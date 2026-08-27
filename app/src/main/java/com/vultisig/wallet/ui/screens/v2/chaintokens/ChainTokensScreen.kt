@@ -87,6 +87,7 @@ internal fun ChainTokensScreen(
         onHideSearchBar = viewModel::hideSearchBar,
         onShowSearchBar = viewModel::showSearchBar,
         onClaimQbtc = viewModel::onClaimQbtc,
+        onDismissQbtcBanner = viewModel::dismissQbtcClaimBanner,
     )
 }
 
@@ -107,6 +108,7 @@ internal fun ChainTokensScreen(
     onSelectTokens: () -> Unit,
     onTokenClick: (ChainTokenUiModel) -> Unit,
     onClaimQbtc: () -> Unit = {},
+    onDismissQbtcBanner: () -> Unit = {},
 ) {
     val snackbarState = rememberVsSnackbarState()
     val uriHandler = VsUriHandler()
@@ -307,6 +309,7 @@ internal fun ChainTokensScreen(
                     if (uiModel.showQbtcClaimBanner) {
                         ClaimQbtcPromoBanner(
                             onClaim = onClaimQbtc,
+                            onDismiss = onDismissQbtcBanner,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         )
                     }
