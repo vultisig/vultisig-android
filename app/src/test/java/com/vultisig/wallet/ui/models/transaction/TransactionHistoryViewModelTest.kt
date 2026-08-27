@@ -7,10 +7,14 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.db.models.PendingLimitOrderEntity
+import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
+import com.vultisig.wallet.data.db.models.TransactionStatus
+import com.vultisig.wallet.data.db.models.TransactionType as DbTransactionType
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.LimitOrderStatus
+import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
@@ -261,19 +265,112 @@ internal class TransactionHistoryViewModelTest {
     }
 
     /**
-     * Verifies refresh() invokes refreshPendingTransactions(vaultId) on the use-case. The
-     * production code calls it once from `refreshOnEnter` in init and once from each explicit
-     * `refresh()`, so the assertion is `atLeast = 2` after one refresh call.
+     * Verifies refresh() invokes refreshPendingTransactions(vaultId) on the use-case. Construction
+     * alone no longer polls — the screen's resume effect owns that — so one explicit refresh is
+     * exactly one call.
      */
     @Test
     fun `refresh invokes refreshPendingTransactions`() {
         val vm = createViewModel()
-        testScope.runCurrent() // drain init's refreshOnEnter call
+        testScope.runCurrent()
 
         vm.refresh()
         testScope.runCurrent()
 
-        coVerify(atLeast = 2) { refreshPendingTransactions(VAULT_ID) }
+        coVerify(exactly = 1) { refreshPendingTransactions(VAULT_ID) }
+    }
+
+    /**
+     * The screen re-checks settlement on every return, not once at construction: a transaction
+     * broadcast seconds before the screen opened has no receipt yet at that first check, and
+     * nothing else would look again.
+     */
+    @Test
+    fun `onScreenResumed refreshes pending transactions`() {
+        val vm = createViewModel()
+        testScope.runCurrent()
+        coVerify(exactly = 0) { refreshPendingTransactions(VAULT_ID) }
+
+        vm.onScreenResumed()
+        testScope.runCurrent()
+
+        coVerify(exactly = 1) { refreshPendingTransactions(VAULT_ID) }
+    }
+
+    /** A row still in flight is re-checked while the user watches it, without any gesture. */
+    @Test
+    fun `in-flight rows are re-polled on a timer while the screen is visible`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(listOf(inFlightEntity()))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+        vm.onScreenResumed()
+        testScope.runCurrent()
+
+        testScope.testScheduler.advanceTimeBy(POLL_INTERVAL_MS + 1)
+        testScope.runCurrent()
+
+        coVerify(exactly = 2) { refreshPendingTransactions(VAULT_ID) }
+    }
+
+    /** Leaving the screen stops the timer: a backgrounded history screen must not keep polling. */
+    @Test
+    fun `polling stops once the screen is no longer visible`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(listOf(inFlightEntity()))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+        vm.onScreenResumed()
+        testScope.runCurrent()
+        vm.onScreenPaused()
+        testScope.runCurrent()
+
+        testScope.testScheduler.advanceTimeBy(POLL_INTERVAL_MS * 4)
+        testScope.runCurrent()
+
+        coVerify(exactly = 1) { refreshPendingTransactions(VAULT_ID) }
+    }
+
+    /** A settled row costs nothing: no timer starts when there is nothing left to settle. */
+    @Test
+    fun `no polling timer runs when every row has settled`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(listOf(inFlightEntity().copy(status = TransactionStatus.CONFIRMED)))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+        vm.onScreenResumed()
+        testScope.runCurrent()
+
+        testScope.testScheduler.advanceTimeBy(POLL_INTERVAL_MS * 4)
+        testScope.runCurrent()
+
+        coVerify(exactly = 1) { refreshPendingTransactions(VAULT_ID) }
+    }
+
+    /** Opening a row that is still in flight asks the chain about that one transaction. */
+    @Test
+    fun `openDetail re-checks an in-flight row`() {
+        val vm = createViewModel()
+        val item = sendItem().copy(status = TransactionStatusUiModel.Broadcasted)
+
+        vm.openDetail(item)
+        testScope.runCurrent()
+
+        coVerify(exactly = 1) { refreshPendingTransactions.refreshOne("Ethereum", "0xabc") }
+    }
+
+    /** A settled row is already final — opening it must not spend a status call. */
+    @Test
+    fun `openDetail does not re-check a settled row`() {
+        val vm = createViewModel()
+
+        vm.openDetail(sendItem())
+        testScope.runCurrent()
+
+        coVerify(exactly = 0) { refreshPendingTransactions.refreshOne(any(), any()) }
     }
 
     /**
@@ -456,9 +553,36 @@ internal class TransactionHistoryViewModelTest {
             feeEstimate = null,
         )
 
+    private fun inFlightEntity() =
+        TransactionHistoryEntity(
+            id = "Ethereum:0xabc",
+            vaultId = VAULT_ID,
+            type = DbTransactionType.SEND,
+            status = TransactionStatus.BROADCASTED,
+            chain = "Ethereum",
+            timestamp = 0L,
+            txHash = "0xabc",
+            explorerUrl = "",
+            payload =
+                SendTransactionHistoryData(
+                    fromAddress = "0xFrom",
+                    toAddress = "0xTo",
+                    amount = "1.0",
+                    token = "ETH",
+                    tokenLogo = "",
+                    feeEstimate = "",
+                    memo = "",
+                    fiatValue = "",
+                ),
+            confirmedAt = null,
+            failureReason = null,
+            lastCheckedAt = null,
+        )
+
     private companion object {
         const val VAULT_ID = "vault-1"
         const val ORDER_HASH = "HASH"
         const val CANCEL_TX_ID = "cancel-tx"
+        const val POLL_INTERVAL_MS = 15_000L
     }
 }

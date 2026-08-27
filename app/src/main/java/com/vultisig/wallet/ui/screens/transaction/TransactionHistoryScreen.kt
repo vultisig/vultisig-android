@@ -43,6 +43,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -76,6 +77,14 @@ import com.vultisig.wallet.ui.utils.asString
 internal fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsState()
     val uriHandler = LocalUriHandler.current
+
+    // Settlement is re-checked on every return to the screen, not once at construction: the first
+    // check on a just-broadcast transaction lands before its receipt exists.
+    LifecycleResumeEffect(Unit) {
+        viewModel.onScreenResumed()
+        onPauseOrDispose { viewModel.onScreenPaused() }
+    }
+
     TransactionHistoryScreen(
         state = state,
         onBack = viewModel::back,

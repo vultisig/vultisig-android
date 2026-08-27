@@ -76,3 +76,21 @@ data class TransactionHistoryEntity(
      */
     @ColumnInfo("broadcastBlockNumber") val broadcastBlockNumber: Long? = null,
 )
+
+/**
+ * Whether the row is still awaiting settlement and stays pollable.
+ *
+ * Mirrors the `status IN (...)` guards in [com.vultisig.wallet.data.db.dao.TransactionHistoryDao]:
+ * `NotFound` is transient indexer lag, not a verdict. Exhaustive on purpose — a new status has to
+ * declare which side it falls on rather than defaulting to terminal and going unpolled forever.
+ */
+val TransactionStatus.isInFlight: Boolean
+    get() =
+        when (this) {
+            TransactionStatus.BROADCASTED,
+            TransactionStatus.PENDING,
+            TransactionStatus.NotFound -> true
+            TransactionStatus.CONFIRMED,
+            TransactionStatus.FAILED,
+            TransactionStatus.REFUNDED -> false
+        }
