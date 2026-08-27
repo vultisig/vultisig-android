@@ -23,7 +23,10 @@ internal interface Navigator<Dest> {
     suspend fun navigate(dst: Dest, opts: NavigationOptions)
 }
 
-internal data class NavigateAction<Dst>(val dst: Dst, val opts: NavigationOptions? = null)
+internal data class NavigateAction<Dst>(val dst: Dst, val opts: NavigationOptions? = null) {
+
+    override fun toString(): String = "NavigateAction(dst=${dst.toNavigationLogName()}, opts=$opts)"
+}
 
 internal data class NavigationOptions(
     val popUpTo: String? = null,
@@ -47,15 +50,22 @@ internal class NavigatorImpl<Dst> @Inject constructor() : Navigator<Dst> {
     }
 
     override suspend fun navigate(destination: Dst) {
-        Timber.d("navigate($destination)")
+        Timber.d("navigate(${destination.toNavigationLogName()})")
         this.destination.emit(NavigateAction(destination))
     }
 
     override suspend fun navigate(dst: Dst, opts: NavigationOptions) {
-        Timber.d("navigate($dst, $opts)")
+        Timber.d("navigate(${dst.toNavigationLogName()}, $opts)")
         this.destination.emit(NavigateAction(dst, opts))
     }
 }
+
+internal fun Any?.toNavigationLogName(): String =
+    when (this) {
+        null -> "null"
+        is String -> "String"
+        else -> javaClass.name
+    }
 
 internal suspend fun Navigator<Destination>.back() {
     navigate(Destination.Back)

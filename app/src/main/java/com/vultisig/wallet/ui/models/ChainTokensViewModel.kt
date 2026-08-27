@@ -27,6 +27,8 @@ import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ChainDashboardBottomBarVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.PromoBanner
+import com.vultisig.wallet.data.repositories.PromoBannerDismissalRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
@@ -106,6 +108,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val requestResultRepository: RequestResultRepository,
     private val balanceRepository: BalanceRepository,
+    private val promoBannerDismissalRepository: PromoBannerDismissalRepository,
 ) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
 
@@ -116,6 +119,7 @@ constructor(
     val uiState = MutableStateFlow(ChainTokensUiModel())
 
     private var loadDataJob: Job? = null
+    private var qbtcBannerJob: Job? = null
 
     private fun updateBalanceVisibility() {
         viewModelScope.safeLaunch {
@@ -186,13 +190,34 @@ constructor(
         val vault = currentVault
         val hasMldsaKey = vault != null && vault.hasValidMldsaKey()
         val canGenerateMldsaKey = vault != null && vault.libType == SigningLibType.DKLS
-        uiState.update {
-            it.copy(
-                showQbtcClaimBanner =
-                    chain == Chain.Bitcoin && (hasMldsaKey || canGenerateMldsaKey),
-                showClaimQbtcButton = chain == Chain.Qbtc && hasMldsaKey,
-            )
+        val isEligible = chain == Chain.Bitcoin && (hasMldsaKey || canGenerateMldsaKey)
+
+        uiState.update { it.copy(showClaimQbtcButton = chain == Chain.Qbtc && hasMldsaKey) }
+
+        qbtcBannerJob?.cancel()
+        if (!isEligible) {
+            uiState.update { it.copy(showQbtcClaimBanner = false) }
+            return
         }
+
+        // Collected rather than read once so closing the banner hides it on the spot: the
+        // dismissal is a stored timestamp, and writing it re-emits here.
+        qbtcBannerJob =
+            viewModelScope.safeLaunch {
+                promoBannerDismissalRepository.isDismissed(PromoBanner.ClaimQbtc).collect {
+                    isDismissed ->
+                    uiState.update { it.copy(showQbtcClaimBanner = !isDismissed) }
+                }
+            }
+    }
+
+    // Global dismissal under the banner's own policy — permanent, so the card does not come back
+    // once closed. The claim itself stays reachable from the QBTC chain screen.
+    fun dismissQbtcClaimBanner() {
+        // Hidden here rather than left to the dismissal collector, so the card goes on the tap
+        // instead of a disk write later; the stored dismissal then re-emits the same false.
+        uiState.update { it.copy(showQbtcClaimBanner = false) }
+        viewModelScope.safeLaunch { promoBannerDismissalRepository.dismiss(PromoBanner.ClaimQbtc) }
     }
 
     fun buy() {

@@ -83,7 +83,6 @@ object TonHelper {
     ): TheOpenNetwork.Transfer {
         val toAddress = AnyAddress(msg.to, CoinType.TON)
         val amount = msg.amount.toLongOrNull() ?: 0L
-        val mode = calculateSendMode(sendMaxAmount = false)
         // Apply the wallet-level bounceable flag from tonSpecific to every TonConnect message,
         // matching the initiating device (browser extension / desktop) which builds the setup
         // message that all co-signers must reproduce. It does NOT derive bounceability per-address
@@ -96,7 +95,7 @@ object TonHelper {
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
             .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
-            .setMode(mode)
+            .setMode(SEND_MODE)
             .setBounceable(bounceable)
             .apply {
                 msg.payload?.takeIf { it.isNotEmpty() }?.let { setCustomPayload(it) }
@@ -110,9 +109,10 @@ object TonHelper {
         tonSpecific: BlockChainSpecific.Ton,
     ): TheOpenNetwork.Transfer {
         val toAddress = AnyAddress(payload.toAddress, CoinType.TON)
-        val amount = if (tonSpecific.sendMaxAmount) 0L else payload.toAmount.toLong()
-
-        val mode = calculateSendMode(tonSpecific.sendMaxAmount)
+        // Sign the explicit amount even for MAX, never an ATTACH_ALL_CONTRACT_BALANCE sweep: the
+        // displayed MAX (balance - fee) must equal what is signed, and that reserved fee doubles as
+        // the account's storage reserve. Matches iOS Ton.buildTransfers.
+        val amount = payload.toAmount.toLong()
 
         // Nominator-pool deposits/withdrawals MUST be sent bounceable so a message the pool
         // rejects (e.g. an uninitialized or mis-funded pool) bounces back instead of being
@@ -124,7 +124,7 @@ object TonHelper {
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
             .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
-            .setMode(mode)
+            .setMode(SEND_MODE)
             .setBounceable(bounceable)
             .apply { payload.memo?.let { setComment(it) } }
             .build()
@@ -153,32 +153,16 @@ object TonHelper {
                 )
                 .build()
 
-        val mode =
-            TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE or
-                TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
-
         return TheOpenNetwork.Transfer.newBuilder()
             .setAmount(
                 ByteString.copyFrom(RECOMMENDED_JETTONS_AMOUNT.toHexString().toHexByteArray())
             )
             .setComment(payload.memo.orEmpty())
             .setBounceable(true) // Jettons always bounceable
-            .setMode(mode)
+            .setMode(SEND_MODE)
             .setDest(tonSpecific.jettonAddress) // Will be set to origin Jetton address
             .setJettonTransfer(jettonTransfer)
             .build()
-    }
-
-    private fun calculateSendMode(sendMaxAmount: Boolean): Int {
-        val baseMode =
-            if (sendMaxAmount) {
-                TheOpenNetwork.SendMode.ATTACH_ALL_CONTRACT_BALANCE.number
-            } else {
-                TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
-            }
-
-        // Always include IGNORE_ACTION_PHASE_ERRORS to prevent retry loops
-        return baseMode or TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
     }
 
     fun getPreSignedImageHash(payload: KeysignPayload): List<String> {
@@ -264,6 +248,15 @@ object TonHelper {
     }
 
     val RECOMMENDED_JETTONS_AMOUNT = CoinType.TON.toUnit("0.08".toBigDecimal()).toLong()
+
+    /**
+     * Every app-built transfer - native, jetton and TonConnect alike - pays fees separately and
+     * nothing more. `IGNORE_ACTION_PHASE_ERRORS` is deliberately absent: with it set, a transfer
+     * the wallet contract cannot pay for is skipped while the transaction still lands un-aborted,
+     * so the seqno is consumed and no funds move. The mode is part of the signed message body, so
+     * every co-signer must derive the same one.
+     */
+    private const val SEND_MODE = TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
 
     private const val MAX_TON_MESSAGES = 4
 }

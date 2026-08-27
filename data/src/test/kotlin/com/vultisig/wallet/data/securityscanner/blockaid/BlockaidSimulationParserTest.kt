@@ -388,6 +388,57 @@ internal class BlockaidSimulationParserTest {
     }
 
     @Test
+    fun `solana three-diff withdraw keeps incoming native SOL as the destination`() {
+        // Parity fixture for sdk#2091 / android#5683: native SOL is the principal incoming leg, not
+        // a fee. The three-diff filter must not delete it just because the response contains SOL,
+        // or the hero can fall through to a one-way WSOL residual transfer and reverse direction.
+        val response =
+            solanaResponse(
+                """{
+                    "result": {
+                      "simulation": {
+                        "account_summary": {
+                          "account_assets_diff": [
+                            {
+                              "asset": { "type": "SOL", "decimals": 9, "symbol": "SOL", "address": null },
+                              "in": { "raw_value": "59435000" }
+                            },
+                            {
+                              "asset": {
+                                "type": "TOKEN",
+                                "address": "So11111111111111111111111111111111111111112",
+                                "symbol": "WSOL",
+                                "decimals": 9
+                              },
+                              "out": { "raw_value": "2039280" }
+                            },
+                            {
+                              "asset": {
+                                "type": "TOKEN",
+                                "address": "ReceiptMint111111111111111111111111111111111",
+                                "symbol": "kSOL",
+                                "decimals": 6
+                              },
+                              "out": { "raw_value": "50000000" }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                """
+                    .trimIndent()
+            )
+
+        val swap = BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Swap
+
+        assertEquals("kSOL", swap.fromCoin.ticker)
+        assertEquals("SOL", swap.toCoin.ticker)
+        assertEquals(BigInteger("50000000"), swap.fromAmount)
+        assertEquals(BigInteger("59435000"), swap.toAmount)
+    }
+
+    @Test
     fun `solana batch skips the SOL-WSOL leg to find the real swap destination`() {
         // A signAllTransactions batch scanned as one diff set can contain both a Kamino SOL-wrap
         // leg (same asset on both sides) and a genuine swap leg. The wrap leg must not be picked as

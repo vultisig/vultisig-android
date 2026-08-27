@@ -6,7 +6,7 @@ import androidx.navigation.NavOptionsBuilder
 import timber.log.Timber
 
 internal fun NavController.route(route: String, opts: NavigationOptions? = null) {
-    Timber.d("route($route, $opts)")
+    Timber.d("route(${route.toNavigationLogName()}, $opts)")
 
     if (route == Destination.Back.route) {
         popBackStack()
@@ -14,7 +14,11 @@ internal fun NavController.route(route: String, opts: NavigationOptions? = null)
         try {
             navigate(route) { buildOptions(this, opts) }
         } catch (e: Exception) {
-            Timber.e(e, "Navigation failed for route: $route")
+            Timber.e(
+                "Navigation failed for route: %s (%s)",
+                route.toNavigationLogName(),
+                e::class.simpleName,
+            )
         }
     }
 }
@@ -27,7 +31,11 @@ internal fun NavController.route(route: NavigateAction<Any>) {
     try {
         navigate(dst) { buildOptions(this, opts) }
     } catch (e: Exception) {
-        Timber.e(e, "Navigation failed for route: $dst")
+        Timber.e(
+            "Navigation failed for route: %s (%s)",
+            dst.toNavigationLogName(),
+            e::class.simpleName,
+        )
     }
 }
 
