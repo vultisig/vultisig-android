@@ -87,14 +87,7 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
         // Chains whose sends WalletCore assembles as a native bank `MsgSend` (routed through
         // CosmosHelper in SigningHelper), so the simulated unsigned tx matches the broadcast tx.
         private val SIMULATION_SUPPORTED_CHAINS =
-            setOf(
-                Chain.GaiaChain,
-                Chain.Kujira,
-                Chain.Dydx,
-                Chain.Osmosis,
-                Chain.Noble,
-                Chain.Akash,
-            )
+            setOf(Chain.GaiaChain, Chain.Dydx, Chain.Osmosis, Chain.Noble, Chain.Akash)
     }
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
@@ -142,7 +135,6 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
             Chain.Akash ->
                 GasFees(limit = gasLimit.toBigInteger(), amount = AKASH_MIN_FEE_UAKT.toBigInteger())
             Chain.GaiaChain,
-            Chain.Kujira,
             Chain.Qbtc -> GasFees(limit = gasLimit.toBigInteger(), amount = 7500.toBigInteger())
             Chain.Terra ->
                 GasFees(limit = gasLimit.toBigInteger(), amount = terraFeeAmount(gasLimit))

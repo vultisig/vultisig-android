@@ -97,8 +97,6 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Tron,
                 Chain.Cardano -> "${explorerUrl}transaction/"
 
-                Chain.Kujira -> "https://finder.kujira.network/kaiyo-1/tx/"
-
                 Chain.Polkadot -> "https://assethub-polkadot.subscan.io/extrinsic/"
                 Chain.Bittensor -> "https://taostats.io/extrinsic/"
 
@@ -164,7 +162,6 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Ethereum -> "https://etherscan.io/"
                 Chain.GaiaChain -> "https://www.mintscan.io/cosmos/"
                 Chain.Dydx -> "https://www.mintscan.io/dydx/"
-                Chain.Kujira -> "https://finder.kujira.network/kaiyo-1/"
                 Chain.Litecoin -> "https://blockchair.com/litecoin/"
                 Chain.MayaChain -> "https://www.explorer.mayachain.info/"
                 Chain.Optimism -> "https://optimistic.etherscan.io/"

@@ -150,10 +150,6 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
-    fun bindSearchKujiraTokenUseCase(impl: SearchKujiraTokenUseCaseImpl): SearchKujiraTokenUseCase
-
-    @Binds
-    @Singleton
     fun bindSearchTerraTokenUseCase(impl: SearchTerraTokenUseCaseImpl): SearchTerraTokenUseCase
 
     @Binds

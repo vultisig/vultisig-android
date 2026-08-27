@@ -159,6 +159,26 @@ internal class SendFormViewModelInitTest {
     }
 
     @Test
+    fun `a deep link naming a chain this version dropped still opens the form`() = runTest {
+        // `vultisig://send?assetChain=…` carries the chain as text, so a link minted while a
+        // since-retired chain existed still names it. Resolving it eagerly threw on the way in and
+        // took the screen down with it.
+        every { savedStateHandle.toRoute<Route.Send>() } returns
+            Route.Send(
+                vaultId = VAULT_ID,
+                chainId = RETIRED_CHAIN_ID,
+                tokenId = "KUJI-$RETIRED_CHAIN_ID",
+                address = "kujira1abc",
+            )
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals("kujira1abc", vm.addressFieldState.text.toString())
+        assertEquals(SendSections.Amount, vm.uiState.value.expandedSection)
+    }
+
+    @Test
     fun `default expandedSection is Asset when no preSelectedTokenId`() = runTest {
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -254,5 +274,8 @@ internal class SendFormViewModelInitTest {
 
     private companion object {
         const val VAULT_ID = "vault-1"
+
+        // A chain id old deep links still carry after the entry was removed from [Chain].
+        const val RETIRED_CHAIN_ID = "Kujira"
     }
 }

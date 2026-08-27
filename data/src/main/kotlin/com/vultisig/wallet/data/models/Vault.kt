@@ -238,7 +238,6 @@ fun Vault.getPubKeyByChain(chain: Chain): String {
 
         // Cosmos
         Chain.GaiaChain,
-        Chain.Kujira,
         Chain.Dydx,
         Chain.Osmosis,
         Chain.Terra,

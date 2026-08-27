@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.addressBookChainId
 import javax.inject.Inject
+import timber.log.Timber
 
 interface AddressBookRepository {
 
@@ -27,7 +28,7 @@ internal class AddressBookRepositoryImpl
 constructor(private val addressBookEntryDao: AddressBookEntryDao) : AddressBookRepository {
 
     override suspend fun getEntries(): List<AddressBookEntry> =
-        addressBookEntryDao.getEntries().map { it.toAddressBookEntry() }
+        addressBookEntryDao.getEntries().mapNotNull { it.toAddressBookEntryOrNull() }
 
     override suspend fun add(entry: AddressBookEntry) {
         addressBookEntryDao.upsert(entry.toEntity())
@@ -41,7 +42,7 @@ constructor(private val addressBookEntryDao: AddressBookEntryDao) : AddressBookR
             } else {
                 addressBookEntryDao.getEntry(lookup.chainId, address)
             }
-        return entity?.toAddressBookEntry()
+        return entity?.toAddressBookEntryOrNull()
     }
 
     override suspend fun delete(chainId: String, address: String) {
@@ -54,6 +55,9 @@ constructor(private val addressBookEntryDao: AddressBookEntryDao) : AddressBookR
     }
 
     override suspend fun entryExists(chainId: String, address: String): Boolean {
+        // A row on a since-retired chain can't be read back — getEntries and getEntry both drop it
+        // — so reporting it as present would send a caller into an edit it can't populate.
+        if (Chain.fromRawOrNull(chainId) == null) return false
         val lookup = chainId.toLookupKey()
         return if (lookup.isEvm) {
             addressBookEntryDao.entryExistsIgnoringCase(lookup.chainId, address)
@@ -68,7 +72,7 @@ constructor(private val addressBookEntryDao: AddressBookEntryDao) : AddressBookR
     // chains also share one address space, so their chainId is canonicalized to Chain.Ethereum's id
     // before it reaches storage or a query. Unknown chain ids fall back to exact-match, unchanged.
     private fun String.toLookupKey(): LookupKey {
-        val chain = Chain.entries.firstOrNull { it.raw.equals(this, ignoreCase = true) }
+        val chain = Chain.fromRawOrNull(this)
         return LookupKey(
             chainId = chain?.addressBookChainId ?: this,
             isEvm = chain?.standard == TokenStandard.EVM,
@@ -77,8 +81,17 @@ constructor(private val addressBookEntryDao: AddressBookEntryDao) : AddressBookR
 
     private data class LookupKey(val chainId: ChainId, val isEvm: Boolean)
 
-    private fun AddressBookEntryEntity.toAddressBookEntry() =
-        AddressBookEntry(chain = Chain.fromRaw(chainId), address = address, title = title)
+    // Rows outlive the chains they were saved for: a retired chain leaves its entries behind, and
+    // no Chain resolves for them. Drop those rows rather than fail the whole address book.
+    private fun AddressBookEntryEntity.toAddressBookEntryOrNull(): AddressBookEntry? {
+        val chain =
+            Chain.fromRawOrNull(chainId)
+                ?: run {
+                    Timber.w("Dropping address book entry on unknown chain %s", chainId)
+                    return null
+                }
+        return AddressBookEntry(chain = chain, address = address, title = title)
+    }
 
     private fun AddressBookEntry.toEntity() =
         AddressBookEntryEntity(chainId = chain.addressBookChainId, address = address, title = title)

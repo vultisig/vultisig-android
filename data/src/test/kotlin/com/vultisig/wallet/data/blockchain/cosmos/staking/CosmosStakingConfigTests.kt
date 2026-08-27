@@ -77,7 +77,6 @@ class CosmosStakingConfigTests {
         // into the staking allowlist by accident.
         assertFalse(CosmosStakingConfig.isStakingSupported(Chain.ThorChain))
         assertFalse(CosmosStakingConfig.isStakingSupported(Chain.GaiaChain))
-        assertFalse(CosmosStakingConfig.isStakingSupported(Chain.Kujira))
         assertFalse(CosmosStakingConfig.isStakingSupported(Chain.Osmosis))
         assertFalse(CosmosStakingConfig.isStakingSupported(Chain.Ethereum))
     }
