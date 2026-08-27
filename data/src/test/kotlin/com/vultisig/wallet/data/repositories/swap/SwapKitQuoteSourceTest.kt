@@ -755,14 +755,55 @@ internal class SwapKitQuoteSourceTest {
 
     @Test
     fun `fetch throws NoRoutes when source chain has no SwapKit prefix mapping`() = runTest {
-        // Mantle is offered by the provider table (every EVM chain is) and would be waved through
-        // by a provider cache that enabled it, but no asset prefix is known for it. The route has
-        // to die here rather than mint a garbage `ETH.ETH`-shaped identifier — SwapKit alone is
+        // Defense-in-depth behind `SwapKitCapability.canReceiveOn`, which no longer offers Mantle
+        // at all: should a capability change ever let an unmapped chain through, the route has to
+        // die here rather than mint a garbage `ETH.ETH`-shaped identifier. SwapKit alone is
         // dropped, the pair's other providers are unaffected.
         every { config.isFeatureEnabled } returns flowOf(true)
         val unmapped = ethCoin().copy(chain = Chain.Mantle)
 
         assertThrows<SwapKitError.NoRoutes> { source().fetch(request(srcToken = unmapped)) }
+    }
+
+    @Test
+    fun `fetch throws ProviderNotEnabled when either leg is not in the providers snapshot`() =
+        runTest {
+            // The `/providers` gate is what keeps a network SwapKit does not currently route from
+            // costing a quote round trip. Either leg is enough to refuse the pair.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { providerCache.isEnabled(Chain.Ethereum) } returns true
+            coEvery { providerCache.isEnabled(Chain.Solana) } returns false
+
+            assertThrows<SwapKitError.ProviderNotEnabled> { source().fetch(request()) }
+            coVerify(exactly = 0) { api.quote(any()) }
+        }
+
+    @Test
+    fun `fetchInboundFee is not gated on the providers snapshot`() = runTest {
+        // #5722 review: this only ever runs for a payload another device already quoted, so a gate
+        // here could not veto a bad pair — it could only turn the initiator's real fee into a
+        // confident $0.00 on the joiner whenever this device's snapshot is missing or stale.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { providerCache.isEnabled(any()) } returns false
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(
+                        route(
+                            routeId = "winner",
+                            providers = listOf("CHAINFLIP"),
+                            expectedBuy = "100",
+                            fees =
+                                listOf(
+                                    SwapKitFee(type = "inbound", chain = "ETH", amount = "0.0001")
+                                ),
+                        )
+                    )
+            )
+
+        val fee = source().fetchInboundFee(request())
+
+        assertEquals(BigInteger("100000000000000"), fee.value)
     }
 
     @Test

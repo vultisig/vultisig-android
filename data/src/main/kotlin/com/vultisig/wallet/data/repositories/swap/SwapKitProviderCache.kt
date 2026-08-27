@@ -26,13 +26,16 @@ import timber.log.Timber
  *   enable is not a chain SwapKit can serve us.
  *
  * The cache is intentionally process-scoped (no disk persistence) — a cold launch every 24h is
- * cheap, and stale enablement is the failure mode we want to avoid most.
+ * cheap. A refresh that fails keeps serving the last successful snapshot (iOS does the same): once
+ * an answer exists, a stale one beats reporting every chain disabled, which would hide SwapKit
+ * app-wide off a single bad `/providers` call. Only the genuine no-data edge fails closed.
  */
 interface SwapKitProviderCache {
     /**
      * Returns `true` when SwapKit currently routes on [chain]. Lazily refreshes the underlying
-     * `/providers` response on first call or when the cache TTL has elapsed; any error while
-     * refreshing surfaces `false` (fail-closed: better to skip SwapKit than offer a bad quote).
+     * `/providers` response on first call or when the cache TTL has elapsed. A failed refresh falls
+     * back to the last successful snapshot, and surfaces `false` only when there has never been one
+     * (fail-closed: better to skip SwapKit than offer a bad quote).
      */
     suspend fun isEnabled(chain: Chain): Boolean
 
@@ -97,16 +100,24 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
                 throw e
             } catch (e: SwapKitError) {
                 // Expected transport/decoding failure from the SwapKit proxy — already classified
-                // at the API layer. Fail-closed so SwapKit is skipped until the next refresh.
-                null
+                // at the API layer. Serve the last good answer if there is one.
+                lastGoodOrNull()
             } catch (e: Exception) {
                 // Unexpected (mapping/parse regression, programmer error). Surface it in logs
                 // rather than silently treat SwapKit as "disabled" forever.
                 Timber.w(e, "SwapKit providers refresh failed unexpectedly")
-                null
+                lastGoodOrNull()
             }
         }
     }
+
+    /**
+     * The last successfully fetched chain set, or null when `/providers` has never been read in
+     * this process. `fetchedAtMillis` is the flag rather than `enabledChains.isEmpty()`: a
+     * legitimately empty response would otherwise be indistinguishable from no data. Called only
+     * under [mutex], after a refresh attempt left both fields untouched.
+     */
+    private fun lastGoodOrNull(): Set<Chain>? = if (fetchedAtMillis == 0L) null else enabledChains
 
     private fun SwapKitProvidersResponseJson.toEnabledChains(): Set<Chain> =
         filterNot { it.provider.uppercase(Locale.ROOT) in FILTERED_PROVIDERS }

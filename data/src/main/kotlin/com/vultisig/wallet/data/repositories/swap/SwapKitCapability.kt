@@ -10,8 +10,9 @@ import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidChainIdentifier
  *
  * The point of this object is that adding a chain to the wallet must not also require adding a row
  * to a SwapKit table before a quote is even attempted. [SwapProviderTableImpl] therefore stopped
- * naming `SWAPKIT` per chain and asks [canReceiveOn] instead; every EVM network the app can swap on
- * is in by construction, so HyperEVM (999) and Robinhood (4663) needed no entry of their own.
+ * naming `SWAPKIT` per chain and asks [canReceiveOn] instead; an EVM network is in as soon as
+ * [SwapKitAssetPrefix] knows how SwapKit spells it, which is the same entry HyperEVM (999) and
+ * Robinhood (4663) needed to be quotable at all.
  *
  * Two predicates, deliberately asymmetric:
  * - [canReceiveOn] — the app can hold a destination asset here. Exact token support is still the
@@ -62,13 +63,17 @@ internal object SwapKitCapability {
      * True when the app can hold a SwapKit destination asset on [chain].
      *
      * Every EVM chain qualifies except [Chain.Sei], which the wallet holds but does not swap on at
-     * all (it is the one EVM chain absent from iOS' `isSwapAvailable`). No allowlist beyond that —
-     * a chain SwapKit does not actually route is dropped later by the `/providers` gate in
+     * all (it is the one EVM chain absent from iOS' `isSwapAvailable`), and those
+     * [SwapKitAssetPrefix] has no spelling for — without a prefix the quote cannot even be
+     * addressed, so offering SwapKit there only costs the pair its immediate "no route" guidance
+     * and replaces it with a guaranteed failure once an amount is typed. Nothing narrower than
+     * that: a chain SwapKit does not currently route is dropped later by the `/providers` gate in
      * [SwapKitQuoteSource], and an asset SwapKit does not list is dropped by `/v3/quote`.
      */
     fun canReceiveOn(chain: Chain): Boolean =
-        if (chain.standard == TokenStandard.EVM) chain != Chain.Sei
-        else chain in NON_EVM_RECEIVE_CHAINS
+        SwapKitAssetPrefix.of(chain) != null &&
+            if (chain.standard == TokenStandard.EVM) chain != Chain.Sei
+            else chain in NON_EVM_RECEIVE_CHAINS
 
     /**
      * True when a SwapKit route may be *sourced* from [chain].

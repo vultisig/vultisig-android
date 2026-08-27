@@ -56,14 +56,10 @@ internal class SwapProviderTableTest {
                 coin(Chain.Ton, "TON", isNative = true), // TON native deposit route
                 coin(Chain.Ripple, "XRP", isNative = true), // XRP deposit-only route
                 // Chains that carried no SwapKit row before the table stopped allowlisting. They
-                // are offered on the strength of being EVM networks the wallet can hold; whether
-                // SwapKit actually routes them is the `/providers` cache's call at quote time.
+                // are offered on the strength of SwapKit having a name for them; whether it
+                // actually routes them is the `/providers` cache's call at quote time.
                 coin(Chain.Robinhood, "ETH", isNative = true), // 4663 → HOOD.*
                 coin(Chain.Hyperliquid, "HYPE", isNative = true), // 999 → HYPEREVM.*
-                coin(Chain.ZkSync, "ETH", isNative = true),
-                coin(Chain.Mantle, "MNT", isNative = true),
-                coin(Chain.Blast, "ETH", isNative = true),
-                coin(Chain.CronosChain, "CRO", isNative = true),
             )
 
         swapKitCoins.forEach { c ->
@@ -78,11 +74,17 @@ internal class SwapProviderTableTest {
     fun `SwapKit is not offered on chains the wallet cannot receive a swap on`() {
         // Boundary guard the other way. Opening the chain list did not make it unbounded: a chain
         // with no SwapKit-reachable account here would mint a garbage asset id and 500 from the
-        // proxy. Sei is the one EVM network in this set — the wallet holds it but does not swap on
-        // it at all.
+        // proxy. Sei is the one EVM network excluded outright — the wallet holds it but does not
+        // swap on it at all. ZkSync, Mantle, Blast and Cronos are excluded for the other reason:
+        // SwapKit has no asset-identifier spelling for them, so a quote could never be addressed
+        // and offering one would only cost the pair its immediate "no route" answer (#5722 review).
         val nonSwapKitCoins =
             listOf(
                 coin(Chain.Sei, "SEI", isNative = true),
+                coin(Chain.ZkSync, "ETH", isNative = true),
+                coin(Chain.Mantle, "MNT", isNative = true),
+                coin(Chain.Blast, "ETH", isNative = true),
+                coin(Chain.CronosChain, "CRO", isNative = true),
                 coin(Chain.GaiaChain, "ATOM", isNative = true),
                 coin(Chain.ThorChain, "RUNE", isNative = true),
                 coin(Chain.MayaChain, "CACAO", isNative = true),

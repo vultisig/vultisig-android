@@ -3,24 +3,27 @@ package com.vultisig.wallet.data.repositories.swap
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
  * Pins the predicates that replaced SwapKit's per-chain allowlist. The property worth defending is
- * that adding an EVM network to the wallet is enough to have SwapKit tried on it — no second edit —
- * while the source side stays narrower than the destination side.
+ * that an EVM network is offered as soon as SwapKit's spelling of it is known — no provider-table
+ * edit on top — while the source side stays narrower than the destination side, and a network whose
+ * spelling is *not* known is never offered a route it could not address.
  */
 internal class SwapKitCapabilityTest {
 
     @Test
-    fun `every EVM chain except Sei can receive`() {
+    fun `an EVM chain can receive exactly when SwapKit's spelling of it is known`() {
         // The open list, stated as a property rather than an enumeration: a new EVM network is in
-        // by construction. Sei is the single exception — the wallet holds it but does not swap it.
+        // as soon as [SwapKitAssetPrefix] carries it. Sei is excluded on top of that — the wallet
+        // holds it but does not swap it at all.
         Chain.entries
             .filter { it.standard == TokenStandard.EVM }
             .forEach { chain ->
-                val expected = chain != Chain.Sei
+                val expected = chain != Chain.Sei && SwapKitAssetPrefix.of(chain) != null
                 assertTrue(
                     SwapKitCapability.canReceiveOn(chain) == expected,
                     "canReceiveOn(${chain.raw}) should be $expected",
@@ -29,7 +32,22 @@ internal class SwapKitCapabilityTest {
     }
 
     @Test
-    fun `Robinhood and HyperEVM need no entry of their own to be receivable`() {
+    fun `EVM chains SwapKit has no asset identifier for are not offered at all`() {
+        // #5722 review: these four gained SWAPKIT when the table stopped allowlisting, but no
+        // prefix is known for any of them, so `assetIdentifier` could only throw. Offering them
+        // replaced a pair's immediate "no route" guidance with a spinner and a late error — worst
+        // for Cardano/TON/SUI/BTC destinations, where SwapKit is the only shared provider.
+        listOf(Chain.ZkSync, Chain.Mantle, Chain.Blast, Chain.CronosChain).forEach { chain ->
+            assertNull(SwapKitAssetPrefix.of(chain), "prefix for ${chain.raw}")
+            assertFalse(SwapKitCapability.canReceiveOn(chain), "canReceiveOn(${chain.raw})")
+            assertFalse(SwapKitCapability.canQuoteFrom(chain), "canQuoteFrom(${chain.raw})")
+        }
+    }
+
+    @Test
+    fun `Robinhood and HyperEVM need no provider-table row to be receivable`() {
+        // One entry, in the map that is load-bearing anyway: without a prefix no quote can be
+        // addressed, so this is the same edit that makes the chain quotable at all.
         assertTrue(SwapKitCapability.canReceiveOn(Chain.Robinhood))
         assertTrue(SwapKitCapability.canReceiveOn(Chain.Hyperliquid))
     }
@@ -86,21 +104,14 @@ internal class SwapKitCapabilityTest {
     }
 
     @Test
-    fun `an EVM chain the scanner does not cover cannot originate a route`() {
-        listOf(Chain.ZkSync, Chain.Mantle, Chain.CronosChain).forEach { chain ->
-            assertTrue(SwapKitCapability.canReceiveOn(chain), "canReceiveOn(${chain.raw})")
-            assertFalse(SwapKitCapability.canQuoteFrom(chain), "canQuoteFrom(${chain.raw})")
-        }
-    }
-
-    @Test
     fun `EVM chains the scanner covers can originate a route`() {
+        // Blast is deliberately absent: Blockaid does index it, but SwapKit's spelling of it is
+        // unknown, so it is not receivable and therefore not sourceable either.
         listOf(
                 Chain.Ethereum,
                 Chain.Arbitrum,
                 Chain.Avalanche,
                 Chain.Base,
-                Chain.Blast,
                 Chain.BscChain,
                 Chain.Hyperliquid,
                 Chain.Optimism,

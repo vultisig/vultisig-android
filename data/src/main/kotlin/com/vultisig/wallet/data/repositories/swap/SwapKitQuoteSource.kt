@@ -110,12 +110,12 @@ constructor(
         if (!config.isFeatureEnabled.first()) {
             return TokenValue(BigInteger.ZERO, request.srcToken)
         }
-        if (
-            !providerCache.isEnabled(request.srcToken.chain) ||
-                !providerCache.isEnabled(request.dstToken.chain)
-        ) {
-            return TokenValue(BigInteger.ZERO, request.srcToken)
-        }
+        // No provider-cache gate here, unlike [fetchInternal]. This runs only for a
+        // `SwapPayload.SwapKit` another device already quoted and signed off on, so the gate could
+        // never veto a bad pair — its one reachable effect would be turning the real fee into a
+        // confident $0.00 on the joiner whenever this device's `/providers` snapshot is missing.
+        // Letting `/v3/quote` answer keeps the joiner's fee row honest; a genuine failure still
+        // degrades to zero via the caller's catch (#5722 review).
         val quoteResponse =
             api.quote(
                 SwapKitQuoteRequest(
@@ -386,7 +386,7 @@ constructor(
         fees: List<SwapKitFee>,
         fallbackFees: List<SwapKitFee> = emptyList(),
     ): BigInteger {
-        val prefix = chainPrefix(srcToken.chain) ?: return BigInteger.ZERO
+        val prefix = SwapKitAssetPrefix.of(srcToken.chain) ?: return BigInteger.ZERO
         val inbound =
             findInboundFee(fees, prefix)
                 ?: findInboundFee(fallbackFees, prefix)
@@ -410,7 +410,7 @@ constructor(
     /**
      * Native gas-coin decimals for a SwapKit source chain. EVM chains use 18, Solana 9, Bitcoin 8.
      * The inbound fee is always denominated in the source chain's native coin, so it is scaled by
-     * these — not the sell token's decimals. Only reached for chains [chainPrefix] already maps.
+     * these — not the sell token's decimals. Only reached for chains [SwapKitAssetPrefix] maps.
      */
     private fun nativeDecimals(chain: Chain): Int =
         when (chain) {
@@ -737,7 +737,8 @@ constructor(
     /**
      * Map a UTXO source chain onto the per-chain PSBT txType discriminator. BTC/LTC share the
      * segwit `PSBT`; DOGE/BCH/DASH/ZEC get their own legacy / Sapling discriminators. An unmapped
-     * chain (shouldn't happen — [chainPrefix] gates the route) falls back to the segwit `PSBT`.
+     * chain (shouldn't happen — [SwapKitAssetPrefix] gates the route) falls back to the segwit
+     * `PSBT`.
      */
     private fun psbtTxTypeForChain(chain: Chain): String =
         when (chain) {
@@ -953,13 +954,12 @@ constructor(
      * SwapKit asset identifier: `CHAIN.TICKER` or `CHAIN.TICKER-CONTRACT` for ERC-20-style tokens.
      */
     private fun assetIdentifier(coin: Coin): String {
-        // The provider-cache gate upstream of this call should already block any chain we don't
-        // have a SwapKit prefix mapping for. Throwing NoRoutes here (rather than falling back to
-        // `coin.ticker`) is defense-in-depth: a future cache change that enables a chain we
-        // haven't mapped would otherwise mint a garbage identifier (e.g. `ETH.ETH` for ZkSync.ETH)
-        // and surface as `helpers_invalid_asset_identifier` 500s from the proxy.
+        // [SwapKitCapability.canReceiveOn] already refuses to offer a chain with no prefix, so
+        // this is defense-in-depth: throwing NoRoutes (rather than falling back to `coin.ticker`)
+        // keeps a future capability change from minting a garbage identifier — e.g. `ETH.ETH` for
+        // ZkSync.ETH — and surfacing as `helpers_invalid_asset_identifier` 500s from the proxy.
         val prefix =
-            chainPrefix(coin.chain)
+            SwapKitAssetPrefix.of(coin.chain)
                 ?: throw SwapKitError.NoRoutes(
                     "SwapKit asset identifier missing chain prefix for ${coin.chain.raw}"
                 )
@@ -979,35 +979,6 @@ constructor(
     @VisibleForTesting
     internal fun swapSymbol(coin: Coin): String =
         if (coin.chain == Chain.Ton && coin.isNativeToken) "TON" else coin.ticker
-
-    private fun chainPrefix(chain: Chain): String? =
-        when (chain) {
-            Chain.Ethereum -> "ETH"
-            Chain.BscChain -> "BSC"
-            Chain.Avalanche -> "AVAX"
-            Chain.Arbitrum -> "ARB"
-            Chain.Optimism -> "OP"
-            Chain.Base -> "BASE"
-            Chain.Polygon -> "POL"
-            Chain.Solana -> "SOL"
-            Chain.Bitcoin -> "BTC"
-            Chain.Litecoin -> "LTC"
-            Chain.Dogecoin -> "DOGE"
-            Chain.BitcoinCash -> "BCH"
-            Chain.Dash -> "DASH"
-            Chain.Zcash -> "ZEC"
-            Chain.Tron -> "TRON"
-            Chain.Sui -> "SUI"
-            Chain.Cardano -> "ADA"
-            Chain.Ton -> "TON"
-            Chain.Ripple -> "XRP"
-            // Confirmed against `GET /tokens`: chain 4663 lists as `HOOD.ETH` / `HOOD.TSLA-0x…`,
-            // chain 999 as `HYPEREVM.HYPE` / `HYPEREVM.USDC-0x…`. The catalogue's separate `HYPE.*`
-            // bucket is HyperCore (`USDC:0x…` addresses), a different venue — never this chain.
-            Chain.Robinhood -> "HOOD"
-            Chain.Hyperliquid -> "HYPEREVM"
-            else -> null
-        }
 
     /**
      * Parse a SwapKit EVM tx numeric field (gas / gasPrice / value). SwapKit V3 hex-encodes these

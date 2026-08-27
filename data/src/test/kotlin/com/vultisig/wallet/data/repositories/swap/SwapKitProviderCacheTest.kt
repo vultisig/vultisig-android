@@ -155,6 +155,40 @@ internal class SwapKitProviderCacheTest {
     }
 
     @Test
+    fun `a failed refresh keeps serving the last successful snapshot`() = runTest {
+        // #5722 review follow-up: dropping the snapshot on a failed refresh reports every chain
+        // disabled, which hides SwapKit app-wide off one bad `/providers` call and shows a $0.00
+        // swap fee on the join screen. iOS serves last-good here; so do we.
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1", "solana"))
+
+        val clock = FakeClock(now = 1_000L)
+        val cache = cache(clock)
+
+        assertTrue(cache.isEnabled(Chain.Ethereum)) // populates the snapshot
+        coEvery { api.providers() } throws RuntimeException("transport boom")
+        clock.now += 24L * 60L * 60L * 1000L + 1L // past TTL, so the refresh is attempted and fails
+
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+        assertTrue(cache.isEnabled(Chain.Solana))
+        assertFalse(cache.isEnabled(Chain.Bitcoin)) // stale, not blanket-true
+    }
+
+    @Test
+    fun `a failed refresh after invalidate has no snapshot to fall back on`() = runTest {
+        // The genuine no-data edge still fails closed: `invalidate` drops the snapshot outright,
+        // so there is nothing to serve and SwapKit is skipped until a refresh succeeds.
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
+
+        val cache = cache()
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+
+        cache.invalidate()
+        coEvery { api.providers() } throws RuntimeException("transport boom")
+
+        assertFalse(cache.isEnabled(Chain.Ethereum))
+    }
+
+    @Test
     fun `cancellation while fetching is re-thrown, not swallowed`() = runTest {
         coEvery { api.providers() } throws CancellationException("scope cancelled")
 
