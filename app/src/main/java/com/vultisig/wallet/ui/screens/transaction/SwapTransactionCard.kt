@@ -94,7 +94,11 @@ internal fun SwapTransactionCard(
                         Column {
                             Text(
                                 text =
-                                    stringResource(R.string.transaction_history_min_payout_label),
+                                    stringResource(
+                                        if (item.isLimitOrder)
+                                            R.string.transaction_history_min_payout_label
+                                        else R.string.transaction_history_expected_payout_label
+                                    ),
                                 style = Theme.brockmann.supplementary.captionSmall,
                                 color = Theme.v2.colors.text.tertiary,
                             )

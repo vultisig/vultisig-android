@@ -44,6 +44,7 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
+import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -372,6 +373,12 @@ constructor(
                         externalRecipient = externalRecipient,
                         swapFee = rawFees?.let { dstToken.convertToTokenValue(it.affiliate) },
                         outboundFee = rawFees?.let { dstToken.convertToTokenValue(it.outbound) },
+                        minPayout =
+                            signedMinimumOutput(
+                                payload = swapPayload,
+                                memo = payload.memo,
+                                dstToken = dstToken,
+                            ),
                         limitOrderLabels =
                             resolveLimitOrderLabels(
                                 memo = payload.memo,
@@ -442,6 +449,12 @@ constructor(
                         externalRecipient = externalRecipient,
                         swapFee = rawFees?.let { dstToken.convertToTokenValue(it.affiliate) },
                         outboundFee = rawFees?.let { dstToken.convertToTokenValue(it.outbound) },
+                        minPayout =
+                            signedMinimumOutput(
+                                payload = swapPayload,
+                                memo = payload.memo,
+                                dstToken = dstToken,
+                            ),
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -537,6 +550,10 @@ constructor(
         // Hides the Swap Fee row and drops it from the total for a SwapKit UTXO deposit whose cost
         // is already the Network Fee — matching the initiator's verify screen and the form (#5358).
         swapFeeHidden: Boolean = false,
+        // Floor the memo THIS device is about to sign enforces, read out of those literal bytes
+        // rather than from the initiator's quote — confirming what it signs is the co-signer's
+        // whole job. Null on every route that enforces none (#5711).
+        minPayout: TokenValue? = null,
         // Non-null only for a THORChain `=<` limit order, recovered from the signed memo. Drives
         // the limit-order title and the Target Price / expiry row (#4154).
         limitOrderLabels: LimitOrderLabels? = null,
@@ -602,6 +619,7 @@ constructor(
             providerLabel = providerLabel,
             externalRecipient = externalRecipient,
             swapFeeHidden = swapFeeHidden,
+            minPayout = minPayout?.let { mapTokenValueToDecimalUiString(it) },
             isLimitOrder = limitOrderLabels != null,
             limitTargetPriceLabel = limitOrderLabels?.targetPriceLabel,
             limitExpiryLabel = limitOrderLabels?.expiryLabel,

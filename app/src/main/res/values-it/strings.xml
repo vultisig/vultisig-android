@@ -149,6 +149,8 @@
     <string name="transaction_type_button_swap">Scambia</string>
     <string name="swap_form_vault">Cassaforte</string>
     <string name="swap_form_min_pay">pagamento min.</string>
+    <string name="swap_form_expected_pay">pagamento previsto</string>
+    <string name="swap_form_min_pay_amount">pagamento min.: %1$s %2$s</string>
     <string name="chain_account_view_swap">SCAMBIA</string>
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
     <string name="faq_settings_q1">Che cos\'è Vultisig?</string>
@@ -1379,6 +1381,7 @@
     <string name="transaction_history_to_label">A</string>
     <string name="transaction_history_via_prefix">tramite</string>
     <string name="transaction_history_min_payout_label">pagamento min.</string>
+    <string name="transaction_history_expected_payout_label">pagamento previsto</string>
     <string name="transaction_history_date_today">Oggi</string>
     <string name="transaction_history_date_yesterday">Ieri</string>
     <string name="transaction_history_elapsed_just_now">proprio adesso</string>

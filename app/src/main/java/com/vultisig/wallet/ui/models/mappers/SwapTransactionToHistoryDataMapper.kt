@@ -28,5 +28,6 @@ internal class SwapTransactionToHistoryDataMapperImpl @Inject constructor() :
             fromAddress = from.src.token.address,
             toAmountDecimal = from.expectedDstDecimal,
             toDecimals = from.dst.token.decimal,
+            isLimitOrder = from.isLimitOrder,
         )
 }

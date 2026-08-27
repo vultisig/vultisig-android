@@ -147,6 +147,8 @@
     <string name="verify_swap_sign_button">Transaktion Signieren</string>
     <string name="swap_form_vault">Tresor</string>
     <string name="swap_form_min_pay">min. Auszahlung</string>
+    <string name="swap_form_expected_pay">erwartete Auszahlung</string>
+    <string name="swap_form_min_pay_amount">min. Auszahlung: %1$s %2$s</string>
     <string name="swap_screen_invalid_vault">Die Transaktion wird wahrscheinlich fehlschlagen, Tresor konnte nicht geladen werden.</string>
     <string name="swap_error_no_amount">Die Menge muss eine positive Zahl sein</string>
     <string name="app_name">Vultisig</string>
@@ -1379,6 +1381,7 @@
     <string name="transaction_history_to_label">An</string>
     <string name="transaction_history_via_prefix">über</string>
     <string name="transaction_history_min_payout_label">Min. Auszahlung</string>
+    <string name="transaction_history_expected_payout_label">Erwartete Auszahlung</string>
     <string name="transaction_history_date_today">Heute</string>
     <string name="transaction_history_date_yesterday">Gestern</string>
     <string name="transaction_history_elapsed_just_now">gerade eben</string>

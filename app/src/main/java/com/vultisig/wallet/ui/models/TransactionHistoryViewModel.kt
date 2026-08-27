@@ -148,6 +148,9 @@ sealed interface TransactionHistoryItemUiModel {
         val fromAddress: String?,
         val toAddress: String?,
         val feeEstimate: String?,
+        // A limit order's amount is the floor its memo enforces; a market swap's is the expected
+        // output. Only the former may be labelled "min. payout" (#5711).
+        val isLimitOrder: Boolean = false,
     ) : TransactionHistoryItemUiModel
 }
 
@@ -611,6 +614,7 @@ constructor(
                     fromAddress = null,
                     toAddress = null,
                     feeEstimate = null,
+                    isLimitOrder = p.isLimitOrder,
                 )
 
             is UnknownTransactionHistoryData -> null

@@ -343,6 +343,8 @@
     <string name="swap_form_total_fees_title">Total Fee</string>
     <string name="swap_form_vault">Vault</string>
     <string name="swap_form_min_pay">min. payout</string>
+    <string name="swap_form_expected_pay">expected payout</string>
+    <string name="swap_form_min_pay_amount">min. payout: %1$s %2$s</string>
     <string name="swap_form_on_chain">on</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
     <string name="verify_swap_agree_receive_amount">I agree with the min. amount I\'ll receive</string>
@@ -1465,6 +1467,7 @@
     <string name="transaction_history_to_label">To</string>
     <string name="transaction_history_via_prefix">via</string>
     <string name="transaction_history_min_payout_label">min. payout</string>
+    <string name="transaction_history_expected_payout_label">expected payout</string>
     <string name="transaction_history_date_today">Today</string>
     <string name="transaction_history_date_yesterday">Yesterday</string>
     <string name="transaction_history_elapsed_just_now">just now</string>

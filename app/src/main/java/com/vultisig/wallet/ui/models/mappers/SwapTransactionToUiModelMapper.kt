@@ -16,6 +16,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.clampDstFiatToSrcFiat
 import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
+import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -153,6 +154,13 @@ constructor(
                 null
             }
 
+        // The floor the signed memo enforces, or null when it enforces none — which is the case
+        // for every aggregator route and for a THORChain/Maya swap left on "Auto" slippage, where
+        // the node returns a memo with no LIM at all (#5711).
+        val minPayout =
+            signedMinimumOutput(payload = from.payload, memo = from.memo, dstToken = from.dstToken)
+                ?.let { mapTokenValueToDecimalUiString(it) }
+
         return SwapTransactionUiModel(
             src =
                 ValuedToken(
@@ -207,6 +215,7 @@ constructor(
             vultBpsDiscountFiatValue = from.vultBpsDiscountFiatValue,
             referralBpsDiscount = from.referralBpsDiscount,
             referralBpsDiscountFiatValue = from.referralBpsDiscountFiatValue,
+            minPayout = minPayout,
             priceImpactPercent = priceImpactDisplay?.percent,
             priceImpactLevel = priceImpactDisplay?.level,
             // Classify as a limit order only when the `=<` memo yielded both labels, so the limit
