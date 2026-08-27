@@ -233,6 +233,14 @@ internal class SwapKitProviderCacheTest {
         coEvery { api.providers() } throws RuntimeException("transport boom")
 
         assertFalse(cache.isEnabled(Chain.Ethereum))
+
+        // ...and stays eager rather than backing off. This is the second no-data edge — after
+        // `invalidate`, as opposed to never-fetched — and what keeps it eager is `isServable`
+        // gating both its branches on `fetchedAtMillis`, which `invalidate` cleared; the narrowing
+        // in `backOffAndServeLastGood` is belt-and-braces on top. Ungating the retry branch would
+        // strand SwapKit off for the full window with no answer to serve in the meantime.
+        assertFalse(cache.isEnabled(Chain.Ethereum))
+        coVerify(exactly = 3) { api.providers() }
     }
 
     @Test

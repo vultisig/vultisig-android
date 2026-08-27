@@ -114,7 +114,7 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
                 chains
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: SwapKitError) {
+            } catch (_: SwapKitError) {
                 // Expected transport/decoding failure from the SwapKit proxy — already classified
                 // at the API layer. Serve the last good answer if there is one.
                 backOffAndServeLastGood(now)
