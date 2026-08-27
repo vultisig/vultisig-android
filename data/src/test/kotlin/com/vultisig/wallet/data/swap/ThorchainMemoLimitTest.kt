@@ -51,6 +51,20 @@ internal class ThorchainMemoLimitTest {
     }
 
     @Test
+    fun `reads the target asset out of the same field layout as the limit`() {
+        assertEquals("THOR.TCY", ThorchainMemoLimit.targetAsset("=:THOR.TCY:thor1abc:31678:va:40"))
+        assertEquals("ETH.USDC-06EB48", ThorchainMemoLimit.targetAsset("=:ETH.USDC-06EB48:0xabc"))
+    }
+
+    @Test
+    fun `a memo with no target asset to read names none`() {
+        assertNull(ThorchainMemoLimit.targetAsset("=::0xabc:31678"))
+        assertNull(ThorchainMemoLimit.targetAsset("="))
+        // A limit order is not a swap memo: its fields are laid out differently.
+        assertNull(ThorchainMemoLimit.targetAsset("=<:THOR.TCY:thor1abc:31678/14400/0"))
+    }
+
+    @Test
     fun `a non-swap action lays its fields out differently and is refused`() {
         // ADD's 4th field is not a LIM triple — reading one out of it would invent a floor.
         assertNull(ThorchainMemoLimit.assertedLimit("ADD:BTC.BTC:thor1abc:31678"))

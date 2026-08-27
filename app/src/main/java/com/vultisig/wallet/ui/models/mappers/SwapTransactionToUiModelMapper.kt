@@ -138,10 +138,10 @@ constructor(
         // formatted here rather than at build time so the price lands in the user's currency and
         // the expiry reuses the same string resources as the form's pills. The cosigner formats the
         // same pair through the same use case, from the memo it is asked to sign.
-        val isLimitMemo = from.memo?.startsWith(LimitSwapMemo.PREFIX) == true
+        val limitMemo = from.memo?.let(LimitSwapMemo::parse)
         val regular = from as? SwapTransaction.RegularSwapTransaction
-        val limitTargetPrice = regular?.limitOrderTargetPrice?.takeIf { isLimitMemo }
-        val limitExpiryHours = regular?.limitOrderExpiryHours?.takeIf { isLimitMemo }
+        val limitTargetPrice = regular?.limitOrderTargetPrice?.takeIf { limitMemo != null }
+        val limitExpiryHours = regular?.limitOrderExpiryHours?.takeIf { limitMemo != null }
         val limitLabels =
             if (limitTargetPrice != null && limitExpiryHours != null) {
                 formatLimitOrderLabels(
@@ -218,9 +218,11 @@ constructor(
             minPayout = minPayout,
             priceImpactPercent = priceImpactDisplay?.percent,
             priceImpactLevel = priceImpactDisplay?.level,
-            // Classify as a limit order only when the `=<` memo yielded both labels, so the limit
-            // title can never render without its Target Price / expiry row.
-            isLimitOrder = limitLabels != null,
+            // The memo decides this, not the labels below it: a `=<` order whose lifetime this
+            // app has no pill for is still an order, and its amount is still the enforced floor
+            // rather than an expectation. The rows that need the labels null-check them
+            // themselves (CodeRabbit, #5734).
+            isLimitOrder = limitMemo != null,
             limitTargetPriceLabel = limitLabels?.targetPriceLabel,
             limitExpiryLabel = limitLabels?.expiryLabel,
         )

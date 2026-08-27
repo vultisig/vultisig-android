@@ -48,12 +48,39 @@ internal class SwapMinPayoutTest {
     fun `a maya memo's limit is read the same way`() {
         val minPayout =
             signedMinimumOutput(
-                payload = SwapPayload.MayaChain(thorSwapPayload(tcy)),
-                memo = "=:MAYA.CACAO:maya1abc:321308705:va:40",
-                dstToken = tcy,
+                payload = SwapPayload.MayaChain(thorSwapPayload(cacao)),
+                memo = "=:MAYA.CACAO:maya1abc:32130870500:va:40",
+                dstToken = cacao,
             )
 
-        minPayout?.value shouldBe BigInteger.valueOf(321308705)
+        // Maya denominates CACAO in its own 1e10 rather than THORChain's 1e8.
+        minPayout?.decimal shouldBe BigDecimal("3.21308705")
+        minPayout?.value shouldBe BigInteger.valueOf(32_130_870_500)
+    }
+
+    @Test
+    fun `a memo naming another asset is no floor for this one`() {
+        // The memo and the destination coin reach a cosigner as separately decoded halves of the
+        // request. A LIM denominated in CACAO must never be labelled with TCY's ticker.
+        signedMinimumOutput(
+            payload = thorPayload(tcy),
+            memo = "=:MAYA.CACAO:maya1abc:321308705:va:40",
+            dstToken = tcy,
+        ) shouldBe null
+    }
+
+    @Test
+    fun `a spelling this app cannot resolve still yields the floor it can read`() {
+        // THORChain resolves `e.eth` against its live pool list; refusing every name we can't
+        // expand would hide floors that are really enforced.
+        val minPayout =
+            signedMinimumOutput(
+                payload = thorPayload(eth),
+                memo = "=:e.eth:0xabc:321308705:va:40",
+                dstToken = eth,
+            )
+
+        minPayout?.decimal shouldBe BigDecimal("3.21308705")
     }
 
     @Test
@@ -135,6 +162,18 @@ internal class SwapMinPayoutTest {
                 priceProviderID = "tcy",
                 contractAddress = "tcy",
                 isNativeToken = false,
+            )
+        val cacao =
+            Coin(
+                chain = Chain.MayaChain,
+                ticker = "CACAO",
+                logo = "cacao",
+                address = "maya1Owner",
+                decimal = 10,
+                hexPublicKey = "hex",
+                priceProviderID = "cacao",
+                contractAddress = "",
+                isNativeToken = true,
             )
         val eth =
             Coin(

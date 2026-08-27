@@ -399,9 +399,9 @@
     <string name="swap_form_gas_title">网络费用</string>
     <string name="swap_form_total_fees_title">总费用</string>
     <string name="swap_form_vault">保险库</string>
-    <string name="swap_form_min_pay">最小支付</string>
-    <string name="swap_form_expected_pay">预期支付</string>
-    <string name="swap_form_min_pay_amount">最小支付：%1$s %2$s</string>
+    <string name="swap_form_min_pay">最低到账</string>
+    <string name="swap_form_expected_pay">预计到账</string>
+    <string name="swap_form_min_pay_amount">最低到账：%1$s %2$s</string>
     <string name="swap_form_on_chain">在</string>
 
     <!-- Share QR Utils -->
@@ -1710,8 +1710,8 @@
     <string name="transaction_status_signed_label">已签名</string>
     <string name="transaction_history_to_label">至</string>
     <string name="transaction_history_via_prefix">通过</string>
-    <string name="transaction_history_min_payout_label">最低支付</string>
-    <string name="transaction_history_expected_payout_label">预期支付</string>
+    <string name="transaction_history_min_payout_label">最低到账</string>
+    <string name="transaction_history_expected_payout_label">预计到账</string>
     <string name="transaction_history_date_today">今天</string>
     <string name="transaction_history_date_yesterday">昨天</string>
     <string name="transaction_history_elapsed_just_now">刚刚</string>

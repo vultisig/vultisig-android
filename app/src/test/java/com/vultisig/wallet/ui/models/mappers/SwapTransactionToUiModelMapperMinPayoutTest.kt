@@ -131,6 +131,33 @@ internal class SwapTransactionToUiModelMapperMinPayoutTest {
             uiModel.minPayout shouldBe null
         }
 
+    @Test
+    fun `a memo naming another asset is not this destination's floor`() = runTest {
+        stubCommon()
+
+        // The LIM is denominated in the asset the memo names. Labelling a CACAO floor with TCY's
+        // ticker would misstate what the signature guarantees (CodeRabbit, #5734).
+        val uiModel = mapper().invoke(thorTransaction(memo = "=:MAYA.CACAO:maya1abc:321308705"))
+
+        uiModel.minPayout shouldBe null
+    }
+
+    @Test
+    fun `an order whose lifetime has no pill is still an order`() = runTest {
+        stubCommon()
+
+        // 999 blocks is a valid `=<` interval outside the app's own 12/24/72-hour options, so the
+        // Target Price / expiry row cannot render — but the amount is still the enforced floor,
+        // and the history card must not call it an expected payout (CodeRabbit, #5734).
+        val uiModel =
+            mapper()
+                .invoke(thorTransaction(memo = "=<:THOR.TCY:thor1uet6qz79tu:321308705/999/0:va:40"))
+
+        uiModel.isLimitOrder shouldBe true
+        uiModel.limitTargetPriceLabel shouldBe null
+        uiModel.limitExpiryLabel shouldBe null
+    }
+
     private fun thorTransaction(
         memo: String?,
         limitOrderTargetPrice: BigDecimal? = null,

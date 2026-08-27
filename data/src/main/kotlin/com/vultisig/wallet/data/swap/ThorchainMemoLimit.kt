@@ -61,6 +61,20 @@ object ThorchainMemoLimit {
     }
 
     /**
+     * The destination asset [memo] names, in THORChain's own notation (`THOR.TCY`,
+     * `ETH.USDC-06EB48`, a secured `eth-usdc-0x…` denom), or null when [memo] is not a swap memo.
+     *
+     * Read from the same field layout [assertedLimit] validates, so a caller can never pair a limit
+     * with the asset name of a different memo. The value is returned verbatim — resolving what it
+     * refers to needs the coin, and belongs to the caller that holds one.
+     */
+    fun targetAsset(memo: String): String? {
+        val fields = memo.split(":")
+        if (fields.size < 2 || !isSwapAction(fields[0])) return null
+        return fields[1].takeIf { it.isNotBlank() }
+    }
+
+    /**
      * THORChain and MayaChain both spell the swap action `SWAP`, `=` or `s`, case-insensitively.
      * Every other action (`ADD`, `WITHDRAW`, `LOAN+`, the `=<` limit order …) lays its fields out
      * differently, so its 4th field is not a `LIM/INTERVAL/QUANTITY` triple and must not be read as

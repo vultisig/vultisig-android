@@ -359,6 +359,7 @@ constructor(
                         )
                         .expectNative(SwapProvider.THORCHAIN)
                 val rawFees = (quote as? SwapQuote.ThorChain)?.data?.fees
+                val limitMemo = payload.memo?.let(LimitSwapMemo::parse)
                 val swapTransactionUiModel =
                     buildSwapUiModel(
                         srcToken = srcToken,
@@ -379,9 +380,10 @@ constructor(
                                 memo = payload.memo,
                                 dstToken = dstToken,
                             ),
+                        isLimitOrder = limitMemo != null,
                         limitOrderLabels =
                             resolveLimitOrderLabels(
-                                memo = payload.memo,
+                                parsed = limitMemo,
                                 srcToken = srcToken,
                                 srcTokenValue = srcTokenValue,
                                 dstToken = dstToken,
@@ -554,8 +556,12 @@ constructor(
         // rather than from the initiator's quote — confirming what it signs is the co-signer's
         // whole job. Null on every route that enforces none (#5711).
         minPayout: TokenValue? = null,
+        // True when the signed memo IS a `=<` order, which is what makes the destination amount a
+        // floor rather than an expectation. Kept independent of [limitOrderLabels]: an order whose
+        // expiry this app has no pill for still has to read as an order (CodeRabbit, #5734).
+        isLimitOrder: Boolean = false,
         // Non-null only for a THORChain `=<` limit order, recovered from the signed memo. Drives
-        // the limit-order title and the Target Price / expiry row (#4154).
+        // the Target Price / expiry row (#4154).
         limitOrderLabels: LimitOrderLabels? = null,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
@@ -620,7 +626,7 @@ constructor(
             externalRecipient = externalRecipient,
             swapFeeHidden = swapFeeHidden,
             minPayout = minPayout?.let { mapTokenValueToDecimalUiString(it) },
-            isLimitOrder = limitOrderLabels != null,
+            isLimitOrder = isLimitOrder,
             limitTargetPriceLabel = limitOrderLabels?.targetPriceLabel,
             limitExpiryLabel = limitOrderLabels?.expiryLabel,
         )
@@ -632,18 +638,20 @@ constructor(
      * A `=<` order reaches the joining device as a plain THORChain swap payload plus its memo, so
      * without this it reads "You're swapping" with no target price and no expiry — the two terms
      * that make the order an order. The memo is the order, so both are recoverable from it: the LIM
-     * against the sold amount gives the target price, the interval blocks give the lifetime. Null
-     * for a market swap or a memo this app can't read back, which leaves the screen exactly as it
-     * was.
+     * against the sold amount gives the target price, the interval blocks give the lifetime.
+     *
+     * Null when [parsed] is a market swap, and also when the order's lifetime is one this app has
+     * no pill for — a memo another client could have built. That drops only the row: the order is
+     * still classified as one by its caller, off the same parse.
      */
     private suspend fun resolveLimitOrderLabels(
-        memo: String?,
+        parsed: LimitSwapMemo.Parsed?,
         srcToken: Coin,
         srcTokenValue: TokenValue,
         dstToken: Coin,
         currency: AppCurrency,
     ): LimitOrderLabels? {
-        val parsed = memo?.let { LimitSwapMemo.parse(it) } ?: return null
+        if (parsed == null) return null
         val targetPrice =
             LimitSwapMemo.targetPrice(
                 limit = parsed.limit,
