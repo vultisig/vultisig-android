@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 /**
- * Pins the 24h TTL, fail-closed, and refresh-after-invalidate behaviour of
+ * Pins the 24h TTL, retry backoff, fail-closed, and refresh-after-invalidate behaviour of
  * [SwapKitProviderCacheImpl]. The cache is the only guard between us and a hot loop on
  * `/providers`, so the TTL/refresh contract is worth a regression test.
  */
@@ -156,9 +156,9 @@ internal class SwapKitProviderCacheTest {
 
     @Test
     fun `a failed refresh keeps serving the last successful snapshot`() = runTest {
-        // #5722 review follow-up: dropping the snapshot on a failed refresh reports every chain
-        // disabled, which hides SwapKit app-wide off one bad `/providers` call and shows a $0.00
-        // swap fee on the join screen. iOS serves last-good here; so do we.
+        // Dropping the snapshot on a failed refresh reports every chain disabled, which hides
+        // SwapKit app-wide off one bad `/providers` call and shows a $0.00 swap fee on the join
+        // screen. iOS serves last-good here; so do we.
         coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1", "solana"))
 
         val clock = FakeClock(now = 1_000L)
@@ -171,6 +171,53 @@ internal class SwapKitProviderCacheTest {
         assertTrue(cache.isEnabled(Chain.Ethereum))
         assertTrue(cache.isEnabled(Chain.Solana))
         assertFalse(cache.isEnabled(Chain.Bitcoin)) // stale, not blanket-true
+    }
+
+    @Test
+    fun `a failed refresh holds off the next attempt while the stale snapshot stands`() = runTest {
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
+
+        val clock = FakeClock(now = 1_000L)
+        val cache = cache(clock)
+
+        assertTrue(cache.isEnabled(Chain.Ethereum)) // populates the snapshot
+        coEvery { api.providers() } throws RuntimeException("transport boom")
+        clock.now += 24L * 60L * 60L * 1000L + 1L // past TTL — one refresh is attempted, and fails
+
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+        clock.now += 60_000L // +1 min, well inside the retry window
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+
+        // Serving the stale snapshot leaves `fetchedAtMillis` behind the TTL, so without a second
+        // deadline every one of these re-hits the failing endpoint — and an eligibility check tests
+        // both legs of a pair, putting two dead round-trips in front of each quote.
+        coVerify(exactly = 2) { api.providers() }
+    }
+
+    @Test
+    fun `the refresh is attempted again once the retry window lapses`() = runTest {
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
+
+        val clock = FakeClock(now = 1_000L)
+        val cache = cache(clock)
+
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+        coEvery { api.providers() } throws RuntimeException("transport boom")
+        clock.now += 24L * 60L * 60L * 1000L + 1L // past TTL
+        assertTrue(cache.isEnabled(Chain.Ethereum)) // refresh fails, stale answer served
+        coVerify(exactly = 2) { api.providers() }
+
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1", "solana"))
+        clock.now += 5L * 60L * 1000L // retry window lapsed
+        assertTrue(cache.isEnabled(Chain.Solana)) // recovered endpoint is picked up
+        coVerify(exactly = 3) { api.providers() }
+
+        // A success clears the backoff along with the TTL, so the fresh snapshot is served outright
+        // rather than through the stale path.
+        clock.now += 60_000L
+        assertTrue(cache.isEnabled(Chain.Solana))
+        coVerify(exactly = 3) { api.providers() }
     }
 
     @Test

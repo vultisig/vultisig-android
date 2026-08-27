@@ -115,7 +115,7 @@ constructor(
         // never veto a bad pair — its one reachable effect would be turning the real fee into a
         // confident $0.00 on the joiner whenever this device's `/providers` snapshot is missing.
         // Letting `/v3/quote` answer keeps the joiner's fee row honest; a genuine failure still
-        // degrades to zero via the caller's catch (#5722 review).
+        // degrades to zero via the caller's catch.
         val quoteResponse =
             api.quote(
                 SwapKitQuoteRequest(

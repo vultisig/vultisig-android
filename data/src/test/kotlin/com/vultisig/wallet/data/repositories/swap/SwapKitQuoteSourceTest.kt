@@ -780,9 +780,9 @@ internal class SwapKitQuoteSourceTest {
 
     @Test
     fun `fetchInboundFee is not gated on the providers snapshot`() = runTest {
-        // #5722 review: this only ever runs for a payload another device already quoted, so a gate
-        // here could not veto a bad pair — it could only turn the initiator's real fee into a
-        // confident $0.00 on the joiner whenever this device's snapshot is missing or stale.
+        // This only ever runs for a payload another device already quoted, so a gate here could
+        // not veto a bad pair — it could only turn the initiator's real fee into a confident
+        // $0.00 on the joiner whenever this device's snapshot is missing or stale.
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { providerCache.isEnabled(any()) } returns false
         coEvery { api.quote(any()) } returns

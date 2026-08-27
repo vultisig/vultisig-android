@@ -33,10 +33,10 @@ internal class SwapKitCapabilityTest {
 
     @Test
     fun `EVM chains SwapKit has no asset identifier for are not offered at all`() {
-        // #5722 review: these four gained SWAPKIT when the table stopped allowlisting, but no
-        // prefix is known for any of them, so `assetIdentifier` could only throw. Offering them
-        // replaced a pair's immediate "no route" guidance with a spinner and a late error — worst
-        // for Cardano/TON/SUI/BTC destinations, where SwapKit is the only shared provider.
+        // These four gained SWAPKIT when the table stopped allowlisting, but no prefix is known
+        // for any of them, so `assetIdentifier` could only throw. Offering them replaced a pair's
+        // immediate "no route" guidance with a spinner and a late error — worst for
+        // Cardano/TON/SUI/BTC destinations, where SwapKit is the only shared provider.
         listOf(Chain.ZkSync, Chain.Mantle, Chain.Blast, Chain.CronosChain).forEach { chain ->
             assertNull(SwapKitAssetPrefix.of(chain), "prefix for ${chain.raw}")
             assertFalse(SwapKitCapability.canReceiveOn(chain), "canReceiveOn(${chain.raw})")

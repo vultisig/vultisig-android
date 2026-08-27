@@ -77,7 +77,7 @@ internal class SwapProviderTableTest {
         // proxy. Sei is the one EVM network excluded outright — the wallet holds it but does not
         // swap on it at all. ZkSync, Mantle, Blast and Cronos are excluded for the other reason:
         // SwapKit has no asset-identifier spelling for them, so a quote could never be addressed
-        // and offering one would only cost the pair its immediate "no route" answer (#5722 review).
+        // and offering one would only cost the pair its immediate "no route" answer.
         val nonSwapKitCoins =
             listOf(
                 coin(Chain.Sei, "SEI", isNative = true),
@@ -202,9 +202,9 @@ internal class SwapProviderTableTest {
 
     @Test
     fun `Robinhood offers 1inch, LiFi, Kyber and SwapKit`() {
-        // The first three are live-confirmed on 4663 (#5390 review); 1inch and Kyber are
-        // sameChainOnly, so a cross-chain pair must fall back to LiFi alone — SwapKit is dropped
-        // there for a different reason, the source-side reputation gate. No 1inch-set drift.
+        // The first three are live-confirmed on 4663; 1inch and Kyber are sameChainOnly, so a
+        // cross-chain pair must fall back to LiFi alone — SwapKit is dropped there for a different
+        // reason, the source-side reputation gate. No 1inch-set drift.
         val expected =
             setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER, SwapProvider.SWAPKIT)
         listOf(

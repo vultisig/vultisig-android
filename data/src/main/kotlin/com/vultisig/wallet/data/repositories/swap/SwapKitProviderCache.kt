@@ -29,13 +29,20 @@ import timber.log.Timber
  * cheap. A refresh that fails keeps serving the last successful snapshot (iOS does the same): once
  * an answer exists, a stale one beats reporting every chain disabled, which would hide SwapKit
  * app-wide off a single bad `/providers` call. Only the genuine no-data edge fails closed.
+ *
+ * A stale snapshot that is being served does not reset the TTL, so without a second deadline every
+ * later call would re-attempt the failing endpoint: two dead round-trips in front of each quote,
+ * since a pair check tests both legs. [RETRY_BACKOFF_MILLIS] holds those off while the stale answer
+ * stands. The no-data edge deliberately keeps retrying eagerly — there is nothing to serve there,
+ * so backing off would only extend an outage the next call might clear.
  */
 interface SwapKitProviderCache {
     /**
      * Returns `true` when SwapKit currently routes on [chain]. Lazily refreshes the underlying
      * `/providers` response on first call or when the cache TTL has elapsed. A failed refresh falls
-     * back to the last successful snapshot, and surfaces `false` only when there has never been one
-     * (fail-closed: better to skip SwapKit than offer a bad quote).
+     * back to the last successful snapshot — briefly re-served without another network attempt —
+     * and surfaces `false` only when there has never been one (fail-closed: better to skip SwapKit
+     * than offer a bad quote).
      */
     suspend fun isEnabled(chain: Chain): Boolean
 
@@ -65,6 +72,14 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
     @Volatile private var enabledChains: Set<Chain> = emptySet()
     @Volatile private var fetchedAtMillis: Long = 0
 
+    /**
+     * Wall-clock instant before which a stale snapshot is served without re-attempting
+     * `/providers`. Zero when no refresh has failed since the last success. Only ever set while a
+     * last-good snapshot exists, so a reader that observes it non-zero has already observed a
+     * non-zero [fetchedAtMillis], and therefore the [enabledChains] published before it.
+     */
+    @Volatile private var retryAfterMillis: Long = 0
+
     override suspend fun isEnabled(chain: Chain): Boolean {
         val cached = ensureFresh() ?: return false
         return chain in cached
@@ -77,38 +92,59 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
             // then guaranteed to see the cleared chains too — without this swap the two volatile
             // writes have no joint happens-before and a brief stale read is observable.
             enabledChains = emptySet()
+            retryAfterMillis = 0
             fetchedAtMillis = 0
         }
 
     private suspend fun ensureFresh(): Set<Chain>? {
-        val now = clock.nowMillis()
-        if (fetchedAtMillis != 0L && (now - fetchedAtMillis) < TTL_MILLIS) {
+        if (isServable(clock.nowMillis())) {
             return enabledChains
         }
         return mutex.withLock {
-            val nowInner = clock.nowMillis()
-            if (fetchedAtMillis != 0L && (nowInner - fetchedAtMillis) < TTL_MILLIS) {
+            val now = clock.nowMillis()
+            if (isServable(now)) {
                 return@withLock enabledChains
             }
             try {
                 val response = api.providers()
                 val chains = response.toEnabledChains()
                 enabledChains = chains
-                fetchedAtMillis = nowInner
+                retryAfterMillis = 0
+                fetchedAtMillis = now
                 chains
             } catch (e: CancellationException) {
                 throw e
             } catch (e: SwapKitError) {
                 // Expected transport/decoding failure from the SwapKit proxy — already classified
                 // at the API layer. Serve the last good answer if there is one.
-                lastGoodOrNull()
+                backOffAndServeLastGood(now)
             } catch (e: Exception) {
                 // Unexpected (mapping/parse regression, programmer error). Surface it in logs
                 // rather than silently treat SwapKit as "disabled" forever.
                 Timber.w(e, "SwapKit providers refresh failed unexpectedly")
-                lastGoodOrNull()
+                backOffAndServeLastGood(now)
             }
         }
+    }
+
+    /**
+     * True when [enabledChains] can be returned as-is: either still inside the TTL, or stale but
+     * inside the retry window opened by the last failed refresh. `fetchedAtMillis != 0L` gates both
+     * — it is what makes the read see a published snapshot rather than the empty initial one.
+     */
+    private fun isServable(now: Long): Boolean =
+        fetchedAtMillis != 0L && ((now - fetchedAtMillis) < TTL_MILLIS || now < retryAfterMillis)
+
+    /**
+     * Serves the last good snapshot after a failed refresh and, when there is one, holds off the
+     * next attempt for [RETRY_BACKOFF_MILLIS]. The deadline is only armed alongside an answer: with
+     * no snapshot the call already returns `false`, so retrying costs nothing a caller can see and
+     * is the only way back. Called under [mutex].
+     */
+    private fun backOffAndServeLastGood(now: Long): Set<Chain>? {
+        val lastGood = lastGoodOrNull() ?: return null
+        retryAfterMillis = now + RETRY_BACKOFF_MILLIS
+        return lastGood
     }
 
     /**
@@ -132,6 +168,13 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
     companion object {
         /** Cache TTL — 24h. */
         private const val TTL_MILLIS: Long = 24L * 60L * 60L * 1000L
+
+        /**
+         * How long a stale snapshot stands after a failed refresh before `/providers` is tried
+         * again. Short enough that a recovered endpoint is picked up within a session, long enough
+         * that a sustained outage does not put a dead request in front of every quote.
+         */
+        private const val RETRY_BACKOFF_MILLIS: Long = 5L * 60L * 1000L
 
         /**
          * Sub-providers whose enablement never counts as SwapKit coverage. Vultisig routes
