@@ -1019,6 +1019,8 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
     )
 }
 
+// Every prefix `/mayachain/pools` currently returns as Available. A prefix missing here resolves to
+// no chain, which leaves the pool's asset leg priced at zero and halves the card and header totals.
 private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
     when (prefix.uppercase()) {
         "BTC" -> Chain.Bitcoin
@@ -1029,6 +1031,9 @@ private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
         "ARB" -> Chain.Arbitrum
         "AVAX" -> Chain.Avalanche
         "BSC" -> Chain.BscChain
+        "THOR" -> Chain.ThorChain
+        "ADA" -> Chain.Cardano
+        "ZEC" -> Chain.Zcash
         else -> null
     }
 

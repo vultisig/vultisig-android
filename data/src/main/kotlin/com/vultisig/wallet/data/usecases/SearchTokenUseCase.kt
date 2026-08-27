@@ -30,7 +30,9 @@ constructor(
 ) : SearchTokenUseCase {
 
     override suspend fun invoke(chainId: String, contractAddress: String): CoinAndFiatValue? {
-        val chain = Chain.fromRaw(chainId)
+        // An id no entry resolves for has no token to find, which is what a null already means
+        // here — the search reports "not found" rather than throwing out of the caller's launch.
+        val chain = Chain.fromRawOrNull(chainId) ?: return null
         return contractAddress
             .trim()
             .takeIf { it.isValidAddressOn(chain) }

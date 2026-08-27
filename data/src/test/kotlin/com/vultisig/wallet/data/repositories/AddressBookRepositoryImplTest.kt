@@ -183,6 +183,20 @@ internal class AddressBookRepositoryImplTest {
         assertNull(repository.getEntry(RETIRED_CHAIN_ID, "kujira1abc"))
     }
 
+    @Test
+    fun `an entry saved for a since-retired chain does not count as existing`() = runTest {
+        // getEntry drops the row, so a caller told it exists would open an edit it can't populate.
+        dao.upsert(
+            AddressBookEntryEntity(
+                chainId = RETIRED_CHAIN_ID,
+                address = "kujira1abc",
+                title = "Old",
+            )
+        )
+
+        assertFalse(repository.entryExists(RETIRED_CHAIN_ID, "kujira1abc"))
+    }
+
     private companion object {
         // EIP-55 checksummed reference address and its all-lowercase canonical form.
         const val CHECKSUMMED = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed"

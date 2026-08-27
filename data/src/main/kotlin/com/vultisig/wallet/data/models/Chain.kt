@@ -67,7 +67,16 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
 
     companion object {
         fun fromRaw(raw: String): Chain =
-            Chain.entries.first { it.raw.equals(other = raw, ignoreCase = true) }
+            fromRawOrNull(raw) ?: throw NoSuchElementException("Unknown chain id $raw")
+
+        /**
+         * Chain ids outlive the entries they were written for: a retired chain leaves rows behind
+         * in the database, in preferences, and in deep links that were minted while it still
+         * existed. Callers that read one of those back use this and skip what they can't resolve,
+         * rather than catching [fromRaw]'s throw.
+         */
+        fun fromRawOrNull(raw: String): Chain? =
+            entries.firstOrNull { it.raw.equals(other = raw, ignoreCase = true) }
 
         val keyImportSupportedChains: List<Chain>
             get() = entries.filter { it != Cardano && it != Qbtc }

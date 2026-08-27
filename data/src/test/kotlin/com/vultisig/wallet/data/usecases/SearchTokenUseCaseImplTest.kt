@@ -48,6 +48,15 @@ internal class SearchTokenUseCaseImplTest {
     }
 
     @Test
+    fun `a chain id no entry resolves for returns null and calls nothing`() = runTest {
+        // Ids saved before a chain was retired outlive it; there is no token to find on one.
+        assertNull(useCase("Kujira", "0x0000000000000000000000000000000000000001"))
+
+        verify(exactly = 0) { addressRepository.isValid(any(), any()) }
+        coVerify(exactly = 0) { searchEvmToken(any(), any()) }
+    }
+
+    @Test
     fun `empty input returns null and calls nothing`() = runTest {
         assertNull(useCase(Chain.Ethereum.id, ""))
 

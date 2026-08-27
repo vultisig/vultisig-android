@@ -55,6 +55,9 @@ constructor(private val addressBookEntryDao: AddressBookEntryDao) : AddressBookR
     }
 
     override suspend fun entryExists(chainId: String, address: String): Boolean {
+        // A row on a since-retired chain can't be read back — getEntries and getEntry both drop it
+        // — so reporting it as present would send a caller into an edit it can't populate.
+        if (Chain.fromRawOrNull(chainId) == null) return false
         val lookup = chainId.toLookupKey()
         return if (lookup.isEvm) {
             addressBookEntryDao.entryExistsIgnoringCase(lookup.chainId, address)
@@ -69,7 +72,7 @@ constructor(private val addressBookEntryDao: AddressBookEntryDao) : AddressBookR
     // chains also share one address space, so their chainId is canonicalized to Chain.Ethereum's id
     // before it reaches storage or a query. Unknown chain ids fall back to exact-match, unchanged.
     private fun String.toLookupKey(): LookupKey {
-        val chain = Chain.entries.firstOrNull { it.raw.equals(this, ignoreCase = true) }
+        val chain = Chain.fromRawOrNull(this)
         return LookupKey(
             chainId = chain?.addressBookChainId ?: this,
             isEvm = chain?.standard == TokenStandard.EVM,
@@ -79,14 +82,14 @@ constructor(private val addressBookEntryDao: AddressBookEntryDao) : AddressBookR
     private data class LookupKey(val chainId: ChainId, val isEvm: Boolean)
 
     // Rows outlive the chains they were saved for: a retired chain leaves its entries behind, and
-    // Chain.fromRaw throws for them. Drop those rows rather than fail the whole address book.
+    // no Chain resolves for them. Drop those rows rather than fail the whole address book.
     private fun AddressBookEntryEntity.toAddressBookEntryOrNull(): AddressBookEntry? {
         val chain =
-            runCatching { Chain.fromRaw(chainId) }
-                .onFailure {
-                    Timber.w(it, "Dropping address book entry on unknown chain %s", chainId)
+            Chain.fromRawOrNull(chainId)
+                ?: run {
+                    Timber.w("Dropping address book entry on unknown chain %s", chainId)
+                    return null
                 }
-                .getOrNull() ?: return null
         return AddressBookEntry(chain = chain, address = address, title = title)
     }
 
