@@ -237,8 +237,8 @@ import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
-import com.vultisig.wallet.ui.screens.v2.home.pager.banner.UpgradeBanner
-import com.vultisig.wallet.ui.screens.v2.home.pager.container.HomePagePagerContainer
+import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePager
+import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
 import com.vultisig.wallet.ui.screens.v3.onboarding.ReviewVaultDevicesScreen
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
@@ -757,7 +757,12 @@ private fun AssetActionButtonPreview() {
 
 @Composable
 private fun BannerPreview() {
-    HomePagePagerContainer { UpgradeBanner {} }
+    HomepagePager(
+        banners = HomeBannerType.entries,
+        onBannerClick = {},
+        onBannerDismiss = {},
+        modifier = Modifier.padding(16.dp),
+    )
 }
 
 @Composable

@@ -779,7 +779,6 @@
     <string name="search_bar_soon">Binnenkort</string>
     <string name="upgrade_banner_sign_faster">Teken sneller dan ooit tevoren</string>
     <string name="upgrade_banner_upgrade_your">Upgrade nu uw kluis</string>
-    <string name="upgrade_banner_upgrade_now">Upgrade nu</string>
     <string name="home_portfolio_balance">Portefeuillesaldo</string>
     <string name="wallet">Wallet</string>
     <string name="governance">Bestuur</string>
@@ -852,8 +851,15 @@
     <string name="send_tx_overview_add_to_address_book">Toevoegen aan adresboek</string>
     <string name="invite_to_x_banner_title">Vultisig bouwt met je mee.</string>
     <string name="invite_to_x_banner_desc">Volg ons op X</string>
-    <string name="invite_to_x_banner_button">Volg %s</string>
     <string name="buy_vult_banner_desc">En bespaar op wisselkosten</string>
+    <string name="rujira_banner_caption">Staken &amp; verdienen</string>
+    <string name="rujira_banner_title">Rujira-staking is nu live</string>
+    <string name="backup_banner_caption">Back-up van je kluis</string>
+    <string name="backup_banner_title">Vraag volledig kluisbeheer aan</string>
+    <string name="referral_rewards_banner_caption">Mis geen beloningen</string>
+    <string name="referral_rewards_banner_title">Voeg je verwijzingscode toe</string>
+    <string name="kamino_banner_caption">Nieuw op Solana</string>
+    <string name="kamino_banner_title">Begin met verdienen via Kamino</string>
     <string name="vault_detail_vault_info">Kluisinfo</string>
     <string name="vault_details_keys">Sleutels</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Snelle ondertekening met biometrie inschakelen</string>

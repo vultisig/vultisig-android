@@ -785,7 +785,6 @@
     <string name="search_bar_soon">Скоро</string>
     <string name="upgrade_banner_sign_faster">Подписывайте быстрее, чем когда-либо прежде</string>
     <string name="upgrade_banner_upgrade_your">Обновите хранилище прямо сейчас</string>
-    <string name="upgrade_banner_upgrade_now">Обновите сейчас</string>
     <string name="home_portfolio_balance">Баланс портфеля</string>
     <string name="wallet">Кошелек</string>
     <string name="governance">Управление</string>
@@ -856,8 +855,15 @@
     <string name="send_tx_overview_add_to_address_book">Добавить в адресную книгу</string>
     <string name="invite_to_x_banner_title">Vultisig строит вместе с вами.</string>
     <string name="invite_to_x_banner_desc">Подпишитесь на нас в X</string>
-    <string name="invite_to_x_banner_button">Подписаться на %s</string>
     <string name="buy_vult_banner_desc">И экономьте на комиссиях за обмен</string>
+    <string name="rujira_banner_caption">Стейкинг и доход</string>
+    <string name="rujira_banner_title">Стейкинг Rujira уже доступен</string>
+    <string name="backup_banner_caption">Резервная копия хранилища</string>
+    <string name="backup_banner_title">Запросите полный контроль над хранилищем</string>
+    <string name="referral_rewards_banner_caption">Не упустите награды</string>
+    <string name="referral_rewards_banner_title">Добавьте свой реферальный код</string>
+    <string name="kamino_banner_caption">Новое на Solana</string>
+    <string name="kamino_banner_title">Начните зарабатывать с Kamino</string>
     <string name="vault_detail_vault_info">Информация о хранилище</string>
     <string name="vault_details_keys">Ключи</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Включить быструю биометрическую подпись</string>
