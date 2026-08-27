@@ -12,26 +12,6 @@ sealed class DecodedAsset {
 
     /** The instruction's fixed native asset, rendered from bundled metadata. */
     data object ChainNative : DecodedAsset()
-
-    /** Checks equality based on asset type and values. */
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        return when {
-            this is Denom && other is Denom -> value == other.value
-            this is TransactionCoin && other is TransactionCoin -> true
-            this is ChainNative && other is ChainNative -> true
-            else -> false
-        }
-    }
-
-    /** Computes hashCode based on asset type and values. */
-    override fun hashCode(): Int {
-        return when (this) {
-            is Denom -> value.hashCode()
-            is TransactionCoin -> TransactionCoin::class.hashCode()
-            is ChainNative -> ChainNative::class.hashCode()
-        }
-    }
 }
 
 /** The quantity, or the share of a position, a transaction moves. */
@@ -44,27 +24,6 @@ sealed class DecodedAmount {
 
     /** The signed operation names no quantity. */
     data object Unstated : DecodedAmount()
-
-    /** Checks equality based on amount type and values. */
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        return when {
-            this is Units && other is Units -> value == other.value && asset == other.asset
-            this is Fraction && other is Fraction ->
-                basisPoints == other.basisPoints && asset == other.asset
-            this is Unstated && other is Unstated -> true
-            else -> false
-        }
-    }
-
-    /** Computes hashCode based on amount type and values. */
-    override fun hashCode(): Int {
-        return when (this) {
-            is Units -> value.hashCode() * 31 + asset.hashCode()
-            is Fraction -> basisPoints * 31 + asset.hashCode()
-            is Unstated -> Unstated::class.hashCode()
-        }
-    }
 }
 
 /** One asset-independent verb per operation. */

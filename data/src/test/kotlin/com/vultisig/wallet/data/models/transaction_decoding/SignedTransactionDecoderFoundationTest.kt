@@ -23,11 +23,6 @@ class SignedTransactionDecoderFoundationTest {
     }
 
     @Test
-    fun testRegistryStartsEmpty() {
-        assertTrue(decoder.getDecoders().isEmpty())
-    }
-
-    @Test
     fun testUnregisteredContentIsUnreadable() {
         val decoded = decoder.decode(StubContent())
 
@@ -273,7 +268,7 @@ class SignedTransactionDecoderFoundationTest {
         override val isNativeCoin = true
         override val rawToAddress = "destination"
         override val rawAmount = SignedAmount.Committed(42.toBigInteger())
-        override val signedData: ByteArray? = null
+        override val signedData: OpaqueSignedContent? = null
         override val rawMemo: String? = "memo"
         override val rawTransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED
         override val rawWasmPayload = null

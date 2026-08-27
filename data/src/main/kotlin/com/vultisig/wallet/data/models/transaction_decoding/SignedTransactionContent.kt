@@ -8,8 +8,45 @@ import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
+import vultisig.keysign.v1.SignBitcoin
+import vultisig.keysign.v1.SignRipple
+import vultisig.keysign.v1.SignSui
+import vultisig.keysign.v1.SignTon
 import vultisig.keysign.v1.TransactionType
 import vultisig.keysign.v1.WasmExecuteContractPayload
+import wallet.core.jni.Base64
+
+/**
+ * Union type representing the different forms of opaque signed content across blockchains. Each
+ * variant corresponds to a pre-encoded transaction body that the signer signs verbatim.
+ */
+sealed class OpaqueSignedContent {
+    /**
+     * Cosmos SignDoc body bytes (the canonical form for Cosmos chains). The bytes are the result of
+     * decoding the base64 SignDirectProto.bodyBytes.
+     */
+    data class CosmosSignDirect(val bodyBytes: ByteArray) : OpaqueSignedContent() {
+        override fun equals(other: Any?) =
+            other is CosmosSignDirect && bodyBytes.contentEquals(other.bodyBytes)
+
+        override fun hashCode() = bodyBytes.contentHashCode()
+    }
+
+    /** Solana message transactions to sign (base64-encoded). */
+    data class SolanaSignature(val rawTransactions: List<String>) : OpaqueSignedContent()
+
+    /** TON transaction structure with messages to sign. */
+    data class TonTransaction(val signTon: SignTon) : OpaqueSignedContent()
+
+    /** Sui Programmable Transaction Block bytes to sign. */
+    data class SuiTransaction(val signSui: SignSui) : OpaqueSignedContent()
+
+    /** XRPL transaction JSON to sign. */
+    data class RippleTransaction(val signRipple: SignRipple) : OpaqueSignedContent()
+
+    /** Bitcoin PSBT to sign. */
+    data class BitcoinPSBT(val signBitcoin: SignBitcoin) : OpaqueSignedContent()
+}
 
 /** The quantity a transaction moves, or the fact that it does not carry one. */
 sealed class SignedAmount {
@@ -21,24 +58,6 @@ sealed class SignedAmount {
      * decoders.
      */
     data object ComputedAtSigning : SignedAmount()
-
-    /** Checks equality based on amount type and values. */
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        return when {
-            this is Committed && other is Committed -> value == other.value
-            this is ComputedAtSigning && other is ComputedAtSigning -> true
-            else -> false
-        }
-    }
-
-    /** Computes hashCode based on amount type and values. */
-    override fun hashCode(): Int {
-        return when (this) {
-            is Committed -> value.hashCode()
-            is ComputedAtSigning -> ComputedAtSigning::class.hashCode()
-        }
-    }
 }
 
 /** How a chain's grammar relates to the routes that are signed before its own helper runs. */
@@ -97,11 +116,15 @@ interface SignedTransactionContent {
     /** The quantity, or the fact that the signer computes it. */
     val rawAmount: SignedAmount
 
-    val signedData: ByteArray?
+    /**
+     * The opaque signed content if present — one of several pre-encoded transaction forms (Cosmos
+     * SignDoc, Solana message, etc.) that the signer signs verbatim.
+     */
+    val signedData: OpaqueSignedContent?
 
     /**
-     * Whether `signDirect.bodyBytes` is the active body consumed by the signer. Approve, swap, and
-     * rebuilt Cosmos routes can make it inactive.
+     * Whether the active signed content body is opaque. Approve, swap, and rebuilt Cosmos routes
+     * can make it inactive.
      */
     val signedDataBodyIsActive: Boolean
         get() = false
@@ -174,7 +197,10 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
     override val rawAmount: SignedAmount
         get() {
             val sendMaxAmount =
-                (payload.blockChainSpecific as? BlockChainSpecific.UTXO)?.sendMaxAmount ?: false
+                (payload.blockChainSpecific as? BlockChainSpecific.UTXO)?.sendMaxAmount
+                    ?: (payload.blockChainSpecific as? BlockChainSpecific.Cardano)?.sendMaxAmount
+                    ?: (payload.blockChainSpecific as? BlockChainSpecific.Ton)?.sendMaxAmount
+                    ?: false
             return if (sendMaxAmount) SignedAmount.ComputedAtSigning
             else SignedAmount.Committed(payload.toAmount)
         }
@@ -197,28 +223,49 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
     override val rawApprove: ERC20ApprovePayload?
         get() = payload.approvePayload
 
-    override val signedData: ByteArray?
-        get() = payload.signDirect?.bodyBytes?.toByteArray()
+    override val signedData: OpaqueSignedContent?
+        get() {
+            payload.signDirect?.bodyBytes?.let { bodyBytes ->
+                return OpaqueSignedContent.CosmosSignDirect(Base64.decode(bodyBytes))
+            }
+            payload.signSolana?.let { solana ->
+                return OpaqueSignedContent.SolanaSignature(solana.rawTransactions)
+            }
+            payload.signTon?.let { ton ->
+                return OpaqueSignedContent.TonTransaction(ton)
+            }
+            payload.signSui?.let { sui ->
+                return OpaqueSignedContent.SuiTransaction(sui)
+            }
+            payload.signRipple?.let { ripple ->
+                return OpaqueSignedContent.RippleTransaction(ripple)
+            }
+            payload.signBitcoin?.let { bitcoin ->
+                return OpaqueSignedContent.BitcoinPSBT(bitcoin)
+            }
+            return null
+        }
 
     override val signedDataBodyIsActive: Boolean
         get() {
             val signDirect = payload.signDirect ?: return false
             if (payload.approvePayload != null || payload.swapPayload != null) return false
+            // signAmino takes precedence over signDirect in CosmosHelper and ThorChainHelper
+            if (payload.signAmino != null) return false
 
             return when (payload.coin.chain) {
+                // Cosmos chains and related protocols use signDirect when present
                 Chain.GaiaChain,
                 Chain.Kujira,
                 Chain.Osmosis,
                 Chain.Noble,
-                Chain.Akash -> {
-                    val txType = rawTransactionType
-                    txType == TransactionType.TRANSACTION_TYPE_UNSPECIFIED ||
-                        txType == TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
-                }
+                Chain.Akash,
                 Chain.Terra,
-                Chain.TerraClassic -> true
-                Chain.Dydx -> rawTransactionType != TransactionType.TRANSACTION_TYPE_VOTE
-                Chain.Qbtc -> true
+                Chain.TerraClassic,
+                Chain.Dydx,
+                Chain.Qbtc,
+                Chain.ThorChain,
+                Chain.MayaChain -> true
                 else -> false
             }
         }
@@ -240,10 +287,6 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
 /**
  * The initiator's pre-payload transaction viewed through the same decoder API. Structured staking
  * intents are exposed because the signer builds from them.
- *
- * Note: Android doesn't have a SendTransaction model like iOS does, so this is a stub
- * implementation. When initiator view is needed, a similar model should be created or this
- * interface should be extended.
  */
 data class InitiatingTransactionContent(
     override val chain: Chain,
@@ -261,7 +304,7 @@ data class InitiatingTransactionContent(
 
     override val rawApprove: ERC20ApprovePayload? = null
 
-    override val signedData: ByteArray? = null
+    override val signedData: OpaqueSignedContent? = null
 
     /** Staking intents become opaque signed content when the payload is built. */
     override val hasOpaqueSignedContent: Boolean
