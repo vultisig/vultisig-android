@@ -785,7 +785,6 @@
     <string name="search_bar_soon">Uskoro</string>
     <string name="upgrade_banner_sign_faster">Potpišite brže nego ikad prije</string>
     <string name="upgrade_banner_upgrade_your">Nadogradite svoj trezor sada</string>
-    <string name="upgrade_banner_upgrade_now">Nadogradite sada</string>
     <string name="home_portfolio_balance">Stanje portfelja</string>
     <string name="wallet">Novčanik</string>
     <string name="governance">Upravljanje</string>
@@ -858,8 +857,15 @@
     <string name="send_tx_overview_add_to_address_book">Dodaj u adresar</string>
     <string name="invite_to_x_banner_title">Vultisig gradi s vama.</string>
     <string name="invite_to_x_banner_desc">Pratite nas na X</string>
-    <string name="invite_to_x_banner_button">Pratite @%s</string>
     <string name="buy_vult_banner_desc">I uštedi na naknadama za zamjenu</string>
+    <string name="rujira_banner_caption">Uloži i zaradi</string>
+    <string name="rujira_banner_title">Rujira staking je sada dostupan</string>
+    <string name="backup_banner_caption">Sigurnosna kopija trezora</string>
+    <string name="backup_banner_title">Zatraži potpuno skrbništvo nad trezorom</string>
+    <string name="referral_rewards_banner_caption">Ne propusti nagrade</string>
+    <string name="referral_rewards_banner_title">Dodaj svoj referral kod</string>
+    <string name="kamino_banner_caption">Novo na Solani</string>
+    <string name="kamino_banner_title">Počnite zarađivati uz Kamino</string>
     <string name="vault_detail_vault_info">Informacije o trezoru</string>
     <string name="vault_details_keys">ključevi</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Omogući brzo biometrijsko potpisivanje</string>

@@ -784,7 +784,6 @@
     <string name="search_bar_soon">Bald</string>
     <string name="upgrade_banner_sign_faster">Unterschreiben Sie schneller als je zuvor</string>
     <string name="upgrade_banner_upgrade_your">Jetzt Ihren Tresor upgraden</string>
-    <string name="upgrade_banner_upgrade_now">Jetzt upgraden</string>
     <string name="home_portfolio_balance">Portfolio-Guthaben</string>
     <string name="wallet">Wallet</string>
     <string name="governance">Governance</string>
@@ -857,8 +856,15 @@
     <string name="send_tx_overview_add_to_address_book">Zum Adressbuch hinzufügen</string>
     <string name="invite_to_x_banner_title">Vultisig entwickelt mit Ihnen.</string>
     <string name="invite_to_x_banner_desc">Folgen Sie uns auf X</string>
-    <string name="invite_to_x_banner_button">Folgen Sie %s</string>
     <string name="buy_vult_banner_desc">Und sparen Sie Swap-Gebühren</string>
+    <string name="rujira_banner_caption">Staken &amp; verdienen</string>
+    <string name="rujira_banner_title">Rujira-Staking jetzt verfügbar</string>
+    <string name="backup_banner_caption">Sichere deinen Tresor</string>
+    <string name="backup_banner_title">Vollständige Tresor-Kontrolle anfordern</string>
+    <string name="referral_rewards_banner_caption">Keine Prämien verpassen</string>
+    <string name="referral_rewards_banner_title">Referral-Code hinzufügen</string>
+    <string name="kamino_banner_caption">Neu auf Solana</string>
+    <string name="kamino_banner_title">Verdiene jetzt mit Kamino</string>
     <string name="vault_detail_vault_info">Tresorinformationen</string>
     <string name="vault_details_keys">Schlüssel</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Biometrische Schnellsignatur aktivieren</string>

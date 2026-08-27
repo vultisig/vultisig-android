@@ -49,7 +49,8 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
         content = {
             when (val route = uiModel.route) {
                 is PositionCircle -> CircleDeFiPositionsScreen(vaultId = route.vaultId)
-                is PositionTokens -> ThorchainDefiPositionsScreen(vaultId = route.vaultId)
+                is PositionTokens ->
+                    ThorchainDefiPositionsScreen(vaultId = route.vaultId, initialTab = route.tab)
                 is PositionMaya ->
                     MayachainDefiPositionsScreen(vaultId = (uiModel.route as PositionMaya).vaultId)
                 is PositionTron -> TronDeFiPositionsScreen(vaultId = route.vaultId)
