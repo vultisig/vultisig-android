@@ -103,9 +103,8 @@ sealed class BlockChainSpecific {
         // Carried in the first-class RippleSpecific.destination_tag proto field, independent of
         // the free-text memo.
         val destinationTag: UInt? = null,
-        // Which XRPL operation this describes: the same (currency, issuer) pair means either a
-        // TrustSet, where toAmount is the trust-line limit, or a Payment that transfers it.
-        // Unspecified stays off the wire, so a native XRP send is unchanged.
+        // The same (currency, issuer) pair means either a TrustSet, where toAmount is the
+        // trust-line limit, or a Payment that transfers it. Unspecified stays off the wire.
         val transactionType: TransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
     ) : BlockChainSpecific()
 

@@ -97,8 +97,7 @@ object RippleHelper {
                 .setLastLedgerSequence(lastLedgerSequence.toInt())
 
         // An issued-currency coin means either a Payment or a TrustSet, which sign different
-        // bytes; only the discriminator separates them, and an operation this build cannot
-        // construct is refused rather than signed as something else.
+        // bytes; only this discriminator separates them.
         val transactionType = rippleSpecific.transactionType
         require(transactionType == TransactionType.TRANSACTION_TYPE_UNSPECIFIED) {
             "Ripple payload carries an unsupported transaction type $transactionType"
@@ -187,7 +186,6 @@ object RippleHelper {
             requireNotNull(rippleTokenIdentity()) { "XRP coin is missing its token id" }
         }
 
-    /** The [Ripple.CurrencyAmount] for [identity] holding [amount] units at [decimals] scale. */
     private fun currencyAmount(
         identity: RippleTokenIdentity,
         amount: BigInteger,

@@ -527,8 +527,7 @@ internal class SendFormGraph(
                 if (switching) return@combine null // <-- SKIP during transitions
 
                 val address = token.address
-                // The tag belongs to the destination account, so it applies to an issued
-                // currency too — which has no memo field, WalletCore having no memo slot for one.
+                // The tag belongs to the destination account, not the asset.
                 val isDestinationTag = token.chain == Chain.Ripple
                 val hasMemo =
                     (token.isNativeToken || token.chain.standard == TokenStandard.COSMOS) &&

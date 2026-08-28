@@ -107,7 +107,6 @@ private fun String.toBigDecimalOrNull(): BigDecimal? =
         null
     }
 
-/** Renders [decimals]-scaled units as the decimal string an XRPL amount carries. */
 fun BigInteger.toRippleTokenValue(decimals: Int): String =
     toRippleDecimal(decimals).stripTrailingZeros().toPlainString()
 
@@ -130,10 +129,7 @@ private fun BigInteger.toRippleDecimal(decimals: Int): BigDecimal {
     return BigDecimal(this, decimals)
 }
 
-/**
- * The on-ledger form of a currency code or ticker: a 3-character code verbatim (XRPL codes are
- * case-sensitive), hex upper-cased, anything else ASCII-packed into the 160-bit form.
- */
+/** XRPL currency codes are case-sensitive, so a 3-character one is never re-cased. */
 fun toRippleCurrencyCode(currency: String): String {
     val value = currency.trim()
     return when {
