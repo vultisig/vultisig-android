@@ -63,8 +63,8 @@ constructor(
         if (
             requestedFeeBps != null && feeAccount == null && quotedFeeAmount(body) > BigInteger.ZERO
         ) {
-            // ATA missing after a fee-bearing quote — fetch a fresh no-fee quote rather than
-            // stripping `platformFee` off JSON Jupiter already signed as fee-bearing.
+            // Fresh no-fee quote: stripping platformFee off a fee-bearing quote JSON makes Jupiter
+            // reject /swap.
             body =
                 fetchRouteQuote(
                     fromToken = fromToken,

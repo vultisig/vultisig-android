@@ -8,11 +8,8 @@ import wallet.core.jni.SolanaAddress
  * VULT-scaled affiliate fee we add, credited to a Vultisig-owned ATA — we keep 100% of it (no
  * Jupiter on-chain Referral Program).
  *
- * The fee ATA is provisioned OFF the signed path: we never inject a create-ATA instruction.
- * Wallet-core's `insertInstruction` appends accounts as new static keys without deduplicating
- * against address lookup tables, so a route that already ALT-loads one of them is rejected on-chain
- * with `AccountLoadedTwice`. If this probe throws (unprovisioned ATA, missing mint, RPC blip),
- * [JupiterApi] requotes without the affiliate fee so the swap still routes.
+ * Never inject create-ATA: WalletCore `insertInstruction` + ALTs → `AccountLoadedTwice`. If this
+ * probe throws, [JupiterApi] requotes without the affiliate fee.
  *
  * Behind an interface so the wallet-core JNI + RPC work can be faked in unit tests.
  */
