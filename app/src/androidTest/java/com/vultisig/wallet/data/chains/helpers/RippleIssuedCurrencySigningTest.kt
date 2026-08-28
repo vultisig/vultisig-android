@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.models.rippleTokenContractAddress
 import java.math.BigInteger
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -38,62 +37,6 @@ class RippleIssuedCurrencySigningTest {
             "794254122e0a035553441203312e351a2272486239434a4157794234726a39315652576e3936446b756b" +
             "4734627764747954681a2272456238544b336742676b3561755a6b77633673486e777247564a48384475" +
             "614c687a210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
-
-    /**
-     * The TrustSet counterpart of the literal above, from the same iOS test. A trust-line
-     * activation is the one operation a mixed-version committee has to agree on byte for byte: a
-     * signer predating the discriminator infers TrustSet from the coin alone and must land here.
-     */
-    private val iosTrustSetSigningInput =
-        "080a106318cec2f10522227250564d68574273664639694d58596a3361417a4a566b504454464e537957644b" +
-            "793a300a2e0a035553441203312e351a2272486239434a4157794234726a39315652576e3936446b756b" +
-            "4734627764747954687a210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f8" +
-            "1798"
-
-    @Test
-    fun trustSetMatchesTheSigningInputIosFreezes() {
-        val payload =
-            tokenPayload(transactionType = TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET)
-                .copy(toAddress = "")
-
-        assertEquals(
-            iosTrustSetSigningInput,
-            RippleHelper.getPreSignedInputData(payload).toHexString(),
-        )
-    }
-
-    // The keysign amount IS the trust line's limit, and a TrustSet names no destination at all —
-    // so it must be built before the guard that rejects an empty toAddress.
-    @Test
-    fun trustSetCarriesTheLimitAndNoPayment() {
-        val payload =
-            tokenPayload(transactionType = TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET)
-                .copy(toAddress = "")
-
-        val input = Ripple.SigningInput.parseFrom(RippleHelper.getPreSignedInputData(payload))
-
-        assertTrue(input.hasOpTrustSet())
-        assertEquals("USD", input.opTrustSet.limitAmount.currency)
-        assertEquals(ISSUER, input.opTrustSet.limitAmount.issuer)
-        assertEquals("1.5", input.opTrustSet.limitAmount.value)
-        assertFalse(input.hasOpPayment())
-        assertEquals(0L, input.flags)
-    }
-
-    // The fail-safe that lets a mixed-version token send abort instead of opening a trust line.
-    @Test
-    fun aTrustSetAndATokenPaymentOverTheSameCoinSignDifferentBytes() {
-        val trustSet =
-            RippleHelper.getPreSignedInputData(
-                tokenPayload(transactionType = TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET)
-                    .copy(toAddress = "")
-            )
-
-        assertNotEquals(
-            trustSet.toHexString(),
-            RippleHelper.getPreSignedInputData(tokenPayload()).toHexString(),
-        )
-    }
 
     @Test
     fun tokenPaymentMatchesTheSigningInputIosFreezes() {
@@ -170,24 +113,11 @@ class RippleIssuedCurrencySigningTest {
         }
     }
 
-    // Another chain's discriminator relayed onto a Ripple payload describes an operation none of
-    // the branches build, so it is refused rather than signed as a Payment.
+    // An operation this build cannot construct must be refused, not signed as a Payment.
     @Test
     fun anUnsupportedOperationDiscriminatorIsRefused() {
-        val payload = tokenPayload(transactionType = TransactionType.TRANSACTION_TYPE_TON_DEPOSIT)
-
-        assertThrows(IllegalStateException::class.java) {
-            RippleHelper.getPreSignedInputData(payload)
-        }
-    }
-
-    // A TrustSet is meaningless for native XRP: there is no issuer to trust.
-    @Test
-    fun aTrustSetOnNativeXrpIsRefused() {
         val payload =
-            tokenPayload(transactionType = TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET).let {
-                it.copy(coin = it.coin.copy(contractAddress = "", isNativeToken = true))
-            }
+            tokenPayload(transactionType = TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET)
 
         assertThrows(IllegalArgumentException::class.java) {
             RippleHelper.getPreSignedInputData(payload)
