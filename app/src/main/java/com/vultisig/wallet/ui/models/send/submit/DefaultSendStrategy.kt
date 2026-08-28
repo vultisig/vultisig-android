@@ -15,8 +15,10 @@ import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
+import com.vultisig.wallet.data.models.isRippleIssuedToken
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.settings.AppCurrency
+import com.vultisig.wallet.data.models.toRepresentableRippleTokenUnits
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -219,8 +221,19 @@ internal class DefaultSendStrategy(
                     val enteredFiat = enteredFiatText.toPlainBigDecimalOrNull()
                     val spendableGasFee = withEvmGasSettings(chain, gasFee)
 
+                    // XRPL carries an issued-currency amount as 16 significant digits while the
+                    // wallet models one at 15 decimal places, so a fraction of a full-precision
+                    // balance is a digit too long and the signer refuses it outright. Trim before
+                    // anything reads the amount, so the balance checks, the verify screen and the
+                    // signed CurrencyAmount all describe the one value the ledger carries.
                     val enteredAmountInt =
-                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
+                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger().let {
+                            if (selectedToken.isRippleIssuedToken) {
+                                it.toRepresentableRippleTokenUnits(selectedToken.decimal)
+                            } else {
+                                it
+                            }
+                        }
                     val tokenAmountInt =
                         clampToSpendableBalance(
                             entered = enteredAmountInt,
@@ -356,24 +369,6 @@ internal class DefaultSendStrategy(
                                 planBtc.value,
                             )
                         }
-
-                        withContext(Dispatchers.IO) {
-                            chainValidationService.validateRippleDestinationReserve(
-                                selectedToken = selectedToken,
-                                dstAddress = dstAddress,
-                                tokenAmountInt = tokenAmountInt,
-                            )
-                            chainValidationService.validateRippleDestinationTag(
-                                selectedToken = selectedToken,
-                                dstAddress = dstAddress,
-                                // A canonical numeric memo (no dedicated tag) is signed as a
-                                // DestinationTag by RippleHelper, so treat it as a present tag here
-                                // instead of falsely blocking the send.
-                                destinationTag =
-                                    destinationTag
-                                        ?: RippleDestinationTag.parseCanonicalDestinationTag(memo),
-                            )
-                        }
                     } else if (
                         chain == Chain.TerraClassic &&
                             TerraClassicTax.isBankDenom(
@@ -428,6 +423,32 @@ internal class DefaultSendStrategy(
                                 )
                             )
                         }
+                    }
+
+                    // Outside the balance branches above: an XRPL issued currency takes the
+                    // non-native arm, yet a destination that rejects untagged payments or holds no
+                    // trust line rejects it exactly as it would native XRP. Each validator no-ops
+                    // for the coins it does not apply to.
+                    withContext(Dispatchers.IO) {
+                        chainValidationService.validateRippleDestinationReserve(
+                            selectedToken = selectedToken,
+                            dstAddress = dstAddress,
+                            tokenAmountInt = tokenAmountInt,
+                        )
+                        chainValidationService.validateRippleDestinationTag(
+                            selectedToken = selectedToken,
+                            dstAddress = dstAddress,
+                            // A canonical numeric memo (no dedicated tag) is signed as a
+                            // DestinationTag by RippleHelper, so treat it as a present tag here
+                            // instead of falsely blocking the send.
+                            destinationTag =
+                                destinationTag
+                                    ?: RippleDestinationTag.parseCanonicalDestinationTag(memo),
+                        )
+                        chainValidationService.validateRippleDestinationTrustLine(
+                            selectedToken = selectedToken,
+                            dstAddress = dstAddress,
+                        )
                     }
 
                     val evmGasSettings = gasSettings.value.evmSettingsFor(chain)

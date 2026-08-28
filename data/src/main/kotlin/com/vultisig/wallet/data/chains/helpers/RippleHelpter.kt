@@ -3,12 +3,19 @@ package com.vultisig.wallet.data.chains.helpers
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.RippleTokenIdentity
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.isSignableRippleCurrencyCode
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.rippleTokenIdentity
+import com.vultisig.wallet.data.models.toRippleCurrencyCode
+import com.vultisig.wallet.data.models.toRippleTokenValue
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
+import java.math.BigInteger
 import java.security.MessageDigest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -17,6 +24,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
+import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
@@ -73,6 +81,10 @@ object RippleHelper {
                 ?: error("getPreSignedInputData: fail to get account number and sequence")
         val (sequence, gas, lastLedgerSequence) = rippleSpecific
 
+        // Classify before anything is built, so a coin whose two halves contradict each other can
+        // never slip into the wrong amount encoding further down.
+        val issuedCurrency = keysignPayload.coin.rippleIssuedCurrency()
+
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
 
@@ -86,17 +98,34 @@ object RippleHelper {
                 .setPublicKey(ByteString.copyFrom(publicKey.data()))
                 .setLastLedgerSequence(lastLedgerSequence.toInt())
 
-        // OperationPayment.amount is denominated in drops, so this path can only move native XRP.
-        // An issued-currency coin reaching here would sign away `toAmount` drops of XRP instead of
-        // the token the user picked — refuse until the CurrencyAmount path exists (issue #5210).
-        require(keysignPayload.coin.isNativeToken) {
-            "Ripple issued-currency transfers are not supported"
+        // Which operation gets built, in precedence order:
+        //   1. signRipple           -> the dApp's raw JSON, signed verbatim (handled above)
+        //   2. issued-currency coin -> opPayment.currencyAmount
+        //   3. native XRP           -> opPayment.amount, in drops
+        //
+        // (2) claims the case where `transaction_type` is unset, which is also what a signer
+        // predating that field reads as a TrustSet. That asymmetry is deliberate: it is the only
+        // way an issued-currency Payment can be expressed at all, and a token send whose committee
+        // includes such a signer diverges and the ceremony fails without moving funds.
+        //
+        // An operation this build cannot construct is refused outright rather than signed as the
+        // Payment below, which would be a different transaction than the peer described.
+        val transactionType = rippleSpecific.transactionType
+        require(transactionType == TransactionType.TRANSACTION_TYPE_UNSPECIFIED) {
+            "Ripple payload carries an unsupported transaction type $transactionType"
         }
 
         val operation =
-            Ripple.OperationPayment.newBuilder()
-                .setDestination(keysignPayload.toAddress)
-                .setAmount(keysignPayload.toAmount.toLong())
+            Ripple.OperationPayment.newBuilder().setDestination(keysignPayload.toAddress)
+        if (issuedCurrency == null) {
+            operation.setAmount(keysignPayload.toAmount.toLong())
+        } else {
+            // Setting currencyAmount selects the oneof arm, so the drops `amount` is not on the
+            // wire at all — a token Payment must never carry one.
+            operation.setCurrencyAmount(
+                currencyAmount(issuedCurrency, keysignPayload.toAmount, keysignPayload.coin.decimal)
+            )
+        }
 
         // The destination tag comes from its own send-form field, carried in the first-class
         // RippleSpecific field. The memo field is an independent free-text memo.
@@ -160,6 +189,43 @@ object RippleHelper {
     }
 
     /**
+     * The coin's issued currency, or null when it is native XRP.
+     *
+     * `isNativeToken` and `contractAddress` between them decide which amount encoding gets signed,
+     * and the whole coin arrives relayed from a peer, so a contradiction between the two is refused
+     * rather than interpreted. A non-native coin with no readable token id would otherwise fall
+     * through to the native encoding and sign the token's base units away as XRP drops.
+     */
+    private fun Coin.rippleIssuedCurrency(): RippleTokenIdentity? {
+        if (isNativeToken) {
+            require(contractAddress.isEmpty()) {
+                "XRP coin claims to be native but carries an issued-currency token id"
+            }
+            return null
+        }
+        return requireNotNull(rippleTokenIdentity()) {
+            "XRP non-native coin is missing a well-formed issued-currency token id"
+        }
+    }
+
+    /** The [Ripple.CurrencyAmount] for [identity] holding [amount] units at [decimals] scale. */
+    private fun currencyAmount(
+        identity: RippleTokenIdentity,
+        amount: BigInteger,
+        decimals: Int,
+    ): Ripple.CurrencyAmount {
+        val currency = toRippleCurrencyCode(identity.currency)
+        require(isSignableRippleCurrencyCode(currency)) {
+            "Ripple currency code '$currency' would not reach the ledger unchanged"
+        }
+        return Ripple.CurrencyAmount.newBuilder()
+            .setCurrency(currency)
+            .setIssuer(identity.issuer)
+            .setValue(amount.toRippleTokenValue(decimals))
+            .build()
+    }
+
+    /**
      * Hand-builds a Payment rawJSON carrying an on-chain Memos blob (and optionally a
      * [destinationTag]) for cases WalletCore's typed [Ripple.OperationPayment] can't express.
      */
@@ -171,6 +237,13 @@ object RippleHelper {
         destinationTag: Long?,
         memo: String,
     ): String {
+        // `Amount` here is a drops string, so a non-native coin reaching this path would sign the
+        // token's base units away as native XRP. WalletCore's typed payment has no memo slot and a
+        // token rawJSON Payment is not part of the wire contract, so refuse rather than guess.
+        require(keysignPayload.coin.isNativeToken) {
+            "Ripple issued-currency payments cannot carry an on-chain memo"
+        }
+
         val txJson: MutableMap<String, Any> =
             mutableMapOf(
                 "TransactionType" to "Payment",

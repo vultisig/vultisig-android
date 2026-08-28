@@ -9,7 +9,6 @@ import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLpToken
-import com.vultisig.wallet.data.models.isReadOnlyAsset
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.RequestResultRepository
@@ -115,7 +114,7 @@ constructor(
                         tokens
                             .asSequence()
                             .filter { it.chain == chain }
-                            .filterNot { it.isLpToken || it.isReadOnlyAsset }
+                            .filterNot { it.isLpToken }
                             .sortedWith(
                                 compareByDescending<Coin> { it.isNativeToken }.thenBy { it.ticker }
                             )

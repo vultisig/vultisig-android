@@ -1335,6 +1335,7 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">激活此地址所需的最低金额为 %1$s %2$s。</string>
     <string name="send_error_xrp_destination_tag_required">此地址需要目标标签。请添加后继续。</string>
+    <string name="send_error_xrp_destination_no_trust_line">收款方没有 %1$s 信任线，因此此付款会被 XRP Ledger 拒绝。</string>
     <string name="send_error_xrp_invalid_destination_tag">目标标签无效。请输入 1 到 4294967295 之间的整数。</string>
     <string name="error_invalid_chain">链无效</string>
     <string name="ton_stake_error_unsupported_pool">不支持此质押池</string>

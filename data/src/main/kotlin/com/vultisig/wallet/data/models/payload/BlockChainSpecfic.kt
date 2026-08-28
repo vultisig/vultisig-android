@@ -103,6 +103,12 @@ sealed class BlockChainSpecific {
         // Carried in the first-class RippleSpecific.destination_tag proto field, independent of
         // the free-text memo.
         val destinationTag: UInt? = null,
+        // Which XRPL operation the payload describes. An issued-currency coin cannot say on its
+        // own: the same (currency, issuer) pair means either "open a trust line for this token"
+        // (TrustSet, where toAmount is the LIMIT) or "send it" (Payment carrying a CurrencyAmount),
+        // and the two sign different bytes. Unspecified stays off the wire, so a native XRP send is
+        // byte-identical to one built before the field existed.
+        val transactionType: TransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
     ) : BlockChainSpecific()
 
     data class Tron(

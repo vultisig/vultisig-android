@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
@@ -526,11 +527,22 @@ internal class SendFormGraph(
                 if (switching) return@combine null // <-- SKIP during transitions
 
                 val address = token.address
-                // XRP shows a dedicated destination-tag field in addition to the memo field.
-                val isDestinationTag = token.chain == Chain.Ripple && token.isNativeToken
+                // XRP shows a dedicated destination-tag field in addition to the memo field. The
+                // tag is a property of the destination account, so it applies to an issued
+                // currency too — which has no memo field of its own, since WalletCore's typed
+                // token payment has no memo slot.
+                val isDestinationTag = token.chain == Chain.Ripple
                 val hasMemo =
                     (token.isNativeToken || token.chain.standard == TokenStandard.COSMOS) &&
                         token.chain != Chain.Sui
+
+                // A memo typed while the field was on screen outlives a switch to a coin that has
+                // no memo field, and the submit path still reads it. On an XRPL issued currency
+                // that ends as either a destination tag the user never entered or a send the
+                // signer refuses — with no field left on screen to clear.
+                if (!hasMemo) {
+                    memoFieldState.clearText()
+                }
 
                 val uiModel =
                     accountToTokenBalanceUiModelMapper(

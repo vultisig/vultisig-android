@@ -561,6 +561,7 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">이 주소를 활성화하려면 최소 %1$s %2$s이 필요합니다.</string>
     <string name="send_error_xrp_destination_tag_required">이 주소에는 목적지 태그가 필요합니다. 계속하려면 태그를 입력하세요.</string>
+    <string name="send_error_xrp_destination_no_trust_line">수신자에게 %1$s 신뢰선이 없으므로 이 결제는 XRP Ledger에서 거부됩니다.</string>
     <string name="send_error_xrp_invalid_destination_tag">잘못된 목적지 태그입니다. 1에서 4294967295 사이의 정수를 입력하세요.</string>
     <string name="error_invalid_chain">체인이 유효하지 않습니다</string>
     <string name="ton_stake_error_unsupported_pool">이 스테이킹 풀은 지원되지 않습니다</string>

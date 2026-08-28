@@ -133,6 +133,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         lastLedgerSequence = specific.lastLedgerSequence,
                         gas = specific.gas,
                         destinationTag = specific.destinationTag,
+                        transactionType = specific.transactionType,
                     )
                 } else null,
             tonSpecific =
