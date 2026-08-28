@@ -128,18 +128,70 @@ class JupiterApiTest {
     }
 
     @Test
-    fun `an unresolvable or unprovisioned fee account fails the quote`() {
-        // resolveFeeAccount throwing (missing/unsupported mint, RPC failure, or an unprovisioned
-        // fee ATA) must propagate so the Jupiter quote fails and the picker falls back to another
-        // provider — we never sign a swap whose fee cannot be collected.
+    fun `an unprovisioned fee account requotes without the affiliate fee`() {
         val service = FakeFeeAtaService(feeAccount = null)
-        val (api, _) = feeApi(service, quotedFeeAmount = "36341")
+        val (api, captured) = feeApi(service, quotedFeeAmount = "36341")
 
-        assertThrows(IllegalStateException::class.java) {
+        assertThrows(SwapException.RateLimitExceeded::class.java) {
             runBlocking {
                 api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, 50)
             }
         }
+
+        assertEquals(listOf("50", null), captured.platformFeeBpsHistory)
+        assertTrue(service.resolveCalled)
+        assertFalse(
+            captured.swapBody!!.contains("feeAccount"),
+            "no-fee requote must not send a fee account: ${captured.swapBody}",
+        )
+        assertFalse(
+            captured.swapBody!!.contains("platformFee"),
+            "fresh no-fee quote must not carry a stripped platformFee: ${captured.swapBody}",
+        )
+    }
+
+    @Test
+    fun `a fee-bearing quote 4xx requotes without the affiliate fee`() {
+        val service = FakeFeeAtaService(feeAccount = FEE_ACCOUNT)
+        val captured = Captured()
+        val api =
+            jupiterApiImpl(
+                service = service,
+                engine =
+                    MockEngine { request ->
+                        if (request.url.encodedPath.endsWith("/quote")) {
+                            val feeBps = request.url.parameters["platformFeeBps"]
+                            captured.platformFeeBpsHistory += feeBps
+                            captured.platformFeeBps = feeBps
+                            if (feeBps != null) {
+                                respond(
+                                    content = """{"error":"The token is not tradable"}""",
+                                    status = HttpStatusCode.BadRequest,
+                                    headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                                )
+                            } else {
+                                respond(
+                                    content = routeResponseJson(null),
+                                    status = HttpStatusCode.OK,
+                                    headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                                )
+                            }
+                        } else {
+                            captured.swapBody = (request.body as? TextContent)?.text
+                            respond(content = "", status = HttpStatusCode.TooManyRequests)
+                        }
+                    },
+            )
+
+        assertThrows(SwapException.RateLimitExceeded::class.java) {
+            runBlocking {
+                api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, 50)
+            }
+        }
+
+        assertEquals(listOf("50", null), captured.platformFeeBpsHistory)
+        assertFalse(service.resolveCalled, "4xx retry never asked for a fee account")
+        assertFalse(captured.swapBody!!.contains("feeAccount"))
     }
 
     @Test
@@ -212,9 +264,12 @@ class JupiterApiTest {
                 engine =
                     MockEngine { request ->
                         if (request.url.encodedPath.endsWith("/quote")) {
-                            captured.platformFeeBps = request.url.parameters["platformFeeBps"]
+                            val feeBps = request.url.parameters["platformFeeBps"]
+                            captured.platformFeeBpsHistory += feeBps
+                            captured.platformFeeBps = feeBps
+                            val feeForThisQuote = if (feeBps != null) quotedFeeAmount else null
                             respond(
-                                content = routeResponseJson(quotedFeeAmount),
+                                content = routeResponseJson(feeForThisQuote),
                                 status = HttpStatusCode.OK,
                                 headers = headersOf(HttpHeaders.ContentType, "application/json"),
                             )
@@ -247,6 +302,7 @@ class JupiterApiTest {
     private class Captured(
         var slippageBps: String? = null,
         var platformFeeBps: String? = null,
+        var platformFeeBpsHistory: MutableList<String?> = mutableListOf(),
         var swapBody: String? = null,
     )
 

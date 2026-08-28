@@ -8,13 +8,11 @@ import wallet.core.jni.SolanaAddress
  * VULT-scaled affiliate fee we add, credited to a Vultisig-owned ATA — we keep 100% of it (no
  * Jupiter on-chain Referral Program).
  *
- * The fee ATA is provisioned OFF the signed path (a backend responsibility): we never build or
- * inject a create-ATA instruction. Wallet-core's `insertInstruction` appends the instruction's
- * accounts as new static keys without deduplicating against the transaction's address lookup
- * tables, so any route that already ALT-loads one of them (e.g. the wSOL mint on a SOL-output swap)
- * is rejected on-chain with `AccountLoadedTwice`. If the fee ATA isn't provisioned yet, the quote
- * throws and Jupiter is dropped for the pair, letting another provider (LiFi, which also collects
- * the affiliate fee) serve it. Mirrors the iOS `JupiterService` fee handling.
+ * The fee ATA is provisioned OFF the signed path: we never inject a create-ATA instruction.
+ * Wallet-core's `insertInstruction` appends accounts as new static keys without deduplicating
+ * against address lookup tables, so a route that already ALT-loads one of them is rejected on-chain
+ * with `AccountLoadedTwice`. If this probe throws (unprovisioned ATA, missing mint, RPC blip),
+ * [JupiterApi] requotes without the affiliate fee so the swap still routes.
  *
  * Behind an interface so the wallet-core JNI + RPC work can be faked in unit tests.
  */
@@ -22,8 +20,7 @@ interface JupiterFeeAtaService {
     /**
      * Derive the Vultisig fee ATA for [feeMint] and verify it exists on-chain (read-only, off the
      * signed path). Throws on a missing/unsupported mint, RPC failure, or an unprovisioned fee ATA
-     * so the caller fails the Jupiter quote (falling back to another provider) rather than signing
-     * a swap whose fee cannot be collected.
+     * so the caller can requote Jupiter without a platform fee.
      */
     suspend fun resolveFeeAccount(feeMint: String): String
 }
@@ -47,11 +44,8 @@ internal class JupiterFeeAtaServiceImpl @Inject constructor(private val solanaAp
             if (tokenProgramId == TOKEN_2022_PROGRAM_ID) owner.token2022Address(feeMint)
             else owner.defaultTokenAddress(feeMint)
         require(!feeAccount.isNullOrEmpty()) { "Failed to derive the Jupiter fee ATA for $feeMint" }
-        // Never route to Jupiter unless the fee can be collected into an already-provisioned ATA.
-        // A transient probe failure also drops Jupiter here — conservative, since another provider
-        // still serves the pair.
         checkNotNull(solanaApi.getAccountOwner(feeAccount)) {
-            "Jupiter fee ATA $feeAccount for mint $feeMint not provisioned; dropping Jupiter"
+            "Jupiter fee ATA $feeAccount for mint $feeMint not provisioned"
         }
         return feeAccount
     }
