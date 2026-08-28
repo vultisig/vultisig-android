@@ -573,7 +573,7 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Minimum amount to activate this address is %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">This address requires a destination tag. Add one to continue.</string>
-    <string name="send_error_xrp_destination_no_trust_line">The recipient has no %1$s trust line, so this payment would be rejected by the XRP Ledger.</string>
+    <string name="send_error_xrp_destination_no_trust_line">This address can’t receive %1$s. The recipient needs to open a trust line for it first.</string>
     <string name="send_error_xrp_invalid_destination_tag">Invalid destination tag. Enter a whole number between 1 and 4294967295.</string>
     <string name="error_invalid_chain">Chain is invalid</string>
     <string name="ton_stake_error_unsupported_pool">This staking pool isn\'t supported</string>

@@ -206,10 +206,9 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
      * otherwise the destination stays unfunded and the payment is rejected on-chain with
      * `tecNO_DST_INSUF_XRP`.
      *
-     * No-ops for non-Ripple sends, non-native tokens, and destinations that already exist. The
-     * native gate must not be widened to issued currencies: an account is created by receiving the
-     * base reserve *in XRP*, which a token Payment delivers none of, so the rule cannot be
-     * satisfied at any amount. [validateRippleDestinationTrustLine] covers those instead.
+     * No-ops for non-Ripple sends, non-native tokens, and destinations that already exist. An
+     * account is created by receiving the base reserve in XRP, which a token Payment delivers none
+     * of, so [validateRippleDestinationTrustLine] covers those instead.
      *
      * Throws [InvalidTransactionDataException] if the destination is unfunded and [tokenAmountInt]
      * is below the account reserve.
@@ -256,10 +255,9 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
      * is supplied — the ledger rejects such a payment with `tecDST_TAG_NEEDED` and, on an exchange
      * deposit address, the funds are credited to the wrong account (effective loss).
      *
-     * No-ops for non-Ripple sends. The flag is a property of the destination account, not of the
-     * asset, so it gates an issued-currency Payment exactly as it gates native XRP. Fails closed on
-     * a lookup failure, matching [validateRippleDestinationReserve]: skipping the check would
-     * reopen the exact loss it guards.
+     * No-ops for non-Ripple sends. The flag belongs to the destination account, not the asset, so
+     * it gates an issued currency exactly as it gates native XRP. Fails closed on a lookup failure:
+     * skipping the check would reopen the loss it guards.
      */
     suspend fun validateRippleDestinationTag(
         selectedToken: Coin,
@@ -289,16 +287,10 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
     }
 
     /**
-     * Blocks an XRPL issued-currency send to a destination that holds no trust line for the token —
-     * the ledger answers `tecPATH_DRY` after the ceremony, with the fee already burned.
-     *
-     * No-ops for non-Ripple sends and for native XRP, which needs no line. The issuer is exempt:
-     * paying an obligation back to the account that issued it redeems the balance and needs no line
-     * on its side.
-     *
-     * Unlike its two siblings this one fails OPEN — it blocks only on positive evidence that the
-     * destination cannot receive. The lookup is an extra read the send never needed before, so a
-     * node blip must not start rejecting sends that worked without it.
+     * Blocks an issued-currency send to a destination holding no trust line for the token, which
+     * the ledger answers with `tecPATH_DRY` after the ceremony with the fee burned. The issuer is
+     * exempt — paying an obligation back to it redeems the balance. Fails open, unlike its two
+     * siblings: this lookup is a read the send never needed before.
      */
     suspend fun validateRippleDestinationTrustLine(selectedToken: Coin, dstAddress: String) {
         val identity = selectedToken.rippleTokenIdentity() ?: return

@@ -1006,7 +1006,7 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Der Mindestbetrag zur Aktivierung dieser Adresse beträgt %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">Diese Adresse erfordert ein Ziel-Tag. Fügen Sie eines hinzu, um fortzufahren.</string>
-    <string name="send_error_xrp_destination_no_trust_line">Der Empfänger hat keine %1$s-Trust-Line, daher würde diese Zahlung vom XRP Ledger abgelehnt.</string>
+    <string name="send_error_xrp_destination_no_trust_line">Diese Adresse kann %1$s nicht empfangen. Der Empfänger muss dafür zuerst eine Trust-Line eröffnen.</string>
     <string name="send_error_xrp_invalid_destination_tag">Ungültiges Ziel-Tag. Geben Sie eine ganze Zahl zwischen 1 und 4294967295 ein.</string>
     <string name="error_invalid_chain">Die Blockchain ist ungültig</string>
     <string name="ton_stake_error_unsupported_pool">Dieser Staking-Pool wird nicht unterstützt</string>

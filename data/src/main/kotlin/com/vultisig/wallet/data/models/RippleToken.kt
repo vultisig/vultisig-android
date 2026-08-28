@@ -20,7 +20,7 @@ const val RIPPLE_TOKEN_DECIMALS: Int = 15
 /** Ceiling on a wire-supplied token scale; no real coin comes close to it. */
 private const val MAX_RIPPLE_TOKEN_SCALE = 100
 
-/** Significant digits an XRPL issued-currency amount carries; beyond it the signer hard-errors. */
+/** Significant digits an XRPL issued-currency amount carries; beyond it the signer errors. */
 private const val RIPPLE_VALUE_PRECISION = 16
 
 /**
@@ -34,18 +34,12 @@ private const val RIPPLE_TOKEN_SEPARATOR = '.'
 /** Currency code reserved for the native asset; it can never name a trust line. */
 private const val RIPPLE_NATIVE_CURRENCY = "XRP"
 
-/** Length of an XRPL "standard" currency code, the only form written as readable characters. */
+/** An XRPL currency code is either 3 characters or a 160-bit value: 20 bytes, 40 hex characters. */
 private const val RIPPLE_STANDARD_CURRENCY_LENGTH = 3
-
-/** An XRPL currency code is 160 bits: 20 bytes, or 40 characters once hex-encoded. */
 private const val RIPPLE_CURRENCY_CODE_BYTES = 20
 private val RIPPLE_HEX_CURRENCY_CODE = Regex("[0-9a-fA-F]{${RIPPLE_CURRENCY_CODE_BYTES * 2}}")
 
-/**
- * The repertoire a standard code may draw on, which is rippled's own `kIsoCharSet`
- * (`src/libxrpl/protocol/UintTypes.cpp`) minus the lowercase letters — see
- * [isSignableRippleCurrencyCode] for why those are excluded.
- */
+/** rippled's `kIsoCharSet` minus the lowercase letters — see [isSignableRippleCurrencyCode]. */
 private const val RIPPLE_SIGNABLE_CURRENCY_CHARS =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>(){}[]|?!@#$%^&*"
 
@@ -113,20 +107,13 @@ private fun String.toBigDecimalOrNull(): BigDecimal? =
         null
     }
 
-/**
- * Renders fixed-point [decimals]-scaled units as the decimal string an XRPL amount carries. Inverse
- * of [toRippleTokenUnits].
- */
+/** Renders [decimals]-scaled units as the decimal string an XRPL amount carries. */
 fun BigInteger.toRippleTokenValue(decimals: Int): String =
     toRippleDecimal(decimals).stripTrailingZeros().toPlainString()
 
 /**
- * Truncates [decimals]-scaled units down to what an XRPL issued-currency amount can express.
- *
- * [RIPPLE_TOKEN_DECIMALS] is the right scale to read a ledger balance at, but one digit wider than
- * the ledger once an amount also has an integer part: a fraction of a full-precision balance, or an
- * amount derived from a fiat price, lands on 17 or 18 significant digits and the signer refuses it
- * outright. Truncation never yields more than was asked for.
+ * Truncates [decimals]-scaled units to the significant digits XRPL carries. At 15 decimal places a
+ * fraction of a full-precision balance runs a digit too long and the signer refuses it.
  */
 fun BigInteger.toRepresentableRippleTokenUnits(decimals: Int): BigInteger {
     val value = toRippleDecimal(decimals)
@@ -138,52 +125,39 @@ fun BigInteger.toRepresentableRippleTokenUnits(decimals: Int): BigInteger {
         .toBigInteger()
 }
 
-/**
- * [decimals] is the owning coin's own scale, which can arrive from a peer over the wire, so it is
- * bounded here: a negative scale would multiply instead of divide, and an astronomical one would
- * expand into gigabytes of digits.
- */
 private fun BigInteger.toRippleDecimal(decimals: Int): BigDecimal {
     require(decimals in 0..MAX_RIPPLE_TOKEN_SCALE) { "Unsupported Ripple token scale $decimals" }
     return BigDecimal(this, decimals)
 }
 
 /**
- * The on-ledger form of a currency code or human ticker.
- *
- * A 3-character standard code is kept exactly as written — XRPL currency codes are case-sensitive,
- * so `usd` and `USD` are different currencies. An already-encoded 40-character hex code is
- * upper-cased. Everything else is packed into the 160-bit form: its ASCII bytes right-padded with
- * zeros to 20 bytes, hex-encoded. A ticker longer than three characters, `RLUSD` included, is only
- * expressible that way, which is why the catalog stores it as hex.
+ * The on-ledger form of a currency code or ticker: a 3-character code verbatim (XRPL codes are
+ * case-sensitive), hex upper-cased, anything else ASCII-packed into the 160-bit form.
  */
 fun toRippleCurrencyCode(currency: String): String {
     val value = currency.trim()
-    if (value.length == RIPPLE_STANDARD_CURRENCY_LENGTH) return value
-    if (value.isRippleHexCurrencyCode()) return value.uppercase()
-
-    val bytes = value.toByteArray(Charsets.UTF_8)
-    require(bytes.size <= RIPPLE_CURRENCY_CODE_BYTES) {
-        "Ripple currency code '$value' exceeds $RIPPLE_CURRENCY_CODE_BYTES bytes"
+    return when {
+        value.length == RIPPLE_STANDARD_CURRENCY_LENGTH -> value
+        RIPPLE_HEX_CURRENCY_CODE.matches(value) -> value.uppercase()
+        else -> {
+            val bytes = value.toByteArray(Charsets.UTF_8)
+            require(bytes.size <= RIPPLE_CURRENCY_CODE_BYTES) {
+                "Ripple currency code '$value' exceeds $RIPPLE_CURRENCY_CODE_BYTES bytes"
+            }
+            bytes.copyOf(RIPPLE_CURRENCY_CODE_BYTES).toHex().uppercase()
+        }
     }
-    return bytes.copyOf(RIPPLE_CURRENCY_CODE_BYTES).toHex().uppercase()
 }
 
 /**
- * True when a code already in on-ledger form ([toRippleCurrencyCode]) reaches the ledger unchanged.
- *
- * WalletCore encodes a 3-byte code by upper-casing it first (`Currency::from_str`), while XRPL
- * copies those bytes verbatim and treats them case-sensitively. A lowercase standard code would
- * therefore be signed as a different currency than the one reviewed — a trust line opened on the
- * wrong asset, or a payment the ledger rejects after the ceremony. Nothing is lost by refusing it:
- * the same currency stays expressible through its 40-character hex spelling.
+ * Whether an on-ledger code reaches the ledger unchanged. WalletCore upper-cases a 3-byte code
+ * before encoding it and XRPL compares those bytes case-sensitively, so a lowercase standard code
+ * would sign a currency other than the one reviewed; its hex spelling still expresses it.
  */
 fun isSignableRippleCurrencyCode(code: String): Boolean =
-    if (code.isRippleHexCurrencyCode()) {
+    if (RIPPLE_HEX_CURRENCY_CODE.matches(code)) {
         code == code.uppercase()
     } else {
         code.length == RIPPLE_STANDARD_CURRENCY_LENGTH &&
             code.all { it in RIPPLE_SIGNABLE_CURRENCY_CHARS }
     }
-
-private fun String.isRippleHexCurrencyCode(): Boolean = RIPPLE_HEX_CURRENCY_CODE.matches(this)

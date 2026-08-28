@@ -1009,7 +1009,7 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Minimalni iznos za aktivaciju ove adrese je %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">Ova adresa zahtijeva odredišnu oznaku. Dodajte je za nastavak.</string>
-    <string name="send_error_xrp_destination_no_trust_line">Primatelj nema %1$s liniju povjerenja, pa bi XRP Ledger odbio ovu uplatu.</string>
+    <string name="send_error_xrp_destination_no_trust_line">Ova adresa ne može primiti %1$s. Primatelj prvo mora otvoriti liniju povjerenja za tu imovinu.</string>
     <string name="send_error_xrp_invalid_destination_tag">Nevažeća odredišna oznaka. Unesite cijeli broj između 1 i 4294967295.</string>
     <string name="error_invalid_chain">Lanac nije valjan</string>
     <string name="ton_stake_error_unsupported_pool">Ovaj staking pool nije podržan</string>

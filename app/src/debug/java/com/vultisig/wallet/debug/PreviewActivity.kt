@@ -3643,6 +3643,7 @@ private fun TokenDetailSheetLoadingPreview() {
                         network = Chain.Solana.raw,
                     ),
                 canSwap = true,
+                canSend = true,
                 canBuy = true,
             )
     }
@@ -3694,6 +3695,7 @@ private fun TokenDetailSheetFullPreview() {
                         network = Chain.Solana.raw,
                     ),
                 canSwap = true,
+                canSend = true,
                 canBuy = true,
                 chart =
                     ChartUiModel(points = points, isPositive = true, changePercentText = "+4.21%"),

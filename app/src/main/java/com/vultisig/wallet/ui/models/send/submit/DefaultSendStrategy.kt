@@ -221,18 +221,15 @@ internal class DefaultSendStrategy(
                     val enteredFiat = enteredFiatText.toPlainBigDecimalOrNull()
                     val spendableGasFee = withEvmGasSettings(chain, gasFee)
 
-                    // XRPL carries an issued-currency amount as 16 significant digits while the
-                    // wallet models one at 15 decimal places, so a fraction of a full-precision
-                    // balance is a digit too long and the signer refuses it outright. Trim before
-                    // anything reads the amount, so the balance checks, the verify screen and the
-                    // signed CurrencyAmount all describe the one value the ledger carries.
+                    val enteredAmount =
+                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
+                    // Trimmed before anything reads it, so the balance checks, the verify
+                    // screen and the signed amount all describe one value XRPL can carry.
                     val enteredAmountInt =
-                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger().let {
-                            if (selectedToken.isRippleIssuedToken) {
-                                it.toRepresentableRippleTokenUnits(selectedToken.decimal)
-                            } else {
-                                it
-                            }
+                        if (selectedToken.isRippleIssuedToken) {
+                            enteredAmount.toRepresentableRippleTokenUnits(selectedToken.decimal)
+                        } else {
+                            enteredAmount
                         }
                     val tokenAmountInt =
                         clampToSpendableBalance(
@@ -425,10 +422,8 @@ internal class DefaultSendStrategy(
                         }
                     }
 
-                    // Outside the balance branches above: an XRPL issued currency takes the
-                    // non-native arm, yet a destination that rejects untagged payments or holds no
-                    // trust line rejects it exactly as it would native XRP. Each validator no-ops
-                    // for the coins it does not apply to.
+                    // Outside the balance branches: a destination that rejects untagged payments
+                    // or holds no trust line rejects a token exactly as it does native XRP.
                     withContext(Dispatchers.IO) {
                         chainValidationService.validateRippleDestinationReserve(
                             selectedToken = selectedToken,

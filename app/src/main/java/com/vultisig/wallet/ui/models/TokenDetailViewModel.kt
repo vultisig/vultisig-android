@@ -57,6 +57,7 @@ internal data class TokenDetailUiModel(
     val isRefreshing: Boolean = false,
     val canDeposit: Boolean = false,
     val canSwap: Boolean = false,
+    val canSend: Boolean = true,
     val canBuy: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val explorerUrl: String = "",
@@ -341,11 +342,8 @@ constructor(
                                     it.copy(
                                         token = tokenUiModel,
                                         canDeposit = chain.isDepositSupported,
-                                        // LP receipt tokens (e.g. bRUNE/ybRUNE) can't be a swap
-                                        // source, and no provider routes an XRPL issued currency
-                                        // even though its chain is swap-supported; gate the button
-                                        // here too, not only in the asset pickers, so it can't be
-                                        // entered from this screen.
+                                        // Gated here as well as in the asset pickers so neither
+                                        // can be entered as a swap source from this screen.
                                         canSwap =
                                             chain.isSwapSupported &&
                                                 !token.isLpToken &&

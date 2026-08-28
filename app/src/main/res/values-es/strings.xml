@@ -1004,7 +1004,7 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">La cantidad mínima para activar esta dirección es %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">Esta dirección requiere una etiqueta de destino. Añade una para continuar.</string>
-    <string name="send_error_xrp_destination_no_trust_line">El destinatario no tiene una línea de confianza de %1$s, por lo que el XRP Ledger rechazaría este pago.</string>
+    <string name="send_error_xrp_destination_no_trust_line">Esta dirección no puede recibir %1$s. El destinatario debe abrir antes una línea de confianza para este activo.</string>
     <string name="send_error_xrp_invalid_destination_tag">Etiqueta de destino no válida. Introduce un número entero entre 1 y 4294967295.</string>
     <string name="error_invalid_chain">La cadena no es válida.</string>
     <string name="ton_stake_error_unsupported_pool">Este pool de staking no es compatible</string>

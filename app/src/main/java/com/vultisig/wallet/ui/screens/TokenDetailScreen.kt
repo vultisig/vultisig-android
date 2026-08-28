@@ -197,7 +197,13 @@ internal fun TokenDetailsContent(
                     )
                 }
 
-                AssetActionButton(action = AssetAction.SEND, isSelected = false, onClick = onSend)
+                if (uiModel.canSend) {
+                    AssetActionButton(
+                        action = AssetAction.SEND,
+                        isSelected = false,
+                        onClick = onSend,
+                    )
+                }
 
                 if (uiModel.canBuy) {
                     AssetActionButton(action = AssetAction.BUY, isSelected = false, onClick = onBuy)

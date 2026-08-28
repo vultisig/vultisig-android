@@ -136,8 +136,7 @@ constructor(
                             account.accounts
                                 .asSequence()
                                 .filter { it.token.id.contains(query, ignoreCase = true) }
-                                // LP receipts and XRPL issued currencies are held and sent like any
-                                // other token, but no provider routes either as a swap source.
+                                // No provider routes an LP receipt or an XRPL issued currency.
                                 .filterNot {
                                     filter == Route.SelectNetwork.Filters.SwapAvailable &&
                                         (it.token.isLpToken || it.token.isRippleIssuedToken)

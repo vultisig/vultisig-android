@@ -1001,7 +1001,7 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Het minimumbedrag om dit adres te activeren is %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">Dit adres vereist een bestemmingstag. Voeg er een toe om door te gaan.</string>
-    <string name="send_error_xrp_destination_no_trust_line">De ontvanger heeft geen %1$s-trustline, dus deze betaling zou door de XRP Ledger worden geweigerd.</string>
+    <string name="send_error_xrp_destination_no_trust_line">Dit adres kan geen %1$s ontvangen. De ontvanger moet daarvoor eerst een trustline openen.</string>
     <string name="send_error_xrp_invalid_destination_tag">Ongeldige bestemmingstag. Voer een geheel getal tussen 1 en 4294967295 in.</string>
     <string name="error_invalid_chain">Ketting is ongeldig</string>
     <string name="ton_stake_error_unsupported_pool">Deze staking-pool wordt niet ondersteund</string>
