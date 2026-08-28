@@ -99,20 +99,45 @@ object RippleHelper {
                 .setLastLedgerSequence(lastLedgerSequence.toInt())
 
         // Which operation gets built, in precedence order:
-        //   1. signRipple           -> the dApp's raw JSON, signed verbatim (handled above)
-        //   2. issued-currency coin -> opPayment.currencyAmount
-        //   3. native XRP           -> opPayment.amount, in drops
+        //   1. signRipple                -> the dApp's raw JSON, signed verbatim (handled above)
+        //   2. TrustSet discriminator    -> opTrustSet, where toAmount is the trust-line LIMIT
+        //   3. issued-currency coin      -> opPayment.currencyAmount
+        //   4. native XRP                -> opPayment.amount, in drops
         //
-        // (2) claims the case where `transaction_type` is unset, which is also what a signer
-        // predating that field reads as a TrustSet. That asymmetry is deliberate: it is the only
-        // way an issued-currency Payment can be expressed at all, and a token send whose committee
-        // includes such a signer diverges and the ceremony fails without moving funds.
-        //
-        // An operation this build cannot construct is refused outright rather than signed as the
-        // Payment below, which would be a different transaction than the peer described.
-        val transactionType = rippleSpecific.transactionType
-        require(transactionType == TransactionType.TRANSACTION_TYPE_UNSPECIFIED) {
-            "Ripple payload carries an unsupported transaction type $transactionType"
+        // (2) before (3) is what makes a mixed-version activation work: a signer predating
+        // `transaction_type` reads any non-native coin as a TrustSet and formats the same limit, so
+        // both build identical bytes. The converse is deliberately not symmetric — (3) claims the
+        // undiscriminated non-native case, which is the only way an issued-currency Payment can be
+        // expressed at all, so a token send whose committee includes such a signer diverges and the
+        // ceremony fails without moving funds.
+        when (val transactionType = rippleSpecific.transactionType) {
+            TransactionType.TRANSACTION_TYPE_UNSPECIFIED -> Unit
+
+            TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET -> {
+                val limit =
+                    requireNotNull(issuedCurrency) {
+                        "Ripple TrustSet requires an issued-currency coin"
+                    }
+                // A TrustSet names no destination and moves nothing, so it is built from the
+                // envelope alone — which is why it is reached before the toAddress guard.
+                return input
+                    .setOpTrustSet(
+                        Ripple.OperationTrustSet.newBuilder()
+                            .setLimitAmount(
+                                currencyAmount(
+                                    limit,
+                                    keysignPayload.toAmount,
+                                    keysignPayload.coin.decimal,
+                                )
+                            )
+                    )
+                    .build()
+                    .toByteArray()
+            }
+
+            // A discriminator this build does not recognise describes an operation none of these
+            // branches would build, so signing at all would sign something nobody reviewed.
+            else -> error("Ripple payload carries an unsupported transaction type $transactionType")
         }
 
         val operation =

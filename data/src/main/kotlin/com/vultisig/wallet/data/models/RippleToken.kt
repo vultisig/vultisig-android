@@ -39,7 +39,7 @@ private const val RIPPLE_STANDARD_CURRENCY_LENGTH = 3
 
 /** An XRPL currency code is 160 bits: 20 bytes, or 40 characters once hex-encoded. */
 private const val RIPPLE_CURRENCY_CODE_BYTES = 20
-private const val RIPPLE_HEX_CURRENCY_LENGTH = RIPPLE_CURRENCY_CODE_BYTES * 2
+private val RIPPLE_HEX_CURRENCY_CODE = Regex("[0-9a-fA-F]{${RIPPLE_CURRENCY_CODE_BYTES * 2}}")
 
 /**
  * The repertoire a standard code may draw on, which is rippled's own `kIsoCharSet`
@@ -186,6 +186,4 @@ fun isSignableRippleCurrencyCode(code: String): Boolean =
             code.all { it in RIPPLE_SIGNABLE_CURRENCY_CHARS }
     }
 
-private fun String.isRippleHexCurrencyCode(): Boolean =
-    length == RIPPLE_HEX_CURRENCY_LENGTH &&
-        all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+private fun String.isRippleHexCurrencyCode(): Boolean = RIPPLE_HEX_CURRENCY_CODE.matches(this)
