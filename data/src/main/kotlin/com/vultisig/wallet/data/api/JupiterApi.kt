@@ -51,30 +51,18 @@ constructor(
         val feeMint = if (toToken == SOLANA_DEFAULT_CONTRACT_ADDRESS) fromToken else toToken
         val slippage = slippageBps ?: DEFAULT_SLIPPAGE_BPS
 
-        var body =
+        // Probe the fee ATA before quoting. A missing account must never take a fee-bearing
+        // /quote — outAmount would be net of a fee we cannot collect, so the UI would lie.
+        val resolvedFeeAccount = requestedFeeBps?.let { resolveFeeAccountOrNull(feeMint) }
+        val body =
             fetchRouteQuote(
                 fromToken = fromToken,
                 toToken = toToken,
                 fromAmount = fromAmount,
                 slippageBps = slippage,
-                platformFeeBps = requestedFeeBps,
+                platformFeeBps = requestedFeeBps.takeIf { resolvedFeeAccount != null },
             )
-        var feeAccount = affiliateFeeAccount(feeMint, requestedFeeBps, body)
-        if (
-            requestedFeeBps != null && feeAccount == null && quotedFeeAmount(body) > BigInteger.ZERO
-        ) {
-            // Fresh no-fee quote: stripping platformFee off a fee-bearing quote JSON makes Jupiter
-            // reject /swap.
-            body =
-                fetchRouteQuote(
-                    fromToken = fromToken,
-                    toToken = toToken,
-                    fromAmount = fromAmount,
-                    slippageBps = slippage,
-                    platformFeeBps = null,
-                )
-            feeAccount = null
-        }
+        val feeAccount = resolvedFeeAccount.takeIf { quotedFeeAmount(body) > BigInteger.ZERO }
 
         val outAmount = body.outAmount
         val routePlan = body.routePlan
@@ -127,10 +115,13 @@ constructor(
                 swapTxData
             }
 
+        val platformFeeAmount = body.platformFee?.amount.takeIf { feeAccount != null }
         return QuoteSwapTotalDataJson(
             swapTransaction = quoteSwapData.copy(data = updatedSwapTx),
             dstAmount = outAmount,
             routePlan = routePlan,
+            platformFeeAmount = platformFeeAmount,
+            platformFeeMint = feeMint.takeIf { platformFeeAmount != null },
         )
     }
 
@@ -167,20 +158,14 @@ constructor(
         return response.bodyOrThrow()
     }
 
-    private suspend fun affiliateFeeAccount(
-        feeMint: String,
-        requestedFeeBps: Int?,
-        body: SwapRouteResponseJson,
-    ): String? {
-        if (requestedFeeBps == null || quotedFeeAmount(body) <= BigInteger.ZERO) return null
-        return try {
+    private suspend fun resolveFeeAccountOrNull(feeMint: String): String? =
+        try {
             feeAtaService.resolveFeeAccount(feeMint)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {
             null
         }
-    }
 
     private fun quotedFeeAmount(body: SwapRouteResponseJson): BigInteger =
         body.platformFee?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO

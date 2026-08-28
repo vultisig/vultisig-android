@@ -9,7 +9,7 @@ import wallet.core.jni.SolanaAddress
  * Jupiter on-chain Referral Program).
  *
  * Never inject create-ATA: WalletCore `insertInstruction` + ALTs → `AccountLoadedTwice`. If this
- * probe throws, [JupiterApi] requotes without the affiliate fee.
+ * probe throws, [JupiterApi] quotes without the affiliate fee.
  *
  * Behind an interface so the wallet-core JNI + RPC work can be faked in unit tests.
  */
@@ -17,7 +17,7 @@ interface JupiterFeeAtaService {
     /**
      * Derive the Vultisig fee ATA for [feeMint] and verify it exists on-chain (read-only, off the
      * signed path). Throws on a missing/unsupported mint, RPC failure, or an unprovisioned fee ATA
-     * so the caller can requote Jupiter without a platform fee.
+     * so the caller can quote Jupiter without a platform fee.
      */
     suspend fun resolveFeeAccount(feeMint: String): String
 }

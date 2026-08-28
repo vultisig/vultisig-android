@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.chains.helpers.SOLANA_DEFAULT_CONTRACT_ADDRESS
+import java.math.BigInteger
 import javax.inject.Inject
 
 internal class JupiterQuoteSource @Inject constructor(private val jupiterApi: JupiterApi) :
@@ -28,7 +29,10 @@ internal class JupiterQuoteSource @Inject constructor(private val jupiterApi: Ju
 
         quote.routePlan.firstOrNull()
             ?: throw SwapException.handleSwapException("No swap route available")
-        val feeRoute = quote.routePlan.firstOrNull { it.swapInfo.feeMint == fromToken }
+        val platformFeeAmount =
+            quote.platformFeeAmount?.takeIf {
+                (it.toBigIntegerOrNull() ?: BigInteger.ZERO) > BigInteger.ZERO
+            }
 
         return SwapQuoteResult.Evm(
             EVMSwapQuoteJson(
@@ -41,8 +45,9 @@ internal class JupiterQuoteSource @Inject constructor(private val jupiterApi: Ju
                         gas = 0,
                         value = "0",
                         gasPrice = "0",
-                        swapFee = feeRoute?.swapInfo?.feeAmount ?: "0",
-                        swapFeeTokenContract = feeRoute?.swapInfo?.feeMint.orEmpty(),
+                        swapFee = platformFeeAmount ?: "0",
+                        swapFeeTokenContract =
+                            if (platformFeeAmount != null) quote.platformFeeMint.orEmpty() else "",
                     ),
             )
         )

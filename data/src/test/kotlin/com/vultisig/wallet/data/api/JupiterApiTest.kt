@@ -111,8 +111,8 @@ class JupiterApiTest {
 
     @Test
     fun `a fee floored to zero by Jupiter sends platformFeeBps but no feeAccount`() {
-        // The quote asks for a fee (bps > 0) but Jupiter floors platformFee.amount to 0; we must
-        // not derive a fee account for a zero fee.
+        // ATA resolves before the quote (we don't yet know Jupiter will floor the amount). The
+        // swap body still omits feeAccount because the quoted amount is 0.
         val service = FakeFeeAtaService(feeAccount = FEE_ACCOUNT)
         val (api, captured) = feeApi(service, quotedFeeAmount = "0")
 
@@ -123,12 +123,12 @@ class JupiterApiTest {
         }
 
         assertEquals("50", captured.platformFeeBps)
-        assertFalse(service.resolveCalled, "no fee account for a zero-amount fee")
+        assertTrue(service.resolveCalled)
         assertFalse(captured.swapBody!!.contains("feeAccount"))
     }
 
     @Test
-    fun `an unprovisioned fee account requotes without the affiliate fee`() {
+    fun `an unprovisioned fee account quotes without the affiliate fee`() {
         val service = FakeFeeAtaService(feeAccount = null)
         val (api, captured) = feeApi(service, quotedFeeAmount = "36341")
 
@@ -138,15 +138,15 @@ class JupiterApiTest {
             }
         }
 
-        assertEquals(listOf("50", null), captured.platformFeeBpsHistory)
+        assertEquals(listOf<String?>(null), captured.platformFeeBpsHistory)
         assertTrue(service.resolveCalled)
         assertFalse(
             captured.swapBody!!.contains("feeAccount"),
-            "no-fee requote must not send a fee account: ${captured.swapBody}",
+            "no-fee quote must not send a fee account: ${captured.swapBody}",
         )
         assertFalse(
             captured.swapBody!!.contains("platformFee"),
-            "fresh no-fee quote must not carry a stripped platformFee: ${captured.swapBody}",
+            "no-fee quote must not carry a platformFee: ${captured.swapBody}",
         )
     }
 
@@ -190,7 +190,7 @@ class JupiterApiTest {
         }
 
         assertEquals(listOf("50", null), captured.platformFeeBpsHistory)
-        assertFalse(service.resolveCalled, "4xx retry never asked for a fee account")
+        assertTrue(service.resolveCalled, "ATA is resolved before the fee-bearing quote")
         assertFalse(captured.swapBody!!.contains("feeAccount"))
     }
 
