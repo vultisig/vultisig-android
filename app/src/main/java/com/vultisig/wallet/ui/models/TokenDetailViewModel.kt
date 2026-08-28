@@ -57,7 +57,6 @@ internal data class TokenDetailUiModel(
     val isRefreshing: Boolean = false,
     val canDeposit: Boolean = false,
     val canSwap: Boolean = false,
-    val canSend: Boolean = false,
     val canBuy: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val explorerUrl: String = "",
@@ -348,7 +347,6 @@ constructor(
                                             chain.isSwapSupported &&
                                                 !token.isLpToken &&
                                                 !token.isRippleIssuedToken,
-                                        canSend = true,
                                         canBuy = chain.isBuySupported,
                                         explorerUrl = explorerUrl,
                                         chainAddress = accountAddress,
