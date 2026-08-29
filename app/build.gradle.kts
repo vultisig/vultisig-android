@@ -165,6 +165,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.intents)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.junit)
     androidTestImplementation(libs.wallet.core)
     androidTestImplementation(libs.ktor.client.mock)
     testImplementation(kotlin("test"))
