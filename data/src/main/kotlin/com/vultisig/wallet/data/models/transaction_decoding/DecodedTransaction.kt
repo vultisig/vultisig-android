@@ -71,28 +71,6 @@ sealed class DecodedCounterparty {
 
     /** A smart contract. */
     data class Contract(val value: String) : DecodedCounterparty()
-
-    /** Checks equality based on counterparty type and values. */
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        return when {
-            this is Node && other is Node -> value == other.value
-            this is Validator && other is Validator -> value == other.value
-            this is Pool && other is Pool -> value == other.value
-            this is Contract && other is Contract -> value == other.value
-            else -> false
-        }
-    }
-
-    /** Computes hashCode based on counterparty type and values. */
-    override fun hashCode(): Int {
-        return when (this) {
-            is Node -> value.hashCode()
-            is Validator -> value.hashCode()
-            is Pool -> value.hashCode()
-            is Contract -> value.hashCode()
-        }
-    }
 }
 
 /** Evidence for the reading, ordered strongest first. */

@@ -248,7 +248,7 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
 
     override val signedDataBodyIsActive: Boolean
         get() {
-            val signDirect = payload.signDirect ?: return false
+            // Approve and swap routes make opaque content inactive
             if (payload.approvePayload != null || payload.swapPayload != null) return false
             // signAmino takes precedence over signDirect in CosmosHelper and ThorChainHelper
             if (payload.signAmino != null) return false
@@ -256,7 +256,6 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
             return when (payload.coin.chain) {
                 // Cosmos chains and related protocols use signDirect when present
                 Chain.GaiaChain,
-                Chain.Kujira,
                 Chain.Osmosis,
                 Chain.Noble,
                 Chain.Akash,
@@ -265,13 +264,22 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
                 Chain.Dydx,
                 Chain.Qbtc,
                 Chain.ThorChain,
-                Chain.MayaChain -> true
+                Chain.MayaChain -> payload.signDirect != null
+                // TON, Sui, Solana, Bitcoin, Ripple use their signed content when present
+                Chain.Ton -> payload.signTon != null
+                Chain.Sui -> payload.signSui != null
+                Chain.Solana -> payload.signSolana != null
+                Chain.Bitcoin,
+                Chain.BitcoinCash,
+                Chain.Dogecoin,
+                Chain.Litecoin -> payload.signBitcoin != null
+                Chain.Ripple -> payload.signRipple != null
                 else -> false
             }
         }
 
     override val hasOpaqueSignedContent: Boolean
-        get() = signedDataBodyIsActive
+        get() = signedData != null && signedDataBodyIsActive
 
     override val memoIsOutranked: Boolean
         get() {
