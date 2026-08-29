@@ -628,6 +628,7 @@
     <string name="referral_create_search">Buscar</string>
     <string name="referral_create_expiration_date">Fecha de vencimiento</string>
     <string name="referral_create_set_expiration_years">Establecer vencimiento (en años)</string>
+    <string name="referral_choose_payout_asset">Elegir activo de pago</string>
     <string name="referral_create_registration_fees">Tarifas de registro</string>
     <string name="referral_create_cost">Costo</string>
     <string name="referral_create_fees_error">Error al cargar las tarifas. Inténtelo de nuevo.</string>
@@ -783,7 +784,6 @@
     <string name="search_bar_soon">Próximamente</string>
     <string name="upgrade_banner_sign_faster">Firma más rápido que nunca</string>
     <string name="upgrade_banner_upgrade_your">Actualiza tu bóveda ahora</string>
-    <string name="upgrade_banner_upgrade_now">Actualízate ahora</string>
     <string name="home_portfolio_balance">Saldo de la cartera</string>
     <string name="wallet">Monedero</string>
     <string name="governance">Gobernanza</string>
@@ -854,8 +854,15 @@
     <string name="send_tx_overview_add_to_address_book">Agregar a la libreta de direcciones</string>
     <string name="invite_to_x_banner_title">Vultisig construye contigo.</string>
     <string name="invite_to_x_banner_desc">Síguenos en X</string>
-    <string name="invite_to_x_banner_button">Sigue a %s</string>
     <string name="buy_vult_banner_desc">Y ahorra en comisiones de intercambio</string>
+    <string name="rujira_banner_caption">Haz staking y gana</string>
+    <string name="rujira_banner_title">El staking de Rujira ya está disponible</string>
+    <string name="backup_banner_caption">Respalda tu Bóveda</string>
+    <string name="backup_banner_title">Solicita la custodia total de la bóveda</string>
+    <string name="referral_rewards_banner_caption">No te pierdas las recompensas</string>
+    <string name="referral_rewards_banner_title">Añade tu código de referido</string>
+    <string name="kamino_banner_caption">Nuevo en Solana</string>
+    <string name="kamino_banner_title">Empieza a ganar con Kamino</string>
     <string name="vault_detail_vault_info">Información de la bóveda</string>
     <string name="vault_details_keys">Claves</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Habilitar la firma rápida biométrica</string>

@@ -134,6 +134,7 @@ dependencies {
     implementation(libs.apache.compress)
     implementation(libs.apache.compress.xz)
     implementation(libs.mlkit.barcode)
+    implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
     implementation(libs.timber)
     implementation(libs.spark.core)

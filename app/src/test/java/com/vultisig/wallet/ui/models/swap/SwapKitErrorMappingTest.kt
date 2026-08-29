@@ -91,7 +91,7 @@ internal class SwapKitErrorMappingTest {
     }
 
     @Test
-    fun `QuoteDeviation routes through FormattedText so 5%% unescapes to 5%`() {
+    fun `QuoteDeviation routes through FormattedText so escaped percent unescapes`() {
         // The empty args list is intentional — FormattedText runs String.format which collapses
         // the resource's `%%` escape back to a literal `%`. A StringResource here would render
         // `5%%` verbatim because it skips String.format entirely.

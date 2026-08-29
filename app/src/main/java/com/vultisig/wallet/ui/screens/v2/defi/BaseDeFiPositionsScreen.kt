@@ -24,6 +24,7 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.serialization.Serializable
 
 /**
  * Base scaffold for DeFi position screens with balance banner, tab navigation, and pull-to-refresh.
@@ -101,6 +102,7 @@ fun BaseDeFiPositionsScreenContent(
 }
 
 /** Tabs available in DeFi position screens. */
+@Serializable
 enum class DeFiTab(@androidx.annotation.StringRes val displayNameRes: Int) {
     EARN(R.string.defi_tab_earn),
     DEPOSITED(R.string.defi_tab_deposited),

@@ -626,6 +626,7 @@
     <string name="referral_create_search">Pesquisar</string>
     <string name="referral_create_expiration_date">Data de expiração</string>
     <string name="referral_create_set_expiration_years">Definir expiração (em anos)</string>
+    <string name="referral_choose_payout_asset">Escolher ativo de pagamento</string>
     <string name="referral_create_registration_fees">Taxas de registro</string>
     <string name="referral_create_cost">Custo</string>
     <string name="referral_create_fees_error">Falha ao carregar taxas. Tente novamente.</string>
@@ -780,7 +781,6 @@
     <string name="search_bar_soon">Em breve</string>
     <string name="upgrade_banner_sign_faster">Assine mais rápido do que nunca</string>
     <string name="upgrade_banner_upgrade_your">Atualize o seu cofre agora</string>
-    <string name="upgrade_banner_upgrade_now">Atualize agora</string>
     <string name="home_portfolio_balance">Saldo da carteira</string>
     <string name="wallet">Carteira</string>
     <string name="governance">Governança</string>
@@ -853,8 +853,15 @@
     <string name="send_tx_overview_add_to_address_book">Adicionar ao Catálogo de Endereços</string>
     <string name="invite_to_x_banner_title">A Vultisig está a construir consigo.</string>
     <string name="invite_to_x_banner_desc">Siga-nos no X</string>
-    <string name="invite_to_x_banner_button">Siga %s</string>
     <string name="buy_vult_banner_desc">E poupe nas taxas de troca</string>
+    <string name="rujira_banner_caption">Faça staking e ganhe</string>
+    <string name="rujira_banner_title">Staking da Rujira disponível agora</string>
+    <string name="backup_banner_caption">Faça Backup do Seu Cofre</string>
+    <string name="backup_banner_title">Solicite a custódia total do cofre</string>
+    <string name="referral_rewards_banner_caption">Não perca recompensas</string>
+    <string name="referral_rewards_banner_title">Adicione seu código de referência</string>
+    <string name="kamino_banner_caption">Novo na Solana</string>
+    <string name="kamino_banner_title">Comece a ganhar com a Kamino</string>
     <string name="vault_detail_vault_info">Informações do Cofre</string>
     <string name="vault_details_keys">Chaves</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Ativar Assinatura Rápida por Biometria</string>

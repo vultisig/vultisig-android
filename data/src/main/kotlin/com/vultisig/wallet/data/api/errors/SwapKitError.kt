@@ -59,10 +59,10 @@ sealed class SwapKitError(message: String, cause: Throwable? = null) : Exception
         SwapKitError("Unsupported SwapKit tx type: $txType")
 
     /**
-     * SwapKit-side feature flag turned off for this chain pair. iOS produces this client-side via
-     * `SwapKitProviderCache` ahead of the network call; the Android cache exists but isn't injected
-     * yet (Phase 2), so this variant is currently produced only by future client gates — not the
-     * wire — and the wire never emits a matching code.
+     * SwapKit does not currently route on one of the pair's chains. Raised client-side by
+     * [com.vultisig.wallet.data.repositories.swap.SwapKitQuoteSource] from the cached `/providers`
+     * response, ahead of the network call, exactly as iOS does. The wire never emits a matching
+     * code.
      */
     data object ProviderNotEnabled : SwapKitError("SwapKit is not enabled on this chain")
 

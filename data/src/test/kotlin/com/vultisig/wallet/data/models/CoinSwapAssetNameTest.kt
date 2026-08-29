@@ -43,26 +43,6 @@ class CoinSwapAssetNameTest {
         assertEquals("GAIA.ATOM", c.swapAssetName())
     }
 
-    // swapAssetName — Kujira non-native
-
-    @Test
-    fun `Kujira ibc token returns KUJI dot ticker`() {
-        val c = coin(Chain.Kujira, "USDC", "ibc/HASH123ABC", isNativeToken = false)
-        assertEquals("KUJI.USDC", c.swapAssetName())
-    }
-
-    @Test
-    fun `Kujira factory token returns KUJI dot ticker`() {
-        val c = coin(Chain.Kujira, "USK", "factory/kujira/usk", isNativeToken = false)
-        assertEquals("KUJI.USK", c.swapAssetName())
-    }
-
-    @Test
-    fun `Kujira token with plain contract address includes contract`() {
-        val c = coin(Chain.Kujira, "FOO", "kujiraabcdef", isNativeToken = false)
-        assertEquals("KUJI.FOO-kujiraabcdef", c.swapAssetName())
-    }
-
     // swapAssetName — ThorChain non-native (secured assets)
 
     @Test

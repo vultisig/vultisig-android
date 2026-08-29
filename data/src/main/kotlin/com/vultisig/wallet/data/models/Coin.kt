@@ -60,7 +60,7 @@ data class Coin(
  * True when this coin has a CoinGecko price-provider id, or a contract address on a chain
  * [coinGeckoAssetPlatformId] actually supports for contract lookups. Pool-priced assets
  * (THORChain/Maya/Solana pool tokens) have neither, and contract addresses on chains CoinGecko
- * doesn't index by platform (e.g. Kujira's `factory/`/`ibc/` denoms, or Sei/Hyperliquid) would
+ * doesn't index by platform (e.g. Osmosis' `factory/`/`ibc/` denoms, or Sei/Hyperliquid) would
  * otherwise pass a bare non-empty check yet always fail the actual fetch — so this gates the token
  * detail screen's price chart and market stats sections on a source that can genuinely resolve.
  */
@@ -153,12 +153,7 @@ fun Coin.swapAssetName(): String =
             "${chain.swapAssetName()}.${ticker}"
         }
     } else {
-        if (
-            chain == Chain.Kujira &&
-                (contractAddress.contains("factory/") || contractAddress.contains("ibc/"))
-        ) {
-            "${chain.swapAssetName()}.${ticker}"
-        } else if (chain == Chain.ThorChain) {
+        if (chain == Chain.ThorChain) {
             if (isSecuredAsset()) {
                 contractAddress
             } else {
@@ -208,7 +203,7 @@ private fun Coin.securedAssetUnderlyingIsEvm(): Boolean {
  * "eth.usdc-0xa0b8..." on both sides). EVM contract addresses are lowercased to handle EIP-55
  * checksum-casing differences from QR payloads; a THORChain secured asset is also lowercased only
  * when its underlying chain is EVM, so it matches that EVM counterpart. Non-EVM secured assets
- * (BTC, LTC, ...) and other non-EVM chains (e.g. Cosmos ibc/, Kujira factory/) use case-sensitive
+ * (BTC, LTC, ...) and other non-EVM chains (e.g. Cosmos ibc/, Osmosis factory/) use case-sensitive
  * canonical forms as returned by the THORChain API and are not altered.
  */
 fun Coin.swapAssetComparisonName(): String {

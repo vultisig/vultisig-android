@@ -56,10 +56,14 @@ import com.vultisig.wallet.ui.theme.Theme
 
 /**
  * Entry point for the THORChain DeFi positions screen; wires ViewModel state and pull-to-refresh.
+ *
+ * [initialTab] preselects a tab for callers that advertise one position in particular; without it
+ * the screen opens on Bonded.
  */
 @Composable
 internal fun ThorchainDefiPositionsScreen(
     vaultId: VaultId,
+    initialTab: DeFiTab? = null,
     model: ThorchainDefiPositionsViewModel = hiltViewModel<ThorchainDefiPositionsViewModel>(),
 ) {
     val state by model.state.collectAsState()
@@ -71,7 +75,7 @@ internal fun ThorchainDefiPositionsScreen(
         }
     }
 
-    LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
+    LaunchedEffect(vaultId) { model.setData(vaultId = vaultId, initialTab = initialTab) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.onScreenResumed() }
 

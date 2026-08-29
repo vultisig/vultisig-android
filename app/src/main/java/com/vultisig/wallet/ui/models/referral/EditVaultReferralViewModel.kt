@@ -10,15 +10,24 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.ThorChainPoolCoin
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.utils.decimals
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.referral.CreateReferralViewModel.Companion.BLOCKS_PER_YEAR
@@ -49,6 +58,8 @@ internal data class EditVaultReferralUiState(
     val referralCostFiatFormatted: String = "",
     val referralExpiration: String = "",
     val costFeesTokenAmount: String = "",
+    val payoutAsset: PayoutAssetUiModel? = null,
+    val isSaveEnabled: Boolean = false,
     val error: ReferralError? = null,
 )
 
@@ -63,6 +74,10 @@ constructor(
     private val accountsRepository: AccountsRepository,
     private val transactionRepository: DepositTransactionRepository,
     private val thorChainApi: ThorChainApi,
+    private val requestResultRepository: RequestResultRepository,
+    private val vaultRepository: VaultRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val enableToken: EnableTokenUseCase,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.ReferralVaultEdition>()
@@ -75,6 +90,11 @@ constructor(
     val state = MutableStateFlow(EditVaultReferralUiState())
     private var address: Address? = null
 
+    /** The asset the THORName is registered with today; null while unknown or when it has none. */
+    private var initialPayoutAsset: ThorChainPoolCoin? = null
+    private var selectedPayoutAsset: ThorChainPoolCoin? = null
+    private var hasPickedPayoutAsset = false
+
     init {
         loadAddress()
         initData()
@@ -85,7 +105,9 @@ constructor(
         viewModelScope.launch {
             referralTextFieldState.setTextAndPlaceCursorAtEnd(vaultReferralCode)
 
-            state.update { it.copy(referralExpiration = vaultReferralExpiration) }
+            state.update {
+                it.copy(referralExpiration = vaultReferralExpiration, payoutAsset = RUNE_PAYOUT)
+            }
 
             try {
                 nativeRuneFees =
@@ -95,6 +117,33 @@ constructor(
                 Timber.w(e, "Falling back to default referral fees")
                 nativeRuneFees = null
             }
+        }
+
+        loadPayoutAsset()
+    }
+
+    /**
+     * Reads the payout asset the THORName already carries so the picker opens on it and an edit
+     * that only extends the expiry keeps it, rather than silently re-registering the name without
+     * one.
+     */
+    private fun loadPayoutAsset() {
+        viewModelScope.safeLaunch(
+            onError = { Timber.w(it, "Failed to load the referral's payout asset") }
+        ) {
+            val preferredAsset =
+                withContext(Dispatchers.IO) { thorChainApi.getReferralCodeInfo(vaultReferralCode) }
+                    .preferredAsset
+
+            val asset = ThorChainPoolCoin.from(preferredAsset) ?: return@safeLaunch
+            initialPayoutAsset = asset
+            // A pick made while this was in flight is the newer intent, and stands.
+            if (hasPickedPayoutAsset) {
+                state.update { it.copy(isSaveEnabled = isSaveEnabled(it.referralCounter)) }
+                return@safeLaunch
+            }
+            selectedPayoutAsset = asset
+            state.update { it.copy(payoutAsset = asset.toUiModel()) }
         }
     }
 
@@ -111,7 +160,11 @@ constructor(
             val newCounter = (stateValue.referralCounter + yearsDelta.toInt()).coerceAtLeast(0)
 
             state.update {
-                it.copy(referralCounter = newCounter, referralExpiration = newExpiration)
+                it.copy(
+                    referralCounter = newCounter,
+                    referralExpiration = newExpiration,
+                    isSaveEnabled = isSaveEnabled(newCounter),
+                )
             }
         } catch (t: Throwable) {
             Timber.e(t, "Failed to parse date")
@@ -131,6 +184,38 @@ constructor(
             calculateFees()
         }
     }
+
+    fun onSelectPayoutAsset() {
+        viewModelScope.launch {
+            val requestId = UUID.randomUUID().toString()
+            navigator.route(
+                Route.ReferralPayoutAsset(
+                    requestId = requestId,
+                    selectedAsset = selectedPayoutAsset?.asset,
+                )
+            )
+
+            val asset =
+                requestResultRepository.request<ThorChainPoolCoin>(requestId) ?: return@launch
+
+            selectedPayoutAsset = asset
+            hasPickedPayoutAsset = true
+            state.update {
+                it.copy(
+                    payoutAsset = asset.toUiModel(),
+                    isSaveEnabled = isSaveEnabled(it.referralCounter),
+                )
+            }
+        }
+    }
+
+    /**
+     * Save covers two independent edits: buying more years, and switching the payout asset. Either
+     * alone is a valid transaction, so an unchanged asset with no added year is the only state that
+     * has nothing to sign.
+     */
+    private fun isSaveEnabled(counter: Int): Boolean =
+        counter > 0 || selectedPayoutAsset?.asset != initialPayoutAsset?.asset
 
     private fun calculateFees() {
         viewModelScope.launch {
@@ -183,7 +268,14 @@ constructor(
                 }
 
                 val address = account.token.address
-                val memo = "~:${vaultReferralCode.uppercase()}:THOR:$address:$address"
+                val payoutAsset = selectedPayoutAsset
+                val memo =
+                    buildEditReferralMemo(
+                        referralCode = vaultReferralCode,
+                        thorAddress = address,
+                        payoutAsset = payoutAsset,
+                        payoutAssetAddress = payoutAsset?.let { payoutAddress(it.coin) },
+                    )
                 val gasFees =
                     TokenValue(
                         value = gasFeeValue,
@@ -235,6 +327,32 @@ constructor(
         }
     }
 
+    /**
+     * This vault's address on the payout asset's chain — the alias THORChain pays the asset out to.
+     * The token is enabled alongside it, so the payouts land somewhere the vault actually shows.
+     */
+    private suspend fun payoutAddress(coin: Coin): String {
+        val vault = vaultRepository.get(vaultId) ?: error("Can't load vault")
+        val address =
+            withContext(Dispatchers.IO) {
+                chainAccountAddressRepository.getAddress(coin, vault).first
+            }
+        enablePayoutToken(coin, vault)
+        return address
+    }
+
+    private suspend fun enablePayoutToken(coin: Coin, vault: Vault) {
+        if (vault.coins.any { it.id == coin.id }) return
+        try {
+            enableToken(vaultId, coin)
+        } catch (t: Throwable) {
+            if (t is kotlinx.coroutines.CancellationException) throw t
+            // Only costs the user the token's row in the vault — the memo, and with it the
+            // payout itself, is unaffected.
+            Timber.w(t, "Failed to add the payout asset to the vault")
+        }
+    }
+
     private fun loadAddress() {
         viewModelScope.launch {
             try {
@@ -264,5 +382,24 @@ constructor(
 
     fun onDismissError() {
         viewModelScope.launch { state.update { it.copy(error = null) } }
+    }
+
+    private fun ThorChainPoolCoin.toUiModel(): PayoutAssetUiModel =
+        PayoutAssetUiModel(
+            asset = asset,
+            logo = getCoinLogo(coin.logo),
+            ticker = coin.ticker,
+            chain = coin.chain.raw,
+        )
+
+    private companion object {
+        /** What a THORName pays out in until an asset is chosen. */
+        val RUNE_PAYOUT =
+            PayoutAssetUiModel(
+                asset = "",
+                logo = getCoinLogo(Coins.ThorChain.RUNE.logo),
+                ticker = Coins.ThorChain.RUNE.ticker,
+                chain = Chain.ThorChain.raw,
+            )
     }
 }

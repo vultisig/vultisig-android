@@ -37,7 +37,6 @@ val thorchainMemoAssetChainPrefix: Map<Chain, String> =
         Chain.Dogecoin to "DOGE",
         Chain.Ethereum to "ETH",
         Chain.GaiaChain to "GAIA",
-        Chain.Kujira to "KUJI",
         Chain.Litecoin to "LTC",
         Chain.ThorChain to "THOR",
         Chain.Tron to "TRON",

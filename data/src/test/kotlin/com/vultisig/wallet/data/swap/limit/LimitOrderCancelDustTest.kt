@@ -187,7 +187,6 @@ internal class LimitOrderCancelDustTest {
                 Chain.Dogecoin to "100000000",
                 Chain.Ethereum to "1000",
                 Chain.GaiaChain to "1000000",
-                Chain.Kujira to "1000000",
                 Chain.Litecoin to "100000",
                 Chain.Tron to "10000000",
                 Chain.Ripple to "100000000",

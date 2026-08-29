@@ -928,6 +928,7 @@
     <string name="referral_create_search">검색</string>
     <string name="referral_create_expiration_date">만료 날짜</string>
     <string name="referral_create_set_expiration_years">만료 기간 설정 (년 단위)</string>
+    <string name="referral_choose_payout_asset">지급 자산 선택</string>
     <string name="referral_create_registration_fees">등록 수수료</string>
     <string name="referral_create_cost">비용</string>
     <string name="referral_create_fees_error">수수료를 불러오지 못했습니다. 다시 시도해 주세요.</string>
@@ -1077,7 +1078,6 @@
     <string name="search_bar_soon">곧 출시</string>
     <string name="upgrade_banner_sign_faster">그 어느 때보다 빠르게 서명</string>
     <string name="upgrade_banner_upgrade_your">지금 볼트를 업그레이드하세요</string>
-    <string name="upgrade_banner_upgrade_now">지금 업그레이드</string>
     <string name="home_portfolio_balance">포트폴리오 잔액</string>
     <string name="wallet">지갑</string>
     <string name="governance">거버넌스</string>
@@ -1154,8 +1154,15 @@
     <string name="send_tx_overview_add_to_address_book">주소록에 추가</string>
     <string name="invite_to_x_banner_title">Vultisig는 여러분과 함께 성장합니다.</string>
     <string name="invite_to_x_banner_desc">X에서 팔로우하세요</string>
-    <string name="invite_to_x_banner_button">@%s 팔로우</string>
     <string name="buy_vult_banner_desc">스왑 수수료를 절약하세요</string>
+    <string name="rujira_banner_caption">스테이킹하고 보상 받기</string>
+    <string name="rujira_banner_title">Rujira 스테이킹 출시</string>
+    <string name="backup_banner_caption">볼트를 백업하세요</string>
+    <string name="backup_banner_title">볼트의 완전한 소유권을 요청하세요</string>
+    <string name="referral_rewards_banner_caption">보상을 놓치지 마세요</string>
+    <string name="referral_rewards_banner_title">추천 코드를 추가하세요</string>
+    <string name="kamino_banner_caption">솔라나 신규</string>
+    <string name="kamino_banner_title">Kamino로 수익을 시작하세요</string>
     <string name="home_defi_portfolio">DeFi 포트폴리오</string>
     <string name="home_page_no_chains_enabled">활성화된 체인 없음</string>
     <string name="home_page_no_chain_enabled_desc">모든 체인을 비활성화했습니다. 최소 하나의 체인을 활성화해 주세요.</string>

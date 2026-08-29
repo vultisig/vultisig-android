@@ -150,10 +150,6 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
-    fun bindSearchKujiraTokenUseCase(impl: SearchKujiraTokenUseCaseImpl): SearchKujiraTokenUseCase
-
-    @Binds
-    @Singleton
     fun bindSearchTerraTokenUseCase(impl: SearchTerraTokenUseCaseImpl): SearchTerraTokenUseCase
 
     @Binds
@@ -271,6 +267,12 @@ internal interface DataUsecasesModule {
     fun bindGetThorChainPendingLpDepositsUseCase(
         impl: GetThorChainPendingLpDepositsUseCaseImpl
     ): GetThorChainPendingLpDepositsUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetThorChainPoolAssetsUseCase(
+        impl: GetThorChainPoolAssetsUseCaseImpl
+    ): GetThorChainPoolAssetsUseCase
 
     @Binds
     @Singleton

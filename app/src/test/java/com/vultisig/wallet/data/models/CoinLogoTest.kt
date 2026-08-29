@@ -125,8 +125,7 @@ internal class CoinLogoTest {
     }
 
     @Test
-    fun `tokenLogoRes resolves fuzion aliases`() {
-        assertEquals(R.drawable.fuzion, coin(logo = "fuzion").tokenLogoRes())
+    fun `tokenLogoRes resolves fuzn logo`() {
         assertEquals(R.drawable.fuzion, coin(logo = "fuzn").tokenLogoRes())
     }
 

@@ -16,6 +16,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.home.components.BOTH_CRYPTO_CONNECTION_TYPES
 import com.vultisig.wallet.ui.screens.v2.home.components.ONLY_WALLET
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,6 +51,9 @@ constructor(
         )
     private lateinit var vaultId: VaultId
     private var chainId: ChainId? = null
+    // The rendered route is rebuilt from the connection flow below, which would otherwise drop the
+    // tab the caller asked for, so it is held here and put back on every rebuild.
+    private var thorchainTab: DeFiTab? = null
 
     val uiState = MutableStateFlow(ChainDashboardUiModel())
 
@@ -70,6 +74,7 @@ constructor(
             is ChainDashboardRoute.PositionTokens -> {
                 vaultId = args.route.vaultId
                 chainId = Chain.ThorChain.id
+                thorchainTab = args.route.tab
             }
 
             is ChainDashboardRoute.PositionMaya -> {
@@ -149,7 +154,10 @@ constructor(
                         CryptoConnectionType.Defi -> {
                             when (chainId) {
                                 Chain.ThorChain.id ->
-                                    ChainDashboardRoute.PositionTokens(vaultId = vaultId)
+                                    ChainDashboardRoute.PositionTokens(
+                                        vaultId = vaultId,
+                                        tab = thorchainTab,
+                                    )
                                 Chain.MayaChain.id ->
                                     ChainDashboardRoute.PositionMaya(vaultId = vaultId)
                                 Chain.Tron.id -> ChainDashboardRoute.PositionTron(vaultId = vaultId)

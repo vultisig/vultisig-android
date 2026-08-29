@@ -396,7 +396,6 @@ constructor(
 
                 val denomTrace =
                     when (chain) {
-                        Chain.Kujira,
                         Chain.Terra ->
                             if (token.contractAddress.startsWith("ibc/")) {
                                 val denomTrace = api.getIbcDenomTraces(token.contractAddress)
