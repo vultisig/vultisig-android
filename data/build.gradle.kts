@@ -126,7 +126,6 @@ dependencies {
     // test
     testCompileOnly(files("../app/libs/mobile-tss-lib.aar"))
     testImplementation(libs.ktor.client.mock)
-    testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)

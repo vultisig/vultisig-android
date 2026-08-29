@@ -13,14 +13,14 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.net.ssl.SSLHandshakeException
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlin.test.fail
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 /**
  * Contract tests for network error handling.
@@ -113,14 +113,19 @@ class NetworkStateInterceptorContractTest {
             fail("Expected NetworkException but request succeeded")
         } catch (e: NetworkException) {
             assertEquals(
-                "httpStatusCode must be 0 for client-side transport errors",
-                0,
-                e.httpStatusCode,
+                expected = 0,
+                actual = e.httpStatusCode,
+                message = "httpStatusCode must be 0 for client-side transport errors",
             )
-            assertEquals("transport failure must be classified by subtype", expectedKind, e.kind)
+            assertEquals(
+                expected = expectedKind,
+                actual = e.kind,
+                message = "transport failure must be classified by subtype",
+            )
             assertTrue(
-                "cause must be the original IOException (${ioException::class.simpleName})",
-                e.cause is IOException,
+                actual = e.cause is IOException,
+                message =
+                    "cause must be the original IOException (${ioException::class.simpleName})",
             )
             assertEquals(ioException.message, e.cause?.message)
         }
@@ -153,7 +158,7 @@ class NetworkStateInterceptorContractTest {
         // Server 503 → normal response
         val serverResponse = serverClient.get("https://api.vultisig.com/test")
 
-        assertNotNull("Network failure must throw an exception", networkException)
+        assertNotNull(networkException, "Network failure must throw an exception")
         assertEquals(0, networkException!!.httpStatusCode)
         assertEquals(HttpStatusCode.ServiceUnavailable, serverResponse.status)
 
