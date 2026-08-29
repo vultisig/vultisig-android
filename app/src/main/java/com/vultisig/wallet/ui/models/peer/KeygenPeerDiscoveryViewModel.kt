@@ -394,13 +394,7 @@ constructor(
             // clearing it counts. Recorded only — keygen starts on the next screen, which is no
             // place for a store card.
             if (selectedDevices.isNotEmpty()) {
-                try {
-                    inAppReviewRepository.record(AppReviewEvent.DevicePairingCompleted(sessionId))
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to record in-app review for device pairing")
-                }
+                inAppReviewRepository.record(AppReviewEvent.DevicePairingCompleted(sessionId))
             }
 
             navigator.route(
