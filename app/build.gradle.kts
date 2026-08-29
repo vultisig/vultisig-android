@@ -138,7 +138,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.timber)
     implementation(libs.spark.core)
-    implementation(libs.core.zxing)
     implementation(libs.wallet.core)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil)
