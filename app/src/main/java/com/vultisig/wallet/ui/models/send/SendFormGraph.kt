@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.isRippleIssuedToken
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
@@ -534,8 +535,10 @@ internal class SendFormGraph(
                         token.chain != Chain.Sui
 
                 // A memo outlives the switch to a coin whose form has no memo field, and submit
-                // still reads it — with no field left on screen to clear it.
-                if (!hasMemo) {
+                // still reads it — with no field left on screen to clear it. Only issued
+                // currencies clear: TON jettons, SPL and TRC20 tokens hide the field too, yet
+                // still sign the memo.
+                if (token.isRippleIssuedToken) {
                     memoFieldState.clearText()
                 }
 

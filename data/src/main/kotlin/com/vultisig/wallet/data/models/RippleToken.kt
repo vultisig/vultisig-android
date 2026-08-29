@@ -148,7 +148,8 @@ fun toRippleCurrencyCode(currency: String): String {
 /**
  * Whether an on-ledger code reaches the ledger unchanged. WalletCore upper-cases a 3-byte code
  * before encoding it and XRPL compares those bytes case-sensitively, so a lowercase standard code
- * would sign a currency other than the one reviewed; its hex spelling still expresses it.
+ * would sign a currency other than the one reviewed. Refused rather than re-spelled in the 160-bit
+ * form: iOS refuses the same codes, so re-spelling one here would diverge the pre-image.
  */
 fun isSignableRippleCurrencyCode(code: String): Boolean =
     if (RIPPLE_HEX_CURRENCY_CODE.matches(code)) {
