@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.recordAndOfferPrompt
+import com.vultisig.wallet.data.repositories.recordFirstVaultBackupCompleted
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateZipVaultBackupFileNameUseCase
@@ -36,6 +37,7 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.typeOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -45,6 +47,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 internal data class BackupPasswordState(
     val mimeType: MimeType = OCTET_STREAM,
@@ -244,20 +247,26 @@ constructor(
             BackupType.AllVaults -> {
                 val vaults = awaitVaults()
                 vaults.forEach { vault -> vaultDataStoreRepository.setBackupStatus(vault.id, true) }
-                // One tap is one milestone: a bulk export of five vaults is a single good moment,
-                // not five, so only the first one is counted.
-                vaults.firstOrNull()?.let { vault ->
-                    inAppReviewRepository.recordAndOfferPrompt(
-                        AppReviewEvent.VaultBackupCompleted(vault.id)
-                    )
+                try {
+                    inAppReviewRepository.recordFirstVaultBackupCompleted(vaults)
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to record in-app review for vault backup")
                 }
             }
 
             is BackupType.CurrentVault -> {
                 vaultDataStoreRepository.setBackupStatus(vaultId, true)
-                inAppReviewRepository.recordAndOfferPrompt(
-                    AppReviewEvent.VaultBackupCompleted(vaultId)
-                )
+                try {
+                    inAppReviewRepository.recordAndOfferPrompt(
+                        AppReviewEvent.VaultBackupCompleted(vaultId)
+                    )
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to record in-app review for vault backup")
+                }
             }
         }
     }

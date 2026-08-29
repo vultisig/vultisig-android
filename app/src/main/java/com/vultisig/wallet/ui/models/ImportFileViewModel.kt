@@ -227,7 +227,14 @@ constructor(
      * install that already holds vaults is routine housekeeping, not a milestone.
      */
     private suspend fun recordRestoreOnNewDevice(vault: Vault) {
-        val vaultCount = runCatching { vaultRepository.getAll().size }.getOrNull()
+        val vaultCount =
+            try {
+                vaultRepository.getAll().size
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: Exception) {
+                null
+            }
         if (vaultCount != 1) return
         inAppReviewRepository.recordAndOfferPrompt(AppReviewEvent.VaultRestoreCompleted(vault.id))
     }

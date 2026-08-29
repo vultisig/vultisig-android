@@ -41,6 +41,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -408,7 +409,13 @@ constructor(
                                         }
                                     }
                                 }
-                                recordIncomingFundsIfNeeded(account)
+                                try {
+                                    recordIncomingFundsIfNeeded(account)
+                                } catch (cancellation: CancellationException) {
+                                    throw cancellation
+                                } catch (e: Exception) {
+                                    Timber.e(e, "Failed to record incoming funds")
+                                }
                             } ?: run { updateRefreshing(false) }
                     }
                     .onCompletion { updateRefreshing(false) }

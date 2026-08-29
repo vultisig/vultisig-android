@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.typeOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @HiltViewModel
 internal class BackupVaultViewModel
@@ -212,9 +214,15 @@ constructor(
 
                 // Securing a vault is a genuine "this worked" moment, and the first one per vault
                 // is the only one that counts — re-exporting the same share is not a new milestone.
-                inAppReviewRepository.recordAndOfferPrompt(
-                    AppReviewEvent.VaultBackupCompleted(vaultId)
-                )
+                try {
+                    inAppReviewRepository.recordAndOfferPrompt(
+                        AppReviewEvent.VaultBackupCompleted(vaultId)
+                    )
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to record in-app review for vault backup")
+                }
 
                 snackbarFlow.showMessage(
                     UiText.StringResource(R.string.vault_settings_success_backup_message)

@@ -121,6 +121,21 @@ suspend fun InAppReviewRepository.recordAndOfferPrompt(event: AppReviewEvent) {
     }
 }
 
+/**
+ * Records a vault backup milestone for only the first vault in a bulk backup operation. One tap is
+ * one milestone: a bulk export of five vaults is a single good moment, not five.
+ */
+suspend fun InAppReviewRepository.recordFirstVaultBackupCompleted(vaults: List<*>) {
+    vaults.firstOrNull()?.let { vault ->
+        val vaultId =
+            when (vault) {
+                is com.vultisig.wallet.data.models.Vault -> vault.id
+                else -> return@let
+            }
+        recordAndOfferPrompt(AppReviewEvent.VaultBackupCompleted(vaultId))
+    }
+}
+
 internal class InAppReviewRepositoryImpl
 @Inject
 constructor(

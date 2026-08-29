@@ -271,24 +271,27 @@ internal fun SettingsScreenPreview() {
                                 ),
                         ),
                         SettingsGroupUiModel(
+                            title = "Support".asUiText(),
+                            items =
+                                listOf(
+                                    SettingsItem.Faq,
+                                    SettingsItem.CheckForUpdates,
+                                    SettingsItem.RateTheApp,
+                                    SettingsItem.ShareTheApp,
+                                ),
+                        ),
+                        SettingsGroupUiModel(
                             title = "Community".asUiText(),
                             items =
                                 listOf(
                                     SettingsItem.ReferralCode,
-                                    SettingsItem.RateTheApp,
-                                    SettingsItem.ShareTheApp,
                                     SettingsItem.Twitter,
                                     SettingsItem.Discord,
                                 ),
                         ),
                         SettingsGroupUiModel(
                             title = "About".asUiText(),
-                            items =
-                                listOf(
-                                    SettingsItem.Faq,
-                                    SettingsItem.TermsOfService,
-                                    SettingsItem.PrivacyPolicy,
-                                ),
+                            items = listOf(SettingsItem.TermsOfService, SettingsItem.PrivacyPolicy),
                         ),
                     )
             ),

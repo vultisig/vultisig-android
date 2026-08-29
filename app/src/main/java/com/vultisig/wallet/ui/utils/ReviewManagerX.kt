@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.utils
 
-import android.app.Activity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -10,7 +9,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.android.play.core.review.ReviewException
-import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.android.play.core.review.model.ReviewErrorCode
 import com.vultisig.wallet.data.repositories.InAppReviewRepository
@@ -20,6 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -60,24 +59,24 @@ internal fun InAppReviewHost(viewModel: InAppReviewViewModel = hiltViewModel()) 
             // A claim is spent whether or not Play shows anything, so never spend one while the
             // app is in the background. The events stay counted, and the next success re-asks.
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return@collectLatest
-            if (viewModel.claimReviewPrompt()) {
-                reviewManager.showReviewPopUp(activity)
+            reviewManager.requestReviewFlow().addOnCompleteListener { task ->
+                launch {
+                    if (
+                        task.isSuccessful &&
+                            lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+                    ) {
+                        // Only claim the prompt if the activity is still resumed after the request
+                        if (viewModel.claimReviewPrompt()) {
+                            val reviewInfo = task.result
+                            reviewManager.launchReviewFlow(activity, reviewInfo)
+                        }
+                    } else {
+                        @ReviewErrorCode
+                        val reviewErrorCode = (task.exception as? ReviewException)?.errorCode
+                        Timber.e("ReviewError: %s", reviewErrorCode)
+                    }
+                }
             }
-        }
-    }
-}
-
-internal fun ReviewManager.showReviewPopUp(activity: Activity) {
-    val request = requestReviewFlow()
-    request.addOnCompleteListener { task ->
-        if (task.isSuccessful) {
-            // We got the ReviewInfo object
-            val reviewInfo = task.result
-            launchReviewFlow(activity, reviewInfo)
-        } else {
-            // There was some problem, log or handle the error code.
-            @ReviewErrorCode val reviewErrorCode = (task.exception as? ReviewException)?.errorCode
-            Timber.e("ReviewError: %s", reviewErrorCode)
         }
     }
 }

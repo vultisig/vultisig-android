@@ -60,6 +60,7 @@ import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -393,7 +394,13 @@ constructor(
             // clearing it counts. Recorded only — keygen starts on the next screen, which is no
             // place for a store card.
             if (selectedDevices.isNotEmpty()) {
-                inAppReviewRepository.record(AppReviewEvent.DevicePairingCompleted(sessionId))
+                try {
+                    inAppReviewRepository.record(AppReviewEvent.DevicePairingCompleted(sessionId))
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to record in-app review for device pairing")
+                }
             }
 
             navigator.route(
