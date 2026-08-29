@@ -11,8 +11,11 @@ import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.mappers.exportableOrNull
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.AppReviewEvent
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.recordAndOfferPrompt
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateZipVaultBackupFileNameUseCase
@@ -69,6 +72,7 @@ constructor(
     private val mapVaultToProto: MapVaultToProto,
     private val saveBackupToUri: SaveBackupToUriUseCase,
     private val deleteBackupDocument: DeleteBackupDocumentUseCase,
+    private val inAppReviewRepository: InAppReviewRepository,
 ) : ViewModel() {
 
     private val args =
@@ -238,13 +242,22 @@ constructor(
     private suspend fun updateBackupStatus() {
         when (backupType) {
             BackupType.AllVaults -> {
-                awaitVaults().forEach { vault ->
-                    vaultDataStoreRepository.setBackupStatus(vault.id, true)
+                val vaults = awaitVaults()
+                vaults.forEach { vault -> vaultDataStoreRepository.setBackupStatus(vault.id, true) }
+                // One tap is one milestone: a bulk export of five vaults is a single good moment,
+                // not five, so only the first one is counted.
+                vaults.firstOrNull()?.let { vault ->
+                    inAppReviewRepository.recordAndOfferPrompt(
+                        AppReviewEvent.VaultBackupCompleted(vault.id)
+                    )
                 }
             }
 
             is BackupType.CurrentVault -> {
                 vaultDataStoreRepository.setBackupStatus(vaultId, true)
+                inAppReviewRepository.recordAndOfferPrompt(
+                    AppReviewEvent.VaultBackupCompleted(vaultId)
+                )
             }
         }
     }

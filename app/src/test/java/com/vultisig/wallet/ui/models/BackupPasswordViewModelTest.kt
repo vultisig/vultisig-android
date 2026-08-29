@@ -123,6 +123,7 @@ internal class BackupPasswordViewModelTest {
             snackbarFlow = snackbarFlow,
             saveBackupToUri = saveBackupToUri,
             deleteBackupDocument = deleteBackupDocument,
+            inAppReviewRepository = mockk(relaxed = true),
         )
     }
 

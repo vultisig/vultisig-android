@@ -275,6 +275,7 @@ internal fun SettingsScreenPreview() {
                             items =
                                 listOf(
                                     SettingsItem.ReferralCode,
+                                    SettingsItem.RateTheApp,
                                     SettingsItem.ShareTheApp,
                                     SettingsItem.Twitter,
                                     SettingsItem.Discord,

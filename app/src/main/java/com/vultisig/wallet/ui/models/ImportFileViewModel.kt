@@ -13,6 +13,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.DefaultDispatcher
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.AppReviewEvent
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.recordAndOfferPrompt
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.MalformedVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
@@ -66,6 +70,8 @@ constructor(
     private val snackBarFlow: SnackbarFlow,
     private val uriFileReader: UriFileReaderUseCase,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
+    private val vaultRepository: VaultRepository,
+    private val inAppReviewRepository: InAppReviewRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.ImportVault>()
@@ -200,6 +206,7 @@ constructor(
     }
 
     private suspend fun finishImport(vault: Vault) {
+        recordRestoreOnNewDevice(vault)
         if (uiModel.value.isZip != true) {
             navigateToHome(vault)
             return
@@ -212,6 +219,17 @@ constructor(
                 it.copy(zipOutputs = remaining, canNavigateToHome = true, activeVault = vault)
             }
         }
+    }
+
+    /**
+     * Counts a restore as a positive moment only when it brought a vault back to a device that had
+     * none — that is the moment the wallet proved it works. Importing an extra share into an
+     * install that already holds vaults is routine housekeeping, not a milestone.
+     */
+    private suspend fun recordRestoreOnNewDevice(vault: Vault) {
+        val vaultCount = runCatching { vaultRepository.getAll().size }.getOrNull()
+        if (vaultCount != 1) return
+        inAppReviewRepository.recordAndOfferPrompt(AppReviewEvent.VaultRestoreCompleted(vault.id))
     }
 
     // The vault is already saved; navigator glitches mustn't surface as an import failure.

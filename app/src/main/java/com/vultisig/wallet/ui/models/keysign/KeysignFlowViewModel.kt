@@ -23,6 +23,8 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.tokenLogoRes
+import com.vultisig.wallet.data.repositories.AppReviewEvent
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.GenerateServiceName
@@ -102,6 +104,7 @@ constructor(
     private val buildKeysignMessage: BuildKeysignMessageUseCase,
     private val updateSolanaKeysignPayload: UpdateSolanaKeysignPayloadUseCase,
     private val buildKeysignTransactionUiModel: BuildKeysignTransactionUiModelUseCase,
+    private val inAppReviewRepository: InAppReviewRepository,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -526,6 +529,10 @@ constructor(
             try {
                 sessionCoordinator.startWithCommittee(_serverAddress, _sessionID, selection.value)
                 Timber.d("Keysign started")
+                // A fast-sign co-signer is the server, not a device the user had to pair with.
+                if (!isFastSign && selection.value.size > 1) {
+                    inAppReviewRepository.record(AppReviewEvent.DevicePairingCompleted(_sessionID))
+                }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e("Failed to start keysign: ${e.stackTraceToString()}")

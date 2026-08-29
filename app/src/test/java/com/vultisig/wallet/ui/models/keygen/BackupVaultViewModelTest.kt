@@ -104,6 +104,7 @@ internal class BackupVaultViewModelTest {
             snackbarFlow = snackbarFlow,
             saveBackupToUri = saveBackupToUri,
             deleteBackupDocument = deleteBackupDocument,
+            inAppReviewRepository = mockk(relaxed = true),
         )
     }
 

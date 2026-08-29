@@ -153,6 +153,7 @@ internal class KeygenPeerDiscoveryViewModelTest {
             sessionApi = sessionApi,
             networkUtils = networkUtils,
             mediatorServiceController = mediatorServiceController,
+            inAppReviewRepository = mockk(relaxed = true),
         )
 
     /**

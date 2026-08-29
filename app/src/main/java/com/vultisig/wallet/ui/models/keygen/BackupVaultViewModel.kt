@@ -11,8 +11,11 @@ import com.vultisig.wallet.data.mappers.exportableOrNull
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getVaultPart
+import com.vultisig.wallet.data.repositories.AppReviewEvent
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.recordAndOfferPrompt
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
 import com.vultisig.wallet.data.usecases.backup.DeleteBackupDocumentUseCase
@@ -56,6 +59,7 @@ constructor(
     private val snackbarFlow: SnackbarFlow,
     private val saveBackupToUri: SaveBackupToUriUseCase,
     private val deleteBackupDocument: DeleteBackupDocumentUseCase,
+    private val inAppReviewRepository: InAppReviewRepository,
 ) : ViewModel() {
 
     private val args =
@@ -205,6 +209,12 @@ constructor(
                 withContext(Dispatchers.IO) {
                     vaultDataStoreRepository.setBackupStatus(args.vaultId, true)
                 }
+
+                // Securing a vault is a genuine "this worked" moment, and the first one per vault
+                // is the only one that counts — re-exporting the same share is not a new milestone.
+                inAppReviewRepository.recordAndOfferPrompt(
+                    AppReviewEvent.VaultBackupCompleted(vaultId)
+                )
 
                 snackbarFlow.showMessage(
                     UiText.StringResource(R.string.vault_settings_success_backup_message)

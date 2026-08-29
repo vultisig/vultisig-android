@@ -192,6 +192,7 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
             sessionApi = sessionApi,
             networkUtils = networkUtils,
             mediatorServiceController = mediatorServiceController,
+            inAppReviewRepository = mockk(relaxed = true),
         )
 
     @Test

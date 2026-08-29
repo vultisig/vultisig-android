@@ -93,6 +93,7 @@
     <string name="send_error_invalid_operator_fee">Naknada operatora mora biti valjani broj između 0 i 10000 baznih bodova</string>
     <string name="settings_screen_language">Jezik</string>
     <string name="settings_screen_currency">Valuta</string>
+    <string name="settings_screen_rate_the_app">Ocijeni aplikaciju</string>
     <string name="settings_screen_share_the_app">Podijelite aplikaciju</string>
     <string name="settings_screen_title">Postavke</string>
     <string name="language_setting_screen_title">Jezik</string>

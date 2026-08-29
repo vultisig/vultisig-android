@@ -242,6 +242,7 @@
     <!-- Settings Screen -->
     <string name="settings_screen_language">语言</string>
     <string name="settings_screen_currency">货币</string>
+    <string name="settings_screen_rate_the_app">为应用评分</string>
     <string name="settings_screen_share_the_app">分享应用</string>
     <string name="settings_screen_title">设置</string>
 

@@ -91,6 +91,8 @@ internal class ImportFileViewModelTest {
                 snackBarFlow = snackbarFlow,
                 uriFileReader = uriFileReader,
                 defaultDispatcher = testDispatcher,
+                vaultRepository = mockk(relaxed = true),
+                inAppReviewRepository = mockk(relaxed = true),
             )
         vm.uiModel.value =
             ImportFileState(

@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.utils.InAppReviewHost
 import com.vultisig.wallet.ui.utils.LocalWindowSizeClass
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.AndroidEntryPoint
@@ -149,6 +150,11 @@ class MainActivity : AppCompatActivity() {
                             }
 
                             CheckUpdates()
+
+                            // Hosted at the root rather than on the keysign screens: a backup, a
+                            // restore or an arrival is just as good a moment to ask, and none of
+                            // them owns a surface the store card could be presented over.
+                            InAppReviewHost()
 
                             MainActivityContent(
                                 navController = navController,

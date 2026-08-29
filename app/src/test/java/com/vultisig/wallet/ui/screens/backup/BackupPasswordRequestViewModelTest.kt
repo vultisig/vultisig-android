@@ -117,6 +117,7 @@ internal class BackupPasswordRequestViewModelTest {
             mapVaultToProto = mapVaultToProto,
             saveBackupToUri = saveBackupToUri,
             deleteBackupDocument = deleteBackupDocument,
+            inAppReviewRepository = mockk(relaxed = true),
         )
     }
 

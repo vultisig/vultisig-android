@@ -22,7 +22,9 @@ import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.AppReviewEvent
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
@@ -132,6 +134,7 @@ constructor(
     private val sessionApi: SessionApi,
     private val networkUtils: NetworkUtils,
     private val mediatorServiceController: MediatorServiceController,
+    private val inAppReviewRepository: InAppReviewRepository,
 ) : ViewModel() {
 
     private val args: Route.Keygen.PeerDiscovery? =
@@ -385,6 +388,13 @@ constructor(
             val selectedDevices = _state.value.selectedDevices
             val keygenCommittee = (listOf(session.localPartyId) + selectedDevices).distinct()
             sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
+
+            // Getting two devices to find each other is the step users most often get stuck on, so
+            // clearing it counts. Recorded only — keygen starts on the next screen, which is no
+            // place for a store card.
+            if (selectedDevices.isNotEmpty()) {
+                inAppReviewRepository.record(AppReviewEvent.DevicePairingCompleted(sessionId))
+            }
 
             navigator.route(
                 Route.Keygen.Generating(

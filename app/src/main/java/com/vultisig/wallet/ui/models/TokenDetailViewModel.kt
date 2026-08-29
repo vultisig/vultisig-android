@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChartRange
 import com.vultisig.wallet.data.models.Coin
@@ -23,6 +24,7 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.TokenPriceChartRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -172,6 +174,7 @@ constructor(
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val tokenPriceChartRepository: TokenPriceChartRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val inAppReviewRepository: InAppReviewRepository,
 ) : ViewModel() {
 
     private val tokenDetail = savedStateHandle.toRoute<Route.TokenDetail>()
@@ -405,11 +408,36 @@ constructor(
                                         }
                                     }
                                 }
+                                recordIncomingFundsIfNeeded(account)
                             } ?: run { updateRefreshing(false) }
                     }
                     .onCompletion { updateRefreshing(false) }
                     .collect()
             }
+    }
+
+    /**
+     * Counts funds arriving on this asset as a positive moment worth asking for a store review.
+     *
+     * Android has no confirmed-incoming-transaction feed, so an arrival is inferred from the
+     * spendable balance growing between two sightings of the same coin — the same shape iOS uses on
+     * its coin detail screen. The repository owns the dedupe and the dust/spam floor; the very
+     * first sighting of a coin never counts, since a balance the device is only now learning about
+     * is not something that just happened.
+     */
+    private suspend fun recordIncomingFundsIfNeeded(account: Account) {
+        val balance = account.tokenValue ?: return
+        val counted =
+            inAppReviewRepository.onConfirmedBalanceObserved(
+                coinId = account.token.id,
+                balance = balance.value,
+                decimals = balance.decimals,
+                fiatPricePerUnit = account.price?.value,
+                isNativeToken = account.token.isNativeToken,
+            )
+        if (counted) {
+            inAppReviewRepository.requestPromptEvaluation()
+        }
     }
 
     private fun loadChart(range: ChartRange) {

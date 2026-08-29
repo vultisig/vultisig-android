@@ -139,6 +139,7 @@ internal class TokenDetailViewModelTest {
             explorerLinkRepository = explorerLinkRepository,
             tokenPriceChartRepository = tokenPriceChartRepository,
             appCurrencyRepository = appCurrencyRepository,
+            inAppReviewRepository = mockk(relaxed = true),
         )
 
     private fun chart(sign: Int) =

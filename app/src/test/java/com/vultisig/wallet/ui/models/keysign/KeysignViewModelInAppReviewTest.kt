@@ -4,20 +4,18 @@ package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.AppReviewEvent
 import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.asUiText
-import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -27,8 +25,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * Covers the in-app review trigger (#5427): it must fire only for a transaction that actually
- * landed on-chain, and only once, since status polling re-emits the terminal state on every tick.
+ * Covers the outbound half of the review trigger (#5700): a transaction only counts as a positive
+ * moment when it actually landed on-chain, and only once, since status polling re-emits the
+ * terminal state on every tick.
  */
 internal class KeysignViewModelInAppReviewTest {
 
@@ -36,11 +35,13 @@ internal class KeysignViewModelInAppReviewTest {
 
     private lateinit var inAppReviewRepository: InAppReviewRepository
 
+    private val sendEvent = AppReviewEvent.ConfirmedOutboundTransaction(TX_HASH)
+
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         inAppReviewRepository = mockk(relaxed = true)
-        coEvery { inAppReviewRepository.onTransactionSucceeded() } returns true
+        coEvery { inAppReviewRepository.record(any()) } returns true
     }
 
     @AfterEach
@@ -49,67 +50,62 @@ internal class KeysignViewModelInAppReviewTest {
     }
 
     @Test
-    fun `a broadcast send asks for a review`() =
+    fun `a broadcast send counts as a positive moment`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            val requests = mutableListOf<Unit>()
-            val job = launch { vm.inAppReviewRequests.toList(requests) }
 
             vm.finishWith(TransactionStatus.Broadcasted)
 
-            requests.size shouldBe 1
-            job.cancel()
+            coVerify(exactly = 1) { inAppReviewRepository.record(sendEvent) }
+            coVerify(exactly = 1) { inAppReviewRepository.requestPromptEvaluation() }
         }
 
     @Test
-    fun `a confirmed send asks for a review`() =
+    fun `a confirmed send counts as a positive moment`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            val requests = mutableListOf<Unit>()
-            val job = launch { vm.inAppReviewRequests.toList(requests) }
 
             vm.finishWith(TransactionStatus.Confirmed)
 
-            requests.size shouldBe 1
-            job.cancel()
+            coVerify(exactly = 1) { inAppReviewRepository.record(sendEvent) }
         }
 
-    // The whole point of #5427: a user whose transaction failed must never be asked to rate.
+    // The whole point of the gate: a user whose transaction failed must never be asked to rate.
     @Test
-    fun `a failed transaction never asks for a review`() =
+    fun `a failed transaction never counts`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
 
             vm.finishWith(TransactionStatus.Failed("boom".asUiText()))
 
-            coVerify(exactly = 0) { inAppReviewRepository.onTransactionSucceeded() }
+            coVerify(exactly = 0) { inAppReviewRepository.record(any()) }
         }
 
     @Test
-    fun `a refunded transaction never asks for a review`() =
+    fun `a refunded transaction never counts`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
 
             vm.finishWith(TransactionStatus.Refunded("paused".asUiText()))
 
-            coVerify(exactly = 0) { inAppReviewRepository.onTransactionSucceeded() }
+            coVerify(exactly = 0) { inAppReviewRepository.record(any()) }
         }
 
     // PSBT co-signing never broadcasts, so nothing reached the chain to celebrate.
     @Test
-    fun `a signed-but-not-broadcast transaction never asks for a review`() =
+    fun `a signed-but-not-broadcast transaction never counts`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
 
             vm.finishWith(TransactionStatus.Signed)
 
-            coVerify(exactly = 0) { inAppReviewRepository.onTransactionSucceeded() }
+            coVerify(exactly = 0) { inAppReviewRepository.record(any()) }
         }
 
     // Status polling re-emits KeysignFinished on every tick; counting each one would inflate the
-    // success counter and re-ask on every poll.
+    // event count and re-open an opportunity on every poll.
     @Test
-    fun `repeated terminal emissions ask only once`() =
+    fun `repeated terminal emissions count only once`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
 
@@ -117,37 +113,38 @@ internal class KeysignViewModelInAppReviewTest {
             vm.finishWith(TransactionStatus.Confirmed)
             vm.finishWith(TransactionStatus.Confirmed)
 
-            coVerify(exactly = 1) { inAppReviewRepository.onTransactionSucceeded() }
+            coVerify(exactly = 1) { inAppReviewRepository.record(any()) }
         }
 
     // dApp message signing produces no transaction, so it is not a "your funds moved" moment.
     @Test
-    fun `message signing never asks for a review`() =
+    fun `message signing never counts`() =
         runTest(testDispatcher) {
             val vm =
                 createViewModel(TransactionTypeUiModel.SignMessage(SignMessageTransactionUiModel()))
 
             vm.finishWith(TransactionStatus.Broadcasted)
 
-            coVerify(exactly = 0) { inAppReviewRepository.onTransactionSucceeded() }
+            coVerify(exactly = 0) { inAppReviewRepository.record(any()) }
         }
 
+    // An already-counted hash must not open a fresh opportunity: that is how a re-entered done
+    // screen would spend a version's single ask with no new milestone behind it.
     @Test
-    fun `no review is requested while the throttle blocks it`() =
+    fun `an already counted transaction opens no opportunity`() =
         runTest(testDispatcher) {
-            coEvery { inAppReviewRepository.onTransactionSucceeded() } returns false
+            coEvery { inAppReviewRepository.record(any()) } returns false
             val vm = createViewModel()
-            val requests = mutableListOf<Unit>()
-            val job = launch { vm.inAppReviewRequests.toList(requests) }
 
             vm.finishWith(TransactionStatus.Confirmed)
 
-            requests.shouldBe(emptyList())
-            job.cancel()
+            coVerify(exactly = 0) { inAppReviewRepository.requestPromptEvaluation() }
         }
 
     private fun KeysignViewModel.finishWith(status: TransactionStatus) {
-        updateUiStateForTesting { it.copy(signingState = KeysignState.KeysignFinished(status)) }
+        updateUiStateForTesting {
+            it.copy(signingState = KeysignState.KeysignFinished(status), txHash = TX_HASH)
+        }
     }
 
     private fun createViewModel(
@@ -188,4 +185,8 @@ internal class KeysignViewModelInAppReviewTest {
             pendingLimitOrderRepository = mockk(relaxed = true),
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
+
+    private companion object {
+        const val TX_HASH = "0xdeadbeef"
+    }
 }
