@@ -356,7 +356,7 @@ constructor(
      * and a backgrounded one stops rather than polling from behind the home screen.
      */
     private fun observeInFlightRows() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(onError = { t -> Timber.w(t, "In-flight polling stopped") }) {
             transactionHistoryRepository
                 .observeTransactions(
                     vaultId = vaultId,
@@ -542,9 +542,34 @@ constructor(
                         }
                 }
                 .collect { groups ->
-                    _uiState.update { it.copy(groups = groups, isLoading = false) }
+                    _uiState.update {
+                        it.copy(
+                            groups = groups,
+                            isLoading = false,
+                            selectedItem = it.selectedItem.reconciledWith(groups),
+                        )
+                    }
                 }
         }
+    }
+
+    /**
+     * Re-points an open detail sheet at the row this emission just carried.
+     *
+     * [TransactionHistoryUiState.selectedItem] is a snapshot taken when the sheet was presented, so
+     * nothing else reaches it: a sheet left open while the poll settles the transaction keeps
+     * reading "In progress" above a row that has already flipped to Confirmed behind it.
+     *
+     * A row that is no longer in the list — filtered out, or on a tab that does not carry it —
+     * keeps the snapshot rather than closing the sheet under the user.
+     */
+    private fun TransactionHistoryItemUiModel?.reconciledWith(
+        groups: List<TransactionHistoryGroupUiModel>
+    ): TransactionHistoryItemUiModel? {
+        val current = this ?: return null
+        return groups.firstNotNullOfOrNull { group ->
+            group.transactions.firstOrNull { it.id == current.id }
+        } ?: current
     }
 
     private fun TransactionHistoryItemUiModel.matchesAssetIds(assetIds: Set<String>): Boolean =

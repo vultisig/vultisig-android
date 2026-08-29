@@ -54,6 +54,7 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -371,6 +372,47 @@ internal class TransactionHistoryViewModelTest {
         testScope.runCurrent()
 
         coVerify(exactly = 0) { refreshPendingTransactions.refreshOne(any(), any()) }
+    }
+
+    /**
+     * The sheet is handed a snapshot, so without reconciliation it keeps reading "In progress"
+     * above a row that has already settled behind it — the exact thing this screen polls for.
+     */
+    @Test
+    fun `an open detail sheet follows the row it is showing`() {
+        val rows = MutableStateFlow(listOf(inFlightEntity()))
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns rows
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+        vm.openDetail(vm.uiState.value.groups.first().transactions.first())
+        testScope.runCurrent()
+        vm.uiState.value.selectedItem?.status shouldBe TransactionStatusUiModel.Broadcasted
+
+        rows.value = listOf(inFlightEntity().copy(status = TransactionStatus.CONFIRMED))
+        testScope.runCurrent()
+
+        vm.uiState.value.selectedItem?.status shouldBe TransactionStatusUiModel.Confirmed
+    }
+
+    /**
+     * A row that leaves the list keeps its sheet: closing it would yank it out from under a read.
+     */
+    @Test
+    fun `a detail sheet stays open when its row leaves the list`() {
+        val rows = MutableStateFlow(listOf(inFlightEntity()))
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns rows
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+        vm.openDetail(vm.uiState.value.groups.first().transactions.first())
+        testScope.runCurrent()
+
+        rows.value = emptyList()
+        testScope.runCurrent()
+
+        vm.uiState.value.selectedItem.shouldNotBeNull().status shouldBe
+            TransactionStatusUiModel.Broadcasted
     }
 
     /**
