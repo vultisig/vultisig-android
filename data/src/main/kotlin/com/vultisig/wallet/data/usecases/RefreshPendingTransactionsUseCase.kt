@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
+import com.vultisig.wallet.data.db.models.isInFlight
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
@@ -25,6 +26,15 @@ interface RefreshPendingTransactionsUseCase {
      * when the user is viewing a single-chain history.
      */
     suspend operator fun invoke(vaultId: String, chain: String? = null)
+
+    /**
+     * Re-check one transaction by [chain] and [txHash], ignoring the [invoke] sweep's backoff.
+     *
+     * For the case where the user asks about a specific row (opening its detail sheet): a single
+     * status call is cheap, and answering "still in progress" without having looked is the defect
+     * this exists to avoid. A row that already settled, or that no longer exists, is a no-op.
+     */
+    suspend fun refreshOne(chain: String, txHash: String)
 }
 
 class RefreshPendingTransactionsUseCaseImpl
@@ -45,6 +55,15 @@ constructor(
                 .filter { it.shouldPollNow() }
                 .map { tx -> async { refreshTransaction(tx) } }
                 .awaitAll()
+        }
+    }
+
+    override suspend fun refreshOne(chain: String, txHash: String) {
+        withContext(dispatcher) {
+            val tx =
+                transactionHistoryRepository.getTransaction(chain, txHash) ?: return@withContext
+            if (!tx.status.isInFlight) return@withContext
+            refreshTransaction(tx)
         }
     }
 
