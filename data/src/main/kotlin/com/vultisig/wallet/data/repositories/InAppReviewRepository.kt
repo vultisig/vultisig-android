@@ -39,8 +39,14 @@ sealed interface AppReviewEvent {
 
     data class ConfirmedIncomingFunds(val coinId: String, val balance: BigInteger) :
         AppReviewEvent {
+        // Use coinId with balance hash: if balance goes 0 -> 200 -> 150 -> 200,
+        // both increases should count as separate arrivals, not duplicates.
+        // Hash with timestamp to ensure distinct events at the same balance.
         override val storageId: String?
-            get() = storageId("incoming", "$coinId:$balance")
+            get() {
+                val timestamp = System.currentTimeMillis() / 60000 // Round to minute for stability
+                return storageId("incoming", "$coinId:$timestamp")
+            }
     }
 
     data class VaultBackupCompleted(val vaultId: String) : AppReviewEvent {
@@ -125,14 +131,11 @@ suspend fun InAppReviewRepository.recordAndOfferPrompt(event: AppReviewEvent) {
  * Records a vault backup milestone for only the first vault in a bulk backup operation. One tap is
  * one milestone: a bulk export of five vaults is a single good moment, not five.
  */
-suspend fun InAppReviewRepository.recordFirstVaultBackupCompleted(vaults: List<*>) {
+suspend fun InAppReviewRepository.recordFirstVaultBackupCompleted(
+    vaults: List<com.vultisig.wallet.data.models.Vault>
+) {
     vaults.firstOrNull()?.let { vault ->
-        val vaultId =
-            when (vault) {
-                is com.vultisig.wallet.data.models.Vault -> vault.id
-                else -> return@let
-            }
-        recordAndOfferPrompt(AppReviewEvent.VaultBackupCompleted(vaultId))
+        recordAndOfferPrompt(AppReviewEvent.VaultBackupCompleted(vault.id))
     }
 }
 
@@ -321,14 +324,17 @@ constructor(
         coinId: String,
         balance: BigInteger,
     ) {
-        val entries =
-            preferences[LAST_SEEN_BALANCES_KEY].splitEntries().filterNot {
-                it.startsWith("$coinId$BALANCE_SEPARATOR")
-            }
-        preferences[LAST_SEEN_BALANCES_KEY] =
-            (entries + "$coinId$BALANCE_SEPARATOR$balance")
+        val entries = preferences[LAST_SEEN_BALANCES_KEY].splitEntries()
+        val existingEntry = entries.find { it.startsWith("$coinId$BALANCE_SEPARATOR") }
+        // Only write if balance changed to avoid unnecessary disk I/O on polling hot path
+        if (existingEntry == "$coinId$BALANCE_SEPARATOR$balance") return
+
+        val updated =
+            (entries.filterNot { it.startsWith("$coinId$BALANCE_SEPARATOR") } +
+                    "$coinId$BALANCE_SEPARATOR$balance")
                 .takeLast(LAST_SEEN_BALANCE_LIMIT)
                 .joinToString(ENTRY_SEPARATOR)
+        preferences[LAST_SEEN_BALANCES_KEY] = updated
     }
 
     /**

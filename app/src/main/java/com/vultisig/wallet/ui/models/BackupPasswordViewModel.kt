@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.typeOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -326,7 +327,13 @@ constructor(
                         vaults.forEach { vault ->
                             vaultDataStoreRepository.setBackupStatus(vault.id, true)
                         }
-                        inAppReviewRepository.recordFirstVaultBackupCompleted(vaults)
+                        try {
+                            inAppReviewRepository.recordFirstVaultBackupCompleted(vaults)
+                        } catch (cancellation: CancellationException) {
+                            throw cancellation
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to record in-app review for vault backup")
+                        }
                     }
 
                     is BackupType.CurrentVault -> {
