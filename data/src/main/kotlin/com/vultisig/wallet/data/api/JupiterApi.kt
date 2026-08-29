@@ -4,7 +4,6 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTotalDataJson
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTransactionJson
 import com.vultisig.wallet.data.api.models.quotes.SwapRouteResponseJson
-import com.vultisig.wallet.data.chains.helpers.SOLANA_DEFAULT_CONTRACT_ADDRESS
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -19,6 +18,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
+import timber.log.Timber
 import wallet.core.jni.SolanaTransaction
 
 interface JupiterApi {
@@ -48,7 +48,9 @@ constructor(
         affiliateBps: Int?,
     ): QuoteSwapTotalDataJson {
         val requestedFeeBps = (affiliateBps ?: 0).takeIf { it > 0 }
-        val feeMint = if (toToken == SOLANA_DEFAULT_CONTRACT_ADDRESS) fromToken else toToken
+        // ExactIn `platformFee.amount` is output-mint units. Collect in the output mint too
+        // (including wSOL) so the displayed amount and the fee ATA share a denomination.
+        val feeMint = toToken
         val slippage = slippageBps ?: DEFAULT_SLIPPAGE_BPS
 
         // Probe the fee ATA before quoting. A missing account must never take a fee-bearing
@@ -145,16 +147,6 @@ constructor(
         if (response.status == HttpStatusCode.TooManyRequests) {
             throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
         }
-        val chargedFee = platformFeeBps != null && platformFeeBps > 0
-        if (chargedFee && response.status.value in 400..499) {
-            return fetchRouteQuote(
-                fromToken,
-                toToken,
-                fromAmount,
-                slippageBps,
-                platformFeeBps = null,
-            )
-        }
         return response.bodyOrThrow()
     }
 
@@ -163,7 +155,12 @@ constructor(
             feeAtaService.resolveFeeAccount(feeMint)
         } catch (cancelled: CancellationException) {
             throw cancelled
-        } catch (_: Exception) {
+        } catch (t: Exception) {
+            Timber.w(
+                t,
+                "Jupiter fee ATA probe failed for mint %s; quoting without affiliate fee",
+                feeMint,
+            )
             null
         }
 

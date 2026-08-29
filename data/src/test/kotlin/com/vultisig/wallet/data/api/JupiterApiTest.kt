@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.utils.NetworkException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -75,9 +76,7 @@ class JupiterApiTest {
     }
 
     @Test
-    fun `a native-SOL output takes the fee in the input mint`() {
-        // The fee owner holds no wSOL ATA (collecting in wSOL would need unwrapping), so SOL-output
-        // swaps charge the affiliate fee on the input mint instead. Mirrors iOS.
+    fun `a native-SOL output takes the fee in the output mint`() {
         val service = FakeFeeAtaService(feeAccount = FEE_ACCOUNT)
         val (api, captured) = feeApi(service, quotedFeeAmount = "36341")
 
@@ -86,9 +85,9 @@ class JupiterApiTest {
         }
 
         assertEquals(
-            OUTPUT_MINT,
+            WSOL_MINT,
             service.resolvedMint,
-            "fee must be taken in the input mint when the output is wrapped SOL",
+            "ExactIn platform fee is collected in the output mint, including wSOL",
         )
         assertTrue(captured.swapBody!!.contains("\"feeAccount\":\"$FEE_ACCOUNT\""))
     }
@@ -151,7 +150,7 @@ class JupiterApiTest {
     }
 
     @Test
-    fun `a fee-bearing quote 4xx requotes without the affiliate fee`() {
+    fun `a fee-bearing quote 4xx does not retry without the affiliate fee`() {
         val service = FakeFeeAtaService(feeAccount = FEE_ACCOUNT)
         val captured = Captured()
         val api =
@@ -163,19 +162,11 @@ class JupiterApiTest {
                             val feeBps = request.url.parameters["platformFeeBps"]
                             captured.platformFeeBpsHistory += feeBps
                             captured.platformFeeBps = feeBps
-                            if (feeBps != null) {
-                                respond(
-                                    content = """{"error":"The token is not tradable"}""",
-                                    status = HttpStatusCode.BadRequest,
-                                    headers = headersOf(HttpHeaders.ContentType, "application/json"),
-                                )
-                            } else {
-                                respond(
-                                    content = routeResponseJson(null),
-                                    status = HttpStatusCode.OK,
-                                    headers = headersOf(HttpHeaders.ContentType, "application/json"),
-                                )
-                            }
+                            respond(
+                                content = """{"error":"Could not find any route"}""",
+                                status = HttpStatusCode.BadRequest,
+                                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+                            )
                         } else {
                             captured.swapBody = (request.body as? TextContent)?.text
                             respond(content = "", status = HttpStatusCode.TooManyRequests)
@@ -183,15 +174,15 @@ class JupiterApiTest {
                     },
             )
 
-        assertThrows(SwapException.RateLimitExceeded::class.java) {
+        assertThrows(NetworkException::class.java) {
             runBlocking {
                 api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, 50)
             }
         }
 
-        assertEquals(listOf("50", null), captured.platformFeeBpsHistory)
-        assertTrue(service.resolveCalled, "ATA is resolved before the fee-bearing quote")
-        assertFalse(captured.swapBody!!.contains("feeAccount"))
+        assertEquals(listOf<String?>("50"), captured.platformFeeBpsHistory)
+        assertTrue(service.resolveCalled)
+        assertNull(captured.swapBody)
     }
 
     @Test
