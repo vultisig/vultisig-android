@@ -21,7 +21,7 @@ private const val QR_CODE_QUIET_ZONE = 4
 
 interface GenerateQrBitmap : (String, Color, Color, Bitmap?) -> Bitmap
 
-internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
+class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
     override fun invoke(
         qrCodeContent: String,
         mainColor: Color,
