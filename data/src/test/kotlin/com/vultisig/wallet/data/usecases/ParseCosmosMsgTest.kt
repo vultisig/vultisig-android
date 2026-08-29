@@ -558,9 +558,8 @@ class ParseCosmosMessageTest {
 
         val result = parseCosmosMessage(signDirect)
         val value = result.messages[0].value
-        val base64String = (value as JsonPrimitive).contentOrNull
-        assertNotNull(base64String)
-        assertContentEquals(originalBytes, Base64.decode(base64String!!))
+        val base64String = assertNotNull((value as JsonPrimitive).contentOrNull)
+        assertContentEquals(originalBytes, Base64.decode(base64String))
     }
 
     @Test
@@ -721,9 +720,8 @@ class ParseCosmosMessageTest {
 
         val result = parseCosmosMessage(signDirect)
         val value = result.messages[0].value
-        val base64String = (value as JsonPrimitive).contentOrNull
-        assertNotNull(base64String)
-        assertContentEquals(msgBytes, Base64.decode(base64String!!))
+        val base64String = assertNotNull((value as JsonPrimitive).contentOrNull)
+        assertContentEquals(msgBytes, Base64.decode(base64String))
     }
 
     @Test
@@ -880,9 +878,8 @@ class ParseCosmosMessageTest {
 
         val result = parseCosmosMessage(signDirect)
         val value = result.messages[0].value
-        val base64String = (value as JsonPrimitive).contentOrNull
-        assertNotNull(base64String)
-        assertContentEquals(malformedBytes, Base64.decode(base64String!!))
+        val base64String = assertNotNull((value as JsonPrimitive).contentOrNull)
+        assertContentEquals(malformedBytes, Base64.decode(base64String))
     }
 
     @Test

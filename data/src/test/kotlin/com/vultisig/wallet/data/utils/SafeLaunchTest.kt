@@ -63,9 +63,9 @@ class SafeLaunchTest {
             }
         job.join()
 
-        assertNotNull(caught, "RuntimeException from error() must be caught")
-        assertTrue(caught is IllegalStateException)
-        assertEquals("fail to broadcast transaction: invalid hex", caught!!.message)
+        val caughtException = assertNotNull(caught, "RuntimeException from error() must be caught")
+        assertTrue(caughtException is IllegalStateException)
+        assertEquals("fail to broadcast transaction: invalid hex", caughtException.message)
     }
 
     @Test
@@ -236,13 +236,14 @@ class SafeLaunchTest {
 
             // Layer 1 (HttpCallValidator) converts IOException → NetworkException
             // Layer 2 (safeLaunch) catches it — no crash
-            assertNotNull(caught, "safeLaunch must catch the NetworkException")
+            val caughtException =
+                assertNotNull(caught, "safeLaunch must catch the NetworkException")
             assertTrue(
-                actual = caught is NetworkException,
+                actual = caughtException is NetworkException,
                 message =
-                    "Must be NetworkException from HttpCallValidator, got ${caught!!::class.simpleName}",
+                    "Must be NetworkException from HttpCallValidator, got ${caughtException::class.simpleName}",
             )
-            assertEquals(0, (caught as NetworkException).httpStatusCode)
+            assertEquals(0, (caughtException as NetworkException).httpStatusCode)
 
             client.close()
         }
@@ -263,13 +264,13 @@ class SafeLaunchTest {
 
         // HttpCallValidator does NOT catch deserialization errors (correct).
         // safeLaunch catches them — no crash.
-        assertNotNull(caught, "safeLaunch must catch deserialization error")
+        val caughtException = assertNotNull(caught, "safeLaunch must catch deserialization error")
         assertFalse(
-            actual = caught is NetworkException,
+            actual = caughtException is NetworkException,
             message =
                 "Deserialization error must NOT be NetworkException — " +
                     "it's an application-level bug, not a transport error. " +
-                    "Got: ${caught!!::class.simpleName}",
+                    "Got: ${caughtException::class.simpleName}",
         )
 
         client.close()
@@ -319,9 +320,10 @@ class SafeLaunchTest {
             }
         job.join()
 
-        assertNotNull(caught, "safeLaunch must catch the error() call")
-        assertTrue(caught is IllegalStateException)
-        assertTrue(caught!!.message!!.contains("fail to broadcast"))
+        val caughtException = assertNotNull(caught, "safeLaunch must catch the error() call")
+        assertTrue(caughtException is IllegalStateException)
+        val message = assertNotNull(caughtException.message)
+        assertTrue(message.contains("fail to broadcast"))
 
         client.close()
     }
