@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -8,6 +9,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.logo
@@ -32,6 +34,7 @@ internal data class CustomTokenUiModel(
     val token: Coin? = null,
     val price: String = "",
     @DrawableRes val chainLogo: Int,
+    @StringRes val hintRes: Int,
     val isInitial: Boolean = true,
 )
 
@@ -47,7 +50,16 @@ constructor(
 ) : ViewModel() {
     val searchFieldState: TextFieldState = TextFieldState()
     private val chainId = savedStateHandle.toRoute<Route.CustomToken>().chainId
-    val uiModel = MutableStateFlow(CustomTokenUiModel(chainLogo = Chain.fromRaw(chainId).logo))
+    private val chain = Chain.fromRaw(chainId)
+    val uiModel =
+        MutableStateFlow(
+            CustomTokenUiModel(
+                chainLogo = chain.logo,
+                hintRes =
+                    if (chain == Chain.Ripple) R.string.custom_token_enter_currency_issuer
+                    else R.string.custom_token_enter_contract_address,
+            )
+        )
 
     fun searchCustomToken() {
         viewModelScope.launch {

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.customtoken.components
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
@@ -39,6 +40,7 @@ internal fun CustomTokenSearchBar(
     onSearchClick: () -> Unit,
     onCloseClick: () -> Unit,
     initialDisplay: Boolean,
+    @StringRes hintRes: Int,
 ) {
     Row(modifier = Modifier.height(intrinsicSize = IntrinsicSize.Max)) {
         V2Container(
@@ -76,10 +78,7 @@ internal fun CustomTokenSearchBar(
                         Box(contentAlignment = Alignment.CenterStart) {
                             if (state.text.isEmpty()) {
                                 Text(
-                                    text =
-                                        stringResource(
-                                            R.string.custom_token_enter_contract_address
-                                        ),
+                                    text = stringResource(hintRes),
                                     style = Theme.brockmann.supplementary.footnote,
                                     color = Theme.v2.colors.text.tertiary,
                                 )
@@ -131,6 +130,7 @@ private fun CustomTokenSearchBarPreview1() {
         initialDisplay = false,
         state = rememberTextFieldState(),
         onCloseClick = {},
+        hintRes = R.string.custom_token_enter_contract_address,
     )
 }
 
@@ -143,5 +143,6 @@ fun CustomTokenSearchBarPreview2() {
         initialDisplay = false,
         state = rememberTextFieldState(),
         onCloseClick = {},
+        hintRes = R.string.custom_token_enter_contract_address,
     )
 }

@@ -96,11 +96,18 @@ object RippleHelper {
                 .setPublicKey(ByteString.copyFrom(publicKey.data()))
                 .setLastLedgerSequence(lastLedgerSequence.toInt())
 
-        // An issued-currency coin means either a Payment or a TrustSet, which sign different
-        // bytes; only this discriminator separates them.
-        val transactionType = rippleSpecific.transactionType
-        require(transactionType == TransactionType.TRANSACTION_TYPE_UNSPECIFIED) {
-            "Ripple payload carries an unsupported transaction type $transactionType"
+        when (val transactionType = rippleSpecific.transactionType) {
+            TransactionType.TRANSACTION_TYPE_UNSPECIFIED -> Unit
+
+            TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET -> {
+                val limit =
+                    requireNotNull(issuedCurrency) {
+                        "Ripple TrustSet requires an issued-currency coin"
+                    }
+                return input.setOpTrustSet(trustSet(keysignPayload, limit)).build().toByteArray()
+            }
+
+            else -> error("Ripple payload carries an unsupported transaction type $transactionType")
         }
 
         val operation =
@@ -174,10 +181,7 @@ object RippleHelper {
         return input.build().toByteArray()
     }
 
-    /**
-     * The coin's issued currency, or null for native XRP. These two fields pick the amount encoding
-     * and the coin arrives relayed from a peer, so a contradiction between them is refused.
-     */
+    /** Null for native XRP. The coin is relayed from a peer, so its two halves must agree. */
     private fun Coin.rippleIssuedCurrency(): RippleTokenIdentity? =
         if (isNativeToken) {
             require(contractAddress.isEmpty()) { "XRP coin is native but carries a token id" }
@@ -185,6 +189,10 @@ object RippleHelper {
         } else {
             requireNotNull(rippleTokenIdentity()) { "XRP coin is missing its token id" }
         }
+
+    private fun trustSet(payload: KeysignPayload, issuedCurrency: RippleTokenIdentity) =
+        Ripple.OperationTrustSet.newBuilder()
+            .setLimitAmount(currencyAmount(issuedCurrency, payload.toAmount, payload.coin.decimal))
 
     private fun currencyAmount(
         identity: RippleTokenIdentity,

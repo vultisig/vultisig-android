@@ -268,6 +268,7 @@
     <string name="verify_deposit_node_address_title">Dirección del nodo</string>
     <string name="verify_deposit_gas_title">Tarifa de red</string>
     <string name="custom_token_enter_contract_address">Introducir la dirección del contrato</string>
+    <string name="custom_token_enter_currency_issuer">Introducir moneda.emisor</string>
     <string name="custom_token_token_not_found">Token no encontrado</string>
     <string name="custom_token_add_token">Agregar %1$s token</string>
     <string name="deposit_form_amount_title">Importe (Saldo: %1$s)</string>
@@ -1005,6 +1006,19 @@
     <string name="send_error_xrp_destination_not_activated">La cantidad mínima para activar esta dirección es %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">Esta dirección requiere una etiqueta de destino. Añade una para continuar.</string>
     <string name="send_error_xrp_destination_no_trust_line">Esta dirección no puede recibir %1$s. El destinatario debe abrir antes una línea de confianza para este activo.</string>
+    <string name="ripple_trust_line_title">Activar línea de confianza</string>
+    <string name="ripple_trust_line_reserve_warning">%1$s necesita una línea de confianza en el XRP Ledger antes de que tu cuenta pueda mantenerlo. Abrirla bloquea permanentemente parte de tus XRP como reserva de propietario.</string>
+    <string name="ripple_trust_line_limit">Límite de la línea de confianza</string>
+    <string name="ripple_trust_line_hero_title">Activando la línea de confianza de %1$s</string>
+    <string name="ripple_trust_line_currency">Moneda</string>
+    <string name="ripple_trust_line_issuer_check">El emisor es correcto</string>
+    <string name="ripple_trust_line_limit_check">El límite de la línea de confianza es correcto</string>
+    <string name="ripple_trust_line_unreviewable">No se puede revisar</string>
+    <string name="ripple_trust_line_unreviewable_value">No se pudieron leer la moneda, el emisor o el límite de esta línea de confianza, así que no se pueden mostrar sus condiciones. No la firmes.</string>
+    <string name="ripple_trust_line_reserve">Reserva bloqueada</string>
+    <string name="ripple_trust_line_spendable_after">XRP disponibles después</string>
+    <string name="ripple_trust_line_activate">Activar</string>
+    <string name="ripple_trust_line_insufficient_xrp">No hay XRP disponibles suficientes para la reserva y la comisión.</string>
     <string name="send_error_xrp_invalid_destination_tag">Etiqueta de destino no válida. Introduce un número entero entre 1 y 4294967295.</string>
     <string name="error_invalid_chain">La cadena no es válida.</string>
     <string name="ton_stake_error_unsupported_pool">Este pool de staking no es compatible</string>

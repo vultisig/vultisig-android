@@ -471,6 +471,7 @@
 
     <!-- Custom Token -->
     <string name="custom_token_enter_contract_address">输入合约地址</string>
+    <string name="custom_token_enter_currency_issuer">输入货币.发行方</string>
     <string name="custom_token_token_not_found">未找到代币</string>
     <string name="custom_token_add_token">添加 %1$s 代币</string>
 
@@ -1336,6 +1337,19 @@
     <string name="send_error_xrp_destination_not_activated">激活此地址所需的最低金额为 %1$s %2$s。</string>
     <string name="send_error_xrp_destination_tag_required">此地址需要目标标签。请添加后继续。</string>
     <string name="send_error_xrp_destination_no_trust_line">此地址无法接收 %1$s。收款方需要先为该资产开通信任线。</string>
+    <string name="ripple_trust_line_title">激活信任线</string>
+    <string name="ripple_trust_line_reserve_warning">%1$s 需要在 XRP Ledger 上建立信任线，您的账户才能持有它。开通信任线会将您的一部分 XRP 永久锁定为所有者准备金。</string>
+    <string name="ripple_trust_line_limit">信任线上限</string>
+    <string name="ripple_trust_line_hero_title">正在开通 %1$s 信任线</string>
+    <string name="ripple_trust_line_currency">货币</string>
+    <string name="ripple_trust_line_issuer_check">发行方正确</string>
+    <string name="ripple_trust_line_limit_check">信任线上限正确</string>
+    <string name="ripple_trust_line_unreviewable">无法核对</string>
+    <string name="ripple_trust_line_unreviewable_value">无法读取该信任线的货币、发行方或上限，因此无法显示其条款。请勿签名。</string>
+    <string name="ripple_trust_line_reserve">锁定储备金</string>
+    <string name="ripple_trust_line_spendable_after">开通后可用 XRP</string>
+    <string name="ripple_trust_line_activate">激活</string>
+    <string name="ripple_trust_line_insufficient_xrp">可用 XRP 不足以支付储备金和手续费。</string>
     <string name="send_error_xrp_invalid_destination_tag">目标标签无效。请输入 1 到 4294967295 之间的整数。</string>
     <string name="error_invalid_chain">链无效</string>
     <string name="ton_stake_error_unsupported_pool">不支持此质押池</string>

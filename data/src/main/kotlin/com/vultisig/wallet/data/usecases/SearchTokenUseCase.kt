@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenStandard.EVM
 import com.vultisig.wallet.data.models.TokenStandard.SOL
+import com.vultisig.wallet.data.models.parseRippleTokenIdentity
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import java.math.BigDecimal
@@ -26,6 +27,7 @@ constructor(
     private val searchSolToken: SearchSolTokenUseCase,
     private val searchTerraToken: SearchTerraTokenUseCase,
     private val searchSuiToken: SearchSuiTokenUseCase,
+    private val searchRippleToken: SearchRippleTokenUseCase,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : SearchTokenUseCase {
 
@@ -47,6 +49,7 @@ constructor(
             chain.standard == SOL -> searchSolToken(address)
             chain == Chain.Terra || chain == Chain.TerraClassic -> searchTerraToken(chain, address)
             chain == Chain.Sui -> searchSuiToken(address)
+            chain == Chain.Ripple -> searchRippleToken(address)
             else -> null
         }
 
@@ -60,6 +63,7 @@ constructor(
             Chain.Terra,
             Chain.TerraClassic -> isCw20ContractAddressShape()
             Chain.Sui -> isSuiCoinTypeShape()
+            Chain.Ripple -> isRippleTokenIdShape()
             else -> isNotEmpty() && chainAccountAddressRepository.isValid(chain, this)
         }
 
@@ -90,6 +94,12 @@ constructor(
             segments[0].startsWith("0x") &&
             !SuiHelper.isNativeSuiCoinType(this)
     }
+
+    /** Of the `currency.issuer` pair, only the issuer is an address that can be validated. */
+    private fun String.isRippleTokenIdShape(): Boolean =
+        parseRippleTokenIdentity(this)?.let {
+            chainAccountAddressRepository.isValid(Chain.Ripple, it.issuer)
+        } == true
 
     private fun Coin.hasSaneMetadata(): Boolean = ticker.isNotBlank() && decimal in 0..MAX_DECIMALS
 

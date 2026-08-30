@@ -534,10 +534,9 @@ internal class SendFormGraph(
                     (token.isNativeToken || token.chain.standard == TokenStandard.COSMOS) &&
                         token.chain != Chain.Sui
 
-                // A memo outlives the switch to a coin whose form has no memo field, and submit
-                // still reads it — with no field left on screen to clear it. Only issued
-                // currencies clear: TON jettons, SPL and TRC20 tokens hide the field too, yet
-                // still sign the memo.
+                // Issued currencies hide the memo field but submit still reads it, so text typed
+                // for another coin would be signed. TON jettons, SPL and TRC20 hide the field
+                // too, but keep signing their memo.
                 if (token.isRippleIssuedToken) {
                     memoFieldState.clearText()
                 }

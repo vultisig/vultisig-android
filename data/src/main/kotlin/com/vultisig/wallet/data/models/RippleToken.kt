@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.data.common.hexToByteArrayOrNull
 import com.vultisig.wallet.data.common.toHex
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -129,19 +130,24 @@ private fun BigInteger.toRippleDecimal(decimals: Int): BigDecimal {
     return BigDecimal(this, decimals)
 }
 
-/** XRPL currency codes are case-sensitive, so a 3-character one is never re-cased. */
-fun toRippleCurrencyCode(currency: String): String {
+fun toRippleCurrencyCode(currency: String): String =
+    requireNotNull(toRippleCurrencyCodeOrNull(currency)) {
+        "Ripple currency code '$currency' exceeds $RIPPLE_CURRENCY_CODE_BYTES bytes"
+    }
+
+/** Null for a ticker too long to pack into the 160-bit form. */
+fun toRippleCurrencyCodeOrNull(currency: String): String? {
     val value = currency.trim()
     return when {
         value.length == RIPPLE_STANDARD_CURRENCY_LENGTH -> value
         RIPPLE_HEX_CURRENCY_CODE.matches(value) -> value.uppercase()
-        else -> {
-            val bytes = value.toByteArray(Charsets.UTF_8)
-            require(bytes.size <= RIPPLE_CURRENCY_CODE_BYTES) {
-                "Ripple currency code '$value' exceeds $RIPPLE_CURRENCY_CODE_BYTES bytes"
-            }
-            bytes.copyOf(RIPPLE_CURRENCY_CODE_BYTES).toHex().uppercase()
-        }
+        else ->
+            value
+                .toByteArray(Charsets.UTF_8)
+                .takeIf { it.size <= RIPPLE_CURRENCY_CODE_BYTES }
+                ?.copyOf(RIPPLE_CURRENCY_CODE_BYTES)
+                ?.toHex()
+                ?.uppercase()
     }
 }
 
@@ -158,3 +164,18 @@ fun isSignableRippleCurrencyCode(code: String): Boolean =
         code.length == RIPPLE_STANDARD_CURRENCY_LENGTH &&
             code.all { it in RIPPLE_SIGNABLE_CURRENCY_CHARS }
     }
+
+/**
+ * Ticker for an on-ledger currency code. The 160-bit form is ASCII right-padded with NUL bytes, so
+ * decoding recovers the ticker; a code that is not printable ASCII stays hex rather than mojibake.
+ */
+fun rippleCurrencyTicker(code: String): String =
+    code
+        .takeIf { RIPPLE_HEX_CURRENCY_CODE.matches(it) }
+        ?.hexToByteArrayOrNull()
+        ?.dropLastWhile { it == 0.toByte() }
+        ?.takeIf { it.isNotEmpty() && it.all { byte -> byte in PRINTABLE_ASCII } }
+        ?.toByteArray()
+        ?.toString(Charsets.US_ASCII) ?: code
+
+private val PRINTABLE_ASCII = 0x20.toByte()..0x7E.toByte()

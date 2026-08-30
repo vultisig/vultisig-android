@@ -43,6 +43,9 @@ private class FakeRippleApi(
         return accountInfo
     }
 
+    override suspend fun fetchIssuedCurrencies(issuer: String): Set<String> =
+        error("not used by these tests")
+
     override suspend fun fetchServerState(): RippleServerStateResponseJson =
         error("not used by these tests")
 

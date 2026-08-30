@@ -32,6 +32,8 @@ import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
@@ -84,6 +86,7 @@ internal fun ChainTokensScreen(
         onHistory = viewModel::history,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
+        onActivateTrustLine = viewModel::activateTrustLine,
         onHideSearchBar = viewModel::hideSearchBar,
         onShowSearchBar = viewModel::showSearchBar,
         onClaimQbtc = viewModel::onClaimQbtc,
@@ -109,6 +112,7 @@ internal fun ChainTokensScreen(
     onTokenClick: (ChainTokenUiModel) -> Unit,
     onClaimQbtc: () -> Unit = {},
     onDismissQbtcBanner: () -> Unit = {},
+    onActivateTrustLine: (ChainTokenUiModel) -> Unit = {},
 ) {
     val snackbarState = rememberVsSnackbarState()
     val uriHandler = VsUriHandler()
@@ -297,6 +301,14 @@ internal fun ChainTokensScreen(
                                         mergedBalance = token.mergeBalance,
                                         modifier =
                                             Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                        trailingContent =
+                                            if (token.canActivateTrustLine) {
+                                                {
+                                                    ActivateTrustLineButton {
+                                                        onActivateTrustLine(token)
+                                                    }
+                                                }
+                                            } else null,
                                     )
                                     if (index != uiModel.tokens.lastIndex) {
                                         UiHorizontalDivider()
@@ -325,6 +337,15 @@ internal fun ChainTokensScreen(
                 }
             }
         },
+    )
+}
+
+@Composable
+private fun ActivateTrustLineButton(onClick: () -> Unit) {
+    VsButton(
+        label = stringResource(R.string.ripple_trust_line_activate),
+        size = VsButtonSize.Mini,
+        onClick = clickOnce(onClick),
     )
 }
 

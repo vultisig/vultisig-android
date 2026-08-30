@@ -267,6 +267,7 @@
     <string name="verify_deposit_node_address_title">Knotenadresse</string>
     <string name="verify_deposit_gas_title">Netzwerkgebühr</string>
     <string name="custom_token_enter_contract_address">Vertragsadresse eingeben</string>
+    <string name="custom_token_enter_currency_issuer">Währung.Emittent eingeben</string>
     <string name="custom_token_token_not_found">Token nicht gefunden</string>
     <string name="custom_token_add_token">%1$s Token hinzufügen</string>
     <string name="deposit_form_amount_title">Betrag (Guthaben: %1$s)</string>
@@ -1007,6 +1008,19 @@
     <string name="send_error_xrp_destination_not_activated">Der Mindestbetrag zur Aktivierung dieser Adresse beträgt %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">Diese Adresse erfordert ein Ziel-Tag. Fügen Sie eines hinzu, um fortzufahren.</string>
     <string name="send_error_xrp_destination_no_trust_line">Diese Adresse kann %1$s nicht empfangen. Der Empfänger muss dafür zuerst eine Trust-Line eröffnen.</string>
+    <string name="ripple_trust_line_title">Trust Line aktivieren</string>
+    <string name="ripple_trust_line_reserve_warning">%1$s benötigt eine Trust Line im XRP Ledger, bevor Ihr Konto es halten kann. Das Öffnen sperrt dauerhaft einen Teil Ihrer XRP als Owner-Reserve.</string>
+    <string name="ripple_trust_line_limit">Trust-Line-Limit</string>
+    <string name="ripple_trust_line_hero_title">%1$s-Trust-Line wird aktiviert</string>
+    <string name="ripple_trust_line_currency">Währung</string>
+    <string name="ripple_trust_line_issuer_check">Der Emittent ist korrekt</string>
+    <string name="ripple_trust_line_limit_check">Das Trust-Line-Limit ist korrekt</string>
+    <string name="ripple_trust_line_unreviewable">Nicht überprüfbar</string>
+    <string name="ripple_trust_line_unreviewable_value">Währung, Emittent oder Limit dieser Trust Line konnten nicht gelesen werden, daher lassen sich ihre Bedingungen nicht anzeigen. Nicht signieren.</string>
+    <string name="ripple_trust_line_reserve">Gesperrte Reserve</string>
+    <string name="ripple_trust_line_spendable_after">Verfügbare XRP danach</string>
+    <string name="ripple_trust_line_activate">Aktivieren</string>
+    <string name="ripple_trust_line_insufficient_xrp">Nicht genügend verfügbare XRP für Reserve und Gebühr.</string>
     <string name="send_error_xrp_invalid_destination_tag">Ungültiges Ziel-Tag. Geben Sie eine ganze Zahl zwischen 1 und 4294967295 ein.</string>
     <string name="error_invalid_chain">Die Blockchain ist ungültig</string>
     <string name="ton_stake_error_unsupported_pool">Dieser Staking-Pool wird nicht unterstützt</string>
