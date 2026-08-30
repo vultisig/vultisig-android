@@ -9,14 +9,14 @@ import io.ktor.http.ContentType.Application
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
-import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Test
 
 class RpcExtensionExtractErrorTest {
 
     @Test
-    fun returnsErrorValueWhenJsonContainsErrorKey() = runBlocking {
+    fun returnsErrorValueWhenJsonContainsErrorKey() = runTest {
         val response = mockResponse("""{ "error": "Invalid token" }""")
 
         val result = extractError(response, "error")
@@ -25,7 +25,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun returnsErrorValueFromTopLevelJsonArray() = runBlocking {
+    fun returnsErrorValueFromTopLevelJsonArray() = runTest {
         val body =
             """
         [
@@ -43,7 +43,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun returnsFullResponseBodyWhenJsonDoesNotContainErrorKey() = runBlocking {
+    fun returnsFullResponseBodyWhenJsonDoesNotContainErrorKey() = runTest {
         val body = """{ "message": "Something went wrong" }"""
         val response = mockResponse(body)
 
@@ -53,7 +53,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun returnsRawBodyWhenResponseIsNotJson() = runBlocking {
+    fun returnsRawBodyWhenResponseIsNotJson() = runTest {
         val body = "Internal Server Error"
         val response = mockResponse(body)
 
@@ -63,7 +63,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun returnsRawBodyWhenJsonIsMalformed() = runBlocking {
+    fun returnsRawBodyWhenJsonIsMalformed() = runTest {
         val body = """{ "error": "Invalid token" """
         val response = mockResponse(body)
 
@@ -73,7 +73,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun returnsEmptyStringWhenErrorKeyExistsButIsEmpty() = runBlocking {
+    fun returnsEmptyStringWhenErrorKeyExistsButIsEmpty() = runTest {
         val response = mockResponse("""{ "error": "" }""")
 
         val result = extractError(response, "error")
@@ -82,7 +82,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun returnsErrorValueFromNestedJsonObject() = runBlocking {
+    fun returnsErrorValueFromNestedJsonObject() = runTest {
         val body =
             """
         {
@@ -102,7 +102,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun returnsErrorValueFromDeeplyNestedJson() = runBlocking {
+    fun returnsErrorValueFromDeeplyNestedJson() = runTest {
         val body =
             """
         {
@@ -125,7 +125,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun prefersTopLevelErrorOverNestedError() = runBlocking {
+    fun prefersTopLevelErrorOverNestedError() = runTest {
         val body =
             """
         {
@@ -145,7 +145,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun returnsErrorValueFromJsonArray() = runBlocking {
+    fun returnsErrorValueFromJsonArray() = runTest {
         val body =
             """
         {
@@ -165,7 +165,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun returnsFirstMatchingErrorWhenMultipleExist() = runBlocking {
+    fun returnsFirstMatchingErrorWhenMultipleExist() = runTest {
         val body =
             """
         {
@@ -187,7 +187,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun returnsFullBodyWhenErrorKeyNotFoundRecursively() = runBlocking {
+    fun returnsFullBodyWhenErrorKeyNotFoundRecursively() = runTest {
         val body =
             """
         {
@@ -205,7 +205,7 @@ class RpcExtensionExtractErrorTest {
     }
 
     @Test
-    fun findsErrorInMixedJsonStructures() = runBlocking {
+    fun findsErrorInMixedJsonStructures() = runTest {
         val body =
             """
         {

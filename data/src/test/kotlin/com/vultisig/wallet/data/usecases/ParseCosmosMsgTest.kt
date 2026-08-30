@@ -5,6 +5,12 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -13,8 +19,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ParseCosmosMessageTest {
 
@@ -280,7 +285,7 @@ class ParseCosmosMessageTest {
         assertEquals(longMemo, result.memo)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `parseCosmosMessage should throw when chainId is blank`() {
         val txBody = createValidTxBody()
         val authInfo = createValidAuthInfo()
@@ -293,10 +298,10 @@ class ParseCosmosMessageTest {
                 authInfoBytes = encodeAuthInfo(authInfo),
             )
 
-        parseCosmosMessage(signDirect)
+        assertFailsWith<IllegalArgumentException> { parseCosmosMessage(signDirect) }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `parseCosmosMessage should throw when accountNumber is blank`() {
         val txBody = createValidTxBody()
         val authInfo = createValidAuthInfo()
@@ -309,10 +314,10 @@ class ParseCosmosMessageTest {
                 authInfoBytes = encodeAuthInfo(authInfo),
             )
 
-        parseCosmosMessage(signDirect)
+        assertFailsWith<IllegalArgumentException> { parseCosmosMessage(signDirect) }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `parseCosmosMessage should throw when bodyBytes is blank`() {
         val authInfo = createValidAuthInfo()
 
@@ -324,10 +329,10 @@ class ParseCosmosMessageTest {
                 authInfoBytes = encodeAuthInfo(authInfo),
             )
 
-        parseCosmosMessage(signDirect)
+        assertFailsWith<IllegalArgumentException> { parseCosmosMessage(signDirect) }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `parseCosmosMessage should throw when authInfoBytes is blank`() {
         val txBody = createValidTxBody()
 
@@ -339,37 +344,37 @@ class ParseCosmosMessageTest {
                 authInfoBytes = "",
             )
 
-        parseCosmosMessage(signDirect)
+        assertFailsWith<IllegalArgumentException> { parseCosmosMessage(signDirect) }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `decodeTxBodySafe should throw on invalid base64`() {
-        decodeTxBodySafe("not-valid-base64!@#$")
+        assertFailsWith<IllegalArgumentException> { decodeTxBodySafe("not-valid-base64!@#$") }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `decodeAuthInfoSafe should throw on invalid base64`() {
-        decodeAuthInfoSafe("not-valid-base64!@#$")
+        assertFailsWith<IllegalArgumentException> { decodeAuthInfoSafe("not-valid-base64!@#$") }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `decodeTxBodySafe should throw on invalid protobuf data`() {
         val invalidProtobuf =
             Base64.encode(byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte()))
-        decodeTxBodySafe(invalidProtobuf)
+        assertFailsWith<IllegalArgumentException> { decodeTxBodySafe(invalidProtobuf) }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `decodeAuthInfoSafe should throw on invalid protobuf data`() {
         val invalidProtobuf =
             Base64.encode(byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte()))
-        decodeAuthInfoSafe(invalidProtobuf)
+        assertFailsWith<IllegalArgumentException> { decodeAuthInfoSafe(invalidProtobuf) }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `decodeTxBodySafe should throw when TxBody has no messages`() {
         val emptyTxBody = TxBody(messages = emptyList(), memo = "no messages")
-        decodeTxBodySafe(encodeTxBody(emptyTxBody))
+        assertFailsWith<IllegalArgumentException> { decodeTxBodySafe(encodeTxBody(emptyTxBody)) }
     }
 
     @Test
@@ -553,9 +558,8 @@ class ParseCosmosMessageTest {
 
         val result = parseCosmosMessage(signDirect)
         val value = result.messages[0].value
-        val base64String = (value as JsonPrimitive).contentOrNull
-        assertNotNull(base64String)
-        assertArrayEquals(originalBytes, Base64.decode(base64String!!))
+        val base64String = assertNotNull((value as JsonPrimitive).contentOrNull)
+        assertContentEquals(originalBytes, Base64.decode(base64String))
     }
 
     @Test
@@ -620,8 +624,8 @@ class ParseCosmosMessageTest {
         val value = result.messages[0].value as JsonObject
         val from = value["fromAddress"]!!.jsonPrimitive.content
         val to = value["toAddress"]!!.jsonPrimitive.content
-        assertTrue("expected thor1 prefix, got $from", from.startsWith("thor1"))
-        assertTrue("expected thor1 prefix, got $to", to.startsWith("thor1"))
+        assertTrue(from.startsWith("thor1"), "expected thor1 prefix, got $from")
+        assertTrue(to.startsWith("thor1"), "expected thor1 prefix, got $to")
         // 20-byte payload -> 32 data chars + 6 checksum chars + "thor1" prefix = 43
         assertEquals(43, from.length)
         assertEquals(43, to.length)
@@ -673,7 +677,7 @@ class ParseCosmosMessageTest {
         val result = parseCosmosMessage(signDirect)
         val value = result.messages[0].value as JsonObject
         val signer = value["signer"]!!.jsonPrimitive.content
-        assertTrue("expected thor1 prefix, got $signer", signer.startsWith("thor1"))
+        assertTrue(signer.startsWith("thor1"), "expected thor1 prefix, got $signer")
         assertEquals(43, signer.length)
         assertEquals("swap:BTC.BTC:bc1qaddr", value["memo"]!!.jsonPrimitive.content)
         val coins = value["coins"]!!.jsonArray
@@ -716,9 +720,8 @@ class ParseCosmosMessageTest {
 
         val result = parseCosmosMessage(signDirect)
         val value = result.messages[0].value
-        val base64String = (value as JsonPrimitive).contentOrNull
-        assertNotNull(base64String)
-        assertArrayEquals(msgBytes, Base64.decode(base64String!!))
+        val base64String = assertNotNull((value as JsonPrimitive).contentOrNull)
+        assertContentEquals(msgBytes, Base64.decode(base64String))
     }
 
     @Test
@@ -769,11 +772,11 @@ class ParseCosmosMessageTest {
 
         val result = parseCosmosMessage(signDirect)
         val value = result.messages[0].value
-        assertTrue("expected JsonObject (decoded), got: $value", value is JsonObject)
+        assertTrue(value is JsonObject, "expected JsonObject (decoded), got: $value")
         val obj = value as JsonObject
         assertEquals("swap:BTC.BTC:bc1qaddr", obj["memo"]!!.jsonPrimitive.content)
         val signer = obj["signer"]!!.jsonPrimitive.content
-        assertTrue("expected thor1 prefix, got $signer", signer.startsWith("thor1"))
+        assertTrue(signer.startsWith("thor1"), "expected thor1 prefix, got $signer")
         val coin0 = obj["coins"]!!.jsonArray[0].jsonObject
         assertEquals("LTC", coin0["asset"]!!.jsonObject["chain"]!!.jsonPrimitive.content)
         assertEquals("12345", coin0["amount"]!!.jsonPrimitive.content)
@@ -875,9 +878,8 @@ class ParseCosmosMessageTest {
 
         val result = parseCosmosMessage(signDirect)
         val value = result.messages[0].value
-        val base64String = (value as JsonPrimitive).contentOrNull
-        assertNotNull(base64String)
-        assertArrayEquals(malformedBytes, Base64.decode(base64String!!))
+        val base64String = assertNotNull((value as JsonPrimitive).contentOrNull)
+        assertContentEquals(malformedBytes, Base64.decode(base64String))
     }
 
     @Test
