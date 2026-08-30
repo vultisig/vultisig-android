@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.components
 import android.content.Context
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
 import androidx.biometric.BiometricPrompt
@@ -38,7 +37,7 @@ import com.vultisig.wallet.ui.utils.closestActivityOrNull
 import timber.log.Timber
 
 private val allowedAuthenticatorTypes
-    get() = BIOMETRIC_STRONG or BIOMETRIC_WEAK or DEVICE_CREDENTIAL
+    get() = BIOMETRIC_STRONG or DEVICE_CREDENTIAL
 
 @Composable
 internal fun BiometryAuthScreen() {
