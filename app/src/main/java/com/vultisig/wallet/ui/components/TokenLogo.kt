@@ -12,8 +12,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
+import coil3.compose.SubcomposeAsyncImage
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
+import coil3.request.ImageRequest
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -41,7 +43,7 @@ internal fun TokenLogo(
         if (logo is String && logo.contains("ipfs.io", ignoreCase = true)) {
             ImageRequest.Builder(context)
                 .data(logo)
-                .addHeader(USER_AGENT, DEFAULT_USER_AGENT)
+                .httpHeaders(NetworkHeaders.Builder().set(USER_AGENT, DEFAULT_USER_AGENT).build())
                 .build()
         } else {
             logo

@@ -1,15 +1,16 @@
 package com.vultisig.wallet.app
 
 import android.app.Application
-import coil.ImageLoader
-import coil.ImageLoaderFactory
-import coil.decode.SvgDecoder
+import android.content.Context
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.svg.SvgDecoder
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.data.utils.SharedPrefsMasterKeyInitializer
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
-internal open class VsBaseApplication : Application(), ImageLoaderFactory {
+internal open class VsBaseApplication : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         WalletCoreLoader
@@ -24,8 +25,8 @@ internal open class VsBaseApplication : Application(), ImageLoaderFactory {
 
     // Coin logos (e.g. Sui on-chain metadata icons) are sometimes served as SVG, which the
     // platform ImageDecoder rejects with "Failed to create image decoder ... unimplemented".
-    override fun newImageLoader(): ImageLoader =
-        ImageLoader.Builder(this).components { add(SvgDecoder.Factory()) }.build()
+    override fun newImageLoader(context: Context): ImageLoader =
+        ImageLoader.Builder(context).components { add(SvgDecoder.Factory()) }.build()
 }
 
 @HiltAndroidApp internal class VultisigApplication : VsBaseApplication()
