@@ -1,9 +1,9 @@
 package com.vultisig.wallet.data.models.proto.v1
 
 import com.vultisig.wallet.data.models.SigningLibType
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import org.junit.jupiter.api.Test
 import vultisig.keygen.v1.LibType
 
 class AliasesTest {
