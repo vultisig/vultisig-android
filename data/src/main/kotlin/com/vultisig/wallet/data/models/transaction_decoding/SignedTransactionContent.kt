@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
+import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.SignBitcoin
 import vultisig.keysign.v1.SignRipple
 import vultisig.keysign.v1.SignSui
@@ -18,12 +19,22 @@ import wallet.core.jni.Base64
 
 /**
  * Union type representing the different forms of opaque signed content across blockchains. Each
- * variant corresponds to a pre-encoded transaction body that the signer signs verbatim.
+ * variant carries the transaction content the signer works from instead of the flat sidecar fields,
+ * but not every variant is byte-final: some are pre-encoded bodies that travel into the signing
+ * input untouched, while others are structured content a chain helper re-encodes together with the
+ * payload's chain-specific data. Each variant states which of the two it is.
  */
 sealed class OpaqueSignedContent {
     /**
+     * Legacy Cosmos amino JSON messages. `CosmosHelper` and `ThorChainHelper` copy each message
+     * into the signing input as raw JSON without ever reading `toAddress` or `toAmount`, so these
+     * messages — not the flat sidecars — are what gets signed.
+     */
+    data class CosmosSignAmino(val signAmino: SignAmino) : OpaqueSignedContent()
+
+    /**
      * Cosmos SignDoc body bytes (the canonical form for Cosmos chains). The bytes are the result of
-     * decoding the base64 SignDirectProto.bodyBytes.
+     * decoding the base64 SignDirectProto.bodyBytes and travel into the signing input unchanged.
      */
     data class CosmosSignDirect(val bodyBytes: ByteArray) : OpaqueSignedContent() {
         override fun equals(other: Any?) =
@@ -32,19 +43,24 @@ sealed class OpaqueSignedContent {
         override fun hashCode() = bodyBytes.contentHashCode()
     }
 
-    /** Solana message transactions to sign (base64-encoded). */
+    /** Solana message transactions signed as given (base64-encoded). */
     data class SolanaSignature(val rawTransactions: List<String>) : OpaqueSignedContent()
 
-    /** TON transaction structure with messages to sign. */
+    /**
+     * TON transaction messages. Not byte-final: `TonHelper` re-encodes every message into a
+     * `TheOpenNetwork.Transfer` and combines it with the payload's TON chain-specific data
+     * (sequence number, expiry, bounceable flag), so these messages describe what is signed without
+     * being the signed bytes themselves.
+     */
     data class TonTransaction(val signTon: SignTon) : OpaqueSignedContent()
 
-    /** Sui Programmable Transaction Block bytes to sign. */
+    /** Sui Programmable Transaction Block bytes signed verbatim. */
     data class SuiTransaction(val signSui: SignSui) : OpaqueSignedContent()
 
-    /** XRPL transaction JSON to sign. */
+    /** XRPL transaction JSON signed verbatim. */
     data class RippleTransaction(val signRipple: SignRipple) : OpaqueSignedContent()
 
-    /** Bitcoin PSBT to sign. */
+    /** Bitcoin PSBT inputs and outputs signed as given, bypassing transaction planning. */
     data class BitcoinPSBT(val signBitcoin: SignBitcoin) : OpaqueSignedContent()
 }
 
@@ -117,8 +133,9 @@ interface SignedTransactionContent {
     val rawAmount: SignedAmount
 
     /**
-     * The opaque signed content if present — one of several pre-encoded transaction forms (Cosmos
-     * SignDoc, Solana message, etc.) that the signer signs verbatim.
+     * The opaque signed content if present — one of several transaction forms (Cosmos amino
+     * messages, Cosmos SignDoc, Solana message, etc.) that the signer works from in place of the
+     * flat sidecar fields. See [OpaqueSignedContent] for which forms are byte-final.
      */
     val signedData: OpaqueSignedContent?
 
@@ -183,6 +200,24 @@ interface SignedTransactionContent {
 fun KeysignPayload.asSignedTransactionContent(): SignedTransactionContent =
     KeysignPayloadContent(this)
 
+/**
+ * Chains whose signing path is driven by a dApp-supplied Cosmos sign document — amino JSON or a
+ * protobuf SignDoc — rather than by a rebuilt bank/CW20 message.
+ */
+private val COSMOS_SIGN_DOC_CHAINS =
+    setOf(
+        Chain.GaiaChain,
+        Chain.Osmosis,
+        Chain.Noble,
+        Chain.Akash,
+        Chain.Terra,
+        Chain.TerraClassic,
+        Chain.Dydx,
+        Chain.Qbtc,
+        Chain.ThorChain,
+        Chain.MayaChain,
+    )
+
 private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTransactionContent {
 
     override val chain: Chain
@@ -225,6 +260,10 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
 
     override val signedData: OpaqueSignedContent?
         get() {
+            // signAmino is read before signDirect in CosmosHelper and ThorChainHelper.
+            payload.signAmino?.let { amino ->
+                return OpaqueSignedContent.CosmosSignAmino(amino)
+            }
             payload.signDirect?.bodyBytes?.let { bodyBytes ->
                 return OpaqueSignedContent.CosmosSignDirect(Base64.decode(bodyBytes))
             }
@@ -248,23 +287,17 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
 
     override val signedDataBodyIsActive: Boolean
         get() {
+            val chain = payload.coin.chain
+            // signAmino is read before the swap route and before signDirect in CosmosHelper and
+            // ThorChainHelper — including inside the THORChain swap path — so whenever it is
+            // present its messages, not the sidecars, are what gets signed.
+            if (payload.signAmino != null) return chain in COSMOS_SIGN_DOC_CHAINS
             // Approve and swap routes make opaque content inactive
             if (payload.approvePayload != null || payload.swapPayload != null) return false
-            // signAmino takes precedence over signDirect in CosmosHelper and ThorChainHelper
-            if (payload.signAmino != null) return false
 
-            return when (payload.coin.chain) {
+            return when (chain) {
                 // Cosmos chains and related protocols use signDirect when present
-                Chain.GaiaChain,
-                Chain.Osmosis,
-                Chain.Noble,
-                Chain.Akash,
-                Chain.Terra,
-                Chain.TerraClassic,
-                Chain.Dydx,
-                Chain.Qbtc,
-                Chain.ThorChain,
-                Chain.MayaChain -> payload.signDirect != null
+                in COSMOS_SIGN_DOC_CHAINS -> payload.signDirect != null
                 // TON, Sui, Solana, Bitcoin, Ripple use their signed content when present
                 Chain.Ton -> payload.signTon != null
                 Chain.Sui -> payload.signSui != null
