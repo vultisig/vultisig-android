@@ -6,11 +6,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.withResumed
 import com.google.android.play.core.review.ReviewException
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.android.play.core.review.model.ReviewErrorCode
@@ -63,17 +63,18 @@ internal fun InAppReviewHost(viewModel: InAppReviewViewModel = hiltViewModel()) 
         delay(PROMPT_SETTLE_DELAY)
 
         // An ask is spent whether or not Play shows anything, so it must never be spent while the
-        // app is in the background: the prompt stays pending and is presented on the next launch.
-        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return@LaunchedEffect
-
-        reviewManager.requestReviewFlow().addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                @ReviewErrorCode val errorCode = (task.exception as? ReviewException)?.errorCode
-                Timber.e("In-app review: request failed with %s", errorCode)
-                return@addOnCompleteListener
+        // app is in the background. Suspending rather than bailing out means a prompt that came due
+        // behind a backgrounded app is presented when the user returns, not on some later launch.
+        lifecycle
+            .withResumed { reviewManager.requestReviewFlow() }
+            .addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    @ReviewErrorCode val errorCode = (task.exception as? ReviewException)?.errorCode
+                    Timber.e("In-app review: request failed with %s", errorCode)
+                    return@addOnCompleteListener
+                }
+                viewModel.onPromptRequested()
+                reviewManager.launchReviewFlow(activity, task.result)
             }
-            viewModel.onPromptRequested()
-            reviewManager.launchReviewFlow(activity, task.result)
-        }
     }
 }

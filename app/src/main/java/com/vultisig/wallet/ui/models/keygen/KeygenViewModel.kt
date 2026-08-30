@@ -60,6 +60,7 @@ import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.data.utils.runCatchingCancellable
 import com.vultisig.wallet.ui.components.canAuthenticateBiometric
 import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
@@ -938,8 +939,10 @@ constructor(
             if (action == TssAction.KEYGEN) {
                 // Recorded here rather than on the KEYGEN branch below, which also runs for a fast
                 // vault whose share is still only in temporary storage until the emailed code is
-                // verified.
-                inAppReviewRepository.onVaultCreated()
+                // verified. The vault is already persisted by this point, so a failed write of the
+                // review moment must not take the completed keygen down with it.
+                runCatchingCancellable { inAppReviewRepository.onVaultCreated() }
+                    .onFailure { Timber.w(it, "Failed to record the in-app review moment") }
             }
         }
 

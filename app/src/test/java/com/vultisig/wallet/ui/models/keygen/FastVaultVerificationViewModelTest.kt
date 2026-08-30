@@ -28,6 +28,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import java.io.IOException
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -126,6 +127,22 @@ internal class FastVaultVerificationViewModelTest {
             advanceUntilIdle()
 
             coVerify(exactly = 1) { inAppReviewRepository.onVaultCreated() }
+        }
+
+    @Test
+    fun `a review moment that fails to persist does not fail verification`() =
+        runTest(testDispatcher) {
+            givenTemporaryVault()
+            coEvery { verifyUseCase(any(), any()) } returns BackupCodeVerifyResult.Valid
+            coEvery { inAppReviewRepository.onVaultCreated() } throws IOException("disk full")
+            val vm = buildViewModel()
+
+            vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
+            vm.processCode("1234")
+            advanceUntilIdle()
+
+            assertEquals(VerifyPinState.Success, vm.state.value.verifyPinState)
+            coVerify(exactly = 1) { navigator.route(any<Route.BackupVault>()) }
         }
 
     @Test
