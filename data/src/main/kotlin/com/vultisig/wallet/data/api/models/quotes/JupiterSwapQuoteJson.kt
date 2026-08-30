@@ -16,6 +16,9 @@ data class QuoteSwapTotalDataJson(
     @SerialName("quoteSwapData") val swapTransaction: QuoteSwapTransactionJson,
     @SerialName("dstAmount") val dstAmount: String,
     @SerialName("routePlan") val routePlan: List<RoutePlanItemJson>,
+    // Jupiter affiliate fee (`platformFee.amount`), not the per-hop AMM `swapInfo.feeAmount`.
+    @SerialName("platformFeeAmount") val platformFeeAmount: String? = null,
+    @SerialName("platformFeeMint") val platformFeeMint: String? = null,
 )
 
 @Serializable
