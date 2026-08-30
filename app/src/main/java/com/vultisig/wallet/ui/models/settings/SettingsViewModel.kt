@@ -28,6 +28,7 @@ import com.vultisig.wallet.ui.models.settings.SettingsItem.Notifications
 import com.vultisig.wallet.ui.models.settings.SettingsItem.PasscodeEncryption
 import com.vultisig.wallet.ui.models.settings.SettingsItem.PreventScreenshots
 import com.vultisig.wallet.ui.models.settings.SettingsItem.PrivacyPolicy
+import com.vultisig.wallet.ui.models.settings.SettingsItem.RateTheApp
 import com.vultisig.wallet.ui.models.settings.SettingsItem.ReferralCode
 import com.vultisig.wallet.ui.models.settings.SettingsItem.ShareTheApp
 import com.vultisig.wallet.ui.models.settings.SettingsItem.TermsOfService
@@ -134,6 +135,20 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                     trailingIcon = R.drawable.ic_small_caret_right,
                 ),
             enabled = true,
+        )
+
+    /**
+     * Links out to the Play listing instead of triggering the in-app review flow: Play's policy
+     * forbids a button from launching that flow, and the flow silently no-ops once its quota is
+     * spent, which would leave the row looking broken.
+     */
+    data object RateTheApp :
+        SettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.settings_screen_rate_the_app),
+                leadingIcon = R.drawable.rate_the_app,
+                trailingIcon = R.drawable.ic_small_caret_right,
+            )
         )
 
     data object ShareTheApp :
@@ -288,7 +303,7 @@ constructor(
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.support),
-                        items = listOf(Faq, CheckForUpdates, ShareTheApp),
+                        items = listOf(Faq, CheckForUpdates, RateTheApp, ShareTheApp),
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.vultisig_community),
@@ -341,6 +356,7 @@ constructor(
             }
 
             PrivacyPolicy -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.PRIVACY))
+            RateTheApp -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.GOOGLE_PLAY))
             ReferralCode -> onClickReferralCode()
             ShareTheApp -> openShareLinkModalBottomSheet()
             TermsOfService -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TERMS_OF_SERVICE))

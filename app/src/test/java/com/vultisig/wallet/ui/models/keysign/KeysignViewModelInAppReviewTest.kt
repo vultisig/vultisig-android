@@ -10,14 +10,10 @@ import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.asUiText
-import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -27,8 +23,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * Covers the in-app review trigger (#5427): it must fire only for a transaction that actually
- * landed on-chain, and only once, since status polling re-emits the terminal state on every tick.
+ * Covers the in-app review moment: it must be recorded only for a transaction that actually landed
+ * on-chain, and only once, since status polling re-emits the terminal state on every tick. Whether
+ * the card is then asked for is [InAppReviewRepository]'s decision, not this screen's.
  */
 internal class KeysignViewModelInAppReviewTest {
 
@@ -40,7 +37,6 @@ internal class KeysignViewModelInAppReviewTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         inAppReviewRepository = mockk(relaxed = true)
-        coEvery { inAppReviewRepository.onTransactionSucceeded() } returns true
     }
 
     @AfterEach
@@ -49,32 +45,26 @@ internal class KeysignViewModelInAppReviewTest {
     }
 
     @Test
-    fun `a broadcast send asks for a review`() =
+    fun `a broadcast send is a review moment`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            val requests = mutableListOf<Unit>()
-            val job = launch { vm.inAppReviewRequests.toList(requests) }
 
             vm.finishWith(TransactionStatus.Broadcasted)
 
-            requests.size shouldBe 1
-            job.cancel()
+            coVerify(exactly = 1) { inAppReviewRepository.onTransactionSucceeded() }
         }
 
     @Test
-    fun `a confirmed send asks for a review`() =
+    fun `a confirmed send is a review moment`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            val requests = mutableListOf<Unit>()
-            val job = launch { vm.inAppReviewRequests.toList(requests) }
 
             vm.finishWith(TransactionStatus.Confirmed)
 
-            requests.size shouldBe 1
-            job.cancel()
+            coVerify(exactly = 1) { inAppReviewRepository.onTransactionSucceeded() }
         }
 
-    // The whole point of #5427: a user whose transaction failed must never be asked to rate.
+    // A user whose transaction failed must never be asked to rate.
     @Test
     fun `a failed transaction never asks for a review`() =
         runTest(testDispatcher) {
@@ -106,10 +96,10 @@ internal class KeysignViewModelInAppReviewTest {
             coVerify(exactly = 0) { inAppReviewRepository.onTransactionSucceeded() }
         }
 
-    // Status polling re-emits KeysignFinished on every tick; counting each one would inflate the
-    // success counter and re-ask on every poll.
+    // Status polling re-emits KeysignFinished on every tick; recording each one would re-arm the
+    // card on every poll.
     @Test
-    fun `repeated terminal emissions ask only once`() =
+    fun `repeated terminal emissions record only once`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
 
@@ -130,20 +120,6 @@ internal class KeysignViewModelInAppReviewTest {
             vm.finishWith(TransactionStatus.Broadcasted)
 
             coVerify(exactly = 0) { inAppReviewRepository.onTransactionSucceeded() }
-        }
-
-    @Test
-    fun `no review is requested while the throttle blocks it`() =
-        runTest(testDispatcher) {
-            coEvery { inAppReviewRepository.onTransactionSucceeded() } returns false
-            val vm = createViewModel()
-            val requests = mutableListOf<Unit>()
-            val job = launch { vm.inAppReviewRequests.toList(requests) }
-
-            vm.finishWith(TransactionStatus.Confirmed)
-
-            requests.shouldBe(emptyList())
-            job.cancel()
         }
 
     private fun KeysignViewModel.finishWith(status: TransactionStatus) {

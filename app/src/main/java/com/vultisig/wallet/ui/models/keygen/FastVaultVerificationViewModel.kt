@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.BackupCodeVerifyResult
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -69,6 +70,7 @@ constructor(
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val inAppReviewRepository: InAppReviewRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.FastVaultVerification>()
@@ -189,6 +191,12 @@ constructor(
                                     vaultId = vaultId,
                                     date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
                                 )
+
+                                if (args.tssAction == TssAction.KEYGEN) {
+                                    // The fast vault only becomes real here: keygen parked its
+                                    // share in temporary storage until this code was verified.
+                                    inAppReviewRepository.onVaultCreated()
+                                }
 
                                 delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
                                 navigator.route(

@@ -42,6 +42,7 @@ import com.vultisig.wallet.data.passcode.AutoLockHold
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.KeyImportData
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
@@ -143,6 +144,7 @@ constructor(
     private val featureFlagRepository: FeatureFlagRepository,
     private val autoLockHold: AutoLockHold,
     private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
+    private val inAppReviewRepository: InAppReviewRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
     private data class ChainKeygenResult(
@@ -932,6 +934,13 @@ constructor(
             }
 
             vaultDataStoreRepository.setBackupStatus(vaultId = vaultId, false)
+
+            if (action == TssAction.KEYGEN) {
+                // Recorded here rather than on the KEYGEN branch below, which also runs for a fast
+                // vault whose share is still only in temporary storage until the emailed code is
+                // verified.
+                inAppReviewRepository.onVaultCreated()
+            }
         }
 
         if (action == TssAction.KEYGEN) {

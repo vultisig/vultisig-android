@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.utils.InAppReviewHost
 import com.vultisig.wallet.ui.utils.LocalWindowSizeClass
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.AndroidEntryPoint
@@ -149,6 +150,11 @@ class MainActivity : AppCompatActivity() {
                             }
 
                             CheckUpdates()
+
+                            // Hosted at the root, not on the screen that earned it: creating a
+                            // vault navigates straight on into backup, which is no place for a
+                            // store card to land.
+                            InAppReviewHost()
 
                             MainActivityContent(
                                 navController = navController,
