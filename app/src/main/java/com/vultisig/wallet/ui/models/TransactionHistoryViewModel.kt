@@ -9,6 +9,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
+import com.vultisig.wallet.data.db.models.isInFlight
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
@@ -50,6 +51,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -209,12 +211,37 @@ constructor(
     private val _uiState = MutableStateFlow(TransactionHistoryUiState(chainName = chainId))
     val uiState: StateFlow<TransactionHistoryUiState> = _uiState.asStateFlow()
 
+    /**
+     * Screen visibility, driven by the composable's resume effect. A flow rather than a job handle
+     * so the poll loop below is started and stopped by the same collector that watches for
+     * in-flight rows, instead of two callbacks racing over a shared `Job?`.
+     */
+    private val isScreenVisible = MutableStateFlow(false)
+
     init {
         observeTransactions()
         observeLimitTabVisibility()
         observeAssetSearchItems()
         observeLimitOrders()
+        observeInFlightRows()
+    }
+
+    /**
+     * Re-checks settlement every time the screen comes back into view, and again on a timer while
+     * anything is still in flight.
+     *
+     * One poll at construction is not enough: the row the user is watching was broadcast seconds
+     * earlier, so that first check lands before the receipt exists and writes PENDING. With nothing
+     * scheduled behind it the row then stays at "In progress" indefinitely — the elapsed chip keeps
+     * ticking, which reads as live, while the status is frozen.
+     */
+    fun onScreenResumed() {
+        isScreenVisible.value = true
         refreshOnEnter()
+    }
+
+    fun onScreenPaused() {
+        isScreenVisible.value = false
     }
 
     fun selectTab(tab: TransactionHistoryTab) {
@@ -268,8 +295,19 @@ constructor(
         viewModelScope.launch { navigator.back() }
     }
 
+    /**
+     * Opening a row that is still in flight re-checks that one transaction: answering "in progress"
+     * to someone who just asked about this specific transaction, without having looked, is what the
+     * sweep's backoff would otherwise do. One status call is a fair price for a current answer.
+     */
     fun openDetail(item: TransactionHistoryItemUiModel) {
         _uiState.update { it.copy(selectedItem = item) }
+        if (!item.status.isInFlight()) return
+        viewModelScope.safeLaunch(
+            onError = { t -> Timber.w(t, "Detail-sheet status re-check failed") }
+        ) {
+            refreshPendingTransactions.refreshOne(item.chain, item.txHash)
+        }
     }
 
     fun dismissDetail() {
@@ -308,6 +346,35 @@ constructor(
             throw e
         } catch (e: Exception) {
             Timber.w(e, "Pull-to-refresh failed for %s", what)
+        }
+    }
+
+    /**
+     * Polls while the screen is in view AND at least one row is still in flight, so a transaction
+     * that settles under the user's eyes flips on its own rather than waiting for them to leave and
+     * come back or pull to refresh. Both halves matter: an idle history screen issues no requests,
+     * and a backgrounded one stops rather than polling from behind the home screen.
+     */
+    private fun observeInFlightRows() {
+        viewModelScope.safeLaunch(onError = { t -> Timber.w(t, "In-flight polling stopped") }) {
+            transactionHistoryRepository
+                .observeTransactions(
+                    vaultId = vaultId,
+                    type = TransactionHistoryType.OVERVIEW,
+                    chain = chainId,
+                )
+                .map { rows -> rows.any { it.status.isInFlight } }
+                .combine(isScreenVisible) { hasInFlight, isVisible -> hasInFlight && isVisible }
+                .distinctUntilChanged()
+                .collectLatest { shouldPoll ->
+                    if (!shouldPoll) return@collectLatest
+                    while (true) {
+                        delay(IN_FLIGHT_POLL_INTERVAL)
+                        runCatchingRefresh("in-flight transactions") {
+                            refreshPendingTransactions(vaultId, chainId)
+                        }
+                    }
+                }
         }
     }
 
@@ -475,9 +542,34 @@ constructor(
                         }
                 }
                 .collect { groups ->
-                    _uiState.update { it.copy(groups = groups, isLoading = false) }
+                    _uiState.update {
+                        it.copy(
+                            groups = groups,
+                            isLoading = false,
+                            selectedItem = it.selectedItem.reconciledWith(groups),
+                        )
+                    }
                 }
         }
+    }
+
+    /**
+     * Re-points an open detail sheet at the row this emission just carried.
+     *
+     * [TransactionHistoryUiState.selectedItem] is a snapshot taken when the sheet was presented, so
+     * nothing else reaches it: a sheet left open while the poll settles the transaction keeps
+     * reading "In progress" above a row that has already flipped to Confirmed behind it.
+     *
+     * A row that is no longer in the list — filtered out, or on a tab that does not carry it —
+     * keeps the snapshot rather than closing the sheet under the user.
+     */
+    private fun TransactionHistoryItemUiModel?.reconciledWith(
+        groups: List<TransactionHistoryGroupUiModel>
+    ): TransactionHistoryItemUiModel? {
+        val current = this ?: return null
+        return groups.firstNotNullOfOrNull { group ->
+            group.transactions.firstOrNull { it.id == current.id }
+        } ?: current
     }
 
     private fun TransactionHistoryItemUiModel.matchesAssetIds(assetIds: Set<String>): Boolean =
@@ -653,5 +745,26 @@ constructor(
          * network and no database.
          */
         val EXPIRY_TICK = 15.seconds
+
+        /**
+         * How often in-flight rows are re-checked while the screen is in view. A little over one
+         * Ethereum block, and well behind the 5s the done-screen poller uses for the same chain —
+         * this sweep covers every pending row at once and keeps running for as long as the user
+         * stays on the screen, where that one is scoped to a single transaction.
+         */
+        val IN_FLIGHT_POLL_INTERVAL = 15.seconds
     }
 }
+
+/**
+ * Whether the row is still awaiting settlement. `NotFound` already maps to
+ * [TransactionStatusUiModel.Pending] upstream, so indexer lag counts as in flight here too.
+ */
+private fun TransactionStatusUiModel.isInFlight(): Boolean =
+    when (this) {
+        TransactionStatusUiModel.Broadcasted,
+        TransactionStatusUiModel.Pending -> true
+        TransactionStatusUiModel.Confirmed,
+        is TransactionStatusUiModel.Failed,
+        is TransactionStatusUiModel.Refunded -> false
+    }

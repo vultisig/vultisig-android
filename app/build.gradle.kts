@@ -76,7 +76,8 @@ dependencies {
 
     // kotlinx
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.serialization)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.protobuf)
     implementation(libs.kotlinx.datetime)
 
     // androidx
@@ -141,6 +142,7 @@ dependencies {
     implementation(libs.wallet.core)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.coil.svg)
     implementation(libs.play.update)
     implementation(libs.play.review)
@@ -152,7 +154,6 @@ dependencies {
     implementation(libs.rive)
 
     // test
-    testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.mockk)
@@ -165,7 +166,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.intents)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
-    androidTestImplementation(libs.junit.jupiter)
+    androidTestImplementation(libs.junit)
     androidTestImplementation(libs.wallet.core)
     androidTestImplementation(libs.ktor.client.mock)
     testImplementation(kotlin("test"))

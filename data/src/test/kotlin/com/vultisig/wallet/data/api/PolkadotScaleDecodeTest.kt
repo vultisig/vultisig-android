@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.api
 
 import java.math.BigInteger
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.assertEquals
+import org.junit.jupiter.api.Test
 
 class PolkadotScaleDecodeTest {
 
