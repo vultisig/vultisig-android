@@ -312,7 +312,6 @@ constructor(
                         srcTokenValue,
                         tokenValue,
                         vultBPSDiscount,
-                        srcNativeToken,
                         slippageBps,
                     )
 
@@ -335,10 +334,8 @@ constructor(
             when (provider) {
                 SwapProvider.MAYA,
                 SwapProvider.THORCHAIN,
-                SwapProvider.LIFI -> dstToken
-                // SwapKit inbound fee is source-native (like 1inch/Kyber/Jupiter, not LiFi's
-                // destination-side integrator model).
-                SwapProvider.SWAPKIT -> srcNativeToken
+                SwapProvider.LIFI,
+                SwapProvider.JUPITER -> dstToken
                 else -> srcNativeToken
             }
 
@@ -1078,7 +1075,6 @@ constructor(
         srcTokenValue: BigInteger,
         tokenValue: TokenValue,
         vultBPSDiscount: Int?,
-        srcNativeToken: Coin,
         slippageBps: Int?,
     ): Pair<SwapQuote, UiText> {
         // LI.FI and Jupiter both take a quote-time slippage override, so slippage is part of the
@@ -1142,11 +1138,10 @@ constructor(
                             )
                         Pair(feeWei, dstToken)
                     } else {
-                        resolveSwapFee(
-                            apiQuote.tx.swapFeeTokenContract,
-                            apiQuote.tx.swapFee,
-                            srcNativeToken,
-                            apiQuote.tx.swapFee.toBigInteger(),
+                        // Jupiter ExactIn platform fee is output-mint base units.
+                        Pair(
+                            apiQuote.tx.swapFee.toBigIntegerOrNull() ?: BigInteger.ZERO,
+                            dstToken,
                         )
                     }
                 val updatedTx = apiQuote.tx.withResolvedSwapFee(feeAmount, feeCoin)
