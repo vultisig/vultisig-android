@@ -392,7 +392,7 @@
     <string name="deposit_form_address_card_title">Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
     <string name="deposit_form_provider_hint">Provider</string>
-    <string name="deposit_form_operator_fee_title">Operator’s Fee (optional)</string>
+    <string name="deposit_form_operator_fee_title">Operator fees (basis points)</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Slippage is required</string>
     <string name="slippage_invalid_error">Slippage must be between 1 and 100</string>

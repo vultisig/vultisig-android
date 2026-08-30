@@ -275,7 +275,7 @@
     <string name="deposit_form_address_card_title">Адрес</string>
     <string name="deposit_form_provider_title">Поставщик (необязательно)</string>
     <string name="deposit_form_provider_hint">Провайдер</string>
-    <string name="deposit_form_operator_fee_title">Комиссия оператора (необязательно)</string>
+    <string name="deposit_form_operator_fee_title">Комиссии оператора (Базисные пункты)</string>
     <string name="deposit_message_deposit_title">%s сообщение депозит</string>
     <string name="deposit_form_custom_memo_title">Пользовательская записка</string>
     <string name="swap_screen_same_asset_error_message">Исходные и целевые активы не могут быть одинаковыми.</string>

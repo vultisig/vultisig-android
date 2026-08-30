@@ -97,7 +97,16 @@ internal class BondStrategy(
             )
         }
 
-        val operatorFeeAmount = operatorFeeFieldState.text.toString().toBigDecimalOrNull()
+        val operatorFeeText = operatorFeeFieldState.text.toString()
+        val operatorFeeValue: Int? =
+            if (operatorFeeText.isNotBlank()) {
+                operatorFeeText.toIntOrNull()?.takeIf { it in 0..10000 }
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_invalid_operator_fee)
+                    )
+            } else {
+                null
+            }
 
         val selectedToken =
             selectedTokenProvider()
@@ -107,11 +116,6 @@ internal class BondStrategy(
 
         val tokenAmountInt =
             tokenAmount?.movePointRight(selectedToken.decimal)?.toBigInteger() ?: BigInteger.ONE
-
-        val operatorFeeValue =
-            operatorFeeAmount
-                ?.movePointRight(if (depositChain == Chain.ThorChain) 2 else 0)
-                ?.toInt()
 
         val srcAddress = selectedToken.address
 

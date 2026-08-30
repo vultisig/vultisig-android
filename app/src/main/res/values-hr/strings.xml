@@ -276,7 +276,7 @@
     <string name="deposit_form_address_card_title">Adresa</string>
     <string name="deposit_form_provider_title">Davatelj (neobavezno)</string>
     <string name="deposit_form_provider_hint">Davatelj</string>
-    <string name="deposit_form_operator_fee_title">Naknada operatera (nije obavezno)</string>
+    <string name="deposit_form_operator_fee_title">Naknade operatora (Bazni bodovi)</string>
     <string name="deposit_message_deposit_title">%s depozit poruke</string>
     <string name="deposit_form_custom_memo_title">Prilagođeni dopis</string>
     <string name="swap_screen_same_asset_error_message">Izvorna i odredišna imovina ne mogu biti ista.</string>

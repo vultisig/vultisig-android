@@ -276,7 +276,7 @@
     <string name="deposit_form_address_card_title">Adresse</string>
     <string name="deposit_form_provider_title">Anbieter (optional)</string>
     <string name="deposit_form_provider_hint">Anbieter</string>
-    <string name="deposit_form_operator_fee_title">Betreibergebühr (optional)</string>
+    <string name="deposit_form_operator_fee_title">Betreiber-Gebühren (Basispunkte)</string>
     <string name="deposit_message_deposit_title">%s Nachricht Einzahlung</string>
     <string name="deposit_form_custom_memo_title">Benutzerdefiniertes Memo</string>
     <string name="swap_screen_same_asset_error_message">Quell- und Ziel-Assets können nicht identisch sein.</string>

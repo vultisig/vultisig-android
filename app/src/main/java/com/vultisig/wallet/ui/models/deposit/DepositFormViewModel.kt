@@ -537,6 +537,12 @@ constructor(
         viewModelScope.launch {
             try {
                 val vaultId = vaultId ?: return@launch
+
+                if (state.value.depositOption == DepositOption.Bond) {
+                    fieldInputCoordinator.validateOperatorFee()
+                    if (state.value.operatorFeeError != null) return@launch
+                }
+
                 isLoading = true
 
                 val transaction = depositStrategies.getValue(state.value.depositOption).build()

@@ -138,7 +138,7 @@ constructor(
     fun validateOperatorFee() {
         val text = fields.operatorFeeFieldState.text.toString()
         if (text.isNotEmpty()) {
-            val errorText = fieldValidator.validateBasisPoints(text.toIntOrNull())
+            val errorText = fieldValidator.validateOperatorFee(text.toIntOrNull())
             state.update { it.copy(operatorFeeError = errorText) }
         }
     }

@@ -40,21 +40,30 @@ internal class BondStrategyTest {
     private val assetsValidator: DepositMemoAssetsValidatorUseCase = mockk()
 
     @Test
-    fun `Thor bond memo scales operator fee by 100 and uses tokenAmount as srcTokenValue`() =
-        runTest {
-            coEvery { chainRepo.isValid(Chain.ThorChain, "thorNode") } returns true
-            givenSpecific()
-            nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
-            tokenAmount.setTextAndPlaceCursorAtEnd("1")
-            operatorFee.setTextAndPlaceCursorAtEnd("5")
+    fun `Thor bond memo passes operator fee through as raw basis points`() = runTest {
+        coEvery { chainRepo.isValid(Chain.ThorChain, "thorNode") } returns true
+        givenSpecific()
+        nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
+        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+        operatorFee.setTextAndPlaceCursorAtEnd("5")
 
-            val tx = build(Chain.ThorChain).build()
+        val tx = build(Chain.ThorChain).build()
 
-            assertEquals("BOND:thorNode::500", tx.memo)
-            assertEquals(BigInteger.valueOf(100_000_000), tx.srcTokenValue.value)
-            assertEquals(OPERATION_BOND, tx.operation)
-            assertEquals("thorNode", tx.nodeAddress)
-        }
+        assertEquals("BOND:thorNode::5", tx.memo)
+        assertEquals(BigInteger.valueOf(100_000_000), tx.srcTokenValue.value)
+        assertEquals(OPERATION_BOND, tx.operation)
+        assertEquals("thorNode", tx.nodeAddress)
+    }
+
+    @Test
+    fun `Thor bond throws when operator fee is out of basis points range`() = runTest {
+        coEvery { chainRepo.isValid(Chain.ThorChain, "thorNode") } returns true
+        nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
+        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+        operatorFee.setTextAndPlaceCursorAtEnd("10001")
+
+        assertFailsWith<InvalidTransactionDataException> { build(Chain.ThorChain).build() }
+    }
 
     @Test
     fun `Maya bond memo uses assets and lpUnits and srcTokenValue defaults to 1`() = runTest {

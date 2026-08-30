@@ -278,7 +278,7 @@
     <string name="deposit_form_address_card_title">Endereço</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>
     <string name="deposit_form_provider_hint">Provedor</string>
-    <string name="deposit_form_operator_fee_title">Taxa do Operador (opcional)</string>
+    <string name="deposit_form_operator_fee_title">Taxas do operador (Pontos base)</string>
     <string name="deposit_message_deposit_title">%s depósito de mensagens</string>
     <string name="deposit_form_custom_memo_title">Memorando personalizado</string>
     <string name="swap_screen_same_asset_error_message">Os ativos de origem e de destino não podem ser iguais.</string>

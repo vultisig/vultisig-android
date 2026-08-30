@@ -1731,11 +1731,7 @@ internal class SwapQuoteManagerTest {
         fetchJupiterQuote(createManager(), slippageBps = null)
 
         coVerify {
-            convertTokenValueToFiat(
-                usdc,
-                TokenValue(BigInteger.ZERO, usdc),
-                AppCurrency.USD,
-            )
+            convertTokenValueToFiat(usdc, TokenValue(BigInteger.ZERO, usdc), AppCurrency.USD)
         }
     }
 

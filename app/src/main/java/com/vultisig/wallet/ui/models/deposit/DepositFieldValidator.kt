@@ -43,6 +43,13 @@ internal interface DepositFieldValidator {
      */
     fun validateBasisPoints(basisPoints: Int?): UiText?
 
+    /**
+     * Returns an error if [operatorFee] is null or outside the `0..10000` basis-points range;
+     * `null` otherwise. Used for the THORChain Bond operator-fee field, which is basis points, not
+     * the percent-shaped range [validateBasisPoints] applies elsewhere.
+     */
+    fun validateOperatorFee(operatorFee: Int?): UiText?
+
     /** Returns an error if [memo] is blank; `null` otherwise. */
     fun validateCustomMemo(memo: String): UiText?
 
@@ -88,6 +95,13 @@ constructor(private val chainAccountAddressRepository: ChainAccountAddressReposi
 
     override fun validateBasisPoints(basisPoints: Int?): UiText? {
         if (basisPoints == null || basisPoints <= 0 || basisPoints > 100) {
+            return UiText.StringResource(R.string.send_from_invalid_amount)
+        }
+        return null
+    }
+
+    override fun validateOperatorFee(operatorFee: Int?): UiText? {
+        if (operatorFee == null || operatorFee !in 0..10000) {
             return UiText.StringResource(R.string.send_from_invalid_amount)
         }
         return null

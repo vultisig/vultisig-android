@@ -821,24 +821,22 @@ internal class DepositFormViewModelTest {
     }
 
     @Test
-    fun `validateOperatorFee with zero sets operatorFeeError`() = runTest {
-        val vm = buildViewModel()
-        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
-
-        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("0")
-        vm.validateOperatorFee()
-
-        val error = vm.state.value.operatorFeeError
-        assertNotNull(error)
-        assertEquals(R.string.send_from_invalid_amount, (error as UiText.StringResource).resId)
-    }
-
-    @Test
-    fun `validateOperatorFee above one hundred sets operatorFeeError`() = runTest {
+    fun `validateOperatorFee with 150 clears operatorFeeError`() = runTest {
         val vm = buildViewModel()
         vm.loadData("vault1", Chain.ThorChain.raw, null, null)
 
         vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("150")
+        vm.validateOperatorFee()
+
+        assertEquals(null, vm.state.value.operatorFeeError)
+    }
+
+    @Test
+    fun `validateOperatorFee above ten thousand sets operatorFeeError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("10001")
         vm.validateOperatorFee()
 
         val error = vm.state.value.operatorFeeError
@@ -858,12 +856,23 @@ internal class DepositFormViewModelTest {
     }
 
     @Test
+    fun `validateOperatorFee with zero clears operatorFeeError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("0")
+        vm.validateOperatorFee()
+
+        assertEquals(null, vm.state.value.operatorFeeError)
+    }
+
+    @Test
     fun `validateOperatorFee with blank input is a no-op and leaves a prior error in place`() =
         runTest {
             val vm = buildViewModel()
             vm.loadData("vault1", Chain.ThorChain.raw, null, null)
 
-            vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("0")
+            vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("10001")
             vm.validateOperatorFee()
             val priorError = vm.state.value.operatorFeeError
             assertNotNull(priorError)
