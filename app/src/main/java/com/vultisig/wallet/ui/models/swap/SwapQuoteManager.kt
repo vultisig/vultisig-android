@@ -334,10 +334,8 @@ constructor(
             when (provider) {
                 SwapProvider.MAYA,
                 SwapProvider.THORCHAIN,
-                SwapProvider.LIFI -> dstToken
-                // SwapKit inbound fee is source-native (like 1inch/Kyber/Jupiter, not LiFi's
-                // destination-side integrator model).
-                SwapProvider.SWAPKIT -> srcNativeToken
+                SwapProvider.LIFI,
+                SwapProvider.JUPITER -> dstToken
                 else -> srcNativeToken
             }
 
