@@ -133,7 +133,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-api-29-v2
+          key: avd-api-30-v2
 
       # Clean only when cache did not restore
       - name: Clean old AVD on cache miss
@@ -147,7 +147,7 @@ jobs:
           TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
           TRUSTWALLET_USER: ${{ secrets.TRUSTWALLET_USER }}
         with:
-          api-level: 29
+          api-level: 30
           target: default
           arch: x86_64
           profile: Nexus 5

@@ -105,7 +105,8 @@ dependencies {
     implementation(libs.ktor.client.serialization.kotlinx)
 
     // serialization
-    implementation(libs.kotlinx.serialization)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.protobuf)
 
     // crypto
     implementation(libs.wallet.core)
@@ -126,7 +127,6 @@ dependencies {
     // test
     testCompileOnly(files("../app/libs/mobile-tss-lib.aar"))
     testImplementation(libs.ktor.client.mock)
-    testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)

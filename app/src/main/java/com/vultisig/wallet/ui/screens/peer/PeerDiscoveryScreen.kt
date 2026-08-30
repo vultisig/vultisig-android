@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.peer
 
-import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
@@ -70,11 +69,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import app.rive.Fit
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.qrcode.QRCodeWriter
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.usecases.GenerateQrBitmapImpl
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.ShowQrHelperBottomSheet
@@ -861,28 +858,13 @@ private fun Error(state: ErrorUiModel, onTryAgainClick: () -> Unit) {
 }
 
 /**
- * Builds a real QR painter so the static @Preview renders the framed card with actual content. In
- * production the QR comes from a Hilt-provided generator backed by an Android context, which the
- * preview renderer does not have — so the bitmap is encoded inline here with the same quiet-zone
- * margin used by the app.
+ * Builds a real QR painter so the static @Preview renders the framed card with actual content,
+ * using the same generator production code paths inject via Hilt.
  */
 @Composable
 private fun rememberPreviewQr(content: String): BitmapPainter =
     remember(content) {
-        val matrix =
-            QRCodeWriter()
-                .encode(content, BarcodeFormat.QR_CODE, 0, 0, mapOf(EncodeHintType.MARGIN to 4))
-        val bitmap = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
-        for (x in 0 until matrix.width) {
-            for (y in 0 until matrix.height) {
-                bitmap.setPixel(
-                    x,
-                    y,
-                    if (matrix.get(x, y)) android.graphics.Color.WHITE
-                    else android.graphics.Color.TRANSPARENT,
-                )
-            }
-        }
+        val bitmap = GenerateQrBitmapImpl()(content, Color.White, Color.Transparent, null)
         BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
     }
 
