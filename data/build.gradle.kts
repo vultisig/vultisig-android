@@ -105,7 +105,8 @@ dependencies {
     implementation(libs.ktor.client.serialization.kotlinx)
 
     // serialization
-    implementation(libs.kotlinx.serialization)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.protobuf)
 
     // crypto
     implementation(libs.wallet.core)
