@@ -191,7 +191,6 @@
 
     <!-- Send Screen -->
     <string name="send_screen_title">发送</string>
-    <string name="bond_screen_title">绑定</string>
     <string name="stake_screen_title">质押</string>
     <string name="unstake_screen_title">取消质押</string>
     <string name="mint_screen_title">铸造</string>
@@ -1571,7 +1570,6 @@
 
     <!-- Bond Form -->
     <string name="bond_node_address">节点地址</string>
-    <string name="bond_operator_fees_basis_point">运营商费用（基点）</string>
     <string name="bond_provider_optional">提供商（可选）</string>
     <string name="deposit_option_withdraw_secured">提取担保资产</string>
     <string name="deposit_option_secured_assets">担保资产</string>

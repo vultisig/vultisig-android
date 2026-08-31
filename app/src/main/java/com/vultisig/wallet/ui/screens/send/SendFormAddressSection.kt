@@ -195,7 +195,6 @@ internal fun FoldableDestinationAddressWidget(
             Text(
                 text =
                     when (state.defiType) {
-                        DeFiNavActions.BOND,
                         DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
                         else -> stringResource(R.string.send_to_address)
                     },
@@ -250,7 +249,6 @@ internal fun FoldableBondDestinationAddress(
                 text =
                     when (state.defiType) {
                         null,
-                        DeFiNavActions.BOND,
                         DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
                         else -> stringResource(R.string.send_to_address)
                     },

@@ -182,29 +182,6 @@ internal class AccountsLoaderTest {
             assertEquals(listOf(runeAccount), loadedAccounts)
         }
 
-    @Test
-    fun `load with BOND uses the regular loadAddresses flow`() =
-        runTest(mainDispatcher) {
-            defiType = DeFiNavActions.BOND
-            val runeAccount = thorAccount(Coins.ThorChain.RUNE)
-            every { accountsRepository.loadAddresses(VAULT_ID) } returns
-                flowOf(
-                    listOf(
-                        Address(
-                            chain = Chain.ThorChain,
-                            address = "thor1",
-                            accounts = listOf(runeAccount),
-                        )
-                    )
-                )
-            val loader = build(backgroundScope)
-
-            loader.load(VAULT_ID)
-            advanceUntilIdle()
-
-            assertEquals(listOf(runeAccount), loadedAccounts)
-        }
-
     // ──────── UNSTAKE_SRUJI ────────
 
     @Test

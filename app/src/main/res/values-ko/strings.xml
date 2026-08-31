@@ -39,7 +39,6 @@
     <string name="unbond">언본딩</string>
     <string name="unbond_screen_title">언본딩</string>
     <string name="bond">본딩</string>
-    <string name="bond_screen_title">본딩</string>
     <string name="stake_screen_title">스테이킹</string>
     <string name="unstake_screen_title">언스테이킹</string>
     <string name="mint_screen_title">민트</string>
@@ -1272,7 +1271,6 @@
 
     <!-- Bond Form -->
     <string name="bond_node_address">노드 주소</string>
-    <string name="bond_operator_fees_basis_point">운영자 수수료 (베이시스 포인트)</string>
     <string name="bond_provider_optional">제공자 (선택사항)</string>
 
     <string name="deposit_option_withdraw_secured">보안 자산 출금</string>

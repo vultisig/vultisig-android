@@ -31,12 +31,11 @@ import kotlinx.coroutines.flow.StateFlow
 import wallet.core.jni.proto.Bitcoin
 
 /**
- * Bundle of the eight submit strategies produced by [SendStrategyFactory.create] for a single
+ * Bundle of the seven submit strategies produced by [SendStrategyFactory.create] for a single
  * `SendFormViewModel` instance.
  */
 internal data class SendStrategies(
     val default: DefaultSendStrategy,
-    val bond: BondStrategy,
     val unbond: UnbondStrategy,
     val stake: StakeStrategy,
     val unstake: UnstakeStrategy,
@@ -52,7 +51,6 @@ internal data class SendStrategies(
      */
     fun submitFor(defiType: DeFiNavActions?) {
         when (defiType) {
-            DeFiNavActions.BOND -> bond.submit()
             DeFiNavActions.UNBOND -> unbond.submit()
             DeFiNavActions.STAKE_RUJI,
             DeFiNavActions.STAKE_SRUJI,
@@ -76,6 +74,8 @@ internal data class SendStrategies(
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withdrawUsdcCircle.submit()
 
             null,
+            // Bond submits through the Deposit flow, not the Send flow.
+            DeFiNavActions.BOND,
             DeFiNavActions.STAKE_CACAO,
             DeFiNavActions.UNSTAKE_CACAO,
             DeFiNavActions.ADD_LP,
@@ -104,7 +104,6 @@ internal data class SendStrategyContext(
     val memoFieldState: TextFieldState,
     val destinationTagFieldState: TextFieldState,
     val slippageFieldState: TextFieldState,
-    val operatorFeesBondFieldState: TextFieldState,
     val providerBondFieldState: TextFieldState,
     val accountValidator: AccountValidator,
     val bitcoinPlanService: BitcoinPlanService,
@@ -185,24 +184,6 @@ constructor(
                     navigator = navigator,
                     expandSection = context.expandSection,
                     emitFocusField = context.emitFocusField,
-                    showLoading = context.showLoading,
-                    hideLoading = context.hideLoading,
-                    showError = context.showError,
-                ),
-            bond =
-                BondStrategy(
-                    scope = context.scope,
-                    tokenAmountFieldState = context.tokenAmountFieldState,
-                    providerBondFieldState = context.providerBondFieldState,
-                    operatorFeesBondFieldState = context.operatorFeesBondFieldState,
-                    accountValidator = context.accountValidator,
-                    chainAccountAddressRepository = chainAccountAddressRepository,
-                    addressParserRepository = addressParserRepository,
-                    blockChainSpecificRepository = blockChainSpecificRepository,
-                    getAvailableTokenBalance = getAvailableTokenBalance,
-                    gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-                    depositTransactionRepository = depositTransactionRepository,
-                    navigator = navigator,
                     showLoading = context.showLoading,
                     hideLoading = context.hideLoading,
                     showError = context.showError,

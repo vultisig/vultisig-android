@@ -113,7 +113,6 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
             onAssetDragEnd = onNetworkDragEnd,
             onAssetDragCancel = onNetworkDragEnd,
             onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
-            operatorFeeFieldState = viewModel.operatorFeesBondFieldState,
             providerFieldState = viewModel.providerBondFieldState,
             slippageFieldState = viewModel.slippageFieldState,
             onSetProviderAddressRequest = viewModel::setProviderAddress,
@@ -177,8 +176,7 @@ internal fun SendFormScreen(
     onAssetDragCancel: () -> Unit,
     onAssetLongPressStarted: (Offset) -> Unit,
 
-    // bond fields
-    operatorFeeFieldState: TextFieldState,
+    // bond/unbond provider field
     providerFieldState: TextFieldState,
 
     // trade
@@ -217,7 +215,6 @@ internal fun SendFormScreen(
                 DeFiNavActions.MINT_YTCY -> stringResource(R.string.mint_screen_title)
                 DeFiNavActions.REDEEM_YRUNE,
                 DeFiNavActions.REDEEM_YTCY -> stringResource(R.string.redeem_screen_title)
-                DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
                 DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
                 DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE -> stringResource(R.string.withdraw)
@@ -299,8 +296,7 @@ internal fun SendFormScreen(
                         memoFieldState = memoFieldState,
                         destinationTagFieldState = destinationTagFieldState,
 
-                        // Bond
-                        operatorFeeFieldState = operatorFeeFieldState,
+                        // Bond/Unbond
                         providerFieldState = providerFieldState,
                         onSetProvider = onSetProviderAddressRequest,
                         onScanProvider = onScanProviderAddressRequest,
@@ -352,8 +348,7 @@ private fun SendFormContent(
     memoFieldState: TextFieldState,
     destinationTagFieldState: TextFieldState,
 
-    // Bond
-    operatorFeeFieldState: TextFieldState,
+    // Bond/Unbond
     providerFieldState: TextFieldState,
     onSetProvider: (String) -> Unit,
     onScanProvider: () -> Unit,
@@ -382,7 +377,6 @@ private fun SendFormContent(
         OptionalInputs(
             memoFieldState = memoFieldState,
             destinationTagFieldState = destinationTagFieldState,
-            operatorFeeFieldState = operatorFeeFieldState,
             slippageFieldState = slippageFieldState,
             onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
         )
@@ -419,7 +413,6 @@ private fun SendFormContent(
             )
         }
 
-        DeFiNavActions.BOND,
         DeFiNavActions.UNBOND -> {
             FoldableBondDestinationAddress(
                 state = state,
@@ -525,7 +518,6 @@ private fun SendScreenPreview() {
         onAssetDragEnd = {},
         onAssetDragCancel = {},
         onAssetLongPressStarted = {},
-        operatorFeeFieldState = TextFieldState(),
         providerFieldState = TextFieldState(),
         slippageFieldState = TextFieldState(),
     )

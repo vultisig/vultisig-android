@@ -82,7 +82,6 @@
     <string name="vault_settings_security_screen_content_bottomsheet">Het uitschakelen van on-chain beveiliging betekent dat Blockaid transacties niet kan verifiëren. Je bent dan minder beschermd.</string>
     <string name="vault_settings_security_screen_title">Beveiliging</string>
     <string name="send_screen_title">Sturen</string>
-    <string name="bond_screen_title">Bonden</string>
     <string name="transaction_type_button_send">Sturen</string>
     <string name="send_from_address">Van</string>
     <string name="send_to_address">Aan</string>
@@ -1237,7 +1236,6 @@
 
     <!-- Bond Form -->
     <string name="bond_node_address">Node-adres</string>
-    <string name="bond_operator_fees_basis_point">Operator-kosten (Basispunten)</string>
     <string name="bond_provider_optional">Provider (Optioneel)</string>
     <string name="deposit_option_withdraw_secured">Gedekte activa opnemen</string>
     <string name="deposit_option_secured_assets">Gedekte activa</string>

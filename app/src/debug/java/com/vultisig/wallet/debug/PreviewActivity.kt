@@ -4038,7 +4038,6 @@ private fun WithdrawUsdcCirclePreview() {
         onAssetDragEnd = {},
         onAssetDragCancel = {},
         onAssetLongPressStarted = {},
-        operatorFeeFieldState = rememberTextFieldState(),
         providerFieldState = rememberTextFieldState(),
         slippageFieldState = rememberTextFieldState(),
     )

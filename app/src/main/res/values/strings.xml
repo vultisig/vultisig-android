@@ -42,7 +42,6 @@
     <string name="unbond">Unbond</string>
     <string name="unbond_screen_title">Unbond</string>
     <string name="bond">Bond</string>
-    <string name="bond_screen_title">Bond</string>
     <string name="stake_screen_title">Stake</string>
     <string name="unstake_screen_title">Unstake</string>
     <string name="mint_screen_title">Mint</string>
@@ -1304,7 +1303,6 @@
 
     <!-- Bond Form -->
     <string name="bond_node_address">Node Address</string>
-    <string name="bond_operator_fees_basis_point">Operator fees (basis points)</string>
     <string name="bond_provider_optional">Provider (Optional)</string>
 
     <string name="deposit_option_withdraw_secured">Withdraw Secured Asset</string>

@@ -76,7 +76,6 @@ internal class AccountsLoader(
                     }
 
                 null,
-                DeFiNavActions.BOND,
                 DeFiNavActions.STAKE_RUJI,
                 DeFiNavActions.STAKE_SRUJI,
                 DeFiNavActions.STAKE_TCY,

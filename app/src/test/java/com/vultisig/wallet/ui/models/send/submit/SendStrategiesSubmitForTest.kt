@@ -16,7 +16,6 @@ internal class SendStrategiesSubmitForTest {
 
     private enum class Target {
         DEFAULT,
-        BOND,
         UNBOND,
         STAKE,
         UNSTAKE,
@@ -26,7 +25,6 @@ internal class SendStrategiesSubmitForTest {
     }
 
     private val default = mockk<DefaultSendStrategy>(relaxed = true)
-    private val bond = mockk<BondStrategy>(relaxed = true)
     private val unbond = mockk<UnbondStrategy>(relaxed = true)
     private val stake = mockk<StakeStrategy>(relaxed = true)
     private val unstake = mockk<UnstakeStrategy>(relaxed = true)
@@ -37,7 +35,6 @@ internal class SendStrategiesSubmitForTest {
     private val strategies =
         SendStrategies(
             default = default,
-            bond = bond,
             unbond = unbond,
             stake = stake,
             unstake = unstake,
@@ -61,7 +58,6 @@ internal class SendStrategiesSubmitForTest {
 
     private fun verifyOnly(expected: Target) {
         verify(exactly = expected.count(Target.DEFAULT)) { default.submit() }
-        verify(exactly = expected.count(Target.BOND)) { bond.submit() }
         verify(exactly = expected.count(Target.UNBOND)) { unbond.submit() }
         verify(exactly = expected.count(Target.STAKE)) { stake.submit() }
         verify(exactly = expected.count(Target.UNSTAKE)) { unstake.submit() }
@@ -77,7 +73,8 @@ internal class SendStrategiesSubmitForTest {
     private companion object {
         val expectedTarget =
             mapOf(
-                DeFiNavActions.BOND to Target.BOND,
+                // Bond submits through the Deposit flow, not the Send flow.
+                DeFiNavActions.BOND to Target.DEFAULT,
                 DeFiNavActions.UNBOND to Target.UNBOND,
                 DeFiNavActions.WITHDRAW_RUJI to Target.UNSTAKE,
                 DeFiNavActions.STAKE_RUJI to Target.STAKE,

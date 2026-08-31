@@ -75,7 +75,6 @@
     <string name="select_chain_chain_title">Lanac</string>
     <string name="select_chain_balance_title">Stanje</string>
     <string name="send_screen_title">POŠALJI</string>
-    <string name="bond_screen_title">Vezati</string>
     <string name="transaction_type_button_send">Pošalji</string>
     <string name="send_from_address">Od</string>
     <string name="send_to_address">Do</string>
@@ -1245,7 +1244,6 @@
 
     <!-- Bond Form -->
     <string name="bond_node_address">Adresa Čvora</string>
-    <string name="bond_operator_fees_basis_point">Naknade operatora (Bazni bodovi)</string>
     <string name="bond_provider_optional">Pružatelj (Neobavezno)</string>
     <string name="deposit_option_withdraw_secured">Povlačenje osigurane imovine</string>
     <string name="deposit_option_secured_assets">Osigurana imovina</string>

@@ -75,7 +75,6 @@
     <string name="select_chain_chain_title">Catena</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="send_screen_title">Invia</string>
-    <string name="bond_screen_title">Vincolare</string>
     <string name="transaction_type_button_send">Invia</string>
     <string name="send_from_address">Da</string>
     <string name="send_to_address">A</string>
@@ -1240,7 +1239,6 @@
 
     <!-- Bond Form -->
     <string name="bond_node_address">Indirizzo del Nodo</string>
-    <string name="bond_operator_fees_basis_point">Commissioni operatore (Punti base)</string>
     <string name="bond_provider_optional">Fornitore (Opzionale)</string>
     <string name="deposit_option_withdraw_secured">Prelevare il patrimonio garantito</string>
     <string name="deposit_option_secured_assets">Patrimoni garantiti</string>

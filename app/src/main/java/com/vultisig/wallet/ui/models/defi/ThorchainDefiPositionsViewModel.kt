@@ -1524,22 +1524,14 @@ constructor(
 
     fun onClickBond(nodeAddress: String) {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
-            val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
-
-            if (runeCoin != null) {
-                navigator.route(
-                    Route.Send(
-                        vaultId = vaultId,
-                        type = DeFiNavActions.BOND.type,
-                        chainId = Chain.ThorChain.id,
-                        tokenId = runeCoin.id,
-                        address = nodeAddress,
-                    )
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.ThorChain.id,
+                    depositType = DeFiNavActions.BOND.type,
+                    bondAddress = nodeAddress,
                 )
-            } else {
-                Timber.e("RUNE coin not found in vault")
-            }
+            )
         }
     }
 
@@ -1569,21 +1561,13 @@ constructor(
 
     fun bondToNode() {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
-            val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
-
-            if (runeCoin != null) {
-                navigator.route(
-                    Route.Send(
-                        vaultId = vaultId,
-                        type = DeFiNavActions.BOND.type,
-                        chainId = Chain.ThorChain.id,
-                        tokenId = runeCoin.id,
-                    )
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.ThorChain.id,
+                    depositType = DeFiNavActions.BOND.type,
                 )
-            } else {
-                Timber.e("RUNE coin not found in vault")
-            }
+            )
         }
     }
 

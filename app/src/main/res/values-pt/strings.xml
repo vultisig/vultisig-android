@@ -75,7 +75,6 @@
     <string name="vault_settings_security_screen_content_bottomsheet">Desativar a segurança on-chain significa que a Blockaid não consegue verificar as transações. Você estará menos protegido.</string>
     <string name="swap_form_on_chain">em</string>
     <string name="send_screen_title">Enviar</string>
-    <string name="bond_screen_title">Vincular</string>
     <string name="transaction_type_button_send">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">Para</string>
@@ -1239,7 +1238,6 @@
 
     <!-- Bond Form -->
     <string name="bond_node_address">Endereço do Nó</string>
-    <string name="bond_operator_fees_basis_point">Taxas do operador (Pontos base)</string>
     <string name="bond_provider_optional">Fornecedor (Opcional)</string>
     <string name="deposit_option_withdraw_secured">Retirar ativo garantido</string>
     <string name="deposit_option_secured_assets">Ativos garantidos</string>

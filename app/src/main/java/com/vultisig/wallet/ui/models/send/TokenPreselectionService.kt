@@ -161,7 +161,6 @@ internal class TokenPreselectionService(
 
             DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE
             DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY
-            DeFiNavActions.BOND -> Coins.ThorChain.RUNE
             DeFiNavActions.UNBOND -> Coins.ThorChain.RUNE
             DeFiNavActions.WITHDRAW_RUJI -> RUJI_REWARDS_COIN
             DeFiNavActions.REDEEM_YRUNE -> Coins.ThorChain.yRUNE
@@ -182,6 +181,8 @@ internal class TokenPreselectionService(
             DeFiNavActions.UNFREEZE_TRX -> Coins.Tron.TRX
             DeFiNavActions.STAKE_TON,
             DeFiNavActions.UNSTAKE_TON -> Coins.Ton.TON
+            // Bond submits through the Deposit flow, not the Send flow.
+            DeFiNavActions.BOND,
             null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
         }
 }
