@@ -120,6 +120,53 @@ internal class SwapMinPayoutTest {
         ) shouldBe null
     }
 
+    @Test
+    fun `a limit order asserts no separate floor - its displayed amount already is one`() {
+        signedMinimumOutput(
+            payload = thorPayload(tcy),
+            memo = "=<:THOR.TCY:thor1uet6qz79tu:321308705/14400/0:va:40",
+            dstToken = tcy,
+        ) shouldBe null
+    }
+
+    @Test
+    fun `a limit memo naming this destination is the order it claims to be`() {
+        signedLimitOrder(
+                memo = "=<:THOR.TCY:thor1uet6qz79tu:321308705/14400/0:va:40",
+                dstToken = tcy,
+            )
+            ?.limit shouldBe BigInteger.valueOf(321308705)
+    }
+
+    @Test
+    fun `a limit memo naming another asset is not this coin's order`() {
+        // A limit order's displayed destination amount IS the floor its memo enforces, so a memo
+        // targeting CACAO must not label TCY's amount "min. payout".
+        signedLimitOrder(
+            memo = "=<:MAYA.CACAO:maya1abc:321308705/14400/0:va:40",
+            dstToken = tcy,
+        ) shouldBe null
+    }
+
+    @Test
+    fun `a limit memo spelled unresolvably stays an order`() {
+        signedLimitOrder(memo = "=<:e.eth:0xabc:321308705/14400/0:va:40", dstToken = eth)
+            ?.limit shouldBe BigInteger.valueOf(321308705)
+    }
+
+    @Test
+    fun `a market memo places no order`() {
+        signedLimitOrder(
+            memo = "=:THOR.TCY:thor1uet6qz79tu:321308705:va:40",
+            dstToken = tcy,
+        ) shouldBe null
+    }
+
+    @Test
+    fun `a route with no memo places no order`() {
+        signedLimitOrder(memo = null, dstToken = tcy) shouldBe null
+    }
+
     private fun thorPayload(dstToken: Coin) = SwapPayload.ThorChain(thorSwapPayload(dstToken))
 
     private fun thorSwapPayload(dstToken: Coin) =

@@ -44,6 +44,7 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
+import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import java.math.BigInteger
 import javax.inject.Inject
@@ -359,7 +360,7 @@ constructor(
                         )
                         .expectNative(SwapProvider.THORCHAIN)
                 val rawFees = (quote as? SwapQuote.ThorChain)?.data?.fees
-                val limitMemo = payload.memo?.let(LimitSwapMemo::parse)
+                val limitMemo = signedLimitOrder(memo = payload.memo, dstToken = dstToken)
                 val swapTransactionUiModel =
                     buildSwapUiModel(
                         srcToken = srcToken,

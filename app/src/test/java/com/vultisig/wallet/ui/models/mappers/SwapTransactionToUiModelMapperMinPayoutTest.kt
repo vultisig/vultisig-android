@@ -132,6 +132,20 @@ internal class SwapTransactionToUiModelMapperMinPayoutTest {
         }
 
     @Test
+    fun `a limit memo naming another asset is not this destination's order`() = runTest {
+        stubCommon()
+
+        // A limit order's displayed amount IS the floor its memo enforces, so an order targeting
+        // CACAO must not put "min. payout" over a TCY amount.
+        val uiModel =
+            mapper()
+                .invoke(thorTransaction(memo = "=<:MAYA.CACAO:maya1abc:321308705/14400/0:va:40"))
+
+        uiModel.isLimitOrder shouldBe false
+        uiModel.minPayout shouldBe null
+    }
+
+    @Test
     fun `a memo naming another asset is not this destination's floor`() = runTest {
         stubCommon()
 

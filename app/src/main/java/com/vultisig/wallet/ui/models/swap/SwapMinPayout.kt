@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.swap.ThorchainMemoLimit
+import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import com.vultisig.wallet.data.swap.limit.MemoAssetMatch
 import com.vultisig.wallet.data.swap.limit.compareToMemoAsset
 
@@ -40,4 +41,23 @@ internal fun signedMinimumOutput(payload: SwapPayload, memo: String?, dstToken: 
     // The LIM is in the protocol's own fixed point — THORChain's 1e8 whatever the destination
     // chain, Maya's 1e10 for CACAO — which is exactly what convertToTokenValue rescales from.
     return dstToken.convertToTokenValue(limit.toString())
+}
+
+/**
+ * The `=<` limit order [memo] places, or null when it places none.
+ *
+ * Null too when the memo's own target asset is confidently not [dstToken], for the same reason
+ * [signedMinimumOutput] refuses that pairing: a limit order's displayed destination amount IS the
+ * floor its memo enforces, so labelling it "min. payout" under a ticker the memo does not name
+ * would promise a minimum in the wrong asset. A cosigner decodes the memo and the payload's
+ * destination coin as two independent halves of the same request, which is where they can disagree.
+ *
+ * [LimitSwapMemo.parse] enforces the memo's own grammar; the asset comparison is one-sided, so a
+ * spelling this app cannot resolve leaves the order classified rather than silently demoting it to
+ * a market swap.
+ */
+internal fun signedLimitOrder(memo: String?, dstToken: Coin): LimitSwapMemo.Parsed? {
+    val parsed = memo?.let(LimitSwapMemo::parse) ?: return null
+    if (dstToken.compareToMemoAsset(parsed.targetAsset) == MemoAssetMatch.DIFFERENT) return null
+    return parsed
 }

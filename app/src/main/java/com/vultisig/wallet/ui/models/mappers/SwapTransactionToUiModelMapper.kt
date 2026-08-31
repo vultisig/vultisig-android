@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
@@ -16,6 +15,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.clampDstFiatToSrcFiat
 import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
+import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
@@ -138,7 +138,7 @@ constructor(
         // formatted here rather than at build time so the price lands in the user's currency and
         // the expiry reuses the same string resources as the form's pills. The cosigner formats the
         // same pair through the same use case, from the memo it is asked to sign.
-        val limitMemo = from.memo?.let(LimitSwapMemo::parse)
+        val limitMemo = signedLimitOrder(memo = from.memo, dstToken = from.dstToken)
         val regular = from as? SwapTransaction.RegularSwapTransaction
         val limitTargetPrice = regular?.limitOrderTargetPrice?.takeIf { limitMemo != null }
         val limitExpiryHours = regular?.limitOrderExpiryHours?.takeIf { limitMemo != null }
