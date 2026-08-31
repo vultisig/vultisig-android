@@ -981,44 +981,19 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
-    fun `unbond carries the raw bonded amount resolved from the live node list`() = runTest {
+    fun `unbond routes to deposit with the node address`() = runTest {
         selectPositions("RUNE")
-        coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
-            flowOf(listOf(bondedNode(BigInteger("777000000"))))
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
         vm.onClickUnBond(NODE_ADDRESS)
 
         coVerify(exactly = 1) {
             navigator.route(
-                Route.Send(
+                Route.Deposit(
                     vaultId = VAULT_ID,
-                    type = DeFiNavActions.UNBOND.type,
                     chainId = Chain.ThorChain.id,
-                    tokenId = Coins.ThorChain.RUNE.id,
-                    address = NODE_ADDRESS,
-                    bondedAmount = "777000000",
-                )
-            )
-        }
-    }
-
-    @Test
-    fun `unbonding an unknown node sends no bonded amount`() = runTest {
-        selectPositions("RUNE")
-
-        val vm = createViewModel().also { it.setData(VAULT_ID) }
-        vm.onClickUnBond("thor1unknownnode")
-
-        coVerify(exactly = 1) {
-            navigator.route(
-                Route.Send(
-                    vaultId = VAULT_ID,
-                    type = DeFiNavActions.UNBOND.type,
-                    chainId = Chain.ThorChain.id,
-                    tokenId = Coins.ThorChain.RUNE.id,
-                    address = "thor1unknownnode",
-                    bondedAmount = null,
+                    depositType = DeFiNavActions.UNBOND.type,
+                    bondAddress = NODE_ADDRESS,
                 )
             )
         }

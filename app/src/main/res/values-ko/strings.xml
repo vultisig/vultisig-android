@@ -37,7 +37,6 @@
     <string name="node_address_formatted">주소: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">언본딩</string>
-    <string name="unbond_screen_title">언본딩</string>
     <string name="bond">본딩</string>
     <string name="stake_screen_title">스테이킹</string>
     <string name="unstake_screen_title">언스테이킹</string>
@@ -1268,10 +1267,6 @@
     <string name="energy">에너지</string>
     <string name="bandwidth_desc">대역폭 포인트는 표준 토큰 전송 및 스마트 컨트랙트 상호작용을 포함하여 TRON의 모든 거래에 필요합니다. 모든 TRON 사용자는 하루에 600개의 무료 대역폭 포인트를 받으며, 이는 약 2건의 기본 전송을 처리할 수 있습니다. 또한 TRX를 스테이킹하여 추가 대역폭 포인트를 얻어 더 많은 거래를 지원할 수 있습니다. 충분한 대역폭 포인트가 있으면 TRX 가스 수수료 없이 토큰을 보내거나, TRX를 스테이킹하거나, 스마트 컨트랙트와 상호작용할 수 있습니다.</string>
     <string name="energy_desc">스왑이나 dApp 거래와 같은 스마트 컨트랙트 상호작용 등 더 복잡한 작업에 필요합니다. 대역폭과 달리 에너지는 무료로 제공되지 않으며, TRX를 스테이킹하여 얻어야 합니다. (고급 사용자는 JustLend나 Tronify의 에너지 대여 시장과 같은 리스 메커니즘을 통해 에너지를 얻을 수도 있습니다). 그러나 에너지를 보유하면 스마트 컨트랙트 상호작용의 가스 수수료를 크게 줄이거나 아예 없앨 수 있어, TRON dApp을 자주 사용하는 사용자에게 유용합니다.</string>
-
-    <!-- Bond Form -->
-    <string name="bond_node_address">노드 주소</string>
-    <string name="bond_provider_optional">제공자 (선택사항)</string>
 
     <string name="deposit_option_withdraw_secured">보안 자산 출금</string>
     <string name="deposit_option_secured_assets">보안 자산</string>

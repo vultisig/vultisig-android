@@ -3,7 +3,6 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -101,9 +100,6 @@ constructor(
     // XRP-only destination tag (shown below the memo field).
     val destinationTagFieldState = TextFieldState()
 
-    // bond/unbond node
-    val providerBondFieldState = TextFieldState()
-
     // Trade
     val slippageFieldState = TextFieldState()
 
@@ -175,7 +171,6 @@ constructor(
             fiatAmountFieldState = fiatAmountFieldState,
             memoFieldState = memoFieldState,
             destinationTagFieldState = destinationTagFieldState,
-            providerBondFieldState = providerBondFieldState,
             slippageFieldState = slippageFieldState,
             selectedTokenProvider = { selectedTokenValue },
             selectedAccountProvider = { selectedAccount },
@@ -239,10 +234,6 @@ constructor(
         graph.addressManager.setOutputAddress(address)
     }
 
-    fun setProviderAddress(address: String) {
-        providerBondFieldState.setTextAndPlaceCursorAtEnd(address)
-    }
-
     fun scanAddress() {
         viewModelScope.safeLaunch {
             val qr = requestQrScan.invoke()
@@ -252,20 +243,10 @@ constructor(
         }
     }
 
-    fun scanProviderAddress() {
-        viewModelScope.safeLaunch {
-            val qr = requestQrScan.invoke()
-            if (!qr.isNullOrBlank()) {
-                setAddressFromQrCode(qr, null, null, providerBondFieldState)
-            }
-        }
-    }
-
     fun onAutoCompound(checked: Boolean) =
         graph.tokenNetworkSelectionDelegate.onAutoCompound(checked)
 
-    fun openAddressBook(addressType: AddressBookType = AddressBookType.OUTPUT) =
-        graph.addressManager.openAddressBook(addressType)
+    fun openAddressBook() = graph.addressManager.openAddressBook()
 
     fun dismissGasSettings() {
         advanceGasUiRepository.hideSettings()

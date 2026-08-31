@@ -71,7 +71,6 @@ internal data class SendFormUiModel(
     val tokenAmountError: UiText? = null,
     val memoError: UiText? = null,
     val reapingError: UiText? = null,
-    val bondProviderError: UiText? = null,
     val hasMemo: Boolean = false,
     // XRP: show a dedicated destination-tag field instead of the free-text memo field.
     val isDestinationTag: Boolean = false,
@@ -102,22 +101,9 @@ internal data class SendFormUiModel(
     val hasTronFrozenBalancesError: Boolean = false,
 )
 
-/**
- * Whether the recipient field is user-editable. Unbond draws from a specific bonded node and
- * prefills a locked node address; every other flow lets the user type, paste or scan a recipient.
- */
-internal val SendFormUiModel.isDstAddressEditable: Boolean
-    get() = defiType != DeFiNavActions.UNBOND
-
-/**
- * Whether an invalid recipient should block the form.
- *
- * Only an address the user can actually correct blocks: a locked Unbond node address offers no
- * retype, paste or scan path, so blocking there would strand the flow with no way out. The inline
- * error still renders, and UnbondStrategy rejects an invalid node address at submit.
- */
+/** Whether an invalid recipient should block the form. */
 internal val SendFormUiModel.isDstAddressBlocking: Boolean
-    get() = dstAddressError != null && isDstAddressEditable
+    get() = dstAddressError != null
 
 /**
  * Whether an over-long memo should block the form.
@@ -224,8 +210,7 @@ internal enum class SendFocusField {
 }
 
 enum class AddressBookType {
-    OUTPUT,
-    PROVIDER,
+    OUTPUT
 }
 
 internal sealed class GasSettings {

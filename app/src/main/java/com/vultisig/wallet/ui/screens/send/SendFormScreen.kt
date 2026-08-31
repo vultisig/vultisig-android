@@ -42,7 +42,6 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.send.AddressBookType
 import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
@@ -50,7 +49,6 @@ import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.models.send.isContinueDisabled
 import com.vultisig.wallet.ui.models.send.isContinueLoading
-import com.vultisig.wallet.ui.models.send.isDstAddressEditable
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.tron.TronResourceTypeTab
@@ -113,11 +111,7 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
             onAssetDragEnd = onNetworkDragEnd,
             onAssetDragCancel = onNetworkDragEnd,
             onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
-            providerFieldState = viewModel.providerBondFieldState,
             slippageFieldState = viewModel.slippageFieldState,
-            onSetProviderAddressRequest = viewModel::setProviderAddress,
-            onScanProviderAddressRequest = viewModel::scanProviderAddress,
-            onAddressProviderBookClick = { viewModel.openAddressBook(AddressBookType.PROVIDER) },
             onAutoCompound = { viewModel.onAutoCompound(it) },
             onTronResourceTypeChange = viewModel::setTronResourceType,
         )
@@ -157,9 +151,6 @@ internal fun SendFormScreen(
     onAddressBookClick: () -> Unit = {},
     onScanDstAddressRequest: () -> Unit = {},
     onSend: () -> Unit = {},
-    onAddressProviderBookClick: () -> Unit = {},
-    onScanProviderAddressRequest: () -> Unit = {},
-    onSetProviderAddressRequest: (String) -> Unit = {},
     onRefreshRequest: () -> Unit = {},
     onGasSettingsClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -175,9 +166,6 @@ internal fun SendFormScreen(
     onAssetDragEnd: () -> Unit,
     onAssetDragCancel: () -> Unit,
     onAssetLongPressStarted: (Offset) -> Unit,
-
-    // bond/unbond provider field
-    providerFieldState: TextFieldState,
 
     // trade
     slippageFieldState: TextFieldState,
@@ -215,7 +203,6 @@ internal fun SendFormScreen(
                 DeFiNavActions.MINT_YTCY -> stringResource(R.string.mint_screen_title)
                 DeFiNavActions.REDEEM_YRUNE,
                 DeFiNavActions.REDEEM_YTCY -> stringResource(R.string.redeem_screen_title)
-                DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
                 DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE -> stringResource(R.string.withdraw)
                 DeFiNavActions.FREEZE_TRX -> stringResource(R.string.tron_freeze_screen_title)
@@ -296,12 +283,6 @@ internal fun SendFormScreen(
                         memoFieldState = memoFieldState,
                         destinationTagFieldState = destinationTagFieldState,
 
-                        // Bond/Unbond
-                        providerFieldState = providerFieldState,
-                        onSetProvider = onSetProviderAddressRequest,
-                        onScanProvider = onScanProviderAddressRequest,
-                        onProviderBookClick = onAddressProviderBookClick,
-
                         // trade
                         slippageFieldState = slippageFieldState,
                         onAutoCompoundCheckedChange = onAutoCompound,
@@ -347,12 +328,6 @@ private fun SendFormContent(
     onTokenAmountLostFocus: () -> Unit = {},
     memoFieldState: TextFieldState,
     destinationTagFieldState: TextFieldState,
-
-    // Bond/Unbond
-    providerFieldState: TextFieldState,
-    onSetProvider: (String) -> Unit,
-    onScanProvider: () -> Unit,
-    onProviderBookClick: () -> Unit,
 
     // trade
     slippageFieldState: TextFieldState,
@@ -410,26 +385,6 @@ private fun SendFormContent(
                 onSetOutputAddress = onSetOutputAddress,
                 onScanDstAddressRequest = onScanDstAddressRequest,
                 onAddressBookClick = onAddressBookClick,
-            )
-        }
-
-        DeFiNavActions.UNBOND -> {
-            FoldableBondDestinationAddress(
-                state = state,
-                onExpandSection = onExpandSection,
-                addressFieldState = addressFieldState,
-                addressFocusRequester = addressFocusRequester,
-                providerFieldState = providerFieldState,
-                onDstAddressLostFocus = onDstAddressLostFocus,
-                onSetOutputAddress = onSetOutputAddress,
-                onScanDstAddressRequest = onScanDstAddressRequest,
-                onAddressBookClick = onAddressBookClick,
-                onSetOutputProvider = onSetProvider,
-                onScanProviderRequest = onScanProvider,
-                onAddressProviderBookClick = onProviderBookClick,
-                // Unbond draws from a specific bonded node; the amount ceiling is frozen to that
-                // node at navigation, so the address must stay locked to keep them in sync.
-                isAddressEditable = state.isDstAddressEditable,
             )
         }
 
@@ -518,7 +473,6 @@ private fun SendScreenPreview() {
         onAssetDragEnd = {},
         onAssetDragCancel = {},
         onAssetLongPressStarted = {},
-        providerFieldState = TextFieldState(),
         slippageFieldState = TextFieldState(),
     )
 }

@@ -652,7 +652,7 @@ constructor(
 
         // Cancel any in-flight collector before starting a new one. getActiveNodes never
         // completes, so without this each refresh would stack another collector that writes
-        // `activeBondedNodes`/state out of order — leaving onClickUnBond to resolve a stale bond.
+        // `activeBondedNodes`/state out of order.
         loadBondedNodesJob?.cancel()
         loadBondedNodesJob =
             viewModelScope.launch {
@@ -1537,25 +1537,14 @@ constructor(
 
     fun onClickUnBond(nodeAddress: String) {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
-            val runeCoin = vault.coins.find { it.ticker == "RUNE" && it.chain == Chain.ThorChain }
-
-            if (runeCoin != null) {
-                val bondedAmount =
-                    activeBondedNodes.firstOrNull { it.node.address == nodeAddress }?.amount
-                navigator.route(
-                    Route.Send(
-                        vaultId = vaultId,
-                        type = DeFiNavActions.UNBOND.type,
-                        chainId = Chain.ThorChain.id,
-                        tokenId = runeCoin.id,
-                        address = nodeAddress,
-                        bondedAmount = bondedAmount?.toString(),
-                    )
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.ThorChain.id,
+                    depositType = DeFiNavActions.UNBOND.type,
+                    bondAddress = nodeAddress,
                 )
-            } else {
-                Timber.e("RUNE coin not found in vault")
-            }
+            )
         }
     }
 
