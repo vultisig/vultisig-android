@@ -58,12 +58,7 @@ constructor(private val appDataStore: AppDataStore) : InAppReviewRepository {
         Timber.i("In-app review: prompt requested")
     }
 
-    /**
-     * Marks the card as owed unless a previous ask is still cooling down.
-     *
-     * The read and the write share one transaction so two moments landing together cannot both
-     * decide the cooldown has elapsed.
-     */
+    /** Marks the card as owed unless a previous ask is still cooling down. */
     private suspend fun onReviewMoment(moment: String) {
         var isPending = false
         appDataStore.editData { preferences ->

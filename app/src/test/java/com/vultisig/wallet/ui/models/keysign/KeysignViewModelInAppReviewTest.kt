@@ -96,15 +96,17 @@ internal class KeysignViewModelInAppReviewTest {
             coVerify(exactly = 0) { inAppReviewRepository.onTransactionSucceeded() }
         }
 
-    // Status polling re-emits KeysignFinished on every tick; recording each one would re-arm the
-    // card on every poll.
+    // Status polling re-emits KeysignFinished on every tick, and a transaction that broadcasts and
+    // then confirms passes through two successful statuses; recording each would re-arm the card.
+    // The statuses have to differ for this to test anything: two identical ones carry equal state,
+    // which the StateFlow conflates into a single emission the collector never sees twice.
     @Test
     fun `repeated terminal emissions record only once`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
 
             vm.finishWith(TransactionStatus.Pending)
-            vm.finishWith(TransactionStatus.Confirmed)
+            vm.finishWith(TransactionStatus.Broadcasted)
             vm.finishWith(TransactionStatus.Confirmed)
 
             coVerify(exactly = 1) { inAppReviewRepository.onTransactionSucceeded() }
