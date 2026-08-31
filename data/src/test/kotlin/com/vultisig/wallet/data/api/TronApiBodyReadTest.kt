@@ -24,16 +24,17 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 /**
- * Characterization tests for [TronApiImpl] methods that call `response.body<T>()`. They pin the
- * success-path (HTTP 200) behavior so it is preserved when the call sites are migrated to
- * `bodyOrThrow<T>()`.
+ * Characterization tests for [TronApiImpl] methods that deserialize a response body. Every call
+ * site reads through `bodyOrThrow<T>()`; these pin the success-path (HTTP 200) behavior that the
+ * migration off the raw `body<T>()` had to preserve.
  *
  * Methods covered:
- * - [TronApi.broadcastTransaction] — `body<TronBroadcastTxResponseJson>()` (null code + dup code)
- * - [TronApi.getSpecific] — `body<TronSpecificBlockJson>()`
- * - [TronApi.getBalance] — `body<TronBalanceResponseJson>()` (native, TRC-20, empty), plus the
- *   failure path: a read that fails must throw rather than report real funds as zero.
- * - [TronApi.getTsStatus] — `body<TronTransactionStatusResponse?>()` (present / absent txId)
+ * - [TronApi.broadcastTransaction] — `bodyOrThrow<TronBroadcastTxResponseJson>()` (null code + dup
+ *   code)
+ * - [TronApi.getSpecific] — `bodyOrThrow<TronSpecificBlockJson>()`
+ * - [TronApi.getBalance] — `bodyOrThrow<TronBalanceResponseJson>()` (native, TRC-20, empty), plus
+ *   the failure path: a read that fails must throw rather than report real funds as zero.
+ * - [TronApi.getTsStatus] — `bodyOrThrow<TronTransactionStatusResponse?>()` (present / absent txId)
  */
 class TronApiBodyReadTest {
 
@@ -68,7 +69,7 @@ class TronApiBodyReadTest {
     }
 
     // -------------------------------------------------------------------------
-    // broadcastTransaction — body<TronBroadcastTxResponseJson>()
+    // broadcastTransaction — bodyOrThrow<TronBroadcastTxResponseJson>()
     // -------------------------------------------------------------------------
 
     @Test
@@ -106,7 +107,7 @@ class TronApiBodyReadTest {
     }
 
     // -------------------------------------------------------------------------
-    // getSpecific — body<TronSpecificBlockJson>()
+    // getSpecific — bodyOrThrow<TronSpecificBlockJson>()
     // -------------------------------------------------------------------------
 
     @Test
@@ -137,7 +138,7 @@ class TronApiBodyReadTest {
     }
 
     // -------------------------------------------------------------------------
-    // getBalance — body<TronBalanceResponseJson>()
+    // getBalance — bodyOrThrow<TronBalanceResponseJson>()
     // -------------------------------------------------------------------------
 
     @Test
@@ -274,7 +275,7 @@ class TronApiBodyReadTest {
         )
 
     // -------------------------------------------------------------------------
-    // getTsStatus — body<TronTransactionStatusResponse?>()
+    // getTsStatus — bodyOrThrow<TronTransactionStatusResponse?>()
     // -------------------------------------------------------------------------
 
     @Test
