@@ -90,8 +90,13 @@ object MockHttpClient {
         var lastBody: String = ""
             private set
 
-        internal fun record(body: String) {
+        /** Encoded path of the most recent request, for asserting which node endpoint was hit. */
+        var lastPath: String = ""
+            private set
+
+        internal fun record(body: String, path: String) {
             lastBody = body
+            lastPath = path
             bodies += body
         }
     }
@@ -109,7 +114,10 @@ object MockHttpClient {
     ): HttpClient =
         HttpClient(
             MockEngine { request ->
-                capture.record(request.body.toByteArray().decodeToString())
+                capture.record(
+                    body = request.body.toByteArray().decodeToString(),
+                    path = request.url.encodedPath,
+                )
                 respond(content = body, status = status, headers = JSON_HEADERS)
             }
         ) {
@@ -132,7 +140,10 @@ object MockHttpClient {
         var index = 0
         return HttpClient(
             MockEngine { request ->
-                capture.record(request.body.toByteArray().decodeToString())
+                capture.record(
+                    body = request.body.toByteArray().decodeToString(),
+                    path = request.url.encodedPath,
+                )
                 val (status, body) = responses[minOf(index++, responses.size - 1)]
                 respond(content = body, status = status, headers = JSON_HEADERS)
             }

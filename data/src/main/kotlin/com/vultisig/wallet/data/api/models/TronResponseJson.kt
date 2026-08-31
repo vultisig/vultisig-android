@@ -50,7 +50,8 @@ data class TronTriggerConstantContractJson(
     @SerialName("energy_penalty") val energyPenalty: Long = 0L,
     @SerialName("transaction") val transaction: Transaction,
 ) {
-    @Serializable data class Result(val result: Boolean = false, val message: String = "")
+    @Serializable
+    data class Result(val result: Boolean = false, val code: String = "", val message: String = "")
 
     @Serializable data class RetItem(val ret: String? = null)
 
@@ -60,9 +61,23 @@ data class TronTriggerConstantContractJson(
         @SerialName("raw_data_hex") val rawDataHex: String = "",
     )
 
+    /**
+     * A reverted simulation can come back as `result.result = true` alongside a `code` or a
+     * `message` such as `REVERT opcode executed`, carrying an energy figure far below what the real
+     * transfer costs. Rejecting on either keeps a doomed estimate out of the signed `fee_limit`.
+     */
     fun isSuccessfulSimulation(): Boolean {
-        return result?.result == true && transaction.ret?.all { it.ret != "FAILED" } != false
+        return result?.result == true &&
+            result.code.isEmpty() &&
+            result.message.isEmpty() &&
+            transaction.ret?.all { it.ret != "FAILED" } != false
     }
+
+    /** Why the simulation was rejected, for the error the caller surfaces. */
+    fun simulationFailureReason(): String =
+        result?.message?.takeIf(String::isNotEmpty)
+            ?: result?.code?.takeIf(String::isNotEmpty)
+            ?: "node reported an unsuccessful simulation"
 }
 
 @Serializable
