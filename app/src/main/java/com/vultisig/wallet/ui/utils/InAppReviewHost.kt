@@ -17,6 +17,7 @@ import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.android.play.core.review.model.ReviewErrorCode
 import com.vultisig.wallet.data.repositories.InAppReviewRepository
+import com.vultisig.wallet.data.utils.runCatchingCancellable
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -41,7 +42,9 @@ constructor(private val inAppReviewRepository: InAppReviewRepository) : ViewMode
     val isPromptPending: Flow<Boolean> = inAppReviewRepository.isPromptPending
 
     fun onPromptRequested() {
-        viewModelScope.launch { inAppReviewRepository.onPromptRequested() }
+        viewModelScope.launch {
+            runCatchingCancellable { inAppReviewRepository.onPromptRequested() }
+        }
     }
 }
 
