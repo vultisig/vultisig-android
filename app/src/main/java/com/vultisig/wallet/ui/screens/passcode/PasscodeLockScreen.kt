@@ -17,7 +17,9 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -32,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.BiometricUnlockAvailability
@@ -56,10 +60,19 @@ internal fun PasscodeLockScreen(model: PasscodeLockViewModel = hiltViewModel()) 
     // A copy can outlive the hardware's willingness to release it — biometrics switched off in
     // device settings, or a sensor locked out. Asking here keeps a link off the screen that could
     // only ever answer with an error.
-    val isBiometricAvailable =
+    var isBiometricAvailable by
         remember(context) {
-            context.biometricUnlockAvailability() == BiometricUnlockAvailability.Available
+            mutableStateOf(
+                context.biometricUnlockAvailability() == BiometricUnlockAvailability.Available
+            )
         }
+
+    // And a lockout expires, or the user switches biometrics back on, while this screen is still
+    // the one on top. Asking again on the way back keeps the link in step with the hardware.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        isBiometricAvailable =
+            context.biometricUnlockAvailability() == BiometricUnlockAvailability.Available
+    }
 
     PasscodeLockScreen(
         state = state,

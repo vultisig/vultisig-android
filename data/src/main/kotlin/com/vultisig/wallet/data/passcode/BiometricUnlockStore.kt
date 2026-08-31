@@ -6,6 +6,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import androidx.core.content.edit
+import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.KeyStore
 import java.security.UnrecoverableKeyException
@@ -175,7 +176,7 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
     override fun clear() {
         prefs.edit(commit = true) { remove(KEY_WRAPPED_KEY) }
         try {
-            keyStore().deleteEntry(KEY_ALIAS)
+            keyStoreOrNull()?.deleteEntry(KEY_ALIAS)
         } catch (e: GeneralSecurityException) {
             // The preference is gone, so isEnabled() already reads false and no unlock can be
             // attempted. An orphaned keystore entry is overwritten by the next enable.
@@ -220,7 +221,7 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
 
     private fun loadKeyOrNull(): SecretKey? =
         try {
-            keyStore().getKey(KEY_ALIAS, null) as? SecretKey
+            keyStoreOrNull()?.getKey(KEY_ALIAS, null) as? SecretKey
         } catch (e: UnrecoverableKeyException) {
             // The entry is there and cannot be used — the state a restored or corrupted keystore
             // leaves behind. Clearing keeps the shortcut from advertising itself as available.
@@ -232,7 +233,25 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
             null
         }
 
-    private fun keyStore(): KeyStore = KeyStore.getInstance(ANDROID_KEY_STORE).apply { load(null) }
+    /**
+     * The keystore itself, or null when it will not open.
+     *
+     * `load` declares [IOException], which is not a [GeneralSecurityException] and so would
+     * otherwise travel up through [clear] and [isEnabled] into the repository's `setPasscode` and
+     * `disablePasscode`, neither of which catches anything — a failure that breaks setting a
+     * passcode at all, for a shortcut that is optional. Refusing here keeps it fail-closed like
+     * everything else in this file.
+     */
+    private fun keyStoreOrNull(): KeyStore? =
+        try {
+            KeyStore.getInstance(ANDROID_KEY_STORE).apply { load(null) }
+        } catch (e: GeneralSecurityException) {
+            Timber.w(e, "Could not open the keystore")
+            null
+        } catch (e: IOException) {
+            Timber.w(e, "Could not open the keystore")
+            null
+        }
 
     private fun readBlob(): ByteArray? =
         prefs.getString(KEY_WRAPPED_KEY, null)?.let { encoded ->

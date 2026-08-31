@@ -6,13 +6,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -38,7 +42,15 @@ internal fun PasscodeSettingsScreen(navController: NavHostController) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val launcher = rememberBiometricUnlockLauncher()
-    val biometricAvailability = remember(context) { context.biometricUnlockAvailability() }
+    var biometricAvailability by
+        remember(context) { mutableStateOf(context.biometricUnlockAvailability()) }
+
+    // Enrolling a biometric is done in device settings, which is exactly where the
+    // not-enrolled note sends the user. Re-asking on the way back keeps the row from staying
+    // dead until the screen is left and re-entered.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        biometricAvailability = context.biometricUnlockAvailability()
+    }
 
     PasscodeSettingsScreen(
         state = state,
