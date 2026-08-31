@@ -95,6 +95,7 @@
     <string name="send_error_invalid_operator_fee">Die Betreibergebühr muss eine gültige Zahl zwischen 0 und 10000 Basispunkten sein</string>
     <string name="settings_screen_language">Sprache</string>
     <string name="settings_screen_currency">Währung</string>
+    <string name="settings_screen_rate_the_app">App bewerten</string>
     <string name="settings_screen_share_the_app">Die App teilen</string>
     <string name="settings_screen_title">Einstellungen</string>
     <string name="language_setting_screen_title">Sprache</string>

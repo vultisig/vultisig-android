@@ -99,6 +99,7 @@
     <string name="send_error_invalid_operator_fee">A taxa do operador deve ser um número válido entre 0 e 10000 pontos base</string>
     <string name="settings_screen_language">Idioma</string>
     <string name="settings_screen_currency">Moeda</string>
+    <string name="settings_screen_rate_the_app">Avalie o app</string>
     <string name="settings_screen_share_the_app">Compartilhar o App</string>
     <string name="settings_screen_title">Configurações</string>
     <string name="language_setting_screen_title">Idioma</string>

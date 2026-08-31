@@ -13,7 +13,6 @@ import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.utils.InAppReviewEffect
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.performHaptic
@@ -86,7 +85,6 @@ private fun Keysign(
             else -> Unit
         }
     }
-    InAppReviewEffect(keysignViewModel.inAppReviewRequests)
     KeysignView(
         state = state,
         transactionTypeUiModel = uiState.transactionUiModel,
