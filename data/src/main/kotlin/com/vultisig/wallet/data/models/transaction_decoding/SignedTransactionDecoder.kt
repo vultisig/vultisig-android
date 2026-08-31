@@ -1,0 +1,90 @@
+package com.vultisig.wallet.data.models.transaction_decoding
+
+import com.vultisig.wallet.data.models.Chain
+import java.util.concurrent.CopyOnWriteArrayList
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
+
+/**
+ * A reader for one chain family's signed grammar. `handles == null` requires the reader to
+ * establish its own provenance from the transaction itself.
+ */
+interface TransactionContentDecoder {
+
+    /**
+     * The chains this decoder's grammar is meaningful on, or `null` for one that establishes its
+     * own provenance from the transaction.
+     */
+    val handles: Set<Chain>?
+
+    /**
+     * Attempts to decode the signed transaction content into a [DecodedTransaction], or returns
+     * null if this decoder cannot handle it.
+     */
+    fun decode(tx: SignedTransactionContent): DecodedTransaction?
+}
+
+/**
+ * Reads operations from content that will actually be signed. Maintains an ordered registry of
+ * chain-family decoders and attempts each in precedence order. The foundation registers no chain
+ * readers, so every transaction remains unreadable.
+ *
+ * Scoped as [Singleton] for true app-level shared instance across the app. All decoder
+ * registrations are visible to any consumer, ensuring consistent provenance verification.
+ *
+ * The registry is thread-safe: concurrent calls to register, unregister, and clear are safe due to
+ * the use of CopyOnWriteArrayList, which prevents ConcurrentModificationException during iteration
+ * in [decode].
+ */
+@Singleton
+class SignedTransactionDecoder @Inject constructor() {
+
+    /** Registered readers in precedence order. Thread-safe for concurrent access. */
+    private val decoders: CopyOnWriteArrayList<TransactionContentDecoder> = CopyOnWriteArrayList()
+
+    /** Register a decoder to the registry. */
+    fun register(decoder: TransactionContentDecoder) {
+        decoders.add(decoder)
+    }
+
+    /** Unregister a decoder from the registry. */
+    fun unregister(decoder: TransactionContentDecoder) {
+        decoders.remove(decoder)
+    }
+
+    /** Get all registered decoders in precedence order. */
+    fun getDecoders(): List<TransactionContentDecoder> = decoders.toList()
+
+    /** Clear all registered decoders. */
+    fun clear() {
+        decoders.clear()
+    }
+
+    /**
+     * Decodes signed transaction content by attempting each registered decoder in precedence order
+     * until one returns non-null. Returns [DecodedTransaction.unreadable] when no reader can prove
+     * an operation. If a decoder throws an exception (except CancellationException), iteration
+     * continues to the next eligible decoder. Coroutine cancellation is rethrown to preserve
+     * cancellation semantics.
+     */
+    fun decode(tx: SignedTransactionContent): DecodedTransaction {
+        for (decoder in decoders) {
+            val handles = decoder.handles
+            if (handles == null || handles.contains(tx.chain)) {
+                try {
+                    decoder.decode(tx)?.let {
+                        return it
+                    }
+                } catch (cancellation: CancellationException) {
+                    // Rethrow coroutine cancellation to preserve cancellation semantics
+                    throw cancellation
+                } catch (_: Exception) {
+                    // Decoder failed on malformed content; continue to next decoder
+                }
+            }
+        }
+
+        return DecodedTransaction.unreadable
+    }
+}
