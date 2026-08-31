@@ -288,10 +288,17 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
     override val signedDataBodyIsActive: Boolean
         get() {
             val chain = payload.coin.chain
-            // signAmino is read before the swap route and before signDirect in CosmosHelper and
-            // ThorChainHelper — including inside the THORChain swap path — so whenever it is
-            // present its messages, not the sidecars, are what gets signed.
-            if (payload.signAmino != null) return chain in COSMOS_SIGN_DOC_CHAINS
+            // signAmino is read before signDirect in CosmosHelper and ThorChainHelper, and before
+            // the swap route in CosmosHelper.getSwapPreSignedInputData, so its messages — not the
+            // sidecars — are what gets signed.
+            if (payload.signAmino != null) {
+                // A THORChain-source swap is signed by ThorchainSwapHelper, which never reads
+                // signAmino, so the memo and swap sidecars remain the description there.
+                if (chain == Chain.ThorChain && payload.swapPayload is SwapPayload.ThorChain) {
+                    return false
+                }
+                return chain in COSMOS_SIGN_DOC_CHAINS
+            }
             // Approve and swap routes make opaque content inactive
             if (payload.approvePayload != null || payload.swapPayload != null) return false
 
