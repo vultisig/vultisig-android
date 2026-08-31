@@ -270,6 +270,26 @@ internal class TokenPreselectionServiceTest {
         }
 
     @Test
+    fun `preSelect BOND - RUNE wins even when a stale tokenId matches another account`() =
+        runTest(mainDispatcher) {
+            // A stale Route.Send could carry a preSelectedTokenId from before the route was
+            // repurposed for BOND. Even though it matches an account here, BOND must still
+            // resolve to RUNE — submitFor fails closed for BOND regardless, but the token shown
+            // to the user before that point should still be correct.
+            defiType = DeFiNavActions.BOND
+            loaded(ethAccount(Coins.Ethereum.ETH))
+            val service = build(backgroundScope)
+
+            service.preSelect(
+                preSelectedChainIds = listOf(null),
+                preSelectedTokenId = Coins.Ethereum.ETH.id,
+            )
+            advanceUntilIdle()
+
+            assertEquals(listOf(Coins.ThorChain.RUNE), selectedTokens)
+        }
+
+    @Test
     fun `preSelect UNSTAKE_YBRUNE - default coin is the ybRUNE receipt`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.UNSTAKE_YBRUNE

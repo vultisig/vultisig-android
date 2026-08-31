@@ -131,10 +131,17 @@ internal class TokenPreselectionService(
             }
         }
 
-        for (account in accounts) {
-            val accountToken = account.token
-            if (accountToken.id.equals(preSelectedTokenId, ignoreCase = true)) {
-                return accountToken
+        // Bond/Unbond always preselect the chain's native asset (see defaultDefiCoin) rather
+        // than matching a stale preSelectedTokenId — submitFor fails closed for these anyway,
+        // but the preselection shown to the user should still be correct.
+        if (
+            defiTypeProvider() != DeFiNavActions.BOND && defiTypeProvider() != DeFiNavActions.UNBOND
+        ) {
+            for (account in accounts) {
+                val accountToken = account.token
+                if (accountToken.id.equals(preSelectedTokenId, ignoreCase = true)) {
+                    return accountToken
+                }
             }
         }
 
