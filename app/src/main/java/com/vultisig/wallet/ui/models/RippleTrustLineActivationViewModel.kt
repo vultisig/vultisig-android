@@ -218,7 +218,7 @@ constructor(
                 )
 
             transactionRepository.addTransaction(transaction)
-            navigator.route(Route.VerifySend(transaction.id, args.vaultId))
+            navigator.route(Route.VerifySend(args.vaultId, transaction.id))
         }
     }
 
