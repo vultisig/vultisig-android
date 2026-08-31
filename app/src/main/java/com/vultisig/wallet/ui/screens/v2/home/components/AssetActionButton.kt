@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.home.components
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -12,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -21,12 +24,15 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
-enum class AssetAction {
-    SWAP,
-    BUY,
-    SEND,
-    RECEIVE,
-    FUNCTIONS,
+enum class AssetAction(
+    @DrawableRes internal val iconRes: Int,
+    @StringRes internal val titleRes: Int,
+) {
+    SWAP(R.drawable.swap_v2, R.string.transaction_type_button_swap),
+    BUY(R.drawable.buy, R.string.transaction_type_button_buy),
+    SEND(R.drawable.send, R.string.transaction_type_button_send),
+    RECEIVE(R.drawable.receive, R.string.transaction_type_button_receive),
+    FUNCTIONS(R.drawable.functions, R.string.transaction_type_button_functions),
 }
 
 /**
@@ -37,11 +43,13 @@ enum class AssetAction {
 internal val assetActionButtonHeight: Dp
     @Composable
     get() =
-        IconBoxSize +
+        AssetActionIconBoxSize +
             IconLabelSpacing +
             with(LocalDensity.current) { Theme.brockmann.supplementary.caption.lineHeight.toDp() }
 
-private val IconBoxSize = 52.dp
+/** Side of the icon box when the row has the width to give every button its full size. */
+internal val AssetActionIconBoxSize = 52.dp
+
 private val IconLabelSpacing = 8.dp
 
 @Composable
@@ -53,6 +61,7 @@ fun AssetActionButton(
             AssetAction.SWAP -> true
             else -> false
         },
+    iconBoxSize: Dp = AssetActionIconBoxSize,
     onClick: () -> Unit = {},
 ) {
 
@@ -60,23 +69,13 @@ fun AssetActionButton(
         if (isSelected) Theme.v2.colors.buttons.ctaPrimary
         else Theme.v2.colors.backgrounds.tertiary_2
 
-    val (logo, title) =
-        when (action) {
-            AssetAction.SWAP -> R.drawable.swap_v2 to R.string.transaction_type_button_swap
-            AssetAction.BUY -> R.drawable.buy to R.string.transaction_type_button_buy
-            AssetAction.SEND -> R.drawable.send to R.string.transaction_type_button_send
-            AssetAction.RECEIVE -> R.drawable.receive to R.string.transaction_type_button_receive
-            AssetAction.FUNCTIONS ->
-                R.drawable.functions to R.string.transaction_type_button_functions
-        }
-
     Column(
         modifier = modifier.clickOnce(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier =
-                Modifier.size(size = IconBoxSize)
+                Modifier.size(size = iconBoxSize)
                     .clip(shape = Theme.v2.radius.lg)
                     .border(
                         width = 1.dp,
@@ -86,15 +85,21 @@ fun AssetActionButton(
                     .background(backgroundColor),
             contentAlignment = Alignment.Center,
         ) {
-            UiIcon(drawableResId = logo, size = 20.dp, tint = Theme.v2.colors.text.primary)
+            UiIcon(
+                drawableResId = action.iconRes,
+                size = 20.dp,
+                tint = Theme.v2.colors.text.primary,
+            )
         }
 
         UiSpacer(IconLabelSpacing)
 
         Text(
-            text = stringResource(title),
+            text = stringResource(action.titleRes),
             color = Theme.v2.colors.text.secondary,
             style = Theme.brockmann.supplementary.caption,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
