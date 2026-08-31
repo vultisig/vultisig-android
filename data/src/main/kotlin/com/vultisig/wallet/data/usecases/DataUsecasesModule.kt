@@ -158,6 +158,10 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindSearchRippleTokenUseCase(impl: SearchRippleTokenUseCaseImpl): SearchRippleTokenUseCase
+
+    @Binds
+    @Singleton
     fun bindCreateVaultBackupFileNameUseCase(
         impl: CreateVaultBackupFileNameUseCaseImpl
     ): CreateVaultBackupFileNameUseCase
@@ -185,6 +189,8 @@ internal interface DataUsecasesModule {
     fun bindCosmosBankCoinFinder(impl: CosmosBankCoinFinderImpl): CosmosBankCoinFinder
 
     @Binds @Singleton fun bindRippleTokenFinder(impl: RippleTokenFinderImpl): RippleTokenFinder
+
+    @Binds @Singleton fun bindRippleTrustLines(impl: RippleTrustLinesImpl): RippleTrustLines
 
     @Binds @Singleton fun bindSuiTokenFinder(impl: SuiTokenFinderImpl): SuiTokenFinder
 

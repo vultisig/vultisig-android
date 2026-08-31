@@ -39,6 +39,10 @@ interface TronApi {
 
     suspend fun getSpecific(): TronSpecificBlockJson
 
+    /**
+     * Simulates a TRC-20 transfer to size its energy cost. Throws when the node answers with a
+     * failed or reverted simulation, so a caller never turns one into a `fee_limit`.
+     */
     suspend fun getTriggerConstantContractFee(
         ownerAddressBase58: String,
         contractAddressBase58: String,
@@ -107,13 +111,29 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
             put("visible", true)
         }
 
-        return httpClient
-            .post(tronGrid) {
-                url { path("tron", "walletsolidity", "triggerconstantcontract") }
-                setBody(body)
-                accept(ContentType.Application.Json)
-            }
-            .bodyOrThrow<TronTriggerConstantContractJson>()
+        val response =
+            httpClient
+                .post(tronGrid) {
+                    // Full node (`wallet`), not `walletsolidity`: the solidified node lags the head
+                    // by ~60s, so a just-funded or just-approved account is simulated against stale
+                    // state. iOS and the SDK both simulate on the full node.
+                    url { path("tron", "wallet", "triggerconstantcontract") }
+                    setBody(body)
+                    accept(ContentType.Application.Json)
+                }
+                .bodyOrThrow<TronTriggerConstantContractJson>()
+
+        // A 200 does not mean the transfer would land. A revert is returned as an ordinary response
+        // whose energy figures are far below the real cost, and consuming one produces a signed
+        // fee_limit that guarantees OUT_OF_ENERGY at broadcast.
+        check(response.isSuccessfulSimulation()) {
+            "Tron fee simulation failed: ${response.simulationFailureReason()}"
+        }
+        check(response.energyUsed + response.energyPenalty > 0L) {
+            "Tron fee simulation returned a non-positive energy estimate"
+        }
+
+        return response
     }
 
     override suspend fun getChainParameters(): TronChainParametersJson {
@@ -122,24 +142,24 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
             .bodyOrThrow<TronChainParametersJson>()
     }
 
+    /**
+     * A failed read throws instead of reading as zero. This balance feeds both the portfolio and
+     * the TRC-20 fee simulation, so swallowing an RPC failure would show real funds as empty and
+     * simulate the transfer at amount 0 — a different shape from the send that actually gets
+     * signed. Only an account the node does not know reads zero.
+     */
     override suspend fun getBalance(coin: Coin): BigInteger {
-        try {
-            val response = httpClient.get("$tronGrid/v1/accounts/${coin.address}")
-            val content = response.bodyOrThrow<TronBalanceResponseJson>()
-            val account = content.tronBalanceResponseData.firstOrNull() ?: return BigInteger.ZERO
+        val response = httpClient.get("$tronGrid/v1/accounts/${coin.address}")
+        val content = response.bodyOrThrow<TronBalanceResponseJson>()
+        val account = content.tronBalanceResponseData.firstOrNull() ?: return BigInteger.ZERO
 
-            return if (coin.isNativeToken) {
-                account.balance
-            } else {
-                account.trc20
-                    .asSequence()
-                    .mapNotNull { it[coin.contractAddress]?.toBigIntegerOrNull() }
-                    .firstOrNull() ?: BigInteger.ZERO
-            }
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e(e, "error getting tron balance")
-            return BigInteger.ZERO
+        return if (coin.isNativeToken) {
+            account.balance
+        } else {
+            account.trc20
+                .asSequence()
+                .mapNotNull { it[coin.contractAddress]?.toBigIntegerOrNull() }
+                .firstOrNull() ?: BigInteger.ZERO
         }
     }
 

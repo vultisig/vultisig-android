@@ -115,6 +115,7 @@
     <string name="send_error_insufficient_frozen_balance">Bedrag overschrijdt bevroren %1$s saldo</string>
     <string name="settings_screen_language">Taal</string>
     <string name="settings_screen_currency">Valuta</string>
+    <string name="settings_screen_rate_the_app">Beoordeel de app</string>
     <string name="settings_screen_share_the_app">Deel de app</string>
     <string name="settings_screen_title">Instellingen</string>
     <string name="language_setting_screen_title">Taal</string>
@@ -265,6 +266,7 @@
     <string name="verify_deposit_node_address_title">Knooppuntadres</string>
     <string name="verify_deposit_gas_title">Netwerkkosten</string>
     <string name="custom_token_enter_contract_address">Voer contractadres in</string>
+    <string name="custom_token_enter_currency_issuer">Voer valuta.uitgever in</string>
     <string name="custom_token_token_not_found">Token niet gevonden</string>
     <string name="custom_token_add_token">%1$s-token toevoegen</string>
     <string name="deposit_form_amount_title">Bedrag (Saldo: %1$s)</string>
@@ -999,6 +1001,21 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Het minimumbedrag om dit adres te activeren is %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">Dit adres vereist een bestemmingstag. Voeg er een toe om door te gaan.</string>
+    <string name="send_error_xrp_destination_no_trust_line">Dit adres kan geen %1$s ontvangen. De ontvanger moet daarvoor eerst een trustline openen.</string>
+    <string name="ripple_trust_line_title">Trustline activeren</string>
+    <string name="ripple_trust_line_reserve_warning">%1$s heeft een trustline op de XRP Ledger nodig voordat je account het kan aanhouden. Openen zet permanent een deel van je XRP vast als eigenaarsreserve.</string>
+    <string name="ripple_trust_line_limit">Trustline-limiet</string>
+    <string name="ripple_trust_line_hero_title">%1$s-trustline wordt geopend</string>
+    <string name="ripple_trust_line_type_pill">Trustline</string>
+    <string name="ripple_trust_line_currency">Valuta</string>
+    <string name="ripple_trust_line_issuer_check">De uitgever is correct</string>
+    <string name="ripple_trust_line_limit_check">De trustline-limiet is correct</string>
+    <string name="ripple_trust_line_unreviewable">Kan niet worden gecontroleerd</string>
+    <string name="ripple_trust_line_unreviewable_value">De valuta, uitgever of limiet van deze trustline kon niet worden gelezen, dus de voorwaarden kunnen niet worden getoond. Onderteken deze niet.</string>
+    <string name="ripple_trust_line_reserve">Vastgezette reserve</string>
+    <string name="ripple_trust_line_spendable_after">Beschikbare XRP daarna</string>
+    <string name="ripple_trust_line_activate">Activeren</string>
+    <string name="ripple_trust_line_insufficient_xrp">Niet genoeg beschikbare XRP voor de reserve en de kosten.</string>
     <string name="send_error_xrp_invalid_destination_tag">Ongeldige bestemmingstag. Voer een geheel getal tussen 1 en 4294967295 in.</string>
     <string name="error_invalid_chain">Ketting is ongeldig</string>
     <string name="ton_stake_error_unsupported_pool">Deze staking-pool wordt niet ondersteund</string>

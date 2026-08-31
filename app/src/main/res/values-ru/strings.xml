@@ -115,6 +115,7 @@
     <string name="send_error_insufficient_frozen_balance">Сумма превышает замороженный баланс %1$s</string>
     <string name="settings_screen_language">Язык</string>
     <string name="settings_screen_currency">Валюта</string>
+    <string name="settings_screen_rate_the_app">Оценить приложение</string>
     <string name="settings_screen_share_the_app">Поделиться приложением</string>
     <string name="settings_screen_title">Настройки</string>
     <string name="language_setting_screen_title">Язык</string>
@@ -265,6 +266,7 @@
     <string name="deposit_screen_amount_title">Количество</string>
     <string name="verify_deposit_gas_title">Комиссия сети</string>
     <string name="custom_token_enter_contract_address">Введите адрес контракта</string>
+    <string name="custom_token_enter_currency_issuer">Введите валюта.эмитент</string>
     <string name="custom_token_token_not_found">Токен не найден</string>
     <string name="custom_token_add_token">Добавить %1$s токен</string>
     <string name="deposit_form_amount_title">Сумма (Баланс: %1$s)</string>
@@ -1007,6 +1009,21 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Минимальная сумма для активации этого адреса — %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">Для этого адреса требуется тег назначения. Добавьте его, чтобы продолжить.</string>
+    <string name="send_error_xrp_destination_no_trust_line">Этот адрес не может получить %1$s. Получателю нужно сначала открыть доверительную линию для этого актива.</string>
+    <string name="ripple_trust_line_title">Активировать доверительную линию</string>
+    <string name="ripple_trust_line_reserve_warning">Чтобы ваш счёт мог держать %1$s, нужна доверительная линия в XRP Ledger. При её открытии часть ваших XRP навсегда блокируется как резерв владельца.</string>
+    <string name="ripple_trust_line_limit">Лимит доверительной линии</string>
+    <string name="ripple_trust_line_hero_title">Открытие доверительной линии %1$s</string>
+    <string name="ripple_trust_line_type_pill">Доверительная линия</string>
+    <string name="ripple_trust_line_currency">Валюта</string>
+    <string name="ripple_trust_line_issuer_check">Эмитент указан верно</string>
+    <string name="ripple_trust_line_limit_check">Лимит доверительной линии указан верно</string>
+    <string name="ripple_trust_line_unreviewable">Невозможно проверить</string>
+    <string name="ripple_trust_line_unreviewable_value">Не удалось прочитать валюту, эмитента или лимит этой доверительной линии, поэтому её условия показать нельзя. Не подписывайте её.</string>
+    <string name="ripple_trust_line_reserve">Заблокированный резерв</string>
+    <string name="ripple_trust_line_spendable_after">Доступно XRP после</string>
+    <string name="ripple_trust_line_activate">Активировать</string>
+    <string name="ripple_trust_line_insufficient_xrp">Недостаточно доступных XRP для резерва и комиссии.</string>
     <string name="send_error_xrp_invalid_destination_tag">Недействительный тег назначения. Введите целое число от 1 до 4294967295.</string>
     <string name="error_invalid_chain">Сеть недействительна</string>
     <string name="ton_stake_error_unsupported_pool">Этот стейкинг-пул не поддерживается</string>

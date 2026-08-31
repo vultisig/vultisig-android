@@ -7,11 +7,14 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.BackupCodeVerifyResult
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.vault.TempVaultDto
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
@@ -20,10 +23,12 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import java.io.IOException
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -50,20 +55,13 @@ internal class FastVaultVerificationViewModelTest {
     private val vaultMetadataRepo: VaultMetadataRepo = mockk(relaxed = true)
     private val vaultRepository: VaultRepository = mockk(relaxed = true)
     private val chainAccountAddressRepository: ChainAccountAddressRepository = mockk(relaxed = true)
+    private val inAppReviewRepository: InAppReviewRepository = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         mockkStatic("androidx.navigation.SavedStateHandleKt")
-        every { any<SavedStateHandle>().toRoute<Route.FastVaultVerification>() } returns
-            Route.FastVaultVerification(
-                vaultId = "vault",
-                pubKeyEcdsa = "pub",
-                email = "a@b.c",
-                tssAction = TssAction.KEYGEN,
-                vaultName = "v",
-                password = "pw",
-            )
+        givenRoute(TssAction.KEYGEN)
     }
 
     @AfterEach
@@ -115,6 +113,75 @@ internal class FastVaultVerificationViewModelTest {
             assertEquals(VerifyPinState.Error, vm.state.value.verifyPinState)
         }
 
+    // A fast vault's share only becomes a real vault once the emailed code checks out, so that is
+    // the moment the vault was created — not the end of the keygen ceremony.
+    @Test
+    fun `a verified code on a new vault is a review moment`() =
+        runTest(testDispatcher) {
+            givenTemporaryVault()
+            coEvery { verifyUseCase(any(), any()) } returns BackupCodeVerifyResult.Valid
+            val vm = buildViewModel()
+
+            vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
+            vm.processCode("1234")
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { inAppReviewRepository.onVaultCreated() }
+        }
+
+    @Test
+    fun `a review moment that fails to persist does not fail verification`() =
+        runTest(testDispatcher) {
+            givenTemporaryVault()
+            coEvery { verifyUseCase(any(), any()) } returns BackupCodeVerifyResult.Valid
+            coEvery { inAppReviewRepository.onVaultCreated() } throws IOException("disk full")
+            val vm = buildViewModel()
+
+            vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
+            vm.processCode("1234")
+            advanceUntilIdle()
+
+            assertEquals(VerifyPinState.Success, vm.state.value.verifyPinState)
+            coVerify(exactly = 1) { navigator.route(any<Route.BackupVault>()) }
+        }
+
+    @Test
+    fun `an upgraded vault is not a review moment`() =
+        runTest(testDispatcher) {
+            givenRoute(TssAction.Migrate)
+            givenTemporaryVault()
+            coEvery { verifyUseCase(any(), any()) } returns BackupCodeVerifyResult.Valid
+            val vm = buildViewModel()
+
+            vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
+            vm.processCode("1234")
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { inAppReviewRepository.onVaultCreated() }
+        }
+
+    private fun givenTemporaryVault() {
+        coEvery { temporaryVaultRepository.getById("vault") } returns
+            TempVaultDto(
+                vault = Vault(id = "vault", name = "v"),
+                email = "a@b.c",
+                password = "pw",
+                hint = null,
+            )
+    }
+
+    private fun givenRoute(tssAction: TssAction) {
+        every { any<SavedStateHandle>().toRoute<Route.FastVaultVerification>() } returns
+            Route.FastVaultVerification(
+                vaultId = "vault",
+                pubKeyEcdsa = "pub",
+                email = "a@b.c",
+                tssAction = tssAction,
+                vaultName = "v",
+                password = "pw",
+            )
+    }
+
     private fun buildViewModel(): FastVaultVerificationViewModel =
         FastVaultVerificationViewModel(
             savedStateHandle = SavedStateHandle(),
@@ -128,5 +195,6 @@ internal class FastVaultVerificationViewModelTest {
             vaultMetadataRepo = vaultMetadataRepo,
             vaultRepository = vaultRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
+            inAppReviewRepository = inAppReviewRepository,
         )
 }

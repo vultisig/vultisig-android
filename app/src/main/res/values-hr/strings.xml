@@ -92,6 +92,7 @@
     <string name="send_error_invalid_operator_fee">Naknada operatora mora biti valjani broj između 0 i 10000 baznih bodova</string>
     <string name="settings_screen_language">Jezik</string>
     <string name="settings_screen_currency">Valuta</string>
+    <string name="settings_screen_rate_the_app">Ocijeni aplikaciju</string>
     <string name="settings_screen_share_the_app">Podijelite aplikaciju</string>
     <string name="settings_screen_title">Postavke</string>
     <string name="language_setting_screen_title">Jezik</string>
@@ -266,6 +267,7 @@
     <string name="verify_deposit_node_address_title">Adresa čvora</string>
     <string name="verify_deposit_gas_title">Mrežna naknada</string>
     <string name="custom_token_enter_contract_address">Unesite adresu ugovora</string>
+    <string name="custom_token_enter_currency_issuer">Unesite valuta.izdavatelj</string>
     <string name="custom_token_token_not_found">Token nije pronađen</string>
     <string name="custom_token_add_token">Dodaj %1$s token</string>
     <string name="deposit_form_amount_title">Iznos (Stanje: %1$s)</string>
@@ -1007,6 +1009,21 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Minimalni iznos za aktivaciju ove adrese je %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">Ova adresa zahtijeva odredišnu oznaku. Dodajte je za nastavak.</string>
+    <string name="send_error_xrp_destination_no_trust_line">Ova adresa ne može primiti %1$s. Primatelj prvo mora otvoriti liniju povjerenja za tu imovinu.</string>
+    <string name="ripple_trust_line_title">Aktiviraj liniju povjerenja</string>
+    <string name="ripple_trust_line_reserve_warning">%1$s zahtijeva liniju povjerenja na XRP Ledgeru prije nego što ga vaš račun može držati. Otvaranje trajno zaključava dio vaših XRP kao rezervu vlasnika.</string>
+    <string name="ripple_trust_line_limit">Ograničenje linije povjerenja</string>
+    <string name="ripple_trust_line_hero_title">Aktiviranje linije povjerenja za %1$s</string>
+    <string name="ripple_trust_line_type_pill">Linija povjerenja</string>
+    <string name="ripple_trust_line_currency">Valuta</string>
+    <string name="ripple_trust_line_issuer_check">Izdavatelj je točan</string>
+    <string name="ripple_trust_line_limit_check">Ograničenje linije povjerenja je točno</string>
+    <string name="ripple_trust_line_unreviewable">Nije moguće provjeriti</string>
+    <string name="ripple_trust_line_unreviewable_value">Valuta, izdavatelj ili ograničenje ove linije povjerenja nisu pročitani pa se njezini uvjeti ne mogu prikazati. Nemojte je potpisati.</string>
+    <string name="ripple_trust_line_reserve">Zaključana rezerva</string>
+    <string name="ripple_trust_line_spendable_after">Dostupni XRP nakon toga</string>
+    <string name="ripple_trust_line_activate">Aktiviraj</string>
+    <string name="ripple_trust_line_insufficient_xrp">Nema dovoljno dostupnih XRP-a za rezervu i naknadu.</string>
     <string name="send_error_xrp_invalid_destination_tag">Nevažeća odredišna oznaka. Unesite cijeli broj između 1 i 4294967295.</string>
     <string name="error_invalid_chain">Lanac nije valjan</string>
     <string name="ton_stake_error_unsupported_pool">Ovaj staking pool nije podržan</string>

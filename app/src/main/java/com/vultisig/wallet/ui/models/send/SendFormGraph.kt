@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
@@ -18,6 +19,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.isRippleIssuedToken
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
@@ -516,11 +518,18 @@ internal class SendFormGraph(
                 if (switching) return@combine null // <-- SKIP during transitions
 
                 val address = token.address
-                // XRP shows a dedicated destination-tag field in addition to the memo field.
-                val isDestinationTag = token.chain == Chain.Ripple && token.isNativeToken
+                // The tag belongs to the destination account, not the asset.
+                val isDestinationTag = token.chain == Chain.Ripple
                 val hasMemo =
                     (token.isNativeToken || token.chain.standard == TokenStandard.COSMOS) &&
                         token.chain != Chain.Sui
+
+                // Issued currencies hide the memo field but submit still reads it, so text typed
+                // for another coin would be signed. TON jettons, SPL and TRC20 hide the field
+                // too, but keep signing their memo.
+                if (token.isRippleIssuedToken) {
+                    memoFieldState.clearText()
+                }
 
                 val uiModel =
                     accountToTokenBalanceUiModelMapper(

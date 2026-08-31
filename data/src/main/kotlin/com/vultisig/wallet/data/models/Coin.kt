@@ -90,18 +90,6 @@ val Coin.isLpToken: Boolean
             else -> false
         }
 
-/**
- * True when the wallet can read this coin's balance but cannot yet move it.
- *
- * XRPL issued currencies are the only such coins today: `account_lines` gives their balances, but
- * transferring one needs a `Payment` carrying a `CurrencyAmount` (currency + issuer + value), while
- * [com.vultisig.wallet.data.chains.helpers.RippleHelper] only builds drop-denominated XRP payments.
- * Routing one into send or swap would sign an XRP transfer of the token's numeric balance, so both
- * actions stay closed until issued-currency signing lands.
- */
-val Coin.isReadOnlyAsset: Boolean
-    get() = isRippleIssuedToken
-
 /** Returns true if this coin's chain allows zero-gas transactions. */
 fun Coin.allowZeroGas(): Boolean {
     return this.chain == Chain.Polkadot || this.chain == Chain.Bittensor || this.chain == Chain.Tron

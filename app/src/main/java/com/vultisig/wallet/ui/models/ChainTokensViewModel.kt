@@ -8,10 +8,12 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.canSelectTokens
@@ -32,6 +34,7 @@ import com.vultisig.wallet.data.repositories.PromoBannerDismissalRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
+import com.vultisig.wallet.data.usecases.RippleTrustLines
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REFRESH_TOKEN_DATA
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -52,6 +55,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -91,6 +95,7 @@ internal data class ChainTokenUiModel(
     @DrawableRes val monotoneChainLogo: Int? = null,
     val mergeBalance: String? = null,
     val network: String = "",
+    val canActivateTrustLine: Boolean = false,
 )
 
 @HiltViewModel
@@ -109,6 +114,7 @@ constructor(
     private val requestResultRepository: RequestResultRepository,
     private val balanceRepository: BalanceRepository,
     private val promoBannerDismissalRepository: PromoBannerDismissalRepository,
+    private val rippleTrustLines: RippleTrustLines,
 ) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
 
@@ -261,6 +267,23 @@ constructor(
         }
     }
 
+    fun activateTrustLine(model: ChainTokenUiModel) {
+        val vaultId = vaultId ?: return
+        viewModelScope.safeLaunch {
+            navigator.route(Route.RippleTrustLineActivation(vaultId, model.id))
+        }
+    }
+
+    private suspend fun tokensNeedingTrustLine(chain: Chain, address: Address): Set<TokenId> =
+        if (chain == Chain.Ripple) {
+            rippleTrustLines.tokensNeedingTrustLine(
+                address = address.address,
+                coins = address.accounts.map { it.token },
+            )
+        } else {
+            emptySet()
+        }
+
     private fun loadData(isRefresh: Boolean) {
         val vaultId =
             vaultId
@@ -299,6 +322,10 @@ constructor(
                     .combine(fetchMergeBalanceFlow(chain)) { address, mergeBalance ->
                         address to mergeBalance
                     }
+                    // Outside the search combine below, so a keystroke cannot re-ask the ledger.
+                    .map { (address, mergeBalances) ->
+                        Triple(address, mergeBalances, tokensNeedingTrustLine(chain, address))
+                    }
                     .catch {
                         if (isRefresh) {
                             updateRefreshing(false)
@@ -306,7 +333,7 @@ constructor(
                         Timber.e(it)
                     }
                     .combine(uiState.value.searchTextFieldState.textAsFlow()) {
-                        (address, mergeBalances),
+                        (address, mergeBalances, needsTrustLine),
                         searchQuery ->
                         val totalFiatValue = address.accounts.calculateAccountsTotalFiatValue()
 
@@ -343,6 +370,7 @@ constructor(
                                             fiatValueToStringMapper(it, asPrice = true)
                                         },
                                     network = token.chain.raw,
+                                    canActivateTrustLine = token.id in needsTrustLine,
                                 )
                             }
 

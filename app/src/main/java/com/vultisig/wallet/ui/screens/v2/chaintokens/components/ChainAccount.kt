@@ -48,9 +48,11 @@ internal fun ChainAccount(
     @DrawableRes monoToneChainLogo: Int?,
     onClick: () -> Unit = {},
     mergedBalance: String? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier.clickOnce(onClick = onClick),
+        // A clickable row wrapping the CTA would make the two compete for the same tap.
+        modifier = if (trailingContent == null) modifier.clickOnce(onClick = onClick) else modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box {
@@ -111,33 +113,37 @@ internal fun ChainAccount(
 
         UiSpacer(size = 8.dp)
 
-        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
-            LoadableValue(
-                value = fiatBalance,
-                isVisible = isBalanceVisible,
-                style = Theme.satoshi.price.bodyS,
-                color = Theme.v2.colors.neutrals.n50,
-            )
+        if (trailingContent != null) {
+            trailingContent()
+        } else {
+            Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
+                LoadableValue(
+                    value = fiatBalance,
+                    isVisible = isBalanceVisible,
+                    style = Theme.satoshi.price.bodyS,
+                    color = Theme.v2.colors.neutrals.n50,
+                )
 
-            UiSpacer(size = 4.dp)
+                UiSpacer(size = 4.dp)
 
-            LoadableValue(
-                value = balance,
-                isVisible = isBalanceVisible,
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.tertiary,
-                maxLines = 2,
-                textAlign = TextAlign.End,
+                LoadableValue(
+                    value = balance,
+                    isVisible = isBalanceVisible,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.tertiary,
+                    maxLines = 2,
+                    textAlign = TextAlign.End,
+                )
+            }
+
+            UiSpacer(size = 8.dp)
+
+            UiIcon(
+                drawableResId = R.drawable.ic_small_caret_right,
+                size = 16.dp,
+                tint = Theme.v2.colors.text.primary,
             )
         }
-
-        UiSpacer(size = 8.dp)
-
-        UiIcon(
-            drawableResId = R.drawable.ic_small_caret_right,
-            size = 16.dp,
-            tint = Theme.v2.colors.text.primary,
-        )
     }
 }
 

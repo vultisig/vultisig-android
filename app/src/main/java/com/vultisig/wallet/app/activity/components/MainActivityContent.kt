@@ -61,6 +61,7 @@ import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
 import com.vultisig.wallet.ui.screens.passcode.LocalIsGateClosed
 import com.vultisig.wallet.ui.screens.passcode.PasscodeGuard
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.InAppReviewHost
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.flow.first
@@ -88,6 +89,13 @@ internal fun MainActivityContent(
     val isLocked = guardState.isLocked
 
     PopDialogDestinationsWhileLocked(navController, isLocked)
+
+    // Hosted here rather than on the screen that earned the moment, which routes on before the card
+    // is due — and only while the gate is open. Play's card is an activity of its own, drawn over
+    // the lock's window rather than under it, and an ask spent there is spent on a passcode screen.
+    if (!isGateClosed) {
+        InAppReviewHost()
+    }
 
     val context = LocalContext.current
     val snackbarState = mainViewModel.snackbarState

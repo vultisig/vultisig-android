@@ -16,7 +16,7 @@ import com.vultisig.wallet.data.models.hasMarketDataSource
 import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
 import com.vultisig.wallet.data.models.isLpToken
-import com.vultisig.wallet.data.models.isReadOnlyAsset
+import com.vultisig.wallet.data.models.isRippleIssuedToken
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -57,11 +57,6 @@ internal data class TokenDetailUiModel(
     val isRefreshing: Boolean = false,
     val canDeposit: Boolean = false,
     val canSwap: Boolean = false,
-    // Closed until the token is loaded, like every other action flag here: the read-only check
-    // runs only once a matching account resolves, and AssetActionButton has no disabled state, so
-    // a default of true would leave SEND tappable for a read-only asset while that load is in
-    // flight or after it finds nothing.
-    val canSend: Boolean = false,
     val canBuy: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val explorerUrl: String = "",
@@ -346,17 +341,12 @@ constructor(
                                     it.copy(
                                         token = tokenUiModel,
                                         canDeposit = chain.isDepositSupported,
-                                        // LP receipt tokens (e.g. bRUNE/ybRUNE) can't be a swap
-                                        // source; gate the button here too, not only in the asset
-                                        // pickers, so it can't be entered from this screen.
+                                        // No provider routes an LP receipt or an XRPL issued
+                                        // currency, whatever the chain supports.
                                         canSwap =
                                             chain.isSwapSupported &&
                                                 !token.isLpToken &&
-                                                !token.isReadOnlyAsset,
-                                        // Read-only assets (XRPL issued currencies) have no
-                                        // signing path yet, so the send entry point is closed
-                                        // here as well as in the asset pickers.
-                                        canSend = !token.isReadOnlyAsset,
+                                                !token.isRippleIssuedToken,
                                         canBuy = chain.isBuySupported,
                                         explorerUrl = explorerUrl,
                                         chainAddress = accountAddress,

@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.BackupCodeVerifyResult
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -18,6 +19,7 @@ import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.usecases.fast.VerifyFastVaultBackupCodeUseCase
+import com.vultisig.wallet.data.utils.runCatchingCancellable
 import com.vultisig.wallet.ui.components.canAuthenticateBiometric
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -69,6 +71,7 @@ constructor(
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val inAppReviewRepository: InAppReviewRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.FastVaultVerification>()
@@ -190,6 +193,12 @@ constructor(
                                     date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
                                 )
 
+                                if (args.tssAction == TssAction.KEYGEN) {
+                                    // The fast vault only becomes real here: keygen parked its
+                                    // share in temporary storage until this code was verified.
+                                    recordVaultCreatedForReview()
+                                }
+
                                 delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
                                 navigator.route(
                                     route =
@@ -219,6 +228,15 @@ constructor(
                 updateVerifyState(VerifyPinState.Error)
             }
         }
+    }
+
+    /**
+     * The vault is saved by the time this runs, so a failed write of the review moment must not
+     * surface to the user as a verification error.
+     */
+    private suspend fun recordVaultCreatedForReview() {
+        runCatchingCancellable { inAppReviewRepository.onVaultCreated() }
+            .onFailure { Timber.w(it, "Failed to record the in-app review moment") }
     }
 
     private fun isCodeTemplateValid(code: String) =

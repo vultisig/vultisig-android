@@ -149,6 +149,7 @@ internal class KeygenViewModelTest {
             autoLockHold = AutoLockHold(),
             referralCodeSettingsRepository = referralCodeSettingsRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
+            inAppReviewRepository = mockk(relaxed = true),
         )
 
     /** Verifies the state action matches the route arg. */

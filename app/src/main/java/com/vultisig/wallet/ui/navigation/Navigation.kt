@@ -147,6 +147,8 @@ internal sealed class Route {
 
     @Serializable data class VerifySend(val vaultId: VaultId, val transactionId: TransactionId)
 
+    @Serializable data class RippleTrustLineActivation(val vaultId: VaultId, val tokenId: TokenId)
+
     // swap
 
     @Serializable

@@ -222,6 +222,7 @@
     <string name="send_error_insufficient_frozen_balance">Amount exceeds frozen %1$s balance</string>
     <string name="settings_screen_language">Language</string>
     <string name="settings_screen_currency">Currency</string>
+    <string name="settings_screen_rate_the_app">Rate the App</string>
     <string name="settings_screen_share_the_app">Share the App</string>
     <string name="settings_screen_title">Settings</string>
     <string name="language_setting_screen_title">Language</string>
@@ -381,6 +382,7 @@
     <string name="verify_deposit_node_address_title">Node Address</string>
     <string name="verify_deposit_gas_title">Gas</string>
     <string name="custom_token_enter_contract_address">Enter Contract Address</string>
+    <string name="custom_token_enter_currency_issuer">Enter Currency.Issuer</string>
     <string name="custom_token_token_not_found">Token not found</string>
     <string name="custom_token_add_token">Add %1$s Token</string>
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
@@ -571,6 +573,21 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Minimum amount to activate this address is %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">This address requires a destination tag. Add one to continue.</string>
+    <string name="send_error_xrp_destination_no_trust_line">This address can’t receive %1$s. The recipient needs to open a trust line for it first.</string>
+    <string name="ripple_trust_line_title">Activate trust line</string>
+    <string name="ripple_trust_line_reserve_warning">%1$s needs a trust line on the XRP Ledger before your account can hold it. Opening one permanently locks part of your XRP as an owner reserve.</string>
+    <string name="ripple_trust_line_limit">Trust Line Limit</string>
+    <string name="ripple_trust_line_hero_title">Activating the %1$s trust line</string>
+    <string name="ripple_trust_line_type_pill">Trust line</string>
+    <string name="ripple_trust_line_currency">Currency</string>
+    <string name="ripple_trust_line_issuer_check">The issuer is correct</string>
+    <string name="ripple_trust_line_limit_check">The trust line limit is correct</string>
+    <string name="ripple_trust_line_unreviewable">Cannot review</string>
+    <string name="ripple_trust_line_unreviewable_value">This trust line\'s currency, issuer or limit could not be read, so its terms cannot be shown. Do not sign it.</string>
+    <string name="ripple_trust_line_reserve">Reserve Locked</string>
+    <string name="ripple_trust_line_spendable_after">Spendable XRP After</string>
+    <string name="ripple_trust_line_activate">Activate</string>
+    <string name="ripple_trust_line_insufficient_xrp">Not enough spendable XRP to cover the reserve and fee.</string>
     <string name="send_error_xrp_invalid_destination_tag">Invalid destination tag. Enter a whole number between 1 and 4294967295.</string>
     <string name="error_invalid_chain">Chain is invalid</string>
     <string name="ton_stake_error_unsupported_pool">This staking pool isn\'t supported</string>

@@ -31,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.groupedLimit
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.monoToneLogo
@@ -107,6 +108,8 @@ internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewMo
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDappTransaction = viewModel::checkConsentDappTransaction,
+        onConsentIssuer = viewModel::checkConsentIssuer,
+        onConsentLimit = viewModel::checkConsentLimit,
         onConfirm = viewModel::joinKeySign,
         onBackClick = viewModel::back,
         onFastSignClick = viewModel::fastSign,
@@ -127,6 +130,8 @@ internal fun VerifySendScreen(
     onConsentAddress: (Boolean) -> Unit = {},
     onConsentAmount: (Boolean) -> Unit = {},
     onConsentDappTransaction: (Boolean) -> Unit = {},
+    onConsentIssuer: (Boolean) -> Unit = {},
+    onConsentLimit: (Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
@@ -265,6 +270,18 @@ internal fun VerifySendScreen(
                                     textAlign = TextAlign.Center,
                                 )
                             }
+                        } else if (tx.isRippleTrustSet) {
+
+                            Text(
+                                text =
+                                    tx.rippleTrustSet?.ticker?.let {
+                                        stringResource(R.string.ripple_trust_line_hero_title, it)
+                                    } ?: stringResource(R.string.ripple_trust_line_title),
+                                style = Theme.brockmann.headings.title2,
+                                color = Theme.v2.colors.text.primary,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
                         } else {
                             VsOverviewToken(
                                 header =
@@ -295,7 +312,38 @@ internal fun VerifySendScreen(
                     // the
                     // wire address here would let a relay display a trusted label/vault while the
                     // signed JSON sends elsewhere, so suppress the native To row for signRipple.
-                    if (tx.signRipple == null) {
+                    if (tx.isRippleTrustSet) {
+                        // Values come from the token id and the signed amount, never from the
+                        // relayed wire fields.
+                        val trustSet = tx.rippleTrustSet
+                        VerifyCardDivider(0.dp)
+                        if (trustSet != null) {
+                            VerifyCardDetails(
+                                title = stringResource(R.string.ripple_field_issuer),
+                                subtitle = trustSet.issuer,
+                            )
+
+                            VerifyCardDivider(0.dp)
+                            VerifyCardDetails(
+                                title = stringResource(R.string.ripple_trust_line_currency),
+                                subtitle = trustSet.ticker,
+                            )
+
+                            VerifyCardDivider(0.dp)
+                            VerifyCardDetails(
+                                title = stringResource(R.string.ripple_trust_line_limit),
+                                subtitle = "${trustSet.groupedLimit} ${trustSet.ticker}",
+                            )
+                        } else {
+                            VerifyCardDetails(
+                                title = stringResource(R.string.ripple_trust_line_unreviewable),
+                                subtitle =
+                                    stringResource(R.string.ripple_trust_line_unreviewable_value),
+                                showAllContent = true,
+                                subtitleColor = Theme.v2.colors.alerts.error,
+                            )
+                        }
+                    } else if (tx.signRipple == null) {
                         VerifyCardDivider(0.dp)
 
                         val toDstLabel =
@@ -507,7 +555,19 @@ internal fun VerifySendScreen(
 
                 if (isConsentsEnabled) {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        if (state.transaction.signRipple != null) {
+                        if (state.transaction.isRippleTrustSet) {
+                            VsCheckField(
+                                title = stringResource(R.string.ripple_trust_line_issuer_check),
+                                isChecked = state.consentIssuer,
+                                onCheckedChange = onConsentIssuer,
+                            )
+
+                            VsCheckField(
+                                title = stringResource(R.string.ripple_trust_line_limit_check),
+                                isChecked = state.consentLimit,
+                                onCheckedChange = onConsentLimit,
+                            )
+                        } else if (state.transaction.signRipple != null) {
                             // A dApp XRPL tx has no native recipient/amount to attest to, so show a
                             // single "reviewed the details" consent instead of the address/amount
                             // pair, which would ask the co-signer to confirm values that aren't

@@ -10,9 +10,11 @@ import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.rippleTrustSetDisplay
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import javax.inject.Inject
+import vultisig.keysign.v1.TransactionType
 
 internal interface TransactionToUiModelMapper :
     SuspendMapperFunc<Transaction, TransactionDetailsUiModel>
@@ -55,6 +57,11 @@ constructor(
                 from.token.isNativeToken &&
                 from.memo == TRON_WITHDRAW_EXPIRE_UNFREEZE_MEMO
 
+        // A TrustSet's amount is the trust-line limit, not a transfer, so send wording misleads.
+        val isRippleTrustSet =
+            (from.blockChainSpecific as? BlockChainSpecific.Ripple)?.transactionType ==
+                TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET
+
         val memo =
             when {
                 from.token.chain == Chain.Ripple && from.memo == destinationTag -> null
@@ -69,6 +76,7 @@ constructor(
                 tronStakingOperation == TronStakingOperation.UNFREEZE ->
                     R.string.tron_unfreeze_screen_title
                 isTronClaim -> R.string.tron_claim_screen_title
+                isRippleTrustSet -> R.string.ripple_trust_line_title
                 else -> null
             }
 
@@ -84,6 +92,10 @@ constructor(
             dstLabel = from.dstLabel,
             memo = memo,
             headerTitleRes = headerTitleRes,
+            isRippleTrustSet = isRippleTrustSet,
+            rippleTrustSet =
+                if (isRippleTrustSet) rippleTrustSetDisplay(from.token, from.tokenValue.value)
+                else null,
             destinationTag = destinationTag,
             signAmino = from.signAmino,
             signDirect = from.signDirect,

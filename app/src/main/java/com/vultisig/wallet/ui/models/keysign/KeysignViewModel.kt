@@ -85,7 +85,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -94,7 +93,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -362,15 +360,6 @@ constructor(
     /** Aggregated read-only keysign UI state; observed by the Compose screen. */
     val state: StateFlow<KeysignUiState> = _state.asStateFlow()
 
-    private val _inAppReviewRequests = Channel<Unit>(Channel.BUFFERED)
-
-    /**
-     * Emits at most once, when this transaction succeeded and the throttle in
-     * [InAppReviewRepository] allows asking for a store review. The screen owns the Play call
-     * because the flow needs an Activity.
-     */
-    val inAppReviewRequests = _inAppReviewRequests.receiveAsFlow()
-
     /** Test-only seam to seed [state] without driving the full signing flow. */
     @VisibleForTesting
     internal fun updateUiStateForTesting(transform: (KeysignUiState) -> KeysignUiState) {
@@ -449,25 +438,24 @@ constructor(
     }
 
     /**
-     * Asks for a store review once this keysign lands on a genuinely successful transaction.
+     * Records the successful transaction as a moment worth asking for a store review at. The card
+     * itself is presented at the app root, which outlives this screen.
      *
      * Only the first qualifying status counts: status polling re-emits
-     * [KeysignState.KeysignFinished] on every tick, so a confirmed transaction would otherwise ask
-     * repeatedly.
+     * [KeysignState.KeysignFinished] on every tick, so a confirmed transaction would otherwise
+     * record repeatedly.
      */
     private fun observeInAppReviewEligibility() {
         if (!isTransactionFlow) return
         viewModelScope.safeLaunch(
-            onError = { e -> Timber.w(e, "Failed to evaluate the in-app review prompt") }
+            onError = { e -> Timber.w(e, "Failed to record the in-app review moment") }
         ) {
             state
                 .map { it.signingState }
                 .filterIsInstance<KeysignState.KeysignFinished>()
                 .first { it.transactionStatus.isSuccessful }
 
-            if (inAppReviewRepository.onTransactionSucceeded()) {
-                _inAppReviewRequests.send(Unit)
-            }
+            inAppReviewRepository.onTransactionSucceeded()
         }
     }
 

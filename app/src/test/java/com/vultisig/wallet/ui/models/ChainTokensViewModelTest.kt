@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.repositories.PromoBannerDismissalRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
+import com.vultisig.wallet.data.usecases.RippleTrustLines
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -54,6 +55,7 @@ internal class ChainTokensViewModelTest {
     private lateinit var requestResultRepository: RequestResultRepository
     private lateinit var balanceRepository: BalanceRepository
     private lateinit var promoBannerDismissalRepository: FakePromoBannerDismissalRepository
+    private lateinit var rippleTrustLines: RippleTrustLines
 
     @BeforeEach
     fun setUp() {
@@ -70,6 +72,7 @@ internal class ChainTokensViewModelTest {
         requestResultRepository = mockk(relaxed = true)
         balanceRepository = mockk(relaxed = true)
         promoBannerDismissalRepository = FakePromoBannerDismissalRepository()
+        rippleTrustLines = mockk(relaxed = true)
     }
 
     @AfterEach
@@ -91,6 +94,7 @@ internal class ChainTokensViewModelTest {
             requestResultRepository = requestResultRepository,
             balanceRepository = balanceRepository,
             promoBannerDismissalRepository = promoBannerDismissalRepository,
+            rippleTrustLines = rippleTrustLines,
         )
 
     @Test
