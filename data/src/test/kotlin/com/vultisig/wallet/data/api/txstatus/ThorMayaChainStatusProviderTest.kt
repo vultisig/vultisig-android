@@ -268,7 +268,10 @@ class ThorMayaChainStatusProviderTest {
     fun `no midgard action falls back to native node and maps code 0 to Confirmed`() = runTest {
         val nativeSuccess =
             """
-            { "tx_response": { "code": 0, "codespace": "", "raw_log": "" } }
+            {
+              "tx": { "body": { "memo": "" } },
+              "tx_response": { "code": 0, "codespace": "", "raw_log": "" }
+            }
             """
                 .trimIndent()
         val client =
@@ -282,6 +285,184 @@ class ThorMayaChainStatusProviderTest {
 
         result shouldBe TransactionResult.Confirmed
     }
+
+    @Test
+    fun `indexable memo with first empty midgard action does not trust native code 0`() = runTest {
+        val nativeSuccess =
+            """
+            {
+              "tx": { "body": { "memo": "=:BTC.BTC:bc1destination" } },
+              "tx_response": { "code": 0, "codespace": "", "raw_log": "" }
+            }
+            """
+                .trimIndent()
+        val refundAction =
+            """
+            { "actions": [ { "type": "refund", "status": "success",
+              "metadata": { "refund": { "reason": "slip limit exceeded" } } } ] }
+            """
+                .trimIndent()
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to """{ "actions": [] }""",
+                HttpStatusCode.OK to nativeSuccess,
+                HttpStatusCode.OK to refundAction,
+            )
+        val provider = ThorMayaChainStatusProvider(client)
+
+        provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
+        provider.checkStatus("hash", Chain.ThorChain) shouldBe
+            TransactionResult.Refunded("slip limit exceeded")
+    }
+
+    @Test
+    fun `non-indexable memo with empty midgard action still trusts native code 0 immediately`() =
+        runTest {
+            val nativeSuccess =
+                """
+                {
+                  "tx": { "body": { "memo": "SECURE+:thor1destination" } },
+                  "tx_response": { "code": 0, "codespace": "", "raw_log": "" }
+                }
+                """
+                    .trimIndent()
+            val client =
+                MockHttpClient.respondingWithSequence(
+                    HttpStatusCode.OK to """{ "actions": [] }""",
+                    HttpStatusCode.OK to nativeSuccess,
+                )
+            val provider = ThorMayaChainStatusProvider(client)
+
+            val result = provider.checkStatus("hash", Chain.ThorChain)
+
+            result shouldBe TransactionResult.Confirmed
+        }
+
+    @Test
+    fun `indexable memo with repeated empty midgard actions eventually trusts native code 0`() =
+        runTest {
+            var nowMillis = 0L
+            val nativeSuccess =
+                """
+                {
+                  "tx": { "body": { "memo": "+:ETH.ETH:0xdestination" } },
+                  "tx_response": { "code": 0, "codespace": "", "raw_log": "" }
+                }
+                """
+                    .trimIndent()
+            val client =
+                MockHttpClient.respondingWithSequence(
+                    HttpStatusCode.OK to """{ "actions": [] }""",
+                    HttpStatusCode.OK to nativeSuccess,
+                    HttpStatusCode.OK to """{ "actions": [] }""",
+                    HttpStatusCode.OK to nativeSuccess,
+                )
+            val provider = ThorMayaChainStatusProvider(client) { nowMillis }
+
+            provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
+            nowMillis = 15_000L
+            provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Confirmed
+        }
+
+    @Test
+    fun `indexable memo with repeated empty midgard actions too close together stays Pending`() =
+        runTest {
+            val nativeSuccess =
+                """
+                {
+                  "tx": { "body": { "memo": "=:BTC.BTC:bc1destination" } },
+                  "tx_response": { "code": 0, "codespace": "", "raw_log": "" }
+                }
+                """
+                    .trimIndent()
+            val client =
+                MockHttpClient.respondingWithSequence(
+                    HttpStatusCode.OK to """{ "actions": [] }""",
+                    HttpStatusCode.OK to nativeSuccess,
+                    HttpStatusCode.OK to """{ "actions": [] }""",
+                    HttpStatusCode.OK to nativeSuccess,
+                )
+            val provider = ThorMayaChainStatusProvider(client) { 0L }
+
+            provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
+            provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
+        }
+
+    @Test
+    fun `indexable memo in MsgDeposit with empty body memo does not trust native code 0`() =
+        runTest {
+            val nativeSuccess =
+                """
+                {
+                  "tx": {
+                    "body": {
+                      "memo": "",
+                      "messages": [
+                        {
+                          "@type": "/types.MsgDeposit",
+                          "memo": "=:BTC.BTC:bc1destination"
+                        }
+                      ]
+                    }
+                  },
+                  "tx_response": { "code": 0, "codespace": "", "raw_log": "" }
+                }
+                """
+                    .trimIndent()
+            val client =
+                MockHttpClient.respondingWithSequence(
+                    HttpStatusCode.OK to """{ "actions": [] }""",
+                    HttpStatusCode.OK to nativeSuccess,
+                )
+            val provider = ThorMayaChainStatusProvider(client)
+
+            val result = provider.checkStatus("hash", Chain.ThorChain)
+
+            result shouldBe TransactionResult.Pending
+        }
+
+    @Test
+    fun `missing native memo with empty midgard action does not trust native code 0`() = runTest {
+        val nativeSuccess =
+            """
+            { "tx_response": { "code": 0, "codespace": "", "raw_log": "" } }
+            """
+                .trimIndent()
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to """{ "actions": [] }""",
+                HttpStatusCode.OK to nativeSuccess,
+            )
+        val provider = ThorMayaChainStatusProvider(client)
+
+        val result = provider.checkStatus("hash", Chain.ThorChain)
+
+        result shouldBe TransactionResult.Pending
+    }
+
+    @Test
+    fun `indexable memo does not count empty midgard response when native node is not found`() =
+        runTest {
+        val nativeSuccess =
+            """
+            {
+              "tx": { "body": { "memo": "=:BTC.BTC:bc1destination" } },
+              "tx_response": { "code": 0, "codespace": "", "raw_log": "" }
+            }
+            """
+                .trimIndent()
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to """{ "actions": [] }""",
+                HttpStatusCode.NotFound to "",
+                HttpStatusCode.OK to """{ "actions": [] }""",
+                HttpStatusCode.OK to nativeSuccess,
+            )
+        val provider = ThorMayaChainStatusProvider(client)
+
+        provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
+        provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
+        }
 
     @Test
     fun `no midgard action and native node 404 stays Pending`() = runTest {
