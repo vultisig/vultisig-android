@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -15,7 +16,10 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SIL
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_DISCOUNT_BPS
 import com.vultisig.wallet.ui.screens.settings.TierType
 import java.math.BigInteger
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 /**
@@ -28,7 +32,7 @@ interface GetDiscountBpsUseCase {
     /** True when the vault holds at least the Silver-tier VULT amount (>= 3000 VULT). */
     suspend fun hasReachedSilverTier(vaultId: String): Boolean
 
-    /** The vault's cached VULT balance in raw token units (18 decimals), or null if unavailable. */
+    /** The vault's VULT balance in raw token units (18 decimals), or null if unavailable. */
     suspend fun getVultBalance(vaultId: String): BigInteger?
 }
 
@@ -40,6 +44,20 @@ constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tiersNFTRepository: TiersNFTRepository,
 ) : GetDiscountBpsUseCase {
+
+    // A quote fetch asks for the discount once per swap provider candidate, all at the same time,
+    // so a vault with no cached VULT row would fire one duplicate eth_call per candidate. Share a
+    // single live read per vault behind a lock and a short-lived cache; the null of a failed read
+    // is cached too, so a failure does not retry once per candidate either.
+    // The per-vault lock only serialises calls for the same vault, so the store itself has to be
+    // safe for concurrent access across vaults.
+    private val liveVultBalanceCache = ConcurrentHashMap<String, LiveVultBalance>()
+
+    private val liveVultBalanceLocks = ConcurrentHashMap<String, Mutex>()
+
+    private fun lockFor(vaultId: String) = liveVultBalanceLocks.computeIfAbsent(vaultId) { Mutex() }
+
+    private class LiveVultBalance(val value: BigInteger?, val expiresAt: Long)
 
     override suspend fun invoke(vaultId: String, swapProvider: SwapProvider): Int {
         if (!supportedProviders.contains(swapProvider)) {
@@ -67,25 +85,48 @@ constructor(
         try {
             val vault = vaultRepository.get(vaultId) ?: return null
 
-            val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id } ?: return null
+            val (address, derivedPublicKey) =
+                chainAccountAddressRepository.getAddress(Chain.Ethereum, vault)
 
-            val (address, _) = chainAccountAddressRepository.getAddress(Chain.Ethereum, vault)
+            // The VULT the vault holds does not depend on Ethereum being one of its enabled
+            // chains, so fall back to an in-memory coin when it isn't in the coin list. It is only
+            // used to read the balance: nothing here persists it or makes it visible in the vault.
+            val vultCoin =
+                vault.coins.find { it.id == Coins.Ethereum.VULT.id }
+                    ?: Coins.Ethereum.VULT.copy(address = address, hexPublicKey = derivedPublicKey)
 
-            val tokenBalance =
+            val cachedBalance =
                 balanceRepository
                     .getCachedTokenBalances(listOf(address), listOf(vultCoin))
                     .find { it.coinId == Coins.Ethereum.VULT.id }
                     ?.tokenBalance
                     ?.tokenValue
-                    ?.value ?: BigInteger.ZERO
+                    ?.value
 
-            return tokenBalance
+            // A missing cache entry is not a zero balance — a vault that never refreshed VULT would
+            // otherwise be shown a fabricated 0. Read it live instead; that read fills the cache,
+            // so later calls take the cached path again, and a failed read stays null (fail
+            // closed).
+            return cachedBalance ?: getLiveBalance(vaultId, address, vultCoin)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             return null
         }
     }
+
+    private suspend fun getLiveBalance(vaultId: String, address: String, coin: Coin): BigInteger? =
+        lockFor(vaultId).withLock {
+            val now = System.currentTimeMillis()
+            val cached = liveVultBalanceCache[vaultId]
+            if (cached != null && now < cached.expiresAt) {
+                return@withLock cached.value
+            }
+
+            val balance = balanceRepository.getBalanceOrNull(address, coin)
+            liveVultBalanceCache[vaultId] = LiveVultBalance(balance, now + LIVE_BALANCE_TTL_MS)
+            balance
+        }
 
     fun getDiscountForBalance(vultBalance: BigInteger): Int {
         return when {
@@ -111,6 +152,10 @@ constructor(
     }
 
     companion object {
+        // Long enough to cover the concurrent candidates of one quote fetch, short enough that a
+        // refresh still sees a fresh balance.
+        private const val LIVE_BALANCE_TTL_MS = 12 * 1000L
+
         // Discount amounts in basis points
         const val NO_DISCOUNT_BPS = 0
         const val BRONZE_DISCOUNT_BPS = 5
