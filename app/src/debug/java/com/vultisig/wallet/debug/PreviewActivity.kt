@@ -374,6 +374,7 @@ class PreviewActivity : ComponentActivity() {
                     "asset_action_button" -> AssetActionButtonPreview()
                     "token_detail_sheet_loading" -> TokenDetailSheetLoadingPreview()
                     "token_detail_sheet_full" -> TokenDetailSheetFullPreview()
+                    "token_detail_sheet_actions" -> TokenDetailSheetFullPreview(allActions = true)
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
                     "send_tx_done" -> SendTxDonePreview()
@@ -3666,7 +3667,7 @@ private const val CHART_POINT_COUNT = 48
  * that actually exercises the partial rest position, the drag up to full, and the faded cut edge.
  */
 @Composable
-private fun TokenDetailSheetFullPreview() {
+private fun TokenDetailSheetFullPreview(allActions: Boolean = false) {
     val points =
         List(CHART_POINT_COUNT) { index ->
             val price = 73.5 + sin(index / 5.0) * 6.0 + index * 0.12
@@ -3695,6 +3696,8 @@ private fun TokenDetailSheetFullPreview() {
                     ),
                 canSwap = true,
                 canBuy = true,
+                canDeposit = allActions,
+                chainAddress = if (allActions) "9ceRgz57Jj1kmDBQtBWJyeSRhSpxvzWLPQb1LzGxKPWa" else "",
                 chart =
                     ChartUiModel(points = points, isPositive = true, changePercentText = "+4.21%"),
                 marketStats =

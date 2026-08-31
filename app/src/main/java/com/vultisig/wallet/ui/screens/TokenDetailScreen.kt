@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -47,7 +46,8 @@ import com.vultisig.wallet.ui.models.TokenDetailViewModel
 import com.vultisig.wallet.ui.models.TokenInfoUiModel
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
-import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionItem
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionRow
 import com.vultisig.wallet.ui.screens.v2.home.components.assetActionButtonHeight
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -181,47 +181,38 @@ internal fun TokenDetailsContent(
 
             UiSpacer(size = 32.dp)
 
-            Row(
-                horizontalArrangement =
-                    Arrangement.spacedBy(space = 20.dp, alignment = Alignment.CenterHorizontally),
+            AssetActionRow(
+                actions =
+                    buildList {
+                        if (uiModel.canSwap) {
+                            add(AssetActionItem(action = AssetAction.SWAP, onClick = onSwap))
+                        }
+
+                        add(AssetActionItem(action = AssetAction.SEND, onClick = onSend))
+
+                        if (uiModel.canBuy) {
+                            add(AssetActionItem(action = AssetAction.BUY, onClick = onBuy))
+                        }
+
+                        if (uiModel.canDeposit) {
+                            add(
+                                AssetActionItem(action = AssetAction.FUNCTIONS, onClick = onDeposit)
+                            )
+                        }
+
+                        // Gated on the address for the same reason every flag above is gated on
+                        // the account: until one resolves there is nothing to put in a QR code,
+                        // and an action that is tappable but does nothing is worse than one that
+                        // has not appeared yet.
+                        if (uiModel.chainAddress.isNotEmpty()) {
+                            add(AssetActionItem(action = AssetAction.RECEIVE, onClick = onReceive))
+                        }
+                    },
                 // Send routes from this screen's own arguments and is always available; every
                 // other child appears only once the account resolves, so the reserved height keeps
                 // the row from growing as they arrive.
                 modifier = Modifier.fillMaxWidth().heightIn(min = assetActionButtonHeight),
-            ) {
-                if (uiModel.canSwap) {
-                    AssetActionButton(
-                        action = AssetAction.SWAP,
-                        isSelected = true,
-                        onClick = onSwap,
-                    )
-                }
-
-                AssetActionButton(action = AssetAction.SEND, isSelected = false, onClick = onSend)
-
-                if (uiModel.canBuy) {
-                    AssetActionButton(action = AssetAction.BUY, isSelected = false, onClick = onBuy)
-                }
-
-                if (uiModel.canDeposit) {
-                    AssetActionButton(
-                        action = AssetAction.FUNCTIONS,
-                        isSelected = false,
-                        onClick = onDeposit,
-                    )
-                }
-
-                // Gated on the address for the same reason every flag above is gated on the
-                // account: until one resolves there is nothing to put in a QR code, and an action
-                // that is tappable but does nothing is worse than one that has not appeared yet.
-                if (uiModel.chainAddress.isNotEmpty()) {
-                    AssetActionButton(
-                        action = AssetAction.RECEIVE,
-                        isSelected = false,
-                        onClick = onReceive,
-                    )
-                }
-            }
+            )
         }
 
         UiSpacer(size = 40.dp)

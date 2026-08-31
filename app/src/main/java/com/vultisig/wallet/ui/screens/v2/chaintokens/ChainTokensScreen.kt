@@ -55,7 +55,8 @@ import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
-import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionItem
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionRow
 import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.KeyboardAware
@@ -205,48 +206,33 @@ internal fun ChainTokensScreen(
 
                 UiSpacer(size = 32.dp)
 
-                Row(
+                AssetActionRow(
+                    actions =
+                        buildList {
+                            if (uiModel.canSwap) {
+                                add(AssetActionItem(action = AssetAction.SWAP, onClick = onSwap))
+                            }
+
+                            add(AssetActionItem(action = AssetAction.SEND, onClick = onSend))
+
+                            if (uiModel.canBuy) {
+                                add(AssetActionItem(action = AssetAction.BUY, onClick = onBuy))
+                            }
+
+                            if (uiModel.canDeposit) {
+                                add(
+                                    AssetActionItem(
+                                        action = AssetAction.FUNCTIONS,
+                                        onClick = onDeposit,
+                                    )
+                                )
+                            }
+
+                            add(AssetActionItem(action = AssetAction.RECEIVE, onClick = onReceive))
+                        },
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.spacedBy(12.dp, alignment = Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (uiModel.canSwap) {
-                        AssetActionButton(
-                            action = AssetAction.SWAP,
-                            isSelected = true,
-                            onClick = onSwap,
-                        )
-                    }
-
-                    AssetActionButton(
-                        action = AssetAction.SEND,
-                        isSelected = false,
-                        onClick = onSend,
-                    )
-
-                    if (uiModel.canBuy) {
-                        AssetActionButton(
-                            action = AssetAction.BUY,
-                            isSelected = false,
-                            onClick = onBuy,
-                        )
-                    }
-
-                    if (uiModel.canDeposit) {
-                        AssetActionButton(
-                            action = AssetAction.FUNCTIONS,
-                            isSelected = false,
-                            onClick = onDeposit,
-                        )
-                    }
-
-                    AssetActionButton(
-                        action = AssetAction.RECEIVE,
-                        isSelected = false,
-                        onClick = onReceive,
-                    )
-                }
+                    maxSpacing = 12.dp,
+                )
 
                 UiSpacer(size = 10.dp)
                 uiModel.tronResourceStats?.let { resourceUsage ->
