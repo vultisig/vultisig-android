@@ -102,7 +102,7 @@ constructor(private val chainAccountAddressRepository: ChainAccountAddressReposi
 
     override fun validateOperatorFee(operatorFee: Int?): UiText? {
         if (operatorFee == null || operatorFee !in 0..10000) {
-            return UiText.StringResource(R.string.send_from_invalid_amount)
+            return UiText.StringResource(R.string.send_error_invalid_operator_fee)
         }
         return null
     }

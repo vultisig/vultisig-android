@@ -538,7 +538,10 @@ constructor(
             try {
                 val vaultId = vaultId ?: return@launch
 
-                if (state.value.depositOption == DepositOption.Bond) {
+                if (
+                    state.value.depositOption == DepositOption.Bond &&
+                        operatorFeeFieldState.text.isNotEmpty()
+                ) {
                     fieldInputCoordinator.validateOperatorFee()
                     if (state.value.operatorFeeError != null) return@launch
                 }

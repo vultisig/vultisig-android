@@ -79,7 +79,7 @@ internal class AddressManager(
         addressFieldState.setTextAndPlaceCursorAtEnd(address)
     }
 
-    /** Opens the address book and applies the chosen entry to the output or provider field. */
+    /** Opens the address book and applies the chosen entry to the output address field. */
     fun openAddressBook() {
         scope.safeLaunch {
             val vaultId = vaultIdProvider() ?: return@safeLaunch

@@ -841,7 +841,10 @@ internal class DepositFormViewModelTest {
 
         val error = vm.state.value.operatorFeeError
         assertNotNull(error)
-        assertEquals(R.string.send_from_invalid_amount, (error as UiText.StringResource).resId)
+        assertEquals(
+            R.string.send_error_invalid_operator_fee,
+            (error as UiText.StringResource).resId,
+        )
     }
 
     @Test
@@ -881,6 +884,30 @@ internal class DepositFormViewModelTest {
             vm.validateOperatorFee()
 
             assertEquals(priorError, vm.state.value.operatorFeeError)
+        }
+
+    @Test
+    fun `deposit with Bond does not let a stale operator-fee error block a blank field`() =
+        runTest {
+            val vm = buildViewModel()
+            vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+            advanceUntilIdle()
+            vm.selectDepositOption(DepositOption.Bond)
+
+            vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("50000")
+            vm.validateOperatorFee()
+            assertNotNull(vm.state.value.operatorFeeError)
+
+            vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("")
+            vm.deposit()
+            advanceUntilIdle()
+
+            // A blank operator fee is valid and must not silently block submission: the deposit
+            // proceeds to the strategy, which fails for a different reason (missing node address)
+            // instead of leaving errorText null with no explanation.
+            val errorText = vm.state.value.errorText
+            assertNotNull(errorText)
+            assertEquals(R.string.send_error_no_address, (errorText as UiText.StringResource).resId)
         }
 
     @Test
