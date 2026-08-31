@@ -473,7 +473,6 @@ class ThorChainHelper(
             )
 
         val bodyBytes = Base64.decode(signDirect.bodyBytes)
-        val txBody = Cosmos.SigningInput.parseFrom(bodyBytes)
 
         val message =
             Cosmos.Message.newBuilder()
@@ -490,12 +489,7 @@ class ThorChainHelper(
                 .build()
 
         inputBuilder.addMessages(message).setFee(buildCosmosFee(cosmosSpecific, denom = denom))
-
-        if (txBody.memo.isNotEmpty()) {
-            inputBuilder.memo = txBody.memo
-        } else {
-            memo?.let { inputBuilder.memo = it }
-        }
+        inputBuilder.memo = cosmosTxBodyMemo(bodyBytes) ?: memo.orEmpty()
 
         return inputBuilder.build().toByteArray()
     }

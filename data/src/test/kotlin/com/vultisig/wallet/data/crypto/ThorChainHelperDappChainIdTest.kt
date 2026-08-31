@@ -13,8 +13,10 @@ import wallet.core.jni.proto.Cosmos
 /**
  * MayaChain is signed by a [ThorChainHelper] built with `CoinType.THORCHAIN`, so the chain id can
  * only come from the instance's own `networkId`. Taking it from the coin type produced
- * `thorchain-1` for every Maya dApp request, and the mismatch surfaced only when the node rejected
- * the broadcast — after a full keysign ceremony.
+ * `thorchain-1` for every Maya dApp request, which the initiating dApp client signs as
+ * `mayachain-mainnet-v1`. Each party keys its relay traffic on the md5 of the message it is
+ * signing, so the two preimages never met: the ceremony stalled mid-keysign rather than failing on
+ * a rejected broadcast.
  */
 class ThorChainHelperDappChainIdTest {
 
