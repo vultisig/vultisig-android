@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.BigIntegerSerializerImpl
+import com.vultisig.wallet.data.utils.NetworkException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -12,6 +13,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import java.math.BigInteger
+import java.net.UnknownHostException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -19,17 +21,20 @@ import kotlinx.serialization.modules.contextual
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 /**
- * Characterization tests for [TronApiImpl] methods that call `response.body<T>()`. They pin the
- * success-path (HTTP 200) behavior so it is preserved when the call sites are migrated to
- * `bodyOrThrow<T>()`.
+ * Characterization tests for [TronApiImpl] methods that deserialize a response body. Every call
+ * site reads through `bodyOrThrow<T>()`; these pin the success-path (HTTP 200) behavior that the
+ * migration off the raw `body<T>()` had to preserve.
  *
  * Methods covered:
- * - [TronApi.broadcastTransaction] — `body<TronBroadcastTxResponseJson>()` (null code + dup code)
- * - [TronApi.getSpecific] — `body<TronSpecificBlockJson>()`
- * - [TronApi.getBalance] — `body<TronBalanceResponseJson>()` (native, TRC-20, empty)
- * - [TronApi.getTsStatus] — `body<TronTransactionStatusResponse?>()` (present / absent txId)
+ * - [TronApi.broadcastTransaction] — `bodyOrThrow<TronBroadcastTxResponseJson>()` (null code + dup
+ *   code)
+ * - [TronApi.getSpecific] — `bodyOrThrow<TronSpecificBlockJson>()`
+ * - [TronApi.getBalance] — `bodyOrThrow<TronBalanceResponseJson>()` (native, TRC-20, empty), plus
+ *   the failure path: a read that fails must throw rather than report real funds as zero.
+ * - [TronApi.getTsStatus] — `bodyOrThrow<TronTransactionStatusResponse?>()` (present / absent txId)
  */
 class TronApiBodyReadTest {
 
@@ -64,7 +69,7 @@ class TronApiBodyReadTest {
     }
 
     // -------------------------------------------------------------------------
-    // broadcastTransaction — body<TronBroadcastTxResponseJson>()
+    // broadcastTransaction — bodyOrThrow<TronBroadcastTxResponseJson>()
     // -------------------------------------------------------------------------
 
     @Test
@@ -102,7 +107,7 @@ class TronApiBodyReadTest {
     }
 
     // -------------------------------------------------------------------------
-    // getSpecific — body<TronSpecificBlockJson>()
+    // getSpecific — bodyOrThrow<TronSpecificBlockJson>()
     // -------------------------------------------------------------------------
 
     @Test
@@ -133,7 +138,7 @@ class TronApiBodyReadTest {
     }
 
     // -------------------------------------------------------------------------
-    // getBalance — body<TronBalanceResponseJson>()
+    // getBalance — bodyOrThrow<TronBalanceResponseJson>()
     // -------------------------------------------------------------------------
 
     @Test
@@ -233,8 +238,44 @@ class TronApiBodyReadTest {
         assertEquals(BigInteger.ZERO, result)
     }
 
+    @Test
+    fun `getBalance throws on a transport failure instead of reading zero`() {
+        val api =
+            TronApiImpl(httpClient = MockHttpClient.throwingIOException(UnknownHostException()))
+
+        val error = assertThrows<NetworkException> { runBlocking { api.getBalance(nativeCoin()) } }
+
+        assertEquals(0, error.httpStatusCode)
+    }
+
+    @Test
+    fun `getBalance throws on an HTTP error instead of reading zero`() {
+        val api =
+            TronApiImpl(
+                httpClient =
+                    MockHttpClient.respondingWith(HttpStatusCode.BadGateway, "upstream down")
+            )
+
+        val error = assertThrows<NetworkException> { runBlocking { api.getBalance(nativeCoin()) } }
+
+        assertEquals(HttpStatusCode.BadGateway.value, error.httpStatusCode)
+    }
+
+    private fun nativeCoin() =
+        Coin(
+            chain = Chain.Tron,
+            ticker = "TRX",
+            logo = "",
+            address = "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     // -------------------------------------------------------------------------
-    // getTsStatus — body<TronTransactionStatusResponse?>()
+    // getTsStatus — bodyOrThrow<TronTransactionStatusResponse?>()
     // -------------------------------------------------------------------------
 
     @Test
