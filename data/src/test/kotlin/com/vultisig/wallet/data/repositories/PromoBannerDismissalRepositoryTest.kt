@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test
 
 /**
  * Covers the global dismissal model (#5064, #5669): a dismissal persists across reads, is keyed per
- * banner (so banners are independent), and either lapses once the banner's TTL elapses or — under a
- * permanent policy — never does.
+ * banner (so banners are independent), and either lapses once the banner's TTL elapses, lasts only
+ * as long as the process, or — under a permanent policy — never lapses.
  */
 internal class PromoBannerDismissalRepositoryTest {
 
@@ -99,6 +99,36 @@ internal class PromoBannerDismissalRepositoryTest {
         now += 3650.days.inWholeMilliseconds
 
         repo.isDismissed(PromoBanner.ClaimQbtc).first() shouldBe true
+    }
+
+    @Test
+    fun `a session dismissal hides the banner for the rest of the process`() = runTest {
+        repo.dismiss(PromoBanner.BackupVaultShare)
+
+        repo.isDismissed(PromoBanner.BackupVaultShare).first() shouldBe true
+
+        // Unlike a TTL, no amount of elapsed time brings it back inside this process.
+        now += 3650.days.inWholeMilliseconds
+        repo.isDismissed(PromoBanner.BackupVaultShare).first() shouldBe true
+    }
+
+    @Test
+    fun `a session dismissal does not survive a new process`() = runTest {
+        repo.dismiss(PromoBanner.BackupVaultShare)
+
+        // A fresh instance over the same storage stands in for a cold launch: the timestamp is
+        // still on disk, and a session policy is required to ignore it.
+        val relaunched = PromoBannerDismissalRepositoryImpl(store)
+
+        relaunched.isDismissed(PromoBanner.BackupVaultShare).first() shouldBe false
+    }
+
+    @Test
+    fun `a session dismissal is independent of the other banners`() = runTest {
+        repo.dismiss(PromoBanner.BackupVaultShare)
+
+        repo.isDismissed(PromoBanner.BuyVultSwap).first() shouldBe false
+        repo.isDismissed(PromoBanner.FollowXVultisig).first() shouldBe false
     }
 
     private fun ttlOf(banner: PromoBanner): Long {

@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.send
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.RippleApi
+import com.vultisig.wallet.data.api.matches
 import com.vultisig.wallet.data.api.requiresDestinationTag
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
@@ -17,6 +18,7 @@ import com.vultisig.wallet.data.models.hasReaping
 import com.vultisig.wallet.data.models.nativeTokenTicker
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.models.rippleTokenIdentity
 import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.ui.utils.UiText
@@ -204,7 +206,9 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
      * otherwise the destination stays unfunded and the payment is rejected on-chain with
      * `tecNO_DST_INSUF_XRP`.
      *
-     * No-ops for non-Ripple sends, non-native tokens, and destinations that already exist.
+     * No-ops for non-Ripple sends, non-native tokens, and destinations that already exist. An
+     * account is created by receiving the base reserve in XRP, which a token Payment delivers none
+     * of, so [validateRippleDestinationTrustLine] covers those instead.
      *
      * Throws [InvalidTransactionDataException] if the destination is unfunded and [tokenAmountInt]
      * is below the account reserve.
@@ -251,15 +255,16 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
      * is supplied — the ledger rejects such a payment with `tecDST_TAG_NEEDED` and, on an exchange
      * deposit address, the funds are credited to the wrong account (effective loss).
      *
-     * No-ops for non-Ripple sends and non-native tokens. Fails closed on a lookup failure, matching
-     * [validateRippleDestinationReserve]: skipping the check would reopen the exact loss it guards.
+     * No-ops for non-Ripple sends. The flag belongs to the destination account, not the asset, so
+     * it gates an issued currency exactly as it gates native XRP. Fails closed on a lookup failure:
+     * skipping the check would reopen the loss it guards.
      */
     suspend fun validateRippleDestinationTag(
         selectedToken: Coin,
         dstAddress: String,
         destinationTag: UInt?,
     ) {
-        if (selectedToken.chain != Chain.Ripple || !selectedToken.isNativeToken) return
+        if (selectedToken.chain != Chain.Ripple) return
         if (destinationTag != null) return
 
         val accountInfo =
@@ -277,6 +282,36 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
         if (accountInfo?.requiresDestinationTag() == true) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_xrp_destination_tag_required)
+            )
+        }
+    }
+
+    /**
+     * Blocks an issued-currency send to a destination holding no trust line for the token, which
+     * the ledger answers with `tecPATH_DRY` after the ceremony with the fee burned. The issuer is
+     * exempt — paying an obligation back to it redeems the balance. Fails open, unlike its two
+     * siblings: this lookup is a read the send never needed before.
+     */
+    suspend fun validateRippleDestinationTrustLine(selectedToken: Coin, dstAddress: String) {
+        val identity = selectedToken.rippleTokenIdentity() ?: return
+        if (dstAddress == identity.issuer) return
+
+        val lines =
+            try {
+                rippleApi.fetchAccountLines(dstAddress)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to fetch Ripple trust lines for %s", dstAddress)
+                return
+            }
+
+        if (lines.none { it.matches(identity) }) {
+            throw InvalidTransactionDataException(
+                UiText.FormattedText(
+                    R.string.send_error_xrp_destination_no_trust_line,
+                    listOf(selectedToken.ticker),
+                )
             )
         }
     }

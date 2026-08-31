@@ -9,13 +9,16 @@ import com.vultisig.wallet.data.api.RippleAccountInfoResponseAccountDataJson
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseJson
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseResultJson
 import com.vultisig.wallet.data.api.RippleApi
+import com.vultisig.wallet.data.api.RippleTrustLineJson
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
+import com.vultisig.wallet.data.models.RIPPLE_TOKEN_DECIMALS
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.rippleTokenContractAddress
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -2037,6 +2040,114 @@ internal class DefaultSendStrategyTest {
             isNativeToken = true,
         )
 
+    /**
+     * XRPL carries an issued-currency amount as 16 significant digits, and the wallet models one at
+     * 15 decimal places — so a fraction of a full-precision balance, which the percentage buttons
+     * produce routinely, is one digit too long. The signer refuses those outright, after Verify.
+     * The staged amount is both what Verify renders and what gets signed, so trimming has to happen
+     * before it is staged, not inside the signer.
+     */
+    @Test
+    fun `submit trims an issued-currency amount to the precision the ledger carries`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val rlusd = rlusdCoin()
+            val xrp = xrpCoin()
+            val account =
+                Account(
+                    token = rlusd,
+                    tokenValue = TokenValue(BigInteger("249987356291478500000"), rlusd),
+                    fiatValue = null,
+                    price = null,
+                )
+            accounts.value =
+                listOf(
+                    account,
+                    Account(
+                        token = xrp,
+                        tokenValue = TokenValue(BigInteger.valueOf(20_000_000L), xrp),
+                        fiatValue = null,
+                        price = null,
+                    ),
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            addressFieldState.setTextAndPlaceCursorAtEnd("rDest")
+            // A quarter of the balance above: 17 significant digits.
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("62.496839072869625")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Ripple,
+                    gasFee = TokenValue(BigInteger.valueOf(400L), xrp),
+                    dstAddress = "rDest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Ripple(
+                        sequence = 1UL,
+                        lastLedgerSequence = 100UL,
+                        gas = 400UL,
+                    )
+                )
+            every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+            coEvery { getAvailableTokenBalance(any(), any()) } returns account.tokenValue
+            coEvery { rippleApi.fetchAccountsInfo("rDest") } returns
+                RippleAccountInfoResponseJson(
+                    result =
+                        RippleAccountInfoResponseResultJson(
+                            accountData =
+                                RippleAccountInfoResponseAccountDataJson(
+                                    balance = "20000000",
+                                    flags = 0L,
+                                )
+                        )
+                )
+            coEvery { rippleApi.fetchAccountLines("rDest") } returns
+                listOf(
+                    RippleTrustLineJson(account = RLUSD_ISSUER, currency = RLUSD_HEX, balance = "0")
+                )
+            coEvery { gasFeeToEstimatedFee(any()) } returns
+                EstimatedGasFee(
+                    formattedFiatValue = "$0.01",
+                    formattedTokenValue = "0.0004 XRP",
+                    tokenValue = TokenValue(BigInteger.valueOf(400L), xrp),
+                    fiatValue = mockk(relaxed = true),
+                )
+
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            assertNull(lastError, "Expected no error; got $lastError")
+            assertEquals(BigInteger("62496839072869620"), captured.captured.tokenValue.value)
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    private val RLUSD_HEX = "524C555344000000000000000000000000000000"
+    private val RLUSD_ISSUER = "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De"
+
     private fun xrpCoin(): Coin =
         Coin(
             chain = Chain.Ripple,
@@ -2049,6 +2160,16 @@ internal class DefaultSendStrategyTest {
             contractAddress = "",
             isNativeToken = true,
         )
+
+    private fun rlusdCoin(): Coin =
+        xrpCoin()
+            .copy(
+                ticker = "RLUSD",
+                decimal = RIPPLE_TOKEN_DECIMALS,
+                priceProviderID = "ripple-usd",
+                contractAddress = rippleTokenContractAddress(RLUSD_HEX, RLUSD_ISSUER),
+                isNativeToken = false,
+            )
 
     private fun usdtCoin(): Coin =
         Coin(

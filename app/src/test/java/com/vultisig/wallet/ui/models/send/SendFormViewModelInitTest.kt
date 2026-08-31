@@ -4,6 +4,11 @@ package com.vultisig.wallet.ui.models.send
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -159,6 +164,26 @@ internal class SendFormViewModelInitTest {
     }
 
     @Test
+    fun `a deep link naming a chain this version dropped still opens the form`() = runTest {
+        // `vultisig://send?assetChain=…` carries the chain as text, so a link minted while a
+        // since-retired chain existed still names it. Resolving it eagerly threw on the way in and
+        // took the screen down with it.
+        every { savedStateHandle.toRoute<Route.Send>() } returns
+            Route.Send(
+                vaultId = VAULT_ID,
+                chainId = RETIRED_CHAIN_ID,
+                tokenId = "KUJI-$RETIRED_CHAIN_ID",
+                address = "kujira1abc",
+            )
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals("kujira1abc", vm.addressFieldState.text.toString())
+        assertEquals(SendSections.Amount, vm.uiState.value.expandedSection)
+    }
+
+    @Test
     fun `default expandedSection is Asset when no preSelectedTokenId`() = runTest {
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -210,6 +235,67 @@ internal class SendFormViewModelInitTest {
         assertEquals("", vm.slippageFieldState.text.toString())
     }
 
+    // Regression: the memo clear added for XRPL issued currencies must not reach a TON jetton. A
+    // jetton hides the memo field too, but TonHelper signs `payload.memo` as the transfer comment,
+    // and a `vultisig://send?...&memo=` deep link is the only way to supply one — wiping it makes
+    // an exchange deposit arrive without its comment.
+    @Test
+    fun `a deep-linked memo survives on a TON jetton`() = runTest {
+        every { savedStateHandle.toRoute<Route.Send>() } returns
+            Route.Send(
+                vaultId = VAULT_ID,
+                chainId = Chain.Ton.id,
+                tokenId = jettonAccount.token.id,
+                memo = EXCHANGE_MEMO,
+            )
+        every { accountsRepository.loadAddresses(VAULT_ID) } returns
+            flowOf(listOf(tonAddress(jettonAccount)))
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(EXCHANGE_MEMO, vm.memoFieldState.text.toString())
+    }
+
+    @Test
+    fun `a memo is cleared on an XRPL issued currency`() = runTest {
+        every { savedStateHandle.toRoute<Route.Send>() } returns
+            Route.Send(
+                vaultId = VAULT_ID,
+                chainId = Chain.Ripple.id,
+                tokenId = rlusdAccount.token.id,
+                memo = EXCHANGE_MEMO,
+            )
+        every { accountsRepository.loadAddresses(VAULT_ID) } returns
+            flowOf(listOf(rippleAddress(rlusdAccount)))
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals("", vm.memoFieldState.text.toString())
+    }
+
+    private fun tonAddress(vararg accounts: Account) =
+        Address(chain = Chain.Ton, address = TON_ADDRESS, accounts = accounts.toList())
+
+    private fun rippleAddress(vararg accounts: Account) =
+        Address(chain = Chain.Ripple, address = RIPPLE_ADDRESS, accounts = accounts.toList())
+
+    private val jettonAccount =
+        account(
+            Coins.Ton.TON.copy(
+                ticker = "USDT",
+                address = TON_ADDRESS,
+                contractAddress = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
+                isNativeToken = false,
+            )
+        )
+
+    private val rlusdAccount = account(Coins.Ripple.RLUSD.copy(address = RIPPLE_ADDRESS))
+
+    private fun account(coin: Coin) =
+        Account(token = coin, tokenValue = null, fiatValue = null, price = null)
+
     private fun buildViewModel(): SendFormViewModel {
         val tokenBalanceMapper = mockk<AccountToTokenBalanceUiModelMapper>()
         coEvery { tokenBalanceMapper.invoke(any()) } returns
@@ -254,5 +340,12 @@ internal class SendFormViewModelInitTest {
 
     private companion object {
         const val VAULT_ID = "vault-1"
+
+        // A chain id old deep links still carry after the entry was removed from [Chain].
+        const val RETIRED_CHAIN_ID = "Kujira"
+
+        const val EXCHANGE_MEMO = "deposit-ref-91823"
+        const val TON_ADDRESS = "UQAqTqLHgFHmZWLBiCTuLuOWTCcOfXFbCXNBnKcPPRPTNSuA"
+        const val RIPPLE_ADDRESS = "rPVMhWBsfF9iMXYj3aAzJVkPDTFNSyWdKy"
     }
 }

@@ -188,8 +188,17 @@ constructor(
     // (the UI model only carries the formatted string). Read/written on the main dispatcher.
     private var activeBondedNodes: List<BondedNodePosition> = emptyList()
 
-    fun setData(vaultId: VaultId) {
+    // A caller-supplied tab is applied once and then forgotten: the screen leaves and re-enters
+    // composition every time the wallet / DeFi toggle flips, and re-seeding there would throw away
+    // whichever tab the user had chosen since.
+    private var hasAppliedInitialTab = false
+
+    fun setData(vaultId: VaultId, initialTab: DeFiTab? = null) {
         this.vaultId = vaultId
+        if (initialTab != null && !hasAppliedInitialTab) {
+            hasAppliedInitialTab = true
+            state.update { it.copy(selectedTab = initialTab.displayNameRes) }
+        }
         loadBalanceVisibility()
         lpDialogJob?.cancel()
         lpDialogJob = loadLpPositionsForDialog()

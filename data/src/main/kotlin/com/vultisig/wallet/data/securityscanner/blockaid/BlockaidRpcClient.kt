@@ -226,21 +226,8 @@ internal class BlockaidRpcClient(private val httpClient: HttpClient) : BlockaidR
 
         private const val SUI_CHAIN = "mainnet"
 
-        private fun Chain.toName(): String {
-            return when (this) {
-                Chain.Arbitrum -> "arbitrum"
-                Chain.Avalanche -> "avalanche"
-                Chain.Base -> "base"
-                Chain.Blast -> "blast"
-                Chain.BscChain -> "bsc"
-                Chain.Bitcoin -> "bitcoin"
-                Chain.Ethereum -> "ethereum"
-                Chain.Optimism -> "optimism"
-                Chain.Polygon -> "polygon"
-                Chain.Sui -> "sui"
-                Chain.Solana -> "solana"
-                else -> error("Chain: ${this.name} not supported by Blockaid")
-            }
-        }
+        private fun Chain.toName(): String =
+            BlockaidChainIdentifier.name(this)
+                ?: error("Chain: ${this.name} not supported by Blockaid")
     }
 }

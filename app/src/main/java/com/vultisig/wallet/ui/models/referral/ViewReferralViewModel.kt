@@ -179,12 +179,23 @@ constructor(
                 onLoadReferralCodeInfo()
             } else {
                 try {
+                    val coin =
+                        withContext(Dispatchers.IO) {
+                            vaultRepository.get(vaultId)?.coins?.find {
+                                it.chain.id == Chain.ThorChain.id && it.isNativeToken
+                            }
+                        } ?: error("Coin not found")
+
+                    // Skip if address is not ready
+                    if (coin.address.isBlank()) {
+                        Timber.d("Coin address not ready for vault %s", vaultId)
+                        this@ViewReferralViewModel.vaultReferralCode = ""
+                        onLoadReferralCodeInfo()
+                        return@launch
+                    }
+
                     val remoteReferral =
                         withContext(Dispatchers.IO) {
-                                val coin =
-                                    vaultRepository.get(vaultId)?.coins?.find {
-                                        it.chain.id == Chain.ThorChain.id && it.isNativeToken
-                                    } ?: error("Coin not found")
                                 thorChainApi.getReferralCodesByAddress(coin.address)
                             }
                             .firstOrNull()

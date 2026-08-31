@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 /**
- * Pins the 24h TTL, fail-closed, and refresh-after-invalidate behaviour of
+ * Pins the 24h TTL, retry backoff, fail-closed, and refresh-after-invalidate behaviour of
  * [SwapKitProviderCacheImpl]. The cache is the only guard between us and a hot loop on
  * `/providers`, so the TTL/refresh contract is worth a regression test.
  */
@@ -37,9 +37,16 @@ internal class SwapKitProviderCacheTest {
     private fun cache(clock: FakeClock = FakeClock()) =
         SwapKitProviderCacheImpl(api).also { it.clock = clock }
 
+    /**
+     * Entries whose chains are live. `supportedChainIds` mirrors them, as the wire usually does.
+     */
     private fun providersResponse(vararg entries: Pair<String, List<String>>) =
         entries.map { (provider, chains) ->
-            SwapKitProviderEntry(provider = provider, supportedChainIds = chains)
+            SwapKitProviderEntry(
+                provider = provider,
+                enabledChainIds = chains,
+                supportedChainIds = chains,
+            )
         }
 
     @Test
@@ -63,7 +70,7 @@ internal class SwapKitProviderCacheTest {
     }
 
     @Test
-    fun `isEnabled unions supportedChainIds across sub-providers`() = runTest {
+    fun `isEnabled unions enabledChainIds across sub-providers`() = runTest {
         coEvery { api.providers() } returns
             providersResponse(
                 "CHAINFLIP" to listOf("1", "bitcoin"),
@@ -148,6 +155,95 @@ internal class SwapKitProviderCacheTest {
     }
 
     @Test
+    fun `a failed refresh keeps serving the last successful snapshot`() = runTest {
+        // Dropping the snapshot on a failed refresh reports every chain disabled, which hides
+        // SwapKit app-wide off one bad `/providers` call and shows a $0.00 swap fee on the join
+        // screen. iOS serves last-good here; so do we.
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1", "solana"))
+
+        val clock = FakeClock(now = 1_000L)
+        val cache = cache(clock)
+
+        assertTrue(cache.isEnabled(Chain.Ethereum)) // populates the snapshot
+        coEvery { api.providers() } throws RuntimeException("transport boom")
+        clock.now += 24L * 60L * 60L * 1000L + 1L // past TTL, so the refresh is attempted and fails
+
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+        assertTrue(cache.isEnabled(Chain.Solana))
+        assertFalse(cache.isEnabled(Chain.Bitcoin)) // stale, not blanket-true
+    }
+
+    @Test
+    fun `a failed refresh holds off the next attempt while the stale snapshot stands`() = runTest {
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
+
+        val clock = FakeClock(now = 1_000L)
+        val cache = cache(clock)
+
+        assertTrue(cache.isEnabled(Chain.Ethereum)) // populates the snapshot
+        coEvery { api.providers() } throws RuntimeException("transport boom")
+        clock.now += 24L * 60L * 60L * 1000L + 1L // past TTL — one refresh is attempted, and fails
+
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+        clock.now += 60_000L // +1 min, well inside the retry window
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+
+        // Serving the stale snapshot leaves `fetchedAtMillis` behind the TTL, so without a second
+        // deadline every one of these re-hits the failing endpoint — and an eligibility check tests
+        // both legs of a pair, putting two dead round-trips in front of each quote.
+        coVerify(exactly = 2) { api.providers() }
+    }
+
+    @Test
+    fun `the refresh is attempted again once the retry window lapses`() = runTest {
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
+
+        val clock = FakeClock(now = 1_000L)
+        val cache = cache(clock)
+
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+        coEvery { api.providers() } throws RuntimeException("transport boom")
+        clock.now += 24L * 60L * 60L * 1000L + 1L // past TTL
+        assertTrue(cache.isEnabled(Chain.Ethereum)) // refresh fails, stale answer served
+        coVerify(exactly = 2) { api.providers() }
+
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1", "solana"))
+        clock.now += 5L * 60L * 1000L // retry window lapsed
+        assertTrue(cache.isEnabled(Chain.Solana)) // recovered endpoint is picked up
+        coVerify(exactly = 3) { api.providers() }
+
+        // A success clears the backoff along with the TTL, so the fresh snapshot is served outright
+        // rather than through the stale path.
+        clock.now += 60_000L
+        assertTrue(cache.isEnabled(Chain.Solana))
+        coVerify(exactly = 3) { api.providers() }
+    }
+
+    @Test
+    fun `a failed refresh after invalidate has no snapshot to fall back on`() = runTest {
+        // The genuine no-data edge still fails closed: `invalidate` drops the snapshot outright,
+        // so there is nothing to serve and SwapKit is skipped until a refresh succeeds.
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
+
+        val cache = cache()
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+
+        cache.invalidate()
+        coEvery { api.providers() } throws RuntimeException("transport boom")
+
+        assertFalse(cache.isEnabled(Chain.Ethereum))
+
+        // ...and stays eager rather than backing off. This is the second no-data edge — after
+        // `invalidate`, as opposed to never-fetched — and what keeps it eager is `isServable`
+        // gating both its branches on `fetchedAtMillis`, which `invalidate` cleared; the narrowing
+        // in `backOffAndServeLastGood` is belt-and-braces on top. Ungating the retry branch would
+        // strand SwapKit off for the full window with no answer to serve in the meantime.
+        assertFalse(cache.isEnabled(Chain.Ethereum))
+        coVerify(exactly = 3) { api.providers() }
+    }
+
+    @Test
     fun `cancellation while fetching is re-thrown, not swallowed`() = runTest {
         coEvery { api.providers() } throws CancellationException("scope cancelled")
 
@@ -217,22 +313,93 @@ internal class SwapKitProviderCacheTest {
     }
 
     @Test
-    fun `unsupported chain ids map to null and never enable a chain`() = runTest {
-        // Bitcoin / TON / Sui / Tron / Cardano are Phase 2/3 sources — they must NOT light up in
-        // Phase 1, regardless of which V3 id format the proxy returns.
+    fun `non-EVM slugs enable their chains`() = runTest {
         coEvery { api.providers() } returns
-            providersResponse("CHAINFLIP" to listOf("bitcoin", "ton", "sui", "tron", "cardano"))
+            providersResponse(
+                "CHAINFLIP" to listOf("bitcoin", "ton", "sui", "728126428", "cardano", "ripple")
+            )
 
         val cache = cache()
 
-        assertFalse(cache.isEnabled(Chain.Bitcoin))
-        assertFalse(cache.isEnabled(Chain.Ton))
-        assertFalse(cache.isEnabled(Chain.Sui))
-        assertFalse(cache.isEnabled(Chain.Tron))
-        assertFalse(cache.isEnabled(Chain.Cardano))
+        assertTrue(cache.isEnabled(Chain.Bitcoin))
+        assertTrue(cache.isEnabled(Chain.Ton))
+        assertTrue(cache.isEnabled(Chain.Sui))
+        assertTrue(cache.isEnabled(Chain.Tron))
+        assertTrue(cache.isEnabled(Chain.Cardano))
+        assertTrue(cache.isEnabled(Chain.Ripple))
+    }
 
-        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("bitcoin"))
-        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("xrp"))
+    @Test
+    fun `chain ids the wallet holds no account for map to null`() = runTest {
+        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("near"))
+        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("stellar"))
+        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("aleo"))
+        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("80094")) // Berachain
         assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig(""))
+    }
+
+    @Test
+    fun `Robinhood and HyperEVM resolve from their decimal chain ids`() = runTest {
+        // Both are live in `/providers.enabledChainIds` as bare decimals. Neither has a
+        // hand-written
+        // entry — they resolve through the EVM chain-id map built off the Chain enum.
+        coEvery { api.providers() } returns providersResponse("FLASHNET" to listOf("4663", "999"))
+
+        val cache = cache()
+
+        assertTrue(cache.isEnabled(Chain.Robinhood))
+        assertTrue(cache.isEnabled(Chain.Hyperliquid))
+    }
+
+    @Test
+    fun `HyperCore's hype id never resolves to the HyperEVM wallet chain`() {
+        // `hype` is a separate venue in SwapKit's catalogue, with `USDC:0x…`-style asset addresses.
+        // Reading it as Chain.Hyperliquid would offer routes against assets this wallet cannot
+        // hold.
+        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("hype"))
+        assertEquals(Chain.Hyperliquid, SwapKitProviderCacheImpl.swapKitChainToVultisig("999"))
+    }
+
+    @Test
+    fun `a chain only listed as supported is not enabled`() = runTest {
+        // Observed live: `hype` and `stellar` sit in supportedChainIds while never being enabled,
+        // and a dark provider lists everything it knows. Only enablement is an offer.
+        coEvery { api.providers() } returns
+            listOf(
+                SwapKitProviderEntry(
+                    provider = "GARDEN",
+                    enabledChainIds = listOf("1"),
+                    supportedChainIds = listOf("1", "999", "bitcoin"),
+                )
+            )
+
+        val cache = cache()
+
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+        assertFalse(cache.isEnabled(Chain.Hyperliquid))
+        assertFalse(cache.isEnabled(Chain.Bitcoin))
+    }
+
+    @Test
+    fun `chains enabled only by THORChain or Maya sub-providers do not count`() = runTest {
+        // Vultisig routes those two through its own integrations and drops their SwapKit routes at
+        // ranking, so a chain they alone enable would offer a provider that can only lose. Casing
+        // is normalized because the upstream has returned both spellings.
+        coEvery { api.providers() } returns
+            providersResponse(
+                "THORCHAIN" to listOf("bitcoin"),
+                "thorchain_streaming" to listOf("litecoin"),
+                "MAYACHAIN" to listOf("dash"),
+                "MAYACHAIN_STREAMING" to listOf("zcash"),
+                "CHAINFLIP" to listOf("1"),
+            )
+
+        val cache = cache()
+
+        assertTrue(cache.isEnabled(Chain.Ethereum))
+        assertFalse(cache.isEnabled(Chain.Bitcoin))
+        assertFalse(cache.isEnabled(Chain.Litecoin))
+        assertFalse(cache.isEnabled(Chain.Dash))
+        assertFalse(cache.isEnabled(Chain.Zcash))
     }
 }

@@ -28,6 +28,7 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 approvalTokenTicker = this.tx.approvalTokenTicker,
                 heroContent = this.tx.heroContent,
                 signRipple = this.tx.signRipple,
+                rippleTrustSet = this.tx.rippleTrustSet,
             )
         }
         is TransactionTypeUiModel.Deposit -> {

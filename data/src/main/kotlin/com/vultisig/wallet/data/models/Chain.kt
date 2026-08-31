@@ -47,7 +47,6 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
     Zcash("Zcash", UTXO, "ZEC/vbyte"),
     Cardano("Cardano", UTXO, "Lovelace"),
     GaiaChain("Cosmos", COSMOS, "uatom"),
-    Kujira("Kujira", COSMOS, "ukuji"),
     Dydx("Dydx", COSMOS, "adydx"),
     Osmosis("Osmosis", COSMOS, "uosmo"),
     Terra("Terra", COSMOS, "uluna"),
@@ -68,7 +67,16 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
 
     companion object {
         fun fromRaw(raw: String): Chain =
-            Chain.entries.first { it.raw.equals(other = raw, ignoreCase = true) }
+            fromRawOrNull(raw) ?: throw NoSuchElementException("Unknown chain id $raw")
+
+        /**
+         * Chain ids outlive the entries they were written for: a retired chain leaves rows behind
+         * in the database, in preferences, and in deep links that were minted while it still
+         * existed. Callers that read one of those back use this and skip what they can't resolve,
+         * rather than catching [fromRaw]'s throw.
+         */
+        fun fromRawOrNull(raw: String): Chain? =
+            entries.firstOrNull { it.raw.equals(other = raw, ignoreCase = true) }
 
         val keyImportSupportedChains: List<Chain>
             get() = entries.filter { it != Cardano && it != Qbtc }
@@ -111,7 +119,6 @@ val Chain.coinType: CoinType
             Chain.Optimism -> CoinType.OPTIMISM
             Chain.BscChain -> CoinType.SMARTCHAIN
             Chain.GaiaChain -> CoinType.COSMOS
-            Chain.Kujira -> CoinType.KUJIRA
             Chain.CronosChain -> CoinType.CRONOSCHAIN
             Chain.Polkadot -> CoinType.POLKADOT
             Chain.Bittensor -> CoinType.POLKADOT
@@ -168,10 +175,10 @@ val Chain.canSelectTokens: Boolean
             Chain.Terra,
             Chain.TerraClassic,
             Chain.Sui,
-            Chain.Kujira,
             Chain.GaiaChain,
             Chain.Osmosis,
             Chain.Tron,
+            Chain.Ripple,
             Chain.Ton -> true
             Chain.ThorChain -> true
             Chain.CronosChain,
@@ -190,7 +197,6 @@ val Chain.isSwapSupported: Boolean
                 Chain.ThorChain,
                 Chain.MayaChain,
                 Chain.GaiaChain,
-                Chain.Kujira,
                 Chain.Bitcoin,
                 Chain.Dogecoin,
                 Chain.BitcoinCash,
@@ -226,7 +232,6 @@ val Chain.isDepositSupported: Boolean
             // TON staking (stake / unstake) lives on the DeFi tab, not the generic
             // Functions/Deposit
             // flow — mirroring iOS, which removed TON from the Functions flow.
-            Chain.Kujira,
             Chain.GaiaChain,
             Chain.Osmosis,
             Chain.Bitcoin,
@@ -400,7 +405,6 @@ fun Chain.swapAssetName(): String {
         Chain.Litecoin -> "LTC"
         Chain.Dogecoin -> "DOGE"
         Chain.GaiaChain -> "GAIA"
-        Chain.Kujira -> "KUJI"
         Chain.Solana -> "SOL"
         Chain.Dash -> "DASH"
         Chain.MayaChain -> "MAYA"
@@ -479,7 +483,6 @@ fun Chain.ticker(): String {
         Chain.Dogecoin -> "DOGE"
         Chain.Dash -> "DASH"
         Chain.GaiaChain -> "UATOM"
-        Chain.Kujira -> "KUJI"
         Chain.MayaChain -> "CACAO"
         Chain.CronosChain -> "CRO"
         Chain.Polkadot -> "DOT"
@@ -561,7 +564,6 @@ val Chain.cosmosNativeDenom: String?
             Chain.ThorChain -> "rune"
             Chain.MayaChain -> "cacao"
             Chain.GaiaChain -> "uatom"
-            Chain.Kujira -> "ukuji"
             Chain.Dydx -> "adydx"
             Chain.Osmosis -> "uosmo"
             Chain.Terra,
@@ -599,7 +601,6 @@ val Chain.maxMemoCharacters: Int?
             // broadcast rejection this limit exists to prevent.
             Chain.Noble,
             Chain.Osmosis,
-            Chain.Kujira,
             Chain.Dydx,
             Chain.TerraClassic,
             Chain.Akash,

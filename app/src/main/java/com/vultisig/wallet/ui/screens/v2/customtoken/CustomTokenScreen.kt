@@ -84,6 +84,7 @@ private fun CustomTokenScreen(
                 onPasteClick = onPasteClick,
                 state = searchFieldState,
                 onCloseClick = onCloseClick,
+                hintRes = state.hintRes,
             )
             UiSpacer(size = 16.dp)
 
@@ -113,6 +114,7 @@ private fun CustomTokenScreenPreview() {
         state =
             CustomTokenUiModel(
                 chainLogo = R.drawable.chainflip,
+                hintRes = R.string.custom_token_enter_contract_address,
                 isLoading = false,
                 token = Coins.Ethereum.GRT,
                 hasError = false,

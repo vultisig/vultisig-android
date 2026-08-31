@@ -1718,6 +1718,24 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
+    fun `fetchQuote prices Jupiter fees with the destination token`() = runTest {
+        val sol = coin(Chain.Solana, "SOL", "SoLsrc", 9)
+        val usdc = coin(Chain.Solana, "USDC", "UsdcDst", 6)
+        coEvery { tokenRepository.getNativeToken(any()) } returns sol
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.JUPITER, any()) } returns
+            SwapQuoteResult.Evm(jupiterEvmQuote())
+
+        fetchJupiterQuote(createManager(), slippageBps = null)
+
+        coVerify {
+            convertTokenValueToFiat(usdc, TokenValue(BigInteger.ZERO, usdc), AppCurrency.USD)
+        }
+    }
+
+    @Test
     fun `Jupiter quotes that differ only in slippage do not collide in the cache`() = runTest {
         // Slippage is part of the quote cache key, so a re-fetch after a slippage change must miss
         // and re-quote rather than serve the stale tolerance. Two identical-slippage calls share

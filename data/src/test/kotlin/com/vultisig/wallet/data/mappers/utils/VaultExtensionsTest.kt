@@ -8,8 +8,8 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
-import junit.framework.TestCase.assertEquals
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class VaultExtensionsTest {
     private val vault = Vault(id = "id", name = "name")

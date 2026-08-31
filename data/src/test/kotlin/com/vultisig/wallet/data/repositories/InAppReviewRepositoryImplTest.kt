@@ -1,103 +1,108 @@
 package com.vultisig.wallet.data.repositories
 
-import android.content.Context
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
-import com.vultisig.wallet.data.repositories.InAppReviewRepositoryImpl.Companion.MIN_INSTALL_AGE
-import com.vultisig.wallet.data.repositories.InAppReviewRepositoryImpl.Companion.MIN_SUCCESSFUL_TRANSACTIONS
 import com.vultisig.wallet.data.repositories.InAppReviewRepositoryImpl.Companion.PROMPT_COOLDOWN
 import com.vultisig.wallet.data.sources.AppDataStore
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
 import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * Covers the three throttle gates from #5427: the prompt waits for enough successful transactions,
- * for the install to be old enough, and for the cooldown between prompts to elapse.
+ * Covers the throttle: either qualifying moment owes the user a card, an ask is spent on request,
+ * and a spent ask holds the next one off for [PROMPT_COOLDOWN].
  */
 internal class InAppReviewRepositoryImplTest {
 
     private val store = FakeAppDataStore()
 
-    private val repo = InAppReviewRepositoryImpl(mockk<Context>(), store)
+    private val repo = InAppReviewRepositoryImpl(store)
 
-    /** Well past both windows, so a test only opts into a gate by moving [now] back toward it. */
-    private var installedAt = 0L
+    /** Far enough from zero that a test only opts into the cooldown by moving [now] back to it. */
     private var now = 365.days.inWholeMilliseconds
 
     init {
         repo.clock = InAppReviewRepositoryImpl.Clock { now }
-        repo.installTime = InAppReviewRepositoryImpl.InstallTime { installedAt }
     }
 
     @Test
-    fun `no prompt before the transaction threshold is reached`() = runTest {
-        repeat(MIN_SUCCESSFUL_TRANSACTIONS - 1) { repo.onTransactionSucceeded() shouldBe false }
+    fun `nothing is pending until a moment is reached`() = runTest {
+        repo.isPromptPending.first() shouldBe false
     }
 
     @Test
-    fun `prompts once the transaction threshold is reached`() = runTest {
-        repeat(MIN_SUCCESSFUL_TRANSACTIONS - 1) { repo.onTransactionSucceeded() }
+    fun `a created vault owes the user a card`() = runTest {
+        repo.onVaultCreated()
 
-        repo.onTransactionSucceeded() shouldBe true
+        repo.isPromptPending.first() shouldBe true
     }
 
     @Test
-    fun `no prompt while the install is younger than the minimum age`() = runTest {
-        installedAt = now - MIN_INSTALL_AGE.inWholeMilliseconds + 1
+    fun `a successful transaction owes the user a card`() = runTest {
+        repo.onTransactionSucceeded()
 
-        repeat(MIN_SUCCESSFUL_TRANSACTIONS + 2) { repo.onTransactionSucceeded() shouldBe false }
+        repo.isPromptPending.first() shouldBe true
     }
 
     @Test
-    fun `an install that just crossed the minimum age is eligible`() = runTest {
-        installedAt = now - MIN_INSTALL_AGE.inWholeMilliseconds
+    fun `requesting the prompt spends it`() = runTest {
+        repo.onVaultCreated()
 
-        repeat(MIN_SUCCESSFUL_TRANSACTIONS - 1) { repo.onTransactionSucceeded() }
+        repo.onPromptRequested()
 
-        repo.onTransactionSucceeded() shouldBe true
+        repo.isPromptPending.first() shouldBe false
     }
 
     @Test
-    fun `the transaction count survives ineligible calls`() = runTest {
-        // Transactions made while the install was too young still count toward the threshold, so
-        // the prompt is not delayed by a further three transactions once the install matures.
-        installedAt = now
-        repeat(MIN_SUCCESSFUL_TRANSACTIONS) { repo.onTransactionSucceeded() shouldBe false }
-
-        now += MIN_INSTALL_AGE.inWholeMilliseconds
-
-        repo.onTransactionSucceeded() shouldBe true
-    }
-
-    @Test
-    fun `no second prompt inside the cooldown`() = runTest {
+    fun `a second moment inside the cooldown is not asked again`() = runTest {
         promptOnce()
 
         now += PROMPT_COOLDOWN.inWholeMilliseconds - 1
+        repo.onTransactionSucceeded()
 
-        repeat(MIN_SUCCESSFUL_TRANSACTIONS + 2) { repo.onTransactionSucceeded() shouldBe false }
+        repo.isPromptPending.first() shouldBe false
     }
 
     @Test
-    fun `prompts again once the cooldown elapses`() = runTest {
+    fun `a moment asks again once the cooldown elapses`() = runTest {
         promptOnce()
 
         now += PROMPT_COOLDOWN.inWholeMilliseconds
+        repo.onTransactionSucceeded()
 
-        repo.onTransactionSucceeded() shouldBe true
+        repo.isPromptPending.first() shouldBe true
     }
 
-    /** Drives the repository to its first `true`, consuming the cooldown. */
+    @Test
+    fun `a second moment before the card is shown leaves it pending`() = runTest {
+        repo.onVaultCreated()
+        repo.onTransactionSucceeded()
+
+        repo.isPromptPending.first() shouldBe true
+
+        // Still a single ask: spending it clears the pair, rather than leaving one queued behind.
+        repo.onPromptRequested()
+        repo.isPromptPending.first() shouldBe false
+    }
+
+    @Test
+    fun `a prompt that was never requested survives a restart`() = runTest {
+        repo.onVaultCreated()
+
+        InAppReviewRepositoryImpl(store).isPromptPending.first() shouldBe true
+    }
+
+    /** Reaches a moment and spends the ask it earns, starting the cooldown at [now]. */
     private suspend fun promptOnce() {
-        repeat(MIN_SUCCESSFUL_TRANSACTIONS - 1) { repo.onTransactionSucceeded() }
-        repo.onTransactionSucceeded() shouldBe true
+        repo.onVaultCreated()
+        repo.isPromptPending.first() shouldBe true
+        repo.onPromptRequested()
     }
 
     private class FakeAppDataStore : AppDataStore {

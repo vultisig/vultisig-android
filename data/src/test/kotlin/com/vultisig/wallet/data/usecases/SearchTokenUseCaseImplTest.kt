@@ -22,9 +22,9 @@ internal class SearchTokenUseCaseImplTest {
     private val addressRepository: ChainAccountAddressRepository = mockk()
     private val searchEvmToken: SearchEvmTokenUseCase = mockk()
     private val searchSolToken: SearchSolTokenUseCase = mockk()
-    private val searchKujiToken: SearchKujiraTokenUseCase = mockk()
     private val searchTerraToken: SearchTerraTokenUseCase = mockk()
     private val searchSuiToken: SearchSuiTokenUseCase = mockk()
+    private val searchRippleToken: SearchRippleTokenUseCase = mockk()
     private val appCurrencyRepository: AppCurrencyRepository = mockk {
         every { currency } returns flowOf(AppCurrency.USD)
     }
@@ -34,9 +34,9 @@ internal class SearchTokenUseCaseImplTest {
             appCurrencyRepository = appCurrencyRepository,
             searchEvmToken = searchEvmToken,
             searchSolToken = searchSolToken,
-            searchKujiToken = searchKujiToken,
             searchTerraToken = searchTerraToken,
             searchSuiToken = searchSuiToken,
+            searchRippleToken = searchRippleToken,
             chainAccountAddressRepository = addressRepository,
         )
 
@@ -47,7 +47,15 @@ internal class SearchTokenUseCaseImplTest {
         verify(exactly = 0) { addressRepository.isValid(any(), any()) }
         coVerify(exactly = 0) { searchEvmToken(any(), any()) }
         coVerify(exactly = 0) { searchSolToken(any()) }
-        coVerify(exactly = 0) { searchKujiToken(any()) }
+    }
+
+    @Test
+    fun `a chain id no entry resolves for returns null and calls nothing`() = runTest {
+        // Ids saved before a chain was retired outlive it; there is no token to find on one.
+        assertNull(useCase("Kujira", "0x0000000000000000000000000000000000000001"))
+
+        verify(exactly = 0) { addressRepository.isValid(any(), any()) }
+        coVerify(exactly = 0) { searchEvmToken(any(), any()) }
     }
 
     @Test
@@ -115,52 +123,6 @@ internal class SearchTokenUseCaseImplTest {
 
         assertEquals(BigDecimal("20.0"), result?.fiatValue?.value)
         coVerify(exactly = 1) { searchSolToken(address) }
-    }
-
-    @Test
-    fun `invalid Kujira address returns null and skips Kujira searcher`() = runTest {
-        stubValid(Chain.Kujira, "0xnot-a-bech32", valid = false)
-
-        assertNull(useCase(Chain.Kujira.id, "0xnot-a-bech32"))
-
-        coVerify(exactly = 0) { searchKujiToken(any()) }
-    }
-
-    @Test
-    fun `valid Kujira bech32 address delegated to Kujira searcher`() = runTest {
-        val address = "kujira1xyzcontractaddress"
-        stubValid(Chain.Kujira, address, valid = true)
-        coEvery { searchKujiToken(address) } returns
-            CoinAndPrice(kujiraCoin(contract = address), BigDecimal.ZERO)
-
-        val result = useCase(Chain.Kujira.id, address)
-
-        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
-        coVerify(exactly = 1) { searchKujiToken(address) }
-    }
-
-    @Test
-    fun `Kujira factory denom validates against extracted creator address`() = runTest {
-        val creator = "kujira1creator"
-        val factoryAddress = "factory/$creator/uusdc"
-        stubValid(Chain.Kujira, creator, valid = true)
-        coEvery { searchKujiToken(factoryAddress) } returns
-            CoinAndPrice(kujiraCoin(contract = factoryAddress), BigDecimal.ZERO)
-
-        val result = useCase(Chain.Kujira.id, factoryAddress)
-
-        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
-        verify(exactly = 1) { addressRepository.isValid(Chain.Kujira, creator) }
-        coVerify(exactly = 1) { searchKujiToken(factoryAddress) }
-    }
-
-    @Test
-    fun `Kujira factory denom with invalid creator returns null`() = runTest {
-        stubValid(Chain.Kujira, "0xbadcreator", valid = false)
-
-        assertNull(useCase(Chain.Kujira.id, "factory/0xbadcreator/uusdc"))
-
-        coVerify(exactly = 0) { searchKujiToken(any()) }
     }
 
     @Test
@@ -275,16 +237,6 @@ internal class SearchTokenUseCaseImplTest {
     }
 
     @Test
-    fun `blank Kujira ticker returns null after successful search`() = runTest {
-        val address = "kujira1xyzcontractaddress"
-        stubValid(Chain.Kujira, address, valid = true)
-        coEvery { searchKujiToken(address) } returns
-            CoinAndPrice(kujiraCoin(ticker = "", contract = address), BigDecimal.ZERO)
-
-        assertNull(useCase(Chain.Kujira.id, address))
-    }
-
-    @Test
     fun `valid Sui coin type delegated to Sui searcher without WalletCore`() = runTest {
         val coinType =
             "0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN"
@@ -320,6 +272,37 @@ internal class SearchTokenUseCaseImplTest {
     }
 
     @Test
+    fun `valid Ripple currency and issuer pair delegated to Ripple searcher`() = runTest {
+        val tokenId = "USD.$RIPPLE_ISSUER"
+        every { addressRepository.isValid(Chain.Ripple, RIPPLE_ISSUER) } returns true
+        coEvery { searchRippleToken(tokenId) } returns
+            CoinAndPrice(rippleCoin(contract = tokenId), BigDecimal.ZERO)
+
+        val result = useCase(Chain.Ripple.id, "  $tokenId  ")
+
+        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
+        coVerify(exactly = 1) { searchRippleToken(tokenId) }
+    }
+
+    @Test
+    fun `Ripple input that is not a currency and issuer pair is rejected`() = runTest {
+        every { addressRepository.isValid(Chain.Ripple, any()) } returns true
+
+        assertNull(useCase(Chain.Ripple.id, RIPPLE_ISSUER))
+        assertNull(useCase(Chain.Ripple.id, "USD.$RIPPLE_ISSUER.extra"))
+        coVerify(exactly = 0) { searchRippleToken(any()) }
+    }
+
+    @Test
+    fun `Ripple pair naming a non-account issuer is rejected`() = runTest {
+        every { addressRepository.isValid(Chain.Ripple, "notanissuer") } returns false
+
+        assertNull(useCase(Chain.Ripple.id, "USD.notanissuer"))
+
+        coVerify(exactly = 0) { searchRippleToken(any()) }
+    }
+
+    @Test
     fun `unsupported chain returns null even for valid format`() = runTest {
         stubValid(Chain.Bitcoin, "bc1qanyaddress", valid = true)
 
@@ -327,7 +310,6 @@ internal class SearchTokenUseCaseImplTest {
 
         coVerify(exactly = 0) { searchEvmToken(any(), any()) }
         coVerify(exactly = 0) { searchSolToken(any()) }
-        coVerify(exactly = 0) { searchKujiToken(any()) }
         coVerify(exactly = 0) { searchTerraToken(any(), any()) }
     }
 
@@ -370,9 +352,9 @@ internal class SearchTokenUseCaseImplTest {
             isNativeToken = false,
         )
 
-    private fun kujiraCoin(ticker: String = "TOKEN", contract: String): Coin =
+    private fun suiCoin(ticker: String = "COIN", contract: String): Coin =
         Coin(
-            chain = Chain.Kujira,
+            chain = Chain.Sui,
             ticker = ticker,
             logo = "",
             address = "",
@@ -383,13 +365,13 @@ internal class SearchTokenUseCaseImplTest {
             isNativeToken = false,
         )
 
-    private fun suiCoin(ticker: String = "COIN", contract: String): Coin =
+    private fun rippleCoin(contract: String): Coin =
         Coin(
-            chain = Chain.Sui,
-            ticker = ticker,
+            chain = Chain.Ripple,
+            ticker = "USD",
             logo = "",
             address = "",
-            decimal = 6,
+            decimal = 15,
             hexPublicKey = "",
             priceProviderID = "",
             contractAddress = contract,
@@ -410,6 +392,7 @@ internal class SearchTokenUseCaseImplTest {
         )
 
     private companion object {
+        const val RIPPLE_ISSUER = "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
         const val EVM_ADDRESS = "0x1234567890123456789012345678901234567890"
         const val TERRA_CONTRACT =
             "terra1nsuqsk6kh58ulczatwev87ttq2z6r3pusulg9r24mfj2fvtzd4uq3exn26"

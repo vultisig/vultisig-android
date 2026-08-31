@@ -104,6 +104,7 @@ import com.vultisig.wallet.ui.screens.referral.ReferralCreateScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditVaultScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralOnboardingScreen
+import com.vultisig.wallet.ui.screens.referral.ReferralPayoutAssetScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralVaultListScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralViewScreen
@@ -128,6 +129,7 @@ import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookBottomSheet
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryScreen
+import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.RippleTrustLineActivationSheet
 import com.vultisig.wallet.ui.screens.v2.chaintokens.bottomsheets.TokenAddressQrBottomSheet
 import com.vultisig.wallet.ui.screens.v2.customtoken.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.v2.home.bottomsheets.vaultlist.VaultListBottomSheet
@@ -446,6 +448,8 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
 
         composable<Route.ReferralCreation> { ReferralCreateScreen(navController = navController) }
 
+        dialog<Route.ReferralPayoutAsset> { ReferralPayoutAssetScreen() }
+
         composable(
             route = Destination.ReferralView.STATIC_ROUTE,
             arguments =
@@ -491,5 +495,6 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         dialog<Route.Receive> { ReceiveBottomSheet() }
 
         dialog<Route.AddressQr> { TokenAddressQrBottomSheet() }
+        dialog<Route.RippleTrustLineActivation> { RippleTrustLineActivationSheet() }
     }
 }

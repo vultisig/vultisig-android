@@ -56,7 +56,6 @@ import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.InAppReviewEffect
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -209,7 +208,6 @@ internal fun JoinKeysignView() {
                 val keysignUiState = keysignViewModel.state.collectAsState().value
                 val kState = keysignUiState.signingState
                 keysignState = kState
-                InAppReviewEffect(keysignViewModel.inAppReviewRequests)
                 KeysignView(
                     state = kState,
                     txHash = keysignUiState.txHash,

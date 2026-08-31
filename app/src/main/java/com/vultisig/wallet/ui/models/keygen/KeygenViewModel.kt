@@ -42,6 +42,7 @@ import com.vultisig.wallet.data.passcode.AutoLockHold
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
+import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.KeyImportData
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
@@ -59,6 +60,7 @@ import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.data.utils.runCatchingCancellable
 import com.vultisig.wallet.ui.components.canAuthenticateBiometric
 import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
@@ -143,6 +145,7 @@ constructor(
     private val featureFlagRepository: FeatureFlagRepository,
     private val autoLockHold: AutoLockHold,
     private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
+    private val inAppReviewRepository: InAppReviewRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
     private data class ChainKeygenResult(
@@ -575,9 +578,19 @@ constructor(
         // so populate chain settings from the route args (originally from the QR code).
         if (!isInitiatingDevice) {
             keyImportRepository.clear()
+            // Every chain the initiator picked gets its own keygen session, routed by raw id, and
+            // it waits for this device in each. Skipping one this build no longer knows would
+            // strand that session: the initiator times out and both sides fail with nothing to
+            // point at. Refuse up front instead, naming the chain.
             val chainSettings =
-                args.chains.mapNotNull { raw ->
-                    Chain.entries.find { it.raw == raw }?.let { ChainImportSetting(chain = it) }
+                args.chains.map { raw ->
+                    val chain =
+                        Chain.fromRawOrNull(raw)
+                            ?: error(
+                                "This version no longer supports $raw. Start the import again " +
+                                    "without it, or update the other device."
+                            )
+                    ChainImportSetting(chain = chain)
                 }
             keyImportRepository.setChainSettings(chainSettings)
         }
@@ -922,6 +935,15 @@ constructor(
             }
 
             vaultDataStoreRepository.setBackupStatus(vaultId = vaultId, false)
+
+            if (action == TssAction.KEYGEN) {
+                // Recorded here rather than on the KEYGEN branch below, which also runs for a fast
+                // vault whose share is still only in temporary storage until the emailed code is
+                // verified. The vault is already persisted by this point, so a failed write of the
+                // review moment must not take the completed keygen down with it.
+                runCatchingCancellable { inAppReviewRepository.onVaultCreated() }
+                    .onFailure { Timber.w(it, "Failed to record the in-app review moment") }
+            }
         }
 
         if (action == TssAction.KEYGEN) {

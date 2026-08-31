@@ -6,10 +6,12 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.passcode.AutoLockHold
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.ChainImportSetting
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
@@ -27,6 +29,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -118,6 +121,14 @@ internal class KeygenViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun givenKeyImportRoute(chains: List<String>) {
+        every { any<SavedStateHandle>().toRoute<Route.Keygen.Generating>() } returns
+            KEY_IMPORT_ROUTE.copy(chains = chains)
+        // Settling the chain list is all these tests are after; the ceremony itself needs the TSS
+        // native libraries, so it stops on the missing import data right after.
+        every { keyImportRepository.get() } returns null
+    }
+
     private fun createViewModel() =
         KeygenViewModel(
             savedStateHandle = SavedStateHandle(),
@@ -138,6 +149,7 @@ internal class KeygenViewModelTest {
             autoLockHold = AutoLockHold(),
             referralCodeSettingsRepository = referralCodeSettingsRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
+            inAppReviewRepository = mockk(relaxed = true),
         )
 
     /** Verifies the state action matches the route arg. */
@@ -157,6 +169,41 @@ internal class KeygenViewModelTest {
             val state = vm.state.value
             state.error.shouldNotBeNull()
             state.keygenState shouldBe KeygenState.CreatingInstance
+        }
+
+    /**
+     * The initiator opens one keygen session per chain it picked and waits for this device in each,
+     * so a chain this build has dropped since — an initiator still on a version that offers it —
+     * has to stop the ceremony here. Skipping it left that session a party short and both devices
+     * failed on a timeout that named nothing.
+     */
+    @Test
+    fun `key import refuses a chain this version no longer supports`() =
+        runTest(testDispatcher) {
+            givenKeyImportRoute(chains = listOf(Chain.Bitcoin.raw, RETIRED_CHAIN_ID))
+
+            val vm = createViewModel()
+
+            vm.state.value.error.shouldNotBeNull().rawError shouldContain RETIRED_CHAIN_ID
+            coVerify(exactly = 0) { keyImportRepository.setChainSettings(any()) }
+        }
+
+    /** A joining device still builds its settings from the chains it does know. */
+    @Test
+    fun `key import takes the chains it knows from the route`() =
+        runTest(testDispatcher) {
+            givenKeyImportRoute(chains = listOf(Chain.Bitcoin.raw, Chain.Ethereum.raw))
+
+            createViewModel()
+
+            coVerify {
+                keyImportRepository.setChainSettings(
+                    listOf(
+                        ChainImportSetting(chain = Chain.Bitcoin),
+                        ChainImportSetting(chain = Chain.Ethereum),
+                    )
+                )
+            }
         }
 
     /** Verifies tryAgain navigates back. */
@@ -187,4 +234,30 @@ internal class KeygenViewModelTest {
 
             coVerify(exactly = 1) { vaultRepository.get("vault-1") }
         }
+
+    private companion object {
+        // A chain id an older initiator can still name after this build dropped the entry.
+        const val RETIRED_CHAIN_ID = "Kujira"
+
+        val KEY_IMPORT_ROUTE =
+            Route.Keygen.Generating(
+                action = TssAction.KeyImport,
+                sessionId = "",
+                serverUrl = "",
+                localPartyId = "",
+                vaultName = "Test Vault",
+                hexChainCode = "",
+                keygenCommittee = emptyList(),
+                encryptionKeyHex = "",
+                isInitiatingDevice = false,
+                libType = SigningLibType.DKLS,
+                vaultId = null,
+                oldCommittee = emptyList(),
+                oldResharePrefix = "",
+                email = null,
+                password = null,
+                hint = null,
+                deviceCount = null,
+            )
+    }
 }

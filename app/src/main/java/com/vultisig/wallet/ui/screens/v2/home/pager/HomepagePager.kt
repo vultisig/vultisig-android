@@ -11,49 +11,32 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.pager.VsPager
 import com.vultisig.wallet.ui.components.v2.pager.indicator.VsPagerIndicator
 import com.vultisig.wallet.ui.components.v2.pager.utils.rememberVsPagerState
-import com.vultisig.wallet.ui.screens.v2.home.pager.banner.BuyVultBanner
-import com.vultisig.wallet.ui.screens.v2.home.pager.banner.FollowXBanner
-import com.vultisig.wallet.ui.screens.v2.home.pager.banner.UpgradeBanner
-import com.vultisig.wallet.ui.screens.v2.home.pager.container.HomePagePagerContainer
+import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBanner
+import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
 
 @Composable
 internal fun HomepagePager(
+    banners: List<HomeBannerType>,
+    onBannerClick: (HomeBannerType) -> Unit,
+    onBannerDismiss: (HomeBannerType) -> Unit,
     modifier: Modifier = Modifier,
-    params: HomepagePagerParams,
-    onUpgradeClick: () -> Unit,
-    onFollowXClick: () -> Unit,
-    onBuyVultClick: () -> Unit,
-    onBuyVultDismiss: () -> Unit,
-    onUpgradeDismiss: () -> Unit,
-    onFollowXDismiss: () -> Unit,
 ) {
-    val state = rememberVsPagerState(key = params)
+    val state = rememberVsPagerState(key = banners)
 
     Column(
         modifier = modifier.animateContentSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         VsPager(state = state) {
-            if (params.showUpgrade)
+            banners.forEach { banner ->
                 item {
-                    HomePagePagerContainer(onCloseClick = onUpgradeDismiss) {
-                        UpgradeBanner(onUpgradeClick = onUpgradeClick)
-                    }
+                    HomeBanner(
+                        banner = banner,
+                        onClick = { onBannerClick(banner) },
+                        onCloseClick = { onBannerDismiss(banner) },
+                    )
                 }
-
-            if (params.showFollowX)
-                item {
-                    HomePagePagerContainer(onCloseClick = onFollowXDismiss) {
-                        FollowXBanner(onFollowXClick = onFollowXClick)
-                    }
-                }
-
-            if (params.showBuyVult)
-                item {
-                    HomePagePagerContainer(onCloseClick = onBuyVultDismiss) {
-                        BuyVultBanner(onBuyVultClick = onBuyVultClick)
-                    }
-                }
+            }
         }
 
         if (state.pageCount > 1) {
@@ -72,19 +55,5 @@ internal fun HomepagePager(
 @Preview
 @Composable
 private fun HomepagePagerPreview() {
-    HomepagePager(
-        params = HomepagePagerParams(showUpgrade = true, showFollowX = true, showBuyVult = true),
-        onUpgradeClick = {},
-        onFollowXClick = {},
-        onBuyVultClick = {},
-        onBuyVultDismiss = {},
-        onUpgradeDismiss = {},
-        onFollowXDismiss = {},
-    )
+    HomepagePager(banners = HomeBannerType.entries, onBannerClick = {}, onBannerDismiss = {})
 }
-
-internal data class HomepagePagerParams(
-    val showUpgrade: Boolean,
-    val showFollowX: Boolean,
-    val showBuyVult: Boolean,
-)

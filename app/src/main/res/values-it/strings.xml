@@ -93,6 +93,7 @@
     <string name="send_error_invalid_operator_fee">La commissione dell\'operatore deve essere un numero valido tra 0 e 10000 punti base</string>
     <string name="settings_screen_language">Lingua</string>
     <string name="settings_screen_currency">Valuta</string>
+    <string name="settings_screen_rate_the_app">Valuta l&#x2019;App</string>
     <string name="settings_screen_share_the_app">Condividi l\'App</string>
     <string name="settings_screen_title">Impostazioni</string>
     <string name="language_setting_screen_title">Lingua</string>
@@ -269,6 +270,7 @@
     <string name="verify_deposit_node_address_title">Indirizzo del nodo</string>
     <string name="verify_deposit_gas_title">Commissione di rete</string>
     <string name="custom_token_enter_contract_address">Inserisci l\'indirizzo del contratto</string>
+    <string name="custom_token_enter_currency_issuer">Inserisci valuta.emittente</string>
     <string name="custom_token_token_not_found">Token non trovato</string>
     <string name="custom_token_add_token">Aggiungi token %1$s</string>
     <string name="deposit_form_amount_title">Importo (Saldo: %1$s)</string>
@@ -630,6 +632,7 @@
     <string name="referral_create_search">Cerca</string>
     <string name="referral_create_expiration_date">Data di scadenza</string>
     <string name="referral_create_set_expiration_years">Imposta scadenza (in anni)</string>
+    <string name="referral_choose_payout_asset">Scegli asset di pagamento</string>
     <string name="referral_create_registration_fees">Commissioni di registrazione</string>
     <string name="referral_create_cost">Costo</string>
     <string name="referral_create_fees_error">Impossibile caricare le commissioni. Riprova.</string>
@@ -783,7 +786,6 @@
     <string name="search_bar_soon">Presto</string>
     <string name="upgrade_banner_sign_faster">Firma più velocemente che mai</string>
     <string name="upgrade_banner_upgrade_your">Aggiorna il tuo vault ora</string>
-    <string name="upgrade_banner_upgrade_now">Aggiorna ora</string>
     <string name="home_portfolio_balance">Saldo del portafoglio</string>
     <string name="wallet">Portafoglio</string>
     <string name="governance">Governance</string>
@@ -856,8 +858,15 @@
     <string name="send_tx_overview_add_to_address_book">Aggiungi alla rubrica</string>
     <string name="invite_to_x_banner_title">Vultisig sta costruendo con te.</string>
     <string name="invite_to_x_banner_desc">Seguici su X</string>
-    <string name="invite_to_x_banner_button">Segui %s</string>
     <string name="buy_vult_banner_desc">E risparmia sulle commissioni di swap</string>
+    <string name="rujira_banner_caption">Fai staking e guadagna</string>
+    <string name="rujira_banner_title">Lo staking Rujira è ora disponibile</string>
+    <string name="backup_banner_caption">Esegui il backup del tuo Vault</string>
+    <string name="backup_banner_title">Richiedi la custodia completa del vault</string>
+    <string name="referral_rewards_banner_caption">Non perdere i premi</string>
+    <string name="referral_rewards_banner_title">Aggiungi il tuo codice referral</string>
+    <string name="kamino_banner_caption">Novità su Solana</string>
+    <string name="kamino_banner_title">Inizia a guadagnare con Kamino</string>
     <string name="vault_detail_vault_info">Informazioni sul Vault</string>
     <string name="vault_details_keys">Chiavi</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Abilita Firma Rapida Biometrica</string>
@@ -999,6 +1008,21 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">L\'importo minimo per attivare questo indirizzo è %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">Questo indirizzo richiede un tag di destinazione. Aggiungine uno per continuare.</string>
+    <string name="send_error_xrp_destination_no_trust_line">Questo indirizzo non può ricevere %1$s. Il destinatario deve prima aprire una linea di fiducia per questo asset.</string>
+    <string name="ripple_trust_line_title">Attiva linea di fiducia</string>
+    <string name="ripple_trust_line_reserve_warning">%1$s richiede una linea di fiducia sull\'XRP Ledger prima che il tuo account possa detenerlo. Aprirla blocca in modo permanente parte dei tuoi XRP come riserva del proprietario.</string>
+    <string name="ripple_trust_line_limit">Limite della linea di fiducia</string>
+    <string name="ripple_trust_line_hero_title">Attivazione della linea di fiducia %1$s</string>
+    <string name="ripple_trust_line_type_pill">Linea di fiducia</string>
+    <string name="ripple_trust_line_currency">Valuta</string>
+    <string name="ripple_trust_line_issuer_check">L\'emittente è corretto</string>
+    <string name="ripple_trust_line_limit_check">Il limite della linea di fiducia è corretto</string>
+    <string name="ripple_trust_line_unreviewable">Impossibile verificare</string>
+    <string name="ripple_trust_line_unreviewable_value">Non è stato possibile leggere valuta, emittente o limite di questa linea di fiducia, quindi le sue condizioni non possono essere mostrate. Non firmarla.</string>
+    <string name="ripple_trust_line_reserve">Riserva bloccata</string>
+    <string name="ripple_trust_line_spendable_after">XRP disponibili dopo</string>
+    <string name="ripple_trust_line_activate">Attiva</string>
+    <string name="ripple_trust_line_insufficient_xrp">XRP disponibili insufficienti per la riserva e la commissione.</string>
     <string name="send_error_xrp_invalid_destination_tag">Tag di destinazione non valido. Inserisci un numero intero tra 1 e 4294967295.</string>
     <string name="error_invalid_chain">La catena non è valida</string>
     <string name="ton_stake_error_unsupported_pool">Questo pool di staking non è supportato</string>

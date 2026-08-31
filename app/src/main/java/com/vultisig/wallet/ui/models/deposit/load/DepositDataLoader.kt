@@ -171,7 +171,6 @@ constructor(
 
                 Chain.MayaChain -> listOf(DepositOption.Leave, DepositOption.Custom)
 
-                Chain.Kujira,
                 Chain.Osmosis -> listOf(DepositOption.TransferIbc)
 
                 Chain.GaiaChain -> listOf(DepositOption.TransferIbc)
@@ -295,13 +294,7 @@ constructor(
                                         else -> listOf(Chain.Osmosis)
                                     }
                                 } else {
-                                    listOf(
-                                            Chain.GaiaChain,
-                                            Chain.Kujira,
-                                            Chain.Osmosis,
-                                            Chain.Noble,
-                                            Chain.Akash,
-                                        )
+                                    listOf(Chain.GaiaChain, Chain.Osmosis, Chain.Noble, Chain.Akash)
                                         .filter { it != chain }
                                 }
 

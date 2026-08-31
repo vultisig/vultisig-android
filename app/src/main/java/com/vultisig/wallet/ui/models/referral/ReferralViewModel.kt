@@ -15,6 +15,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,6 +43,8 @@ constructor(
 
     val state = MutableStateFlow<ReferralUiState>(ReferralUiState.Loading)
     private var remoteReferral: String? = null
+    private var retryCount = 0
+    private val maxRetries = 3
 
     init {
         loadStatus()
@@ -69,6 +72,30 @@ constructor(
                         state.value = ReferralUiState.Unavailable
                         return@safeLaunch
                     }
+
+                    // Retry if address is not yet loaded
+                    if (coin.address.isBlank()) {
+                        if (retryCount < maxRetries) {
+                            retryCount++
+                            Timber.d(
+                                "Coin address not ready, retrying in 500ms (attempt %d/%d)",
+                                retryCount,
+                                maxRetries,
+                            )
+                            viewModelScope.launch {
+                                delay(500)
+                                loadStatus()
+                            }
+                        } else {
+                            Timber.d(
+                                "Coin address never became available after %d retries",
+                                maxRetries,
+                            )
+                            state.value = ReferralUiState.Unavailable
+                        }
+                        return@safeLaunch
+                    }
+
                     withContext(Dispatchers.IO) {
                         thorChainApi.getReferralCodesByAddress(coin.address)
                     }

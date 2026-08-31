@@ -21,7 +21,6 @@ internal val Chain.logo: Int
             Chain.Dogecoin -> R.drawable.doge
             Chain.Dash -> R.drawable.dash
             Chain.GaiaChain -> R.drawable.atom
-            Chain.Kujira -> R.drawable.kuji
             Chain.MayaChain -> R.drawable.maya
             Chain.CronosChain -> R.drawable.cro
             Chain.Polkadot -> R.drawable.dot
@@ -65,7 +64,6 @@ internal val Chain.monoToneLogo: Int
             Chain.Dogecoin -> R.drawable.doge_mono
             Chain.Dash -> R.drawable.dash_mono
             Chain.GaiaChain -> R.drawable.cosmos_mono
-            Chain.Kujira -> R.drawable.kuji_mono
             Chain.MayaChain -> R.drawable.maya_mono
             Chain.CronosChain -> R.drawable.cronos_mono
             Chain.Polkadot -> R.drawable.dot_mono

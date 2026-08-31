@@ -19,4 +19,7 @@ data class ThorChainPoolJson(
     // lookup, without asking thornode about all ~100 of them.
     @SerialName("pending_inbound_rune") val pendingInboundRune: String = "0",
     @SerialName("pending_inbound_asset") val pendingInboundAsset: String = "0",
+    // The asset's own precision, only present when it differs from the 8 decimals THORChain
+    // accounts in (e.g. 6 for ETH.USDC). Absent for most pools.
+    @SerialName("decimals") val decimals: Int? = null,
 )

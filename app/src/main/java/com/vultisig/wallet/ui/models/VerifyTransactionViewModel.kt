@@ -9,6 +9,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.chains.helpers.RippleDappTx
+import com.vultisig.wallet.data.models.RippleTrustSetDisplay
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
@@ -85,6 +86,13 @@ internal data class TransactionDetailsUiModel(
     @StringRes val headerTitleRes: Int? = null,
     // XRP destination tag (decimal), shown as its own row alongside the memo.
     val destinationTag: String? = null,
+    /** Set for an XRPL trust-line activation, whose amount is a limit rather than a transfer. */
+    val isRippleTrustSet: Boolean = false,
+    /**
+     * Null when the terms cannot be read — separate from [isRippleTrustSet] so an unreadable trust
+     * line still suppresses the payment rows.
+     */
+    val rippleTrustSet: RippleTrustSetDisplay? = null,
     val signAmino: String? = null,
     val signDirect: String? = null,
     /** Base64 raw txs of a dApp signSolana batch (issue #5238); empty for non-Solana-dApp txs. */
@@ -158,6 +166,8 @@ internal data class VerifyTransactionUiModel(
     val transaction: TransactionDetailsUiModel = TransactionDetailsUiModel(),
     val consentAddress: Boolean = false,
     val consentAmount: Boolean = false,
+    val consentIssuer: Boolean = false,
+    val consentLimit: Boolean = false,
     val consentDappTransaction: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
@@ -171,8 +181,12 @@ internal data class VerifyTransactionUiModel(
         // consents are meaningless there. Gate it on a single "reviewed the details" consent
         // instead; native sends keep the two-checkbox flow.
         get() =
-            if (transaction.signRipple != null) consentDappTransaction
-            else consentAddress && consentAmount
+            when {
+                transaction.signRipple != null -> consentDappTransaction
+                // A trust line names no recipient and moves no amount.
+                transaction.isRippleTrustSet -> consentIssuer && consentLimit
+                else -> consentAddress && consentAmount
+            }
 }
 
 /**
@@ -243,6 +257,14 @@ constructor(
 
     fun checkConsentAmount(checked: Boolean) {
         viewModelScope.launch { _uiState.update { it.copy(consentAmount = checked) } }
+    }
+
+    fun checkConsentIssuer(checked: Boolean) {
+        viewModelScope.launch { _uiState.update { it.copy(consentIssuer = checked) } }
+    }
+
+    fun checkConsentLimit(checked: Boolean) {
+        viewModelScope.launch { _uiState.update { it.copy(consentLimit = checked) } }
     }
 
     fun checkConsentDappTransaction(checked: Boolean) {

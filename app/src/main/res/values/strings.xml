@@ -224,6 +224,7 @@
     <string name="send_error_insufficient_frozen_balance">Amount exceeds frozen %1$s balance</string>
     <string name="settings_screen_language">Language</string>
     <string name="settings_screen_currency">Currency</string>
+    <string name="settings_screen_rate_the_app">Rate the App</string>
     <string name="settings_screen_share_the_app">Share the App</string>
     <string name="settings_screen_title">Settings</string>
     <string name="language_setting_screen_title">Language</string>
@@ -385,6 +386,7 @@
     <string name="verify_deposit_node_address_title">Node Address</string>
     <string name="verify_deposit_gas_title">Gas</string>
     <string name="custom_token_enter_contract_address">Enter Contract Address</string>
+    <string name="custom_token_enter_currency_issuer">Enter Currency.Issuer</string>
     <string name="custom_token_token_not_found">Token not found</string>
     <string name="custom_token_add_token">Add %1$s Token</string>
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
@@ -575,6 +577,21 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Minimum amount to activate this address is %1$s %2$s.</string>
     <string name="send_error_xrp_destination_tag_required">This address requires a destination tag. Add one to continue.</string>
+    <string name="send_error_xrp_destination_no_trust_line">This address can’t receive %1$s. The recipient needs to open a trust line for it first.</string>
+    <string name="ripple_trust_line_title">Activate trust line</string>
+    <string name="ripple_trust_line_reserve_warning">%1$s needs a trust line on the XRP Ledger before your account can hold it. Opening one permanently locks part of your XRP as an owner reserve.</string>
+    <string name="ripple_trust_line_limit">Trust Line Limit</string>
+    <string name="ripple_trust_line_hero_title">Activating the %1$s trust line</string>
+    <string name="ripple_trust_line_type_pill">Trust line</string>
+    <string name="ripple_trust_line_currency">Currency</string>
+    <string name="ripple_trust_line_issuer_check">The issuer is correct</string>
+    <string name="ripple_trust_line_limit_check">The trust line limit is correct</string>
+    <string name="ripple_trust_line_unreviewable">Cannot review</string>
+    <string name="ripple_trust_line_unreviewable_value">This trust line\'s currency, issuer or limit could not be read, so its terms cannot be shown. Do not sign it.</string>
+    <string name="ripple_trust_line_reserve">Reserve Locked</string>
+    <string name="ripple_trust_line_spendable_after">Spendable XRP After</string>
+    <string name="ripple_trust_line_activate">Activate</string>
+    <string name="ripple_trust_line_insufficient_xrp">Not enough spendable XRP to cover the reserve and fee.</string>
     <string name="send_error_xrp_invalid_destination_tag">Invalid destination tag. Enter a whole number between 1 and 4294967295.</string>
     <string name="error_invalid_chain">Chain is invalid</string>
     <string name="ton_stake_error_unsupported_pool">This staking pool isn\'t supported</string>
@@ -943,6 +960,7 @@
     <string name="referral_create_search">Search</string>
     <string name="referral_create_expiration_date">Expiration date</string>
     <string name="referral_create_set_expiration_years">Set Expiration (in years)</string>
+    <string name="referral_choose_payout_asset">Choose payout asset</string>
     <string name="referral_create_registration_fees">Registration Fees</string>
     <string name="referral_create_cost">Cost</string>
     <string name="referral_create_fees_error">Failed to load fees. Please try again.</string>
@@ -1100,7 +1118,6 @@
     <string name="search_bar_soon">Soon</string>
     <string name="upgrade_banner_sign_faster">Sign faster than ever before</string>
     <string name="upgrade_banner_upgrade_your">Upgrade your vault now</string>
-    <string name="upgrade_banner_upgrade_now">Upgrade now</string>
     <string name="home_portfolio_balance">Portfolio Balance</string>
     <string name="wallet">Wallet</string>
     <string name="governance">Governance</string>
@@ -1184,10 +1201,16 @@
     <string name="send_tx_overview_add_to_address_book">Add to Address Book</string>
     <string name="invite_to_x_banner_title">Vultisig is building with you.</string>
     <string name="invite_to_x_banner_desc">Follow us on X</string>
-    <string name="invite_to_x_banner_button">Follow @%s</string>
     <string name="buy_vult_banner_title" translatable="false">Buy $VULT</string>
     <string name="buy_vult_banner_desc">And save on swap fees</string>
-    <string name="buy_vult_banner_button" translatable="false">Buy $VULT</string>
+    <string name="rujira_banner_caption">Stake &amp; earn</string>
+    <string name="rujira_banner_title">Rujira staking live now</string>
+    <string name="backup_banner_caption">Back Up Your Vault</string>
+    <string name="backup_banner_title">Request full vault custody</string>
+    <string name="referral_rewards_banner_caption">Don’t miss rewards</string>
+    <string name="referral_rewards_banner_title">Add your referral code</string>
+    <string name="kamino_banner_caption">New on Solana</string>
+    <string name="kamino_banner_title">Start earning with Kamino</string>
     <string name="home_defi_portfolio">DeFi Portfolio</string>
     <string name="home_page_no_chains_enabled">No chains enabled</string>
     <string name="home_page_no_chain_enabled_desc">You’ve disabled all chains. Make sure that at least one chain is enabled.</string>

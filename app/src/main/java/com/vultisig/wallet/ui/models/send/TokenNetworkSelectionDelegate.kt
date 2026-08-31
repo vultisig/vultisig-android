@@ -286,8 +286,11 @@ internal class TokenNetworkSelectionDelegate(
         val vaultId = vaultIdProvider()
         if (vaultId.isNullOrBlank()) return
 
+        // A deep link carries the chain id as text, so it can name one this build no longer has —
+        // an old `vultisig://send?assetChain=…` for a since-retired chain. Fall through to matching
+        // the address against the chains that do exist rather than throwing on the way in.
         val chainValidForAddress =
-            preSelectedChainId?.let { listOf(Chain.fromRaw(preSelectedChainId)) }
+            preSelectedChainId?.let { Chain.fromRawOrNull(it) }?.let(::listOf)
                 ?: Chain.entries.filter { chain ->
                     chainAccountAddressRepository.isValid(chain, qrCode)
                 }

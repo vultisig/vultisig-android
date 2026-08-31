@@ -29,8 +29,8 @@ import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
-import com.vultisig.wallet.data.repositories.PromoBanner
 import com.vultisig.wallet.data.repositories.PromoBannerDismissalRepository
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TiersNFTRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -50,6 +50,8 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultIntroItem
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.pushNotificationErrorUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -69,6 +71,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -100,12 +103,10 @@ internal data class VaultAccountsUiModel(
     val hasLoadedAccounts: Boolean = false,
     val hasLoadedDeFiAccounts: Boolean = false,
     val searchTextFieldState: TextFieldState = TextFieldState(),
-    // Per-banner visibility, each gated on a global dismissal whose lifetime is the banner's own
-    // policy (#5064). The upgrade banner additionally requires the vault to be GG20
-    // (migration-eligible).
-    val showUpgradeBanner: Boolean = false,
-    val showFollowXBanner: Boolean = false,
-    val showBuyVultBanner: Boolean = false,
+    // Promo banners this vault is eligible for, in carousel order. Each is gated on a global
+    // dismissal whose lifetime is the banner's own policy (#5064) plus, for some, a fact about the
+    // vault — see collectBannerVisibility.
+    val banners: List<HomeBannerType> = emptyList(),
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
     val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
     val isChainSelectionEnabled: Boolean = true,
@@ -163,6 +164,7 @@ constructor(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
     private val promoBannerDismissalRepository: PromoBannerDismissalRepository,
+    private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
     private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
     private val hasCircleAccount: HasCircleAccountUseCase,
@@ -210,33 +212,57 @@ constructor(
         bannerJob?.cancel()
         bannerJob =
             viewModelScope.safeLaunch {
-                // Re-collected per vault so an expired TTL is re-evaluated on vault switch / home
-                // re-entry. The upgrade banner is migration-only (GG20); the others depend solely
-                // on
-                // their global dismissal window.
-                val isMigrationEligible =
-                    withContext(ioDispatcher) { vaultRepository.get(vaultId) }?.libType ==
-                        SigningLibType.GG20
-                combine(
-                        promoBannerDismissalRepository.isDismissed(PromoBanner.UpgradeVaultDkls),
-                        promoBannerDismissalRepository.isDismissed(PromoBanner.FollowXVultisig),
-                        promoBannerDismissalRepository.isDismissed(PromoBanner.BuyVultSwap),
-                    ) { upgradeDismissed, followXDismissed, buyVultDismissed ->
-                        Triple(
-                            isMigrationEligible && !upgradeDismissed,
-                            !followXDismissed,
-                            !buyVultDismissed,
-                        )
+                // Re-evaluated per vault so an expired TTL, a newly enabled chain or a referral
+                // code entered elsewhere are all picked up on vault switch / home re-entry.
+                val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
+                val chains = vault?.coins?.mapTo(mutableSetOf()) { it.chain }.orEmpty()
+                val hasReferralCode =
+                    withContext(ioDispatcher) {
+                        !referralCodeSettingsRepository
+                            .getExternalReferralBy(vaultId)
+                            .isNullOrEmpty()
                     }
-                    .collect { (showUpgrade, showFollowX, showBuyVult) ->
-                        uiState.update {
-                            it.copy(
-                                showUpgradeBanner = showUpgrade,
-                                showFollowXBanner = showFollowX,
-                                showBuyVultBanner = showBuyVult,
-                            )
+
+                val eligible =
+                    HomeBannerType.entries.filter { banner ->
+                        when (banner) {
+                            HomeBannerType.UpgradeVault -> vault?.libType == SigningLibType.GG20
+                            // Chain-gated because these two open that chain's DeFi screen, and on a
+                            // vault without it there would be nowhere for them to go.
+                            HomeBannerType.KaminoEarn -> Chain.Solana in chains
+                            HomeBannerType.RujiraStaking -> Chain.ThorChain in chains
+                            HomeBannerType.ReferralRewards -> !hasReferralCode
+                            // Backup is gated on the backup flow below rather than here, because it
+                            // is the one fact that can change while home is on screen.
+                            HomeBannerType.BackupVault -> true
+                            HomeBannerType.FollowX,
+                            HomeBannerType.BuyVult -> true
                         }
                     }
+
+                // combine() over an empty list never emits, so the carousel would keep whatever it
+                // last showed instead of emptying.
+                val dismissals =
+                    if (eligible.isEmpty()) flowOf(emptyList())
+                    else
+                        combine(
+                            eligible.map {
+                                promoBannerDismissalRepository.isDismissed(it.promoBanner)
+                            }
+                        ) {
+                            it.toList()
+                        }
+
+                combine(dismissals, vaultDataStoreRepository.readBackupStatus(vaultId)) {
+                        dismissed,
+                        isBackedUp ->
+                        eligible.filterIndexed { index, banner ->
+                            !dismissed[index] &&
+                                (banner != HomeBannerType.BackupVault || !isBackedUp)
+                        }
+                    }
+                    .distinctUntilChanged()
+                    .collect { banners -> uiState.update { it.copy(banners = banners) } }
             }
     }
 
@@ -294,9 +320,10 @@ constructor(
                     hasLoadedDeFiAccounts = false,
                     totalFiatValue = null,
                     totalDeFiValue = null,
-                    // Upgrade banner is vault-scoped (GG20-only); clear it eagerly so the previous
-                    // vault's CTA can't flash before collectBannerVisibility re-evaluates libType.
-                    showUpgradeBanner = false,
+                    // Several banners are vault-scoped (GG20, chain presence, referral code);
+                    // clear them eagerly so the previous vault's CTAs can't flash before
+                    // collectBannerVisibility re-evaluates against the new one.
+                    banners = emptyList(),
                 )
             }
         }
@@ -389,7 +416,7 @@ constructor(
     }
 
     /**
-     * Re-reads the DeFi list when home comes back to the front.
+     * Re-reads the promo banners and the DeFi list when home comes back to the front.
      *
      * Positions are changed a screen deeper — a Kamino vault switched on under Manage Positions, a
      * deposit signed — and nothing on the way back asks this list to look again, so it kept
@@ -403,6 +430,10 @@ constructor(
      */
     fun onScreenResumed() {
         val vaultId = vaultId ?: return
+        // Banner eligibility is a snapshot taken per load, and the facts behind it are changed a
+        // screen deeper: a referral code entered through the referral banner itself, a chain
+        // enabled. Re-read them here or the promo keeps asking for what the user just gave it.
+        collectBannerVisibility(vaultId)
         if (uiState.value.cryptoConnectionType != CryptoConnectionType.Defi) return
         if (isDeFiRefreshThrottled) return
         loadDeFiBalances(vaultId, isRefresh = true)
@@ -443,17 +474,63 @@ constructor(
         }
     }
 
-    fun dismissBuyVultBanner() = dismissPromoBanner(PromoBanner.BuyVultSwap)
-
-    fun dismissUpgradeBanner() = dismissPromoBanner(PromoBanner.UpgradeVaultDkls)
-
-    fun dismissFollowXBanner() = dismissPromoBanner(PromoBanner.FollowXVultisig)
+    /**
+     * Where each promo banner goes when the card is tapped — the whole card is the target now that
+     * Figma has dropped the separate CTA button.
+     *
+     * [HomeBannerType.FollowX] is absent on purpose: it leaves the app for a URL and is answered in
+     * the composable, which is where a `Context` exists.
+     */
+    fun onBannerClick(banner: HomeBannerType) {
+        val vaultId = vaultId ?: return
+        when (banner) {
+            HomeBannerType.UpgradeVault -> migrate()
+            HomeBannerType.BuyVult -> buyVult()
+            HomeBannerType.BackupVault -> backupVault()
+            // Straight to the chain's DeFi screen: Solana opens on Earn, and THORChain is asked
+            // for Staked because it otherwise opens on Bonded, a tab away from the Rujira staking
+            // this banner advertises.
+            //
+            // The chain dashboard renders whichever side of the wallet / DeFi toggle is active
+            // rather than the route it was opened with, so the toggle has to move first: from the
+            // wallet tab, where these banners are usually tapped, both would otherwise land on the
+            // chain's token list.
+            HomeBannerType.KaminoEarn ->
+                viewModelScope.launch {
+                    cryptoConnectionTypeRepository.setActiveCryptoConnection(
+                        CryptoConnectionType.Defi
+                    )
+                    navigator.route(
+                        Route.ChainDashboard(ChainDashboardRoute.PositionSolana(vaultId = vaultId))
+                    )
+                }
+            HomeBannerType.RujiraStaking ->
+                viewModelScope.launch {
+                    cryptoConnectionTypeRepository.setActiveCryptoConnection(
+                        CryptoConnectionType.Defi
+                    )
+                    navigator.route(
+                        Route.ChainDashboard(
+                            ChainDashboardRoute.PositionTokens(
+                                vaultId = vaultId,
+                                tab = DeFiTab.STAKED,
+                            )
+                        )
+                    )
+                }
+            HomeBannerType.ReferralRewards ->
+                viewModelScope.launch {
+                    navigator.route(Route.ReferralExternalEdition(vaultId = vaultId))
+                }
+            HomeBannerType.FollowX -> Unit
+        }
+    }
 
     // Global dismissal: the banner stays hidden across vaults for as long as its policy says —
-    // until a TTL elapses, or for good (#5064). Writing the timestamp re-emits the dismissal flow,
-    // so the banner hides reactively without a session flag.
-    private fun dismissPromoBanner(banner: PromoBanner) {
-        viewModelScope.safeLaunch { promoBannerDismissalRepository.dismiss(banner) }
+    // until a TTL elapses, until the process ends, or for good (#5064). Writing the dismissal
+    // re-emits its flow, so the banner hides reactively without a session flag here.
+    fun onBannerDismiss(banner: HomeBannerType) {
+        viewModelScope.safeLaunch { promoBannerDismissalRepository.dismiss(banner.promoBanner) }
     }
 
     fun receive() {

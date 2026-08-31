@@ -60,36 +60,34 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
             "DAI",
         )
 
-    private val evmAggregators =
-        setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER, SwapProvider.SWAPKIT)
+    // SwapKit is absent from every set below on purpose: [providersFor] appends it centrally for
+    // any chain [SwapKitCapability.canReceiveOn] allows, so a newly supported network never needs a
+    // row here just to be offered a SwapKit quote.
+    private val evmAggregators = setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
     private val thorchainPlusEvmAggregators =
-        setOf(
-            SwapProvider.THORCHAIN,
-            SwapProvider.ONEINCH,
-            SwapProvider.LIFI,
-            SwapProvider.KYBER,
-            SwapProvider.SWAPKIT,
-        )
+        setOf(SwapProvider.THORCHAIN, SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
     private val mayaPlusEvmAggregators =
-        setOf(
-            SwapProvider.MAYA,
-            SwapProvider.ONEINCH,
-            SwapProvider.LIFI,
-            SwapProvider.KYBER,
-            SwapProvider.SWAPKIT,
-        )
+        setOf(SwapProvider.MAYA, SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
 
     /** Providers that only quote same-chain swaps; filtered out for cross-chain pairs. */
     private val sameChainOnly = setOf(SwapProvider.ONEINCH, SwapProvider.KYBER)
 
     override fun providersFor(coin: Coin): Set<SwapProvider> {
+        val natural = naturalProvidersFor(coin)
+        return if (SwapKitCapability.canReceiveOn(coin.chain)) natural + SwapProvider.SWAPKIT
+        else natural
+    }
+
+    /**
+     * The chain's own provider set, before SwapKit is appended by [providersFor]. THORChain / Maya
+     * eligibility is still per-token here; SwapKit's is not a table concern at all.
+     */
+    private fun naturalProvidersFor(coin: Coin): Set<SwapProvider> {
         val ticker = coin.ticker.uppercase()
         return when (coin.chain) {
             Chain.MayaChain -> setOf(SwapProvider.MAYA)
 
-            // SwapKit DASH routes are signed by SwapKitLegacyP2PKHSigner (legacy P2PKH PSBT via
-            // CoinType.DASH). Mirrors iOS' `.dash → [.mayachain, .swapkit]`.
-            Chain.Dash -> setOf(SwapProvider.MAYA, SwapProvider.SWAPKIT)
+            Chain.Dash -> setOf(SwapProvider.MAYA)
 
             Chain.Ethereum -> ethereumProviders(ticker)
 
@@ -118,11 +116,13 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
             Chain.Mantle -> setOf(SwapProvider.LIFI, SwapProvider.KYBER)
 
             // All three live-confirmed on 4663; 1inch /swap returns executable calldata to its
-            // deployed router (0x5a70…89c7).
+            // deployed router (0x5a70…89c7). SwapKit rides along via [providersFor], destination
+            // only — Blockaid does not index 4663, so [SwapKitCapability.canQuoteFrom] refuses it
+            // as a source.
             Chain.Robinhood -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
 
             Chain.ThorChain -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
-            Chain.Bitcoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA, SwapProvider.SWAPKIT)
+            Chain.Bitcoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
 
             // THORChain's only Cosmos Hub pool is native ATOM. IBC/factory tokens (e.g. rKUJI)
             // would be sent as `GAIA.<TICKER>-ibc/...`, which Thornode rejects with "bad to asset"
@@ -133,17 +133,11 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
                     setOf(SwapProvider.THORCHAIN)
                 else emptySet()
 
-            // SwapKit DOGE/BCH/LTC routes: DOGE/BCH are legacy P2PKH (SwapKitLegacyP2PKHSigner,
-            // with
-            // BCH's SIGHASH_FORKID), LTC is segwit PSBT (SwapKitBtcSigner). Mirrors iOS'
-            // `.dogecoin/.bitcoinCash/.litecoin → [.thorchain, .swapkit]`.
             Chain.Dogecoin,
             Chain.BitcoinCash,
-            Chain.Litecoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
+            Chain.Litecoin -> setOf(SwapProvider.THORCHAIN)
 
-            // SwapKit ZEC routes are signed by SwapKitZcashSigner (Sapling-v4 transparent PSBT,
-            // ZIP-243 sighash). Mirrors iOS' `.zcash → [.mayachain, .swapkit]`.
-            Chain.Zcash -> setOf(SwapProvider.MAYA, SwapProvider.SWAPKIT)
+            Chain.Zcash -> setOf(SwapProvider.MAYA)
 
             Chain.Arbitrum ->
                 if (isMayaEligible(Chain.Arbitrum, ticker, mayaArbTokens)) mayaPlusEvmAggregators
@@ -154,43 +148,21 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
 
             Chain.Solana ->
                 if (coin.isNativeToken)
-                    setOf(
-                        SwapProvider.THORCHAIN,
-                        SwapProvider.JUPITER,
-                        SwapProvider.LIFI,
-                        SwapProvider.SWAPKIT,
-                    )
-                else setOf(SwapProvider.JUPITER, SwapProvider.LIFI, SwapProvider.SWAPKIT)
+                    setOf(SwapProvider.THORCHAIN, SwapProvider.JUPITER, SwapProvider.LIFI)
+                else setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
 
-            // SwapKit XRP is deposit-only — no signer; the native RippleHelper builds the Payment
-            // to
-            // SwapKit's deposit r-address. Mirrors iOS' `.ripple → [.thorchain, .swapkit]`.
-            Chain.Ripple -> setOf(SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
+            Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
 
-            // SwapKit TRON routes are signed by SwapKitTronSigner (TronWeb object → sha256 of
-            // raw_data_hex). Mirrors iOS' `.tron → [.thorchain, .swapkit]`.
-            Chain.Tron -> setOf(SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
+            Chain.Tron -> setOf(SwapProvider.THORCHAIN)
 
-            // SwapKit TON routes are a plain native deposit transfer signed via TonHelper. TON has
-            // no native Thor/Maya route on Android, so it is SwapKit-only. Mirrors iOS'
-            // `.ton → [.swapkit]`.
-            Chain.Ton -> setOf(SwapProvider.SWAPKIT)
+            // TON, SUI and Cardano have no native Thor/Maya route on Android, so SwapKit — appended
+            // by [providersFor] — is the only provider they ever carry.
+            Chain.Ton,
+            Chain.Sui,
+            Chain.Cardano -> emptySet()
 
             Chain.Hyperliquid -> setOf(SwapProvider.LIFI)
 
-            // SwapKit SUI routes are signed by SwapKitSuiSigner (Blake2b-32 of the intent-prefixed
-            // PTB, Ed25519 envelope). Mirrors iOS' `.sui → [.swapkit]`.
-            Chain.Sui -> setOf(SwapProvider.SWAPKIT)
-
-            // SwapKit Cardano routes are signed by SwapKitCardanoSigner (Blake2b-256 of the CBOR tx
-            // body, Ed25519 vkey witness). Mirrors iOS' `.cardano → [.swapkit]`.
-            Chain.Cardano -> setOf(SwapProvider.SWAPKIT)
-
-            // MayaChain was the only provider ever mapped for Kujira, and it has delisted every
-            // KUJI.* pool (verified against /mayachain/pools on 2026-08-01), so every Kujira quote
-            // is a guaranteed failure (#5472). [poolEligibility] can only ADD routes, so the entry
-            // has to go for the pair to stop being offered.
-            Chain.Kujira,
             Chain.Polkadot,
             Chain.Bittensor,
             Chain.Dydx,
@@ -208,9 +180,15 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
         val shared = providersFor(srcToken).intersect(providersFor(dstToken))
         val crossChain = srcToken.chain != dstToken.chain
         val bothThorChain = srcToken.chain == Chain.ThorChain && dstToken.chain == Chain.ThorChain
+        // SwapKit eligibility is directional (iOS SwapCoinsResolver.resolveAllProviders): a chain
+        // the app can receive on but cannot reputation-check stays a valid SwapKit *destination*
+        // while being refused as a source. Dropping only SwapKit here — never the whole pair —
+        // leaves 1inch / Kyber / LI.FI / THOR / Maya standing on such a source.
+        val swapKitSourceBlocked = !SwapKitCapability.canQuoteFrom(srcToken.chain)
         return shared.filter { provider ->
             (!crossChain || provider !in sameChainOnly) &&
-                !(bothThorChain && provider == SwapProvider.MAYA)
+                !(bothThorChain && provider == SwapProvider.MAYA) &&
+                !(swapKitSourceBlocked && provider == SwapProvider.SWAPKIT)
         }
     }
 

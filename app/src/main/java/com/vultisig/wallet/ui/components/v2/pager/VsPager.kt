@@ -7,18 +7,16 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import com.vultisig.wallet.ui.components.v2.pager.utils.VsPagerState
 
 @Composable
@@ -27,35 +25,31 @@ internal fun VsPager(
     state: VsPagerState,
     content: VsPagerState.() -> Unit,
 ) {
-    var maxHeight by remember { mutableStateOf(140.dp) }
     val density = LocalDensity.current
 
     val pagerState = rememberPagerState(pageCount = { state.pageCount })
 
+    val pageHeights = remember { mutableStateMapOf<Int, Dp>() }
+
     LaunchedEffect(state) {
         state.clear()
         state.content()
+        // Page indices are reused across a different set of pages, so heights measured for the
+        // previous set would otherwise keep the pager at the tallest page it has *ever* shown.
+        pageHeights.clear()
     }
 
     LaunchedEffect(pagerState.currentPage) { state.updateCurrentPage(pagerState.currentPage) }
 
-    val pageHeights = remember { mutableStateMapOf<Int, Dp>() }
-
-    val updateMaxHeight = remember {
-        { index: Int, newHeight: Dp ->
-            val oldHeight = pageHeights[index]
-            if (oldHeight != newHeight) {
-                pageHeights[index] = newHeight
-                maxHeight = max(newHeight, maxHeight)
-            }
-        }
-    }
+    // Tallest page currently measured, so the pager reserves one height for every page instead of
+    // resizing as the user swipes. Derived rather than accumulated: a monotonic maximum could only
+    // ever grow, and would strand the empty space of a page that is no longer there.
+    val maxHeight by remember { derivedStateOf { pageHeights.values.maxOrNull() ?: 0.dp } }
 
     val onPageMeasured =
-        remember(density, updateMaxHeight) {
+        remember(density) {
             { index: Int, size: IntSize ->
-                val heightDp = with(density) { size.height.toDp() }
-                updateMaxHeight(index, heightDp)
+                pageHeights[index] = with(density) { size.height.toDp() }
             }
         }
 

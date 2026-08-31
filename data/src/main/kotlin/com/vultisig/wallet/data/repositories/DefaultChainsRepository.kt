@@ -25,7 +25,9 @@ constructor(private val dataStore: AppDataStore, private val json: Json) : Defau
         get() =
             dataStore.readData(stringPreferencesKey(SELECTED_DEFAULT_CHAINS_KEY), "").map { it ->
                 try {
-                        json.decodeFromString<List<String>>(it).map { Chain.fromRaw(it) }
+                        json.decodeFromString<List<String>>(it).mapNotNull { id ->
+                            Chain.fromRawOrNull(id)
+                        }
                     } catch (e: Throwable) {
                         Timber.e(e)
                         DEFAULT_CHAINS_LIST

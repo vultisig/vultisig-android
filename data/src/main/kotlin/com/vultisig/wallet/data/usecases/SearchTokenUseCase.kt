@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenStandard.EVM
 import com.vultisig.wallet.data.models.TokenStandard.SOL
+import com.vultisig.wallet.data.models.parseRippleTokenIdentity
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import java.math.BigDecimal
@@ -24,14 +25,16 @@ constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val searchEvmToken: SearchEvmTokenUseCase,
     private val searchSolToken: SearchSolTokenUseCase,
-    private val searchKujiToken: SearchKujiraTokenUseCase,
     private val searchTerraToken: SearchTerraTokenUseCase,
     private val searchSuiToken: SearchSuiTokenUseCase,
+    private val searchRippleToken: SearchRippleTokenUseCase,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : SearchTokenUseCase {
 
     override suspend fun invoke(chainId: String, contractAddress: String): CoinAndFiatValue? {
-        val chain = Chain.fromRaw(chainId)
+        // An id no entry resolves for has no token to find, which is what a null already means
+        // here — the search reports "not found" rather than throwing out of the caller's launch.
+        val chain = Chain.fromRawOrNull(chainId) ?: return null
         return contractAddress
             .trim()
             .takeIf { it.isValidAddressOn(chain) }
@@ -44,9 +47,9 @@ constructor(
         when {
             chain.standard == EVM -> searchEvmToken(chainId, address)
             chain.standard == SOL -> searchSolToken(address)
-            chain == Chain.Kujira -> searchKujiToken(address)
             chain == Chain.Terra || chain == Chain.TerraClassic -> searchTerraToken(chain, address)
             chain == Chain.Sui -> searchSuiToken(address)
+            chain == Chain.Ripple -> searchRippleToken(address)
             else -> null
         }
 
@@ -60,15 +63,9 @@ constructor(
             Chain.Terra,
             Chain.TerraClassic -> isCw20ContractAddressShape()
             Chain.Sui -> isSuiCoinTypeShape()
-            else ->
-                isNotEmpty() &&
-                    chainAccountAddressRepository.isValid(chain, canonicalizedFor(chain))
+            Chain.Ripple -> isRippleTokenIdShape()
+            else -> isNotEmpty() && chainAccountAddressRepository.isValid(chain, this)
         }
-
-    private fun String.canonicalizedFor(chain: Chain): String =
-        if (chain == Chain.Kujira && startsWith(KUJIRA_FACTORY_PREFIX)) {
-            substringAfter('/').substringBefore('/')
-        } else this
 
     /**
      * Bech32 *shape* check for a Terra CW20 contract address, mirroring the SDK's
@@ -98,10 +95,15 @@ constructor(
             !SuiHelper.isNativeSuiCoinType(this)
     }
 
+    /** Of the `currency.issuer` pair, only the issuer is an address that can be validated. */
+    private fun String.isRippleTokenIdShape(): Boolean =
+        parseRippleTokenIdentity(this)?.let {
+            chainAccountAddressRepository.isValid(Chain.Ripple, it.issuer)
+        } == true
+
     private fun Coin.hasSaneMetadata(): Boolean = ticker.isNotBlank() && decimal in 0..MAX_DECIMALS
 
     private companion object {
-        const val KUJIRA_FACTORY_PREFIX = "factory/"
         const val TERRA_CONTRACT_PREFIX = "terra1"
         const val MAX_DECIMALS = 30
     }

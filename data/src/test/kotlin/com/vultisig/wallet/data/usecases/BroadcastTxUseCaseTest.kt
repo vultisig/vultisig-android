@@ -50,10 +50,10 @@ class BroadcastTxUseCaseTest {
         val cosmosApi = mockk<CosmosApi>()
         val cosmosApiFactory = mockk<CosmosApiFactory>()
         coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } returns null
-        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+        every { cosmosApiFactory.createCosmosApi(Chain.GaiaChain) } returns cosmosApi
 
         val txHash =
-            createUseCase(cosmosApiFactory = cosmosApiFactory)(Chain.Kujira, signedTransaction())
+            createUseCase(cosmosApiFactory = cosmosApiFactory)(Chain.GaiaChain, signedTransaction())
 
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
     }
@@ -149,10 +149,10 @@ class BroadcastTxUseCaseTest {
         val cosmosApi = mockk<CosmosApi>()
         val cosmosApiFactory = mockk<CosmosApiFactory>()
         coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } returns BROADCAST_HASH
-        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+        every { cosmosApiFactory.createCosmosApi(Chain.GaiaChain) } returns cosmosApi
 
         val txHash =
-            createUseCase(cosmosApiFactory = cosmosApiFactory)(Chain.Kujira, signedTransaction())
+            createUseCase(cosmosApiFactory = cosmosApiFactory)(Chain.GaiaChain, signedTransaction())
 
         assertEquals(BROADCAST_HASH, txHash)
     }
@@ -163,10 +163,10 @@ class BroadcastTxUseCaseTest {
         val cosmosApiFactory = mockk<CosmosApiFactory>()
         coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } throws sequenceMismatch()
         coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns txStatus(code = 0)
-        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+        every { cosmosApiFactory.createCosmosApi(Chain.GaiaChain) } returns cosmosApi
 
         val txHash =
-            createUseCase(cosmosApiFactory = cosmosApiFactory)(Chain.Kujira, signedTransaction())
+            createUseCase(cosmosApiFactory = cosmosApiFactory)(Chain.GaiaChain, signedTransaction())
 
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
         coVerify(exactly = 1) { cosmosApi.broadcastTransaction(RAW_TRANSACTION) }
@@ -180,12 +180,12 @@ class BroadcastTxUseCaseTest {
         coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } throws rejection
         // Our hash is on chain but the execution failed (non-zero code): no funds moved.
         coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns txStatus(code = 5)
-        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+        every { cosmosApiFactory.createCosmosApi(Chain.GaiaChain) } returns cosmosApi
 
         val thrown =
             assertFailsWith<CosmosBroadcastException> {
                 createUseCase(cosmosApiFactory = cosmosApiFactory)(
-                    Chain.Kujira,
+                    Chain.GaiaChain,
                     signedTransaction(),
                 )
             }
@@ -200,12 +200,12 @@ class BroadcastTxUseCaseTest {
         coEvery { cosmosApi.broadcastTransaction(RAW_TRANSACTION) } throws rejection
         // A different tx consumed the sequence, so the LCD never finds our hash.
         coEvery { cosmosApi.getTxStatus(KNOWN_TRANSACTION_HASH) } returns null
-        every { cosmosApiFactory.createCosmosApi(Chain.Kujira) } returns cosmosApi
+        every { cosmosApiFactory.createCosmosApi(Chain.GaiaChain) } returns cosmosApi
 
         val thrown =
             assertFailsWith<CosmosBroadcastException> {
                 createUseCase(cosmosApiFactory = cosmosApiFactory)(
-                    Chain.Kujira,
+                    Chain.GaiaChain,
                     signedTransaction(),
                 )
             }

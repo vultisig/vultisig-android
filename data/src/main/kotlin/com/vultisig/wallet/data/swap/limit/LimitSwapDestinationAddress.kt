@@ -58,7 +58,6 @@ private val limitSwapDestinationValidators: Map<Chain, (String) -> Boolean> =
         Chain.Zcash to { a -> Regex("^t[13][$BASE58_CHARS]{33}$").matches(a) },
         Chain.Solana to ::isSolanaAddress,
         Chain.GaiaChain to { a -> isBech32Address(a, "cosmos") },
-        Chain.Kujira to { a -> isBech32Address(a, "kujira") },
         Chain.ThorChain to { a -> isBech32Address(a, "thor") },
         Chain.Noble to { a -> isBech32Address(a, "noble") },
         Chain.Ripple to { a -> Regex("^r[$BASE58_CHARS]{24,34}$").matches(a) },

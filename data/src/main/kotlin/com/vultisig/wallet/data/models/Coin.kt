@@ -60,7 +60,7 @@ data class Coin(
  * True when this coin has a CoinGecko price-provider id, or a contract address on a chain
  * [coinGeckoAssetPlatformId] actually supports for contract lookups. Pool-priced assets
  * (THORChain/Maya/Solana pool tokens) have neither, and contract addresses on chains CoinGecko
- * doesn't index by platform (e.g. Kujira's `factory/`/`ibc/` denoms, or Sei/Hyperliquid) would
+ * doesn't index by platform (e.g. Osmosis' `factory/`/`ibc/` denoms, or Sei/Hyperliquid) would
  * otherwise pass a bare non-empty check yet always fail the actual fetch — so this gates the token
  * detail screen's price chart and market stats sections on a source that can genuinely resolve.
  */
@@ -89,18 +89,6 @@ val Coin.isLpToken: Boolean
                     contractAddress.startsWith("x/nami-index-")
             else -> false
         }
-
-/**
- * True when the wallet can read this coin's balance but cannot yet move it.
- *
- * XRPL issued currencies are the only such coins today: `account_lines` gives their balances, but
- * transferring one needs a `Payment` carrying a `CurrencyAmount` (currency + issuer + value), while
- * [com.vultisig.wallet.data.chains.helpers.RippleHelper] only builds drop-denominated XRP payments.
- * Routing one into send or swap would sign an XRP transfer of the token's numeric balance, so both
- * actions stay closed until issued-currency signing lands.
- */
-val Coin.isReadOnlyAsset: Boolean
-    get() = isRippleIssuedToken
 
 /** Returns true if this coin's chain allows zero-gas transactions. */
 fun Coin.allowZeroGas(): Boolean {
@@ -153,12 +141,7 @@ fun Coin.swapAssetName(): String =
             "${chain.swapAssetName()}.${ticker}"
         }
     } else {
-        if (
-            chain == Chain.Kujira &&
-                (contractAddress.contains("factory/") || contractAddress.contains("ibc/"))
-        ) {
-            "${chain.swapAssetName()}.${ticker}"
-        } else if (chain == Chain.ThorChain) {
+        if (chain == Chain.ThorChain) {
             if (isSecuredAsset()) {
                 contractAddress
             } else {
@@ -208,7 +191,7 @@ private fun Coin.securedAssetUnderlyingIsEvm(): Boolean {
  * "eth.usdc-0xa0b8..." on both sides). EVM contract addresses are lowercased to handle EIP-55
  * checksum-casing differences from QR payloads; a THORChain secured asset is also lowercased only
  * when its underlying chain is EVM, so it matches that EVM counterpart. Non-EVM secured assets
- * (BTC, LTC, ...) and other non-EVM chains (e.g. Cosmos ibc/, Kujira factory/) use case-sensitive
+ * (BTC, LTC, ...) and other non-EVM chains (e.g. Cosmos ibc/, Osmosis factory/) use case-sensitive
  * canonical forms as returned by the THORChain API and are not altered.
  */
 fun Coin.swapAssetComparisonName(): String {

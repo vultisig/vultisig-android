@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
  */
 class ParseCosmosMessageStakingTest {
 
-    private val parse = ParseCosmosMessageUseCaseImpl(ProtoBuf {}) { "thor-encoded" }
+    private val parse = ParseCosmosMessageUseCaseImpl(ProtoBuf {}) { _, _ -> "thor-encoded" }
 
     private val delegator = "terra1delegator00000000000000000000000000abc"
     private val validatorA = "terravaloper1l3zgemxwql5fpa6p9z6h0000000000abc"

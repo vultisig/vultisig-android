@@ -29,27 +29,27 @@ class ReshareRoutingServerMatchTest {
     // -- Wire-string pin: production constants must match the server contract verbatim --
 
     @Test
-    fun `ROOT_ECDSA_MESSAGE_ID is exactly "p-ecdsa" — wire contract with server`() {
+    fun `ROOT_ECDSA_MESSAGE_ID is exactly p_ecdsa wire contract with server`() {
         assertEquals("p-ecdsa", ROOT_ECDSA_MESSAGE_ID)
     }
 
     @Test
-    fun `ROOT_EDDSA_MESSAGE_ID is exactly "p-eddsa" — wire contract with server`() {
+    fun `ROOT_EDDSA_MESSAGE_ID is exactly p_eddsa wire contract with server`() {
         assertEquals("p-eddsa", ROOT_EDDSA_MESSAGE_ID)
     }
 
     @Test
-    fun `ROOT_MLDSA_EXCHANGE_MESSAGE_ID is exactly "p-mldsa"`() {
+    fun `ROOT_MLDSA_EXCHANGE_MESSAGE_ID is exactly p_mldsa`() {
         assertEquals("p-mldsa", ROOT_MLDSA_EXCHANGE_MESSAGE_ID)
     }
 
     @Test
-    fun `ROOT_MLDSA_SETUP_MESSAGE_ID is exactly "p-mldsa-setup"`() {
+    fun `ROOT_MLDSA_SETUP_MESSAGE_ID is exactly p_mldsa_setup`() {
         assertEquals("p-mldsa-setup", ROOT_MLDSA_SETUP_MESSAGE_ID)
     }
 
     @Test
-    fun `ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID is exactly "eddsa_key_import"`() {
+    fun `ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID is exactly eddsa_key_import`() {
         assertEquals("eddsa_key_import", ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID)
     }
 

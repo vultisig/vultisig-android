@@ -396,7 +396,6 @@ constructor(
 
                 val denomTrace =
                     when (chain) {
-                        Chain.Kujira,
                         Chain.Terra ->
                             if (token.contractAddress.startsWith("ibc/")) {
                                 val denomTrace = api.getIbcDenomTraces(token.contractAddress)
@@ -666,6 +665,7 @@ constructor(
                                 accountInfo?.result?.ledgerCurrentIndex?.toULong()?.plus(60UL)
                                     ?: 0UL,
                             gas = gasFee.value.toLong().toULong(),
+                            transactionType = transactionType,
                             // The destination tag is injected from the send form's dedicated field
                             // (see DefaultSendStrategy); it is not derived from the memo.
                         )

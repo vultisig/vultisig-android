@@ -105,10 +105,11 @@ class ExplorerLinkRepositoryImplTest {
     }
 
     @Test
-    fun `SwapKit-routed EVM on untrackable source chain falls back to LiFi tracker`() {
-        // Hyperliquid is EVM-shaped but outside SwapKit's /track catalogue, so the SwapKit branch
-        // is skipped and the EVM source-chain logic applies. The tracker no longer depends on
-        // swapFee, so a feeless route still gets a Track link.
+    fun `SwapKit-routed HyperEVM tracks on SwapKit under chain 999`() {
+        // HyperEVM used to fall through to the source-chain link because `/track` carried a
+        // hand-written chain list it was missing from. EVM ids are derived now, so it tracks on
+        // SwapKit like any other EVM source. The tracker does not depend on swapFee, so a feeless
+        // route still gets a Track link.
         val link =
             repository.getSwapProgressLink(
                 "0xabc",
@@ -118,7 +119,17 @@ class ExplorerLinkRepositoryImplTest {
                     swapFee = "",
                 ),
             )
-        assertEquals("https://scan.li.fi/tx/0xabc", link)
+        assertEquals("https://track.swapkit.dev/?hash=0xabc&chainId=999", link)
+    }
+
+    @Test
+    fun `SwapKit-routed Robinhood tracks on SwapKit under chain 4663`() {
+        val link =
+            repository.getSwapProgressLink(
+                "0xabc",
+                evmPayload(Chain.Robinhood, SwapProvider.SWAPKIT.getSwapProviderId()),
+            )
+        assertEquals("https://track.swapkit.dev/?hash=0xabc&chainId=4663", link)
     }
 
     @Test

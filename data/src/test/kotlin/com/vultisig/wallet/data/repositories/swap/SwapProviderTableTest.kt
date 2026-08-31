@@ -23,10 +23,10 @@ internal class SwapProviderTableTest {
     private val table = SwapProviderTableImpl(EmptySwapPoolEligibility)
 
     @Test
-    fun `SwapKit is offered on every Phase 1 SwapKit chain`() {
-        // Each (chain, ticker, native) pair is a chain SwapKit routes on in Phase 1. ETH covers
-        // both the generic branch and the Thor/Maya-eligible branches (USDC) since they take
-        // separate code paths in ethereumProviders().
+    fun `SwapKit is offered on every chain the wallet can receive on`() {
+        // Each (chain, ticker, native) pair is a chain the wallet holds a SwapKit-reachable asset
+        // on. ETH covers both the generic branch and the Thor/Maya-eligible branches (USDC) since
+        // they take separate code paths in ethereumProviders().
         val swapKitCoins =
             listOf(
                 coin(Chain.Ethereum, "ZZZ", isNative = false), // generic EVM token → evmAggregators
@@ -55,6 +55,11 @@ internal class SwapProviderTableTest {
                 coin(Chain.Cardano, "ADA", isNative = true), // Cardano CBOR / deposit route
                 coin(Chain.Ton, "TON", isNative = true), // TON native deposit route
                 coin(Chain.Ripple, "XRP", isNative = true), // XRP deposit-only route
+                // Chains that carried no SwapKit row before the table stopped allowlisting. They
+                // are offered on the strength of SwapKit having a name for them; whether it
+                // actually routes them is the `/providers` cache's call at quote time.
+                coin(Chain.Robinhood, "ETH", isNative = true), // 4663 → HOOD.*
+                coin(Chain.Hyperliquid, "HYPE", isNative = true), // 999 → HYPEREVM.*
             )
 
         swapKitCoins.forEach { c ->
@@ -66,11 +71,16 @@ internal class SwapProviderTableTest {
     }
 
     @Test
-    fun `SwapKit is not offered on chains it does not route in Phase 1`() {
-        // Boundary guard the other way: SWAPKIT must NOT leak onto chains absent from its branches,
-        // otherwise the source would mint a garbage asset id and 500 from the proxy.
+    fun `SwapKit is not offered on chains the wallet cannot receive a swap on`() {
+        // Boundary guard the other way. Opening the chain list did not make it unbounded: a chain
+        // with no SwapKit-reachable account here would mint a garbage asset id and 500 from the
+        // proxy. Sei is the one EVM network excluded outright — the wallet holds it but does not
+        // swap on it at all. ZkSync, Mantle, Blast and Cronos are excluded for the other reason:
+        // SwapKit has no asset-identifier spelling for them, so a quote could never be addressed
+        // and offering one would only cost the pair its immediate "no route" answer.
         val nonSwapKitCoins =
             listOf(
+                coin(Chain.Sei, "SEI", isNative = true),
                 coin(Chain.ZkSync, "ETH", isNative = true),
                 coin(Chain.Mantle, "MNT", isNative = true),
                 coin(Chain.Blast, "ETH", isNative = true),
@@ -78,8 +88,9 @@ internal class SwapProviderTableTest {
                 coin(Chain.GaiaChain, "ATOM", isNative = true),
                 coin(Chain.ThorChain, "RUNE", isNative = true),
                 coin(Chain.MayaChain, "CACAO", isNative = true),
-                coin(Chain.Hyperliquid, "HYPE", isNative = true),
                 coin(Chain.Polkadot, "DOT", isNative = true),
+                coin(Chain.Qbtc, "QBTC", isNative = true),
+                coin(Chain.Bittensor, "TAO", isNative = true),
             )
 
         nonSwapKitCoins.forEach { c ->
@@ -88,6 +99,51 @@ internal class SwapProviderTableTest {
                 "Did not expect SWAPKIT for ${c.chain}/${c.ticker} but got ${table.providersFor(c)}",
             )
         }
+    }
+
+    @Test
+    fun `Robinhood is a SwapKit destination but never a SwapKit source`() {
+        // Blockaid does not index 4663, so an EVM route cannot be reputation-checked before it is
+        // signed from Robinhood. Destination-only rather than dropped: the pair keeps SwapKit in
+        // one direction, and Robinhood's own aggregators are untouched in both.
+        val hood = coin(Chain.Robinhood, "ETH", isNative = true)
+        val eth = coin(Chain.Ethereum, "ETH", isNative = true)
+
+        assertTrue(SwapProvider.SWAPKIT in table.providersFor(hood))
+        assertTrue(
+            SwapProvider.SWAPKIT in table.eligibleProvidersFor(eth, hood),
+            "Expected SwapKit into Robinhood",
+        )
+        assertFalse(
+            SwapProvider.SWAPKIT in table.eligibleProvidersFor(hood, eth),
+            "Did not expect SwapKit out of Robinhood",
+        )
+    }
+
+    @Test
+    fun `a blocked SwapKit source keeps every other provider for the pair`() {
+        // The rule is "skip SwapKit", never "fail the pair".
+        val hood = coin(Chain.Robinhood, "ZZZ", isNative = false)
+        val eth = coin(Chain.Ethereum, "ZZZ", isNative = false)
+
+        val eligible = table.eligibleProvidersFor(hood, eth)
+
+        assertFalse(SwapProvider.SWAPKIT in eligible)
+        assertEquals(
+            listOf(SwapProvider.LIFI),
+            eligible,
+            "Cross-chain drops the same-chain-only aggregators, but LI.FI must survive",
+        )
+    }
+
+    @Test
+    fun `HyperEVM quotes SwapKit in both directions`() {
+        // Unlike Robinhood, Blockaid indexes HyperEVM as `hyperevm`, so it can originate a route.
+        val hype = coin(Chain.Hyperliquid, "HYPE", isNative = true)
+        val eth = coin(Chain.Ethereum, "ETH", isNative = true)
+
+        assertTrue(SwapProvider.SWAPKIT in table.eligibleProvidersFor(hype, eth))
+        assertTrue(SwapProvider.SWAPKIT in table.eligibleProvidersFor(eth, hype))
     }
 
     @Test
@@ -144,10 +200,12 @@ internal class SwapProviderTableTest {
     }
 
     @Test
-    fun `Robinhood offers exactly 1inch, LiFi and Kyber`() {
-        // All three live-confirmed on 4663 (#5390 review); 1inch and Kyber are sameChainOnly, so a
-        // cross-chain pair must fall back to LiFi alone. No SwapKit, no 1inch-set drift.
-        val expected = setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
+    fun `Robinhood offers 1inch, LiFi, Kyber and SwapKit`() {
+        // The first three are live-confirmed on 4663; 1inch and Kyber are sameChainOnly, so a
+        // cross-chain pair must fall back to LiFi alone — SwapKit is dropped there for a different
+        // reason, the source-side reputation gate. No 1inch-set drift.
+        val expected =
+            setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER, SwapProvider.SWAPKIT)
         listOf(
                 coin(Chain.Robinhood, "ETH", isNative = true),
                 coin(Chain.Robinhood, "AAPL", isNative = false),
@@ -242,34 +300,7 @@ internal class SwapProviderTableTest {
     }
 
     @Test
-    fun `Kujira offers no providers now that Maya has delisted every KUJI pool`() {
-        // MayaChain was Kujira's only provider and no KUJI.* pool remains, so KUJI→USK and every
-        // cross-chain KUJI pair must resolve to no providers — the pipeline then raises
-        // SwapIsNotSupported → "Swap route not available" instead of a doomed quote (#5472).
-        listOf(
-                coin(Chain.Kujira, "KUJI", isNative = true),
-                coin(Chain.Kujira, "USK", isNative = false, contract = "factory/kujira1/uusk"),
-            )
-            .forEach { c ->
-                assertEquals(
-                    emptySet<SwapProvider>(),
-                    table.providersFor(c),
-                    "Kujira must offer no providers for ${c.ticker}",
-                )
-            }
-
-        assertEquals(
-            emptyList<SwapProvider>(),
-            table.eligibleProvidersFor(
-                srcToken = coin(Chain.Kujira, "KUJI", isNative = true),
-                dstToken = coin(Chain.Kujira, "USK", isNative = false, contract = "factory/uusk"),
-            ),
-            "Same-chain KUJI→USK must have no eligible provider",
-        )
-    }
-
-    @Test
-    fun `MayaChain keeps its MAYA route after Kujira was split out`() {
+    fun `MayaChain keeps its MAYA route`() {
         assertEquals(
             setOf(SwapProvider.MAYA),
             table.providersFor(coin(Chain.MayaChain, "CACAO", isNative = true)),

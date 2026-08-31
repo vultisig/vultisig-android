@@ -464,8 +464,15 @@ class ThorChainHelper(
         publicKey: PublicKey,
         denom: String,
     ): ByteArray {
+        val inputBuilder =
+            buildDappSigningInput(
+                signingMode = Cosmos.SigningMode.Protobuf,
+                cosmosSpecific = cosmosSpecific,
+                publicKeyData = publicKey.data(),
+                requestChainId = signDirect.chainId,
+            )
+
         val bodyBytes = Base64.decode(signDirect.bodyBytes)
-        val txBody = Cosmos.SigningInput.parseFrom(bodyBytes)
 
         val message =
             Cosmos.Message.newBuilder()
@@ -481,21 +488,8 @@ class ThorChainHelper(
                 )
                 .build()
 
-        val inputBuilder =
-            Cosmos.SigningInput.newBuilder()
-                .setPublicKey(ByteString.copyFrom(publicKey.data()))
-                .setSigningMode(Cosmos.SigningMode.Protobuf)
-                .setChainId(coinType.chainId())
-                .setAccountNumber(cosmosSpecific.accountNumber.toLong())
-                .setSequence(cosmosSpecific.sequence.toLong())
-                .setMode(Cosmos.BroadcastMode.SYNC)
-                .addMessages(message)
-                .setFee(buildCosmosFee(cosmosSpecific, denom = denom))
-        if (txBody.memo.isNotEmpty()) {
-            inputBuilder.memo = txBody.memo
-        } else {
-            memo?.let { inputBuilder.memo = it }
-        }
+        inputBuilder.addMessages(message).setFee(buildCosmosFee(cosmosSpecific, denom = denom))
+        inputBuilder.memo = cosmosTxBodyMemo(bodyBytes) ?: memo.orEmpty()
 
         return inputBuilder.build().toByteArray()
     }
@@ -507,13 +501,12 @@ class ThorChainHelper(
         memo: String?,
     ): ByteArray {
         val inputBuilder =
-            Cosmos.SigningInput.newBuilder()
-                .setPublicKey(ByteString.copyFrom(publicKey.data()))
-                .setSigningMode(Cosmos.SigningMode.JSON) // Use JSON mode for Amino
-                .setChainId(coinType.chainId())
-                .setAccountNumber(cosmosSpecific.accountNumber.toLong())
-                .setSequence(cosmosSpecific.sequence.toLong())
-                .setMode(Cosmos.BroadcastMode.SYNC)
+            buildDappSigningInput(
+                signingMode = Cosmos.SigningMode.JSON, // Use JSON mode for Amino
+                cosmosSpecific = cosmosSpecific,
+                publicKeyData = publicKey.data(),
+                requestChainId = null,
+            )
 
         signAmino.msgs.forEach { cosmosMsg ->
             val message =
@@ -540,6 +533,37 @@ class ThorChainHelper(
         memo?.let { inputBuilder.memo = it }
 
         return inputBuilder.build().toByteArray()
+    }
+
+    /**
+     * Header shared by the two dApp co-signing builders. The chain id comes from [networkId] — the
+     * network this helper instance was built for — because `coinType` is a THORChain constant that
+     * MayaChain, which wallet-core models as THORChain with a `maya` hrp, can never resolve to.
+     */
+    internal fun buildDappSigningInput(
+        signingMode: Cosmos.SigningMode,
+        cosmosSpecific: BlockChainSpecific.Cosmos,
+        publicKeyData: ByteArray,
+        requestChainId: String?,
+    ): Cosmos.SigningInput.Builder =
+        Cosmos.SigningInput.newBuilder()
+            .setPublicKey(ByteString.copyFrom(publicKeyData))
+            .setSigningMode(signingMode)
+            .setChainId(resolveDappChainId(requestChainId))
+            .setAccountNumber(cosmosSpecific.accountNumber.toLong())
+            .setSequence(cosmosSpecific.sequence.toLong())
+            .setMode(Cosmos.BroadcastMode.SYNC)
+
+    /**
+     * Rejects a dApp request whose own chain id disagrees with [networkId] rather than silently
+     * signing it for the other network, which only fails after a full keysign ceremony.
+     */
+    internal fun resolveDappChainId(requestChainId: String?): String {
+        val requested = requestChainId?.trim().orEmpty()
+        require(requested.isEmpty() || requested == networkId) {
+            "dApp requested chain id \"$requested\", but this vault signs \"$networkId\""
+        }
+        return networkId
     }
 
     private fun buildCosmosFee(

@@ -472,8 +472,8 @@ class ChainHelpersTest {
     }
 
     /**
-     * One send per Cosmos-family chain not otherwise covered by [sendCosmosTest]/ [sendKUJIRATest],
-     * plus one genuine IBC transfer (`transaction_type` 3, routed through [CosmosHelper]'s
+     * One send per Cosmos-family chain not otherwise covered by [sendCosmosTest], plus one genuine
+     * IBC transfer (`transaction_type` 3, routed through [CosmosHelper]'s
      * `TRANSACTION_TYPE_IBC_TRANSFER` branch rather than a plain send whose memo merely looks like
      * IBC routing info). Regression coverage for issue #5421 item 5.
      */
@@ -741,24 +741,6 @@ class ChainHelpersTest {
             val coin = payload.coin.coinType
 
             val helper = UtxoHelper(coin, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
-            val preImageHashes =
-                helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
-
-            assertEquals(preImageHashes, transaction.expectedImageHash)
-        }
-    }
-
-    @Test
-    fun sendKUJIRATest() {
-        val transactions: List<TransactionData> = loadTransactionData(KUJIRA_JSON_FILE)
-        val helper =
-            CosmosHelper(
-                coinType = CoinType.KUJIRA,
-                denom = Chain.Kujira.feeUnit,
-                gasLimit = CosmosHelper.getChainGasLimit(Chain.Kujira),
-            )
-
-        transactions.forEach { transaction ->
             val preImageHashes =
                 helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
 
@@ -1098,7 +1080,6 @@ class ChainHelpersTest {
         private const val QBTC_JSON_FILE = "qbtc.json"
         private const val SUI_JSON_FILE = "sui.json"
         private const val TRON_JSON_FILE = "tron.json"
-        private const val KUJIRA_JSON_FILE = "kujira.json"
 
         private const val CARDANO_JSON_FILE = "cardano.json"
 
@@ -1137,7 +1118,6 @@ class ChainHelpersTest {
                 QBTC_JSON_FILE to "sendQBTCTest",
                 SUI_JSON_FILE to "sendSUI",
                 TRON_JSON_FILE to "sendTronTest",
-                KUJIRA_JSON_FILE to "sendKUJIRATest",
                 CARDANO_JSON_FILE to "sendCardano",
                 THORCHAIN_SWAP_JSON_FILE to "sendThorchainSwapTest",
                 THORCHAIN_SWAP_LIMIT_ORDER_JSON_FILE to "sendThorchainSwapTest",
@@ -1153,7 +1133,9 @@ class ChainHelpersTest {
         // so it belongs in the matrix rather than a standalone file).
         // The standalone fixture files are shared byte-for-byte with the Swift and TS corpora,
         // preserving the cross-signer agreement required by #5421 and vultisig-sdk#1585.
-        private const val EXPECTED_CASE_COUNT = 88
+        // -3: kujira.json, dropped with the chain — the other corpora still carry it, so the sync
+        // check reports it as missing here rather than as a hash disagreement.
+        private const val EXPECTED_CASE_COUNT = 85
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"

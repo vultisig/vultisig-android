@@ -18,7 +18,10 @@ internal class SendTransactionHistoryDataMapperImpl @Inject constructor() :
         // recipient. Persist the decoded one-line summary and the JSON's real Destination so the
         // history row keeps its true meaning after a restart instead of downgrading to "0 XRP → ".
         val rippleDapp = from.signRipple
-        val dappSummary = rippleDapp?.let { RippleDappTransactionDecoder.summarize(it.rawJson) }
+        // A TrustSet's amount is the trust-line limit; unsummarized, the row reads as a transfer.
+        val dappSummary =
+            if (from.isRippleTrustSet) "TrustSet: ${from.token.token.ticker}"
+            else rippleDapp?.let { RippleDappTransactionDecoder.summarize(it.rawJson) }
         // For a dApp XRPL tx the recipient must come only from the decoded JSON `Destination`.
         // Offers/trust lines have none, so leave it empty rather than falling back to the wire
         // `dstAddress` — a relay could set that to a trusted label/vault while the signed JSON

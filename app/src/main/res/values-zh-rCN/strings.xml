@@ -242,6 +242,7 @@
     <!-- Settings Screen -->
     <string name="settings_screen_language">语言</string>
     <string name="settings_screen_currency">货币</string>
+    <string name="settings_screen_rate_the_app">为应用评分</string>
     <string name="settings_screen_share_the_app">分享应用</string>
     <string name="settings_screen_title">设置</string>
 
@@ -473,6 +474,7 @@
 
     <!-- Custom Token -->
     <string name="custom_token_enter_contract_address">输入合约地址</string>
+    <string name="custom_token_enter_currency_issuer">输入货币.发行方</string>
     <string name="custom_token_token_not_found">未找到代币</string>
     <string name="custom_token_add_token">添加 %1$s 代币</string>
 
@@ -874,6 +876,7 @@
     <string name="referral_create_search">搜索</string>
     <string name="referral_create_expiration_date">到期日期</string>
     <string name="referral_create_set_expiration_years">设置到期（年）</string>
+    <string name="referral_choose_payout_asset">选择支付资产</string>
     <string name="referral_create_registration_fees">注册费</string>
     <string name="referral_create_cost">成本</string>
     <string name="referral_create_fees_error">加载费用失败，请重试。</string>
@@ -1161,7 +1164,6 @@
     <!-- Upgrade Banner -->
     <string name="upgrade_banner_sign_faster">比以往更快地签名</string>
     <string name="upgrade_banner_upgrade_your">立即升级您的保险库</string>
-    <string name="upgrade_banner_upgrade_now">立即升级</string>
 
     <!-- Home -->
     <string name="home_portfolio_balance">投资组合余额</string>
@@ -1258,8 +1260,15 @@
     <string name="send_tx_overview_add_to_address_book">添加到地址簿</string>
     <string name="invite_to_x_banner_title">Vultisig 正在与您一起构建。</string>
     <string name="invite_to_x_banner_desc">在 X 上关注我们</string>
-    <string name="invite_to_x_banner_button">关注 %s</string>
     <string name="buy_vult_banner_desc">并节省交换费用</string>
+    <string name="rujira_banner_caption">质押并赚取收益</string>
+    <string name="rujira_banner_title">Rujira 质押现已上线</string>
+    <string name="backup_banner_caption">备份您的保险库</string>
+    <string name="backup_banner_title">申请完整保管您的保险库</string>
+    <string name="referral_rewards_banner_caption">不要错过奖励</string>
+    <string name="referral_rewards_banner_title">添加您的推荐代码</string>
+    <string name="kamino_banner_caption">Solana 新功能</string>
+    <string name="kamino_banner_title">通过 Kamino 开始赚取收益</string>
     <string name="rename_vault_screen_rename_vault">改名</string>
     <string name="custom_token_screen_finding_token">查找代币</string>
     <string name="retry">重试</string>
@@ -1330,6 +1339,21 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">激活此地址所需的最低金额为 %1$s %2$s。</string>
     <string name="send_error_xrp_destination_tag_required">此地址需要目标标签。请添加后继续。</string>
+    <string name="send_error_xrp_destination_no_trust_line">此地址无法接收 %1$s。收款方需要先为该资产开通信任线。</string>
+    <string name="ripple_trust_line_title">激活信任线</string>
+    <string name="ripple_trust_line_reserve_warning">%1$s 需要在 XRP Ledger 上建立信任线，您的账户才能持有它。开通信任线会将您的一部分 XRP 永久锁定为所有者准备金。</string>
+    <string name="ripple_trust_line_limit">信任线上限</string>
+    <string name="ripple_trust_line_hero_title">正在开通 %1$s 信任线</string>
+    <string name="ripple_trust_line_type_pill">信任线</string>
+    <string name="ripple_trust_line_currency">货币</string>
+    <string name="ripple_trust_line_issuer_check">发行方正确</string>
+    <string name="ripple_trust_line_limit_check">信任线上限正确</string>
+    <string name="ripple_trust_line_unreviewable">无法核对</string>
+    <string name="ripple_trust_line_unreviewable_value">无法读取该信任线的货币、发行方或上限，因此无法显示其条款。请勿签名。</string>
+    <string name="ripple_trust_line_reserve">锁定储备金</string>
+    <string name="ripple_trust_line_spendable_after">开通后可用 XRP</string>
+    <string name="ripple_trust_line_activate">激活</string>
+    <string name="ripple_trust_line_insufficient_xrp">可用 XRP 不足以支付储备金和手续费。</string>
     <string name="send_error_xrp_invalid_destination_tag">目标标签无效。请输入 1 到 4294967295 之间的整数。</string>
     <string name="error_invalid_chain">链无效</string>
     <string name="ton_stake_error_unsupported_pool">不支持此质押池</string>

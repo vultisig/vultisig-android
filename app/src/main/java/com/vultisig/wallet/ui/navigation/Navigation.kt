@@ -14,6 +14,7 @@ import com.vultisig.wallet.ui.navigation.Route.BackupVault
 import com.vultisig.wallet.ui.navigation.Route.SelectNetwork.Filters
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo
 import com.vultisig.wallet.ui.navigation.Route.VaultList
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -149,6 +150,8 @@ internal sealed class Route {
     )
 
     @Serializable data class VerifySend(val vaultId: VaultId, val transactionId: TransactionId)
+
+    @Serializable data class RippleTrustLineActivation(val vaultId: VaultId, val tokenId: TokenId)
 
     // swap
 
@@ -613,6 +616,13 @@ internal sealed class Route {
 
     @Serializable data class ReferralCreation(val vaultId: String)
 
+    /**
+     * Payout-asset picker for a referral. [selectedAsset] is the THORChain pool asset id currently
+     * chosen, so the list can mark it; the pick is returned through [requestId].
+     */
+    @Serializable
+    data class ReferralPayoutAsset(val requestId: String, val selectedAsset: String? = null)
+
     @Serializable data class ReferralExternalEdition(val vaultId: String)
 
     @Serializable data class ReferralListVault(val vaultId: String)
@@ -674,7 +684,13 @@ internal sealed interface BackupType {
 sealed interface ChainDashboardRoute {
     @Serializable data class Wallet(val vaultId: String, val chainId: String) : ChainDashboardRoute
 
-    @Serializable data class PositionTokens(val vaultId: String) : ChainDashboardRoute
+    /**
+     * THORChain DeFi positions. [tab] preselects one of the screen's tabs, for callers that
+     * advertise a single position: the screen otherwise opens on Bonded, which is a tab away from
+     * what the Rujira staking promo, say, offered the user.
+     */
+    @Serializable
+    data class PositionTokens(val vaultId: String, val tab: DeFiTab? = null) : ChainDashboardRoute
 
     @Serializable data class PositionCircle(val vaultId: String) : ChainDashboardRoute
 

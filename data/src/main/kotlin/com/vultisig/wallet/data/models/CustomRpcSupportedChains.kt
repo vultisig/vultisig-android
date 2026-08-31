@@ -40,7 +40,6 @@ object CustomRpcSupportedChains {
     val cosmos: List<Chain> =
         listOf(
             Chain.GaiaChain,
-            Chain.Kujira,
             Chain.Dydx,
             Chain.Osmosis,
             Chain.Terra,

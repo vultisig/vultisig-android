@@ -45,7 +45,6 @@ object CustomRpcDefaultEndpoint {
     private val cosmos: Map<Chain, String> =
         mapOf(
             Chain.GaiaChain to "https://cosmos-rest.publicnode.com",
-            Chain.Kujira to "https://kujira-api.polkachu.com",
             Chain.Dydx to "https://dydx-rest.publicnode.com",
             Chain.Osmosis to "https://osmosis-rest.publicnode.com",
             Chain.Terra to "https://terra-lcd.publicnode.com",

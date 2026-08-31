@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -604,6 +605,7 @@ internal fun VerifyCardDetails(
     modifier: Modifier = Modifier,
     bracketValue: String? = null,
     showAllContent: Boolean = false,
+    subtitleColor: Color = Theme.v2.colors.text.primary,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -647,7 +649,7 @@ internal fun VerifyCardDetails(
             Text(
                 text = subtitle,
                 style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
+                color = subtitleColor,
                 textAlign = TextAlign.End,
                 modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier,
                 maxLines = if (showAllContent) 5 else 1,
