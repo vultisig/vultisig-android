@@ -6,7 +6,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -15,7 +17,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.passcode.AutoLockTimeout
+import com.vultisig.wallet.ui.components.BiometricUnlockAvailability
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.biometricUnlockAvailability
+import com.vultisig.wallet.ui.components.rememberBiometricUnlockLauncher
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
@@ -25,28 +30,36 @@ import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.screens.settings.SettingItem
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun PasscodeSettingsScreen(navController: NavHostController) {
     val viewModel = hiltViewModel<PasscodeSettingsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val launcher = rememberBiometricUnlockLauncher()
+    val biometricAvailability = remember(context) { context.biometricUnlockAvailability() }
 
     PasscodeSettingsScreen(
         state = state,
+        biometricAvailability = biometricAvailability,
         onBackClick = { navController.popBackStack() },
         onPasscodeEnabledChange = viewModel::onPasscodeEnabledChange,
         onChangePasscodeClick = viewModel::onChangePasscodeClick,
         onAutoLockClick = viewModel::onAutoLockClick,
+        onBiometricUnlockChange = { viewModel.onBiometricUnlockChange(it, launcher) },
     )
 }
 
 @Composable
 internal fun PasscodeSettingsScreen(
     state: PasscodeSettingsUiModel,
+    biometricAvailability: BiometricUnlockAvailability,
     onBackClick: () -> Unit,
     onPasscodeEnabledChange: (Boolean) -> Unit,
     onChangePasscodeClick: () -> Unit,
     onAutoLockClick: () -> Unit,
+    onBiometricUnlockChange: (Boolean) -> Unit,
 ) {
     V2Scaffold(
         title = stringResource(R.string.passcode_settings_title),
@@ -100,10 +113,42 @@ internal fun PasscodeSettingsScreen(
                                     trailingIcon = R.drawable.ic_small_caret_right,
                                 ),
                             onClick = onAutoLockClick,
+                            isLastItem = false,
+                        )
+
+                        SettingItem(
+                            item =
+                                SettingsItemUiModel(
+                                    title =
+                                        UiText.StringResource(
+                                            R.string.passcode_settings_biometrics
+                                        ),
+                                    leadingIcon = R.drawable.ic_biometrics,
+                                    trailingSwitch = state.isBiometricUnlockEnabled,
+                                ),
+                            // The row stays visible on a device that cannot do this, with the note
+                            // below saying why — a capability that silently is not there reads as
+                            // one the app forgot to build.
+                            onClick = {
+                                if (
+                                    biometricAvailability == BiometricUnlockAvailability.Available
+                                ) {
+                                    onBiometricUnlockChange(!state.isBiometricUnlockEnabled)
+                                }
+                            },
                             isLastItem = true,
                         )
                     }
                 }
+            }
+
+            biometricNote(state, biometricAvailability)?.let { note ->
+                UiSpacer(size = 12.dp)
+                Text(
+                    text = note,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                )
             }
 
             // Outside the switch's branch: the warning is worth most before a passcode is set.
@@ -114,6 +159,30 @@ internal fun PasscodeSettingsScreen(
                 color = Theme.v2.colors.text.tertiary,
             )
         }
+    }
+}
+
+/**
+ * What the biometric row has to say for itself, if anything.
+ *
+ * A failed attempt outranks the device state: the user has just tried something and is owed the
+ * outcome, not a description of the hardware.
+ */
+@Composable
+private fun biometricNote(
+    state: PasscodeSettingsUiModel,
+    availability: BiometricUnlockAvailability,
+): String? {
+    if (!state.isPasscodeEnabled) return null
+    state.biometricError?.let {
+        return it.asString()
+    }
+    return when (availability) {
+        BiometricUnlockAvailability.Available -> null
+        BiometricUnlockAvailability.NotEnrolled ->
+            stringResource(R.string.passcode_biometric_not_enrolled)
+        BiometricUnlockAvailability.Unavailable ->
+            stringResource(R.string.passcode_biometric_not_available)
     }
 }
 
@@ -137,10 +206,13 @@ private fun PasscodeSettingsScreenPreview() {
                 isPasscodeEnabled = true,
                 autoLockTimeout = AutoLockTimeout.FiveMinutes,
                 isReady = true,
+                isBiometricUnlockEnabled = true,
             ),
+        biometricAvailability = BiometricUnlockAvailability.Available,
         onBackClick = {},
         onPasscodeEnabledChange = {},
         onChangePasscodeClick = {},
         onAutoLockClick = {},
+        onBiometricUnlockChange = {},
     )
 }

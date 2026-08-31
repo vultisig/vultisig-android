@@ -6,14 +6,19 @@ import com.vultisig.wallet.data.passcode.AutoLockRepository
 import com.vultisig.wallet.data.passcode.AutoLockTimeout
 import com.vultisig.wallet.data.passcode.PasscodeRepository
 import com.vultisig.wallet.data.passcode.PasscodeState
+import com.vultisig.wallet.ui.components.BiometricUnlockLauncher
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import javax.crypto.Cipher
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,6 +37,7 @@ internal class PasscodeSettingsViewModelTest {
 
     private val passcodeState = MutableStateFlow<PasscodeState>(PasscodeState.Disabled)
     private val autoLockTimeout = MutableStateFlow(AutoLockTimeout.Default)
+    private val biometricEnabled = MutableStateFlow(false)
 
     private lateinit var navigator: Navigator<Destination>
     private lateinit var passcodeRepository: PasscodeRepository
@@ -43,7 +49,9 @@ internal class PasscodeSettingsViewModelTest {
         navigator = mockk(relaxed = true)
         passcodeRepository = mockk(relaxed = true)
         autoLockRepository = mockk(relaxed = true)
+        biometricEnabled.value = false
         every { passcodeRepository.state } returns passcodeState
+        every { passcodeRepository.isBiometricUnlockEnabled } returns biometricEnabled
         every { autoLockRepository.timeout } returns autoLockTimeout
     }
 
@@ -137,4 +145,96 @@ internal class PasscodeSettingsViewModelTest {
             coVerify { navigator.route(Route.PasscodeEntry(Route.PasscodeEntryAction.Disable)) }
             coVerify(exactly = 0) { passcodeRepository.disablePasscode(any()) }
         }
+
+    @Test
+    fun `the biometric switch follows the stored copy`() = runTest {
+        passcodeState.value = PasscodeState.Unlocked
+        val model = viewModel()
+        advanceUntilIdle()
+        assertFalse(model.state.value.isBiometricUnlockEnabled)
+
+        biometricEnabled.value = true
+        advanceUntilIdle()
+
+        assertTrue(model.state.value.isBiometricUnlockEnabled)
+    }
+
+    @Test
+    fun `turning biometrics on stores the copy with the cipher the prompt authorised`() = runTest {
+        val offered = cipher()
+        val authorized = cipher()
+        coEvery { passcodeRepository.biometricEnableCipher() } returns offered
+        coEvery { passcodeRepository.enableBiometricUnlock(any()) } returns true
+        val model = viewModel()
+        advanceUntilIdle()
+
+        model.onBiometricUnlockChange(true, BiometricUnlockLauncher { authorized })
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { passcodeRepository.enableBiometricUnlock(authorized) }
+        assertNull(model.state.value.biometricError)
+    }
+
+    @Test
+    fun `a cancelled enable prompt stores nothing and says nothing`() = runTest {
+        coEvery { passcodeRepository.biometricEnableCipher() } returns cipher()
+        val model = viewModel()
+        advanceUntilIdle()
+
+        model.onBiometricUnlockChange(true, BiometricUnlockLauncher { null })
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { passcodeRepository.enableBiometricUnlock(any()) }
+        assertNull(model.state.value.biometricError)
+    }
+
+    @Test
+    fun `a device that cannot mint the key reports it rather than failing silently`() = runTest {
+        coEvery { passcodeRepository.biometricEnableCipher() } returns null
+        val model = viewModel()
+        advanceUntilIdle()
+
+        model.onBiometricUnlockChange(true, BiometricUnlockLauncher { cipher() })
+        advanceUntilIdle()
+
+        assertNotNull(model.state.value.biometricError)
+        coVerify(exactly = 0) { passcodeRepository.enableBiometricUnlock(any()) }
+    }
+
+    @Test
+    fun `a copy that did not reach the disk is reported`() = runTest {
+        coEvery { passcodeRepository.biometricEnableCipher() } returns cipher()
+        coEvery { passcodeRepository.enableBiometricUnlock(any()) } returns false
+        val model = viewModel()
+        advanceUntilIdle()
+
+        model.onBiometricUnlockChange(true, BiometricUnlockLauncher { cipher() })
+        advanceUntilIdle()
+
+        assertNotNull(model.state.value.biometricError)
+    }
+
+    @Test
+    fun `turning biometrics off needs no prompt`() = runTest {
+        biometricEnabled.value = true
+        val model = viewModel()
+        advanceUntilIdle()
+
+        var prompted = false
+        model.onBiometricUnlockChange(
+            false,
+            BiometricUnlockLauncher {
+                prompted = true
+                it
+            },
+        )
+        advanceUntilIdle()
+
+        // Removing a copy is not reading it, so nothing has to be authorised to do it.
+        assertFalse(prompted)
+        coVerify(exactly = 1) { passcodeRepository.disableBiometricUnlock() }
+    }
+
+    /** A real instance, uninitialised: these tests are about sequencing, not about the JCE. */
+    private fun cipher(): Cipher = Cipher.getInstance("AES/GCM/NoPadding")
 }

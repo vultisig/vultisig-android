@@ -8,10 +8,12 @@ import androidx.compose.runtime.snapshots.Snapshot
 import com.vultisig.wallet.data.passcode.PasscodeRepository
 import com.vultisig.wallet.data.passcode.PasscodeState
 import com.vultisig.wallet.data.passcode.PasscodeUnlockResult
+import com.vultisig.wallet.ui.components.BiometricUnlockLauncher
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import javax.crypto.Cipher
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -38,13 +40,16 @@ internal class PasscodeLockViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var passcodeRepository: PasscodeRepository
     private val passcodeState = MutableStateFlow<PasscodeState>(PasscodeState.Unlocked)
+    private val biometricEnabled = MutableStateFlow(false)
 
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         passcodeRepository = mockk(relaxed = true)
         passcodeState.value = PasscodeState.Unlocked
+        biometricEnabled.value = false
         every { passcodeRepository.state } returns passcodeState
+        every { passcodeRepository.isBiometricUnlockEnabled } returns biometricEnabled
     }
 
     @AfterEach
@@ -206,4 +211,106 @@ internal class PasscodeLockViewModelTest {
         assertTrue(model.state.value.isVerifying)
         assertFalse(model.state.value.isInputEnabled)
     }
+
+    @Test
+    fun `the biometric shortcut is offered only when a copy exists`() = runTest {
+        val model = viewModel()
+        advanceUntilIdle()
+        assertFalse(model.state.value.isBiometricUnlockEnabled)
+
+        biometricEnabled.value = true
+        advanceUntilIdle()
+
+        assertTrue(model.state.value.isBiometricUnlockEnabled)
+    }
+
+    @Test
+    fun `biometrics never fire on their own`() = runTest {
+        // The whole point of the change: a passcode user chose the passcode, and a prompt that
+        // opens by itself unlocks the app for whoever is holding the phone.
+        biometricEnabled.value = true
+
+        viewModel()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { passcodeRepository.biometricUnlockCipher() }
+        coVerify(exactly = 0) { passcodeRepository.unlockWithBiometrics(any()) }
+    }
+
+    @Test
+    fun `a tap runs the prompt and unlocks with the cipher it authorised`() = runTest {
+        val offered = cipher()
+        val authorized = cipher()
+        coEvery { passcodeRepository.biometricUnlockCipher() } returns offered
+        coEvery { passcodeRepository.unlockWithBiometrics(any()) } returns
+            PasscodeUnlockResult.Success
+        val model = viewModel()
+
+        model.onUseBiometricsClick(launcherReturning(authorized))
+        advanceUntilIdle()
+
+        // The authorised instance, not the one handed to the prompt: only that one carries the
+        // authorisation the keystore granted.
+        coVerify(exactly = 1) { passcodeRepository.unlockWithBiometrics(authorized) }
+        assertNull(model.state.value.error)
+    }
+
+    @Test
+    fun `a cancelled prompt says nothing and leaves the passcode field alone`() = runTest {
+        coEvery { passcodeRepository.biometricUnlockCipher() } returns cipher()
+        val model = viewModel()
+
+        model.onUseBiometricsClick(launcherReturning(null))
+        advanceUntilIdle()
+
+        assertNull(model.state.value.error)
+        coVerify(exactly = 0) { passcodeRepository.unlockWithBiometrics(any()) }
+        assertTrue(model.state.value.isInputEnabled)
+    }
+
+    @Test
+    fun `a copy that has gone is reported rather than failing silently`() = runTest {
+        coEvery { passcodeRepository.biometricUnlockCipher() } returns null
+        val model = viewModel()
+
+        model.onUseBiometricsClick(launcherReturning(cipher()))
+        advanceUntilIdle()
+
+        assertEquals(PasscodeLockError.BiometricUnavailable, model.state.value.error)
+    }
+
+    @Test
+    fun `a match that still does not open the app is reported`() = runTest {
+        coEvery { passcodeRepository.biometricUnlockCipher() } returns cipher()
+        coEvery { passcodeRepository.unlockWithBiometrics(any()) } returns
+            PasscodeUnlockResult.Failed
+        val model = viewModel()
+
+        model.onUseBiometricsClick(launcherReturning(cipher()))
+        advanceUntilIdle()
+
+        assertEquals(PasscodeLockError.BiometricUnavailable, model.state.value.error)
+    }
+
+    @Test
+    fun `a second tap while the prompt is up starts nothing`() = runTest {
+        coEvery { passcodeRepository.biometricUnlockCipher() } returns cipher()
+        val model = viewModel()
+        val launcher = BiometricUnlockLauncher {
+            delay(1_000)
+            null
+        }
+
+        model.onUseBiometricsClick(launcher)
+        advanceTimeBy(100)
+        model.onUseBiometricsClick(launcher)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { passcodeRepository.biometricUnlockCipher() }
+    }
+
+    /** A real instance, uninitialised: these tests are about sequencing, not about the JCE. */
+    private fun cipher(): Cipher = Cipher.getInstance("AES/GCM/NoPadding")
+
+    private fun launcherReturning(result: Cipher?) = BiometricUnlockLauncher { result }
 }

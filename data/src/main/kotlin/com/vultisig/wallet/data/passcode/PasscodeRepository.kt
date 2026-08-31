@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.passcode
 
 import android.os.SystemClock
 import com.vultisig.wallet.data.DefaultDispatcher
+import javax.crypto.Cipher
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -134,6 +135,45 @@ interface PasscodeRepository {
 
     /** Drops the in-memory data key and returns to [PasscodeState.Locked]. */
     fun lock()
+
+    /**
+     * Whether a biometric copy of the data key is stored on this device — the optional shortcut
+     * described on [BiometricUnlockStore], never a replacement for the passcode.
+     *
+     * A flow rather than a getter because both the lock screen and the settings switch render from
+     * it, and either can turn it off: a copy the hardware has invalidated is dropped on the unlock
+     * attempt that discovers it, and the switch must follow.
+     */
+    val isBiometricUnlockEnabled: StateFlow<Boolean>
+
+    /**
+     * A cipher to hand to the biometric prompt before [enableBiometricUnlock], or null when this
+     * device cannot hold the copy. The prompt authenticates it; nothing here can.
+     */
+    suspend fun biometricEnableCipher(): Cipher?
+
+    /**
+     * A cipher to hand to the biometric prompt before [unlockWithBiometrics], or null when there is
+     * no usable copy to read.
+     */
+    suspend fun biometricUnlockCipher(): Cipher?
+
+    /**
+     * Stores a biometric copy of the data key using a [cipher] the prompt has authenticated.
+     *
+     * Requires the app to be unlocked, since only then is there a data key to copy. Returns false
+     * when the copy did not reach the disk — the passcode is unaffected either way.
+     */
+    suspend fun enableBiometricUnlock(cipher: Cipher): Boolean
+
+    /** Removes the biometric copy. The passcode continues to work unchanged. */
+    suspend fun disableBiometricUnlock()
+
+    /**
+     * Unlocks the app with a [cipher] the prompt has authenticated, recovering the data key from
+     * the biometric copy instead of deriving it from the passcode.
+     */
+    suspend fun unlockWithBiometrics(cipher: Cipher): PasscodeUnlockResult
 }
 
 /**
@@ -172,6 +212,7 @@ internal interface PasscodeDataKeySource {
 internal class PasscodeRepositoryImpl(
     private val cipher: PasscodeCipher,
     private val store: PasscodeStore,
+    private val biometrics: BiometricUnlockStore,
     private val keyShareProtection: VaultKeyShareProtection,
     private val dispatcher: CoroutineDispatcher,
     private val elapsedRealtimeMillis: () -> Long,
@@ -181,12 +222,24 @@ internal class PasscodeRepositoryImpl(
     constructor(
         cipher: PasscodeCipher,
         store: PasscodeStore,
+        biometrics: BiometricUnlockStore,
         keyShareProtection: VaultKeyShareProtection,
         @DefaultDispatcher dispatcher: CoroutineDispatcher,
-    ) : this(cipher, store, keyShareProtection, dispatcher, SystemClock::elapsedRealtime)
+    ) : this(
+        cipher,
+        store,
+        biometrics,
+        keyShareProtection,
+        dispatcher,
+        SystemClock::elapsedRealtime,
+    )
 
     private val _state = MutableStateFlow<PasscodeState>(PasscodeState.Unknown)
     override val state: StateFlow<PasscodeState> = _state.asStateFlow()
+
+    private val _isBiometricUnlockEnabled = MutableStateFlow(false)
+    override val isBiometricUnlockEnabled: StateFlow<Boolean> =
+        _isBiometricUnlockEnabled.asStateFlow()
 
     /**
      * Guards read-modify-write sequences over the persisted credentials and lockout counters, so
@@ -234,6 +287,7 @@ internal class PasscodeRepositoryImpl(
         mutex.withLock {
             if (_state.value != PasscodeState.Unknown) return
             _state.value = resolveOrReport()
+            refreshBiometricUnlockEnabled()
         }
     }
 
@@ -241,10 +295,26 @@ internal class PasscodeRepositoryImpl(
         mutex.withLock {
             when (_state.value) {
                 PasscodeState.KeyUnavailable,
-                PasscodeState.StoreUnavailable -> _state.value = resolveOrReport()
+                PasscodeState.StoreUnavailable -> {
+                    _state.value = resolveOrReport()
+                    refreshBiometricUnlockEnabled()
+                }
                 else -> Unit
             }
         }
+    }
+
+    /**
+     * Publishes whether the biometric shortcut is on. Callers must hold [mutex].
+     *
+     * A copy only means anything while a passcode is configured, since it is a shortcut past that
+     * passcode and nothing else. Reporting false for every other state keeps a copy that outlived
+     * its passcode — which the invariant says cannot happen, but which nothing here can prove —
+     * from advertising itself as a way in.
+     */
+    private suspend fun refreshBiometricUnlockEnabled() {
+        _isBiometricUnlockEnabled.value =
+            _state.value.isConfigured && withContext(dispatcher) { biometrics.isEnabled() }
     }
 
     /**
@@ -307,6 +377,10 @@ internal class PasscodeRepositoryImpl(
                 Timber.e("Refusing to set a passcode: encrypted keyshares have no credentials")
                 return@withLock PasscodeUnlockResult.Failed
             }
+            // The data key about to be minted is a new one, so any biometric copy still on the
+            // device holds a key nothing wraps. The invariant says disablePasscode already removed
+            // it; this is what makes that true even if a crash landed between the two.
+            withContext(dispatcher) { biometrics.clear() }
             val key = withContext(dispatcher) { cipher.newDataKey() }
             try {
                 // Not cancellable as a unit. Cancellation between the wrap and the bulk encrypt
@@ -337,6 +411,7 @@ internal class PasscodeRepositoryImpl(
                 key.fill(0)
             }
             publishUnlockedUnlessLocked()
+            refreshBiometricUnlockEnabled()
             PasscodeUnlockResult.Success
         }
     }
@@ -377,7 +452,9 @@ internal class PasscodeRepositoryImpl(
         return mutex.withLock {
             verifyLocked(currentPasscode) { key ->
                 // The data key is unchanged, so stored keyshares stay valid: only the wrap is
-                // rewritten. This is why changing the passcode is instant on a large vault set.
+                // rewritten. This is why changing the passcode is instant on a large vault set,
+                // and why the biometric copy needs nothing done to it — it holds the data key
+                // itself, not anything derived from the passcode.
                 //
                 // Nothing else has been touched yet, and the store puts back what it had, so a
                 // wrap that did not land leaves the old passcode in force.
@@ -401,6 +478,13 @@ internal class PasscodeRepositoryImpl(
     override suspend fun disablePasscode(passcode: String): PasscodeUnlockResult =
         mutex.withLock {
             verifyLocked(passcode) { key ->
+                // The biometric copy goes first, before anything else moves. It holds this data
+                // key, and the moment the credentials are gone it is the only thing that does — so
+                // a crash anywhere after this point leaves no copy of a retired key behind, which
+                // is the invariant BiometricUnlockStore relies on instead of iOS's binding blob.
+                withContext(dispatcher) { biometrics.clear() }
+                _isBiometricUnlockEnabled.value = false
+
                 // Decrypt first, drop the credentials second. A crash between the two leaves the
                 // passcode in place over a partly decrypted table, which still reads correctly.
                 //
@@ -458,6 +542,80 @@ internal class PasscodeRepositoryImpl(
                 publishUnlockedUnlessLocked()
                 PasscodeUnlockResult.Success
             }
+        }
+
+    override suspend fun biometricEnableCipher(): Cipher? =
+        withContext(dispatcher) { biometrics.encryptCipherOrNull() }
+
+    override suspend fun biometricUnlockCipher(): Cipher? {
+        val cipher = withContext(dispatcher) { biometrics.decryptCipherOrNull() }
+        // Null can mean the store has just dropped a copy the hardware invalidated, so the link on
+        // the lock screen and the switch in settings both have to stop offering it.
+        if (cipher == null) {
+            mutex.withLock { refreshBiometricUnlockEnabled() }
+        }
+        return cipher
+    }
+
+    override suspend fun enableBiometricUnlock(cipher: Cipher): Boolean =
+        mutex.withLock {
+            // Only an unlocked app holds the key this copies. Recovering it any other way would
+            // mean deriving it from the passcode, which is the passcode path's job, not this one's.
+            val key =
+                dataKeyOrNull()
+                    ?: run {
+                        Timber.e("Refusing to enable biometric unlock: the app is locked")
+                        return@withLock false
+                    }
+            val stored =
+                try {
+                    withContext(dispatcher) { biometrics.store(key, cipher) }
+                } finally {
+                    key.fill(0)
+                }
+            refreshBiometricUnlockEnabled()
+            stored
+        }
+
+    override suspend fun disableBiometricUnlock() {
+        mutex.withLock {
+            withContext(dispatcher) { biometrics.clear() }
+            refreshBiometricUnlockEnabled()
+        }
+    }
+
+    override suspend fun unlockWithBiometrics(cipher: Cipher): PasscodeUnlockResult =
+        mutex.withLock {
+            // Anything else is an app with nothing for this to open: already unlocked, no passcode
+            // at all, or one of the states where no key of any kind reaches the keyshares.
+            if (_state.value != PasscodeState.Locked) {
+                return@withLock PasscodeUnlockResult.Failed
+            }
+
+            val key =
+                withContext(dispatcher) { biometrics.readDataKeyOrNull(cipher) }
+                    ?: run {
+                        refreshBiometricUnlockEnabled()
+                        return@withLock PasscodeUnlockResult.Failed
+                    }
+
+            // The field gets a copy so the array below stays ours to zero — see swapDataKey.
+            swapDataKey(key.copyOf())
+            try {
+                // The same sweep the passcode path runs: an interrupted setPasscode is finished by
+                // whichever unlock comes next, and this is now one of them.
+                protectAllOrLog(key)
+            } finally {
+                key.fill(0)
+            }
+
+            // A biometric match is an authentication that succeeded, so the wrong-passcode counter
+            // standing against this device no longer describes anything. The throttle exists to
+            // slow down guessing at six digits, and nothing was guessed here.
+            withContext(dispatcher) { store.writeLockout(PasscodeLockout.cleared()) }
+
+            publishUnlockedUnlessLocked()
+            PasscodeUnlockResult.Success
         }
 
     override fun lock() {

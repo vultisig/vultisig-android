@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.passcode
 
 import io.kotest.matchers.shouldBe
+import javax.crypto.Cipher
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -24,12 +25,14 @@ import org.junit.jupiter.api.Test
 internal class PasscodeRepositoryImplTest {
 
     private lateinit var store: FakePasscodeStore
+    private lateinit var biometrics: FakeBiometricUnlockStore
     private lateinit var protection: RecordingKeyShareProtection
     private var now = 1_000_000L
 
     @BeforeEach
     fun setUp() {
         store = FakePasscodeStore()
+        biometrics = FakeBiometricUnlockStore()
         protection = RecordingKeyShareProtection()
         now = 1_000_000L
     }
@@ -39,6 +42,7 @@ internal class PasscodeRepositoryImplTest {
         PasscodeRepositoryImpl(
             cipher = PasscodeCipher(),
             store = store,
+            biometrics = biometrics,
             keyShareProtection = protection,
             dispatcher = StandardTestDispatcher(testScheduler),
             elapsedRealtimeMillis = { now },
@@ -632,6 +636,7 @@ internal class PasscodeRepositoryImplTest {
             PasscodeRepositoryImpl(
                 cipher = PasscodeCipher(),
                 store = store,
+                biometrics = biometrics,
                 keyShareProtection = protection,
                 dispatcher = Dispatchers.Default,
                 elapsedRealtimeMillis = { now },
@@ -651,6 +656,205 @@ internal class PasscodeRepositoryImplTest {
             store.readLockout().failedAttempts,
         )
     }
+
+    @Test
+    fun `enableBiometricUnlock stores the data key and reports the shortcut on`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+
+        assertTrue(repository.enableBiometricUnlock(anyCipher()))
+
+        assertTrue(repository.isBiometricUnlockEnabled.value)
+        assertContentEquals(repository.dataKeyOrNull(), biometrics.storedDataKey())
+    }
+
+    @Test
+    fun `enableBiometricUnlock is refused while the app is locked`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.lock()
+
+        assertFalse(repository.enableBiometricUnlock(anyCipher()))
+
+        assertFalse(repository.isBiometricUnlockEnabled.value)
+        assertNull(biometrics.storedDataKey())
+    }
+
+    @Test
+    fun `enableBiometricUnlock reports a copy that did not reach the disk`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        biometrics.storeSucceeds = false
+
+        assertFalse(repository.enableBiometricUnlock(anyCipher()))
+
+        assertFalse(repository.isBiometricUnlockEnabled.value)
+    }
+
+    @Test
+    fun `unlockWithBiometrics recovers the same data key the passcode does`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.enableBiometricUnlock(anyCipher())
+        val fromPasscode = repository.dataKeyOrNull()
+        repository.lock()
+
+        val result = repository.unlockWithBiometrics(anyCipher())
+
+        assertEquals(PasscodeUnlockResult.Success, result)
+        assertEquals(PasscodeState.Unlocked, repository.state.value)
+        assertContentEquals(fromPasscode, repository.dataKeyOrNull())
+    }
+
+    @Test
+    fun `unlockWithBiometrics clears a standing wrong-passcode penalty`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.enableBiometricUnlock(anyCipher())
+        repository.lock()
+        repeat(PasscodeLockout.ATTEMPTS_BEFORE_LOCKOUT) { repository.unlock("000000") }
+        assertTrue(store.readLockout().failedAttempts > 0)
+
+        repository.unlockWithBiometrics(anyCipher())
+
+        assertEquals(0, store.readLockout().failedAttempts)
+    }
+
+    @Test
+    fun `unlockWithBiometrics finishes an interrupted keyshare sweep`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.enableBiometricUnlock(anyCipher())
+        repository.lock()
+        protection.calls.clear()
+
+        repository.unlockWithBiometrics(anyCipher())
+
+        assertEquals(listOf("protect"), protection.calls)
+    }
+
+    @Test
+    fun `unlockWithBiometrics is refused when the app is not locked`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.enableBiometricUnlock(anyCipher())
+
+        assertEquals(PasscodeUnlockResult.Failed, repository.unlockWithBiometrics(anyCipher()))
+    }
+
+    @Test
+    fun `unlockWithBiometrics reports a copy that has gone and turns the shortcut off`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.enableBiometricUnlock(anyCipher())
+        repository.lock()
+        // Stands in for a key the hardware invalidated between the prompt and the read.
+        biometrics.clear()
+
+        assertEquals(PasscodeUnlockResult.Failed, repository.unlockWithBiometrics(anyCipher()))
+
+        assertEquals(PasscodeState.Locked, repository.state.value)
+        assertFalse(repository.isBiometricUnlockEnabled.value)
+    }
+
+    @Test
+    fun `an enable the user abandons leaves the shortcut off rather than broken`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.enableBiometricUnlock(anyCipher())
+        assertTrue(repository.isBiometricUnlockEnabled.value)
+
+        // Asking for the cipher retires the key the stored copy was made under. Cancelling the
+        // prompt at this point must leave nothing claiming to be a working shortcut.
+        repository.biometricEnableCipher()
+
+        assertNull(repository.biometricUnlockCipher())
+        assertFalse(repository.isBiometricUnlockEnabled.value)
+    }
+
+    @Test
+    fun `disableBiometricUnlock removes the copy and leaves the passcode working`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.enableBiometricUnlock(anyCipher())
+
+        repository.disableBiometricUnlock()
+
+        assertFalse(repository.isBiometricUnlockEnabled.value)
+        assertNull(biometrics.storedDataKey())
+        repository.lock()
+        assertEquals(PasscodeUnlockResult.Success, repository.unlock("123456"))
+    }
+
+    @Test
+    fun `disablePasscode removes the biometric copy before the credentials`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.enableBiometricUnlock(anyCipher())
+
+        repository.disablePasscode("123456")
+
+        // The copy holds the retired data key, so nothing may be left holding it.
+        assertNull(biometrics.storedDataKey())
+        assertFalse(repository.isBiometricUnlockEnabled.value)
+    }
+
+    @Test
+    fun `setPasscode clears a biometric copy left over from an earlier data key`() = runTest {
+        // Stands in for a crash that took the credentials but not the copy.
+        biometrics.store(ByteArray(32) { 7 }, anyCipher())
+
+        val repository = repository()
+        repository.setPasscode("123456")
+
+        assertFalse(repository.isBiometricUnlockEnabled.value)
+        assertNull(biometrics.storedDataKey())
+    }
+
+    @Test
+    fun `changePasscode leaves the biometric copy able to unlock`() = runTest {
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.enableBiometricUnlock(anyCipher())
+
+        // The data key does not change, so the copy is still the right one — the reason nothing
+        // has to be re-encrypted behind a second prompt.
+        repository.changePasscode("123456", "654321")
+        repository.lock()
+
+        assertEquals(PasscodeUnlockResult.Success, repository.unlockWithBiometrics(anyCipher()))
+    }
+
+    @Test
+    fun `initialize reports the shortcut off when no passcode is configured`() = runTest {
+        biometrics.store(ByteArray(32) { 7 }, anyCipher())
+
+        val repository = repository()
+        repository.initialize()
+
+        assertEquals(PasscodeState.Disabled, repository.state.value)
+        assertFalse(repository.isBiometricUnlockEnabled.value)
+    }
+
+    @Test
+    fun `initialize reports the shortcut on for a locked vault that has a copy`() = runTest {
+        repository().let {
+            it.setPasscode("123456")
+            it.enableBiometricUnlock(anyCipher())
+        }
+
+        val reopened = repository()
+        reopened.initialize()
+
+        assertEquals(PasscodeState.Locked, reopened.state.value)
+        assertTrue(reopened.isBiometricUnlockEnabled.value)
+    }
+
+    /**
+     * A real cipher instance, uninitialised. The fake store does no encryption of its own; what is
+     * under test is the sequencing around a cipher the prompt has authorised, not the JCE.
+     */
+    private fun anyCipher(): Cipher = Cipher.getInstance("AES/GCM/NoPadding")
 }
 
 /** Records how the repository drives the bulk keyshare re-keying, including its ordering. */
@@ -677,6 +881,51 @@ internal class RecordingKeyShareProtection : VaultKeyShareProtection {
     override suspend fun unprotectAll(dataKey: ByteArray) {
         calls += "unprotect"
         unprotectFailure?.let { throw it }
+    }
+}
+
+/**
+ * In-memory [BiometricUnlockStore] standing in for the keystore-guarded copy.
+ *
+ * The ciphers are real instances and are ignored: a keystore key that only the hardware releases
+ * cannot exist in a JVM test, and what these tests are about is the repository's sequencing around
+ * one — when the copy is made, when it is dropped, and what it recovers.
+ */
+internal class FakeBiometricUnlockStore : BiometricUnlockStore {
+    private var copy: ByteArray? = null
+
+    /** Set false to stand in for a device that cannot mint the key at all. */
+    var canStore = true
+
+    /** Set false to stand in for a copy that did not reach the disk. */
+    var storeSucceeds = true
+
+    /** The copy as stored, for tests asserting on what a retired key left behind. */
+    fun storedDataKey(): ByteArray? = copy?.copyOf()
+
+    override fun isEnabled(): Boolean = copy != null
+
+    override fun encryptCipherOrNull(): Cipher? {
+        if (!canStore) return null
+        // Mirrors the real store: minting the new key retires the old one, so the copy it opened
+        // goes at the same moment rather than lingering as an unreadable shortcut.
+        copy = null
+        return Cipher.getInstance("AES/GCM/NoPadding")
+    }
+
+    override fun decryptCipherOrNull(): Cipher? =
+        if (copy != null) Cipher.getInstance("AES/GCM/NoPadding") else null
+
+    override fun store(dataKey: ByteArray, cipher: Cipher): Boolean {
+        if (!storeSucceeds) return false
+        copy = dataKey.copyOf()
+        return true
+    }
+
+    override fun readDataKeyOrNull(cipher: Cipher): ByteArray? = copy?.copyOf()
+
+    override fun clear() {
+        copy = null
     }
 }
 

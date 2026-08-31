@@ -69,6 +69,7 @@ import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.QrShareField
 import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.data.usecases.VaultAndBalance
+import com.vultisig.wallet.ui.components.BiometricUnlockAvailability
 import com.vultisig.wallet.ui.components.SignMessageCard
 import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
@@ -280,11 +281,14 @@ class PreviewActivity : ComponentActivity() {
                                 PasscodeSettingsUiModel(
                                     isPasscodeEnabled = true,
                                     autoLockTimeout = AutoLockTimeout.Never,
+                                    isBiometricUnlockEnabled = true,
                                 ),
+                            biometricAvailability = BiometricUnlockAvailability.Available,
                             onBackClick = {},
                             onPasscodeEnabledChange = {},
                             onChangePasscodeClick = {},
                             onAutoLockClick = {},
+                            onBiometricUnlockChange = {},
                         )
                     "passcode_lock" ->
                         PasscodeLockScreen(
@@ -295,6 +299,12 @@ class PreviewActivity : ComponentActivity() {
                         PasscodeLockScreen(
                             state = PasscodeLockUiModel(),
                             textFieldState = TextFieldState("12"),
+                        )
+                    "passcode_lock_biometrics" ->
+                        PasscodeLockScreen(
+                            state = PasscodeLockUiModel(isBiometricUnlockEnabled = true),
+                            textFieldState = TextFieldState(),
+                            isBiometricUnlockAvailable = true,
                         )
                     "passcode_lock_error" ->
                         PasscodeLockScreen(
