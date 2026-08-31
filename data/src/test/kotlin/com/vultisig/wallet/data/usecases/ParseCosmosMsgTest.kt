@@ -25,16 +25,17 @@ class ParseCosmosMessageTest {
 
     private val protoBuf = ProtoBuf { encodeDefaults = false }
 
-    // Stub thor bech32 encoder so unit tests don't depend on the WalletCore JNI library.
-    // Produces a `thor1`-prefixed 43-char string deterministically derived from the input bytes,
-    // satisfying the prefix/length/uniqueness assertions in the address tests below.
-    private val testThorEncoder: (ByteArray) -> String = { bytes ->
+    // Stub bech32 encoder so unit tests don't depend on the WalletCore JNI library.
+    // Produces a 43-char string under the requested human-readable part, deterministically derived
+    // from the input bytes, satisfying the prefix/length/uniqueness assertions in the address tests
+    // below.
+    private val testBech32Encoder: (String, ByteArray) -> String = { hrp, bytes ->
         val hex = bytes.joinToString("") { "%02x".format(it.toInt() and 0xff) }
-        "thor1" + (hex + "q".repeat(38)).take(38)
+        hrp + "1" + (hex + "q".repeat(38)).take(38)
     }
 
     private val parseCosmosMessageUseCaseImpl =
-        ParseCosmosMessageUseCaseImpl(protoBuf, testThorEncoder)
+        ParseCosmosMessageUseCaseImpl(protoBuf, testBech32Encoder)
 
     @Test
     fun `parseCosmosMessage should successfully parse valid input`() {
@@ -689,6 +690,71 @@ class ParseCosmosMessageTest {
         assertEquals("LTC", asset["ticker"]!!.jsonPrimitive.content)
         assertEquals("12345", coin0["amount"]!!.jsonPrimitive.content)
         assertEquals("8", coin0["decimals"]!!.jsonPrimitive.content)
+    }
+
+    // MayaChain forks THORChain and reuses its `/types.Msg*` type urls, so the request's own chain
+    // id is the only thing that says which human-readable part the raw 20-byte addresses belong to.
+    // Rendering every one as `thor` showed the joining device a recipient the dApp never named.
+    @Test
+    fun `types MsgSend on maya should be decoded with maya1 bech32 addresses`() {
+        val msgSend =
+            ThorMsgSendBody(
+                fromAddress = ByteArray(20) { it.toByte() },
+                toAddress = ByteArray(20) { (0xFF - it).toByte() },
+                amount = listOf(Coin(denom = "cacao", amount = "100000000")),
+            )
+        val msgBytes = protoBuf.encodeToByteArray(ThorMsgSendBody.serializer(), msgSend)
+        val txBody =
+            TxBody(messages = listOf(ProtobufAny("/types.MsgSend", msgBytes)), memo = "test")
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "mayachain-mainnet-v1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(createValidAuthInfo()),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        val from = value["fromAddress"]!!.jsonPrimitive.content
+        val to = value["toAddress"]!!.jsonPrimitive.content
+        assertTrue(from.startsWith("maya1"), "expected maya1 prefix, got $from")
+        assertTrue(to.startsWith("maya1"), "expected maya1 prefix, got $to")
+        assertNotEquals(from, to)
+    }
+
+    @Test
+    fun `types MsgDeposit on maya should decode a maya1 signer`() {
+        val msgDeposit =
+            ThorMsgDepositBody(
+                coins =
+                    listOf(
+                        ThorChainCoin(
+                            asset =
+                                ThorChainAsset(chain = "MAYA", symbol = "CACAO", ticker = "CACAO"),
+                            amount = "12345",
+                            decimals = 10L,
+                        )
+                    ),
+                memo = "swap:BTC.BTC:bc1qaddr",
+                signer = ByteArray(20) { (it + 1).toByte() },
+            )
+        val msgBytes = protoBuf.encodeToByteArray(ThorMsgDepositBody.serializer(), msgDeposit)
+        val txBody =
+            TxBody(messages = listOf(ProtobufAny("/types.MsgDeposit", msgBytes)), memo = "test")
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "mayachain-mainnet-v1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(createValidAuthInfo()),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val signer = (result.messages[0].value as JsonObject)["signer"]!!.jsonPrimitive.content
+        assertTrue(signer.startsWith("maya1"), "expected maya1 prefix, got $signer")
     }
 
     @Test

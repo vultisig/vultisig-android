@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.crypto.checkError
+import com.vultisig.wallet.data.crypto.cosmosTxBodyMemo
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -397,7 +398,6 @@ class CosmosHelper(
         publicKey: PublicKey,
     ): ByteArray {
         val bodyBytes = Base64.decode(signDirect.bodyBytes)
-        val txBody = Cosmos.SigningInput.parseFrom(bodyBytes)
 
         val message =
             Cosmos.Message.newBuilder()
@@ -424,11 +424,7 @@ class CosmosHelper(
                 .addMessages(message)
                 .setFee(buildCosmosFee(cosmosData))
 
-        if (txBody.memo.isNotEmpty()) {
-            inputBuilder.memo = txBody.memo
-        } else {
-            memo?.let { inputBuilder.memo = it }
-        }
+        inputBuilder.memo = cosmosTxBodyMemo(bodyBytes) ?: memo.orEmpty()
 
         return inputBuilder.build().toByteArray()
     }

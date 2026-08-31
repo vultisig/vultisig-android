@@ -24,10 +24,10 @@ fun interface ParseCosmosMessageUseCase {
 
 internal class ParseCosmosMessageUseCaseImpl(
     private val protoBuf: ProtoBuf,
-    private val thorAddressEncoder: (ByteArray) -> String,
+    private val bech32Encoder: (String, ByteArray) -> String,
 ) : ParseCosmosMessageUseCase {
 
-    @Inject constructor(protoBuf: ProtoBuf) : this(protoBuf, { Bech32.encode(THOR_BECH32_HRP, it) })
+    @Inject constructor(protoBuf: ProtoBuf) : this(protoBuf, Bech32::encode)
 
     override fun invoke(signDirect: SignDirectProto): CosmosMessage {
         require(signDirect.chainId.isNotBlank()) { "Chain ID cannot be blank" }
@@ -38,13 +38,14 @@ internal class ParseCosmosMessageUseCaseImpl(
         return try {
             val decodedTxBody = decodeTxBodySafe(signDirect.bodyBytes)
             val decodedAuthInfo = decodeAuthInfoSafe(signDirect.authInfoBytes)
+            val hrp = bech32HrpOf(signDirect.chainId)
 
             CosmosMessage(
                 chainId = signDirect.chainId,
                 accountNumber = signDirect.accountNumber,
                 sequence = decodedAuthInfo.signerInfos.firstOrNull()?.sequence?.toString() ?: "0",
                 memo = decodedTxBody.memo,
-                messages = decodedTxBody.messages.map { it.toMessage() },
+                messages = decodedTxBody.messages.map { it.toMessage(hrp) },
                 authInfoFee = decodedAuthInfo.authInfoFee?.toFee() ?: Fee(amount = emptyList()),
             )
         } catch (e: IndexOutOfBoundsException) {
@@ -95,10 +96,10 @@ internal class ParseCosmosMessageUseCaseImpl(
         }
     }
 
-    private fun ProtobufAny.toMessage() =
-        Message(typeUrl = typeUrl, value = decodeValueOrFallback())
+    private fun ProtobufAny.toMessage(hrp: String) =
+        Message(typeUrl = typeUrl, value = decodeValueOrFallback(hrp))
 
-    private fun ProtobufAny.decodeValueOrFallback(): JsonElement =
+    private fun ProtobufAny.decodeValueOrFallback(hrp: String): JsonElement =
         try {
             when (typeUrl) {
                 "/cosmos.bank.v1beta1.MsgSend" ->
@@ -109,14 +110,14 @@ internal class ParseCosmosMessageUseCaseImpl(
                                 requireThorAddressBytes(it.fromAddress)
                                 requireThorAddressBytes(it.toAddress)
                             }
-                            .toRendered()
+                            .toRendered(hrp)
                     )
                 "/types.MsgDeposit" ->
                     JSON.encodeToJsonElement(
                         decodeChecked<ThorMsgDepositBody>(value) {
                                 requireThorAddressBytes(it.signer)
                             }
-                            .toRendered()
+                            .toRendered(hrp)
                     )
                 "/cosmos.staking.v1beta1.MsgDelegate" ->
                     JSON.encodeToJsonElement(decodeChecked<MsgDelegateBody>(value))
@@ -138,18 +139,18 @@ internal class ParseCosmosMessageUseCaseImpl(
             JsonPrimitive(Base64.encode(value))
         }
 
-    private fun ThorMsgSendBody.toRendered() =
+    private fun ThorMsgSendBody.toRendered(hrp: String) =
         RenderedThorMsgSend(
-            fromAddress = encodeThorAddress(fromAddress),
-            toAddress = encodeThorAddress(toAddress),
+            fromAddress = encodeAddress(hrp, fromAddress),
+            toAddress = encodeAddress(hrp, toAddress),
             amount = amount,
         )
 
-    private fun ThorMsgDepositBody.toRendered() =
-        RenderedThorMsgDeposit(coins = coins, memo = memo, signer = encodeThorAddress(signer))
+    private fun ThorMsgDepositBody.toRendered(hrp: String) =
+        RenderedThorMsgDeposit(coins = coins, memo = memo, signer = encodeAddress(hrp, signer))
 
-    private fun encodeThorAddress(bytes: ByteArray): String =
-        if (bytes.isEmpty()) "" else thorAddressEncoder(bytes)
+    private fun encodeAddress(hrp: String, bytes: ByteArray): String =
+        if (bytes.isEmpty()) "" else bech32Encoder(hrp, bytes)
 
     private inline fun <reified T> decodeChecked(bytes: ByteArray, validate: (T) -> Unit = {}): T =
         protoBuf.decodeFromByteArray<T>(bytes).also(validate)
@@ -170,7 +171,19 @@ internal class ParseCosmosMessageUseCaseImpl(
 
     companion object {
         private const val THOR_BECH32_HRP = "thor"
+        private const val MAYA_BECH32_HRP = "maya"
+        private const val MAYA_CHAIN_ID_PREFIX = "mayachain"
         private const val THOR_ADDRESS_LENGTH_BYTES = 20
+
+        /**
+         * MayaChain forks THORChain, so its `/types.Msg*` bodies carry raw 20-byte addresses under
+         * the same type urls. Only the request's own chain id says which human-readable part to
+         * render them with; encoding every one as `thor` showed the joining device a recipient that
+         * matched neither the dApp's nor the payload's.
+         */
+        private fun bech32HrpOf(chainId: String): String =
+            if (chainId.startsWith(MAYA_CHAIN_ID_PREFIX, ignoreCase = true)) MAYA_BECH32_HRP
+            else THOR_BECH32_HRP
 
         private val JSON = Json {
             encodeDefaults = true
