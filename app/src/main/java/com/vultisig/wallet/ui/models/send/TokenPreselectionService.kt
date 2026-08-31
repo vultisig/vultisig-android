@@ -172,17 +172,20 @@ internal class TokenPreselectionService(
             // two directions start from different tokens — as with the RUJI pair above.
             DeFiNavActions.STAKE_YBRUNE -> Coins.ThorChain.bRUNE
             DeFiNavActions.UNSTAKE_YBRUNE -> Coins.ThorChain.ybRUNE
-            DeFiNavActions.STAKE_CACAO,
-            DeFiNavActions.UNSTAKE_CACAO,
-            DeFiNavActions.ADD_LP,
-            DeFiNavActions.REMOVE_LP -> Coins.MayaChain.CACAO
+            // The EVM asset side of a pool add is the one case ADD_LP still submits through the
+            // Send flow (the Deposit flow's AddLiquidityStrategy only covers the RUNE/CACAO side).
+            DeFiNavActions.ADD_LP -> Coins.MayaChain.CACAO
             DeFiNavActions.FREEZE_TRX,
             DeFiNavActions.UNFREEZE_TRX -> Coins.Tron.TRX
             DeFiNavActions.STAKE_TON,
             DeFiNavActions.UNSTAKE_TON -> Coins.Ton.TON
-            // Bond/Unbond submit through the Deposit flow, not the Send flow.
+            // Bond/Unbond/Stake-Cacao/Unstake-Cacao/Remove-LP submit through the Deposit flow, not
+            // the Send flow.
             DeFiNavActions.BOND,
             DeFiNavActions.UNBOND,
+            DeFiNavActions.STAKE_CACAO,
+            DeFiNavActions.UNSTAKE_CACAO,
+            DeFiNavActions.REMOVE_LP,
             null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
         }
 }

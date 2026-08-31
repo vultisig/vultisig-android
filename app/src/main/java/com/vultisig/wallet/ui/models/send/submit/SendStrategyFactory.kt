@@ -71,13 +71,16 @@ internal data class SendStrategies(
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withdrawUsdcCircle.submit()
 
             null,
-            // Bond/Unbond submit through the Deposit flow, not the Send flow.
+            // Bond/Unbond/Stake-Cacao/Unstake-Cacao/Remove-LP submit through the Deposit flow, not
+            // the Send flow.
             DeFiNavActions.BOND,
             DeFiNavActions.UNBOND,
             DeFiNavActions.STAKE_CACAO,
             DeFiNavActions.UNSTAKE_CACAO,
-            DeFiNavActions.ADD_LP,
             DeFiNavActions.REMOVE_LP,
+            // ADD_LP still submits through the Send flow for the EVM asset side of a pool add,
+            // which the Deposit flow's AddLiquidityStrategy doesn't cover (RUNE/CACAO side only).
+            DeFiNavActions.ADD_LP,
             DeFiNavActions.FREEZE_TRX,
             DeFiNavActions.UNFREEZE_TRX,
             // TON staking submits through the Deposit flow, not the Send flow.
