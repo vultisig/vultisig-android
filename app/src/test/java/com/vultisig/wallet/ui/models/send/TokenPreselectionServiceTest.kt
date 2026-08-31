@@ -240,6 +240,36 @@ internal class TokenPreselectionServiceTest {
         }
 
     @Test
+    fun `preSelect BOND - default coin is RUNE, not an unrelated wallet account`() =
+        runTest(mainDispatcher) {
+            // A stale deep link or restored back stack could still land a Route.Send on BOND.
+            // The account list here holds only ETH — no THORChain account at all — so
+            // findPreselectedToken's arbitrary-first-account fallback would offer ETH for a
+            // THORChain bond. The explicit BOND -> RUNE mapping must win instead.
+            defiType = DeFiNavActions.BOND
+            loaded(ethAccount(Coins.Ethereum.ETH))
+            val service = build(backgroundScope)
+
+            service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
+            advanceUntilIdle()
+
+            assertEquals(listOf(Coins.ThorChain.RUNE), selectedTokens)
+        }
+
+    @Test
+    fun `preSelect UNBOND - default coin is RUNE, not an unrelated wallet account`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.UNBOND
+            loaded(ethAccount(Coins.Ethereum.ETH))
+            val service = build(backgroundScope)
+
+            service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
+            advanceUntilIdle()
+
+            assertEquals(listOf(Coins.ThorChain.RUNE), selectedTokens)
+        }
+
+    @Test
     fun `preSelect UNSTAKE_YBRUNE - default coin is the ybRUNE receipt`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.UNSTAKE_YBRUNE

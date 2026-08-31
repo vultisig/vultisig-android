@@ -174,18 +174,20 @@ internal class TokenPreselectionService(
             DeFiNavActions.UNSTAKE_YBRUNE -> Coins.ThorChain.ybRUNE
             // The EVM asset side of a pool add is the one case ADD_LP still submits through the
             // Send flow (the Deposit flow's AddLiquidityStrategy only covers the RUNE/CACAO side).
-            DeFiNavActions.ADD_LP -> Coins.MayaChain.CACAO
+            DeFiNavActions.ADD_LP,
+            DeFiNavActions.STAKE_CACAO,
+            DeFiNavActions.UNSTAKE_CACAO,
+            DeFiNavActions.REMOVE_LP -> Coins.MayaChain.CACAO
             DeFiNavActions.FREEZE_TRX,
             DeFiNavActions.UNFREEZE_TRX -> Coins.Tron.TRX
             DeFiNavActions.STAKE_TON,
             DeFiNavActions.UNSTAKE_TON -> Coins.Ton.TON
-            // Bond/Unbond/Stake-Cacao/Unstake-Cacao/Remove-LP submit through the Deposit flow, not
-            // the Send flow.
+            // Bond/Unbond only submit through the Deposit flow now, but a Route.Send reaching here
+            // (a stale deep link or restored back stack) must still preselect the chain's own
+            // native asset explicitly rather than falling back to findPreselectedToken's
+            // arbitrary-first-account default — submitFor refuses to submit these regardless.
             DeFiNavActions.BOND,
-            DeFiNavActions.UNBOND,
-            DeFiNavActions.STAKE_CACAO,
-            DeFiNavActions.UNSTAKE_CACAO,
-            DeFiNavActions.REMOVE_LP,
+            DeFiNavActions.UNBOND -> Coins.ThorChain.RUNE
             null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
         }
 }
