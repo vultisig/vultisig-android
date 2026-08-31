@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -16,9 +17,11 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
+import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -106,6 +109,8 @@ internal class BondStrategyTest {
                 DepositFormUiModel(depositChain = chain, isWhitelistFailed = isWhitelistFailed)
             },
             selectedTokenProvider = { runeCoin() },
+            selectedAccountProvider = { mockk(relaxed = true) },
+            addressProvider = { mockk(relaxed = true) },
             nodeAddressFieldState = nodeAddress,
             tokenAmountFieldState = tokenAmount,
             providerFieldState = provider,
@@ -116,6 +121,15 @@ internal class BondStrategyTest {
             blockChainSpecificRepository = specificRepo,
             isAssetCharsValid = assetsValidator,
             isLpUnitCharsValid = { it.toLongOrNull()?.let { v -> v > 0 } == true },
+            requireTokenAmount = { token, _, _, _ ->
+                val amount = tokenAmount.text.toString().toBigDecimalOrNull()
+                if (amount == null || amount <= BigDecimal.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+                amount.movePointRight(token.decimal).toBigInteger()
+            },
             calculateGasFee = { _, token, _ -> TokenValue(BigInteger.ONE, token) },
             getFeesFiatValue = { _, _, _ -> estimatedFee() },
         )

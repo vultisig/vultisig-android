@@ -2,6 +2,8 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositMemo.Bond
@@ -16,7 +18,6 @@ import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
-import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.UUID
 
@@ -26,6 +27,8 @@ internal class BondStrategy(
     private val chainProvider: () -> Chain?,
     private val stateProvider: () -> DepositFormUiModel,
     private val selectedTokenProvider: () -> Coin?,
+    private val selectedAccountProvider: () -> Account?,
+    private val addressProvider: () -> Address?,
     private val nodeAddressFieldState: TextFieldState,
     private val tokenAmountFieldState: TextFieldState,
     private val providerFieldState: TextFieldState,
@@ -36,6 +39,7 @@ internal class BondStrategy(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
     private val isLpUnitCharsValid: (String) -> Boolean,
+    private val requireTokenAmount: (Coin, Account, Address, TokenValue) -> BigInteger,
     private val calculateGasFee: suspend (Chain, Coin, String) -> TokenValue,
     private val getFeesFiatValue:
         suspend (BlockChainSpecificAndUtxo, TokenValue, Coin) -> EstimatedGasFee,
@@ -67,17 +71,6 @@ internal class BondStrategy(
         if (nodeAddress.isBlank() || !chainAccountAddressRepository.isValid(chain, nodeAddress)) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
-            )
-        }
-
-        val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
-
-        if (
-            depositChain == Chain.ThorChain &&
-                (tokenAmount == null || tokenAmount <= BigDecimal.ZERO)
-        ) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
             )
         }
 
@@ -114,12 +107,30 @@ internal class BondStrategy(
                     UiText.StringResource(R.string.send_error_no_address)
                 )
 
-        val tokenAmountInt =
-            tokenAmount?.movePointRight(selectedToken.decimal)?.toBigInteger() ?: BigInteger.ONE
-
         val srcAddress = selectedToken.address
 
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
+
+        val tokenAmountInt =
+            if (depositChain == Chain.ThorChain) {
+                val selectedAccount =
+                    selectedAccountProvider()
+                        ?: throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_no_address)
+                        )
+                val address =
+                    addressProvider()
+                        ?: throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_no_address)
+                        )
+                requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+            } else {
+                tokenAmountFieldState.text
+                    .toString()
+                    .toBigDecimalOrNull()
+                    ?.movePointRight(selectedToken.decimal)
+                    ?.toBigInteger() ?: BigInteger.ONE
+            }
 
         val providerText = providerFieldState.text.toString()
         val provider = providerText.ifBlank { null }

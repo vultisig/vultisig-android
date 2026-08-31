@@ -209,10 +209,6 @@ internal enum class SendFocusField {
     AMOUNT,
 }
 
-enum class AddressBookType {
-    OUTPUT
-}
-
 internal sealed class GasSettings {
     data class Eth(val baseFee: BigInteger, val priorityFee: BigInteger, val gasLimit: BigInteger) :
         GasSettings() {

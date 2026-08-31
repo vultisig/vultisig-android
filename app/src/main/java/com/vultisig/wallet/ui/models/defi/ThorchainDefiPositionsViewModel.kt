@@ -184,10 +184,6 @@ constructor(
     private var loadBondedNodesJob: Job? = null
     private var loadStakingPositionsJob: Job? = null
 
-    // Latest bonded nodes, kept so onClickUnBond can resolve the selected node's raw bonded amount
-    // (the UI model only carries the formatted string). Read/written on the main dispatcher.
-    private var activeBondedNodes: List<BondedNodePosition> = emptyList()
-
     // A caller-supplied tab is applied once and then forgotten: the screen leaves and re-enters
     // composition every time the wallet / DeFi toggle flips, and re-seeding there would throw away
     // whichever tab the user had chosen since.
@@ -652,7 +648,7 @@ constructor(
 
         // Cancel any in-flight collector before starting a new one. getActiveNodes never
         // completes, so without this each refresh would stack another collector that writes
-        // `activeBondedNodes`/state out of order.
+        // state out of order.
         loadBondedNodesJob?.cancel()
         loadBondedNodesJob =
             viewModelScope.launch {
@@ -717,7 +713,6 @@ constructor(
                             _totalValueBond.update { BigInteger.ZERO }
                         }
                         .collect { activeNodes ->
-                            activeBondedNodes = activeNodes
                             // Format UI data and show
                             val nodeUiModels = activeNodes.map { it.toUiModel() }
                             val totalBonded = calculateTotalBonded(activeNodes)

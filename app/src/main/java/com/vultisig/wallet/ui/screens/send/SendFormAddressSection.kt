@@ -87,14 +87,13 @@ private fun AddressInputSection(
     focusRequester: FocusRequester? = null,
     onFocusLost: (() -> Unit)? = null,
     testTag: String? = null,
-    editable: Boolean = true,
 ) {
     var wasFocused by remember { mutableStateOf(false) }
 
     VsTextInputField(
         textFieldState = fieldState,
         hint = stringResource(R.string.send_to_address_hint),
-        enabled = editable,
+        enabled = true,
         focusRequester = focusRequester,
         onFocusChanged =
             onFocusLost?.let { onLost ->
@@ -118,13 +117,9 @@ private fun AddressInputSection(
             else Modifier.fillMaxWidth(),
     )
 
-    // A locked field (unbond node address) can't be changed, so the paste/scan/address-book
-    // actions that would retarget it are hidden.
-    if (editable) {
-        UiSpacer(16.dp)
+    UiSpacer(16.dp)
 
-        AddressActionRow(onPaste = onPaste, onScan = onScan, onAddressBook = onAddressBook)
-    }
+    AddressActionRow(onPaste = onPaste, onScan = onScan, onAddressBook = onAddressBook)
 }
 
 @Composable
