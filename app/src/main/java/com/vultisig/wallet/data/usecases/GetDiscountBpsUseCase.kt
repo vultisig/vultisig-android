@@ -14,7 +14,6 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOL
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.PLATINUM_DISCOUNT_BPS
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_DISCOUNT_BPS
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.ULTIMATE_DISCOUNT_BPS
-import com.vultisig.wallet.data.utils.SimpleCache
 import com.vultisig.wallet.ui.screens.settings.TierType
 import java.math.BigInteger
 import java.util.concurrent.ConcurrentHashMap
@@ -50,13 +49,15 @@ constructor(
     // so a vault with no cached VULT row would fire one duplicate eth_call per candidate. Share a
     // single live read per vault behind a lock and a short-lived cache; the null of a failed read
     // is cached too, so a failure does not retry once per candidate either.
-    private val liveVultBalanceCache = SimpleCache<String, LiveVultBalance>(LIVE_BALANCE_TTL_MS)
+    // The per-vault lock only serialises calls for the same vault, so the store itself has to be
+    // safe for concurrent access across vaults.
+    private val liveVultBalanceCache = ConcurrentHashMap<String, LiveVultBalance>()
 
     private val liveVultBalanceLocks = ConcurrentHashMap<String, Mutex>()
 
     private fun lockFor(vaultId: String) = liveVultBalanceLocks.computeIfAbsent(vaultId) { Mutex() }
 
-    private class LiveVultBalance(val value: BigInteger?)
+    private class LiveVultBalance(val value: BigInteger?, val expiresAt: Long)
 
     override suspend fun invoke(vaultId: String, swapProvider: SwapProvider): Int {
         if (!supportedProviders.contains(swapProvider)) {
@@ -116,11 +117,15 @@ constructor(
 
     private suspend fun getLiveBalance(vaultId: String, address: String, coin: Coin): BigInteger? =
         lockFor(vaultId).withLock {
-            liveVultBalanceCache
-                .getOrPut(vaultId) {
-                    LiveVultBalance(balanceRepository.getBalanceOrNull(address, coin))
-                }
-                .value
+            val now = System.currentTimeMillis()
+            val cached = liveVultBalanceCache[vaultId]
+            if (cached != null && now < cached.expiresAt) {
+                return@withLock cached.value
+            }
+
+            val balance = balanceRepository.getBalanceOrNull(address, coin)
+            liveVultBalanceCache[vaultId] = LiveVultBalance(balance, now + LIVE_BALANCE_TTL_MS)
+            balance
         }
 
     fun getDiscountForBalance(vultBalance: BigInteger): Int {
