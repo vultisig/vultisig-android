@@ -58,13 +58,12 @@ constructor(
             when (provider) {
                 SwapProvider.THORCHAIN,
                 SwapProvider.MAYA,
-                SwapProvider.LIFI -> from.dstToken
+                SwapProvider.LIFI,
+                SwapProvider.JUPITER -> from.dstToken
 
                 SwapProvider.ONEINCH,
                 SwapProvider.KYBER,
                 SwapProvider.SWAPKIT -> tokenRepository.getNativeToken(from.srcToken.chain.id)
-
-                SwapProvider.JUPITER -> from.srcToken
             }
 
         // SwapKit UTXO-family sources (Bitcoin PSBT deposit, Cardano CBOR deposit) settle by
