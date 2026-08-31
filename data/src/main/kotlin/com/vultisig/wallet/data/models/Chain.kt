@@ -178,6 +178,7 @@ val Chain.canSelectTokens: Boolean
             Chain.GaiaChain,
             Chain.Osmosis,
             Chain.Tron,
+            Chain.Ripple,
             Chain.Ton -> true
             Chain.ThorChain -> true
             Chain.CronosChain,

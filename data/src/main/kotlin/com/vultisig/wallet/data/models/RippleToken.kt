@@ -1,7 +1,10 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.data.common.hexToByteArrayOrNull
+import com.vultisig.wallet.data.common.toHex
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.MathContext
 import java.math.RoundingMode
 
 /**
@@ -15,6 +18,12 @@ import java.math.RoundingMode
  */
 const val RIPPLE_TOKEN_DECIMALS: Int = 15
 
+/** Ceiling on a wire-supplied token scale; no real coin comes close to it. */
+private const val MAX_RIPPLE_TOKEN_SCALE = 100
+
+/** Significant digits an XRPL issued-currency amount carries; beyond it the signer errors. */
+private const val RIPPLE_VALUE_PRECISION = 16
+
 /**
  * Separator between the currency code and issuer address inside a Ripple token's `contractAddress`.
  *
@@ -25,6 +34,15 @@ private const val RIPPLE_TOKEN_SEPARATOR = '.'
 
 /** Currency code reserved for the native asset; it can never name a trust line. */
 private const val RIPPLE_NATIVE_CURRENCY = "XRP"
+
+/** An XRPL currency code is either 3 characters or a 160-bit value: 20 bytes, 40 hex characters. */
+private const val RIPPLE_STANDARD_CURRENCY_LENGTH = 3
+private const val RIPPLE_CURRENCY_CODE_BYTES = 20
+private val RIPPLE_HEX_CURRENCY_CODE = Regex("[0-9a-fA-F]{${RIPPLE_CURRENCY_CODE_BYTES * 2}}")
+
+/** rippled's `kIsoCharSet` minus the lowercase letters — see [isSignableRippleCurrencyCode]. */
+private const val RIPPLE_SIGNABLE_CURRENCY_CHARS =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>(){}[]|?!@#$%^&*"
 
 /** An XRPL issued currency, identified by its raw on-chain currency code and issuing account. */
 data class RippleTokenIdentity(val currency: String, val issuer: String)
@@ -89,3 +107,75 @@ private fun String.toBigDecimalOrNull(): BigDecimal? =
     } catch (_: NumberFormatException) {
         null
     }
+
+fun BigInteger.toRippleTokenValue(decimals: Int): String =
+    toRippleDecimal(decimals).stripTrailingZeros().toPlainString()
+
+/**
+ * Truncates [decimals]-scaled units to the significant digits XRPL carries. At 15 decimal places a
+ * fraction of a full-precision balance runs a digit too long and the signer refuses it.
+ */
+fun BigInteger.toRepresentableRippleTokenUnits(decimals: Int): BigInteger {
+    val value = toRippleDecimal(decimals)
+    if (value.stripTrailingZeros().precision() <= RIPPLE_VALUE_PRECISION) return this
+
+    return value
+        .round(MathContext(RIPPLE_VALUE_PRECISION, RoundingMode.DOWN))
+        .movePointRight(decimals)
+        .toBigInteger()
+}
+
+private fun BigInteger.toRippleDecimal(decimals: Int): BigDecimal {
+    require(decimals in 0..MAX_RIPPLE_TOKEN_SCALE) { "Unsupported Ripple token scale $decimals" }
+    return BigDecimal(this, decimals)
+}
+
+fun toRippleCurrencyCode(currency: String): String =
+    requireNotNull(toRippleCurrencyCodeOrNull(currency)) {
+        "Ripple currency code '$currency' exceeds $RIPPLE_CURRENCY_CODE_BYTES bytes"
+    }
+
+/** Null for a ticker too long to pack into the 160-bit form. */
+fun toRippleCurrencyCodeOrNull(currency: String): String? {
+    val value = currency.trim()
+    return when {
+        value.length == RIPPLE_STANDARD_CURRENCY_LENGTH -> value
+        RIPPLE_HEX_CURRENCY_CODE.matches(value) -> value.uppercase()
+        else ->
+            value
+                .toByteArray(Charsets.UTF_8)
+                .takeIf { it.size <= RIPPLE_CURRENCY_CODE_BYTES }
+                ?.copyOf(RIPPLE_CURRENCY_CODE_BYTES)
+                ?.toHex()
+                ?.uppercase()
+    }
+}
+
+/**
+ * Whether an on-ledger code reaches the ledger unchanged. WalletCore upper-cases a 3-byte code
+ * before encoding it and XRPL compares those bytes case-sensitively, so a lowercase standard code
+ * would sign a currency other than the one reviewed. Refused rather than re-spelled in the 160-bit
+ * form: iOS refuses the same codes, so re-spelling one here would diverge the pre-image.
+ */
+fun isSignableRippleCurrencyCode(code: String): Boolean =
+    if (RIPPLE_HEX_CURRENCY_CODE.matches(code)) {
+        code == code.uppercase()
+    } else {
+        code.length == RIPPLE_STANDARD_CURRENCY_LENGTH &&
+            code.all { it in RIPPLE_SIGNABLE_CURRENCY_CHARS }
+    }
+
+/**
+ * Ticker for an on-ledger currency code. The 160-bit form is ASCII right-padded with NUL bytes, so
+ * decoding recovers the ticker; a code that is not printable ASCII stays hex rather than mojibake.
+ */
+fun rippleCurrencyTicker(code: String): String =
+    code
+        .takeIf { RIPPLE_HEX_CURRENCY_CODE.matches(it) }
+        ?.hexToByteArrayOrNull()
+        ?.dropLastWhile { it == 0.toByte() }
+        ?.takeIf { it.isNotEmpty() && it.all { byte -> byte in PRINTABLE_ASCII } }
+        ?.toByteArray()
+        ?.toString(Charsets.US_ASCII) ?: code
+
+private val PRINTABLE_ASCII = 0x20.toByte()..0x7E.toByte()

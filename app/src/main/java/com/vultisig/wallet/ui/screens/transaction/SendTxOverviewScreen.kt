@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.RippleDappTx
 import com.vultisig.wallet.data.models.OPERATION_MINT
+import com.vultisig.wallet.data.models.RippleTrustSetDisplay
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.CopyIcon
@@ -106,8 +107,33 @@ internal fun SendTxOverviewScreen(
                 functionName = tx.functionName,
                 modifier = Modifier.fillMaxWidth(),
             ) {
+                val trustSet = tx.rippleTrustSet
                 val rippleDapp = tx.signRipple
-                if (rippleDapp != null) {
+                if (trustSet != null) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.ripple_trust_line_type_pill),
+                            style = Theme.brockmann.supplementary.captionSmall,
+                            color = Theme.v2.colors.text.tertiary,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                        )
+                        UiSpacer(12.dp)
+                        Text(
+                            text =
+                                stringResource(
+                                    R.string.ripple_trust_line_hero_title,
+                                    trustSet.ticker,
+                                ),
+                            style = Theme.brockmann.headings.title2,
+                            color = Theme.v2.colors.text.primary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                } else if (rippleDapp != null) {
                     // A dApp XRPL transaction has no native send amount (`toAmount` is 0), so show
                     // the operation type instead of a misleading "0 XRP"; the decoded terms render
                     // in the summary card below.
@@ -199,7 +225,11 @@ internal fun SendTxOverviewScreen(
                     if (showSaveToAddressBook) {
                         Column {
                             VerifyCardDetails(
-                                title = stringResource(R.string.tx_overview_screen_tx_to),
+                                title =
+                                    stringResource(
+                                        if (tx.rippleTrustSet != null) R.string.ripple_field_issuer
+                                        else R.string.tx_overview_screen_tx_to
+                                    ),
                                 subtitle = tx.toLabel ?: tx.to,
                                 bracketValue = tx.toLabel?.let { tx.to },
                             )
@@ -214,7 +244,11 @@ internal fun SendTxOverviewScreen(
                         }
                     } else {
                         VerifyCardDetails(
-                            title = stringResource(R.string.tx_overview_screen_tx_to),
+                            title =
+                                stringResource(
+                                    if (tx.rippleTrustSet != null) R.string.ripple_field_issuer
+                                    else R.string.tx_overview_screen_tx_to
+                                ),
                             subtitle = tx.toLabel ?: tx.to,
                             bracketValue = tx.toLabel?.let { tx.to },
                         )
@@ -469,6 +503,8 @@ internal data class UiTransactionInfo(
      * native `toAmount` is 0 because the real amounts live in the raw JSON.
      */
     val signRipple: RippleDappTx? = null,
+    /** Signed terms of an XRPL trust-line activation, which transfers nothing. */
+    val rippleTrustSet: RippleTrustSetDisplay? = null,
 )
 
 internal enum class UiTransactionInfoType {

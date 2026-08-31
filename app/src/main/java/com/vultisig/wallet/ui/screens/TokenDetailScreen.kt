@@ -184,9 +184,9 @@ internal fun TokenDetailsContent(
             Row(
                 horizontalArrangement =
                     Arrangement.spacedBy(space = 20.dp, alignment = Alignment.CenterHorizontally),
-                // Every flag below starts false and only resolves once the account loads, so
-                // without a reserved height this row is zero-height on the first frame and the
-                // content jumps once the buttons appear.
+                // Send routes from this screen's own arguments and is always available; every
+                // other child appears only once the account resolves, so the reserved height keeps
+                // the row from growing as they arrive.
                 modifier = Modifier.fillMaxWidth().heightIn(min = assetActionButtonHeight),
             ) {
                 if (uiModel.canSwap) {
@@ -197,13 +197,7 @@ internal fun TokenDetailsContent(
                     )
                 }
 
-                if (uiModel.canSend) {
-                    AssetActionButton(
-                        action = AssetAction.SEND,
-                        isSelected = false,
-                        onClick = onSend,
-                    )
-                }
+                AssetActionButton(action = AssetAction.SEND, isSelected = false, onClick = onSend)
 
                 if (uiModel.canBuy) {
                     AssetActionButton(action = AssetAction.BUY, isSelected = false, onClick = onBuy)

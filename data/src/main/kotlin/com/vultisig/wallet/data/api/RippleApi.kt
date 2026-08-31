@@ -437,7 +437,7 @@ data class RippleTrustLineJson(
  * Exact-match on the trust line's currency/issuer pair. Both halves are case-sensitive on XRPL —
  * `USD` and `usd` are distinct currencies, and issuer addresses are base58 — so neither is folded.
  */
-internal fun RippleTrustLineJson.matches(identity: RippleTokenIdentity): Boolean =
+fun RippleTrustLineJson.matches(identity: RippleTokenIdentity): Boolean =
     currency == identity.currency && account == identity.issuer
 
 @Serializable

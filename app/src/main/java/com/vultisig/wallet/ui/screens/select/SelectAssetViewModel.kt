@@ -14,7 +14,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLpToken
-import com.vultisig.wallet.data.models.isReadOnlyAsset
+import com.vultisig.wallet.data.models.isRippleIssuedToken
 import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
@@ -115,7 +115,7 @@ constructor(
                             .map { coinList ->
                                 coinList
                                     .filterNot {
-                                        it.isNativeToken || it.isLpToken || it.isReadOnlyAsset
+                                        it.isNativeToken || it.isLpToken || it.isRippleIssuedToken
                                     }
                                     .map { coin ->
                                         AssetUiModel(
@@ -136,13 +136,9 @@ constructor(
                             account.accounts
                                 .asSequence()
                                 .filter { it.token.id.contains(query, ignoreCase = true) }
-                                // Read-only assets (XRPL issued currencies) can neither
-                                // be sent nor swapped, so they are dropped from every filter —
-                                // unlike LP receipts, which are excluded from swaps only.
-                                .filterNot { it.token.isReadOnlyAsset }
                                 .filterNot {
                                     filter == Route.SelectNetwork.Filters.SwapAvailable &&
-                                        it.token.isLpToken
+                                        (it.token.isLpToken || it.token.isRippleIssuedToken)
                                 }
                                 .sortedWith(
                                     compareByDescending<Account> { it.token.isNativeToken }

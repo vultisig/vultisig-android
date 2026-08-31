@@ -24,6 +24,7 @@ internal class SearchTokenUseCaseImplTest {
     private val searchSolToken: SearchSolTokenUseCase = mockk()
     private val searchTerraToken: SearchTerraTokenUseCase = mockk()
     private val searchSuiToken: SearchSuiTokenUseCase = mockk()
+    private val searchRippleToken: SearchRippleTokenUseCase = mockk()
     private val appCurrencyRepository: AppCurrencyRepository = mockk {
         every { currency } returns flowOf(AppCurrency.USD)
     }
@@ -35,6 +36,7 @@ internal class SearchTokenUseCaseImplTest {
             searchSolToken = searchSolToken,
             searchTerraToken = searchTerraToken,
             searchSuiToken = searchSuiToken,
+            searchRippleToken = searchRippleToken,
             chainAccountAddressRepository = addressRepository,
         )
 
@@ -270,6 +272,37 @@ internal class SearchTokenUseCaseImplTest {
     }
 
     @Test
+    fun `valid Ripple currency and issuer pair delegated to Ripple searcher`() = runTest {
+        val tokenId = "USD.$RIPPLE_ISSUER"
+        every { addressRepository.isValid(Chain.Ripple, RIPPLE_ISSUER) } returns true
+        coEvery { searchRippleToken(tokenId) } returns
+            CoinAndPrice(rippleCoin(contract = tokenId), BigDecimal.ZERO)
+
+        val result = useCase(Chain.Ripple.id, "  $tokenId  ")
+
+        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
+        coVerify(exactly = 1) { searchRippleToken(tokenId) }
+    }
+
+    @Test
+    fun `Ripple input that is not a currency and issuer pair is rejected`() = runTest {
+        every { addressRepository.isValid(Chain.Ripple, any()) } returns true
+
+        assertNull(useCase(Chain.Ripple.id, RIPPLE_ISSUER))
+        assertNull(useCase(Chain.Ripple.id, "USD.$RIPPLE_ISSUER.extra"))
+        coVerify(exactly = 0) { searchRippleToken(any()) }
+    }
+
+    @Test
+    fun `Ripple pair naming a non-account issuer is rejected`() = runTest {
+        every { addressRepository.isValid(Chain.Ripple, "notanissuer") } returns false
+
+        assertNull(useCase(Chain.Ripple.id, "USD.notanissuer"))
+
+        coVerify(exactly = 0) { searchRippleToken(any()) }
+    }
+
+    @Test
     fun `unsupported chain returns null even for valid format`() = runTest {
         stubValid(Chain.Bitcoin, "bc1qanyaddress", valid = true)
 
@@ -332,6 +365,19 @@ internal class SearchTokenUseCaseImplTest {
             isNativeToken = false,
         )
 
+    private fun rippleCoin(contract: String): Coin =
+        Coin(
+            chain = Chain.Ripple,
+            ticker = "USD",
+            logo = "",
+            address = "",
+            decimal = 15,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = contract,
+            isNativeToken = false,
+        )
+
     private fun terraCoin(chain: Chain = Chain.Terra, contract: String): Coin =
         Coin(
             chain = chain,
@@ -346,6 +392,7 @@ internal class SearchTokenUseCaseImplTest {
         )
 
     private companion object {
+        const val RIPPLE_ISSUER = "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
         const val EVM_ADDRESS = "0x1234567890123456789012345678901234567890"
         const val TERRA_CONTRACT =
             "terra1nsuqsk6kh58ulczatwev87ttq2z6r3pusulg9r24mfj2fvtzd4uq3exn26"

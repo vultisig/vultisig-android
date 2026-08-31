@@ -176,9 +176,7 @@ class JupiterApiTest {
             )
 
         assertThrows(NetworkException::class.java) {
-            runTest {
-                api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, 50)
-            }
+            runTest { api.getSwapQuote(QUOTE_AMOUNT, INPUT_MINT, OUTPUT_MINT, WALLET, null, 50) }
         }
 
         assertEquals(listOf<String?>("50"), captured.platformFeeBpsHistory)

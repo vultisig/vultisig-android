@@ -111,15 +111,6 @@ class RippleTokenTest {
         assertFalse(isRippleNativeCurrency("USD"))
     }
 
-    // Read-only assets have no signing path, so send and swap must stay closed for them.
-    @Test
-    fun `issued tokens are read-only while native XRP is not`() {
-        val native = Coin.EMPTY.copy(chain = Chain.Ripple, ticker = "XRP", isNativeToken = true)
-
-        assertTrue(token("USD").isReadOnlyAsset)
-        assertFalse(native.isReadOnlyAsset)
-    }
-
     private companion object {
         const val ISSUER = "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
         const val OTHER_ISSUER = "rcoef87SYMJ58NAFx7fNM5frVknmvHsvJ"
