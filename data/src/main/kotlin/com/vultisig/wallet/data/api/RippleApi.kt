@@ -45,12 +45,6 @@ interface RippleApi {
      */
     suspend fun fetchAccountLines(walletAddress: String): List<RippleTrustLineJson>
 
-    /**
-     * Currency codes [issuer] has issued, as the ledger spells them. Empty when the account issues
-     * nothing, which is also what an address that holds no obligations reports.
-     */
-    suspend fun fetchIssuedCurrencies(issuer: String): Set<String>
-
     suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson?
 
     suspend fun fetchServerState(): RippleServerStateResponseJson
@@ -285,28 +279,6 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
         }
     }
 
-    override suspend fun fetchIssuedCurrencies(issuer: String): Set<String> {
-        val payload =
-            RpcPayload(
-                method = "gateway_balances",
-                params =
-                    buildJsonArray {
-                        addJsonObject {
-                            put("account", issuer)
-                            put("ledger_index", "validated")
-                        }
-                    },
-            )
-
-        return http
-            .post(BASE_XRP_CLUSTER) { setBody(payload) }
-            .bodyOrThrow<RippleGatewayBalancesResponseJson>()
-            .result
-            ?.obligations
-            ?.keys
-            .orEmpty()
-    }
-
     override suspend fun fetchServerState(): RippleServerStateResponseJson {
         val payload = RpcPayload(method = "server_state", params = buildJsonArray {})
 
@@ -467,18 +439,6 @@ data class RippleTrustLineJson(
  */
 fun RippleTrustLineJson.matches(identity: RippleTokenIdentity): Boolean =
     currency == identity.currency && account == identity.issuer
-
-@Serializable
-data class RippleGatewayBalancesResponseJson(
-    @SerialName("result") val result: RippleGatewayBalancesResultJson? = null
-)
-
-@Serializable
-data class RippleGatewayBalancesResultJson(
-    // Currency code to the total the account has issued of it. Absent when it issues nothing and
-    // when the account does not exist, both of which mean the same thing to a caller.
-    @SerialName("obligations") val obligations: Map<String, String>? = null
-)
 
 @Serializable
 data class RippleServerStateResponseJson(

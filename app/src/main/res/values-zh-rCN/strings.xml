@@ -1341,6 +1341,7 @@
     <string name="ripple_trust_line_reserve_warning">%1$s 需要在 XRP Ledger 上建立信任线，您的账户才能持有它。开通信任线会将您的一部分 XRP 永久锁定为所有者准备金。</string>
     <string name="ripple_trust_line_limit">信任线上限</string>
     <string name="ripple_trust_line_hero_title">正在开通 %1$s 信任线</string>
+    <string name="ripple_trust_line_type_pill">信任线</string>
     <string name="ripple_trust_line_currency">货币</string>
     <string name="ripple_trust_line_issuer_check">发行方正确</string>
     <string name="ripple_trust_line_limit_check">信任线上限正确</string>

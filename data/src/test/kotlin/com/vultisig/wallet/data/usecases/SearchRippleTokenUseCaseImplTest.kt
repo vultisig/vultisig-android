@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.usecases
 
-import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.models.RIPPLE_TOKEN_DECIMALS
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import io.mockk.coEvery
@@ -14,14 +13,12 @@ import org.junit.jupiter.api.Test
 
 internal class SearchRippleTokenUseCaseImplTest {
 
-    private val rippleApi: RippleApi = mockk()
     private val tokenPriceRepository: TokenPriceRepository = mockk()
 
-    private val useCase = SearchRippleTokenUseCaseImpl(rippleApi, tokenPriceRepository)
+    private val useCase = SearchRippleTokenUseCaseImpl(tokenPriceRepository)
 
     @Test
-    fun `a ticker the issuer issues resolves to its catalog entry`() = runTest {
-        coEvery { rippleApi.fetchIssuedCurrencies(RLUSD_ISSUER) } returns setOf(RLUSD_HEX)
+    fun `a ticker resolves to its catalog entry`() = runTest {
         coEvery { tokenPriceRepository.getPriceByPriceProviderId("ripple-usd") } returns
             BigDecimal("1.0")
 
@@ -33,10 +30,10 @@ internal class SearchRippleTokenUseCaseImplTest {
         assertEquals(BigDecimal("1.0"), result?.price)
     }
 
+    // A currency with no outstanding supply is absent from the issuer's obligations while its
+    // trust lines are live, so issuance is not a precondition for adding one.
     @Test
-    fun `an uncatalogued currency resolves to a coin at the shared Ripple scale`() = runTest {
-        coEvery { rippleApi.fetchIssuedCurrencies(ISSUER) } returns setOf("EUR", "USD")
-
+    fun `an uncatalogued currency resolves without consulting the ledger`() = runTest {
         val result = useCase("USD.$ISSUER")
 
         assertEquals("USD", result?.coin?.ticker)
@@ -46,37 +43,12 @@ internal class SearchRippleTokenUseCaseImplTest {
         coVerify(exactly = 0) { tokenPriceRepository.getPriceByPriceProviderId(any()) }
     }
 
-    // XRPL compares currency codes byte for byte, so the issuer's own spelling is the only match.
+    // WalletCore uppercases a 3-byte code, so the signer refuses one it would alter; accepting it
+    // here would add a token whose every send dies at keysign.
     @Test
-    fun `a currency the issuer does not issue returns null`() = runTest {
-        coEvery { rippleApi.fetchIssuedCurrencies(ISSUER) } returns setOf("USD")
-
-        assertNull(useCase("usd.$ISSUER"))
-        assertNull(useCase("GBP.$ISSUER"))
-    }
-
-    // The signer would sign USD instead, so a genuinely-issued lowercase code is still refused —
-    // the same gate iOS applies in RippleCustomTokenResolver.
-    @Test
-    fun `a genuinely issued code the signer would re-case is refused`() = runTest {
-        coEvery { rippleApi.fetchIssuedCurrencies(ISSUER) } returns setOf("usd", "aUD")
-
+    fun `a code the signer would re-case is refused`() = runTest {
         assertNull(useCase("usd.$ISSUER"))
         assertNull(useCase("aUD.$ISSUER"))
-    }
-
-    @Test
-    fun `an account issuing nothing returns null`() = runTest {
-        coEvery { rippleApi.fetchIssuedCurrencies(ISSUER) } returns emptySet()
-
-        assertNull(useCase("USD.$ISSUER"))
-    }
-
-    @Test
-    fun `RPC failure surfaces as null instead of propagating`() = runTest {
-        coEvery { rippleApi.fetchIssuedCurrencies(ISSUER) } throws IllegalStateException("offline")
-
-        assertNull(useCase("USD.$ISSUER"))
     }
 
     @Test

@@ -1007,6 +1007,7 @@
     <string name="ripple_trust_line_reserve_warning">%1$s heeft een trustline op de XRP Ledger nodig voordat je account het kan aanhouden. Openen zet permanent een deel van je XRP vast als eigenaarsreserve.</string>
     <string name="ripple_trust_line_limit">Trustline-limiet</string>
     <string name="ripple_trust_line_hero_title">%1$s-trustline wordt geopend</string>
+    <string name="ripple_trust_line_type_pill">Trustline</string>
     <string name="ripple_trust_line_currency">Valuta</string>
     <string name="ripple_trust_line_issuer_check">De uitgever is correct</string>
     <string name="ripple_trust_line_limit_check">De trustline-limiet is correct</string>

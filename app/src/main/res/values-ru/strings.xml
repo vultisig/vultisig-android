@@ -1015,6 +1015,7 @@
     <string name="ripple_trust_line_reserve_warning">Чтобы ваш счёт мог держать %1$s, нужна доверительная линия в XRP Ledger. При её открытии часть ваших XRP навсегда блокируется как резерв владельца.</string>
     <string name="ripple_trust_line_limit">Лимит доверительной линии</string>
     <string name="ripple_trust_line_hero_title">Открытие доверительной линии %1$s</string>
+    <string name="ripple_trust_line_type_pill">Доверительная линия</string>
     <string name="ripple_trust_line_currency">Валюта</string>
     <string name="ripple_trust_line_issuer_check">Эмитент указан верно</string>
     <string name="ripple_trust_line_limit_check">Лимит доверительной линии указан верно</string>

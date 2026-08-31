@@ -579,6 +579,7 @@
     <string name="ripple_trust_line_reserve_warning">%1$s needs a trust line on the XRP Ledger before your account can hold it. Opening one permanently locks part of your XRP as an owner reserve.</string>
     <string name="ripple_trust_line_limit">Trust Line Limit</string>
     <string name="ripple_trust_line_hero_title">Activating the %1$s trust line</string>
+    <string name="ripple_trust_line_type_pill">Trust line</string>
     <string name="ripple_trust_line_currency">Currency</string>
     <string name="ripple_trust_line_issuer_check">The issuer is correct</string>
     <string name="ripple_trust_line_limit_check">The trust line limit is correct</string>

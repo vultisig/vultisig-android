@@ -1010,6 +1010,7 @@
     <string name="ripple_trust_line_reserve_warning">%1$s richiede una linea di fiducia sull\'XRP Ledger prima che il tuo account possa detenerlo. Aprirla blocca in modo permanente parte dei tuoi XRP come riserva del proprietario.</string>
     <string name="ripple_trust_line_limit">Limite della linea di fiducia</string>
     <string name="ripple_trust_line_hero_title">Attivazione della linea di fiducia %1$s</string>
+    <string name="ripple_trust_line_type_pill">Linea di fiducia</string>
     <string name="ripple_trust_line_currency">Valuta</string>
     <string name="ripple_trust_line_issuer_check">L\'emittente è corretto</string>
     <string name="ripple_trust_line_limit_check">Il limite della linea di fiducia è corretto</string>

@@ -567,6 +567,7 @@
     <string name="ripple_trust_line_reserve_warning">%1$s을(를) 보유하려면 먼저 XRP Ledger에 신뢰선이 필요합니다. 신뢰선을 열면 XRP의 일부가 소유자 준비금으로 영구히 잠깁니다.</string>
     <string name="ripple_trust_line_limit">신뢰선 한도</string>
     <string name="ripple_trust_line_hero_title">%1$s 신뢰선 개설 중</string>
+    <string name="ripple_trust_line_type_pill">신뢰선</string>
     <string name="ripple_trust_line_currency">통화</string>
     <string name="ripple_trust_line_issuer_check">발행자가 올바릅니다</string>
     <string name="ripple_trust_line_limit_check">신뢰선 한도가 올바릅니다</string>

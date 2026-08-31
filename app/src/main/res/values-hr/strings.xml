@@ -1015,6 +1015,7 @@
     <string name="ripple_trust_line_reserve_warning">%1$s zahtijeva liniju povjerenja na XRP Ledgeru prije nego što ga vaš račun može držati. Otvaranje trajno zaključava dio vaših XRP kao rezervu vlasnika.</string>
     <string name="ripple_trust_line_limit">Ograničenje linije povjerenja</string>
     <string name="ripple_trust_line_hero_title">Aktiviranje linije povjerenja za %1$s</string>
+    <string name="ripple_trust_line_type_pill">Linija povjerenja</string>
     <string name="ripple_trust_line_currency">Valuta</string>
     <string name="ripple_trust_line_issuer_check">Izdavatelj je točan</string>
     <string name="ripple_trust_line_limit_check">Ograničenje linije povjerenja je točno</string>

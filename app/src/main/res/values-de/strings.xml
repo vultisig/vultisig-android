@@ -1012,6 +1012,7 @@
     <string name="ripple_trust_line_reserve_warning">%1$s benötigt eine Trust Line im XRP Ledger, bevor Ihr Konto es halten kann. Das Öffnen sperrt dauerhaft einen Teil Ihrer XRP als Owner-Reserve.</string>
     <string name="ripple_trust_line_limit">Trust-Line-Limit</string>
     <string name="ripple_trust_line_hero_title">%1$s-Trust-Line wird aktiviert</string>
+    <string name="ripple_trust_line_type_pill">Trust Line</string>
     <string name="ripple_trust_line_currency">Währung</string>
     <string name="ripple_trust_line_issuer_check">Der Emittent ist korrekt</string>
     <string name="ripple_trust_line_limit_check">Das Trust-Line-Limit ist korrekt</string>
