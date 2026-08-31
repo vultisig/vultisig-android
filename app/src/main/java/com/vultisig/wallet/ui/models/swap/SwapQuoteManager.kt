@@ -1139,7 +1139,10 @@ constructor(
                         Pair(feeWei, dstToken)
                     } else {
                         // Jupiter ExactIn platform fee is output-mint base units.
-                        Pair(apiQuote.tx.swapFee.toBigIntegerOrNull() ?: BigInteger.ZERO, dstToken)
+                        Pair(
+                            apiQuote.tx.swapFee.toBigIntegerOrNull() ?: BigInteger.ZERO,
+                            dstToken,
+                        )
                     }
                 val updatedTx = apiQuote.tx.withResolvedSwapFee(feeAmount, feeCoin)
                 val tokenFees = TokenValue(value = feeAmount, token = feeCoin)
