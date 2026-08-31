@@ -28,7 +28,7 @@ interface GetDiscountBpsUseCase {
     /** True when the vault holds at least the Silver-tier VULT amount (>= 3000 VULT). */
     suspend fun hasReachedSilverTier(vaultId: String): Boolean
 
-    /** The vault's cached VULT balance in raw token units (18 decimals), or null if unavailable. */
+    /** The vault's VULT balance in raw token units (18 decimals), or null if unavailable. */
     suspend fun getVultBalance(vaultId: String): BigInteger?
 }
 
@@ -67,19 +67,29 @@ constructor(
         try {
             val vault = vaultRepository.get(vaultId) ?: return null
 
-            val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id } ?: return null
+            val (address, derivedPublicKey) =
+                chainAccountAddressRepository.getAddress(Chain.Ethereum, vault)
 
-            val (address, _) = chainAccountAddressRepository.getAddress(Chain.Ethereum, vault)
+            // The VULT the vault holds does not depend on Ethereum being one of its enabled
+            // chains, so fall back to an in-memory coin when it isn't in the coin list. It is only
+            // used to read the balance: nothing here persists it or makes it visible in the vault.
+            val vultCoin =
+                vault.coins.find { it.id == Coins.Ethereum.VULT.id }
+                    ?: Coins.Ethereum.VULT.copy(address = address, hexPublicKey = derivedPublicKey)
 
-            val tokenBalance =
+            val cachedBalance =
                 balanceRepository
                     .getCachedTokenBalances(listOf(address), listOf(vultCoin))
                     .find { it.coinId == Coins.Ethereum.VULT.id }
                     ?.tokenBalance
                     ?.tokenValue
-                    ?.value ?: BigInteger.ZERO
+                    ?.value
 
-            return tokenBalance
+            // A missing cache entry is not a zero balance — a vault that never refreshed VULT would
+            // otherwise be shown a fabricated 0. Read it live instead; that read fills the cache,
+            // so later calls take the cached path again, and a failed read stays null (fail
+            // closed).
+            return cachedBalance ?: balanceRepository.getBalanceOrNull(address, vultCoin)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
