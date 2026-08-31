@@ -298,8 +298,10 @@ class SwapQuoteRepositoryProvidersTest {
 
     private fun jupiterQuoteResponse(
         dstAmount: String = "1500000",
-        feeMint: String = SOL_MINT,
-        feeAmount: String = "1234",
+        platformFeeAmount: String? = "1234",
+        platformFeeMint: String? = USDC_MINT,
+        hopFeeMint: String = SOL_MINT,
+        hopFeeAmount: String = "9999",
     ) =
         QuoteSwapTotalDataJson(
             swapTransaction = QuoteSwapTransactionJson(data = "AQID"),
@@ -315,18 +317,20 @@ class SwapQuoteRepositoryProvidersTest {
                                 outputMint = "outputMint",
                                 inAmount = "1000",
                                 outAmount = "1500000",
-                                feeAmount = feeAmount,
-                                feeMint = feeMint,
+                                feeAmount = hopFeeAmount,
+                                feeMint = hopFeeMint,
                             ),
                         percent = 100,
                     )
                 ),
+            platformFeeAmount = platformFeeAmount,
+            platformFeeMint = platformFeeMint,
         )
 
     @Test
-    fun `jupiter happy path with matching feeMint returns swap fee from route`() = runTest {
+    fun `jupiter happy path uses platformFee not the AMM hop fee`() = runTest {
         coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any(), any(), any()) } returns
-            jupiterQuoteResponse(feeMint = SOL_MINT, feeAmount = "1234")
+            jupiterQuoteResponse(platformFeeAmount = "1234", platformFeeMint = USDC_MINT)
 
         // Native SOL → empty contract address triggers SOL default mint mapping
         val sol = coin(Chain.Solana, "SOL", contractAddress = "")
@@ -344,14 +348,14 @@ class SwapQuoteRepositoryProvidersTest {
 
         assertEquals("1500000", result.dstAmount)
         assertEquals("1234", result.tx.swapFee)
-        assertEquals(SOL_MINT, result.tx.swapFeeTokenContract)
+        assertEquals(USDC_MINT, result.tx.swapFeeTokenContract)
         assertEquals("AQID", result.tx.data)
     }
 
     @Test
-    fun `jupiter no matching feeMint returns zero swap fee`() = runTest {
+    fun `jupiter with no platform fee returns zero swap fee`() = runTest {
         coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any(), any(), any()) } returns
-            jupiterQuoteResponse(feeMint = "differentMint", feeAmount = "9999")
+            jupiterQuoteResponse(platformFeeAmount = null, platformFeeMint = null)
 
         val sol = coin(Chain.Solana, "SOL", contractAddress = "")
         val usdc = coin(Chain.Solana, "USDC", contractAddress = USDC_MINT)
@@ -367,8 +371,6 @@ class SwapQuoteRepositoryProvidersTest {
                 .data
 
         assertEquals("0", result.tx.swapFee)
-        // swapFeeTokenContract is empty when no matching feeMint route exists,
-        // so the zero amount is never paired with a non-empty token.
         assertEquals("", result.tx.swapFeeTokenContract)
     }
 
@@ -580,7 +582,7 @@ class SwapQuoteRepositoryProvidersTest {
     @Test
     fun `jupiter forwards the request slippage to the api`() = runTest {
         coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any(), any(), any()) } returns
-            jupiterQuoteResponse(feeMint = SOL_MINT, feeAmount = "1234")
+            jupiterQuoteResponse()
 
         val sol = coin(Chain.Solana, "SOL", contractAddress = "")
         val usdc = coin(Chain.Solana, "USDC", contractAddress = USDC_MINT)
@@ -609,7 +611,7 @@ class SwapQuoteRepositoryProvidersTest {
     @Test
     fun `jupiter forwards a positive VULT-scaled affiliate bps to the api`() = runTest {
         coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any(), any(), any()) } returns
-            jupiterQuoteResponse(feeMint = SOL_MINT, feeAmount = "1234")
+            jupiterQuoteResponse()
 
         val sol = coin(Chain.Solana, "SOL", contractAddress = "")
         val usdc = coin(Chain.Solana, "USDC", contractAddress = USDC_MINT)

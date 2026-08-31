@@ -4,7 +4,6 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTotalDataJson
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTransactionJson
 import com.vultisig.wallet.data.api.models.quotes.SwapRouteResponseJson
-import com.vultisig.wallet.data.chains.helpers.SOLANA_DEFAULT_CONTRACT_ADDRESS
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -14,10 +13,12 @@ import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
+import timber.log.Timber
 import wallet.core.jni.SolanaTransaction
 
 interface JupiterApi {
@@ -46,47 +47,27 @@ constructor(
         slippageBps: Int?,
         affiliateBps: Int?,
     ): QuoteSwapTotalDataJson {
-        // Ask Jupiter to take the VULT-scaled affiliate fee when a positive bps was requested.
-        // Whether we actually pass a fee account is decided below from the quote's real fee
-        // amount, not just the request.
-        val requestsPlatformFee = (affiliateBps ?: 0) > 0
+        val requestedFeeBps = (affiliateBps ?: 0).takeIf { it > 0 }
+        // ExactIn `platformFee.amount` is output-mint units. Collect in the output mint too
+        // (including wSOL) so the displayed amount and the fee ATA share a denomination.
+        val feeMint = toToken
+        val slippage = slippageBps ?: DEFAULT_SLIPPAGE_BPS
 
-        // The mint the affiliate fee is collected in. For ExactIn, Jupiter accepts a fee account
-        // in the input OR output mint. We use the output mint, except for native-SOL outputs
-        // (wrapped SOL) where the fee owner holds no wSOL ATA and collecting in wSOL would need
-        // unwrapping — there we charge the fee on the input mint instead. Mirrors iOS.
-        val feeMint = if (toToken == SOLANA_DEFAULT_CONTRACT_ADDRESS) fromToken else toToken
+        // Probe the fee ATA before quoting. A missing account must never take a fee-bearing
+        // /quote — outAmount would be net of a fee we cannot collect, so the UI would lie.
+        val resolvedFeeAccount = requestedFeeBps?.let { resolveFeeAccountOrNull(feeMint) }
+        val body =
+            fetchRouteQuote(
+                fromToken = fromToken,
+                toToken = toToken,
+                fromAmount = fromAmount,
+                slippageBps = slippage,
+                platformFeeBps = requestedFeeBps.takeIf { resolvedFeeAccount != null },
+            )
+        val feeAccount = resolvedFeeAccount.takeIf { quotedFeeAmount(body) > BigInteger.ZERO }
 
-        val quoteResponse =
-            httpClient.get("$JUPITER_URL/swap/v1/quote") {
-                parameter("inputMint", fromToken)
-                parameter("outputMint", toToken)
-                parameter("amount", fromAmount)
-                parameter("slippageBps", slippageBps ?: DEFAULT_SLIPPAGE_BPS)
-                if (requestsPlatformFee) parameter("platformFeeBps", affiliateBps)
-            }
-        if (quoteResponse.status == HttpStatusCode.TooManyRequests) {
-            throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
-        }
-        val body = quoteResponse.bodyOrThrow<SwapRouteResponseJson>()
         val outAmount = body.outAmount
         val routePlan = body.routePlan
-
-        // Gate the fee-account flow on the actually-quoted fee, not just the requested bps: Jupiter
-        // can floor `platformFee.amount` to 0 (tiny amounts / fee-ineligible route) even when a fee
-        // was asked for. Deriving a fee account for a zero fee would be wrong. An unprovisioned
-        // fee ATA throws here, failing the Jupiter quote so another provider serves the pair.
-        val quotedFeeAmount = body.platformFee?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
-        val feeAccount =
-            if (requestsPlatformFee && quotedFeeAmount > BigInteger.ZERO)
-                feeAtaService.resolveFeeAccount(feeMint)
-            else null
-
-        // When Jupiter floored the fee to 0 we resolve no `feeAccount`. Round-tripping the quote's
-        // `platformFee` back into `/swap` without a matching `feeAccount` makes Jupiter reject the
-        // fee-bearing swap, which would drop the now-preferred Jupiter route to a worse provider,
-        // so
-        // strip it. With no fee requested `platformFee` is already null, so this is a no-op there.
         val quoteResponseForSwap = if (feeAccount == null) body.copy(platformFee = null) else body
 
         val quoteSwapRequestBody = buildJsonObject {
@@ -136,12 +117,55 @@ constructor(
                 swapTxData
             }
 
+        val platformFeeAmount = body.platformFee?.amount.takeIf { feeAccount != null }
         return QuoteSwapTotalDataJson(
             swapTransaction = quoteSwapData.copy(data = updatedSwapTx),
             dstAmount = outAmount,
             routePlan = routePlan,
+            platformFeeAmount = platformFeeAmount,
+            platformFeeMint = feeMint.takeIf { platformFeeAmount != null },
         )
     }
+
+    private suspend fun fetchRouteQuote(
+        fromToken: String,
+        toToken: String,
+        fromAmount: String,
+        slippageBps: Int,
+        platformFeeBps: Int?,
+    ): SwapRouteResponseJson {
+        val response =
+            httpClient.get("$JUPITER_URL/swap/v1/quote") {
+                parameter("inputMint", fromToken)
+                parameter("outputMint", toToken)
+                parameter("amount", fromAmount)
+                parameter("slippageBps", slippageBps)
+                if (platformFeeBps != null && platformFeeBps > 0) {
+                    parameter("platformFeeBps", platformFeeBps)
+                }
+            }
+        if (response.status == HttpStatusCode.TooManyRequests) {
+            throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
+        }
+        return response.bodyOrThrow()
+    }
+
+    private suspend fun resolveFeeAccountOrNull(feeMint: String): String? =
+        try {
+            feeAtaService.resolveFeeAccount(feeMint)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (t: Exception) {
+            Timber.w(
+                t,
+                "Jupiter fee ATA probe failed for mint %s; quoting without affiliate fee",
+                feeMint,
+            )
+            null
+        }
+
+    private fun quotedFeeAmount(body: SwapRouteResponseJson): BigInteger =
+        body.platformFee?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
     internal companion object {
         val MIN_FEE_PRICE_SWAP = "150000".toBigInteger()
