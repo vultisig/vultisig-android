@@ -1,12 +1,12 @@
 package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
-import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
@@ -28,21 +28,24 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 
 /**
- * Bundle of the eight submit strategies produced by [SendStrategyFactory.create] for a single
+ * Bundle of the six submit strategies produced by [SendStrategyFactory.create] for a single
  * `SendFormViewModel` instance.
  */
 internal data class SendStrategies(
     val default: DefaultSendStrategy,
-    val bond: BondStrategy,
-    val unbond: UnbondStrategy,
     val stake: StakeStrategy,
     val unstake: UnstakeStrategy,
     val mint: MintStrategy,
     val redeem: RedeemStrategy,
     val withdrawUsdcCircle: WithdrawUsdcCircleStrategy,
+    // Guards a Route.Send that somehow still carries a Deposit-only defiType (a stale deep link or
+    // restored back stack): falls back to DefaultSendStrategy would silently submit an ordinary
+    // transfer instead of the Bond/Unbond/etc. memo the user expects.
+    val onUnsupportedDefiType: (DeFiNavActions) -> Unit,
 ) {
 
     /**
@@ -52,8 +55,6 @@ internal data class SendStrategies(
      */
     fun submitFor(defiType: DeFiNavActions?) {
         when (defiType) {
-            DeFiNavActions.BOND -> bond.submit()
-            DeFiNavActions.UNBOND -> unbond.submit()
             DeFiNavActions.STAKE_RUJI,
             DeFiNavActions.STAKE_SRUJI,
             DeFiNavActions.STAKE_TCY,
@@ -75,11 +76,18 @@ internal data class SendStrategies(
 
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withdrawUsdcCircle.submit()
 
-            null,
+            // Bond/Unbond/Stake-Cacao/Unstake-Cacao/Remove-LP only submit through the Deposit
+            // flow now — fail closed rather than falling back to a plain send.
+            DeFiNavActions.BOND,
+            DeFiNavActions.UNBOND,
             DeFiNavActions.STAKE_CACAO,
             DeFiNavActions.UNSTAKE_CACAO,
+            DeFiNavActions.REMOVE_LP -> onUnsupportedDefiType(defiType)
+
+            null,
+            // ADD_LP still submits through the Send flow for the EVM asset side of a pool add,
+            // which the Deposit flow's AddLiquidityStrategy doesn't cover (RUNE/CACAO side only).
             DeFiNavActions.ADD_LP,
-            DeFiNavActions.REMOVE_LP,
             DeFiNavActions.FREEZE_TRX,
             DeFiNavActions.UNFREEZE_TRX,
             // TON staking submits through the Deposit flow, not the Send flow.
@@ -104,8 +112,6 @@ internal data class SendStrategyContext(
     val memoFieldState: TextFieldState,
     val destinationTagFieldState: TextFieldState,
     val slippageFieldState: TextFieldState,
-    val operatorFeesBondFieldState: TextFieldState,
-    val providerBondFieldState: TextFieldState,
     val accountValidator: AccountValidator,
     val bitcoinPlanService: BitcoinPlanService,
     val addressManager: AddressManager,
@@ -142,7 +148,6 @@ constructor(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val accountsRepository: AccountsRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val addressParserRepository: AddressParserRepository,
     private val chainValidationService: ChainValidationService,
     private val navigator: Navigator<Destination>,
     private val thorChainApi: ThorChainApi,
@@ -151,7 +156,7 @@ constructor(
 
     /**
      * Wires the per-instance ViewModel state in [context] with the shared dependencies and returns
-     * the eight strategies.
+     * the six strategies.
      */
     fun create(context: SendStrategyContext): SendStrategies =
         SendStrategies(
@@ -185,41 +190,6 @@ constructor(
                     navigator = navigator,
                     expandSection = context.expandSection,
                     emitFocusField = context.emitFocusField,
-                    showLoading = context.showLoading,
-                    hideLoading = context.hideLoading,
-                    showError = context.showError,
-                ),
-            bond =
-                BondStrategy(
-                    scope = context.scope,
-                    tokenAmountFieldState = context.tokenAmountFieldState,
-                    providerBondFieldState = context.providerBondFieldState,
-                    operatorFeesBondFieldState = context.operatorFeesBondFieldState,
-                    accountValidator = context.accountValidator,
-                    chainAccountAddressRepository = chainAccountAddressRepository,
-                    addressParserRepository = addressParserRepository,
-                    blockChainSpecificRepository = blockChainSpecificRepository,
-                    getAvailableTokenBalance = getAvailableTokenBalance,
-                    gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-                    depositTransactionRepository = depositTransactionRepository,
-                    navigator = navigator,
-                    showLoading = context.showLoading,
-                    hideLoading = context.hideLoading,
-                    showError = context.showError,
-                ),
-            unbond =
-                UnbondStrategy(
-                    scope = context.scope,
-                    tokenAmountFieldState = context.tokenAmountFieldState,
-                    providerBondFieldState = context.providerBondFieldState,
-                    accountValidator = context.accountValidator,
-                    chainAccountAddressRepository = chainAccountAddressRepository,
-                    addressParserRepository = addressParserRepository,
-                    blockChainSpecificRepository = blockChainSpecificRepository,
-                    getAvailableTokenBalance = getAvailableTokenBalance,
-                    gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-                    depositTransactionRepository = depositTransactionRepository,
-                    navigator = navigator,
                     showLoading = context.showLoading,
                     hideLoading = context.hideLoading,
                     showError = context.showError,
@@ -315,5 +285,13 @@ constructor(
                     hideLoading = context.hideLoading,
                     showError = context.showError,
                 ),
+            onUnsupportedDefiType = { defiType ->
+                Timber.e(
+                    "Route.Send received a Deposit-only defiType (%s); refusing to submit it as a" +
+                        " plain send",
+                    defiType,
+                )
+                context.showError(UiText.StringResource(R.string.dialog_default_error_body))
+            },
         )
 }

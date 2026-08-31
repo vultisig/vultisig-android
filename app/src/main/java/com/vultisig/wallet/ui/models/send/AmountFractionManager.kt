@@ -183,7 +183,6 @@ internal class AmountFractionManager(
 
         if (
             defiType != null &&
-                defiType != DeFiNavActions.BOND &&
                 defiType != DeFiNavActions.STAKE_RUJI &&
                 defiType != DeFiNavActions.UNSTAKE_RUJI &&
                 defiType != DeFiNavActions.STAKE_SRUJI &&
@@ -308,7 +307,6 @@ internal class AmountFractionManager(
         val availableTokenBalance =
             if (
                 defiType == null ||
-                    defiType == DeFiNavActions.BOND ||
                     defiType == DeFiNavActions.STAKE_RUJI ||
                     defiType == DeFiNavActions.STAKE_SRUJI ||
                     defiType == DeFiNavActions.STAKE_TCY ||

@@ -20,7 +20,14 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.UUID
 
-/** Builds an Unbond [DepositTransaction] for THORChain or MayaChain. */
+/**
+ * Builds an Unbond [DepositTransaction] for THORChain or MayaChain.
+ *
+ * Known gap: unlike the deleted Send-form path (`AccountsLoader.publishUnbond`) and the iOS/Windows
+ * clients, this does not cap the amount to the specific node's bonded balance — only to the
+ * wallet's combined RUNE balance via the displayed max. A follow-up should port that per-node
+ * ceiling here.
+ */
 internal class UnbondStrategy(
     private val vaultIdProvider: () -> String?,
     private val chainProvider: () -> Chain?,

@@ -9,7 +9,6 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
-import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
@@ -58,7 +57,6 @@ internal class AccountsLoaderTest {
     private var defiType: DeFiNavActions? = null
     private var preselectedTokenId: String? = null
     private var mscaAddress: String? = null
-    private var bondedAmount: BigInteger? = null
 
     @BeforeEach
     fun setUp() {
@@ -171,29 +169,6 @@ internal class AccountsLoaderTest {
                             chain = Chain.ThorChain,
                             address = "thor1",
                             accounts = listOf(runeAccount, positionOnly),
-                        )
-                    )
-                )
-            val loader = build(backgroundScope)
-
-            loader.load(VAULT_ID)
-            advanceUntilIdle()
-
-            assertEquals(listOf(runeAccount), loadedAccounts)
-        }
-
-    @Test
-    fun `load with BOND uses the regular loadAddresses flow`() =
-        runTest(mainDispatcher) {
-            defiType = DeFiNavActions.BOND
-            val runeAccount = thorAccount(Coins.ThorChain.RUNE)
-            every { accountsRepository.loadAddresses(VAULT_ID) } returns
-                flowOf(
-                    listOf(
-                        Address(
-                            chain = Chain.ThorChain,
-                            address = "thor1",
-                            accounts = listOf(runeAccount),
                         )
                     )
                 )
@@ -653,102 +628,6 @@ internal class AccountsLoaderTest {
             advanceUntilIdle()
 
             assertTrue(loadedAccounts.any { it.token.id.equals(Coins.ThorChain.bRUNE.id, true) })
-        }
-
-    // ──────── UNBOND ────────
-
-    @Test
-    fun `UNBOND overrides the RUNE balance with the node's bonded amount`() =
-        runTest(mainDispatcher) {
-            defiType = DeFiNavActions.UNBOND
-            bondedAmount = BigInteger("5000000")
-            // loadDeFiAddresses returns the wallet's spendable RUNE (1_000_000) — the bug source.
-            val runeAccount = thorAccount(Coins.ThorChain.RUNE)
-            coEvery { accountsRepository.loadDeFiAddresses(VAULT_ID, false) } returns
-                flowOf(
-                    listOf(
-                        Address(
-                            chain = Chain.ThorChain,
-                            address = "thor1",
-                            accounts = listOf(runeAccount),
-                        )
-                    )
-                )
-            val loader = build(backgroundScope)
-
-            loader.load(VAULT_ID)
-            advanceUntilIdle()
-
-            assertEquals(BigInteger("5000000"), loadedAccounts.single().tokenValue?.value)
-            coVerify(exactly = 0) { accountsRepository.loadAddresses(any()) }
-        }
-
-    @Test
-    fun `UNBOND without a bonded amount zeroes the RUNE balance`() =
-        runTest(mainDispatcher) {
-            // The RUNE DeFi account carries the combined bond across every node, not this node's.
-            // With no per-node amount the ceiling can't be derived, so it's zeroed to block the
-            // form rather than letting it draw against another node's bond.
-            defiType = DeFiNavActions.UNBOND
-            bondedAmount = null
-            val runeAccount = thorAccount(Coins.ThorChain.RUNE)
-            coEvery { accountsRepository.loadDeFiAddresses(VAULT_ID, false) } returns
-                flowOf(
-                    listOf(
-                        Address(
-                            chain = Chain.ThorChain,
-                            address = "thor1",
-                            accounts = listOf(runeAccount),
-                        )
-                    )
-                )
-            val loader = build(backgroundScope)
-
-            loader.load(VAULT_ID)
-            advanceUntilIdle()
-
-            val published = loadedAccounts.single()
-            assertEquals(BigInteger.ZERO, published.tokenValue?.value)
-        }
-
-    @Test
-    fun `UNBOND recomputes RUNE fiat from price and leaves other accounts untouched`() =
-        runTest(mainDispatcher) {
-            defiType = DeFiNavActions.UNBOND
-            bondedAmount = BigInteger("200000000") // 2 RUNE (8 decimals)
-            val runeAccount =
-                Account(
-                    token = Coins.ThorChain.RUNE,
-                    tokenValue =
-                        TokenValue(value = BigInteger("100000000"), token = Coins.ThorChain.RUNE),
-                    fiatValue = FiatValue(BigDecimal("3.00"), "USD"),
-                    price = FiatValue(BigDecimal("3.00"), "USD"),
-                )
-            val otherAccount = ethAccount()
-            coEvery { accountsRepository.loadDeFiAddresses(VAULT_ID, false) } returns
-                flowOf(
-                    listOf(
-                        Address(
-                            chain = Chain.ThorChain,
-                            address = "thor1",
-                            accounts = listOf(runeAccount, otherAccount),
-                        )
-                    )
-                )
-            val loader = build(backgroundScope)
-
-            loader.load(VAULT_ID)
-            advanceUntilIdle()
-
-            val rune = loadedAccounts.first { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
-            assertEquals(BigInteger("200000000"), rune.tokenValue?.value)
-            // 2 RUNE * $3 = $6
-            assertEquals(0, BigDecimal("6.00").compareTo(rune.fiatValue?.value))
-            // non-RUNE account passes through unchanged
-            assertEquals(
-                otherAccount,
-                loadedAccounts.first { it.token.id.equals(Coins.Ethereum.ETH.id, true) },
-            )
         }
 
     // ──────── WITHDRAW_RUJI ────────
@@ -1265,7 +1144,6 @@ internal class AccountsLoaderTest {
             defiTypeProvider = { defiType },
             preselectedTokenIdProvider = { preselectedTokenId },
             mscaAddressProvider = { mscaAddress },
-            bondedAmountProvider = { bondedAmount },
         )
 
     private fun ethAccount(): Account =

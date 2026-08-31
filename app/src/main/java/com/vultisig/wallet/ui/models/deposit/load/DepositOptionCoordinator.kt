@@ -260,7 +260,13 @@ constructor(
         fields.assetsFieldState.clearText()
         fields.rewardsAmountFieldState.clearText()
         state.update {
-            it.copy(tokenAmountError = null, nodeAddressError = null, dstAddressError = null)
+            it.copy(
+                tokenAmountError = null,
+                nodeAddressError = null,
+                dstAddressError = null,
+                operatorFeeError = null,
+                providerError = null,
+            )
         }
     }
 }

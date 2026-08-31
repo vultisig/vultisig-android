@@ -75,7 +75,6 @@
     <string name="vault_settings_security_screen_content_bottomsheet">Desativar a segurança on-chain significa que a Blockaid não consegue verificar as transações. Você estará menos protegido.</string>
     <string name="swap_form_on_chain">em</string>
     <string name="send_screen_title">Enviar</string>
-    <string name="bond_screen_title">Vincular</string>
     <string name="transaction_type_button_send">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">Para</string>
@@ -280,7 +279,7 @@
     <string name="deposit_form_address_card_title">Endereço</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>
     <string name="deposit_form_provider_hint">Provedor</string>
-    <string name="deposit_form_operator_fee_title">Taxa do Operador (opcional)</string>
+    <string name="deposit_form_operator_fee_title">Taxas do operador (Pontos base)</string>
     <string name="deposit_message_deposit_title">%s depósito de mensagens</string>
     <string name="deposit_form_custom_memo_title">Memorando personalizado</string>
     <string name="swap_screen_same_asset_error_message">Os ativos de origem e de destino não podem ser iguais.</string>
@@ -463,7 +462,6 @@
     <string name="node_address_formatted">Endereço: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Desvincular</string>
-    <string name="unbond_screen_title">Desvincular</string>
     <string name="stake_screen_title">Stake</string>
     <string name="unstake_screen_title">Unstake</string>
     <string name="mint_screen_title">Cunhar</string>
@@ -1254,10 +1252,6 @@
     <string name="bandwidth_desc">Os Pontos de Largura de Banda (Bandwidth Points) são necessários para todas as transações na TRON, incluindo envios de tokens padrão e interações com contratos inteligentes. Cada utilizador da TRON recebe 600 Pontos de Largura de Banda gratuitos por dia, o que pode cobrir aproximadamente dois envios básicos. Além disso, pode ganhar Pontos de Largura de Banda extra ao fazer staking de TRX, aumentando o seu saldo diário para suportar mais transações. Se tiver Pontos de Largura de Banda suficientes, pode enviar tokens, fazer staking de TRX ou interagir com contratos inteligentes sem pagar TRX em taxas de gás.</string>
     <string name="energy_desc">A Energia (Energy) é necessária para ações mais complexas, como interagir com contratos inteligentes (por exemplo, swaps ou transações de dApps). Ao contrário da Largura de Banda, a Energia não é gratuita — é necessário fazer staking de TRX para ganhar Energia. (Os utilizadores mais avançados também podem adquirir Energia através de mecanismos de leasing, como o JustLend ou os mercados de aluguer de Energia da Tronify). No entanto, ter Energia pode reduzir significativamente ou mesmo eliminar as taxas de gás para interações com contratos inteligentes, tornando-a valiosa para aqueles que utilizam dApps da TRON com frequência.</string>
 
-    <!-- Bond Form -->
-    <string name="bond_node_address">Endereço do Nó</string>
-    <string name="bond_operator_fees_basis_point">Taxas do operador (Pontos base)</string>
-    <string name="bond_provider_optional">Fornecedor (Opcional)</string>
     <string name="deposit_option_withdraw_secured">Retirar ativo garantido</string>
     <string name="deposit_option_secured_assets">Ativos garantidos</string>
     <string name="address_auto_filled">Endereço %1$s (preenchido automaticamente)</string>

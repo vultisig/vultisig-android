@@ -33,7 +33,6 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.vsStyledBackground
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSections
-import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -88,14 +87,13 @@ private fun AddressInputSection(
     focusRequester: FocusRequester? = null,
     onFocusLost: (() -> Unit)? = null,
     testTag: String? = null,
-    editable: Boolean = true,
 ) {
     var wasFocused by remember { mutableStateOf(false) }
 
     VsTextInputField(
         textFieldState = fieldState,
         hint = stringResource(R.string.send_to_address_hint),
-        enabled = editable,
+        enabled = true,
         focusRequester = focusRequester,
         onFocusChanged =
             onFocusLost?.let { onLost ->
@@ -119,13 +117,9 @@ private fun AddressInputSection(
             else Modifier.fillMaxWidth(),
     )
 
-    // A locked field (unbond node address) can't be changed, so the paste/scan/address-book
-    // actions that would retarget it are hidden.
-    if (editable) {
-        UiSpacer(16.dp)
+    UiSpacer(16.dp)
 
-        AddressActionRow(onPaste = onPaste, onScan = onScan, onAddressBook = onAddressBook)
-    }
+    AddressActionRow(onPaste = onPaste, onScan = onScan, onAddressBook = onAddressBook)
 }
 
 @Composable
@@ -193,12 +187,7 @@ internal fun FoldableDestinationAddressWidget(
             UiSpacer(16.dp)
 
             Text(
-                text =
-                    when (state.defiType) {
-                        DeFiNavActions.BOND,
-                        DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
-                        else -> stringResource(R.string.send_to_address)
-                    },
+                text = stringResource(R.string.send_to_address),
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
             )
@@ -214,80 +203,6 @@ internal fun FoldableDestinationAddressWidget(
                 onPaste = onSetOutputAddress,
                 onScan = onScanDstAddressRequest,
                 onAddressBook = onAddressBookClick,
-            )
-        }
-    }
-}
-
-@Composable
-internal fun FoldableBondDestinationAddress(
-    state: SendFormUiModel,
-    onExpandSection: (SendSections) -> Unit,
-    addressFieldState: TextFieldState,
-    addressFocusRequester: FocusRequester = remember { FocusRequester() },
-    onDstAddressLostFocus: () -> Unit,
-    onSetOutputAddress: (String) -> Unit,
-    onScanDstAddressRequest: () -> Unit,
-    onAddressBookClick: () -> Unit,
-    providerFieldState: TextFieldState,
-    onSetOutputProvider: (String) -> Unit,
-    onScanProviderRequest: () -> Unit,
-    onAddressProviderBookClick: () -> Unit,
-    isAddressEditable: Boolean = true,
-) {
-    FoldableSection(
-        expanded = state.expandedSection == SendSections.Address,
-        // A filled-in but invalid recipient is not complete — no checkmark while the error shows.
-        complete = state.isDstAddressComplete && state.dstAddressError == null,
-        title = stringResource(R.string.add_address_address_title),
-        onToggle = { onExpandSection(SendSections.Address) },
-        completeTitleContent = { AddressCompleteTitleContent(addressFieldState) },
-    ) {
-        Column(
-            modifier = Modifier.padding(start = 12.dp, top = 16.dp, end = 12.dp, bottom = 12.dp)
-        ) {
-            Text(
-                text =
-                    when (state.defiType) {
-                        null,
-                        DeFiNavActions.BOND,
-                        DeFiNavActions.UNBOND -> stringResource(R.string.bond_node_address)
-                        else -> stringResource(R.string.send_to_address)
-                    },
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.supplementary.caption,
-            )
-
-            UiSpacer(12.dp)
-
-            AddressInputSection(
-                fieldState = addressFieldState,
-                error = state.dstAddressError,
-                focusRequester = addressFocusRequester,
-                onFocusLost = onDstAddressLostFocus,
-                testTag = "SendFormScreen.bondAddressField",
-                onPaste = onSetOutputAddress,
-                onScan = onScanDstAddressRequest,
-                onAddressBook = onAddressBookClick,
-                editable = isAddressEditable,
-            )
-
-            UiSpacer(12.dp)
-
-            Text(
-                text = stringResource(R.string.bond_provider_optional),
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.supplementary.caption,
-            )
-
-            UiSpacer(12.dp)
-
-            AddressInputSection(
-                fieldState = providerFieldState,
-                error = state.bondProviderError,
-                onPaste = onSetOutputProvider,
-                onScan = onScanProviderRequest,
-                onAddressBook = onAddressProviderBookClick,
             )
         }
     }

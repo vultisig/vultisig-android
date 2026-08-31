@@ -54,23 +54,6 @@ internal class SendFormContinueGateTest {
     }
 
     @Test
-    fun `locked unbond node address never blocks continue`() {
-        val state = model(dstAddressError = invalidRecipient, defiType = DeFiNavActions.UNBOND)
-
-        assertFalse(state.isDstAddressEditable)
-        assertFalse(state.isDstAddressBlocking)
-        assertFalse(state.isContinueDisabled())
-    }
-
-    @Test
-    fun `bond keeps its editable address gated`() {
-        val state = model(dstAddressError = invalidRecipient, defiType = DeFiNavActions.BOND)
-
-        assertTrue(state.isDstAddressEditable)
-        assertTrue(state.isContinueDisabled())
-    }
-
-    @Test
     fun `percentage selection blocks continue and shows it as loading`() {
         // The calculation is about to overwrite the amount field, so Continue must not submit the
         // amount the user just replaced — and it says so with the spinner instead of greying out.

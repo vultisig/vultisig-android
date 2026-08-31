@@ -82,7 +82,6 @@
     <string name="vault_tier_ultimate_description_part3"> при всех обменах.</string>
     <string name="join_keysign_missing_required_vault">У вас нет необходимого хранилища для Keysign</string>
     <string name="send_screen_title">Отправить</string>
-    <string name="bond_screen_title">Привязать</string>
     <string name="transaction_type_button_send">Отправить</string>
     <string name="send_from_address">От</string>
     <string name="send_to_address">Кому</string>
@@ -277,7 +276,7 @@
     <string name="deposit_form_address_card_title">Адрес</string>
     <string name="deposit_form_provider_title">Поставщик (необязательно)</string>
     <string name="deposit_form_provider_hint">Провайдер</string>
-    <string name="deposit_form_operator_fee_title">Комиссия оператора (необязательно)</string>
+    <string name="deposit_form_operator_fee_title">Комиссии оператора (Базисные пункты)</string>
     <string name="deposit_message_deposit_title">%s сообщение депозит</string>
     <string name="deposit_form_custom_memo_title">Пользовательская записка</string>
     <string name="swap_screen_same_asset_error_message">Исходные и целевые активы не могут быть одинаковыми.</string>
@@ -464,7 +463,6 @@
     <string name="node_address_formatted">Адрес: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Отвязать</string>
-    <string name="unbond_screen_title">Отвязать</string>
     <string name="stake_screen_title">Стейкинг</string>
     <string name="unstake_screen_title">Отменить стейкинг</string>
     <string name="mint_screen_title">Чеканить</string>
@@ -1260,10 +1258,6 @@
     <string name="bandwidth_desc">Баллы пропускной способности требуются для каждой транзакции на TRON, включая как стандартные отправки токенов, так и взаимодействия со смарт-контрактами. Каждый пользователь TRON получает 600 бесплатных баллов пропускной способности в день, которых хватает примерно на две базовые отправки. Кроме того, вы можете заработать дополнительные баллы пропускной способности, делая ставки TRX и увеличивая свой дневной баланс для поддержки большего количества транзакций. Если у вас достаточно баллов пропускной способности, вы можете отправлять токены, делать ставки TRX или взаимодействовать со смарт-контрактами, не платя TRX в виде комиссий за газ.</string>
     <string name="energy_desc">Требуется для более сложных действий, таких как взаимодействие со смарт-контрактами (например, свопы или транзакции dApp). В отличие от пропускной способности, энергия не предоставляется бесплатно — вам нужно делать ставки TRX, чтобы заработать энергию. (Более продвинутые пользователи также могут приобретать энергию через механизмы лизинга, такие как JustLend или рынки аренды энергии Tronify). Однако наличие Energy может значительно снизить или даже устранить комиссию за газ при взаимодействии со смарт-контрактами, что делает Energy ценным для тех, кто часто использует приложения TRON dApps.</string>
 
-    <!-- Bond Form -->
-    <string name="bond_node_address">Адрес Узла</string>
-    <string name="bond_operator_fees_basis_point">Комиссии оператора (Базисные пункты)</string>
-    <string name="bond_provider_optional">Провайдер (Необязательно)</string>
     <string name="deposit_option_withdraw_secured">Вывод обеспеченного актива</string>
     <string name="deposit_option_secured_assets">Залоговые активы</string>
     <string name="address_auto_filled">Адрес %1$s (заполняется автоматически)</string>

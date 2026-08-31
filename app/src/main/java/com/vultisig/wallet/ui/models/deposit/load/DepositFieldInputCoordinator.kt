@@ -124,23 +124,24 @@ constructor(
         state.update { it.copy(tokenAmountError = errorText) }
     }
 
-    /** Validates the provider-address field, surfacing inline errors. */
+    /** Validates the provider-address field when non-empty; it is an optional field. */
     fun validateProvider() {
+        val provider = fields.providerFieldState.text.toString()
         val errorText =
-            fieldValidator.addressErrorOrNull(
-                chainProvider(),
-                fields.providerFieldState.text.toString(),
-            )
+            if (provider.isNotEmpty()) {
+                fieldValidator.addressErrorOrNull(chainProvider(), provider)
+            } else {
+                null
+            }
         state.update { it.copy(providerError = errorText) }
     }
 
     /** Validates the operator-fee basis-points field when non-empty. */
     fun validateOperatorFee() {
         val text = fields.operatorFeeFieldState.text.toString()
-        if (text.isNotEmpty()) {
-            val errorText = fieldValidator.validateBasisPoints(text.toIntOrNull())
-            state.update { it.copy(operatorFeeError = errorText) }
-        }
+        val errorText =
+            if (text.isNotEmpty()) fieldValidator.validateOperatorFee(text.toIntOrNull()) else null
+        state.update { it.copy(operatorFeeError = errorText) }
     }
 
     /** Validates the custom-memo field, surfacing inline errors. */
@@ -192,9 +193,10 @@ constructor(
         }
     }
 
-    /** Sets the provider-address field. */
+    /** Sets the provider-address field and revalidates. */
     fun setProvider(provider: String) {
         fields.providerFieldState.setTextAndPlaceCursorAtEnd(provider)
+        validateProvider()
     }
 
     /** Sets the node-address field and revalidates. */

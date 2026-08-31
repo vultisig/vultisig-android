@@ -124,10 +124,17 @@ internal class TokenPreselectionService(
             }
         }
 
-        for (account in accounts) {
-            val accountToken = account.token
-            if (accountToken.id.equals(preSelectedTokenId, ignoreCase = true)) {
-                return accountToken
+        // Bond/Unbond always preselect the chain's native asset (see defaultDefiCoin) rather
+        // than matching a stale preSelectedTokenId — submitFor fails closed for these anyway,
+        // but the preselection shown to the user should still be correct.
+        if (
+            defiTypeProvider() != DeFiNavActions.BOND && defiTypeProvider() != DeFiNavActions.UNBOND
+        ) {
+            for (account in accounts) {
+                val accountToken = account.token
+                if (accountToken.id.equals(preSelectedTokenId, ignoreCase = true)) {
+                    return accountToken
+                }
             }
         }
 
@@ -154,8 +161,6 @@ internal class TokenPreselectionService(
 
             DeFiNavActions.MINT_YRUNE -> Coins.ThorChain.RUNE
             DeFiNavActions.MINT_YTCY -> Coins.ThorChain.TCY
-            DeFiNavActions.BOND -> Coins.ThorChain.RUNE
-            DeFiNavActions.UNBOND -> Coins.ThorChain.RUNE
             DeFiNavActions.WITHDRAW_RUJI -> RUJI_REWARDS_COIN
             DeFiNavActions.REDEEM_YRUNE -> Coins.ThorChain.yRUNE
             DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY
@@ -167,14 +172,22 @@ internal class TokenPreselectionService(
             // two directions start from different tokens — as with the RUJI pair above.
             DeFiNavActions.STAKE_YBRUNE -> Coins.ThorChain.bRUNE
             DeFiNavActions.UNSTAKE_YBRUNE -> Coins.ThorChain.ybRUNE
+            // The EVM asset side of a pool add is the one case ADD_LP still submits through the
+            // Send flow (the Deposit flow's AddLiquidityStrategy only covers the RUNE/CACAO side).
+            DeFiNavActions.ADD_LP,
             DeFiNavActions.STAKE_CACAO,
             DeFiNavActions.UNSTAKE_CACAO,
-            DeFiNavActions.ADD_LP,
             DeFiNavActions.REMOVE_LP -> Coins.MayaChain.CACAO
             DeFiNavActions.FREEZE_TRX,
             DeFiNavActions.UNFREEZE_TRX -> Coins.Tron.TRX
             DeFiNavActions.STAKE_TON,
             DeFiNavActions.UNSTAKE_TON -> Coins.Ton.TON
+            // Bond/Unbond only submit through the Deposit flow now, but a Route.Send reaching here
+            // (a stale deep link or restored back stack) must still preselect the chain's own
+            // native asset explicitly rather than falling back to findPreselectedToken's
+            // arbitrary-first-account default — submitFor refuses to submit these regardless.
+            DeFiNavActions.BOND,
+            DeFiNavActions.UNBOND -> Coins.ThorChain.RUNE
             null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
         }
 }

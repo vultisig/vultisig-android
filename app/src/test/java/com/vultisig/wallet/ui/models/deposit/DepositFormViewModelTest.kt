@@ -765,17 +765,14 @@ internal class DepositFormViewModelTest {
     }
 
     @Test
-    fun `validateProvider with blank provider sets providerError`() = runTest {
+    fun `validateProvider with blank provider clears providerError`() = runTest {
         val vm = buildViewModel()
         vm.loadData("vault1", Chain.ThorChain.raw, null, null)
         advanceUntilIdle()
 
         vm.validateProvider()
 
-        val error = vm.state.value.providerError
-        assertNotNull(error)
-        assertTrue(error is UiText.StringResource)
-        assertEquals(R.string.send_error_no_address, (error as UiText.StringResource).resId)
+        assertEquals(null, vm.state.value.providerError)
     }
 
     @Test
@@ -821,29 +818,30 @@ internal class DepositFormViewModelTest {
     }
 
     @Test
-    fun `validateOperatorFee with zero sets operatorFeeError`() = runTest {
-        val vm = buildViewModel()
-        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
-
-        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("0")
-        vm.validateOperatorFee()
-
-        val error = vm.state.value.operatorFeeError
-        assertNotNull(error)
-        assertEquals(R.string.send_from_invalid_amount, (error as UiText.StringResource).resId)
-    }
-
-    @Test
-    fun `validateOperatorFee above one hundred sets operatorFeeError`() = runTest {
+    fun `validateOperatorFee with 150 clears operatorFeeError`() = runTest {
         val vm = buildViewModel()
         vm.loadData("vault1", Chain.ThorChain.raw, null, null)
 
         vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("150")
         vm.validateOperatorFee()
 
+        assertEquals(null, vm.state.value.operatorFeeError)
+    }
+
+    @Test
+    fun `validateOperatorFee above ten thousand sets operatorFeeError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("10001")
+        vm.validateOperatorFee()
+
         val error = vm.state.value.operatorFeeError
         assertNotNull(error)
-        assertEquals(R.string.send_from_invalid_amount, (error as UiText.StringResource).resId)
+        assertEquals(
+            R.string.send_error_invalid_operator_fee,
+            (error as UiText.StringResource).resId,
+        )
     }
 
     @Test
@@ -858,20 +856,53 @@ internal class DepositFormViewModelTest {
     }
 
     @Test
-    fun `validateOperatorFee with blank input is a no-op and leaves a prior error in place`() =
+    fun `validateOperatorFee with zero clears operatorFeeError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("0")
+        vm.validateOperatorFee()
+
+        assertEquals(null, vm.state.value.operatorFeeError)
+    }
+
+    @Test
+    fun `validateOperatorFee with blank input clears a prior error`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("10001")
+        vm.validateOperatorFee()
+        assertNotNull(vm.state.value.operatorFeeError)
+
+        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("")
+        vm.validateOperatorFee()
+
+        assertEquals(null, vm.state.value.operatorFeeError)
+    }
+
+    @Test
+    fun `deposit with Bond does not let a stale operator-fee error block a blank field`() =
         runTest {
             val vm = buildViewModel()
             vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+            advanceUntilIdle()
+            vm.selectDepositOption(DepositOption.Bond)
 
-            vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("0")
+            vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("50000")
             vm.validateOperatorFee()
-            val priorError = vm.state.value.operatorFeeError
-            assertNotNull(priorError)
+            assertNotNull(vm.state.value.operatorFeeError)
 
             vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("")
-            vm.validateOperatorFee()
+            vm.deposit()
+            advanceUntilIdle()
 
-            assertEquals(priorError, vm.state.value.operatorFeeError)
+            // A blank operator fee is valid and must not silently block submission: the deposit
+            // proceeds to the strategy, which fails for a different reason (missing node address)
+            // instead of leaving errorText null with no explanation.
+            val errorText = vm.state.value.errorText
+            assertNotNull(errorText)
+            assertEquals(R.string.send_error_no_address, (errorText as UiText.StringResource).resId)
         }
 
     @Test

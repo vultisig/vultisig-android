@@ -34,7 +34,6 @@ import timber.log.Timber
 internal class AddressManager(
     private val scope: CoroutineScope,
     private val addressFieldState: TextFieldState,
-    private val providerBondFieldState: TextFieldState,
     // XRP destination-tag field; X-address decoding autofills and locks it.
     private val destinationTagFieldState: TextFieldState,
     private val selectedToken: StateFlow<Coin?>,
@@ -80,12 +79,8 @@ internal class AddressManager(
         addressFieldState.setTextAndPlaceCursorAtEnd(address)
     }
 
-    /**
-     * Opens the address book and applies the chosen entry to the output or provider field.
-     *
-     * @param addressType which field the selected address should populate.
-     */
-    fun openAddressBook(addressType: AddressBookType = AddressBookType.OUTPUT) {
+    /** Opens the address book and applies the chosen entry to the output address field. */
+    fun openAddressBook() {
         scope.safeLaunch {
             val vaultId = vaultIdProvider() ?: return@safeLaunch
             val selectedChain = selectedToken.value?.chain ?: return@safeLaunch
@@ -94,16 +89,8 @@ internal class AddressManager(
                 requestAddressBookEntry(chainId = selectedChain.id, excludeVaultId = vaultId)
                     ?: return@safeLaunch
 
-            when (addressType) {
-                AddressBookType.OUTPUT -> {
-                    checkIfTokenSelectionRequired(selectedChain, address.chain)
-                    setOutputAddress(address.address)
-                }
-
-                AddressBookType.PROVIDER -> {
-                    providerBondFieldState.setTextAndPlaceCursorAtEnd(address.address)
-                }
-            }
+            checkIfTokenSelectionRequired(selectedChain, address.chain)
+            setOutputAddress(address.address)
         }
     }
 

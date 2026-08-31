@@ -84,7 +84,6 @@
     <string name="send_from_invalid_amount">Monto invalido</string>
     <string name="insufficient_utxos_error">No hay suficientes UTXOs disponibles para cubrir el monto seleccionado. Por favor, agregue más fondos o reduzca el monto que está enviando</string>
     <string name="send_screen_title">Enviar</string>
-    <string name="bond_screen_title">Vincular</string>
     <string name="transaction_type_button_send">Enviar</string>
     <string name="send_from_address">De</string>
     <string name="send_to_address">A</string>
@@ -279,7 +278,7 @@
     <string name="deposit_form_address_card_title">Dirección</string>
     <string name="deposit_form_provider_title">Proveedor (opcional)</string>
     <string name="deposit_form_provider_hint">Proveedor</string>
-    <string name="deposit_form_operator_fee_title">Tarifa del operador (opcional)</string>
+    <string name="deposit_form_operator_fee_title">Comisiones del operador (Puntos base)</string>
     <string name="deposit_message_deposit_title">%s mensaje de deposito</string>
     <string name="deposit_form_custom_memo_title">Memo personalizado</string>
     <string name="swap_screen_same_asset_error_message">Los activos de origen y destino no pueden ser los mismos.</string>
@@ -463,7 +462,6 @@
     <string name="node_address_formatted">Dirección: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Desvincular</string>
-    <string name="unbond_screen_title">Desvincular</string>
     <string name="stake_screen_title">Staking</string>
     <string name="unstake_screen_title">Unstaking</string>
     <string name="mint_screen_title">Acuñar</string>
@@ -1255,10 +1253,6 @@
     <string name="bandwidth_desc">Se requieren Puntos de Ancho de Banda para cada transacción en TRON, incluyendo tanto los envíos de tokens estándar como las interacciones con contratos inteligentes. Cada usuario de TRON recibe 600 Puntos de Ancho de Banda gratuitos al día, que pueden cubrir aproximadamente dos envíos básicos. Además, puedes ganar Puntos de Ancho de Banda adicionales al hacer staking de TRX, lo que aumenta tu saldo diario para soportar más transacciones. Si tienes suficientes Puntos de Ancho de Banda, puedes enviar tokens, hacer staking de TRX o interactuar con contratos inteligentes sin pagar TRX en comisiones de gas.</string>
     <string name="energy_desc">Se requiere para acciones más complejas, como interactuar con contratos inteligentes (por ejemplo, swaps o transacciones de dApps). A diferencia del Ancho de Banda, la Energía no es gratuita; necesitas hacer staking de TRX para obtenerla. (Los usuarios más avanzados también pueden adquirir Energía mediante mecanismos de leasing como JustLend o los mercados de alquiler de Energía de Tronify). Sin embargo, tener Energía puede reducir significativamente o incluso eliminar las comisiones de gas para las interacciones con contratos inteligentes, lo que la hace valiosa para quienes usan dApps de TRON con frecuencia.</string>
 
-    <!-- Bond Form -->
-    <string name="bond_node_address">Dirección del Nodo</string>
-    <string name="bond_operator_fees_basis_point">Comisiones del operador (Puntos base)</string>
-    <string name="bond_provider_optional">Proveedor (Opcional)</string>
     <string name="deposit_option_withdraw_secured">Retirar activos garantizados</string>
     <string name="deposit_option_secured_assets">Activos garantizados</string>
     <string name="address_auto_filled">Dirección de %1$s (autocompletada)</string>

@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -16,9 +17,11 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
+import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -40,21 +43,30 @@ internal class BondStrategyTest {
     private val assetsValidator: DepositMemoAssetsValidatorUseCase = mockk()
 
     @Test
-    fun `Thor bond memo scales operator fee by 100 and uses tokenAmount as srcTokenValue`() =
-        runTest {
-            coEvery { chainRepo.isValid(Chain.ThorChain, "thorNode") } returns true
-            givenSpecific()
-            nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
-            tokenAmount.setTextAndPlaceCursorAtEnd("1")
-            operatorFee.setTextAndPlaceCursorAtEnd("5")
+    fun `Thor bond memo passes operator fee through as raw basis points`() = runTest {
+        coEvery { chainRepo.isValid(Chain.ThorChain, "thorNode") } returns true
+        givenSpecific()
+        nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
+        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+        operatorFee.setTextAndPlaceCursorAtEnd("5")
 
-            val tx = build(Chain.ThorChain).build()
+        val tx = build(Chain.ThorChain).build()
 
-            assertEquals("BOND:thorNode::500", tx.memo)
-            assertEquals(BigInteger.valueOf(100_000_000), tx.srcTokenValue.value)
-            assertEquals(OPERATION_BOND, tx.operation)
-            assertEquals("thorNode", tx.nodeAddress)
-        }
+        assertEquals("BOND:thorNode::5", tx.memo)
+        assertEquals(BigInteger.valueOf(100_000_000), tx.srcTokenValue.value)
+        assertEquals(OPERATION_BOND, tx.operation)
+        assertEquals("thorNode", tx.nodeAddress)
+    }
+
+    @Test
+    fun `Thor bond throws when operator fee is out of basis points range`() = runTest {
+        coEvery { chainRepo.isValid(Chain.ThorChain, "thorNode") } returns true
+        nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
+        tokenAmount.setTextAndPlaceCursorAtEnd("1")
+        operatorFee.setTextAndPlaceCursorAtEnd("10001")
+
+        assertFailsWith<InvalidTransactionDataException> { build(Chain.ThorChain).build() }
+    }
 
     @Test
     fun `Maya bond memo uses assets and lpUnits and srcTokenValue defaults to 1`() = runTest {
@@ -97,6 +109,8 @@ internal class BondStrategyTest {
                 DepositFormUiModel(depositChain = chain, isWhitelistFailed = isWhitelistFailed)
             },
             selectedTokenProvider = { runeCoin() },
+            selectedAccountProvider = { mockk(relaxed = true) },
+            addressProvider = { mockk(relaxed = true) },
             nodeAddressFieldState = nodeAddress,
             tokenAmountFieldState = tokenAmount,
             providerFieldState = provider,
@@ -107,6 +121,15 @@ internal class BondStrategyTest {
             blockChainSpecificRepository = specificRepo,
             isAssetCharsValid = assetsValidator,
             isLpUnitCharsValid = { it.toLongOrNull()?.let { v -> v > 0 } == true },
+            requireTokenAmount = { token, _, _, _ ->
+                val amount = tokenAmount.text.toString().toBigDecimalOrNull()
+                if (amount == null || amount <= BigDecimal.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+                amount.movePointRight(token.decimal).toBigInteger()
+            },
             calculateGasFee = { _, token, _ -> TokenValue(BigInteger.ONE, token) },
             getFeesFiatValue = { _, _, _ -> estimatedFee() },
         )

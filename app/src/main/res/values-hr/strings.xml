@@ -75,7 +75,6 @@
     <string name="select_chain_chain_title">Lanac</string>
     <string name="select_chain_balance_title">Stanje</string>
     <string name="send_screen_title">POŠALJI</string>
-    <string name="bond_screen_title">Vezati</string>
     <string name="transaction_type_button_send">Pošalji</string>
     <string name="send_from_address">Od</string>
     <string name="send_to_address">Do</string>
@@ -278,7 +277,7 @@
     <string name="deposit_form_address_card_title">Adresa</string>
     <string name="deposit_form_provider_title">Davatelj (neobavezno)</string>
     <string name="deposit_form_provider_hint">Davatelj</string>
-    <string name="deposit_form_operator_fee_title">Naknada operatera (nije obavezno)</string>
+    <string name="deposit_form_operator_fee_title">Naknade operatora (Bazni bodovi)</string>
     <string name="deposit_message_deposit_title">%s depozit poruke</string>
     <string name="deposit_form_custom_memo_title">Prilagođeni dopis</string>
     <string name="swap_screen_same_asset_error_message">Izvorna i odredišna imovina ne mogu biti ista.</string>
@@ -464,7 +463,6 @@
     <string name="node_address_formatted">Adresa: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Odveži</string>
-    <string name="unbond_screen_title">Odveži</string>
     <string name="stake_screen_title">Ulog</string>
     <string name="unstake_screen_title">Ukloni ulog</string>
     <string name="mint_screen_title">Kovati</string>
@@ -1260,10 +1258,6 @@
     <string name="bandwidth_desc">Za svaku transakciju na TRON-u, uključujući i standardna slanja tokena i interakcije pametnih ugovora, potrebni su bodovi propusnosti. Svaki korisnik TRON-a dobiva 600 besplatnih bodova propusnosti dnevno, što može pokriti otprilike dva osnovna slanja. Osim toga, možete zaraditi dodatne bodove propusnosti ulaganjem TRX-a, povećavajući svoj dnevni saldo kako biste podržali više transakcija. Ako imate dovoljno bodova propusnosti, možete slati tokene, ulagati TRX ili komunicirati s pametnim ugovorima bez plaćanja TRX-a u naknadama za gorivo.</string>
     <string name="energy_desc">Potrebno za složenije radnje, kao što je interakcija s pametnim ugovorima (npr. zamjene ili transakcije dApp-ova). Za razliku od propusnosti, energija se ne daje besplatno - morate ulagati TRX da biste zaradili energiju. (Napredniji korisnici također mogu steći energiju putem mehanizama najma kao što su JustLend ili Tronifyjeva tržišta najma energije). Međutim, posjedovanje energije može značajno smanjiti ili čak eliminirati naknade za gorivo za interakcije pametnih ugovora, što energiju čini vrijednom za one koji često koriste TRON dApp-ove.</string>
 
-    <!-- Bond Form -->
-    <string name="bond_node_address">Adresa Čvora</string>
-    <string name="bond_operator_fees_basis_point">Naknade operatora (Bazni bodovi)</string>
-    <string name="bond_provider_optional">Pružatelj (Neobavezno)</string>
     <string name="deposit_option_withdraw_secured">Povlačenje osigurane imovine</string>
     <string name="deposit_option_secured_assets">Osigurana imovina</string>
     <string name="address_auto_filled">%1$s Adresa (automatski popunjeno)</string>

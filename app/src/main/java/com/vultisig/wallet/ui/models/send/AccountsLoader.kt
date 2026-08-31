@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companio
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Coins
-import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.VaultId
@@ -32,7 +31,6 @@ internal class AccountsLoader(
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val preselectedTokenIdProvider: () -> TokenId?,
     private val mscaAddressProvider: () -> String?,
-    private val bondedAmountProvider: () -> BigInteger?,
 ) {
     private var loadAccountsJob: Job? = null
 
@@ -60,11 +58,6 @@ internal class AccountsLoader(
                         loadCircleUSDCAccount(vaultId, generation)
                     }
 
-                DeFiNavActions.UNBOND ->
-                    scope.safeLaunch(onError = ::onLoadError) {
-                        loadUnbondAccount(vaultId, generation)
-                    }
-
                 DeFiNavActions.UNSTAKE_SRUJI ->
                     scope.safeLaunch(onError = ::onLoadError) {
                         loadAutoCompoundRujiAccount(vaultId, generation)
@@ -76,7 +69,6 @@ internal class AccountsLoader(
                     }
 
                 null,
-                DeFiNavActions.BOND,
                 DeFiNavActions.STAKE_RUJI,
                 DeFiNavActions.STAKE_SRUJI,
                 DeFiNavActions.STAKE_TCY,
@@ -493,53 +485,5 @@ internal class AccountsLoader(
                 price = null,
             )
         publishLoaded(listOf(sRujiAccount, thorchainAccount), generation)
-    }
-
-    // Unbond draws from the RUNE already bonded to the selected node, not the vault's combined
-    // bond. loadDeFiAddresses returns the RUNE account carrying the *combined* bond across every
-    // bonded node (ThorchainDeFiBalanceService sums bonDetails), so override its balance with this
-    // node's bonded amount (threaded via bondedAmountProvider). This makes the MAX/percentage base
-    // and the submit-time balance check operate on the per-node bonded amount — matching
-    // iOS/Windows.
-    private suspend fun loadUnbondAccount(vaultId: VaultId, generation: Long) {
-        val bondedAmount = bondedAmountProvider()
-        accountsRepository
-            .loadDeFiAddresses(vaultId, false)
-            .map { addrs -> addrs.spendableAccounts() }
-            .collect { accounts -> publishUnbond(accounts, bondedAmount, generation) }
-    }
-
-    private fun publishUnbond(
-        accounts: List<Account>,
-        bondedAmount: BigInteger?,
-        generation: Long,
-    ) {
-        if (generation != currentGeneration) return
-        // The RUNE account from loadDeFiAddresses carries the vault's *combined* bond across every
-        // node (ThorchainDeFiBalanceService sums bonDetails), not this node's. If the per-node
-        // amount is missing (e.g. a stale deep link), we can't derive the real ceiling, so zero it
-        // out — better to block the form than let MAX/submit draw against another node's bond.
-        val ceiling = bondedAmount ?: BigInteger.ZERO
-        val overridden =
-            accounts.map { account ->
-                if (account.token.id.equals(Coins.ThorChain.RUNE.id, true)) {
-                    val bondedTokenValue =
-                        account.tokenValue?.copy(value = ceiling)
-                            ?: TokenValue(value = ceiling, token = account.token)
-                    account.copy(
-                        tokenValue = bondedTokenValue,
-                        fiatValue =
-                            account.price?.let { price ->
-                                FiatValue(
-                                    value = price.value.multiply(bondedTokenValue.decimal),
-                                    currency = price.currency,
-                                )
-                            },
-                    )
-                } else {
-                    account
-                }
-            }
-        publishLoaded(overridden, generation)
     }
 }

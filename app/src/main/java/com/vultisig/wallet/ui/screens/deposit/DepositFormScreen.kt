@@ -387,7 +387,7 @@ internal fun DepositFormScreen(
                     if (depositOption == DepositOption.Bond && depositChain == Chain.ThorChain) {
                         FormTextFieldCard(
                             title = stringResource(R.string.deposit_form_operator_fee_title),
-                            hint = "0.0",
+                            hint = "0",
                             keyboardType = KeyboardType.Number,
                             textFieldState = operatorFeeFieldState,
                             onLostFocus = onOperatorFeeLostFocus,

@@ -40,9 +40,7 @@
     <string name="node_address_formatted">Address: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Unbond</string>
-    <string name="unbond_screen_title">Unbond</string>
     <string name="bond">Bond</string>
-    <string name="bond_screen_title">Bond</string>
     <string name="stake_screen_title">Stake</string>
     <string name="unstake_screen_title">Unstake</string>
     <string name="mint_screen_title">Mint</string>
@@ -394,7 +392,7 @@
     <string name="deposit_form_address_card_title">Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
     <string name="deposit_form_provider_hint">Provider</string>
-    <string name="deposit_form_operator_fee_title">Operator’s Fee (optional)</string>
+    <string name="deposit_form_operator_fee_title">Operator fees (basis points)</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Slippage is required</string>
     <string name="slippage_invalid_error">Slippage must be between 1 and 100</string>
@@ -1318,11 +1316,6 @@
     <string name="energy_desc">Required for more complex actions, such as interacting with smart contracts (e.g., swaps or dApp transactions). Unlike Bandwidth, Energy is not given for free—you need to stake TRX to earn Energy. (More advanced users can also acquire Energy through leasing mechanisms such as JustLend or Tronify’s Energy rental markets). However, having Energy can significantly reduce or even eliminate the gas fees for smart contract interactions, making Energy valuable for those who use TRON dApps frequently.</string>
     <string name="tron" translatable="false">Tron</string>
     <string name="tron_bandwidth_energy_title" translatable="false"><![CDATA["Bandwidth & Energy "]]></string>
-
-    <!-- Bond Form -->
-    <string name="bond_node_address">Node Address</string>
-    <string name="bond_operator_fees_basis_point">Operator fees (basis points)</string>
-    <string name="bond_provider_optional">Provider (Optional)</string>
 
     <string name="deposit_option_withdraw_secured">Withdraw Secured Asset</string>
     <string name="deposit_option_secured_assets">Secured Assets</string>

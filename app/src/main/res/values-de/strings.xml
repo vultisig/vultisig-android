@@ -75,7 +75,6 @@
     <string name="vault_settings_security_screen_content_bottomsheet">Das Deaktivieren der On-Chain-Sicherheit bedeutet, dass Blockaid Transaktionen nicht überprüfen kann. Sie sind dann weniger geschützt.</string>
     <string name="join_keysign_missing_required_vault">Sie haben nicht den erforderlichen Tresor für Keysign</string>
     <string name="send_screen_title">Senden</string>
-    <string name="bond_screen_title">Bonden</string>
     <string name="transaction_type_button_send">Senden</string>
     <string name="send_from_address">Von</string>
     <string name="send_to_address">Zu</string>
@@ -278,7 +277,7 @@
     <string name="deposit_form_address_card_title">Adresse</string>
     <string name="deposit_form_provider_title">Anbieter (optional)</string>
     <string name="deposit_form_provider_hint">Anbieter</string>
-    <string name="deposit_form_operator_fee_title">Betreibergebühr (optional)</string>
+    <string name="deposit_form_operator_fee_title">Betreiber-Gebühren (Basispunkte)</string>
     <string name="deposit_message_deposit_title">%s Nachricht Einzahlung</string>
     <string name="deposit_form_custom_memo_title">Benutzerdefiniertes Memo</string>
     <string name="swap_screen_same_asset_error_message">Quell- und Ziel-Assets können nicht identisch sein.</string>
@@ -463,7 +462,6 @@
     <string name="node_address_formatted">Adresse: %s</string>
     <string name="apy">APY</string>
     <string name="unbond">Entbinden</string>
-    <string name="unbond_screen_title">Entbinden</string>
     <string name="stake_screen_title">Staken</string>
     <string name="unstake_screen_title">Entstaken</string>
     <string name="mint_screen_title">Prägen</string>
@@ -1257,10 +1255,6 @@
     <string name="bandwidth_desc">Bandbreitenpunkte werden für jede Transaktion auf TRON benötigt, sowohl für Standard-Token-Sendungen als auch für Smart-Contract-Interaktionen. Jeder TRON-Nutzer erhält täglich 600 kostenlose Bandbreitenpunkte, was für etwa zwei einfache Sendungen ausreicht. Zusätzlich können Sie durch das Staking von TRX weitere Bandbreitenpunkte verdienen und so Ihr tägliches Guthaben erhöhen, um mehr Transaktionen zu ermöglichen. Mit genügend Bandbreitenpunkten können Sie Token senden, TRX staken oder mit Smart Contracts interagieren, ohne TRX an Gasgebühren zahlen zu müssen.</string>
     <string name="energy_desc">Energie wird für komplexere Aktionen benötigt, wie z. B. die Interaktion mit Smart Contracts (z. B. Swaps oder dApp-Transaktionen). Im Gegensatz zu Bandbreite ist Energie nicht kostenlos – Sie müssen TRX staken, um Energie zu erhalten. (Fortgeschrittene Nutzer können Energie auch über Leasing-Mechanismen wie JustLend oder die Energie-Mietmärkte von Tronify erwerben.) Energie kann die Gasgebühren für Smart-Contract-Interaktionen jedoch deutlich reduzieren oder sogar eliminieren und ist daher besonders wertvoll für Nutzer, die häufig TRON-dApps verwenden.</string>
 
-    <!-- Bond Form -->
-    <string name="bond_node_address">Knotenadresse</string>
-    <string name="bond_operator_fees_basis_point">Betreiber-Gebühren (Basispunkte)</string>
-    <string name="bond_provider_optional">Anbieter (Optional)</string>
     <string name="deposit_option_withdraw_secured">Gesichertes Vermögen abheben</string>
     <string name="deposit_option_secured_assets">Sicherheiten</string>
     <string name="address_auto_filled">%1$s Adresse (automatisch ausgefüllt)</string>

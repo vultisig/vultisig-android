@@ -77,18 +77,6 @@ internal class SendFormViewModelAddressTest {
     }
 
     @Test
-    fun `setProviderAddress writes to providerBondFieldState only`() = runTest {
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        vm.setProviderAddress("provider1")
-        advanceUntilIdle()
-
-        assertEquals("provider1", vm.providerBondFieldState.text.toString())
-        assertEquals("", vm.addressFieldState.text.toString())
-    }
-
-    @Test
     fun `isDstAddressComplete becomes true when address has content`() = runTest {
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -153,21 +141,6 @@ internal class SendFormViewModelAddressTest {
     }
 
     @Test
-    fun `scanProviderAddress with non-blank QR populates providerBondFieldState`() = runTest {
-        coEvery { requestQrScan.invoke() } returns "providerQR"
-        every { chainAccountAddressRepository.isValid(any(), any()) } returns false
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        vm.scanProviderAddress()
-        advanceUntilIdle()
-
-        assertEquals("providerQR", vm.providerBondFieldState.text.toString())
-        assertEquals("", vm.addressFieldState.text.toString())
-    }
-
-    @Test
     fun `setAddressFromQrCode populates the field with the QR payload`() = runTest {
         every { chainAccountAddressRepository.isValid(any(), any()) } returns false
 
@@ -207,7 +180,7 @@ internal class SendFormViewModelAddressTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        vm.openAddressBook(AddressBookType.OUTPUT)
+        vm.openAddressBook()
         advanceUntilIdle()
 
         assertEquals("", vm.addressFieldState.text.toString())

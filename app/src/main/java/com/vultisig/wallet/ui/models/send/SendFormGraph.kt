@@ -51,7 +51,6 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
-import java.math.BigInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -113,8 +112,6 @@ internal class SendFormGraph(
     private val fiatAmountFieldState: TextFieldState,
     private val memoFieldState: TextFieldState,
     private val destinationTagFieldState: TextFieldState,
-    private val operatorFeesBondFieldState: TextFieldState,
-    private val providerBondFieldState: TextFieldState,
     private val slippageFieldState: TextFieldState,
     private val selectedTokenProvider: () -> Coin?,
     private val selectedAccountProvider: () -> Account?,
@@ -129,7 +126,6 @@ internal class SendFormGraph(
     private var vaultId: VaultId? = null
     private var defiType: DeFiNavActions? = null // Default is send, no defi form
     private var mscaAddress: String? = null
-    private var bondedAmount: BigInteger? = null
     private var preselectedTokenId: TokenId? = null
 
     private val vaultProvider: () -> Vault? = { vault }
@@ -137,7 +133,6 @@ internal class SendFormGraph(
     private val defiTypeProvider: () -> DeFiNavActions? = { defiType }
     private val preselectedTokenIdProvider: () -> TokenId? = { preselectedTokenId }
     private val mscaAddressProvider: () -> String? = { mscaAddress }
-    private val bondedAmountProvider: () -> BigInteger? = { bondedAmount }
 
     private val planFee = MutableStateFlow<Long?>(null)
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
@@ -176,7 +171,6 @@ internal class SendFormGraph(
             defiTypeProvider = defiTypeProvider,
             preselectedTokenIdProvider = preselectedTokenIdProvider,
             mscaAddressProvider = mscaAddressProvider,
-            bondedAmountProvider = bondedAmountProvider,
         )
     }
 
@@ -202,7 +196,6 @@ internal class SendFormGraph(
         AddressManager(
             scope = scope,
             addressFieldState = addressFieldState,
-            providerBondFieldState = providerBondFieldState,
             destinationTagFieldState = destinationTagFieldState,
             selectedToken = selectedToken,
             chainAccountAddressRepository = chainAccountAddressRepository,
@@ -325,7 +318,7 @@ internal class SendFormGraph(
         )
     }
 
-    /** The per-DeFi-action submit strategies (bond, stake, mint, ...). */
+    /** The per-DeFi-action submit strategies (stake, mint, ...). */
     val strategies: SendStrategies by lazy {
         sendStrategyFactory.create(
             SendStrategyContext(
@@ -336,8 +329,6 @@ internal class SendFormGraph(
                 memoFieldState = memoFieldState,
                 destinationTagFieldState = destinationTagFieldState,
                 slippageFieldState = slippageFieldState,
-                operatorFeesBondFieldState = operatorFeesBondFieldState,
-                providerBondFieldState = providerBondFieldState,
                 accountValidator = accountValidator,
                 bitcoinPlanService = bitcoinPlanService,
                 addressManager = addressManager,
@@ -371,7 +362,6 @@ internal class SendFormGraph(
     fun initialize(args: Route.Send) {
         defiType = if (args.type == null) null else parseDepositType(args.type)
         mscaAddress = args.mscaAddress
-        bondedAmount = args.bondedAmount?.toBigIntegerOrNull()
         vaultId = args.vaultId
         // Seeded before the load: the accounts a plain send may draw on depend on the token it was
         // opened for — the ybRUNE receipt is not a wallet token and has to be synthesized.

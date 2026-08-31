@@ -69,7 +69,6 @@ internal data class AmountInputs(
 internal data class OptionalInputs(
     val memoFieldState: TextFieldState,
     val destinationTagFieldState: TextFieldState,
-    val operatorFeeFieldState: TextFieldState,
     val slippageFieldState: TextFieldState,
     val onAutoCompoundCheckedChange: (Boolean) -> Unit,
 )
@@ -94,7 +93,6 @@ internal fun FoldableAmountWidget(
     val onTokenAmountLostFocus = amountInputs.onTokenAmountLostFocus
     val memoFieldState = optionalInputs.memoFieldState
     val destinationTagFieldState = optionalInputs.destinationTagFieldState
-    val operatorFeeFieldState = optionalInputs.operatorFeeFieldState
     val slippageTextFieldState = optionalInputs.slippageFieldState
     val onAutoCompoundCheckedChange = optionalInputs.onAutoCompoundCheckedChange
     val isCircleMode = state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
@@ -401,26 +399,6 @@ internal fun FoldableAmountWidget(
 
                         UiSpacer(12.dp)
                     }
-                }
-            }
-
-            if (state.defiType == DeFiNavActions.BOND) {
-                Column(modifier = Modifier.padding(vertical = 2.dp)) {
-                    Text(
-                        text = stringResource(R.string.bond_operator_fees_basis_point),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.tertiary,
-                    )
-
-                    UiSpacer(12.dp)
-
-                    VsTextInputField(
-                        textFieldState = operatorFeeFieldState,
-                        hint = "0",
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-
-                    UiSpacer(12.dp)
                 }
             }
 

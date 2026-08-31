@@ -23,7 +23,6 @@ internal fun fakeSendStrategyFactory(
         depositTransactionRepository = mockk(relaxed = true),
         accountsRepository = mockk(relaxed = true),
         chainAccountAddressRepository = mockk(relaxed = true),
-        addressParserRepository = mockk(relaxed = true),
         chainValidationService = mockk(relaxed = true),
         navigator = navigator,
         thorChainApi = mockk(relaxed = true),

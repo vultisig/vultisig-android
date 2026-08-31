@@ -7,7 +7,7 @@ import org.junit.jupiter.api.assertAll
 /**
  * Guards the stable Compose `testTag` selectors that QA Maestro flows depend on. A silent removal
  * during a refactor (see #4180) breaks every automated send flow, so this test fails the build the
- * moment any of the four selectors disappears from the send form sources.
+ * moment any of the three selectors disappears from the send form sources.
  */
 class SendFormScreenTestTagsTest {
 
@@ -40,7 +40,6 @@ class SendFormScreenTestTagsTest {
                 "SendFormScreen.chainSelector",
                 "SendFormScreen.addressField",
                 "SendFormScreen.amountField",
-                "SendFormScreen.bondAddressField",
             )
     }
 }

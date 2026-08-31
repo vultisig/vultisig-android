@@ -50,7 +50,6 @@ internal class AddressManagerTest {
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase = mockk(relaxed = true)
 
     private val addressFieldState = TextFieldState()
-    private val providerBondFieldState = TextFieldState()
     private val destinationTagFieldState = TextFieldState()
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
@@ -462,7 +461,6 @@ internal class AddressManagerTest {
         AddressManager(
             scope = scope,
             addressFieldState = addressField,
-            providerBondFieldState = providerBondFieldState,
             destinationTagFieldState = destinationTagFieldState,
             selectedToken = selectedToken,
             chainAccountAddressRepository = chainAccountAddressRepository,
