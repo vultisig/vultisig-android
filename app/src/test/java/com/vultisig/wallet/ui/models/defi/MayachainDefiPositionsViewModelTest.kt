@@ -961,6 +961,26 @@ internal class MayachainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `a re-entry leaves the cached LP cards up instead of zeroing them`() = runTest {
+        // The snapshot brings the cards back, but the set naming which of them a read actually
+        // answered used to live in the view-model. A re-entry started that set empty, so the first
+        // reload swapped every restored card for a zero placeholder until the network answered.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        createViewModel().also { it.setData(VAULT_ID) }.clearForTest()
+
+        // The re-entry's own read never answers, so what is on screen is what the cache restored.
+        coEvery { mayachainBondRepository.getMemberDetails(CACAO_ADDRESS) } coAnswers
+            {
+                awaitCancellation()
+            }
+        val lp = successData(createViewModel().also { it.setData(VAULT_ID) }).lp
+
+        assertFalse(lp.isLoading, "a restored LP card must not go back to its shimmer")
+        assertEquals("$0.40", lp.positions.single().totalPriceLp)
+    }
+
+    @Test
     fun `a re-entry does not reopen the position picker`() = runTest {
         snapshotCache.write(VAULT_ID, LAST_RENDERED.copy(showPositionSelectionDialog = true))
         neverAnswersSelection()

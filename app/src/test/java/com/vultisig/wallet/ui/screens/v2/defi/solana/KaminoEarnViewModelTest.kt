@@ -134,15 +134,20 @@ internal class KaminoEarnViewModelTest {
     @Test
     fun `a restored total survives the next load rather than being dropped on sight`() = runTest {
         // The total answers one question — this selection, in this currency — and the coverage it
-        // was summed over travels with it. Without that the load drops it immediately, which is
-        // the flash the snapshot exists to remove.
+        // was summed over travels with it. Without that the load drops it the moment it starts,
+        // which is the flash the snapshot exists to remove.
         snapshotCache.write(VAULT_ID, LAST_RENDERED)
+        // The selection the restored total was summed over, so the load gets far enough to run its
+        // drop check for real; the fan-out behind it is held, so nothing can rebuild the figures
+        // and the total on screen is still the restored one.
         coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
-            flow { awaitCancellation() }
+            flowOf(setOf(STEAKHOUSE.address))
+        coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } coAnswers { awaitCancellation() }
 
         val state = viewModel().also { it.setData(VAULT_ID) }.state.value
 
         state.totalValue.shouldNotBeNull().value shouldBe BigDecimal("100")
+        state.rows.single().depositedDisplay shouldBe "100 USDC"
     }
 
     @Test

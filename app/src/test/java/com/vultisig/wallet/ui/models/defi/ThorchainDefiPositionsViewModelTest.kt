@@ -1356,6 +1356,32 @@ internal class ThorchainDefiPositionsViewModelTest {
         }
 
     @Test
+    fun `a re-entry leaves the cached LP cards up instead of shimmering them`() = runTest {
+        // The snapshot brings the cards back, but the set naming which of them a read actually
+        // answered used to live in the view-model. A re-entry started that set empty, so the first
+        // reload rejected every restored card and put the tab back on the shimmer the cache exists
+        // to remove.
+        selectPositions(BTC_POOL)
+        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            listOf(poolStats(BTC_POOL))
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
+            ThorChainLpPositions(
+                listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "100000000"))
+            )
+        createViewModel().also { it.setData(VAULT_ID) }.clearForTest()
+
+        // The re-entry's own read never answers, so what is on screen is what the cache restored.
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } coAnswers
+            {
+                awaitCancellation()
+            }
+        val lp = createViewModel().also { it.setData(VAULT_ID) }.state.value.lp
+
+        assertFalse(lp.isLoading, "a restored LP card must not go back to its shimmer")
+        lp.positions.single().totalPriceLp shouldBe "$8.00"
+    }
+
+    @Test
     fun `a re-entry paints the state the screen was last showing`() = runTest {
         // Popping back to the DeFi list destroys this view-model, so the next open used to
         // cold-start: empty cards, header on a spinner, and the enabled set flashing back to the

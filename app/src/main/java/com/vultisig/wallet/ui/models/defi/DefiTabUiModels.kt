@@ -52,6 +52,16 @@ internal data class LpTabUiModel(
     val isLoading: Boolean = false,
     val positions: List<LpPositionUiModel> = emptyList(),
     /**
+     * Pools whose card came from a read that answered. A pool the last read could not resolve
+     * leaves a placeholder standing, and carrying that into the next reload would present a figure
+     * nothing has confirmed while skipping the shimmer that says a read is in flight.
+     *
+     * It travels with the cards rather than sitting beside them in the view-model, because the
+     * cached snapshot restores this model: a re-entry that brought the cards back without the set
+     * they were judged by would have the first reload reject every one of them.
+     */
+    val livePoolKeys: Set<String> = emptySet(),
+    /**
      * Half-finished symmetric adds, listed above the positions. They are deliberately not gated on
      * the pool being selected in the Manage-Positions dialog: a deposit the user cannot see is the
      * one that silently gets refunded.

@@ -176,11 +176,6 @@ constructor(
     private var loadStakingJob: Job? = null
     private var loadLpJob: Job? = null
 
-    // Pools whose card came from a read that answered. A read that could not resolve them leaves
-    // placeholders standing, and carrying those into the next reload would present a figure nothing
-    // has confirmed while skipping the shimmer that says a read is in flight.
-    private var livePoolKeys: Set<String> = emptySet()
-
     private val currentModel: MayachainDefiPositionsUiModel
         get() =
             (_state.value as? MayachainDefiUiState.Success)?.data ?: MayachainDefiPositionsUiModel()
@@ -302,10 +297,10 @@ constructor(
                     current.staking.copy(
                         positions =
                             current.staking.positions.map { position ->
-                                position.copy(isLoading = true)
+                                position.copy(isLoading = true, stakedFiatDisplay = null)
                             }
                     ),
-                lp = current.lp.copy(positions = emptyList()),
+                lp = current.lp.copy(positions = emptyList(), livePoolKeys = emptySet()),
             )
         }
     }
@@ -755,9 +750,10 @@ constructor(
                 // Pools the last load already priced keep their card; only a pool with nothing
                 // behind it yet falls back to the placeholder, and the shimmer is raised only for
                 // those — a refresh over cards that already carry figures leaves them readable.
+                val lpTab = currentModel.lp
                 val loaded =
-                    currentModel.lp.positions
-                        .filter { it.positionKey in livePoolKeys }
+                    lpTab.positions
+                        .filter { it.positionKey in lpTab.livePoolKeys }
                         .associateBy { it.positionKey }
                 val placeholderPositions =
                     selectedPools.map { pool ->
@@ -777,7 +773,7 @@ constructor(
                     }
                 val isCold = selectedPools.any { loaded[it.positionKey] == null }
                 updateModel {
-                    it.copy(lp = LpTabUiModel(isLoading = isCold, positions = placeholderPositions))
+                    it.copy(lp = it.lp.copy(isLoading = isCold, positions = placeholderPositions))
                 }
 
                 val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
@@ -791,7 +787,7 @@ constructor(
                     reportLpFiat(BigDecimal.ZERO)
                     updateModel {
                         it.copy(
-                            lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
+                            lp = it.lp.copy(isLoading = false, positions = placeholderPositions)
                         )
                     }
                     return@safeLaunch
@@ -802,7 +798,7 @@ constructor(
                     reportLpFiat(BigDecimal.ZERO)
                     updateModel {
                         it.copy(
-                            lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
+                            lp = it.lp.copy(isLoading = false, positions = placeholderPositions)
                         )
                     }
                     return@safeLaunch
@@ -976,10 +972,17 @@ constructor(
                         // header total rather than admit a value is missing.
                         LpLegTotal.Unavailable
                     }
-                livePoolKeys =
+                val livePoolKeys =
                     if (isPriceable) selectedPools.map { it.positionKey }.toSet() else emptySet()
                 updateModel {
-                    it.copy(lp = LpTabUiModel(isLoading = false, positions = lpPositions))
+                    it.copy(
+                        lp =
+                            LpTabUiModel(
+                                isLoading = false,
+                                positions = lpPositions,
+                                livePoolKeys = livePoolKeys,
+                            )
+                    )
                 }
             }
     }

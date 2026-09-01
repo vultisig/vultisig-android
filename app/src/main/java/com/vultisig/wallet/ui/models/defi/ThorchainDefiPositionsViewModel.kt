@@ -185,11 +185,6 @@ constructor(
     private var loadBondedNodesJob: Job? = null
     private var loadStakingPositionsJob: Job? = null
 
-    // Pools whose card came from a read that answered. A pool the last read could not resolve
-    // leaves a placeholder standing, and carrying that into the next reload would present a figure
-    // nothing has confirmed while skipping the shimmer that says a read is in flight.
-    private var livePoolKeys: Set<String> = emptySet()
-
     // A caller-supplied tab is applied once and then forgotten: the screen leaves and re-enters
     // composition every time the wallet / DeFi toggle flips, and re-seeding there would throw away
     // whichever tab the user had chosen since.
@@ -494,10 +489,10 @@ constructor(
                     current.staking.copy(
                         positions =
                             current.staking.positions.map { position ->
-                                position.copy(isLoading = true)
+                                position.copy(isLoading = true, stakedFiatDisplay = null)
                             }
                     ),
-                lp = current.lp.copy(positions = emptyList()),
+                lp = current.lp.copy(positions = emptyList(), livePoolKeys = emptySet()),
             )
         }
     }
@@ -1237,7 +1232,16 @@ constructor(
 
         if (selectedPools.isEmpty()) {
             loadLpJob?.cancel()
-            state.update { it.copy(lp = it.lp.copy(isLoading = false, positions = emptyList())) }
+            state.update {
+                it.copy(
+                    lp =
+                        it.lp.copy(
+                            isLoading = false,
+                            positions = emptyList(),
+                            livePoolKeys = emptySet(),
+                        )
+                )
+            }
             loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
             return
         }
@@ -1256,9 +1260,10 @@ constructor(
                 // Pools the last load already priced keep their card; only a pool with nothing
                 // behind it yet falls back to the placeholder, and the shimmer is raised only for
                 // those — a refresh over cards that already carry figures leaves them readable.
+                val lpTab = state.value.lp
                 val loaded =
-                    state.value.lp.positions
-                        .filter { it.positionKey in livePoolKeys }
+                    lpTab.positions
+                        .filter { it.positionKey in lpTab.livePoolKeys }
                         .associateBy { it.positionKey }
                 val placeholders =
                     selectedPools.map { pool ->
@@ -1353,12 +1358,21 @@ constructor(
                             // understate the header total rather than admit a value is missing.
                             LpLegTotal.Unavailable
                         }
-                    livePoolKeys =
+                    val livePoolKeys =
                         selectedPools
                             .filterNot { it in failedSelectedPools }
                             .map { it.positionKey }
                             .toSet()
-                    state.update { it.copy(lp = it.lp.copy(isLoading = false, positions = merged)) }
+                    state.update {
+                        it.copy(
+                            lp =
+                                it.lp.copy(
+                                    isLoading = false,
+                                    positions = merged,
+                                    livePoolKeys = livePoolKeys,
+                                )
+                        )
+                    }
                 } catch (e: Throwable) {
                     if (e is CancellationException) throw e
                     Timber.e(e, "Failed to load THORChain LP positions")
