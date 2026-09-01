@@ -25,6 +25,8 @@ internal class SearchTokenUseCaseImplTest {
     private val searchTerraToken: SearchTerraTokenUseCase = mockk()
     private val searchSuiToken: SearchSuiTokenUseCase = mockk()
     private val searchRippleToken: SearchRippleTokenUseCase = mockk()
+    private val searchTonToken: SearchTonTokenUseCase = mockk()
+    private val searchTronToken: SearchTronTokenUseCase = mockk()
     private val appCurrencyRepository: AppCurrencyRepository = mockk {
         every { currency } returns flowOf(AppCurrency.USD)
     }
@@ -37,6 +39,8 @@ internal class SearchTokenUseCaseImplTest {
             searchTerraToken = searchTerraToken,
             searchSuiToken = searchSuiToken,
             searchRippleToken = searchRippleToken,
+            searchTonToken = searchTonToken,
+            searchTronToken = searchTronToken,
             chainAccountAddressRepository = addressRepository,
         )
 
@@ -303,6 +307,68 @@ internal class SearchTokenUseCaseImplTest {
     }
 
     @Test
+    fun `valid Ton jetton master delegated to Ton searcher`() = runTest {
+        val master = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs"
+        stubValid(Chain.Ton, master, valid = true)
+        coEvery { searchTonToken(master) } returns
+            CoinAndPrice(tonCoin(contract = master), BigDecimal.ZERO)
+
+        val result = useCase(Chain.Ton.id, "  $master  ")
+
+        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
+        coVerify(exactly = 1) { searchTonToken(master) }
+    }
+
+    @Test
+    fun `invalid Ton address returns null and skips Ton searcher`() = runTest {
+        stubValid(Chain.Ton, "not-a-jetton", valid = false)
+
+        assertNull(useCase(Chain.Ton.id, "not-a-jetton"))
+
+        coVerify(exactly = 0) { searchTonToken(any()) }
+    }
+
+    @Test
+    fun `Ton searcher returning null surfaces as null`() = runTest {
+        val master = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs"
+        stubValid(Chain.Ton, master, valid = true)
+        coEvery { searchTonToken(master) } returns null
+
+        assertNull(useCase(Chain.Ton.id, master))
+    }
+
+    @Test
+    fun `valid Tron contract delegated to Tron searcher`() = runTest {
+        val contract = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf"
+        stubValid(Chain.Tron, contract, valid = true)
+        coEvery { searchTronToken(contract) } returns
+            CoinAndPrice(tronCoin(contract = contract), BigDecimal.ZERO)
+
+        val result = useCase(Chain.Tron.id, "  $contract  ")
+
+        assertEquals(BigDecimal.ZERO, result?.fiatValue?.value)
+        coVerify(exactly = 1) { searchTronToken(contract) }
+    }
+
+    @Test
+    fun `invalid Tron address returns null and skips Tron searcher`() = runTest {
+        stubValid(Chain.Tron, "not-a-contract", valid = false)
+
+        assertNull(useCase(Chain.Tron.id, "not-a-contract"))
+
+        coVerify(exactly = 0) { searchTronToken(any()) }
+    }
+
+    @Test
+    fun `Tron searcher returning null surfaces as null`() = runTest {
+        val contract = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf"
+        stubValid(Chain.Tron, contract, valid = true)
+        coEvery { searchTronToken(contract) } returns null
+
+        assertNull(useCase(Chain.Tron.id, contract))
+    }
+
+    @Test
     fun `unsupported chain returns null even for valid format`() = runTest {
         stubValid(Chain.Bitcoin, "bc1qanyaddress", valid = true)
 
@@ -372,6 +438,32 @@ internal class SearchTokenUseCaseImplTest {
             logo = "",
             address = "",
             decimal = 15,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = contract,
+            isNativeToken = false,
+        )
+
+    private fun tonCoin(ticker: String = "JETTON", contract: String): Coin =
+        Coin(
+            chain = Chain.Ton,
+            ticker = ticker,
+            logo = "",
+            address = "",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = contract,
+            isNativeToken = false,
+        )
+
+    private fun tronCoin(ticker: String = "TRC20", contract: String): Coin =
+        Coin(
+            chain = Chain.Tron,
+            ticker = ticker,
+            logo = "",
+            address = "",
+            decimal = 6,
             hexPublicKey = "",
             priceProviderID = "",
             contractAddress = contract,

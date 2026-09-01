@@ -35,7 +35,7 @@ internal fun TokenSelectionScreen(viewModel: TokenSelectionViewModel = hiltViewM
     TokenSelectionScreen(
         searchTextFieldState = viewModel.searchTextFieldState,
         state = state,
-        hasCustomToken = true,
+        hasCustomToken = viewModel.hasCustomToken,
         onEnableToken = viewModel::enableTokenTemp,
         onDisableToken = viewModel::disableTokenTemp,
         onDoneClick = viewModel::onCommitChanges,

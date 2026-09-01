@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.canSelectTokens
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
@@ -53,6 +54,8 @@ constructor(
     private val vaultId: String = savedStateHandle.toRoute<Route.SelectTokens>().vaultId
 
     private val chainId: String = savedStateHandle.toRoute<Route.SelectTokens>().chainId
+
+    val hasCustomToken: Boolean = Chain.fromRaw(chainId).canSelectTokens
 
     private val enabledTokenIds = MutableStateFlow(emptySet<String>())
 

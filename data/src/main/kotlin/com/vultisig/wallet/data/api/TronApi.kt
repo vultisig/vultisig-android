@@ -60,6 +60,17 @@ interface TronApi {
     suspend fun getContractMetadata(contract: String): TronContractInfoJson
 
     suspend fun getTsStatus(chain: Chain, txHash: String): TronTransactionStatusResponse?
+
+    /**
+     * Reads a no-argument view function's ABI-encoded return via `triggerconstantcontract`,
+     * self-addressed as owner since the call touches no state and needs no funded account. Returns
+     * `null` on a failed/reverted simulation or network error, so a custom-token lookup fails
+     * closed rather than guessing a symbol or decimals.
+     */
+    suspend fun readContractConstant(
+        contractAddressBase58: String,
+        functionSelector: String,
+    ): String?
 }
 
 internal class TronApiImpl @Inject constructor(private val httpClient: HttpClient) : TronApi {
@@ -181,6 +192,40 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                 setBody(TronAccountRequestJson(address, true))
             }
             .bodyOrThrow<TronAccountJson>()
+    }
+
+    override suspend fun readContractConstant(
+        contractAddressBase58: String,
+        functionSelector: String,
+    ): String? {
+        val body = buildJsonObject {
+            put("owner_address", contractAddressBase58)
+            put("contract_address", contractAddressBase58)
+            put("function_selector", functionSelector)
+            put("visible", true)
+        }
+        return try {
+            httpClient
+                .post(tronGrid) {
+                    url { path("tron", "wallet", "triggerconstantcontract") }
+                    setBody(body)
+                    accept(ContentType.Application.Json)
+                }
+                .bodyOrThrow<TronTriggerConstantContractJson>()
+                .takeIf { it.isSuccessfulSimulation() }
+                ?.constantResult
+                ?.firstOrNull()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.d(
+                e,
+                "Tron constant call failed for %s %s",
+                contractAddressBase58,
+                functionSelector,
+            )
+            null
+        }
     }
 
     override suspend fun getContractMetadata(contract: String): TronContractInfoJson {

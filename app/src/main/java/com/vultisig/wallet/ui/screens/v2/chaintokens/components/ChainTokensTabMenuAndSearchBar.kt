@@ -36,6 +36,7 @@ fun ChainTokensTabMenuAndSearchBar(
     onEditClick: () -> Unit,
     onSearchClick: () -> Unit,
     onTokensClick: () -> Unit,
+    canSelectTokens: Boolean = true,
 ) {
 
     var tabIndex by remember { mutableIntStateOf(0) }
@@ -76,9 +77,11 @@ fun ChainTokensTabMenuAndSearchBar(
                     )
                 }
 
-                UiSpacer(size = 8.dp)
+                if (canSelectTokens) {
+                    UiSpacer(size = 8.dp)
 
-                VsEditPill(label = stringResource(R.string.edit_tokens), onClick = onEditClick)
+                    VsEditPill(label = stringResource(R.string.edit_tokens), onClick = onEditClick)
+                }
             }
         },
         onCancelSearchClick = onCancelSearchClick,
