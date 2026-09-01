@@ -1722,4 +1722,33 @@
     <string name="cosmos_staking_redelegate_cooldown_fallback">Izvorni validator je u razdoblju mirovanja redelegacije</string>
     <string name="cosmos_staking_insufficient_fee_balance">Nema dovoljno likvidnog %1$s za pokrivanje mrežne naknade. Najprije zatražite nagrade ili nadoplatite.</string>
     <string name="cosmos_staking_max_entries_reached">Dosegnuli ste najveći broj od %1$d zahtjeva na čekanju za ovaj validator. Pričekajte da se jedan dovrši prije nastavka.</string>
+    <!-- Transaction done screen: past-tense operation vocabulary read from the signed transaction -->
+    <string name="done_verb_sent">Poslano</string>
+    <string name="done_verb_approved">Odobreno</string>
+    <string name="done_verb_staked">Stakano</string>
+    <string name="done_verb_unstaked">Ulog povučen</string>
+    <string name="done_verb_bonded">Vezano</string>
+    <string name="done_verb_unbonded">Odvezano</string>
+    <string name="done_verb_rebonded">Ponovno vezano</string>
+    <string name="done_verb_left">Napušteno</string>
+    <string name="done_verb_delegated">Delegirano</string>
+    <string name="done_verb_undelegated">Delegacija poništena</string>
+    <string name="done_verb_redelegated">Ponovno delegirano</string>
+    <string name="done_verb_claimed_rewards">Nagrade preuzete</string>
+    <string name="done_verb_minted">Iskovano</string>
+    <string name="done_verb_redeemed">Otkupljeno</string>
+    <string name="done_verb_withdrew">Podignuto</string>
+    <string name="done_verb_added_liquidity">Dodana likvidnost</string>
+    <string name="done_verb_removed_liquidity">Uklonjena likvidnost</string>
+    <string name="done_verb_merged">Spojeno</string>
+    <string name="done_verb_unmerged">Razdvojeno</string>
+    <string name="done_verb_bridged">Premošteno</string>
+    <string name="done_verb_voted">Glasano</string>
+    <string name="done_verb_deposited">Položeno</string>
+    <string name="done_verb_switched">Prebačeno</string>
+    <string name="done_verb_placed_limit_order">Postavljen limit nalog</string>
+    <string name="limit_swap_cancel_done_sent">Otkazivanje poslano</string>
+    <string name="scope_your_whole_stake">cijeli vaš ulog</string>
+    <string name="scope_rewards_accrued_so_far">do sada stečene nagrade</string>
+    <string name="withdrawing_share_of_staked_position">%1$s vaše uložene pozicije</string>
 </resources>

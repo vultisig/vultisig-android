@@ -1771,4 +1771,33 @@
     <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
     <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
     <string name="cosmos_staking_max_entries_reached">You\'ve reached the maximum of %1$d pending requests for this validator. Wait for one to complete before continuing.</string>
+    <!-- Transaction done screen: past-tense operation vocabulary read from the signed transaction -->
+    <string name="done_verb_sent">Sent</string>
+    <string name="done_verb_approved">Approved</string>
+    <string name="done_verb_staked">Staked</string>
+    <string name="done_verb_unstaked">Unstaked</string>
+    <string name="done_verb_bonded">Bonded</string>
+    <string name="done_verb_unbonded">Unbonded</string>
+    <string name="done_verb_rebonded">Rebonded</string>
+    <string name="done_verb_left">Left</string>
+    <string name="done_verb_delegated">Delegated</string>
+    <string name="done_verb_undelegated">Undelegated</string>
+    <string name="done_verb_redelegated">Redelegated</string>
+    <string name="done_verb_claimed_rewards">Claimed rewards</string>
+    <string name="done_verb_minted">Minted</string>
+    <string name="done_verb_redeemed">Redeemed</string>
+    <string name="done_verb_withdrew">Withdrew</string>
+    <string name="done_verb_added_liquidity">Added liquidity</string>
+    <string name="done_verb_removed_liquidity">Removed liquidity</string>
+    <string name="done_verb_merged">Merged</string>
+    <string name="done_verb_unmerged">Unmerged</string>
+    <string name="done_verb_bridged">Bridged</string>
+    <string name="done_verb_voted">Voted</string>
+    <string name="done_verb_deposited">Deposited</string>
+    <string name="done_verb_switched">Switched</string>
+    <string name="done_verb_placed_limit_order">Placed limit order</string>
+    <string name="limit_swap_cancel_done_sent">Cancellation sent</string>
+    <string name="scope_your_whole_stake">your whole stake</string>
+    <string name="scope_rewards_accrued_so_far">rewards accrued so far</string>
+    <string name="withdrawing_share_of_staked_position">%1$s of your staked position</string>
 </resources>

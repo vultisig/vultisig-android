@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,9 +25,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.RippleDappTx
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.RippleTrustSetDisplay
+import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.SignRippleDisplayView
@@ -163,14 +168,15 @@ internal fun SendTxOverviewScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
+                        val display = doneHeroDisplay(tx)
+
                         VsOverviewToken(
-                            header =
-                                if (tx.type == UiTransactionInfoType.Send) {
-                                    stringResource(R.string.tx_overview_screen_tx_send)
-                                } else {
-                                    stringResource(R.string.tx_overview_screen_tx_deposit)
-                                },
-                            valuedToken = tx.token,
+                            header = display.verb,
+                            tokenLogo = display.tokenLogo,
+                            ticker = display.ticker,
+                            chainLogo = display.chainLogo,
+                            value = display.value,
+                            fiatValue = display.fiatValue,
                             shape = Theme.v2.radius.xl,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -354,6 +360,99 @@ internal fun SendTxOverviewScreen(
     )
 }
 
+/**
+ * The verb, asset, amount, and fiat the done card renders.
+ *
+ * Mirrors the iOS `DoneHeroDisplay`. It selects between the decoder-driven reading and the existing
+ * normal-send presentation; the card itself is unchanged either way, and every field falls back to
+ * what the transaction already computed rather than to a fabricated figure.
+ */
+@Immutable
+internal data class DoneHeroDisplay(
+    val verb: String,
+    val tokenLogo: ImageModel,
+    val ticker: String,
+    val chainLogo: Int?,
+    val value: String,
+    val fiatValue: String?,
+)
+
+/**
+ * Builds the done card's display.
+ *
+ * With no decoder reading — a plain transfer, an unreadable transaction — this is exactly the
+ * existing card: the send/deposit header and the transaction's own token and figures. A reading
+ * replaces the verb and, where the signed content states a truthful quantity, the asset and amount
+ * with it. It never substitutes a zero or a carrier amount: a reading that resolved no amount shows
+ * the asset alone.
+ */
+@Composable
+private fun doneHeroDisplay(tx: UiTransactionInfo): DoneHeroDisplay {
+    val token = tx.token.token
+    val fallbackLogo = getCoinLogo(token.logo)
+    val fallbackChainLogo =
+        token.chain.monoToneLogo.takeIf { !token.isNativeToken || token.chain.isLayer2 }
+    val fallbackVerb =
+        if (tx.type == UiTransactionInfoType.Send) {
+            stringResource(R.string.tx_overview_screen_tx_send)
+        } else {
+            stringResource(R.string.tx_overview_screen_tx_deposit)
+        }
+
+    val fallback =
+        DoneHeroDisplay(
+            verb = fallbackVerb,
+            tokenLogo = fallbackLogo,
+            ticker = token.ticker,
+            chainLogo = fallbackChainLogo,
+            value = tx.token.value,
+            fiatValue = tx.token.fiatValue,
+        )
+
+    val hero = tx.operationHero ?: return fallback
+    val verb = hero.title ?: fallbackVerb
+
+    return when (hero) {
+        is HeroContent.Send ->
+            DoneHeroDisplay(
+                verb = verb,
+                tokenLogo = getCoinLogo(hero.coin.logo),
+                ticker = hero.coin.ticker,
+                // The decoder resolves its asset from the signed units, which may not be the
+                // payload's coin, so the payload's chain badge would mislabel it.
+                chainLogo = null,
+                value = hero.coin.amount,
+                fiatValue = hero.coin.fiatValue,
+            )
+
+        is HeroContent.Projected -> {
+            val estimate = hero.estimate
+            if (estimate != null) {
+                DoneHeroDisplay(
+                    verb = verb,
+                    tokenLogo = getCoinLogo(estimate.logo),
+                    ticker = estimate.ticker,
+                    chainLogo = null,
+                    // A projection settles at execution, so it stays visibly approximate.
+                    value = "≈ ${estimate.amount}",
+                    fiatValue = estimate.fiatValue,
+                )
+            } else {
+                // The position read resolved nothing. Name the asset and the operation; inventing
+                // an amount here is what the scope line exists to avoid.
+                fallback.copy(verb = verb, value = "", fiatValue = null)
+            }
+        }
+
+        is HeroContent.Title -> fallback.copy(verb = verb, value = "", fiatValue = null)
+
+        // A swap done screen is owned by its own two-sided layout, and an Unverified hero is never
+        // produced by the decoder; both keep the transaction's existing figures.
+        is HeroContent.Swap,
+        HeroContent.Unverified -> fallback
+    }
+}
+
 @Composable
 private fun AddToAddressBookButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     Row(
@@ -497,6 +596,12 @@ internal data class UiTransactionInfo(
      * Carried through from [com.vultisig.wallet.ui.models.TransactionDetailsUiModel.heroContent].
      */
     val heroContent: HeroContent? = null,
+    /**
+     * Decoder-selected operation data for the existing normal-send done hero. Kept separate from
+     * [heroContent], whose Blockaid-simulated figures own a richer layout, so a decoder reading can
+     * relabel the card without discarding trusted amounts.
+     */
+    val operationHero: HeroContent? = null,
     /**
      * Decoded terms of a dApp-supplied XRPL transaction (SignRipple). When present the done screen
      * shows the decoded summary (Type / Selling / Buying / Issuer) instead of a "0 XRP" hero — the

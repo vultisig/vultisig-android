@@ -2037,4 +2037,33 @@
     <string name="cosmos_staking_redelegate_cooldown_fallback">源验证人处于重新委托冷却期</string>
     <string name="cosmos_staking_insufficient_fee_balance">可用 %1$s 不足以支付网络费用。请先领取奖励或充值。</string>
     <string name="cosmos_staking_max_entries_reached">您对该验证人的待处理请求已达到上限 %1$d 个。请等待其中一个完成后再继续。</string>
+    <!-- Transaction done screen: past-tense operation vocabulary read from the signed transaction -->
+    <string name="done_verb_sent">已发送</string>
+    <string name="done_verb_approved">已批准</string>
+    <string name="done_verb_staked">已质押</string>
+    <string name="done_verb_unstaked">已解除质押</string>
+    <string name="done_verb_bonded">已绑定</string>
+    <string name="done_verb_unbonded">已解绑</string>
+    <string name="done_verb_rebonded">已重新绑定</string>
+    <string name="done_verb_left">已退出</string>
+    <string name="done_verb_delegated">已委托</string>
+    <string name="done_verb_undelegated">已解除委托</string>
+    <string name="done_verb_redelegated">已重新委托</string>
+    <string name="done_verb_claimed_rewards">已领取奖励</string>
+    <string name="done_verb_minted">已铸造</string>
+    <string name="done_verb_redeemed">已赎回</string>
+    <string name="done_verb_withdrew">已提取</string>
+    <string name="done_verb_added_liquidity">已添加流动性</string>
+    <string name="done_verb_removed_liquidity">已移除流动性</string>
+    <string name="done_verb_merged">已合并</string>
+    <string name="done_verb_unmerged">已取消合并</string>
+    <string name="done_verb_bridged">已完成跨链转账</string>
+    <string name="done_verb_voted">已投票</string>
+    <string name="done_verb_deposited">已存入</string>
+    <string name="done_verb_switched">已切换</string>
+    <string name="done_verb_placed_limit_order">已下限价单</string>
+    <string name="limit_swap_cancel_done_sent">取消已发送</string>
+    <string name="scope_your_whole_stake">您的全部质押</string>
+    <string name="scope_rewards_accrued_so_far">至今累积的奖励</string>
+    <string name="withdrawing_share_of_staked_position">您质押仓位的 %1$s</string>
 </resources>

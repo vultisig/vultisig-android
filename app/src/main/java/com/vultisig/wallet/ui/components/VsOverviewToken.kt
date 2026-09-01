@@ -46,9 +46,43 @@ internal fun VsOverviewToken(
     withContainer: Boolean = true,
 ) {
     val token: Coin = valuedToken.token
-    val chainLogo = token.chain.monoToneLogo
-    val value: String = valuedToken.value
 
+    VsOverviewToken(
+        header = header,
+        tokenLogo = getCoinLogo(token.logo),
+        ticker = token.ticker,
+        chainLogo =
+            token.chain.monoToneLogo.takeIf { !token.isNativeToken || token.chain.isLayer2 },
+        value = valuedToken.value,
+        fiatValue = valuedToken.fiatValue,
+        shape = shape,
+        modifier = modifier,
+        withContainer = withContainer,
+    )
+}
+
+/**
+ * The same card addressed by its display parts rather than by a [ValuedToken].
+ *
+ * Used where the asset shown is not the transaction's own coin — the done screen's decoder-driven
+ * hero resolves its asset from the signed units, which may be a chain-native denom the payload
+ * never named. [chainLogo] is null there because the resolved asset carries no payload chain badge.
+ *
+ * An empty [value] renders the ticker alone, for a reading that identifies the asset but states no
+ * truthful quantity.
+ */
+@Composable
+internal fun VsOverviewToken(
+    header: String,
+    tokenLogo: ImageModel,
+    ticker: String,
+    chainLogo: Int?,
+    value: String,
+    fiatValue: String?,
+    shape: Shape,
+    modifier: Modifier = Modifier,
+    withContainer: Boolean = true,
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
@@ -71,18 +105,16 @@ internal fun VsOverviewToken(
 
         UiSpacer(12.dp)
 
-        TokenAndChainLogo(
-            tokenLogo = getCoinLogo(token.logo),
-            tokenTicker = token.ticker,
-            chainLogo = chainLogo.takeIf { !token.isNativeToken || token.chain.isLayer2 },
-        )
+        TokenAndChainLogo(tokenLogo = tokenLogo, tokenTicker = ticker, chainLogo = chainLogo)
 
         UiSpacer(12.dp)
 
         val text = buildAnnotatedString {
-            append(value)
-            append(" ")
-            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(token.ticker) }
+            if (value.isNotEmpty()) {
+                append(value)
+                append(" ")
+            }
+            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(ticker) }
         }
 
         Text(
@@ -93,11 +125,13 @@ internal fun VsOverviewToken(
             maxLines = 1,
         )
 
-        Text(
-            text = valuedToken.fiatValue,
-            style = Theme.brockmann.supplementary.captionSmall,
-            color = Theme.v2.colors.text.tertiary,
-        )
+        if (fiatValue != null) {
+            Text(
+                text = fiatValue,
+                style = Theme.brockmann.supplementary.captionSmall,
+                color = Theme.v2.colors.text.tertiary,
+            )
+        }
     }
 }
 

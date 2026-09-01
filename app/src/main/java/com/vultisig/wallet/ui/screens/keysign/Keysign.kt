@@ -38,6 +38,7 @@ import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.KeepScreenOn
+import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
@@ -92,6 +93,7 @@ internal fun KeysignView(
     showSaveToAddressBook: Boolean,
     dappMetadata: DAppMetadata? = null,
     @DrawableRes coinLogoRes: Int? = null,
+    operationHero: HeroContent? = null,
 ) {
     // Block system back while signing/broadcasting is in progress. Popping the nav entry here
     // cancels the ViewModel's coroutine scope mid-broadcast, before a terminal state lands, and a
@@ -172,7 +174,10 @@ internal fun KeysignView(
                                     onComplete = onComplete,
                                     onBack = onBack,
                                     transactionStatus = targetState.transactionStatus,
-                                    tx = transactionTypeUiModel.toUiTransactionInfo(),
+                                    tx =
+                                        transactionTypeUiModel
+                                            .toUiTransactionInfo()
+                                            .copy(operationHero = operationHero),
                                     showToolbar = showToolbar,
                                     onAddToAddressBook = onAddToAddressBook,
                                     showSaveToAddressBook = showSaveToAddressBook,

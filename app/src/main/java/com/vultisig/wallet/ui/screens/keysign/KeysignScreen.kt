@@ -101,5 +101,6 @@ private fun Keysign(
         hasBackClick = true,
         dappMetadata = keysignViewModel.dappMetadata,
         coinLogoRes = keysignViewModel.coinLogoRes,
+        operationHero = uiState.operationHero,
     )
 }

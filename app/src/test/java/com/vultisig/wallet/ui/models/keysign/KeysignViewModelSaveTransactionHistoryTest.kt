@@ -105,6 +105,7 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
             inAppReviewRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),
             pendingLimitOrderRepository = mockk(relaxed = true),
+            doneTransactionPresentation = mockk(relaxed = true),
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
 
