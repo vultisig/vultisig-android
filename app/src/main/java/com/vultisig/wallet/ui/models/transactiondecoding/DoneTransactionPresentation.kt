@@ -7,7 +7,6 @@ import com.vultisig.wallet.data.models.transaction_decoding.DecodedOperation
 import com.vultisig.wallet.data.models.transaction_decoding.SignedTransactionDecoder
 import com.vultisig.wallet.data.models.transaction_decoding.asSignedTransactionContent
 import com.vultisig.wallet.ui.components.hero.HeroContent
-import com.vultisig.wallet.ui.components.hero.retitled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,13 +66,6 @@ constructor(
 
         return presentation.hero(decoded, trustedCoin(payload, trustedCoins), title)
     }
-
-    /**
-     * Supplies the done verb to a richer presentation — a Blockaid simulation, for instance —
-     * without replacing its figures.
-     */
-    fun retitleResolvedHero(hero: HeroContent?, payload: KeysignPayload): HeroContent? =
-        hero?.retitled(specificTitle(payload))
 
     /**
      * The vault's own coin for the payload's asset, which carries the trusted decimals and logo.

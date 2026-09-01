@@ -65,6 +65,7 @@ import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.hero.retitled
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
@@ -463,9 +464,13 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { Timber.w(it, "Failed to resolve the done operation hero") }
         ) {
-            val hero =
+            // Both readings are decoded here, off the main thread. The state update below must
+            // stay cheap: `update` runs its lambda on the calling dispatcher and re-runs it on CAS
+            // contention, so decoding inside it would put repeated chain parsing on the UI thread.
+            val (hero, doneVerb) =
                 withContext(Dispatchers.IO) {
-                    doneTransactionPresentation.resolve(payload, vault.coins)
+                    doneTransactionPresentation.resolve(payload, vault.coins) to
+                        doneTransactionPresentation.specificTitle(payload)
                 }
 
             _state.update { current ->
@@ -474,20 +479,17 @@ constructor(
                     // A Blockaid simulation owns figures the decoder cannot improve on, so only
                     // its verb is replaced. Nothing happens when the reading is one the normal-send
                     // card already describes.
-                    transactionUiModel = current.transactionUiModel?.retitledForDone(payload),
+                    transactionUiModel = current.transactionUiModel?.retitledForDone(doneVerb),
                 )
             }
         }
     }
 
     /** Applies the done verb to an already-resolved simulated hero, preserving its figures. */
-    private fun TransactionTypeUiModel.retitledForDone(
-        payload: KeysignPayload
-    ): TransactionTypeUiModel {
+    private fun TransactionTypeUiModel.retitledForDone(verb: String?): TransactionTypeUiModel {
         val send = this as? TransactionTypeUiModel.Send ?: return this
         val simulated = send.tx.heroContent ?: return this
-        val retitled = doneTransactionPresentation.retitleResolvedHero(simulated, payload)
-        return TransactionTypeUiModel.Send(send.tx.copy(heroContent = retitled))
+        return TransactionTypeUiModel.Send(send.tx.copy(heroContent = simulated.retitled(verb)))
     }
 
     /**
