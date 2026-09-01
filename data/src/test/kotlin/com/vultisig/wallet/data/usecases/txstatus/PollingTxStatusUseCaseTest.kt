@@ -57,6 +57,19 @@ class PollingTxStatusUseCaseTest {
         }
     }
 
+    private class AlwaysRefundedStatusRepository : TransactionStatusRepository {
+        var callCount = 0
+            private set
+
+        override suspend fun checkTransactionStatus(
+            txHash: String,
+            chain: Chain,
+        ): TransactionResult {
+            callCount++
+            return TransactionResult.Refunded("refunded")
+        }
+    }
+
     private class FakeTxStatusConfigurationProvider(private val config: TxStatusConfiguration) :
         TxStatusConfigurationProvider {
         override fun getConfigurationForChain(chain: Chain) = config
@@ -163,5 +176,23 @@ class PollingTxStatusUseCaseTest {
             elapsedMillis < 10_000,
             "expected timeout near maxWaitSeconds, but took ${elapsedMillis}ms",
         )
+    }
+
+    @Test
+    fun `invoke stops polling after refunded result`() = runBlocking {
+        val repository = AlwaysRefundedStatusRepository()
+        val useCase =
+            PollingTxStatusUseCaseImpl(
+                txStatusConfigurationProvider =
+                    FakeTxStatusConfigurationProvider(
+                        TxStatusConfiguration(pollIntervalSeconds = 30, maxWaitSeconds = 60)
+                    ),
+                transactionStatusRepository = repository,
+            )
+
+        val results = withTimeout(5_000) { useCase(Chain.ThorChain, "deadbeef").toList() }
+
+        assertEquals(listOf(TransactionResult.Refunded("refunded")), results)
+        assertEquals(1, repository.callCount)
     }
 }

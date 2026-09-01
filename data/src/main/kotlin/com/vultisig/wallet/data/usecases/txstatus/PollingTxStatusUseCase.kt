@@ -49,7 +49,8 @@ constructor(
 
                 when (result) {
                     is TransactionResult.Confirmed,
-                    is TransactionResult.Failed -> return@flow
+                    is TransactionResult.Failed,
+                    is TransactionResult.Refunded -> return@flow
                     else ->
                         delay(
                             backoffDelay(

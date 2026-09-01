@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api.txstatus
 
 import com.vultisig.wallet.data.api.models.cosmos.CosmosEnvelopedTxResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTxBody
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
@@ -9,6 +10,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.http.HttpStatusCode
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.SerialName
@@ -41,13 +43,18 @@ import timber.log.Timber
  * plain native transfer (e.g. sending a secured asset) or a native deposit the node rejected during
  * execution never becomes an action, so `/v2/actions` returns an empty array for it. Treating that
  * as [TransactionResult.Pending] left such txs stuck "in progress" forever while the app kept
- * polling Midgard. When no action is found we therefore fall back to the native node's
+ * polling Midgard. When no action is found we therefore consult the native node's
  * `cosmos/tx/v1beta1/txs/{hash}` endpoint, which reports the committed tx's result code directly:
- * code 0 → [TransactionResult.Confirmed], non-zero → [TransactionResult.Failed] with the node's
- * `raw_log`, and 404/not-yet-committed → [TransactionResult.Pending] so polling continues.
+ * non-zero → [TransactionResult.Failed] with the node's `raw_log`, and 404/not-yet-committed →
+ * [TransactionResult.Pending] so polling continues. A successful native result is trusted
+ * immediately for memos Midgard does not index; for Midgard-indexed memos it is trusted only after
+ * repeated empty action responses, giving Midgard's action index time to surface refunds.
  */
-class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: HttpClient) :
+class ThorMayaChainStatusProvider
+internal constructor(private val httpClient: HttpClient, private val nowMillis: () -> Long) :
     TransactionStatusProvider {
+
+    @Inject constructor(httpClient: HttpClient) : this(httpClient, System::currentTimeMillis)
 
     private val midgardUrls =
         mapOf(
@@ -61,12 +68,17 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
             Chain.MayaChain to MAYACHAIN_NATIVE_TX_URL,
         )
 
+    private val emptyActionStreaks = ConcurrentHashMap<EmptyActionKey, EmptyActionStreak>()
+
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
         val baseUrl = midgardUrls[chain] ?: return TransactionResult.Failed("Unknown chain")
         return try {
             val response: MidgardActionsResponse =
                 httpClient.get(baseUrl) { parameter(MIDGARD_TXID_PARAM, txHash) }.bodyOrThrow()
-            val action = response.actions.firstOrNull() ?: return checkNativeStatus(txHash, chain)
+            val action =
+                response.actions.firstOrNull()
+                    ?: return checkNativeStatusAfterEmptyAction(txHash, chain)
+            emptyActionStreaks.remove(EmptyActionKey(chain, txHash))
             mapAction(action)
         } catch (e: CancellationException) {
             throw e
@@ -77,20 +89,97 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
     }
 
     /**
-     * Resolve a native THORChain/MayaChain tx that Midgard doesn't index (plain transfers, rejected
-     * deposits) via the node's `cosmos/tx/v1beta1/txs/{hash}` endpoint. The node returns 404 until
-     * the tx is committed in a block, then a non-null result code (0 = success).
+     * Resolve the ambiguous "no Midgard action yet" case. Native failures are terminal, native 404
+     * stays pending, and native success is gated for memo types Midgard is expected to index.
      */
-    private suspend fun checkNativeStatus(txHash: String, chain: Chain): TransactionResult {
-        val nativeTxUrl = nativeTxUrls[chain] ?: return TransactionResult.Pending
-        val response = httpClient.get("$nativeTxUrl/$txHash")
-        if (response.status == HttpStatusCode.NotFound) return TransactionResult.Pending
-        val txResponse = response.bodyOrThrow<CosmosEnvelopedTxResponse>().txResponse
-        return when (txResponse.code) {
-            0 -> TransactionResult.Confirmed
-            null -> TransactionResult.Pending
-            else -> TransactionResult.Failed(nonBlankOr(txResponse.rawLog, DEFAULT_FAILED_REASON))
+    private suspend fun checkNativeStatusAfterEmptyAction(
+        txHash: String,
+        chain: Chain,
+    ): TransactionResult {
+        val key = EmptyActionKey(chain, txHash)
+
+        val nativeStatus = checkNativeStatus(txHash, chain)
+        if (nativeStatus.result != TransactionResult.Confirmed) {
+            if (nativeStatus.result is TransactionResult.Failed) {
+                emptyActionStreaks.remove(key)
+            }
+            return nativeStatus.result
         }
+
+        if (nativeStatus.hasMemo && !nativeStatus.memo.isMidgardIndexedMemo()) {
+            emptyActionStreaks.remove(key)
+            return TransactionResult.Confirmed
+        }
+
+        val streak =
+            emptyActionStreaks.compute(key) { _, current ->
+                val now = nowMillis()
+                val fresh =
+                    current?.takeIf { now - it.lastObservedAtMillis <= EMPTY_ACTION_STREAK_TTL_MS }
+                fresh?.copy(count = fresh.count + 1, lastObservedAtMillis = now)
+                    ?: EmptyActionStreak(
+                        count = 1,
+                        firstObservedAtMillis = now,
+                        lastObservedAtMillis = now,
+                    )
+            }!!
+
+        return if (
+            streak.count >= MIN_INDEXABLE_EMPTY_ACTION_POLLS &&
+                streak.lastObservedAtMillis - streak.firstObservedAtMillis >=
+                    MIN_INDEXABLE_EMPTY_ACTION_AGE_MS
+        ) {
+            emptyActionStreaks.remove(key)
+            TransactionResult.Confirmed
+        } else {
+            TransactionResult.Pending
+        }
+    }
+
+    private suspend fun checkNativeStatus(txHash: String, chain: Chain): NativeStatusResult {
+        val nativeTxUrl =
+            nativeTxUrls[chain]
+                ?: return NativeStatusResult(
+                    result = TransactionResult.Pending,
+                    memo = null,
+                    hasMemo = false,
+                )
+        val response = httpClient.get("$nativeTxUrl/$txHash")
+        if (response.status == HttpStatusCode.NotFound) {
+            return NativeStatusResult(
+                result = TransactionResult.Pending,
+                memo = null,
+                hasMemo = false,
+            )
+        }
+        val envelope = response.bodyOrThrow<CosmosEnvelopedTxResponse>()
+        val txResponse = envelope.txResponse
+        val result =
+            when (txResponse.code) {
+                0 -> TransactionResult.Confirmed
+                null -> TransactionResult.Pending
+                else ->
+                    TransactionResult.Failed(nonBlankOr(txResponse.rawLog, DEFAULT_FAILED_REASON))
+            }
+        val memo = envelope.tx?.body.extractMemo()
+        return NativeStatusResult(result = result, memo = memo.value, hasMemo = memo.isPresent)
+    }
+
+    private fun CosmosTxBody?.extractMemo(): NativeMemo {
+        if (this == null) return NativeMemo(value = null, isPresent = false)
+        val msgDepositMemo =
+            messages.firstNotNullOfOrNull { message ->
+                message.memo.takeIf { message.type == THOR_MSG_DEPOSIT_TYPE && !it.isNullOrBlank() }
+            }
+        if (msgDepositMemo != null) return NativeMemo(value = msgDepositMemo, isPresent = true)
+        return NativeMemo(value = memo, isPresent = memo != null)
+    }
+
+    private fun String?.isMidgardIndexedMemo(): Boolean {
+        val op =
+            this?.trim()?.takeIf { it.isNotEmpty() }?.substringBefore(":")?.uppercase()
+                ?: return false
+        return op in MIDGARD_INDEXED_MEMO_OPS
     }
 
     private fun mapAction(action: MidgardAction): TransactionResult =
@@ -126,8 +215,51 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
         const val ACTION_STATUS_SUCCESS = "success"
         const val DEFAULT_REFUND_REASON = "Transaction refunded"
         const val DEFAULT_FAILED_REASON = "Transaction failed"
+        const val MIN_INDEXABLE_EMPTY_ACTION_POLLS = 2
+        const val MIN_INDEXABLE_EMPTY_ACTION_AGE_MS = 15_000L
+        const val EMPTY_ACTION_STREAK_TTL_MS = 5 * 60_000L
+        const val THOR_MSG_DEPOSIT_TYPE = "/types.MsgDeposit"
+        val MIDGARD_INDEXED_MEMO_OPS =
+            setOf(
+                "=",
+                "=<",
+                "SWAP",
+                "S",
+                "M=<",
+                "+",
+                "ADD",
+                "A",
+                "-",
+                "WITHDRAW",
+                "WD",
+                "$+",
+                "$-",
+                "LOAN+",
+                "LOAN-",
+                "BOND",
+                "UNBOND",
+                "LEAVE",
+                "POOL+",
+                "POOL-",
+            )
     }
 }
+
+private data class EmptyActionKey(val chain: Chain, val txHash: String)
+
+private data class EmptyActionStreak(
+    val count: Int,
+    val firstObservedAtMillis: Long,
+    val lastObservedAtMillis: Long,
+)
+
+private data class NativeStatusResult(
+    val result: TransactionResult,
+    val memo: String?,
+    val hasMemo: Boolean,
+)
+
+private data class NativeMemo(val value: String?, val isPresent: Boolean)
 
 @Serializable
 internal data class MidgardActionsResponse(val actions: List<MidgardAction> = emptyList())
