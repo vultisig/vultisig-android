@@ -497,7 +497,7 @@ constructor(
                                         .getAddressInfo(coin.chain, address)
                                         ?.address
                                         ?.balance
-                                balance?.toBigInteger() ?: 0.toBigInteger()
+                                balance?.toBigInteger() ?: BigInteger.ZERO
                             }
 
                             Ethereum,
@@ -571,7 +571,8 @@ constructor(
 
                             Solana -> {
                                 if (coin.isNativeToken) {
-                                    solanaApi.getBalance(address)
+                                    solanaApi.getBalanceOrNull(address)
+                                        ?: error("Solana balance read failed for $address")
                                 } else {
                                     splTokenRepository.getBalance(coin)
                                         ?: splTokenRepository.getCachedBalance(coin)
