@@ -179,10 +179,16 @@ fun VsCenterHighlightCarousel(
                 .padding(vertical = 16.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            UiHorizontalDivider(
+                modifier = Modifier.width(344.dp),
+                color = Theme.v2.colors.border.light,
+            )
+            Spacer(modifier = Modifier.height(9.dp))
+
             Text(
                 text = stringResource(R.string.select_chain_title),
                 color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.body.m.medium,
+                style = Theme.brockmann.supplementary.caption,
                 modifier = Modifier.padding(bottom = 16.dp),
             )
 
