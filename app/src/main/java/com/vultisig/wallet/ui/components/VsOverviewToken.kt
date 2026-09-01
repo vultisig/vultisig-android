@@ -69,7 +69,9 @@ internal fun VsOverviewToken(
  * never named. [chainLogo] is null there because the resolved asset carries no payload chain badge.
  *
  * An empty [value] renders the ticker alone, for a reading that identifies the asset but states no
- * truthful quantity.
+ * truthful quantity. [scope] is what the transaction committed to in words — "50% of your staked
+ * position" — which stays exact even when the settled amount is only an estimate, so it is the last
+ * thing to be dropped rather than the first.
  */
 @Composable
 internal fun VsOverviewToken(
@@ -82,6 +84,7 @@ internal fun VsOverviewToken(
     shape: Shape,
     modifier: Modifier = Modifier,
     withContainer: Boolean = true,
+    scope: String? = null,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -130,6 +133,17 @@ internal fun VsOverviewToken(
                 text = fiatValue,
                 style = Theme.brockmann.supplementary.captionSmall,
                 color = Theme.v2.colors.text.tertiary,
+            )
+        }
+
+        if (scope != null) {
+            UiSpacer(4.dp)
+
+            Text(
+                text = scope,
+                style = Theme.brockmann.supplementary.captionSmall,
+                color = Theme.v2.colors.text.tertiary,
+                textAlign = TextAlign.Center,
             )
         }
     }

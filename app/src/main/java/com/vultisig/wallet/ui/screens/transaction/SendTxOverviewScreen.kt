@@ -177,6 +177,7 @@ internal fun SendTxOverviewScreen(
                             chainLogo = display.chainLogo,
                             value = display.value,
                             fiatValue = display.fiatValue,
+                            scope = display.scope,
                             shape = Theme.v2.radius.xl,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -375,6 +376,11 @@ internal data class DoneHeroDisplay(
     val chainLogo: Int?,
     val value: String,
     val fiatValue: String?,
+    /**
+     * What the transaction committed to in words, for an amount that only settles at execution.
+     * Null for every reading whose quantity is stated outright by the signed content.
+     */
+    val scope: String? = null,
 )
 
 /**
@@ -433,14 +439,17 @@ private fun doneHeroDisplay(tx: UiTransactionInfo): DoneHeroDisplay {
                     tokenLogo = getCoinLogo(estimate.logo),
                     ticker = estimate.ticker,
                     chainLogo = null,
-                    // A projection settles at execution, so it stays visibly approximate.
+                    // A projection settles at execution, so it stays visibly approximate — and the
+                    // scope below it is the part that stays exact.
                     value = "≈ ${estimate.amount}",
                     fiatValue = estimate.fiatValue,
+                    scope = hero.scope,
                 )
             } else {
-                // The position read resolved nothing. Name the asset and the operation; inventing
-                // an amount here is what the scope line exists to avoid.
-                fallback.copy(verb = verb, value = "", fiatValue = null)
+                // The position read resolved nothing, so the scope is the only quantity the
+                // decoder proved. Dropping it here would leave a verb over a blank amount and
+                // discard the one figure that is certain.
+                fallback.copy(verb = verb, value = "", fiatValue = null, scope = hero.scope)
             }
         }
 
