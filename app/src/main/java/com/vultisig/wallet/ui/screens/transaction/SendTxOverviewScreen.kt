@@ -462,7 +462,17 @@ private fun doneHeroDisplay(tx: UiTransactionInfo): DoneHeroDisplay {
             }
         }
 
-        is HeroContent.Title -> fallback.copy(verb = verb, value = "", fiatValue = null)
+        // A title-only reading names an operation and nothing else. Keeping the payload token
+        // would pair "Claimed rewards" with branding for an asset the reading never identified.
+        is HeroContent.Title ->
+            DoneHeroDisplay(
+                verb = verb,
+                tokenLogo = fallbackLogo,
+                ticker = "",
+                chainLogo = null,
+                value = "",
+                fiatValue = null,
+            )
 
         // A swap done screen is owned by its own two-sided layout, and an Unverified hero is never
         // produced by the decoder; both keep the transaction's existing figures.
