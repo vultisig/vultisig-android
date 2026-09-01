@@ -740,7 +740,16 @@ constructor(
                 onError = { e ->
                     Timber.e(e, "Failed to load Maya LP positions")
                     reportLpFiat(BigDecimal.ZERO)
-                    updateModel { it.copy(lp = it.lp.copy(isLoading = false)) }
+                    updateModel {
+                        it.copy(
+                            lp =
+                                it.lp.copy(
+                                    isLoading = false,
+                                    positions =
+                                        it.lp.positions.map { p -> p.copy(isLoading = false) },
+                                )
+                        )
+                    }
                 }
             ) {
                 // The zero has to be resolved before the placeholders are built: a failed load
@@ -758,7 +767,7 @@ constructor(
                 val placeholderPositions =
                     selectedPools.map { pool ->
                         val assetTicker = pool.ticker.substringAfter("/")
-                        loaded[pool.positionKey]
+                        loaded[pool.positionKey]?.copy(isLoading = false)
                             ?: LpPositionUiModel(
                                 titleLp = "${pool.ticker} Pool",
                                 totalPriceLp = zero,
@@ -769,11 +778,11 @@ constructor(
                                 positionKey = pool.positionKey,
                                 canRemove = false,
                                 chainLogo = pool.chainLogo as? Int,
+                                isLoading = true,
                             )
                     }
-                val isCold = selectedPools.any { loaded[it.positionKey] == null }
                 updateModel {
-                    it.copy(lp = it.lp.copy(isLoading = isCold, positions = placeholderPositions))
+                    it.copy(lp = it.lp.copy(isLoading = false, positions = placeholderPositions))
                 }
 
                 val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
@@ -787,7 +796,12 @@ constructor(
                     reportLpFiat(BigDecimal.ZERO)
                     updateModel {
                         it.copy(
-                            lp = it.lp.copy(isLoading = false, positions = placeholderPositions)
+                            lp =
+                                it.lp.copy(
+                                    isLoading = false,
+                                    positions =
+                                        placeholderPositions.map { p -> p.copy(isLoading = false) },
+                                )
                         )
                     }
                     return@safeLaunch
@@ -798,7 +812,12 @@ constructor(
                     reportLpFiat(BigDecimal.ZERO)
                     updateModel {
                         it.copy(
-                            lp = it.lp.copy(isLoading = false, positions = placeholderPositions)
+                            lp =
+                                it.lp.copy(
+                                    isLoading = false,
+                                    positions =
+                                        placeholderPositions.map { p -> p.copy(isLoading = false) },
+                                )
                         )
                     }
                     return@safeLaunch

@@ -1267,11 +1267,11 @@ constructor(
                         .associateBy { it.positionKey }
                 val placeholders =
                     selectedPools.map { pool ->
-                        loaded[pool.positionKey] ?: pool.toPlaceholderUiModel(zero)
+                        loaded[pool.positionKey]?.copy(isLoading = false)
+                            ?: pool.toPlaceholderUiModel(zero).copy(isLoading = true)
                     }
-                val isCold = selectedPools.any { loaded[it.positionKey] == null }
                 state.update {
-                    it.copy(lp = it.lp.copy(isLoading = isCold, positions = placeholders))
+                    it.copy(lp = it.lp.copy(isLoading = false, positions = placeholders))
                 }
 
                 try {
@@ -1286,7 +1286,14 @@ constructor(
                         Timber.e("Vault does not have RUNE coin for LP positions")
                         reportLpFiat(BigDecimal.ZERO)
                         state.update {
-                            it.copy(lp = it.lp.copy(isLoading = false, positions = placeholders))
+                            it.copy(
+                                lp =
+                                    it.lp.copy(
+                                        isLoading = false,
+                                        positions =
+                                            placeholders.map { p -> p.copy(isLoading = false) },
+                                    )
+                            )
                         }
                         return@launch
                     }
@@ -1378,7 +1385,13 @@ constructor(
                     Timber.e(e, "Failed to load THORChain LP positions")
                     reportLpFiat(BigDecimal.ZERO)
                     state.update {
-                        it.copy(lp = it.lp.copy(isLoading = false, positions = placeholders))
+                        it.copy(
+                            lp =
+                                it.lp.copy(
+                                    isLoading = false,
+                                    positions = placeholders.map { p -> p.copy(isLoading = false) },
+                                )
+                        )
                     }
                 }
             }

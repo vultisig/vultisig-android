@@ -108,6 +108,7 @@ internal data class LpPositionUiModel(
     val positionKey: String = "",
     val canRemove: Boolean = true,
     val chainLogo: Int? = null,
+    val isLoading: Boolean = false,
 )
 
 internal data class StakePositionUiModel(
