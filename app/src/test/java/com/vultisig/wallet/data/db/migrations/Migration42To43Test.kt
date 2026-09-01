@@ -15,9 +15,28 @@ internal class Migration42To43Test {
 
         MIGRATION_42_43.migrate(db)
 
-        verify(exactly = 2) { db.execSQL(capture(statements)) }
+        verify(exactly = 5) { db.execSQL(capture(statements)) }
 
-        val deleteDuplicate = statements[0]
+        val copyTokenPrice = statements[0]
+        assertTrue(copyTokenPrice.contains("INSERT OR IGNORE INTO tokenPrice"))
+        assertTrue(copyTokenPrice.contains("tokenPrice.tokenId = coin.ticker || '-' || coin.chain"))
+        assertTrue(copyTokenPrice.contains("coin.chain IN ('Ton', 'Tron')"))
+        assertTrue(copyTokenPrice.contains("coin.contractAddress != ''"))
+
+        val deleteLegacyTokenPrice = statements[1]
+        assertTrue(deleteLegacyTokenPrice.contains("DELETE FROM tokenPrice"))
+        assertTrue(deleteLegacyTokenPrice.contains("tokenId IN"))
+        assertTrue(deleteLegacyTokenPrice.contains("chain IN ('Ton', 'Tron')"))
+        assertTrue(deleteLegacyTokenPrice.contains("contractAddress != ''"))
+
+        val updateDisabledCoin = statements[2]
+        assertTrue(updateDisabledCoin.contains("UPDATE disabledCoin"))
+        assertTrue(updateDisabledCoin.contains("SET coinId ="))
+        assertTrue(updateDisabledCoin.contains("coin.vaultId = disabledCoin.vaultId"))
+        assertTrue(updateDisabledCoin.contains("coin.chain = disabledCoin.chain"))
+        assertTrue(updateDisabledCoin.contains("coin.contractAddress != ''"))
+
+        val deleteDuplicate = statements[3]
         assertTrue(deleteDuplicate.contains("DELETE FROM coin"))
         assertTrue(deleteDuplicate.contains("chain IN ('Ton', 'Tron')"))
         assertTrue(deleteDuplicate.contains("contractAddress != ''"))
@@ -28,7 +47,7 @@ internal class Migration42To43Test {
             )
         )
 
-        val updateLegacy = statements[1]
+        val updateLegacy = statements[4]
         assertTrue(updateLegacy.contains("UPDATE coin"))
         assertTrue(
             updateLegacy.contains("SET id = ticker || '-' || chain || '-' || contractAddress")
