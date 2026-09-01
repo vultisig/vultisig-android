@@ -78,7 +78,7 @@ internal fun SolanaStakingPositionsScreen(
     val state by viewModel.state.collectAsState()
     val kaminoState by kaminoViewModel.state.collectAsState()
     var selectedTab by rememberSaveable { mutableStateOf(DeFiTab.EARN) }
-    val pickerSearchTextFieldState = remember { TextFieldState() }
+    val pickerSearchTextFieldState = remember(kaminoState.isShowingPicker) { TextFieldState() }
 
     LifecycleResumeEffect(vaultId) {
         viewModel.setData(vaultId)

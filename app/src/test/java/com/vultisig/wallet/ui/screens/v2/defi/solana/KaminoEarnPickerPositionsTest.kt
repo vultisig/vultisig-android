@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.defi.solana
 
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.blockchain.solana.kamino.coin
 import com.vultisig.wallet.data.models.getCoinLogo
@@ -26,7 +27,8 @@ internal class KaminoEarnPickerPositionsTest {
                 // The key is what reaches KaminoVaultSelectionRepository, so a ticker here would
                 // alias both USDC vaults onto one selection.
                 position.ticker shouldBe vault.fallbackName
-                position.logo shouldBe getCoinLogo(vault.coin!!.logo)
+                val expectedLogo = vault.coin?.let { getCoinLogo(it.logo) } ?: R.drawable.kamino
+                position.logo shouldBe expectedLogo
             }
         }
     }
