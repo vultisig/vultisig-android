@@ -12,7 +12,7 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 internal fun CameraButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     VsCircleButton(
         onClick = onClick,
-        drawableResId = R.drawable.camera_2,
+        drawableResId = R.drawable.camera_filled,
         size = VsCircleButtonSize.Custom(62.dp),
         iconSize = 24.dp,
         modifier = modifier,
