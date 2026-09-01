@@ -6,8 +6,8 @@ import com.vultisig.wallet.data.models.proto.v1.KeyShareProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
 import google.protobuf.Timestamp
+import java.time.Instant
 import javax.inject.Inject
-import kotlinx.datetime.Clock
 
 internal interface MapVaultToProto : MapperFunc<Vault, VaultProto>
 
@@ -60,7 +60,7 @@ internal class MapVaultToProtoImpl @Inject constructor() : MapVaultToProto {
             resharePrefix = from.resharePrefix,
             keyShares =
                 from.keyshares.map { KeyShareProto(publicKey = it.pubKey, keyshare = it.keyShare) },
-            createdAt = Timestamp(Clock.System.now().epochSeconds),
+            createdAt = Timestamp(Instant.now().epochSecond),
             libType = from.libType.toProto(),
             chainPublicKeys =
                 from.chainPublicKeys.map {

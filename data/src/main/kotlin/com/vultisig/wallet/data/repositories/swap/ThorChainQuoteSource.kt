@@ -9,10 +9,11 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.models.swapAssetName
+import com.vultisig.wallet.data.utils.plus
 import java.math.BigInteger
+import java.time.Instant
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.datetime.Clock
 import timber.log.Timber
 
 internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi: ThorChainApi) :
@@ -49,7 +50,7 @@ internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi
                 recommendedMinTokenValue =
                     srcToken.convertToTokenValue(finalData.recommendedMinAmountIn),
                 data = finalData,
-                expiredAt = Clock.System.now() + expiredAfter,
+                expiredAt = Instant.now() + expiredAfter,
             )
         )
     }

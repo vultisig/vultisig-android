@@ -46,7 +46,9 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.max
 import com.vultisig.wallet.data.utils.increaseByPercent
+import com.vultisig.wallet.data.utils.plus
 import java.math.BigInteger
+import java.time.Instant
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -54,7 +56,6 @@ import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.datetime.Clock
 import timber.log.Timber
 import vultisig.keysign.v1.CosmosIbcDenomTrace
 import vultisig.keysign.v1.TransactionType
@@ -400,9 +401,9 @@ constructor(
                             if (token.contractAddress.startsWith("ibc/")) {
                                 val denomTrace = api.getIbcDenomTraces(token.contractAddress)
                                 val timeout =
-                                    Clock.System.now()
+                                    Instant.now()
                                         .plus(10.minutes)
-                                        .toEpochMilliseconds()
+                                        .toEpochMilli()
                                         .milliseconds
                                         .inWholeNanoseconds
 
@@ -413,9 +414,9 @@ constructor(
                                 )
                             } else {
                                 val timeout =
-                                    Clock.System.now()
+                                    Instant.now()
                                         .plus(10.minutes)
-                                        .toEpochMilliseconds()
+                                        .toEpochMilli()
                                         .milliseconds
                                         .inWholeNanoseconds
                                 CosmosIbcDenomTrace(
@@ -429,9 +430,9 @@ constructor(
                         Chain.Osmosis -> {
                             if (transactionType == TransactionType.TRANSACTION_TYPE_IBC_TRANSFER) {
                                 val timeout =
-                                    Clock.System.now()
+                                    Instant.now()
                                         .plus(10.minutes)
-                                        .toEpochMilliseconds()
+                                        .toEpochMilli()
                                         .milliseconds
                                         .inWholeNanoseconds
                                 CosmosIbcDenomTrace(
@@ -644,7 +645,7 @@ constructor(
                             BlockChainSpecific.Ton(
                                 sequenceNumber =
                                     sequenceNumberDeferred.await().toString().toULong(),
-                                expireAt = (Clock.System.now().epochSeconds + 600L).toULong(),
+                                expireAt = (Instant.now().epochSecond + 600L).toULong(),
                                 bounceable = isBounceable.await(),
                                 isDeposit = isDeposit,
                                 sendMaxAmount = isMaxAmountEnabled,
@@ -680,7 +681,7 @@ constructor(
                     } catch (_: Exception) {
                         null
                     } ?: ENERGY_TO_SUN_FACTOR.toLong()
-                val now = Clock.System.now()
+                val now = Instant.now()
                 val expiration = now + 1.hours
                 val rawData = specific.blockHeader.rawData
 
@@ -706,8 +707,8 @@ constructor(
                 BlockChainSpecificAndUtxo(
                     blockChainSpecific =
                         BlockChainSpecific.Tron(
-                            timestamp = now.toEpochMilliseconds().toULong(),
-                            expiration = expiration.toEpochMilliseconds().toULong(),
+                            timestamp = now.toEpochMilli().toULong(),
+                            expiration = expiration.toEpochMilli().toULong(),
                             blockHeaderTimestamp = rawData.timeStamp,
                             blockHeaderNumber = rawData.number,
                             blockHeaderVersion = rawData.version,

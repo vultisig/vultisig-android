@@ -23,6 +23,7 @@ import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -30,7 +31,6 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -77,7 +77,7 @@ internal class SwapTransactionBuilderTest {
             SwapQuote.ThorChain(
                 expectedDstValue = TokenValue(BigInteger.valueOf(100), dstToken),
                 fees = TokenValue(BigInteger.valueOf(7), srcToken),
-                expiredAt = Clock.System.now(),
+                expiredAt = Instant.now(),
                 recommendedMinTokenValue = TokenValue(BigInteger.ZERO, srcToken),
                 data = data,
             )
@@ -132,7 +132,7 @@ internal class SwapTransactionBuilderTest {
             SwapQuote.MayaChain(
                 expectedDstValue = TokenValue(BigInteger.valueOf(200), dstToken),
                 fees = TokenValue(BigInteger.valueOf(3), srcToken),
-                expiredAt = Clock.System.now(),
+                expiredAt = Instant.now(),
                 recommendedMinTokenValue = TokenValue(BigInteger.ZERO, srcToken),
                 data = data,
             )
@@ -182,7 +182,7 @@ internal class SwapTransactionBuilderTest {
             SwapQuote.ThorChain(
                 expectedDstValue = TokenValue(BigInteger.valueOf(100), dstToken),
                 fees = TokenValue(BigInteger.valueOf(7), srcToken),
-                expiredAt = Clock.System.now(),
+                expiredAt = Instant.now(),
                 recommendedMinTokenValue = TokenValue(BigInteger.ZERO, srcToken),
                 data = data,
             )
@@ -236,7 +236,7 @@ internal class SwapTransactionBuilderTest {
             SwapQuote.MayaChain(
                 expectedDstValue = TokenValue(BigInteger.valueOf(200), dstToken),
                 fees = TokenValue(BigInteger.valueOf(3), srcToken),
-                expiredAt = Clock.System.now(),
+                expiredAt = Instant.now(),
                 recommendedMinTokenValue = TokenValue(BigInteger.ZERO, srcToken),
                 data = data,
             )
@@ -294,7 +294,7 @@ internal class SwapTransactionBuilderTest {
                 SwapQuote.SwapKit(
                     expectedDstValue = TokenValue(BigInteger.valueOf(300), dstToken),
                     fees = TokenValue(BigInteger.valueOf(2), srcToken),
-                    expiredAt = Clock.System.now(),
+                    expiredAt = Instant.now(),
                     data = data,
                     subProvider = "NEAR",
                 )
@@ -331,7 +331,7 @@ internal class SwapTransactionBuilderTest {
             SwapQuote.SwapKit(
                 expectedDstValue = TokenValue(BigInteger.valueOf(300), dstToken),
                 fees = TokenValue(BigInteger.valueOf(2), srcToken),
-                expiredAt = Clock.System.now(),
+                expiredAt = Instant.now(),
                 data = data,
                 subProvider = null,
             )
@@ -377,7 +377,7 @@ internal class SwapTransactionBuilderTest {
                 SwapQuote.OneInch(
                     expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
                     fees = TokenValue(BigInteger.valueOf(9), dstToken),
-                    expiredAt = Clock.System.now(),
+                    expiredAt = Instant.now(),
                     data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
                     provider = "1inch",
                 )
@@ -437,7 +437,7 @@ internal class SwapTransactionBuilderTest {
                 SwapQuote.OneInch(
                     expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
                     fees = TokenValue(BigInteger.valueOf(9), dstToken),
-                    expiredAt = Clock.System.now(),
+                    expiredAt = Instant.now(),
                     data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
                     provider = "1inch",
                 )
@@ -492,7 +492,7 @@ internal class SwapTransactionBuilderTest {
                     // "Swap Fee" placeholder; the initiator overwrites tx.gasPrice/gas below.
                     expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
                     fees = TokenValue(BigInteger.valueOf(21_000), srcToken),
-                    expiredAt = Clock.System.now(),
+                    expiredAt = Instant.now(),
                     data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
                     provider = "1inch",
                 )
@@ -542,7 +542,7 @@ internal class SwapTransactionBuilderTest {
             SwapQuote.OneInch(
                 expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
                 fees = TokenValue(BigInteger.valueOf(9), dstToken),
-                expiredAt = Clock.System.now(),
+                expiredAt = Instant.now(),
                 data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
                 provider = "1inch",
             )
@@ -589,7 +589,7 @@ internal class SwapTransactionBuilderTest {
             SwapQuote.OneInch(
                 expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
                 fees = TokenValue(BigInteger.valueOf(9), dstToken),
-                expiredAt = Clock.System.now(),
+                expiredAt = Instant.now(),
                 data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
                 provider = "1inch",
             )
@@ -635,7 +635,7 @@ internal class SwapTransactionBuilderTest {
                 SwapQuote.OneInch(
                     expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
                     fees = TokenValue(BigInteger.valueOf(9), dstToken),
-                    expiredAt = Clock.System.now(),
+                    expiredAt = Instant.now(),
                     data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
                     provider = "1inch",
                 )
@@ -686,7 +686,7 @@ internal class SwapTransactionBuilderTest {
             SwapQuote.OneInch(
                 expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
                 fees = TokenValue(BigInteger.valueOf(9), dstToken),
-                expiredAt = Clock.System.now(),
+                expiredAt = Instant.now(),
                 data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
                 provider = "1inch",
             )
@@ -737,7 +737,7 @@ internal class SwapTransactionBuilderTest {
                 SwapQuote.OneInch(
                     expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
                     fees = TokenValue(BigInteger.valueOf(9), dstToken),
-                    expiredAt = Clock.System.now(),
+                    expiredAt = Instant.now(),
                     data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
                     provider = "1inch",
                 )
@@ -790,7 +790,7 @@ internal class SwapTransactionBuilderTest {
             SwapQuote.OneInch(
                 expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
                 fees = TokenValue(BigInteger.valueOf(9), dstToken),
-                expiredAt = Clock.System.now(),
+                expiredAt = Instant.now(),
                 data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
                 provider = "1inch",
             )
@@ -840,7 +840,7 @@ internal class SwapTransactionBuilderTest {
                 SwapQuote.OneInch(
                     expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
                     fees = TokenValue(BigInteger.valueOf(9), dstToken),
-                    expiredAt = Clock.System.now(),
+                    expiredAt = Instant.now(),
                     data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
                     provider = "1inch",
                 )
@@ -888,7 +888,7 @@ internal class SwapTransactionBuilderTest {
                 SwapQuote.ThorChain(
                     expectedDstValue = TokenValue(BigInteger.valueOf(100), dstToken),
                     fees = TokenValue(BigInteger.valueOf(7), srcToken),
-                    expiredAt = Clock.System.now(),
+                    expiredAt = Instant.now(),
                     recommendedMinTokenValue = TokenValue(BigInteger.ZERO, srcToken),
                     data = data,
                 )

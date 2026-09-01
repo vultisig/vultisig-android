@@ -20,12 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
+import com.vultisig.wallet.data.utils.minus
 import com.vultisig.wallet.data.utils.timerFlow
 import com.vultisig.wallet.ui.theme.Theme
+import java.time.Instant
 import java.util.Locale
 import kotlin.time.Duration
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 
 /**
  * Countdown pill showing the remaining lifetime of the current swap quote.
@@ -39,7 +39,7 @@ internal fun QuoteTimer(expiredAt: Instant, modifier: Modifier = Modifier) {
 
     LaunchedEffect(expiredAt) {
         timerFlow().collect {
-            val now = Clock.System.now()
+            val now = Instant.now()
             val left = expiredAt - now
             timeLeft = formatDurationAsMinutesSeconds(left)
             progress = quoteTimerProgress(left, expiredAfter)

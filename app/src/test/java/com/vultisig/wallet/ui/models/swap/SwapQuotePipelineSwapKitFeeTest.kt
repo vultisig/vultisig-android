@@ -20,9 +20,9 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Test
 
 /**
@@ -105,7 +105,7 @@ internal class SwapQuotePipelineSwapKitFeeTest {
             SwapQuote.SwapKit(
                 expectedDstValue = TokenValue(BigInteger.valueOf(400), srcToken),
                 fees = TokenValue(BigInteger.valueOf(9), srcToken),
-                expiredAt = Clock.System.now(),
+                expiredAt = Instant.now(),
                 data =
                     SwapKitSwapPayloadJson(
                         fromCoin = srcToken,

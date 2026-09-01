@@ -323,12 +323,7 @@ internal class SendFormViewModelInitTest {
     private fun rippleAddress(vararg accounts: Account) =
         Address(chain = Chain.Ripple, address = RIPPLE_ADDRESS, accounts = accounts.toList())
 
-    private val jettonAccount =
-        account(
-            Coins.Ton.USDT.copy(
-                address = TON_ADDRESS,
-            )
-        )
+    private val jettonAccount = account(Coins.Ton.USDT.copy(address = TON_ADDRESS))
 
     private val rlusdAccount = account(Coins.Ripple.RLUSD.copy(address = RIPPLE_ADDRESS))
 

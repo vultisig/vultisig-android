@@ -3,13 +3,11 @@ package com.vultisig.wallet.data.repositories.vault
 import com.vultisig.wallet.data.db.dao.VaultMetadataDao
 import com.vultisig.wallet.data.db.models.VaultMetadataEntity
 import com.vultisig.wallet.data.models.VaultId
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import kotlin.math.abs
-import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.daysUntil
-import kotlinx.datetime.todayIn
 
 interface VaultMetadataRepo {
 
@@ -24,7 +22,7 @@ internal class VaultMetadataRepoImpl @Inject constructor(private val dao: VaultM
     override suspend fun isFastVaultPasswordReminderRequired(vaultId: VaultId): Boolean =
         getOrDefault(vaultId).fastVaultPasswordReminderShownDate.let {
             it == null ||
-                (abs(it.daysUntil(Clock.System.todayIn(TimeZone.currentSystemDefault()))) >
+                (abs(ChronoUnit.DAYS.between(it, LocalDate.now(ZoneId.systemDefault()))) >
                     FAST_VAULT_PASSWORD_REMINDER_EVERY_N_DAYS)
         }
 

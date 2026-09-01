@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
+import com.vultisig.wallet.data.utils.plus
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.utils.UiText
@@ -40,6 +41,7 @@ import io.mockk.slot
 import io.mockk.unmockkObject
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.time.Instant
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
@@ -52,7 +54,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -618,7 +619,7 @@ internal class SwapQuoteManagerTest {
                 SwapQuote.SwapKit(
                     expectedDstValue = TokenValue(BigInteger.ONE, eth),
                     fees = TokenValue(BigInteger.valueOf(400), btc),
-                    expiredAt = Clock.System.now().plus(5.minutes),
+                    expiredAt = Instant.now().plus(5.minutes),
                     data = mockk(relaxed = true),
                     subProvider = "NEAR",
                 )
@@ -685,7 +686,7 @@ internal class SwapQuoteManagerTest {
             SwapQuote.ThorChain(
                 expectedDstValue = thorDst,
                 fees = TokenValue(BigInteger.ZERO, eth),
-                expiredAt = Clock.System.now().plus(5.minutes),
+                expiredAt = Instant.now().plus(5.minutes),
                 recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
                 data =
                     THORChainSwapQuote(
@@ -713,7 +714,7 @@ internal class SwapQuoteManagerTest {
             SwapQuote.SwapKit(
                 expectedDstValue = swapKitDst,
                 fees = TokenValue(BigInteger.valueOf(400), btc),
-                expiredAt = Clock.System.now().plus(5.minutes),
+                expiredAt = Instant.now().plus(5.minutes),
                 data = mockk(relaxed = true),
                 subProvider = null,
             )
@@ -770,7 +771,7 @@ internal class SwapQuoteManagerTest {
             SwapQuote.SwapKit(
                 expectedDstValue = dstValue,
                 fees = TokenValue(BigInteger.ZERO, eth),
-                expiredAt = Clock.System.now().plus(5.minutes),
+                expiredAt = Instant.now().plus(5.minutes),
                 data = mockk(relaxed = true),
                 subProvider = null,
             )
@@ -825,7 +826,7 @@ internal class SwapQuoteManagerTest {
             SwapQuote.SwapKit(
                 expectedDstValue = dstValue,
                 fees = TokenValue(BigInteger.ZERO, eth),
-                expiredAt = Clock.System.now().plus(5.minutes),
+                expiredAt = Instant.now().plus(5.minutes),
                 data = mockk(relaxed = true),
                 subProvider = null,
             )
@@ -944,7 +945,7 @@ internal class SwapQuoteManagerTest {
             SwapQuote.ThorChain(
                 expectedDstValue = thorDst,
                 fees = TokenValue(BigInteger.ZERO, eth),
-                expiredAt = Clock.System.now().plus(5.minutes),
+                expiredAt = Instant.now().plus(5.minutes),
                 recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
                 data =
                     THORChainSwapQuote(
@@ -972,7 +973,7 @@ internal class SwapQuoteManagerTest {
             SwapQuote.SwapKit(
                 expectedDstValue = swapKitDst,
                 fees = TokenValue(BigInteger.valueOf(400), btc),
-                expiredAt = Clock.System.now().plus(5.minutes),
+                expiredAt = Instant.now().plus(5.minutes),
                 data = mockk(relaxed = true),
                 subProvider = null,
             )
@@ -1242,7 +1243,7 @@ internal class SwapQuoteManagerTest {
             SwapQuote.ThorChain(
                 expectedDstValue = thorDst,
                 fees = TokenValue(BigInteger.valueOf(7), eth),
-                expiredAt = Clock.System.now().plus(5.minutes),
+                expiredAt = Instant.now().plus(5.minutes),
                 recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
                 data =
                     THORChainSwapQuote(
@@ -1395,7 +1396,7 @@ internal class SwapQuoteManagerTest {
                 SwapQuote.ThorChain(
                     expectedDstValue = thorDst,
                     fees = TokenValue(BigInteger.valueOf(7), eth),
-                    expiredAt = Clock.System.now().plus(5.minutes),
+                    expiredAt = Instant.now().plus(5.minutes),
                     recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
                     data =
                         THORChainSwapQuote(
@@ -1649,7 +1650,7 @@ internal class SwapQuoteManagerTest {
             SwapQuote.ThorChain(
                 expectedDstValue = thorDst,
                 fees = TokenValue(BigInteger.ZERO, eth),
-                expiredAt = Clock.System.now().plus(5.minutes),
+                expiredAt = Instant.now().plus(5.minutes),
                 recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
                 data =
                     THORChainSwapQuote(

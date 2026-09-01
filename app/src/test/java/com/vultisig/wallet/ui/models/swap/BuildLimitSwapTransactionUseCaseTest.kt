@@ -20,8 +20,8 @@ import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.time.Instant
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -301,7 +301,7 @@ internal class BuildLimitSwapTransactionUseCaseTest {
                 expectedDstValue = TokenValue(BigInteger.ZERO, eth),
                 fees = TokenValue(BigInteger.ZERO, eth),
                 recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
-                expiredAt = Instant.DISTANT_FUTURE,
+                expiredAt = Instant.MAX,
                 data =
                     mockk<THORChainSwapQuote>(relaxed = true) {
                         every { this@mockk.router } returns router
