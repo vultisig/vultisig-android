@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
 import com.vultisig.wallet.data.chains.helpers.TronFunctions.buildTrc20TransferParameters
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.accept
@@ -24,9 +25,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.path
+import java.io.IOException
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.delay
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import timber.log.Timber
@@ -60,6 +63,17 @@ interface TronApi {
     suspend fun getContractMetadata(contract: String): TronContractInfoJson
 
     suspend fun getTsStatus(chain: Chain, txHash: String): TronTransactionStatusResponse?
+
+    /**
+     * Reads a no-argument view function's ABI-encoded return via `triggerconstantcontract`,
+     * self-addressed as owner since the call touches no state and needs no funded account. Returns
+     * `null` on a failed/reverted simulation or network error, so a custom-token lookup fails
+     * closed rather than guessing a symbol or decimals.
+     */
+    suspend fun readContractConstant(
+        contractAddressBase58: String,
+        functionSelector: String,
+    ): String?
 }
 
 internal class TronApiImpl @Inject constructor(private val httpClient: HttpClient) : TronApi {
@@ -181,6 +195,56 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                 setBody(TronAccountRequestJson(address, true))
             }
             .bodyOrThrow<TronAccountJson>()
+    }
+
+    override suspend fun readContractConstant(
+        contractAddressBase58: String,
+        functionSelector: String,
+    ): String? {
+        val body = buildJsonObject {
+            put("owner_address", contractAddressBase58)
+            put("contract_address", contractAddressBase58)
+            put("function_selector", functionSelector)
+            put("visible", true)
+        }
+        return try {
+            httpClient
+                .post(tronGrid) {
+                    url { path("tron", "wallet", "triggerconstantcontract") }
+                    setBody(body)
+                    accept(ContentType.Application.Json)
+                }
+                .bodyOrThrow<TronTriggerConstantContractJson>()
+                .takeIf { it.isSuccessfulSimulation() }
+                ?.constantResult
+                ?.firstOrNull()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: NetworkException) {
+            Timber.d(
+                e,
+                "Tron constant call failed for %s %s",
+                contractAddressBase58,
+                functionSelector,
+            )
+            null
+        } catch (e: IOException) {
+            Timber.d(
+                e,
+                "Tron constant call failed for %s %s",
+                contractAddressBase58,
+                functionSelector,
+            )
+            null
+        } catch (e: SerializationException) {
+            Timber.d(
+                e,
+                "Tron constant call failed for %s %s",
+                contractAddressBase58,
+                functionSelector,
+            )
+            null
+        }
     }
 
     override suspend fun getContractMetadata(contract: String): TronContractInfoJson {

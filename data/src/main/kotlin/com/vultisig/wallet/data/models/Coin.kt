@@ -26,12 +26,13 @@ data class Coin(
      * coin insert is REPLACE-on-conflict) and picker/account lookups keyed on id would resolve to
      * whichever one happens to come first. XRPL issued currencies are qualified for the same
      * reason: a currency code is only unique per issuer, so several independent issuers each mint
-     * their own `USD` trust line. Every other coin type keeps the plain `ticker-chainId` form
-     * unchanged.
+     * their own `USD` trust line. TON jettons and TRON TRC-20 tokens are also contract-qualified:
+     * their symbols are user-controlled metadata, so two unrelated contracts can both report the
+     * same ticker. Every other coin type keeps the plain `ticker-chainId` form unchanged.
      */
     val id: TokenId
         get() =
-            if (isSecuredAsset() || isRippleIssuedToken) {
+            if (isSecuredAsset() || isRippleIssuedToken || isContractQualifiedCustomToken()) {
                 "$ticker-${chain.id}-$contractAddress"
             } else {
                 "$ticker-${chain.id}"
@@ -55,6 +56,9 @@ data class Coin(
             )
     }
 }
+
+private fun Coin.isContractQualifiedCustomToken(): Boolean =
+    !isNativeToken && contractAddress.isNotBlank() && (chain == Chain.Ton || chain == Chain.Tron)
 
 /**
  * True when this coin has a CoinGecko price-provider id, or a contract address on a chain

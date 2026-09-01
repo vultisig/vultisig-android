@@ -266,6 +266,7 @@ internal fun ChainTokensScreen(
                         isTabMenu = uiModel.isSearchMode.not(),
                         onCancelSearchClick = onHideSearchBar,
                         searchTextFieldState = uiModel.searchTextFieldState,
+                        canSelectTokens = uiModel.canSelectTokens,
                     )
 
                     TopShineContainer(modifier = Modifier.fillMaxWidth().padding(16.dp)) {

@@ -28,6 +28,8 @@ constructor(
     private val searchTerraToken: SearchTerraTokenUseCase,
     private val searchSuiToken: SearchSuiTokenUseCase,
     private val searchRippleToken: SearchRippleTokenUseCase,
+    private val searchTonToken: SearchTonTokenUseCase,
+    private val searchTronToken: SearchTronTokenUseCase,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : SearchTokenUseCase {
 
@@ -50,6 +52,8 @@ constructor(
             chain == Chain.Terra || chain == Chain.TerraClassic -> searchTerraToken(chain, address)
             chain == Chain.Sui -> searchSuiToken(address)
             chain == Chain.Ripple -> searchRippleToken(address)
+            chain == Chain.Ton -> searchTonToken(address)
+            chain == Chain.Tron -> searchTronToken(address)
             else -> null
         }
 

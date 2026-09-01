@@ -49,6 +49,7 @@ data class TronTriggerConstantContractJson(
     @SerialName("energy_used") val energyUsed: Long = 0L,
     @SerialName("energy_penalty") val energyPenalty: Long = 0L,
     @SerialName("transaction") val transaction: Transaction,
+    @SerialName("constant_result") val constantResult: List<String> = emptyList(),
 ) {
     @Serializable
     data class Result(val result: Boolean = false, val code: String = "", val message: String = "")
