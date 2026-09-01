@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -24,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,6 +59,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.defi.InfoItem
 import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
+import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -75,6 +78,7 @@ internal fun SolanaStakingPositionsScreen(
     val state by viewModel.state.collectAsState()
     val kaminoState by kaminoViewModel.state.collectAsState()
     var selectedTab by rememberSaveable { mutableStateOf(DeFiTab.EARN) }
+    val pickerSearchTextFieldState = remember { TextFieldState() }
 
     LifecycleResumeEffect(vaultId) {
         viewModel.setData(vaultId)
@@ -110,11 +114,15 @@ internal fun SolanaStakingPositionsScreen(
     )
 
     if (kaminoState.isShowingPicker) {
-        KaminoVaultPickerSheet(
-            selected = kaminoState.pendingSelection,
-            onToggle = kaminoViewModel::onVaultToggled,
-            onDone = kaminoViewModel::savePicker,
-            onDismiss = kaminoViewModel::closePicker,
+        // The same sheet every other picker in the app opens — Kamino vaults are just its Earn
+        // section, so there is nothing here that is Solana's own chrome.
+        PositionsSelectionDialog(
+            earnPositions = KAMINO_EARN_PICKER_POSITIONS,
+            selectedPositions = kaminoState.pendingSelection.toList(),
+            searchTextFieldState = pickerSearchTextFieldState,
+            onPositionSelectionChange = kaminoViewModel::onVaultToggled,
+            onDoneClick = kaminoViewModel::savePicker,
+            onCancelClick = kaminoViewModel::closePicker,
         )
     }
 }

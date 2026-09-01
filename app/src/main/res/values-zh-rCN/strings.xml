@@ -59,8 +59,6 @@
     <string name="defi_stake">质押</string>
     <string name="liquidity_pool">流动性池</string>
     <!-- Kamino Earn -->
-    <string name="kamino_earn_title">Kamino Earn</string>
-    <string name="kamino_earn_curated_by">由 %1$s 策划</string>
     <string name="kamino_earn_deposited">已存入：%1$s</string>
     <string name="kamino_earn_apy">年化收益率</string>
     <string name="kamino_earn_earned">已赚取：%1$s</string>
