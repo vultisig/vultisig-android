@@ -155,6 +155,16 @@ internal class SwapMinPayoutTest {
     }
 
     @Test
+    fun `an order whose LIM iOS compressed is still an order`() {
+        // iOS writes the LIM in THORChain's `<mantissa>e<exponent>` shorthand whenever that is
+        // shorter, which is how it fits an order into a UTXO source's 80-byte OP_RETURN. Reading
+        // it as anything but a limit order would caption an enforced floor "expected payout" on
+        // the Android cosigner of an iOS-placed order.
+        signedLimitOrder(memo = "=<:THOR.TCY:thor1uet6qz79tu:32e7/14400/0:va:40", dstToken = tcy)
+            ?.limit shouldBe BigInteger.valueOf(320_000_000)
+    }
+
+    @Test
     fun `a market memo places no order`() {
         signedLimitOrder(
             memo = "=:THOR.TCY:thor1uet6qz79tu:321308705:va:40",

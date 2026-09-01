@@ -318,6 +318,74 @@ class LimitSwapMemoTest {
     }
 
     @Test
+    fun `parse decodes the compressed LIM an iOS-placed order carries`() {
+        // iOS shrinks the LIM to `<mantissa>e<exponent>` whenever that is shorter (`compressLim`),
+        // so an order this device is asked to cosign spells the same floor a different way. Both
+        // spellings must parse to the same integer, or the cosigner reads an enforced floor as a
+        // market swap's expected output.
+        val compressed =
+            checkNotNull(
+                LimitSwapMemo.parse(
+                    "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:16e8/14400/0:va:50"
+                )
+            )
+        val plain =
+            checkNotNull(
+                LimitSwapMemo.parse(
+                    "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:1600000000/14400/0:va:50"
+                )
+            )
+
+        assertEquals(BigInteger.valueOf(1_600_000_000L), compressed.limit)
+        assertEquals(plain, compressed)
+    }
+
+    @Test
+    fun `assertLimitSwapMemo accepts a compressed LIM and still rejects a zero one`() {
+        LimitSwapMemo.assertLimitSwapMemo(
+            "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:16e8/7200/0:va:50"
+        )
+        val error =
+            assertThrows(IllegalArgumentException::class.java) {
+                LimitSwapMemo.assertLimitSwapMemo(
+                    "=<:BTC.BTC:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh:0e8/7200/0:va:50"
+                )
+            }
+        assertTrue(error.message.orEmpty().contains("zero minimum-received"))
+    }
+
+    @TestFactory
+    fun `decodeLim reads both spellings and refuses everything else`(): List<DynamicTest> {
+        val cases =
+            listOf(
+                "1600000000" to BigInteger.valueOf(1_600_000_000L),
+                "16e8" to BigInteger.valueOf(1_600_000_000L),
+                "16E8" to BigInteger.valueOf(1_600_000_000L),
+                "544e6" to BigInteger.valueOf(544_000_000L),
+                "0" to BigInteger.ZERO,
+                // Decoded, not read as a floor: the callers reject a zero trade target with their
+                // own message, because THORChain treats it as an unprotected market order.
+                "0e8" to BigInteger.ZERO,
+                "" to null,
+                "e8" to null,
+                "16e" to null,
+                "1e2e3" to null,
+                "16 e8" to null,
+                "١٦" to null,
+                // Raising ten to an exponent a memo picked must stay bounded, as must the digit
+                // run handed to BigInteger; and THORNode itself refuses a LIM past 256 bits.
+                "16e81" to null,
+                "1".repeat(41) to null,
+                "1e80" to null,
+            )
+        return cases.map { (field, expected) ->
+            DynamicTest.dynamicTest("decodeLim(\"$field\") = $expected") {
+                assertEquals(expected, LimitSwapMemo.decodeLim(field))
+            }
+        }
+    }
+
+    @Test
     fun `parse returns null for a non-limit memo`() {
         assertEquals(null, LimitSwapMemo.parse("=:BTC.BTC:dest:4000000"))
     }

@@ -5,11 +5,25 @@ import java.math.BigInteger
 /**
  * Reads the minimum-output floor (`LIM`) a THORChain / MayaChain swap memo asserts.
  *
- * The node bakes `LIM = expected_amount_out × (10_000 − tolerance_bps) / 10_000` into the memo it
- * returns, and that memo is signed verbatim (`SwapTransactionBuilder` passes `quote.data.memo`
- * straight through, and `UtxoHelper` writes it into the OP_RETURN unchanged). So the floor is read
- * back out of the memo rather than re-derived from the tolerance we sent: the node owns the
- * rounding and the streaming split, and a client-side re-derivation would drift from it.
+ * The node bakes the floor into the memo it returns, and that memo is signed verbatim
+ * (`SwapTransactionBuilder` passes `quote.data.memo` straight through, and `UtxoHelper` writes it
+ * into the OP_RETURN unchanged). So the floor is read back out of the memo rather than re-derived
+ * from the tolerance we sent: the node owns the rounding and the streaming split, and a client-side
+ * re-derivation would drift from it.
+ *
+ * What the node applies the tolerance to is the swap's own emit — the full-size output before the
+ * outbound fee and before the affiliate cut — not `expected_amount_out`, which is that emit with
+ * both already taken off. Live quotes, one pair and amount, 3% tolerance:
+ * ```
+ * no affiliate       → LIM 872730873   expected_amount_out 898821632
+ * affiliate va/30bps → LIM 872730873   expected_amount_out 896125362
+ * affiliate va/10bps → LIM 872730873   expected_amount_out 897923005
+ * ```
+ *
+ * The LIM does not move with the affiliate bps at all, and at a small tolerance it lands *above*
+ * `expected_amount_out` — a live 50 bps quote returned LIM `31739612` against `expected_amount_out
+ * 31657653`. So the LIM is the level the chain checks the swap against, not the amount that reaches
+ * the user: the outbound fee and the affiliate cut still come off after that check.
  *
  * With "Auto" slippage the app sends no `tolerance_bps` at all
  * ([com.vultisig.wallet.data.repositories.swap.DEFAULT_THORCHAIN_TOLERANCE_BPS]), so the memo
@@ -23,9 +37,11 @@ object ThorchainMemoLimit {
     /**
      * THORNode parses the LIM as a `cosmos.Uint` and rejects a memo whose value does not fit 256
      * bits. A wider number is a memo the chain refuses outright — no swap, and therefore no floor
-     * to read a guarantee out of. Exclusive upper bound.
+     * to read a guarantee out of. Exclusive upper bound, shared with
+     * [com.vultisig.wallet.data.swap.limit.LimitSwapMemo] so both memo grammars refuse the same
+     * magnitudes the chain does.
      */
-    private val LIMIT_UPPER_BOUND: BigInteger = BigInteger.valueOf(2).pow(256)
+    internal val LIMIT_UPPER_BOUND: BigInteger = BigInteger.valueOf(2).pow(256)
 
     /**
      * A non-empty run of ASCII decimal digits. `Char.isDigit` alone also accepts non-ASCII
@@ -76,9 +92,14 @@ object ThorchainMemoLimit {
 
     /**
      * THORChain and MayaChain both spell the swap action `SWAP`, `=` or `s`, case-insensitively.
-     * Every other action (`ADD`, `WITHDRAW`, `LOAN+`, the `=<` limit order …) lays its fields out
-     * differently, so its 4th field is not a `LIM/INTERVAL/QUANTITY` triple and must not be read as
-     * one.
+     *
+     * The action is the only thing keeping a `=<` limit order out of here: its 4th field *is* a
+     * `LIM/INTERVAL/QUANTITY` triple at the same index — `LimitSwapMemo.build` emits
+     * `=<:TARGET:DEST:LIM/INTERVAL/0` — so the field layout alone would read one happily. It must
+     * not: a limit order's displayed destination amount already IS its LIM, so returning it here
+     * would spell the same floor out a second time as if it were a market swap's minimum. The other
+     * actions (`ADD`, `WITHDRAW`, `LOAN+` …) do lay their fields out differently, and their 4th
+     * field is not a triple at all.
      */
     private fun isSwapAction(field: String): Boolean =
         when (field.lowercase()) {
