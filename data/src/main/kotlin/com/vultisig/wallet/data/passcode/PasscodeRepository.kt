@@ -78,7 +78,9 @@ sealed interface PasscodeUnlockResult {
     data class LockedOut(val retryAfterMillis: Long) : PasscodeUnlockResult
 
     /**
-     * The passcode was right but the operation could not be completed, and nothing was changed.
+     * The passcode was right but the operation could not be completed, and the passcode itself is
+     * unchanged — still in force if it was set, still absent if it was not.
+     *
      * Surfaced rather than thrown so a single unreadable keyshare cannot crash the app and strand
      * the user with a passcode they are unable to remove.
      */
@@ -478,13 +480,6 @@ internal class PasscodeRepositoryImpl(
     override suspend fun disablePasscode(passcode: String): PasscodeUnlockResult =
         mutex.withLock {
             verifyLocked(passcode) { key ->
-                // The biometric copy goes first, before anything else moves. It holds this data
-                // key, and the moment the credentials are gone it is the only thing that does — so
-                // a crash anywhere after this point leaves no copy of a retired key behind, which
-                // is the invariant BiometricUnlockStore relies on instead of iOS's binding blob.
-                withContext(dispatcher) { biometrics.clear() }
-                _isBiometricUnlockEnabled.value = false
-
                 // Decrypt first, drop the credentials second. A crash between the two leaves the
                 // passcode in place over a partly decrypted table, which still reads correctly.
                 //
@@ -503,6 +498,14 @@ internal class PasscodeRepositoryImpl(
                 // sealed under a key the next launch has no way to recover.
                 try {
                     withContext(NonCancellable) {
+                        // The biometric copy goes before the credentials it shadows. It holds this
+                        // data key, and the moment the credentials are gone it is the only thing
+                        // that does — so a crash anywhere after this point leaves no copy of a
+                        // retired key behind, which is the invariant BiometricUnlockStore relies on
+                        // instead of iOS's binding blob. No earlier than this, or the abort above
+                        // would turn the shortcut off over an operation that changed nothing.
+                        withContext(dispatcher) { biometrics.clear() }
+                        _isBiometricUnlockEnabled.value = false
                         withContext(dispatcher) { store.clearCredentials() }
                         swapDataKey(null)
                         _state.value = PasscodeState.Disabled
@@ -515,7 +518,9 @@ internal class PasscodeRepositoryImpl(
                     Timber.e(e, "Refusing to disable the passcode: the credentials are still there")
                     // unprotectAll has already put every share back in the clear, and the passcode
                     // that guards them is still in force. Uncancellable because they stay exposed
-                    // until this finishes.
+                    // until this finishes. The biometric copy is gone by now and cannot be remade
+                    // without another prompt, so the shortcut stays off — what Failed promises is
+                    // unchanged is the passcode it was a shortcut past, and that is still there.
                     withContext(NonCancellable) {
                         protectAllOrLog(key)
                         key.fill(0)

@@ -8,8 +8,10 @@ import androidx.core.content.edit
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.KeyStore
+import java.security.ProviderException
 import java.security.UnrecoverableKeyException
 import java.util.Base64
+import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -82,21 +84,32 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
 
     override fun encryptCipherOrNull(): Cipher? =
         try {
-            // Replaces whatever is there: generating over an existing alias overwrites it, so a
-            // second enable cannot leave the first copy readable.
-            val key = generateKey()
-            // And drops the copy that key used to open, in the same breath. The blob is already
-            // unreadable at this point, and a prompt the user then cancels would otherwise leave
-            // an unreadable copy behind that isEnabled() — which asks whether the alias exists —
-            // would go on reporting as a working shortcut.
-            prefs.edit(commit = true) { remove(KEY_WRAPPED_KEY) }
-            Cipher.getInstance(PasscodeCipher.AES_GCM_NO_PADDING).apply {
-                init(Cipher.ENCRYPT_MODE, key)
+            // The copy goes before the key that opens it is replaced, and only a removal that
+            // reached the disk counts as gone. Not androidx's edit(commit = true), which throws
+            // that answer away: a refused removal would leave the old copy behind the new alias,
+            // readable by nobody and counted by isEnabled() as a working shortcut.
+            if (prefs.edit().remove(KEY_WRAPPED_KEY).commit()) {
+                // Generating over an existing alias overwrites it, so a second enable cannot leave
+                // the first copy readable. Between here and a store() nothing reads as enabled,
+                // which is exactly what a prompt the user then cancels leaves behind.
+                val key = generateKey()
+                Cipher.getInstance(PasscodeCipher.AES_GCM_NO_PADDING).apply {
+                    init(Cipher.ENCRYPT_MODE, key)
+                }
+            } else {
+                // Nothing has been touched yet, so a shortcut that is already on goes on working
+                // and only this enable refuses.
+                Timber.e("Could not drop the previous biometric data key")
+                null
             }
         } catch (e: GeneralSecurityException) {
             // The common one is "at least one biometric must be enrolled", thrown at generation
             // time. The caller has already asked BiometricManager why, so this only has to refuse.
             Timber.w(e, "Cannot mint a biometric unlock key on this device")
+            null
+        } catch (e: ProviderException) {
+            // Every other keystore failure at generation time — see the note on keyStoreOrNull.
+            Timber.w(e, "The keystore refused a biometric unlock key")
             null
         } catch (e: IllegalStateException) {
             // AndroidKeyStore raises this for a keystore that is not usable at all.
@@ -129,6 +142,9 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
         } catch (e: GeneralSecurityException) {
             Timber.w(e, "Cannot prepare a biometric unlock")
             null
+        } catch (e: ProviderException) {
+            Timber.w(e, "Cannot prepare a biometric unlock")
+            null
         }
     }
 
@@ -158,6 +174,10 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
             Timber.e(e, "Failed to store the biometric data key")
             clear()
             false
+        } catch (e: ProviderException) {
+            Timber.e(e, "Failed to store the biometric data key")
+            clear()
+            false
         }
 
     override fun readDataKeyOrNull(cipher: Cipher): ByteArray? {
@@ -175,22 +195,39 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
                 clear()
                 null
             }
+        } catch (e: AEADBadTagException) {
+            // The copy was not made under the key that just opened it, so no retry can read it and
+            // every unlock from here fails the same way. Clearing is the only thing that ends it:
+            // the alias exists, so isEnabled() would go on offering a shortcut that cannot work.
+            // Narrow on purpose — an authentication that has expired arrives as an
+            // IllegalBlockSizeException, and the copy behind that one is still good.
+            Timber.e(e, "Discarding a biometric data key that was made under another key")
+            clear()
+            null
         } catch (e: GeneralSecurityException) {
             Timber.e(e, "Failed to read the biometric data key")
             null
         } catch (e: IllegalStateException) {
             Timber.e(e, "Failed to read the biometric data key")
             null
+        } catch (e: ProviderException) {
+            Timber.e(e, "Failed to read the biometric data key")
+            null
         }
     }
 
     override fun clear() {
+        // The one write here whose answer is not acted on, unlike the two above: the alias goes
+        // next and isEnabled() wants both, so a removal the disk refuses still leaves the shortcut
+        // reading off, and the next enable overwrites the copy either way.
         prefs.edit(commit = true) { remove(KEY_WRAPPED_KEY) }
         try {
             keyStoreOrNull()?.deleteEntry(KEY_ALIAS)
         } catch (e: GeneralSecurityException) {
             // The preference is gone, so isEnabled() already reads false and no unlock can be
             // attempted. An orphaned keystore entry is overwritten by the next enable.
+            Timber.w(e, "Could not delete the biometric unlock key")
+        } catch (e: ProviderException) {
             Timber.w(e, "Could not delete the biometric unlock key")
         }
     }
@@ -237,16 +274,21 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
         } catch (e: GeneralSecurityException) {
             Timber.w(e, "Could not read the biometric unlock key")
             null
+        } catch (e: ProviderException) {
+            Timber.w(e, "Could not read the biometric unlock key")
+            null
         }
 
     /**
      * The keystore itself, or null when it will not open.
      *
-     * `load` declares [IOException], which is not a [GeneralSecurityException] and so would
-     * otherwise travel up through [clear] and [isEnabled] into the repository's `setPasscode` and
-     * `disablePasscode`, neither of which catches anything — a failure that breaks setting a
-     * passcode at all, for a shortcut that is optional. Refusing here keeps it fail-closed like
-     * everything else in this file.
+     * `load` declares [IOException], which is not a [GeneralSecurityException], and the provider
+     * reports whatever it cannot express as a checked exception with [ProviderException], which
+     * Kotlin does not check at all. Either would otherwise travel up through [clear] and
+     * [isEnabled] into the repository's `setPasscode` and `disablePasscode`, neither of which
+     * catches anything — a failure that breaks setting a passcode at all, for a shortcut that is
+     * optional. Refusing here, and at every other keystore call in this file, keeps it fail-closed
+     * like everything else.
      */
     private fun keyStoreOrNull(): KeyStore? =
         try {
@@ -255,6 +297,9 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
             Timber.w(e, "Could not open the keystore")
             null
         } catch (e: IOException) {
+            Timber.w(e, "Could not open the keystore")
+            null
+        } catch (e: ProviderException) {
             Timber.w(e, "Could not open the keystore")
             null
         }

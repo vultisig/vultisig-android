@@ -2,8 +2,12 @@ package com.vultisig.wallet.data.passcode
 
 import android.content.SharedPreferences
 import com.vultisig.wallet.data.utils.InMemorySharedPreferences
+import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
+import kotlin.test.assertContentEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -42,20 +46,62 @@ internal class KeyStoreBiometricUnlockStoreTest {
         assertNull(prefs.getString(KEY_WRAPPED_KEY, null))
     }
 
+    @Test
+    fun `a copy is read back with the key it was made under`() {
+        val prefs = InMemorySharedPreferences()
+        val key = aesKey()
+        val store = KeyStoreBiometricUnlockStore(prefs)
+        store.store(dataKey(), encryptCipher(key))
+
+        assertContentEquals(dataKey(), store.readDataKeyOrNull(decryptCipher(prefs, key)))
+
+        // And is still there afterwards: the shortcut survives being used.
+        assertNotNull(prefs.getString(KEY_WRAPPED_KEY, null))
+    }
+
+    @Test
+    fun `a copy made under another key is dropped rather than left to fail at every unlock`() {
+        // What a copy that outlived its alias meets: the tag says this ciphertext was never made
+        // under the key that just opened it, and no retry can change that. Leaving it would keep
+        // isEnabled() — which asks whether the alias exists — offering a shortcut that only fails.
+        val prefs = InMemorySharedPreferences()
+        val store = KeyStoreBiometricUnlockStore(prefs)
+        store.store(dataKey(), encryptCipher(aesKey()))
+
+        assertNull(store.readDataKeyOrNull(decryptCipher(prefs, aesKey())))
+
+        assertNull(prefs.getString(KEY_WRAPPED_KEY, null))
+    }
+
     private fun dataKey() = ByteArray(PasscodeCipher.DATA_KEY_LENGTH) { it.toByte() }
+
+    private fun aesKey(): SecretKey =
+        KeyGenerator.getInstance("AES")
+            .apply { init(PasscodeCipher.DATA_KEY_LENGTH * Byte.SIZE_BITS) }
+            .generateKey()
 
     /**
      * A cipher the way the biometric prompt hands one back — authorised and initialised for
      * encryption. The key is an ordinary JCE one; the store only ever asks it for an IV and a
      * `doFinal`.
      */
-    private fun encryptCipher(): Cipher {
-        val key =
-            KeyGenerator.getInstance("AES")
-                .apply { init(PasscodeCipher.DATA_KEY_LENGTH * Byte.SIZE_BITS) }
-                .generateKey()
-        return Cipher.getInstance(PasscodeCipher.AES_GCM_NO_PADDING).apply {
+    private fun encryptCipher(key: SecretKey = aesKey()): Cipher =
+        Cipher.getInstance(PasscodeCipher.AES_GCM_NO_PADDING).apply {
             init(Cipher.ENCRYPT_MODE, key)
+        }
+
+    /**
+     * A cipher over the stored copy's own IV, the way `decryptCipherOrNull` builds one — with
+     * whichever [key] the caller wants to stand in for the alias behind it.
+     */
+    private fun decryptCipher(prefs: SharedPreferences, key: SecretKey): Cipher {
+        val blob = Base64.getDecoder().decode(prefs.getString(KEY_WRAPPED_KEY, null))
+        return Cipher.getInstance(PasscodeCipher.AES_GCM_NO_PADDING).apply {
+            init(
+                Cipher.DECRYPT_MODE,
+                key,
+                GCMParameterSpec(PasscodeCipher.GCM_TAG_BITS, blob, 0, PasscodeCipher.IV_LENGTH),
+            )
         }
     }
 

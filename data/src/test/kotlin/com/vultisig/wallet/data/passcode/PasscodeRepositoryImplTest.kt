@@ -800,6 +800,22 @@ internal class PasscodeRepositoryImplTest {
     }
 
     @Test
+    fun `a disable that fails leaves the biometric shortcut where it found it`() = runTest {
+        // Failed says the passcode is unchanged, and the shortcut past it is part of that: an
+        // abort that changes nothing must not cost the user a shortcut they then have to set up
+        // again behind a fresh prompt.
+        val repository = repository()
+        repository.setPasscode("123456")
+        repository.enableBiometricUnlock(anyCipher())
+        protection.unprotectFailure = IllegalStateException("keyshare failed to decrypt")
+
+        assertEquals(PasscodeUnlockResult.Failed, repository.disablePasscode("123456"))
+
+        assertNotNull(biometrics.storedDataKey())
+        assertTrue(repository.isBiometricUnlockEnabled.value)
+    }
+
+    @Test
     fun `setPasscode clears a biometric copy left over from an earlier data key`() = runTest {
         // Stands in for a crash that took the credentials but not the copy.
         biometrics.store(ByteArray(32) { 7 }, anyCipher())
