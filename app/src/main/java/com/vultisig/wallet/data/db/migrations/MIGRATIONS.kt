@@ -1075,3 +1075,40 @@ internal val MIGRATION_41_42 =
             )
         }
     }
+
+// TON jettons and TRON TRC-20 tokens were first saved with Coin.id = "$ticker-$chain", but their
+// tickers are contract metadata, not identities: two contracts can both report "USDT". Runtime
+// Coin.id is now contract-qualified for non-native TON/TRON custom tokens, so rewrite existing
+// rows to the same key before repository operations read them back. If a corrected row somehow
+// already exists, drop the legacy duplicate first so the update cannot trip the coin PK.
+internal val MIGRATION_42_43 =
+    object : Migration(42, 43) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            DELETE FROM coin
+            WHERE chain IN ('Ton', 'Tron')
+            AND contractAddress != ''
+            AND id = ticker || '-' || chain
+            AND EXISTS (
+                SELECT 1
+                FROM coin AS corrected
+                WHERE corrected.vaultId = coin.vaultId
+                AND corrected.id = coin.ticker || '-' || coin.chain || '-' || coin.contractAddress
+            )
+            """
+                    .trimIndent()
+            )
+
+            db.execSQL(
+                """
+            UPDATE coin
+            SET id = ticker || '-' || chain || '-' || contractAddress
+            WHERE chain IN ('Ton', 'Tron')
+            AND contractAddress != ''
+            AND id = ticker || '-' || chain
+            """
+                    .trimIndent()
+            )
+        }
+    }
