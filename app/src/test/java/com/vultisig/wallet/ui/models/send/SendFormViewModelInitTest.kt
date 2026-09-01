@@ -30,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -142,6 +143,48 @@ internal class SendFormViewModelInitTest {
     }
 
     @Test
+    fun `memo is visible for a TON jetton`() = runTest {
+        val vm = buildViewModelWithPreselectedToken(Coins.Ton.USDT)
+
+        assertTrue(vm.uiState.value.hasMemo)
+    }
+
+    @Test
+    fun `memo is visible for an SPL token`() = runTest {
+        val vm = buildViewModelWithPreselectedToken(Coins.Solana.USDC)
+
+        assertTrue(vm.uiState.value.hasMemo)
+    }
+
+    @Test
+    fun `memo is visible for a TRC20 token`() = runTest {
+        val vm = buildViewModelWithPreselectedToken(Coins.Tron.USDT)
+
+        assertTrue(vm.uiState.value.hasMemo)
+    }
+
+    @Test
+    fun `memo is hidden for an ERC20 token`() = runTest {
+        val vm = buildViewModelWithPreselectedToken(Coins.Ethereum.USDC)
+
+        assertFalse(vm.uiState.value.hasMemo)
+    }
+
+    @Test
+    fun `memo is hidden for an XRPL issued currency`() = runTest {
+        val vm = buildViewModelWithPreselectedToken(Coins.Ripple.RLUSD)
+
+        assertFalse(vm.uiState.value.hasMemo)
+    }
+
+    @Test
+    fun `memo is hidden for Sui`() = runTest {
+        val vm = buildViewModelWithPreselectedToken(Coins.Sui.SUI)
+
+        assertFalse(vm.uiState.value.hasMemo)
+    }
+
+    @Test
     fun `preSelectedTokenId without address expands the Address section`() = runTest {
         every { savedStateHandle.toRoute<Route.Send>() } returns
             Route.Send(vaultId = VAULT_ID, tokenId = "RUNE-thorchain")
@@ -235,10 +278,9 @@ internal class SendFormViewModelInitTest {
         assertEquals("", vm.slippageFieldState.text.toString())
     }
 
-    // Regression: the memo clear added for XRPL issued currencies must not reach a TON jetton. A
-    // jetton hides the memo field too, but TonHelper signs `payload.memo` as the transfer comment,
-    // and a `vultisig://send?...&memo=` deep link is the only way to supply one — wiping it makes
-    // an exchange deposit arrive without its comment.
+    // Regression: the memo clear added for XRPL issued currencies must not reach a TON jetton.
+    // TonHelper signs `payload.memo` as the transfer comment, so wiping it makes an exchange
+    // deposit arrive without its comment.
     @Test
     fun `a deep-linked memo survives on a TON jetton`() = runTest {
         every { savedStateHandle.toRoute<Route.Send>() } returns
@@ -283,11 +325,8 @@ internal class SendFormViewModelInitTest {
 
     private val jettonAccount =
         account(
-            Coins.Ton.TON.copy(
-                ticker = "USDT",
+            Coins.Ton.USDT.copy(
                 address = TON_ADDRESS,
-                contractAddress = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
-                isNativeToken = false,
             )
         )
 
@@ -338,8 +377,27 @@ internal class SendFormViewModelInitTest {
         )
     }
 
+    private fun TestScope.buildViewModelWithPreselectedToken(coin: Coin): SendFormViewModel {
+        val token = coin.copy(address = ADDRESS)
+        coEvery { accountsRepository.loadAddresses(VAULT_ID) } returns
+            flowOf(
+                listOf(
+                    Address(
+                        chain = token.chain,
+                        address = ADDRESS,
+                        accounts = listOf(account(token)),
+                    )
+                )
+            )
+        every { savedStateHandle.toRoute<Route.Send>() } returns
+            Route.Send(vaultId = VAULT_ID, tokenId = token.id)
+
+        return buildViewModel().also { advanceUntilIdle() }
+    }
+
     private companion object {
         const val VAULT_ID = "vault-1"
+        const val ADDRESS = "address-1"
 
         // A chain id old deep links still carry after the entry was removed from [Chain].
         const val RETIRED_CHAIN_ID = "Kujira"

@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.carriesMemo
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -70,6 +71,7 @@ internal class TokenNetworkSelectionDelegate(
     private val accounts: StateFlow<List<Account>>,
     private val selectedToken: MutableStateFlow<Coin?>,
     private val addressFieldState: TextFieldState,
+    private val memoFieldState: TextFieldState,
     private val uiState: MutableStateFlow<SendFormUiModel>,
     private val isSwitchingAccounts: MutableStateFlow<Boolean>,
     private val defiTypeProvider: () -> DeFiNavActions?,
@@ -260,6 +262,9 @@ internal class TokenNetworkSelectionDelegate(
         // autocompound toggle hits this same race that setTronResourceType already preempts).
         amountFractionManager.cancel()
         amountManager.resetUserInputCache()
+        if (!token.carriesMemo) {
+            memoFieldState.setTextAndPlaceCursorAtEnd("")
+        }
         selectedToken.value = token
     }
 
