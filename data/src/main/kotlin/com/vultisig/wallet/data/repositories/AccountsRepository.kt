@@ -664,10 +664,19 @@ constructor(
     }
 
     private fun Account.applyBalance(balance: TokenBalance): Account =
-        copy(tokenValue = balance.tokenValue, fiatValue = balance.fiatValue)
+        copy(
+            tokenValue = balance.tokenValue,
+            fiatValue = balance.fiatValue,
+            defiPositionsCount = balance.defiPositionsCount,
+        )
 
     private fun Account.applyBalance(balance: TokenBalance, price: FiatValue?): Account =
-        copy(tokenValue = balance.tokenValue, fiatValue = balance.fiatValue, price = price)
+        copy(
+            tokenValue = balance.tokenValue,
+            fiatValue = balance.fiatValue,
+            price = price,
+            defiPositionsCount = balance.defiPositionsCount,
+        )
 
     private fun Address.distinctByChainAndContractAddress() =
         copy(

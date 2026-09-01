@@ -25,12 +25,13 @@ class CalculateActiveDefiPositionsCountTest {
             isNativeToken = ticker == "RUNE",
         )
 
-    private fun account(ticker: String, amount: BigInteger?) =
+    private fun account(ticker: String, amount: BigInteger?, defiPositionsCount: Int? = null) =
         Account(
             token = coin(ticker),
             tokenValue = amount?.let { TokenValue(it, ticker, 8) },
             fiatValue = amount?.let { FiatValue(BigDecimal.ONE, "USD") },
             price = null,
+            defiPositionsCount = defiPositionsCount,
         )
 
     @Test
@@ -65,6 +66,17 @@ class CalculateActiveDefiPositionsCountTest {
         val accounts = listOf(account("RUNE", null), account("TCY", BigInteger("50")))
 
         assertEquals(1, accounts.calculateActiveDefiPositionsCount())
+    }
+
+    @Test
+    fun `an aggregated token balance can count multiple active positions`() {
+        val accounts =
+            listOf(
+                account("SOL", BigInteger("100"), defiPositionsCount = 1),
+                account("USDC", BigInteger("50"), defiPositionsCount = 2),
+            )
+
+        assertEquals(3, accounts.calculateActiveDefiPositionsCount())
     }
 
     @Test

@@ -181,6 +181,7 @@ class KaminoDeFiBalanceService(
                             entries.fold(BigInteger.ZERO) { running, (_, amount) ->
                                 running + amount
                             },
+                        positionCount = entries.size,
                     )
                 }
 

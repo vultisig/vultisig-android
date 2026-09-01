@@ -64,12 +64,18 @@ internal class AddressToUiModelMapperDefiPositionsTest {
             isNativeToken = isNativeToken,
         )
 
-    private fun account(ticker: String, amount: BigInteger?, isNativeToken: Boolean = false) =
+    private fun account(
+        ticker: String,
+        amount: BigInteger?,
+        isNativeToken: Boolean = false,
+        defiPositionsCount: Int? = null,
+    ) =
         Account(
             token = coin(ticker, isNativeToken),
             tokenValue = amount?.let { TokenValue(it, ticker, 8) },
             fiatValue = amount?.let { FiatValue(BigDecimal.ONE, "USD") },
             price = null,
+            defiPositionsCount = defiPositionsCount,
         )
 
     private fun address(isDefiProvider: Boolean, vararg accounts: Account) =
@@ -110,6 +116,21 @@ internal class AddressToUiModelMapperDefiPositionsTest {
             )
 
         model.defiPositionsCount shouldBe 0
+    }
+
+    @Test
+    fun `a defi row reports multiple positions behind one token balance`() = runTest {
+        val model =
+            mapper(
+                address(
+                    isDefiProvider = true,
+                    account("RUNE", BigInteger.ZERO, isNativeToken = true),
+                    account("USDC", BigInteger("150"), defiPositionsCount = 2),
+                )
+            )
+
+        model.defiPositionsCount shouldBe 2
+        model.assetsSize shouldBe 2
     }
 
     @Test

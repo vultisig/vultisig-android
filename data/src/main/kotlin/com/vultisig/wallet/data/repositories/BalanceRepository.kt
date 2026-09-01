@@ -297,7 +297,12 @@ constructor(
                 }
 
             TokenBalanceAndPrice(
-                tokenBalance = TokenBalance(tokenValue = tokenValue, fiatValue = fiatValue),
+                tokenBalance =
+                    TokenBalance(
+                        tokenValue = tokenValue,
+                        fiatValue = fiatValue,
+                        defiPositionsCount = balance.positionCount,
+                    ),
                 price =
                     if (price != null) {
                         FiatValue(price, currency.ticker)
@@ -398,7 +403,12 @@ constructor(
 
         emit(
             TokenBalanceAndPrice(
-                tokenBalance = TokenBalance(tokenValue = tokenValue, fiatValue = fiatValue),
+                tokenBalance =
+                    TokenBalance(
+                        tokenValue = tokenValue,
+                        fiatValue = fiatValue,
+                        defiPositionsCount = defiBalance?.positionCount,
+                    ),
                 price = FiatValue(value = price, currency = currency.ticker),
             )
         )

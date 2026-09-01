@@ -22,6 +22,7 @@ data class Account(
      * form may spend.
      */
     val isPositionOnly: Boolean = false,
+    val defiPositionsCount: Int? = null,
 ) {
     companion object {
         val EMPTY = Account(token = Coin.EMPTY, tokenValue = null, fiatValue = null, price = null)
@@ -94,5 +95,8 @@ fun List<Account>.calculateAccountsPartialFiatValue(): FiatValue? {
 fun List<Account>.calculateActiveDefiPositionsCount(): Int? {
     if (isEmpty()) return 0
     if (none { it.tokenValue != null }) return null
-    return count { (it.tokenValue?.value?.signum() ?: 0) > 0 }
+    return sumOf { account ->
+        val tokenValue = account.tokenValue ?: return@sumOf 0
+        if (tokenValue.value.signum() > 0) account.defiPositionsCount ?: 1 else 0
+    }
 }
