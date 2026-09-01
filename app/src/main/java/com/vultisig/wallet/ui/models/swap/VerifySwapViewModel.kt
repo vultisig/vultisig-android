@@ -108,6 +108,11 @@ internal data class SwapTransactionUiModel(
     // rebuilds the tx from the payload without a quote — the row is then hidden (#5335).
     val priceImpactPercent: String? = null,
     val priceImpactLevel: PriceImpactLevel? = null,
+    // Minimum destination output the signed memo actually enforces, formatted for display (e.g.
+    // "3.23347754"). Null — never zero, never a stand-in — when the route enforces no floor, which
+    // is every aggregator route and every THORChain/Maya swap left on "Auto" slippage; the screen
+    // then promises no minimum at all (#5711). See [signedMinimumOutput].
+    val minPayout: String? = null,
     // THORChain limit order (#4154): drives the "You're placing a limit order" title and the Target
     // Price / expiry row on the confirmation screen. False (and null labels) for market swaps.
     val isLimitOrder: Boolean = false,

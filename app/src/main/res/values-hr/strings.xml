@@ -153,6 +153,8 @@
     <string name="swap_screen_invalid_vault">Transakcija će vjerojatno propasti, trezor se nije mogao učitati.</string>
     <string name="swap_form_vault">Trezor</string>
     <string name="swap_form_min_pay">min. isplata</string>
+    <string name="swap_form_expected_pay">očekivana isplata</string>
+    <string name="swap_form_min_pay_amount">min. isplata: %1$s %2$s</string>
     <string name="vault_list_vaults_list">Sefovi</string>
     <string name="tx_done_address_copied">%1$s kopirano u međuspremnik</string>
     <string name="token_logo">Logo tokena</string>
@@ -1401,6 +1403,7 @@
     <string name="transaction_history_to_label">Za</string>
     <string name="transaction_history_via_prefix">putem</string>
     <string name="transaction_history_min_payout_label">min. isplata</string>
+    <string name="transaction_history_expected_payout_label">očekivana isplata</string>
     <string name="transaction_history_date_today">Danas</string>
     <string name="transaction_history_date_yesterday">Jučer</string>
     <string name="transaction_history_elapsed_just_now">upravo sada</string>

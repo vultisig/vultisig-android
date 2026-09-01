@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.swap.ThorchainMemoLimit
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -141,8 +142,56 @@ object LimitSwapMemo {
         return withAffiliate
     }
 
-    private val tradeTargetPattern = Regex("^\\d+/\\d+/\\d+$")
+    /**
+     * `LIM/INTERVAL/QUANTITY`, where the LIM is either a plain decimal or THORChain's
+     * `<mantissa>e<exponent>` shorthand — see [decodeLim].
+     */
+    private val tradeTargetPattern = Regex("^\\d+(?:[eE]\\d+)?/\\d+/\\d+$")
     private val affiliateBpsPattern = Regex("^\\d+$")
+
+    /**
+     * Longest LIM field read at all, so an unbounded digit run never reaches [BigInteger], and
+     * largest `e<exponent>` accepted, so decoding never raises ten to an attacker-chosen power.
+     * Both are far above anything a 1e8 fixed-point amount needs; iOS bounds its own decoder the
+     * same way.
+     */
+    private const val MAX_LIM_FIELD_LENGTH = 40
+
+    private const val MAX_LIM_EXPONENT = 80
+
+    /**
+     * A LIM field: digits, optionally followed by `e` and the exponent. `\d` is ASCII-only, which
+     * matters — [BigInteger] and `Character.digit` both accept non-ASCII numerals, and would read
+     * one as a value the node never wrote.
+     */
+    private val limPattern = Regex("^(\\d+)(?:[eE](\\d+))?$")
+
+    /**
+     * The integer a memo's LIM field spells, or null when it spells nothing THORChain would read.
+     *
+     * The field is written either as a plain decimal (`1600000000`) or in THORChain's
+     * `<mantissa>e<exponent>` shorthand — the mantissa followed by `exponent` trailing zeros
+     * (`16e8`). Both denote the same integer, and the chain accepts either.
+     *
+     * [build] only ever writes the plain form, but this app is also asked to *read* orders it did
+     * not place: iOS shrinks a LIM to the shorthand whenever that is strictly shorter
+     * (`compressLim`), which is how an order fits a UTXO source's 80-byte OP_RETURN. Refusing the
+     * shorthand would leave a cosigner unable to tell an iOS-placed limit order from a market swap
+     * — captioning an enforced floor "expected payout" — and would drop the order from
+     * [com.vultisig.wallet.data.repositories.PendingLimitOrderRepository] entirely.
+     *
+     * Zero is decoded, not rejected: callers treat it as the market-order trade target it is, with
+     * their own message. Null is for a field that is not either form.
+     */
+    internal fun decodeLim(field: String): BigInteger? {
+        if (field.length > MAX_LIM_FIELD_LENGTH) return null
+        val match = limPattern.matchEntire(field) ?: return null
+        val exponentText = match.groups[2]?.value
+        val exponent = if (exponentText == null) 0 else exponentText.toIntOrNull() ?: return null
+        if (exponent > MAX_LIM_EXPONENT) return null
+        val limit = BigInteger(match.groupValues[1]) * BigInteger.TEN.pow(exponent)
+        return limit.takeIf { it < ThorchainMemoLimit.LIMIT_UPPER_BOUND }
+    }
 
     /**
      * Fail closed on anything that is not a well-formed THORChain limit-swap memo.
@@ -173,7 +222,11 @@ object LimitSwapMemo {
             "limit-swap memo trade target must be \"<limit>/<interval>/<quantity>\", " +
                 "got \"$tradeTarget\""
         }
-        require(BigInteger(tradeTarget.substringBefore('/')) > BigInteger.ZERO) {
+        val limit = decodeLim(tradeTarget.substringBefore('/'))
+        require(limit != null) {
+            "limit-swap memo has an unreadable minimum-received (LIM): \"$tradeTarget\""
+        }
+        require(limit > BigInteger.ZERO) {
             "limit-swap memo has a zero minimum-received (LIM), which THORChain treats as a market " +
                 "order"
         }
@@ -215,7 +268,7 @@ object LimitSwapMemo {
             return null
         }
         val parts = segments[2].split("/")
-        val limit = parts[0].toBigIntegerOrNull()?.takeIf { it > BigInteger.ZERO } ?: return null
+        val limit = decodeLim(parts[0])?.takeIf { it > BigInteger.ZERO } ?: return null
         val expiryBlocks = parts[1].toIntOrNull() ?: return null
         return Parsed(
             targetAsset = segments[0],

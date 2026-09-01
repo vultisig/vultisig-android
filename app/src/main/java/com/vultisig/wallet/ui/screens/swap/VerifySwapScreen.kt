@@ -270,7 +270,13 @@ private fun VerifySwapScreen(
                         HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.light)
                     }
 
-                    SwapToken(valuedToken = tx.dst, isSwap = true, isDestinationToken = true)
+                    SwapToken(
+                        valuedToken = tx.dst,
+                        isSwap = true,
+                        isDestinationToken = true,
+                        isLimitOrder = tx.isLimitOrder,
+                        minPayout = tx.minPayout,
+                    )
 
                     if (tx.isLimitOrder && tx.limitTargetPriceLabel != null) {
                         UiSpacer(16.dp)
@@ -467,6 +473,8 @@ internal fun SwapToken(
     isSwap: Boolean = false,
     isDestinationToken: Boolean = false,
     isLoading: Boolean = false,
+    isLimitOrder: Boolean = false,
+    minPayout: String? = null,
 ) {
     val token = valuedToken.token
     val value = valuedToken.value
@@ -496,8 +504,16 @@ internal fun SwapToken(
 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             if (isDestinationToken) {
+                // A market swap's amount is the quote's *expected* output — the memo's floor, when
+                // there is one, sits below it and gets its own line — so calling it the minimum
+                // overstates what the signature guarantees. A limit order is the opposite case: its
+                // amount IS the signed floor, so "min. payout" is exactly right there (#5711).
                 Text(
-                    text = stringResource(R.string.swap_form_min_pay),
+                    text =
+                        stringResource(
+                            if (isLimitOrder) R.string.swap_form_min_pay
+                            else R.string.swap_form_expected_pay
+                        ),
                     style = Theme.brockmann.supplementary.captionSmall,
                     color = Theme.v2.colors.text.tertiary,
                 )
@@ -519,6 +535,22 @@ internal fun SwapToken(
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.tertiary,
                 )
+
+                // The floor the signed memo actually enforces. Absent — not zeroed, not
+                // substituted — on routes that enforce none, so the screen never asserts a
+                // guarantee the signature doesn't back (#5711).
+                if (minPayout != null) {
+                    Text(
+                        text =
+                            stringResource(
+                                R.string.swap_form_min_pay_amount,
+                                minPayout,
+                                token.ticker,
+                            ),
+                        style = Theme.brockmann.supplementary.captionSmall,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+                }
             }
         }
 

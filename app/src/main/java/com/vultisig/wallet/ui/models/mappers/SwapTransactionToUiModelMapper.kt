@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
@@ -16,6 +15,8 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.clampDstFiatToSrcFiat
 import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
+import com.vultisig.wallet.ui.models.swap.signedLimitOrder
+import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -136,10 +137,10 @@ constructor(
         // formatted here rather than at build time so the price lands in the user's currency and
         // the expiry reuses the same string resources as the form's pills. The cosigner formats the
         // same pair through the same use case, from the memo it is asked to sign.
-        val isLimitMemo = from.memo?.startsWith(LimitSwapMemo.PREFIX) == true
+        val limitMemo = signedLimitOrder(memo = from.memo, dstToken = from.dstToken)
         val regular = from as? SwapTransaction.RegularSwapTransaction
-        val limitTargetPrice = regular?.limitOrderTargetPrice?.takeIf { isLimitMemo }
-        val limitExpiryHours = regular?.limitOrderExpiryHours?.takeIf { isLimitMemo }
+        val limitTargetPrice = regular?.limitOrderTargetPrice?.takeIf { limitMemo != null }
+        val limitExpiryHours = regular?.limitOrderExpiryHours?.takeIf { limitMemo != null }
         val limitLabels =
             if (limitTargetPrice != null && limitExpiryHours != null) {
                 formatLimitOrderLabels(
@@ -151,6 +152,13 @@ constructor(
             } else {
                 null
             }
+
+        // The floor the signed memo enforces, or null when it enforces none — which is the case
+        // for every aggregator route and for a THORChain/Maya swap left on "Auto" slippage, where
+        // the node returns a memo with no LIM at all (#5711).
+        val minPayout =
+            signedMinimumOutput(payload = from.payload, memo = from.memo, dstToken = from.dstToken)
+                ?.let { mapTokenValueToDecimalUiString(it) }
 
         return SwapTransactionUiModel(
             src =
@@ -206,11 +214,14 @@ constructor(
             vultBpsDiscountFiatValue = from.vultBpsDiscountFiatValue,
             referralBpsDiscount = from.referralBpsDiscount,
             referralBpsDiscountFiatValue = from.referralBpsDiscountFiatValue,
+            minPayout = minPayout,
             priceImpactPercent = priceImpactDisplay?.percent,
             priceImpactLevel = priceImpactDisplay?.level,
-            // Classify as a limit order only when the `=<` memo yielded both labels, so the limit
-            // title can never render without its Target Price / expiry row.
-            isLimitOrder = limitLabels != null,
+            // The memo decides this, not the labels below it: a `=<` order whose lifetime this
+            // app has no pill for is still an order, and its amount is still the enforced floor
+            // rather than an expectation. The rows that need the labels null-check them
+            // themselves (CodeRabbit, #5734).
+            isLimitOrder = limitMemo != null,
             limitTargetPriceLabel = limitLabels?.targetPriceLabel,
             limitExpiryLabel = limitLabels?.expiryLabel,
         )

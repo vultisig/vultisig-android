@@ -338,6 +338,8 @@
     <string name="swap_form_total_fees_title">총 수수료</string>
     <string name="swap_form_vault">볼트</string>
     <string name="swap_form_min_pay">최소 수령액</string>
+    <string name="swap_form_expected_pay">예상 수령액</string>
+    <string name="swap_form_min_pay_amount">최소 수령액: %1$s %2$s</string>
     <string name="swap_form_on_chain">네트워크</string>
     <string name="share_qr_utils_choose_an_app">앱 선택</string>
     <string name="verify_swap_agree_receive_amount">최소 수령 금액에 동의합니다</string>
@@ -1425,6 +1427,7 @@
     <string name="transaction_history_to_label">수신</string>
     <string name="transaction_history_via_prefix">경유</string>
     <string name="transaction_history_min_payout_label">최소 수령액</string>
+    <string name="transaction_history_expected_payout_label">예상 수령액</string>
     <string name="transaction_history_date_today">오늘</string>
     <string name="transaction_history_date_yesterday">어제</string>
     <string name="transaction_history_elapsed_just_now">방금 전</string>

@@ -241,6 +241,8 @@
     <string name="naming_vault_screen_invalid_name">Ongeldige naam</string>
     <string name="swap_form_vault">Kluis</string>
     <string name="swap_form_min_pay">min. uitbetaling</string>
+    <string name="swap_form_expected_pay">verwachte uitbetaling</string>
+    <string name="swap_form_min_pay_amount">min. uitbetaling: %1$s %2$s</string>
     <string name="rename_vault_invalid_name">Ongeldige naam</string>
     <string name="swap_form_invalid_amount">Ongeldig bedrag</string>
     <string name="vault_name_too_long_error">Kluisnaam is te lang</string>
@@ -1392,6 +1394,7 @@
     <string name="transaction_history_to_label">Aan</string>
     <string name="transaction_history_via_prefix">via</string>
     <string name="transaction_history_min_payout_label">min. uitbetaling</string>
+    <string name="transaction_history_expected_payout_label">verwachte uitbetaling</string>
     <string name="transaction_history_date_today">Vandaag</string>
     <string name="transaction_history_date_yesterday">Gisteren</string>
     <string name="transaction_history_elapsed_just_now">zojuist</string>

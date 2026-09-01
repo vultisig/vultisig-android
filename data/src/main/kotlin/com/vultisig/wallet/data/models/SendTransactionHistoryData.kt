@@ -107,6 +107,14 @@ data class SwapTransactionHistoryData(
      * Confirmed. See [com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService].
      */
     val toDecimals: Int = 0,
+    /**
+     * Whether this row is a THORChain `=<` limit order rather than a market swap. A limit order's
+     * [toAmount] IS the floor the memo enforces, so the card labels it "min. payout"; a market
+     * swap's is the quote's expected output and must not be labelled a minimum (#5711).
+     * Default-valued so legacy rows stay readable (no Room migration) — and defaulting to `false`
+     * is the safe direction, since it claims no guarantee.
+     */
+    val isLimitOrder: Boolean = false,
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(
