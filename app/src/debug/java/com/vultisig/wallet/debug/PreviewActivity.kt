@@ -3697,8 +3697,7 @@ private fun TokenDetailSheetFullPreview(allActions: Boolean = false) {
                 canSwap = true,
                 canBuy = true,
                 canDeposit = allActions,
-                chainAddress =
-                    if (allActions) "9ceRgz57Jj1kmDBQtBWJyeSRhSpxvzWLPQb1LzGxKPWa" else "",
+                chainAddress = if (allActions) "9ceRgz57Jj1kmDBQtBWJyeSRhSpxvzWLPQb1LzGxKPWa" else "",
                 chart =
                     ChartUiModel(points = points, isPositive = true, changePercentText = "+4.21%"),
                 marketStats =
