@@ -98,7 +98,7 @@ internal fun CryptoConnectionSelect(
                                 modifier = Modifier.weight(1f),
                                 onClick = { onTypeClick(CryptoConnectionType.Wallet) },
                                 text = stringResource(R.string.wallet),
-                                icon = R.drawable.wallet,
+                                icon = R.drawable.wallet_filled,
                                 enabled = isWalletSelected,
                             )
 
@@ -106,7 +106,7 @@ internal fun CryptoConnectionSelect(
                                 modifier = Modifier.weight(1f),
                                 onClick = { onTypeClick(CryptoConnectionType.Defi) },
                                 text = stringResource(R.string.defi),
-                                icon = R.drawable.coins_add,
+                                icon = R.drawable.nodes,
                                 enabled = !isWalletSelected,
                             )
                         }
@@ -115,7 +115,7 @@ internal fun CryptoConnectionSelect(
                                 modifier = Modifier.weight(1f),
                                 onClick = { onTypeClick(CryptoConnectionType.Wallet) },
                                 text = stringResource(R.string.wallet),
-                                icon = R.drawable.wallet,
+                                icon = R.drawable.wallet_filled,
                                 enabled = true,
                             )
                         }

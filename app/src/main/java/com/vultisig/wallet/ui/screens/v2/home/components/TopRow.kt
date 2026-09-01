@@ -28,7 +28,7 @@ internal fun TopRow(
 
         VsCircleButton(
             onClick = onOpenHistoryClick,
-            icon = R.drawable.clock_arrow_circlepath,
+            icon = R.drawable.clock_rotate_clockwise,
             size = VsCircleButtonSize.Small,
             type = VsCircleButtonType.Secondary,
             designType = DesignType.Shined,
@@ -36,7 +36,7 @@ internal fun TopRow(
         UiSpacer(size = 8.dp)
         VsCircleButton(
             onClick = onOpenSettingsClick,
-            icon = R.drawable.gear,
+            icon = R.drawable.gear_4,
             size = VsCircleButtonSize.Small,
             type = VsCircleButtonType.Secondary,
             designType = DesignType.Shined,
