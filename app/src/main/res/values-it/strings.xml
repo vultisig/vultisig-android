@@ -1256,6 +1256,11 @@
     <string name="add">Aggiungi</string>
     <string name="remove">Rimuovi</string>
     <string name="no_positions_found">Nessuna posizione trovata</string>
+    <plurals name="defi_chain_positions_count">
+        <item quantity="one">%1$d posizione</item>
+        <item quantity="many">%1$d di posizioni</item>
+        <item quantity="other">%1$d posizioni</item>
+    </plurals>
     <string name="select_positions">Seleziona posizioni</string>
     <string name="enable_at_least_one_position">Abilita almeno una posizione per visualizzare i saldi e gestire le posizioni.</string>
     <string name="bandwidth">Larghezza di banda</string>

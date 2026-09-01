@@ -1253,6 +1253,10 @@
     <string name="add">Toevoegen</string>
     <string name="remove">Verwijderen</string>
     <string name="no_positions_found">Geen posities gevonden</string>
+    <plurals name="defi_chain_positions_count">
+        <item quantity="one">%1$d positie</item>
+        <item quantity="other">%1$d posities</item>
+    </plurals>
     <string name="select_positions">Selecteer posities</string>
     <string name="enable_at_least_one_position">Schakel ten minste één positie in om saldi te bekijken en posities te beheren.</string>
     <string name="bandwidth">Bandbreedte</string>

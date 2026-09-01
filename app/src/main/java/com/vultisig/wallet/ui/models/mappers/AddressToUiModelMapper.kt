@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.mappers
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.calculateAccountsPartialFiatValue
+import com.vultisig.wallet.data.models.calculateActiveDefiPositionsCount
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.models.AccountUiModel
 import javax.inject.Inject
@@ -36,6 +37,12 @@ constructor(
                 },
             assetsSize = from.accounts.size,
             nativeTokenTicker = nativeAccount.token.ticker,
+            isDeFiProvider = isDefiProvider,
+            // A DeFi row reports how many positions the vault holds on the chain, not how many
+            // tokens it tracks there. Counted only for DeFi rows, so a wallet row still reports
+            // its asset count.
+            defiPositionsCount =
+                if (isDefiProvider) from.accounts.calculateActiveDefiPositionsCount() else null,
         )
     }
 }

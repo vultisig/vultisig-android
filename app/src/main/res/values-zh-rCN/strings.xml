@@ -1587,6 +1587,9 @@
     <string name="add">添加</string>
     <string name="remove">移除</string>
     <string name="no_positions_found">未找到仓位</string>
+    <plurals name="defi_chain_positions_count">
+        <item quantity="other">%1$d 个仓位</item>
+    </plurals>
     <string name="select_positions">选择仓位</string>
     <string name="enable_at_least_one_position">请至少启用一个仓位以查看余额和管理仓位。</string>
     <string name="bandwidth">带宽</string>
