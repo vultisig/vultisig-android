@@ -71,7 +71,7 @@ constructor(
         }
 
     override suspend fun getAddressInfo(chain: Chain, address: String): BlockChairInfo? {
-        try {
+        return try {
             val response =
                 httpClient.get(
                     "$BASE_URL/${getChainName(chain)}/dashboards/address/${address}?state=latest"
@@ -80,14 +80,14 @@ constructor(
                 }
             val responseData = response.bodyOrThrow<BlockChairInfoJson>()
             Timber.d("response data: $responseData")
-            return responseData.data[address]?.copy(
+            responseData.data[address]?.copy(
                 currentBlockHeight = responseData.context?.state?.toLong()
             )
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e("fail to get address info from blockchair: ${e.message}")
+            Timber.e(e, "fail to get address info from blockchair")
+            throw e
         }
-        return null
     }
 
     override suspend fun getAllUtxos(chain: Chain, address: String): BlockChairInfo {

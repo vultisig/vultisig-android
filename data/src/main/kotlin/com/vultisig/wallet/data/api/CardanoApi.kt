@@ -72,7 +72,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("Error in Cardano getBalance : ${e.message}")
-            BigInteger.ZERO
+            throw e
         }
     }
 

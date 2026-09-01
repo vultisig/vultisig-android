@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ton.TonDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.tron.TronDeFiBalanceService
 import com.vultisig.wallet.data.db.dao.TokenValueDao
+import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.models.Coins
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -29,6 +30,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -45,11 +47,14 @@ class BalanceRepositoryBalanceOrNullTest {
 
     private val solanaApi = mockk<SolanaApi>(relaxed = true)
     private val thorChainApi = mockk<ThorChainApi>(relaxed = true)
+    private val blockchairApi = mockk<BlockChairApi>(relaxed = true)
+    private val cardanoApi = mockk<CardanoApi>(relaxed = true)
+    private val tokenValueDao = mockk<TokenValueDao>(relaxed = true)
 
     private val repository =
         BalanceRepositoryImpl(
             thorChainApi = thorChainApi,
-            blockchairApi = mockk<BlockChairApi>(relaxed = true),
+            blockchairApi = blockchairApi,
             evmApiFactory = mockk<EvmApiFactory>(relaxed = true),
             mayaChainApi = mockk<MayaChainApi>(relaxed = true),
             cosmosApiFactory = mockk<CosmosApiFactory>(relaxed = true),
@@ -64,8 +69,8 @@ class BalanceRepositoryBalanceOrNullTest {
             tonApi = mockk<TonApi>(relaxed = true),
             rippleApi = mockk<RippleApi>(relaxed = true),
             tronApi = mockk<TronApi>(relaxed = true),
-            cardanoApi = mockk<CardanoApi>(relaxed = true),
-            tokenValueDao = mockk<TokenValueDao>(relaxed = true),
+            cardanoApi = cardanoApi,
+            tokenValueDao = tokenValueDao,
             thorchainDeFiBalanceService = mockk<ThorchainDeFiBalanceService>(relaxed = true),
             circleDeFiBalanceService = mockk<CircleDeFiBalanceService>(relaxed = true),
             mayaDeFiBalanceService = mockk<MayaDeFiBalanceService>(relaxed = true),
@@ -109,6 +114,55 @@ class BalanceRepositoryBalanceOrNullTest {
         assertThrows<CancellationException> {
             repository.getBalanceOrNull(ADDRESS, Coins.ThorChain.RUNE)
         }
+    }
+
+    @Test
+    fun `a Blockchair balance failure propagates and is not persisted as zero`() = runTest {
+        coEvery { blockchairApi.getAddressInfo(Coins.Bitcoin.BTC.chain, ADDRESS) } throws
+            IllegalStateException("blockchair down")
+
+        assertThrows<IllegalStateException> {
+            repository.getTokenValue(ADDRESS, Coins.Bitcoin.BTC).first()
+        }
+
+        coVerify(exactly = 0) { tokenValueDao.insertTokenValue(any<TokenValueEntity>()) }
+    }
+
+    @Test
+    fun `a Blockchair absent address response persists a genuine zero`() = runTest {
+        coEvery { blockchairApi.getAddressInfo(Coins.Bitcoin.BTC.chain, ADDRESS) } returns null
+
+        repository.getTokenValue(ADDRESS, Coins.Bitcoin.BTC).first().value shouldBe BigInteger.ZERO
+
+        coVerify(exactly = 1) {
+            tokenValueDao.insertTokenValue(
+                match<TokenValueEntity> { it.tokenValue == BigInteger.ZERO.toString() }
+            )
+        }
+    }
+
+    @Test
+    fun `a Cardano balance failure propagates and is not persisted as zero`() = runTest {
+        coEvery { cardanoApi.getBalance(Coins.Cardano.ADA) } throws
+            IllegalStateException("koios down")
+
+        assertThrows<IllegalStateException> {
+            repository.getTokenValue(ADDRESS, Coins.Cardano.ADA).first()
+        }
+
+        coVerify(exactly = 0) { tokenValueDao.insertTokenValue(any<TokenValueEntity>()) }
+    }
+
+    @Test
+    fun `a Solana native balance failure propagates and is not persisted as zero`() = runTest {
+        coEvery { solanaApi.getBalanceOrNull(ADDRESS) } returns null
+
+        assertThrows<IllegalStateException> {
+            repository.getTokenValue(ADDRESS, Coins.Solana.SOL).first()
+        }
+
+        coVerify(exactly = 0) { solanaApi.getBalance(any()) }
+        coVerify(exactly = 0) { tokenValueDao.insertTokenValue(any<TokenValueEntity>()) }
     }
 
     private companion object {

@@ -3,9 +3,11 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.BigIntegerSerializerImpl
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.UTXOStatusResponseSerializerImpl
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -96,6 +98,20 @@ class BlockChairApiBodyReadTest {
         val result = api.getAddressInfo(chain = Chain.Litecoin, address = "missingAddress")
 
         assertNull(result)
+    }
+
+    @Test
+    fun `getAddressInfo propagates an HTTP failure instead of swallowing it into null`() = runTest {
+        val api =
+            BlockChairApiImp(
+                json = json,
+                httpClient = MockHttpClient.respondingWith(HttpStatusCode.Forbidden, ""),
+                utxoStatusResponseSerializer = UTXOStatusResponseSerializerImpl(json),
+            )
+
+        assertFailsWith<NetworkException> {
+            api.getAddressInfo(chain = Chain.Litecoin, address = "missingAddress")
+        }
     }
 
     // -------------------------------------------------------------------------
