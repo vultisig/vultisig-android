@@ -1592,7 +1592,7 @@ private fun SendTxDoneDecodedPreview() {
                 HeroCoinAmount(
                     amount = "1,250.5",
                     ticker = "TCY",
-                    logo = Coins.ThorChain.RUNE.logo,
+                    logo = Coins.ThorChain.TCY.logo,
                     fiatValue = "$412.66",
                 ),
         )
@@ -1609,7 +1609,7 @@ private fun SendTxDoneProjectedPreview() {
                 HeroCoinAmount(
                     amount = "625.25",
                     ticker = "TCY",
-                    logo = Coins.ThorChain.RUNE.logo,
+                    logo = Coins.ThorChain.TCY.logo,
                     fiatValue = "$206.33",
                 ),
             scope = stringResource(R.string.withdrawing_share_of_staked_position, "50%"),
