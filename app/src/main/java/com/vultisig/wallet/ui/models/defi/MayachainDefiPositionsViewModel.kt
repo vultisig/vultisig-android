@@ -781,8 +781,9 @@ constructor(
                                 isLoading = true,
                             )
                     }
+                val isCold = selectedPools.any { loaded[it.positionKey] == null }
                 updateModel {
-                    it.copy(lp = it.lp.copy(isLoading = false, positions = placeholderPositions))
+                    it.copy(lp = it.lp.copy(isLoading = isCold, positions = placeholderPositions))
                 }
 
                 val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }

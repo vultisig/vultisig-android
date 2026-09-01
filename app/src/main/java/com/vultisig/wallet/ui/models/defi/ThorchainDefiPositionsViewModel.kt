@@ -1270,8 +1270,9 @@ constructor(
                         loaded[pool.positionKey]?.copy(isLoading = false)
                             ?: pool.toPlaceholderUiModel(zero).copy(isLoading = true)
                     }
+                val isCold = selectedPools.any { loaded[it.positionKey] == null }
                 state.update {
-                    it.copy(lp = it.lp.copy(isLoading = false, positions = placeholders))
+                    it.copy(lp = it.lp.copy(isLoading = isCold, positions = placeholders))
                 }
 
                 try {
