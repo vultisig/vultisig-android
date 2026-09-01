@@ -51,10 +51,8 @@ import timber.log.Timber
  * repeated empty action responses, giving Midgard's action index time to surface refunds.
  */
 class ThorMayaChainStatusProvider
-internal constructor(
-    private val httpClient: HttpClient,
-    private val nowMillis: () -> Long,
-) : TransactionStatusProvider {
+internal constructor(private val httpClient: HttpClient, private val nowMillis: () -> Long) :
+    TransactionStatusProvider {
 
     @Inject constructor(httpClient: HttpClient) : this(httpClient, System::currentTimeMillis)
 
@@ -116,17 +114,15 @@ internal constructor(
         val streak =
             emptyActionStreaks.compute(key) { _, current ->
                 val now = nowMillis()
-                current?.copy(count = current.count + 1, lastObservedAtMillis = now)
+                val fresh =
+                    current?.takeIf { now - it.lastObservedAtMillis <= EMPTY_ACTION_STREAK_TTL_MS }
+                fresh?.copy(count = fresh.count + 1, lastObservedAtMillis = now)
                     ?: EmptyActionStreak(
                         count = 1,
                         firstObservedAtMillis = now,
                         lastObservedAtMillis = now,
                     )
-            } ?: EmptyActionStreak(
-                count = 0,
-                firstObservedAtMillis = nowMillis(),
-                lastObservedAtMillis = nowMillis(),
-            )
+            }!!
 
         return if (
             streak.count >= MIN_INDEXABLE_EMPTY_ACTION_POLLS &&
@@ -180,8 +176,9 @@ internal constructor(
     }
 
     private fun String?.isMidgardIndexedMemo(): Boolean {
-        val op = this?.trim()?.takeIf { it.isNotEmpty() }?.substringBefore(":")?.uppercase()
-            ?: return false
+        val op =
+            this?.trim()?.takeIf { it.isNotEmpty() }?.substringBefore(":")?.uppercase()
+                ?: return false
         return op in MIDGARD_INDEXED_MEMO_OPS
     }
 
@@ -220,6 +217,7 @@ internal constructor(
         const val DEFAULT_FAILED_REASON = "Transaction failed"
         const val MIN_INDEXABLE_EMPTY_ACTION_POLLS = 2
         const val MIN_INDEXABLE_EMPTY_ACTION_AGE_MS = 15_000L
+        const val EMPTY_ACTION_STREAK_TTL_MS = 5 * 60_000L
         const val THOR_MSG_DEPOSIT_TYPE = "/types.MsgDeposit"
         val MIDGARD_INDEXED_MEMO_OPS =
             setOf(

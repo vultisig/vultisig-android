@@ -389,6 +389,34 @@ class ThorMayaChainStatusProviderTest {
         }
 
     @Test
+    fun `stale empty action streak does not carry over to a later polling session`() = runTest {
+        var nowMillis = 0L
+        val nativeSuccess =
+            """
+            {
+              "tx": { "body": { "memo": "+:ETH.ETH:0xdestination" } },
+              "tx_response": { "code": 0, "codespace": "", "raw_log": "" }
+            }
+            """
+                .trimIndent()
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to """{ "actions": [] }""",
+                HttpStatusCode.OK to nativeSuccess,
+                HttpStatusCode.OK to """{ "actions": [] }""",
+                HttpStatusCode.OK to nativeSuccess,
+            )
+        val provider = ThorMayaChainStatusProvider(client) { nowMillis }
+
+        provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
+
+        // A new polling session starts long after the streak's TTL — the stale count must not
+        // let this poll confirm immediately even though 15s+ has technically elapsed.
+        nowMillis = 10 * 60_000L
+        provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
+    }
+
+    @Test
     fun `indexable memo in MsgDeposit with empty body memo does not trust native code 0`() =
         runTest {
             val nativeSuccess =
@@ -443,25 +471,25 @@ class ThorMayaChainStatusProviderTest {
     @Test
     fun `indexable memo does not count empty midgard response when native node is not found`() =
         runTest {
-        val nativeSuccess =
-            """
+            val nativeSuccess =
+                """
             {
               "tx": { "body": { "memo": "=:BTC.BTC:bc1destination" } },
               "tx_response": { "code": 0, "codespace": "", "raw_log": "" }
             }
             """
-                .trimIndent()
-        val client =
-            MockHttpClient.respondingWithSequence(
-                HttpStatusCode.OK to """{ "actions": [] }""",
-                HttpStatusCode.NotFound to "",
-                HttpStatusCode.OK to """{ "actions": [] }""",
-                HttpStatusCode.OK to nativeSuccess,
-            )
-        val provider = ThorMayaChainStatusProvider(client)
+                    .trimIndent()
+            val client =
+                MockHttpClient.respondingWithSequence(
+                    HttpStatusCode.OK to """{ "actions": [] }""",
+                    HttpStatusCode.NotFound to "",
+                    HttpStatusCode.OK to """{ "actions": [] }""",
+                    HttpStatusCode.OK to nativeSuccess,
+                )
+            val provider = ThorMayaChainStatusProvider(client)
 
-        provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
-        provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
+            provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
+            provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
         }
 
     @Test
