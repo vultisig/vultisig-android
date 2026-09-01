@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
 import com.vultisig.wallet.data.chains.helpers.TronFunctions.buildTrc20TransferParameters
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.accept
@@ -24,9 +25,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.path
+import java.io.IOException
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.delay
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import timber.log.Timber
@@ -217,7 +220,23 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                 ?.firstOrNull()
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
-        } catch (e: Exception) {
+        } catch (e: NetworkException) {
+            Timber.d(
+                e,
+                "Tron constant call failed for %s %s",
+                contractAddressBase58,
+                functionSelector,
+            )
+            null
+        } catch (e: IOException) {
+            Timber.d(
+                e,
+                "Tron constant call failed for %s %s",
+                contractAddressBase58,
+                functionSelector,
+            )
+            null
+        } catch (e: SerializationException) {
             Timber.d(
                 e,
                 "Tron constant call failed for %s %s",

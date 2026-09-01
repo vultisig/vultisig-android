@@ -7,9 +7,12 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
+import com.vultisig.wallet.data.utils.NetworkException
+import java.io.IOException
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.serialization.SerializationException
 import timber.log.Timber
 
 internal interface SearchTonTokenUseCase : suspend (String) -> CoinAndPrice?
@@ -48,7 +51,13 @@ constructor(private val tonApi: TonApi, private val tokenPriceRepository: TokenP
             tonApi.getJettonMetadata(masterAddress)
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
+        } catch (e: NetworkException) {
+            Timber.d(e, "Ton jetton metadata fetch failed for %s", masterAddress)
+            null
+        } catch (e: IOException) {
+            Timber.d(e, "Ton jetton metadata fetch failed for %s", masterAddress)
+            null
+        } catch (e: SerializationException) {
             Timber.d(e, "Ton jetton metadata fetch failed for %s", masterAddress)
             null
         }

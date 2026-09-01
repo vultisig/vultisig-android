@@ -53,4 +53,30 @@ internal class CoinIdTest {
         val c = coin(Chain.ThorChain, "RUNE", "", isNativeToken = true)
         assertEquals("RUNE-THORChain", c.id)
     }
+
+    @Test
+    fun `same ticker TON jettons with different contracts get distinct ids`() {
+        val first = coin(Chain.Ton, "USDJ", "EQFirstJetton")
+        val second = coin(Chain.Ton, "USDJ", "EQSecondJetton")
+
+        assertNotEquals(first.id, second.id)
+        assertEquals("USDJ-Ton-EQFirstJetton", first.id)
+        assertEquals("USDJ-Ton-EQSecondJetton", second.id)
+    }
+
+    @Test
+    fun `same ticker TRON tokens with different contracts get distinct ids`() {
+        val first = coin(Chain.Tron, "USDX", "TFirstTrc20")
+        val second = coin(Chain.Tron, "USDX", "TSecondTrc20")
+
+        assertNotEquals(first.id, second.id)
+        assertEquals("USDX-Tron-TFirstTrc20", first.id)
+        assertEquals("USDX-Tron-TSecondTrc20", second.id)
+    }
+
+    @Test
+    fun `native TON and TRON coins keep unqualified ids`() {
+        assertEquals("TON-Ton", coin(Chain.Ton, "TON", "", isNativeToken = true).id)
+        assertEquals("TRX-Tron", coin(Chain.Tron, "TRX", "", isNativeToken = true).id)
+    }
 }
