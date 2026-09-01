@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.repositories.KaminoVaultSelectionRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.defi.DeFiPositionsSnapshotCache
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -46,6 +47,18 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
+ * Last-known Kamino Earn state for a vault, together with the two facts that say what its figures
+ * still answer: the enabled set the total was summed over, and the currency the cards were priced
+ * in. Restoring the model without them would have the next load drop the total on sight, which is
+ * the flash this exists to remove.
+ */
+internal data class KaminoEarnSnapshot(
+    val model: KaminoEarnUiModel,
+    val totalCoverage: Set<String>,
+    val pricedCurrency: AppCurrency?,
+)
+
+/**
  * Drives the Kamino Earn segment of the Solana DeFi tab.
  *
  * Cards are gated on the per-vault opt-in and, once enabled, always render: a vault with no deposit
@@ -65,6 +78,7 @@ constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val snapshotCache: DeFiPositionsSnapshotCache,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -89,11 +103,46 @@ constructor(
      */
     private var pricedCurrency: AppCurrency? = null
 
+    // Guards the one-shot restore: the screen calls setData on every resume, and seeding there
+    // would drop whatever the last load published back onto the snapshot.
+    private var hasRestoredSnapshot = false
+
     fun setData(vaultId: String) {
         this.vaultId = vaultId
+        restoreSnapshot(vaultId)
         forgetStoredShareTokens()
         loadBalanceVisibility()
         observeSelectionAndCurrency()
+    }
+
+    /**
+     * Paints the cards this vault last showed instead of cold-starting the tab — which, since Earn
+     * is the tab the Solana screen opens on, is the wait every re-entry pays. The reload
+     * [observeSelectionAndCurrency] starts on its first emission replaces them, and drops whatever
+     * a currency switch or a changed selection has invalidated. The picker is deliberately left
+     * closed: a sheet the user dismissed by leaving the screen must not reopen itself.
+     */
+    private fun restoreSnapshot(vaultId: String) {
+        if (hasRestoredSnapshot) return
+        hasRestoredSnapshot = true
+        val cached = snapshotCache.read(vaultId, KaminoEarnSnapshot::class) ?: return
+        totalCoverage = cached.totalCoverage
+        pricedCurrency = cached.pricedCurrency
+        _state.value = cached.model.copy(isShowingPicker = false, pendingSelection = emptySet())
+    }
+
+    override fun onCleared() {
+        if (::vaultId.isInitialized) {
+            snapshotCache.write(
+                vaultId,
+                KaminoEarnSnapshot(
+                    model = _state.value,
+                    totalCoverage = totalCoverage,
+                    pricedCurrency = pricedCurrency,
+                ),
+            )
+        }
+        super.onCleared()
     }
 
     /**

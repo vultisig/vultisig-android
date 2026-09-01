@@ -90,6 +90,19 @@ internal sealed interface TonDeFiUiState {
 }
 
 /**
+ * Last-known TON staking state for a vault: what the screen rendered, plus the pool it was routing
+ * to. The pool address and staked amount are display/routing context the screen keeps outside its
+ * state, so they travel with it — restoring the card without them would leave Unstake dead if the
+ * refresh that follows fails.
+ */
+@Immutable
+internal data class TonStakingSnapshot(
+    val state: TonDeFiUiState.Success,
+    val poolAddress: String?,
+    val stakedDisplay: String,
+)
+
+/**
  * View-model for the native TON nominator-pool staking position on the DeFi/Earn tab.
  *
  * Reads the account's pools from tonapi, treats the largest as the primary position (mirrors
@@ -108,6 +121,7 @@ constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val snapshotCache: DeFiPositionsSnapshotCache,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
@@ -122,9 +136,48 @@ constructor(
     private var cachedStakedDisplay: String = ""
     private var loadJob: Job? = null
 
+    // Guards the one-shot restore: the screen calls setData on every resume, and seeding there
+    // would drop whatever the last load published back onto the snapshot.
+    private var hasRestoredSnapshot = false
+
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
+        restoreSnapshot(vaultId)
         loadData(vaultId)
+    }
+
+    /**
+     * Paints the card this vault last showed instead of the first-open skeleton. The reload
+     * [setData] starts right after replaces it, and holds Stake/Unstake closed while it runs — see
+     * [isActionLocked] — so nothing is ever staged off the restored figures.
+     */
+    private fun restoreSnapshot(vaultId: VaultId) {
+        if (hasRestoredSnapshot) return
+        hasRestoredSnapshot = true
+        val cached = snapshotCache.read(vaultId, TonStakingSnapshot::class) ?: return
+        cachedPoolAddress = cached.poolAddress
+        cachedStakedDisplay = cached.stakedDisplay
+        _state.value =
+            cached.state.copy(
+                isReloading = false,
+                showPositionSelectionDialog = false,
+                tempSelectedPositions = cached.state.selectedPositions,
+            )
+    }
+
+    override fun onCleared() {
+        val success = _state.value as? TonDeFiUiState.Success
+        if (vaultId.isNotEmpty() && success != null) {
+            snapshotCache.write(
+                vaultId,
+                TonStakingSnapshot(
+                    state = success,
+                    poolAddress = cachedPoolAddress,
+                    stakedDisplay = cachedStakedDisplay,
+                ),
+            )
+        }
+        super.onCleared()
     }
 
     fun refresh() {

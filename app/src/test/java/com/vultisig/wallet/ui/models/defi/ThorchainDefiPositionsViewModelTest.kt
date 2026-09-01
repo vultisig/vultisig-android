@@ -92,6 +92,8 @@ internal class ThorchainDefiPositionsViewModelTest {
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
     private lateinit var getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase
     private lateinit var getThorChainPendingLpDepositsUseCase: GetThorChainPendingLpDepositsUseCase
+    // The real cache, not a mock: these tests assert the round trip a nav pop and a re-entry make.
+    private lateinit var snapshotCache: DeFiPositionsSnapshotCache
 
     @BeforeEach
     fun setUp() {
@@ -112,6 +114,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         balanceVisibilityRepository = mockk(relaxed = true)
         getThorChainLpPositionsUseCase = mockk(relaxed = true)
         getThorChainPendingLpDepositsUseCase = mockk(relaxed = true)
+        snapshotCache = DeFiPositionsSnapshotCache()
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
@@ -1233,6 +1236,198 @@ internal class ThorchainDefiPositionsViewModelTest {
         vm.state.value.selectedPositions shouldBe defaultSelectedPositionsDialog()
     }
 
+    @Test
+    fun `a refresh leaves the settled bonded total up instead of blanking it`() = runTest {
+        selectPositions("RUNE")
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+            flowOf(listOf(bondedNode(BigInteger("1000000000"))))
+        val viewModel = createViewModel().also { it.setData(VAULT_ID) }
+        assertEquals("$20.00", viewModel.state.value.bonded.totalBondedPrice)
+
+        // The refresh never answers, so what is on screen is what the previous load left.
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+            flow { awaitCancellation() }
+        viewModel.setData(VAULT_ID)
+
+        val bonded = viewModel.state.value.bonded
+        assertFalse(bonded.isLoading, "a priced total must not go back to its shimmer on a refresh")
+        assertEquals("10.00000000 RUNE", bonded.totalBondedAmount)
+        assertEquals("$20.00", bonded.totalBondedPrice)
+    }
+
+    @Test
+    fun `a refresh leaves the settled staking cards up instead of replacing them`() = runTest {
+        selectPositions("TCY")
+        coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns
+            flowOf(stakingDetails(Coins.ThorChain.TCY, BigInteger("500000000")))
+        val viewModel = createViewModel().also { it.setData(VAULT_ID) }
+        val settled = viewModel.state.value.staking.positions.single()
+        assertFalse(settled.isLoading)
+
+        // The refresh never answers, so what is on screen is what the previous load left.
+        coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns
+            flow { awaitCancellation() }
+        viewModel.setData(VAULT_ID)
+
+        val position = viewModel.state.value.staking.positions.single()
+        assertFalse(position.isLoading, "a settled card must not be swapped for a placeholder")
+        assertEquals(settled.stakedAmountDisplay, position.stakedAmountDisplay)
+        assertEquals(settled.stakedFiatDisplay, position.stakedFiatDisplay)
+    }
+
+    @Test
+    fun `a refresh leaves the settled LP cards up instead of blanking them`() = runTest {
+        selectPositions(BTC_POOL)
+        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            listOf(poolStats(BTC_POOL))
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
+            ThorChainLpPositions(
+                listOf(lpPosition(BTC_POOL, runeRedeem = "300000000", assetRedeem = "100000000"))
+            )
+        val viewModel = createViewModel().also { it.setData(VAULT_ID) }
+        viewModel.state.value.lp.positions.single().totalPriceLp shouldBe "$8.00"
+
+        // The refresh never answers, so what is on screen is what the previous load left.
+        coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } coAnswers
+            {
+                awaitCancellation()
+            }
+        viewModel.setData(VAULT_ID)
+
+        val lp = viewModel.state.value.lp
+        assertFalse(lp.isLoading, "a priced LP card must not go back to its shimmer on a refresh")
+        lp.positions.single().totalPriceLp shouldBe "$8.00"
+    }
+
+    @Test
+    fun `a refresh keeps the two RUJI cards apart`() = runTest {
+        // RUJI and its auto-compounding sRUJI card share the one "RUJI" tile in Manage Positions,
+        // so a refresh that matched settled cards on that key would render the bonded card twice
+        // and drop the compounding one.
+        selectPositions("RUJI")
+        coEvery { rujiStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(
+                listOf(
+                    stakingDetails(
+                        coin = Coins.ThorChain.RUJI,
+                        stakeAmount = BigInteger("500000000"),
+                    ),
+                    stakingDetails(
+                        coin = Coins.ThorChain.sRUJI,
+                        stakeAmount = BigInteger("300000000"),
+                    ),
+                )
+            )
+        val viewModel = createViewModel().also { it.setData(VAULT_ID) }
+        assertEquals(2, viewModel.state.value.staking.positions.size)
+
+        // The refresh never answers, so what is on screen is what the previous load left.
+        coEvery { rujiStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flow { awaitCancellation() }
+        viewModel.setData(VAULT_ID)
+
+        val positions = viewModel.state.value.staking.positions
+        assertEquals(listOf(RUJI_ID, Coins.ThorChain.sRUJI.id), positions.map { it.coin.id })
+        assertEquals("5 RUJI", positions.first().stakedAmountDisplay)
+        assertEquals("3 RUJI", positions.last().stakedAmountDisplay)
+    }
+
+    @Test
+    fun `a reload after a failed LP read shimmers instead of standing on the placeholders`() =
+        runTest {
+            // A failed read leaves zeroed placeholder cards on screen. Carrying those into the
+            // next reload as though they were settled would present a figure nothing confirmed and
+            // hide the fact that a read is in flight.
+            selectPositions(BTC_POOL)
+            coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+                listOf(poolStats(BTC_POOL))
+            coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } throws
+                RuntimeException("midgard down")
+            val viewModel = createViewModel().also { it.setData(VAULT_ID) }
+            viewModel.state.value.lp.isLoading shouldBe false
+
+            coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } coAnswers
+                {
+                    awaitCancellation()
+                }
+            viewModel.setData(VAULT_ID)
+
+            viewModel.state.value.lp.isLoading shouldBe true
+        }
+
+    @Test
+    fun `a re-entry paints the state the screen was last showing`() = runTest {
+        // Popping back to the DeFi list destroys this view-model, so the next open used to
+        // cold-start: empty cards, header on a spinner, and the enabled set flashing back to the
+        // RUNE + TCY defaults until the store answered.
+        snapshotCache.write(VAULT_ID, LAST_RENDERED)
+        neverAnswersSelection()
+
+        val model = createViewModel().also { it.setData(VAULT_ID) }.state.value
+
+        model.totalAmountPrice shouldBe "$12.34"
+        model.isTotalAmountLoading shouldBe false
+        model.bonded.totalBondedAmount shouldBe "5 RUNE"
+        // An empty selection is a choice the user made, and it survives the re-entry rather than
+        // being replaced by the defaults.
+        model.selectedPositions shouldBe emptyList()
+        model.selectedPositions shouldBe model.tempSelectedPositions
+    }
+
+    @Test
+    fun `a re-entry does not reopen the position picker`() = runTest {
+        snapshotCache.write(VAULT_ID, LAST_RENDERED.copy(showPositionSelectionDialog = true))
+        neverAnswersSelection()
+
+        val model = createViewModel().also { it.setData(VAULT_ID) }.state.value
+
+        model.showPositionSelectionDialog shouldBe false
+    }
+
+    @Test
+    fun `the first open with nothing cached still starts from the defaults`() = runTest {
+        neverAnswersSelection()
+
+        val model = createViewModel().also { it.setData(VAULT_ID) }.state.value
+
+        model.selectedPositions shouldBe defaultSelectedPositionsDialog()
+    }
+
+    @Test
+    fun `hands the rendered state to the cache when the screen is popped`() = runTest {
+        selectPositions("RUNE")
+        val viewModel = createViewModel().also { it.setData(VAULT_ID) }
+        val rendered = viewModel.state.value
+
+        viewModel.clearForTest()
+
+        snapshotCache.read(VAULT_ID, ThorchainDefiPositionsUiModel::class) shouldBe rendered
+    }
+
+    @Test
+    fun `a pull-to-refresh does not seed the older snapshot back over the screen`() = runTest {
+        // setData is also the refresh entry point, so the restore has to be one-shot: seeding on
+        // every call would drop what the screen has already loaded.
+        snapshotCache.write(VAULT_ID, LAST_RENDERED)
+        selectPositions("RUNE")
+        val viewModel = createViewModel().also { it.setData(VAULT_ID) }
+        viewModel.state.value.selectedPositions shouldBe listOf("RUNE")
+
+        neverAnswersSelection()
+        viewModel.setData(VAULT_ID)
+
+        viewModel.state.value.selectedPositions shouldBe listOf("RUNE")
+    }
+
+    /**
+     * Leaves the saved-selection read suspended, so nothing the loads do can overwrite a restored
+     * snapshot while the assertion runs.
+     */
+    private fun neverAnswersSelection() {
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.ThorChain, VAULT_ID) } returns
+            flow { awaitCancellation() }
+    }
+
     private fun selectPositions(vararg keys: String) {
         coEvery { defiPositionsRepository.getSelectedPositions(Chain.ThorChain, VAULT_ID) } returns
             flowOf(keys.toSet())
@@ -1304,10 +1499,22 @@ internal class ThorchainDefiPositionsViewModelTest {
             balanceVisibilityRepository = balanceVisibilityRepository,
             getThorChainLpPositionsUseCase = getThorChainLpPositionsUseCase,
             getThorChainPendingLpDepositsUseCase = getThorChainPendingLpDepositsUseCase,
+            snapshotCache = snapshotCache,
             ioDispatcher = testDispatcher,
         )
 
     private companion object {
+        /** A settled screen, as the cache would have it after the user walked away from one. */
+        val LAST_RENDERED =
+            ThorchainDefiPositionsUiModel(
+                totalAmountPrice = "$12.34",
+                isTotalAmountLoading = false,
+                bonded =
+                    BondedTabUiModel(totalBondedAmount = "5 RUNE", totalBondedPrice = "$10.00"),
+                selectedPositions = emptyList(),
+                tempSelectedPositions = emptyList(),
+            )
+
         const val VAULT_ID = "vault-1"
         const val RUNE_ADDRESS = "thor1runeaddress"
         const val RUJI_ADDRESS = "thor1rujiaddress"

@@ -140,6 +140,7 @@ constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase,
     private val getThorChainPendingLpDepositsUseCase: GetThorChainPendingLpDepositsUseCase,
+    private val snapshotCache: DeFiPositionsSnapshotCache,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -184,13 +185,23 @@ constructor(
     private var loadBondedNodesJob: Job? = null
     private var loadStakingPositionsJob: Job? = null
 
+    // Pools whose card came from a read that answered. A pool the last read could not resolve
+    // leaves a placeholder standing, and carrying that into the next reload would present a figure
+    // nothing has confirmed while skipping the shimmer that says a read is in flight.
+    private var livePoolKeys: Set<String> = emptySet()
+
     // A caller-supplied tab is applied once and then forgotten: the screen leaves and re-enters
     // composition every time the wallet / DeFi toggle flips, and re-seeding there would throw away
     // whichever tab the user had chosen since.
     private var hasAppliedInitialTab = false
 
+    // Guards the one-shot restore: setData also runs on every pull-to-refresh, and seeding there
+    // would drop whatever the refresh has already published back onto the snapshot.
+    private var hasRestoredSnapshot = false
+
     fun setData(vaultId: VaultId, initialTab: DeFiTab? = null) {
         this.vaultId = vaultId
+        restoreSnapshot(vaultId)
         if (initialTab != null && !hasAppliedInitialTab) {
             hasAppliedInitialTab = true
             state.update { it.copy(selectedTab = initialTab.displayNameRes) }
@@ -202,6 +213,31 @@ constructor(
         loadTotalValue()
         currencyJob?.cancel()
         currencyJob = observeCurrencyChanges()
+    }
+
+    /**
+     * Paints the state this vault's screen was last showing, so a re-entry starts from the cards,
+     * totals and enabled set the user left behind instead of from an empty model whose defaults
+     * would flash RUNE + TCY back on. Everything here is refreshed by the loads [setData] kicks off
+     * straight after; only the position picker is dropped, because a sheet the user closed by
+     * leaving the screen must not reopen itself.
+     */
+    private fun restoreSnapshot(vaultId: VaultId) {
+        if (hasRestoredSnapshot) return
+        hasRestoredSnapshot = true
+        val cached = snapshotCache.read(vaultId, ThorchainDefiPositionsUiModel::class) ?: return
+        state.value =
+            cached.copy(
+                showPositionSelectionDialog = false,
+                tempSelectedPositions = cached.selectedPositions,
+            )
+    }
+
+    override fun onCleared() {
+        if (::vaultId.isInitialized) {
+            snapshotCache.write(vaultId, state.value)
+        }
+        super.onCleared()
     }
 
     private fun loadLpPositionsForDialog(): Job =
@@ -416,6 +452,7 @@ constructor(
                 .drop(1)
                 .collect {
                     resetTotalsToPending()
+                    dropFiatPricedInPreviousCurrency()
 
                     bondedNodesRefreshTrigger.value++
                     loadBondedNodes()
@@ -438,6 +475,31 @@ constructor(
         _totalValueTCYStake.value = null
         _totalValueLpFiat.value = null
         state.update { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
+    }
+
+    /**
+     * Drops the fiat the cards carry when the display currency changes.
+     *
+     * Every other reload now leaves settled figures in place and swaps them when the fresh ones
+     * land, which is what stops a re-entry looking like a first open. A currency switch is the one
+     * case where that would be wrong: these strings were formatted for the currency being left, so
+     * they are cleared here and the reload puts each card back on its shimmer until it can price
+     * them again.
+     */
+    private fun dropFiatPricedInPreviousCurrency() {
+        state.update { current ->
+            current.copy(
+                bonded = current.bonded.copy(totalBondedPrice = null),
+                staking =
+                    current.staking.copy(
+                        positions =
+                            current.staking.positions.map { position ->
+                                position.copy(isLoading = true)
+                            }
+                    ),
+                lp = current.lp.copy(positions = emptyList()),
+            )
+        }
     }
 
     /**
@@ -660,7 +722,12 @@ constructor(
                     return@launch
                 }
 
-                state.update { it.copy(bonded = it.bonded.copy(isLoading = true)) }
+                // A total the last load already priced stays on screen while this one runs. The
+                // shimmer belongs to a cold start; re-arming it on every entry and pull is what
+                // made a re-entry look like a first open.
+                state.update {
+                    it.copy(bonded = it.bonded.copy(isLoading = it.bonded.totalBondedPrice == null))
+                }
 
                 // Load selected positions, if disabled then show nothing
                 try {
@@ -790,11 +857,23 @@ constructor(
                     return@launch
                 }
                 val zero = zeroFiat()
+                // Cards the last load already settled stay up while this one runs, and are
+                // replaced in place when it lands; only a position with nothing behind it yet
+                // gets the placeholder. Rebuilding every card from the placeholders is what blanked
+                // the tab on re-entry.
+                // Keyed by coin rather than by selection key: RUJI and its auto-compounding
+                // sRUJI card are both toggled by the one "RUJI" tile, so keying by that would
+                // collapse the two into one and render it twice.
+                val settled =
+                    state.value.staking.positions
+                        .filterNot { it.isLoading }
+                        .associateBy { it.coin.id }
                 val defaultLoadingPositions =
                     loadDefaultStakingPositions()
                         .filter { position -> selectedPositions.contains(position.selectionKey()) }
                         .map { positionUiModel ->
-                            positionUiModel.copy(isLoading = true, stakedFiatDisplay = zero)
+                            settled[positionUiModel.coin.id]
+                                ?: positionUiModel.copy(isLoading = true, stakedFiatDisplay = zero)
                         }
                 state.update {
                     it.copy(staking = StakingTabUiModel(positions = defaultLoadingPositions))
@@ -1149,7 +1228,7 @@ constructor(
         // Dialog dataset hasn't loaded yet (or last fetch failed). Don't run with stale state —
         // loadLpPositionsForDialog calls reloadLpTab again once it succeeds.
         if (pools == null) {
-            state.update { it.copy(lp = it.lp.copy(isLoading = true)) }
+            state.update { it.copy(lp = it.lp.copy(isLoading = it.lp.positions.isEmpty())) }
             ensureAvailablePoolsLoaded()
             return
         }
@@ -1163,7 +1242,7 @@ constructor(
             return
         }
 
-        state.update { it.copy(lp = it.lp.copy(isLoading = true)) }
+        state.update { it.copy(lp = it.lp.copy(isLoading = it.lp.positions.isEmpty())) }
 
         loadLpJob?.cancel()
         loadLpJob =
@@ -1174,9 +1253,20 @@ constructor(
                 val zero = zeroFiat()
                 // Show placeholder cards for each selected pool first — even pools where the user
                 // has no liquidity yet should be visible so the Add button is reachable.
-                val placeholders = selectedPools.map { it.toPlaceholderUiModel(zero) }
+                // Pools the last load already priced keep their card; only a pool with nothing
+                // behind it yet falls back to the placeholder, and the shimmer is raised only for
+                // those — a refresh over cards that already carry figures leaves them readable.
+                val loaded =
+                    state.value.lp.positions
+                        .filter { it.positionKey in livePoolKeys }
+                        .associateBy { it.positionKey }
+                val placeholders =
+                    selectedPools.map { pool ->
+                        loaded[pool.positionKey] ?: pool.toPlaceholderUiModel(zero)
+                    }
+                val isCold = selectedPools.any { loaded[it.positionKey] == null }
                 state.update {
-                    it.copy(lp = it.lp.copy(isLoading = true, positions = placeholders))
+                    it.copy(lp = it.lp.copy(isLoading = isCold, positions = placeholders))
                 }
 
                 try {
@@ -1263,6 +1353,11 @@ constructor(
                             // understate the header total rather than admit a value is missing.
                             LpLegTotal.Unavailable
                         }
+                    livePoolKeys =
+                        selectedPools
+                            .filterNot { it in failedSelectedPools }
+                            .map { it.positionKey }
+                            .toSet()
                     state.update { it.copy(lp = it.lp.copy(isLoading = false, positions = merged)) }
                 } catch (e: Throwable) {
                     if (e is CancellationException) throw e

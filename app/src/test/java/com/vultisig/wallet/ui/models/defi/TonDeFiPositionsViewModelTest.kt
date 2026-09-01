@@ -23,6 +23,7 @@ import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -45,6 +46,8 @@ internal class TonDeFiPositionsViewModelTest {
     private lateinit var tokenPriceRepository: TokenPriceRepository
     private lateinit var appCurrencyRepository: AppCurrencyRepository
     private lateinit var navigator: Navigator<Destination>
+    // The real cache, not a mock: these tests assert the round trip a nav pop and a re-entry make.
+    private lateinit var snapshotCache: DeFiPositionsSnapshotCache
 
     @BeforeEach
     fun setUp() {
@@ -55,6 +58,7 @@ internal class TonDeFiPositionsViewModelTest {
         tokenPriceRepository = mockk(relaxed = true)
         appCurrencyRepository = mockk(relaxed = true)
         navigator = mockk(relaxed = true)
+        snapshotCache = DeFiPositionsSnapshotCache()
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
@@ -228,6 +232,60 @@ internal class TonDeFiPositionsViewModelTest {
             }
         }
 
+    @Test
+    fun `a re-entry paints the card the screen was last showing`() = runTest {
+        // Popping back to the DeFi list destroys this view-model; without a snapshot the next open
+        // sits on the first-open skeleton for as long as tonapi takes.
+        snapshotCache.write(VAULT_ID, LAST_RENDERED)
+        // Suspend the network so the only state on screen is the restored one.
+        coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } coAnswers
+            {
+                CompletableDeferred<List<TonAccountStakingInfoJson>>().await()
+            }
+
+        val state = createViewModel().also { it.setData(VAULT_ID) }.state.value
+
+        assertTrue(state is TonDeFiUiState.Success, "expected Success, was $state")
+        assertEquals("50 GRAM", state.tonData.stakedDisplay)
+        assertEquals("Whales", state.tonData.poolName)
+        assertTrue(state.tonData.hasPosition)
+    }
+
+    @Test
+    fun `a re-entry keeps the pool it was routing to when the refresh fails`() = runTest {
+        // The pool address lives outside the state, so it has to travel with the snapshot —
+        // otherwise a restored card offers an Unstake that silently does nothing.
+        snapshotCache.write(VAULT_ID, LAST_RENDERED)
+        coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } throws
+            RuntimeException("network down")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.onUnstake()
+
+        coVerify(exactly = 1) {
+            navigator.route(
+                Route.TonUnstake(vaultId = VAULT_ID, poolAddress = POOL, stakedDisplay = "50 GRAM")
+            )
+        }
+    }
+
+    @Test
+    fun `hands the rendered card to the cache when the screen is popped`() = runTest {
+        coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns
+            listOf(TonAccountStakingInfoJson(pool = POOL, amount = 50_000_000_000L))
+        coEvery { tonStakingApi.getStakingPool(POOL) } returns
+            TonStakingPoolInfoJson(name = "Whales", apy = 5.0)
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val rendered = vm.state.value as TonDeFiUiState.Success
+
+        vm.clearForTest()
+
+        assertEquals(
+            TonStakingSnapshot(state = rendered, poolAddress = POOL, stakedDisplay = "50 GRAM"),
+            snapshotCache.read(VAULT_ID, TonStakingSnapshot::class),
+        )
+    }
+
     private fun createViewModel(): TonDeFiPositionsViewModel =
         TonDeFiPositionsViewModel(
             vaultRepository = vaultRepository,
@@ -235,10 +293,30 @@ internal class TonDeFiPositionsViewModelTest {
             balanceVisibilityRepository = balanceVisibilityRepository,
             tokenPriceRepository = tokenPriceRepository,
             appCurrencyRepository = appCurrencyRepository,
+            snapshotCache = snapshotCache,
             navigator = navigator,
         )
 
     private companion object {
+        /** A settled screen, as the cache would have it after the user walked away from one. */
+        val LAST_RENDERED =
+            TonStakingSnapshot(
+                state =
+                    TonDeFiUiState.Success(
+                        tonData =
+                            TonStakingUiModel(
+                                totalAmountPrice = "$100.00",
+                                ticker = "TON",
+                                poolName = "Whales",
+                                stakedDisplay = "50 GRAM",
+                                stakedFiatDisplay = "$100.00",
+                                hasPosition = true,
+                            )
+                    ),
+                poolAddress = POOL,
+                stakedDisplay = "50 GRAM",
+            )
+
         const val VAULT_ID = "vault-1"
         const val TON_ADDRESS = "UQtonAddress"
         const val POOL = "0:a45b17f28409229b78360e3290420f13e4fe20f90d7e2bf8c4ac6703259e22fa"

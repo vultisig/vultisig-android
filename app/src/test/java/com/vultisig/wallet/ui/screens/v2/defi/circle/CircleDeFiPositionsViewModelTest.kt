@@ -15,8 +15,12 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
+import com.vultisig.wallet.ui.models.defi.DeFiPositionsSnapshotCache
+import com.vultisig.wallet.ui.models.defi.clearForTest
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import io.mockk.Runs
 import io.mockk.clearMocks
@@ -30,6 +34,7 @@ import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -57,6 +62,8 @@ internal class CircleDeFiPositionsViewModelTest {
     private lateinit var appCurrencyRepository: AppCurrencyRepository
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
     private lateinit var context: Context
+    // The real cache, not a mock: these tests assert the round trip a nav pop and a re-entry make.
+    private lateinit var snapshotCache: DeFiPositionsSnapshotCache
 
     @BeforeEach
     fun setUp() {
@@ -73,6 +80,7 @@ internal class CircleDeFiPositionsViewModelTest {
         appCurrencyRepository = mockk(relaxed = true)
         balanceVisibilityRepository = mockk(relaxed = true)
         context = mockk(relaxed = true)
+        snapshotCache = DeFiPositionsSnapshotCache()
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { chainAccountAddressRepository.getAddress(Chain.Ethereum, VAULT) } returns
             (OWNER_ADDRESS to "pubKey")
@@ -186,6 +194,56 @@ internal class CircleDeFiPositionsViewModelTest {
         return captured.captured
     }
 
+    @Test
+    fun `a re-entry paints the deposit the screen was last showing`() = runTest {
+        // Popping back to the DeFi list destroys this view-model; without a snapshot the next open
+        // puts the banner back on its loading state while the account and balance are re-read.
+        snapshotCache.write(VAULT_ID, LAST_RENDERED)
+        // Suspend the account read so the only state on screen is the restored one.
+        coEvery { scaCircleAccountRepository.getAccount(VAULT_ID) } coAnswers
+            {
+                CompletableDeferred<String?>().await()
+            }
+
+        val state = createViewModel().also { it.setData(VAULT_ID) }.state.value
+
+        assertEquals("$500.00", state.totalAmountPrice)
+        assertFalse(state.isTotalAmountLoading)
+        assertFalse(state.circleDefi.isLoading)
+        assertEquals("500 USDC", state.circleDefi.totalDeposit)
+    }
+
+    @Test
+    fun `a re-entry keeps the account withdrawals route to`() = runTest {
+        // The MSCA address lives outside the state, so it has to travel with the snapshot —
+        // otherwise a restored open account offers a Withdraw that silently does nothing.
+        snapshotCache.write(VAULT_ID, LAST_RENDERED)
+        coEvery { scaCircleAccountRepository.getAccount(VAULT_ID) } coAnswers
+            {
+                CompletableDeferred<String?>().await()
+            }
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.onWithdrawAccount()
+
+        coVerify(exactly = 1) {
+            navigator.route(match<Route.Send> { it.mscaAddress == MSCA_ADDRESS })
+        }
+    }
+
+    @Test
+    fun `hands the rendered state to the cache when the screen is popped`() = runTest {
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val rendered = vm.state.value
+
+        vm.clearForTest()
+
+        assertEquals(
+            CircleDeFiSnapshot(model = rendered, mscaAddress = null),
+            snapshotCache.read(VAULT_ID, CircleDeFiSnapshot::class),
+        )
+    }
+
     private fun createViewModel(): CircleDeFiPositionsViewModel =
         CircleDeFiPositionsViewModel(
             navigator = navigator,
@@ -199,11 +257,29 @@ internal class CircleDeFiPositionsViewModelTest {
             tokenPriceRepository = tokenPriceRepository,
             appCurrencyRepository = appCurrencyRepository,
             balanceVisibilityRepository = balanceVisibilityRepository,
+            snapshotCache = snapshotCache,
             context = context,
             ioDispatcher = testDispatcher,
         )
 
     private companion object {
+        /** A settled screen, as the cache would have it after the user walked away from one. */
+        val LAST_RENDERED =
+            CircleDeFiSnapshot(
+                model =
+                    DefiUiModel(
+                        totalAmountPrice = "$500.00",
+                        isTotalAmountLoading = false,
+                        circleDefi =
+                            DefiUiModel.CircleDeFi(
+                                isAccountOpen = true,
+                                totalDeposit = "500 USDC",
+                                totalDepositCurrency = "$500.00",
+                            ),
+                    ),
+                mscaAddress = MSCA_ADDRESS,
+            )
+
         const val VAULT_ID = "vault-1"
         const val OWNER_ADDRESS = "0x087077528E7028f4880e6b9DaD082910b7dfe0d2"
         const val MSCA_ADDRESS = "0xNewMscaAccount"
