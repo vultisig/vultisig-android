@@ -996,7 +996,7 @@ constructor(
                 updateModel {
                     it.copy(
                         lp =
-                            LpTabUiModel(
+                            it.lp.copy(
                                 isLoading = false,
                                 positions = lpPositions,
                                 livePoolKeys = livePoolKeys,
