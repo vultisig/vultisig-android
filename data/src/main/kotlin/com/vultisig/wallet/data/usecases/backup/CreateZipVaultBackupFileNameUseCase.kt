@@ -1,10 +1,8 @@
 package com.vultisig.wallet.data.usecases.backup
 
 import com.vultisig.wallet.data.models.Vault
+import java.time.LocalDateTime
 import javax.inject.Inject
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 fun interface CreateZipVaultBackupFileNameUseCase {
     operator fun invoke(vaults: List<Vault>): String
@@ -13,8 +11,8 @@ fun interface CreateZipVaultBackupFileNameUseCase {
 internal class CreateZipVaultBackupFileNameUseCaseImpl @Inject constructor() :
     CreateZipVaultBackupFileNameUseCase {
     override fun invoke(vaults: List<Vault>): String {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        return "vaults_backup_${now.date}_${
+        val now = LocalDateTime.now()
+        return "vaults_backup_${now.toLocalDate()}_${
             now.hour.toString().padStart(
                 2,
                 '0',

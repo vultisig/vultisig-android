@@ -3,8 +3,8 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import java.math.BigDecimal
+import java.time.Instant
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.datetime.Instant
 
 sealed class SwapQuote {
 

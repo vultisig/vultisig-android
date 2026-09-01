@@ -17,14 +17,13 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
 import timber.log.Timber
 
 internal data class FastVaultPasswordReminderUiModel(
@@ -117,7 +116,7 @@ constructor(
     private suspend fun updatePasswordNextReminderTime() {
         vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
             vaultId = vaultId,
-            date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            date = LocalDate.now(ZoneId.systemDefault()),
         )
     }
 }

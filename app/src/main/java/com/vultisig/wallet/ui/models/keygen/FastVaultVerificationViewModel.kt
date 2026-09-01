@@ -29,15 +29,14 @@ import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
 import timber.log.Timber
 
 internal enum class VerifyPinState {
@@ -190,7 +189,7 @@ constructor(
 
                                 vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
                                     vaultId = vaultId,
-                                    date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                                    date = LocalDate.now(ZoneId.systemDefault()),
                                 )
 
                                 if (args.tssAction == TssAction.KEYGEN) {

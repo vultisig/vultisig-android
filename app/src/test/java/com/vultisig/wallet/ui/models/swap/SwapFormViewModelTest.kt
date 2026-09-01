@@ -39,6 +39,7 @@ import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.utils.plus
 import com.vultisig.wallet.ui.models.findCurrentSrc
 import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -61,6 +62,7 @@ import io.mockk.unmockkStatic
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -86,7 +88,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -4472,7 +4473,7 @@ internal class SwapFormViewModelTest {
         SwapQuote.ThorChain(
             expectedDstValue = expectedDstValue,
             fees = TokenValue(value = BigInteger("5000000"), token = USDC_COIN),
-            expiredAt = Clock.System.now() + 1.minutes,
+            expiredAt = Instant.now() + 1.minutes,
             recommendedMinTokenValue = TokenValue(value = BigInteger("1000"), token = ETH_COIN),
             data = mockk(relaxed = true),
         )
@@ -4483,7 +4484,7 @@ internal class SwapFormViewModelTest {
         SwapQuote.MayaChain(
             expectedDstValue = expectedDstValue,
             fees = TokenValue(value = BigInteger("5000000"), token = USDC_COIN),
-            expiredAt = Clock.System.now() + 1.minutes,
+            expiredAt = Instant.now() + 1.minutes,
             recommendedMinTokenValue = TokenValue(value = BigInteger("1000"), token = ETH_COIN),
             data = mockk(relaxed = true),
         )
@@ -4494,7 +4495,7 @@ internal class SwapFormViewModelTest {
         SwapQuote.SwapKit(
             expectedDstValue = expectedDstValue,
             fees = TokenValue(value = BigInteger("400"), token = BTC_COIN),
-            expiredAt = Clock.System.now() + 1.minutes,
+            expiredAt = Instant.now() + 1.minutes,
             data = mockk(relaxed = true),
             subProvider = "NEAR",
         )
@@ -4507,7 +4508,7 @@ internal class SwapFormViewModelTest {
         SwapQuote.OneInch(
             expectedDstValue = expectedDstValue,
             fees = fees,
-            expiredAt = Clock.System.now() + 1.minutes,
+            expiredAt = Instant.now() + 1.minutes,
             data = mockk(relaxed = true),
             provider = SwapProvider.LIFI.getSwapProviderId(),
         )

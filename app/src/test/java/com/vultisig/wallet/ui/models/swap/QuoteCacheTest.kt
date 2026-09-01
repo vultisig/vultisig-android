@@ -2,11 +2,12 @@ package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
+import com.vultisig.wallet.data.utils.plus
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
+import java.time.Instant
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test
@@ -23,7 +24,7 @@ internal class QuoteCacheTest {
     // QuoteCache only reads `quote.expiredAt`; a relaxed mock with a future expiry avoids building
     // the full SwapQuote object graph.
     private fun freshQuote(): SwapQuote =
-        mockk<SwapQuote> { every { expiredAt } returns Clock.System.now() + 5.minutes }
+        mockk<SwapQuote> { every { expiredAt } returns Instant.now() + 5.minutes }
 
     @Test
     fun `get returns the cached quote for an identical key`() {

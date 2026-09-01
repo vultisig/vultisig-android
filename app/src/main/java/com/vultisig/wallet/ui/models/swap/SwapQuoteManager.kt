@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
+import com.vultisig.wallet.data.utils.plus
 import com.vultisig.wallet.data.utils.thorswapMultiplier
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
@@ -34,6 +35,7 @@ import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.time.Instant
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -44,7 +46,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeout
-import kotlinx.datetime.Clock
 import timber.log.Timber
 
 internal data class QuoteFetchResult(
@@ -1002,7 +1003,7 @@ constructor(
                     expectedDstValue = expectedDstValue,
                     fees = tokenFees,
                     data = apiQuote.copy(tx = updatedTx),
-                    expiredAt = Clock.System.now() + expiredAfter,
+                    expiredAt = Instant.now() + expiredAfter,
                     provider = provider.getSwapProviderId(),
                 )
             }
@@ -1059,7 +1060,7 @@ constructor(
                     expectedDstValue = expectedDstValue,
                     fees = tokenFees,
                     data = apiQuote,
-                    expiredAt = Clock.System.now() + expiredAfter,
+                    expiredAt = Instant.now() + expiredAfter,
                     provider = provider.getSwapProviderId(),
                 )
             }
@@ -1147,7 +1148,7 @@ constructor(
                     expectedDstValue = expectedDstValue,
                     fees = tokenFees,
                     data = apiQuote.copy(tx = updatedTx),
-                    expiredAt = Clock.System.now() + expiredAfter,
+                    expiredAt = Instant.now() + expiredAfter,
                     provider = provider.getSwapProviderId(),
                 )
             }
@@ -1287,7 +1288,7 @@ constructor(
                     expectedDstValue = expectedDstValue,
                     fees = tokenFees,
                     data = apiQuote,
-                    expiredAt = Clock.System.now() + expiredAfter,
+                    expiredAt = Instant.now() + expiredAfter,
                     // `provider` is the proto-serialized discriminator used by
                     // SwapTransactionToUiModelMapper to map back onto SwapProvider.SWAPKIT —
                     // keep it as the canonical id. The sub-provider drives the UI label below.
@@ -1623,7 +1624,7 @@ internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
                     slippageBps,
                 )
             val quote = entries[key] ?: return null
-            if (Clock.System.now() < quote.expiredAt) {
+            if (Instant.now() < quote.expiredAt) {
                 quote
             } else {
                 entries.remove(key)
@@ -1656,7 +1657,7 @@ internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         }
 
     private fun evict() {
-        val now = Clock.System.now()
+        val now = Instant.now()
         entries.entries.removeAll { now >= it.value.expiredAt }
         val iter = entries.entries.iterator()
         while (entries.size > maxSize && iter.hasNext()) {

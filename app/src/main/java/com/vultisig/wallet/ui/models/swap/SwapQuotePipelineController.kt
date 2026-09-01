@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.utils.minus
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
@@ -29,6 +30,7 @@ import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.time.Instant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -49,8 +51,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import timber.log.Timber
 
 /**
@@ -642,7 +642,7 @@ constructor(
         // A row that lapsed while the sheet was open can no longer be signed at its quoted rate:
         // don't apply it (Swap would stay enabled against an expired quote) — refresh instead, so
         // a fresh candidate set replaces the whole list.
-        if (Clock.System.now() >= candidate.result.quote.expiredAt) {
+        if (Instant.now() >= candidate.result.quote.expiredAt) {
             refreshQuoteState.value++
             return
         }
@@ -805,7 +805,7 @@ constructor(
         }
         refreshQuoteJob =
             scope.launch(ioDispatcher) {
-                delay(expiredAt - Clock.System.now())
+                delay(expiredAt - Instant.now())
                 refreshQuoteState.value++
             }
     }

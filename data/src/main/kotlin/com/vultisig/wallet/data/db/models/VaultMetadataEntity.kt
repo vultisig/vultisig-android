@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import com.vultisig.wallet.data.models.VaultId
-import kotlinx.datetime.LocalDate
+import java.time.LocalDate
 
 @Entity(
     tableName = "vaultMetadata",

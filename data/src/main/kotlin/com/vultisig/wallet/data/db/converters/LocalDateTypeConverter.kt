@@ -1,11 +1,11 @@
 package com.vultisig.wallet.data.db.converters
 
 import androidx.room.TypeConverter
-import kotlinx.datetime.LocalDate
+import java.time.LocalDate
 
 class LocalDateTypeConverter {
 
-    @TypeConverter fun toLocalDate(value: Int): LocalDate = LocalDate.fromEpochDays(value)
+    @TypeConverter fun toLocalDate(value: Long): LocalDate = LocalDate.ofEpochDay(value)
 
-    @TypeConverter fun fromLocalDate(value: LocalDate): Int = value.toEpochDays()
+    @TypeConverter fun fromLocalDate(value: LocalDate): Long = value.toEpochDay()
 }
