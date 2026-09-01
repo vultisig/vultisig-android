@@ -142,11 +142,19 @@ internal fun PasscodeSettingsScreen(
                             // below saying why — a capability that silently is not there reads as
                             // one the app forgot to build.
                             onClick = {
-                                if (
-                                    biometricAvailability == BiometricUnlockAvailability.Available
-                                ) {
-                                    onBiometricUnlockChange(!state.isBiometricUnlockEnabled)
-                                }
+                                val enable = !state.isBiometricUnlockEnabled
+                                // Only enabling asks anything of the sensor. Turning it off
+                                // deletes a stored copy, and gating that direction too strands
+                                // the row: deleting the last enrolled biometric leaves the
+                                // keystore key invalidated rather than gone, so the store still
+                                // reads as enabled while availability reads NotEnrolled — the
+                                // switch would sit at ON with every tap swallowed and the copy
+                                // unremovable.
+                                val canToggle =
+                                    !enable ||
+                                        biometricAvailability ==
+                                            BiometricUnlockAvailability.Available
+                                if (canToggle) onBiometricUnlockChange(enable)
                             },
                             isLastItem = true,
                         )

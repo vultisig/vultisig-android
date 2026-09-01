@@ -93,7 +93,20 @@ private suspend fun Context.authenticateForUnlock(
     // BiometricPrompt must be built and started on the main thread, and the caller is a view model
     // coroutine that may be anywhere.
     return withContext(Dispatchers.Main.immediate) {
-        suspendCancellableCoroutine { continuation ->
+        // androidx.biometric refuses to show a prompt once the host has saved its state, and it
+        // refuses silently: authenticate() logs and returns without ever reaching the callback.
+        // The caller would be left awaiting a continuation nothing can resume, which on the lock
+        // screen means the verifying flag stays set and the passcode field stays dead for the rest
+        // of the process. There is a real window for it — the caller fetches a cipher from the
+        // keystore first — so it is worth asking rather than assuming. The question is exact: this
+        // check and the authenticate() below both run on the main thread, which is also the thread
+        // that saves the state, so nothing can slip between them.
+        if (activity.supportFragmentManager.isStateSaved) {
+            Timber.d("Not showing the biometric prompt: the host has already saved its state")
+            return@withContext null
+        }
+
+        suspendCancellableCoroutine<Cipher?> { continuation ->
             val prompt =
                 BiometricPrompt(
                     activity,

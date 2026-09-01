@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.passcode
 
 import android.content.SharedPreferences
-import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
@@ -32,8 +31,10 @@ import timber.log.Timber
  *
  * The keystore key is generated with `setInvalidatedByBiometricEnrollment`, so enrolling a new face
  * or finger destroys it: someone who adds their own biometric to an unlocked device does not
- * thereby inherit access to the wallet. That is the Android counterpart of iOS's
- * `.biometryCurrentSet`.
+ * thereby inherit access to the wallet. It is the nearest Android has to iOS's
+ * `.biometryCurrentSet`, and not the same promise — the platform revokes on a new enrolment or on
+ * the last one being deleted, so deleting one of several enrolled fingers leaves the copy readable
+ * by the rest.
  *
  * Unlike iOS, the stored copy carries no binding to the wrap it was made for. It does not need one:
  * the app is `allowBackup="false"` and both halves — the preference and the keystore key — go with
@@ -136,8 +137,18 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
             // The IV is the cipher's own, generated when it was initialised for encryption, and it
             // is not secret — it is stored beside the ciphertext exactly as PasscodeCipher does.
             val blob = cipher.iv + cipher.doFinal(dataKey)
-            prefs.edit(commit = true) { putString(KEY_WRAPPED_KEY, encode(blob)) }
-            true
+            // Not androidx's edit(commit = true), which throws away the Boolean commit() returns.
+            // A refused write would then be reported as a stored copy, and because commit()
+            // updates the in-memory map before it writes the file, isEnabled() would go on
+            // agreeing until the process restarted: a switch reading ON over nothing on disk.
+            val stored = prefs.edit().putString(KEY_WRAPPED_KEY, encode(blob)).commit()
+            if (!stored) {
+                Timber.e("Could not persist the biometric data key")
+                // Puts the in-memory map back and retires the key the copy was made under, so the
+                // shortcut reads as off everywhere rather than only after the next start.
+                clear()
+            }
+            stored
         } catch (e: GeneralSecurityException) {
             // Reached when the prompt's authentication did not actually cover this cipher.
             Timber.e(e, "Failed to store the biometric data key")
@@ -196,22 +207,17 @@ constructor(private val prefs: SharedPreferences) : BiometricUnlockStore {
                 // Refuses a caller-supplied IV, so the same key can never encrypt twice under one.
                 .setRandomizedEncryptionRequired(true)
                 .setUserAuthenticationRequired(true)
-                // Destroys the key when a biometric is added or removed, so a newly enrolled
-                // fingerprint cannot open a wallet it was never shown to.
+                // Destroys the key when a new biometric is enrolled, or when the last one is
+                // deleted — those two, which is all the platform promises. A newly enrolled
+                // fingerprint therefore cannot open a wallet it was never shown to. Deleting one
+                // of several enrolled fingers revokes nothing, so this is not a guarantee that
+                // the set which turned the shortcut on is the set that can still use it.
                 .setInvalidatedByBiometricEnrollment(true)
-                .apply {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        // Per use, and only a strong biometric: a timeout of zero means every
-                        // operation carries its own authentication, and the device credential is
-                        // deliberately not accepted — someone who knows the device PIN must not
-                        // reach a wallet the app passcode exists to protect.
-                        setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)
-                    } else {
-                        // The pre-R spelling of the same thing: -1 is per-use authentication, which
-                        // on those versions accepts a strong biometric only.
-                        @Suppress("DEPRECATION") setUserAuthenticationValidityDurationSeconds(-1)
-                    }
-                }
+                // Per use, and only a strong biometric: a timeout of zero means every operation
+                // carries its own authentication, and the device credential is deliberately not
+                // accepted — someone who knows the device PIN must not reach a wallet the app
+                // passcode exists to protect. No pre-R spelling of this is needed; minSdk is R.
+                .setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)
                 .build()
 
         return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEY_STORE)
