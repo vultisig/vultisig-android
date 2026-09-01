@@ -533,8 +533,6 @@
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Pool di liquidità</string>
     <!-- Kamino Earn -->
-    <string name="kamino_earn_title">Kamino Earn</string>
-    <string name="kamino_earn_curated_by">Curato da %1$s</string>
     <string name="kamino_earn_deposited">Depositato: %1$s</string>
     <string name="kamino_earn_apy">APY</string>
     <string name="kamino_earn_earned">Guadagnato: %1$s</string>

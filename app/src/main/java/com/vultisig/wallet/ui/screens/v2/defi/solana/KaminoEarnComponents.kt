@@ -11,19 +11,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,15 +26,16 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoCurator
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
+import com.vultisig.wallet.data.blockchain.solana.kamino.coin
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
 import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
 import com.vultisig.wallet.ui.screens.v2.defi.InfoItem
+import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import com.vultisig.wallet.ui.theme.Theme
 import java.math.BigDecimal
 
@@ -51,85 +46,23 @@ private val LOGO_SIZE = 36.dp
 private val LOGO_PAIR_WIDTH = 60.dp
 
 /**
- * Picker for which curated vaults the Earn tab shows.
+ * The curated vaults offered in the shared "Select positions" picker.
  *
- * Without this the tab has no way to be populated at all — the opt-in gates every card, so the
- * feature is unreachable until the user can turn a vault on.
+ * The pinned name rather than the live one: this is a catalogue of what the app offers, and the
+ * catalogue is the allow-list — the same descriptors iOS builds its Earn cells from. The cell shows
+ * the underlying token's mark, because the vault is what is picked but the token is what the user
+ * recognises, and the curator joins the name as a search term so "rockawayx" finds RWA USDC.
  */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun KaminoVaultPickerSheet(
-    selected: Set<String>,
-    onToggle: (String, Boolean) -> Unit,
-    onDone: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Theme.v2.colors.backgrounds.primary,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.kamino_earn_title),
-                style = Theme.brockmann.headings.title3,
-                color = Theme.v2.colors.text.primary,
-            )
-
-            KaminoVaultRegistry.ALLOW_LIST.forEach { vault ->
-                val isSelected = vault.address in selected
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .kaminoCard()
-                            .toggleable(
-                                value = isSelected,
-                                role = Role.Checkbox,
-                                onValueChange = { onToggle(vault.address, it) },
-                            )
-                            .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = vault.fallbackName,
-                            style = Theme.brockmann.body.m.medium,
-                            color = Theme.v2.colors.text.primary,
-                        )
-                        Text(
-                            text =
-                                stringResource(
-                                    R.string.kamino_earn_curated_by,
-                                    vault.curator.displayName,
-                                ),
-                            style = Theme.brockmann.body.s.medium,
-                            color = Theme.v2.colors.text.tertiary,
-                        )
-                    }
-
-                    Text(
-                        text = stringResource(vault.riskTier.labelRes),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = vault.riskTier.labelColor(),
-                    )
-
-                    UiSpacer(12.dp)
-
-                    Checkbox(checked = isSelected, onCheckedChange = null)
-                }
-            }
-
-            VsButton(
-                label = stringResource(R.string.save_changes),
-                onClick = onDone,
-                modifier = Modifier.fillMaxWidth(),
+internal val KAMINO_EARN_PICKER_POSITIONS: List<PositionUiModelDialog>
+    get() =
+        KaminoVaultRegistry.ALLOW_LIST.map { vault ->
+            PositionUiModelDialog(
+                logo = vault.coin?.let { getCoinLogo(it.logo) } ?: R.drawable.kamino,
+                ticker = vault.fallbackName,
+                positionKey = vault.address,
+                searchTerms = listOf(vault.fallbackName, vault.curator.displayName),
             )
         }
-    }
-}
 
 /**
  * The Kamino Earn segment: one card per enabled vault.

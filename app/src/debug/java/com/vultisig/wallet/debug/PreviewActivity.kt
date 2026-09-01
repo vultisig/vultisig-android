@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoCurator
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRiskTier
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakeState
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -227,8 +228,10 @@ import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
+import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.screens.v2.defi.maya.RemoveLpScreenContent
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.solana.KAMINO_EARN_PICKER_POSITIONS
 import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoAmountContent
 import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnRow
 import com.vultisig.wallet.ui.screens.v2.defi.solana.KaminoEarnUiModel
@@ -372,6 +375,7 @@ class PreviewActivity : ComponentActivity() {
                     "solana_defi_earn_empty" ->
                         SolanaDeFiPreview(tab = DeFiTab.EARN, hasEnabledVaults = false)
                     "solana_defi_staked" -> SolanaDeFiPreview(tab = DeFiTab.STAKED)
+                    "solana_defi_picker" -> SolanaDeFiPickerPreview()
                     "kamino_deposit_form" -> KaminoAmountPreview(isWithdraw = false)
                     "kamino_withdraw_form" -> KaminoAmountPreview(isWithdraw = true)
                     "swap_confirm" -> SwapConfirmPreview()
@@ -4147,6 +4151,21 @@ private fun SolanaDeFiPreview(tab: DeFiTab, hasEnabledVaults: Boolean = true) {
                 isBalanceVisible = true,
             ),
         selectedTab = tab,
+    )
+}
+
+/**
+ * The Earn tab with the shared "Select positions" sheet open over it, as Manage positions opens it.
+ */
+@Composable
+private fun SolanaDeFiPickerPreview() {
+    SolanaDeFiPreview(tab = DeFiTab.EARN)
+
+    PositionsSelectionDialog(
+        earnPositions = KAMINO_EARN_PICKER_POSITIONS,
+        selectedPositions = listOf(KaminoVaultRegistry.STEAKHOUSE_USDC.address),
+        searchTextFieldState = rememberTextFieldState(),
+        onPositionSelectionChange = { _, _ -> },
     )
 }
 

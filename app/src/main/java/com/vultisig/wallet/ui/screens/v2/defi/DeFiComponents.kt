@@ -68,6 +68,7 @@ import com.vultisig.wallet.ui.components.v2.utils.roundToPx
 import com.vultisig.wallet.ui.screens.referral.SetBackgroundBanner
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
+import com.vultisig.wallet.ui.screens.v2.defi.model.matching
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -337,6 +338,7 @@ fun ApyInfoItem(apy: String, modifier: Modifier = Modifier) {
 @Composable
 internal fun PositionsSelectionDialog(
     selectedPositions: List<String>,
+    earnPositions: List<PositionUiModelDialog> = emptyList(),
     bondPositions: List<PositionUiModelDialog> = emptyList(),
     stakePositions: List<PositionUiModelDialog> = emptyList(),
     lpPositions: List<PositionUiModelDialog> = emptyList(),
@@ -345,42 +347,18 @@ internal fun PositionsSelectionDialog(
     onDoneClick: () -> Unit = {},
     onCancelClick: () -> Unit = {},
 ) {
-    val searchQuery = searchTextFieldState.text.toString().lowercase()
+    val searchQuery = searchTextFieldState.text.toString()
 
-    val updateBondPositions =
-        remember(bondPositions, selectedPositions) {
-            bondPositions.map { it.copy(isSelected = selectedPositions.contains(it.positionKey)) }
-        }
-
-    val updateStakePositions =
-        remember(stakePositions, selectedPositions) {
-            stakePositions.map { it.copy(isSelected = selectedPositions.contains(it.positionKey)) }
-        }
-
-    val updateLpPositions =
-        remember(lpPositions, selectedPositions) {
-            lpPositions.map { it.copy(isSelected = selectedPositions.contains(it.positionKey)) }
-        }
+    val filteredEarnPositions =
+        rememberFilteredPositions(earnPositions, selectedPositions, searchQuery)
 
     val filteredBondPositions =
-        remember(searchQuery, updateBondPositions) {
-            if (searchQuery.isEmpty()) updateBondPositions
-            else updateBondPositions.filter { it.ticker.lowercase().contains(searchQuery) }
-        }
+        rememberFilteredPositions(bondPositions, selectedPositions, searchQuery)
 
     val filteredStakePositions =
-        remember(searchQuery, updateStakePositions) {
-            if (searchQuery.isEmpty()) updateStakePositions
-            else updateStakePositions.filter { it.ticker.lowercase().contains(searchQuery) }
-        }
+        rememberFilteredPositions(stakePositions, selectedPositions, searchQuery)
 
-    val filteredLpPositions =
-        remember(searchQuery, updateLpPositions) {
-            if (searchQuery.isEmpty()) updateLpPositions
-            else updateLpPositions.filter { it.ticker.lowercase().contains(searchQuery) }
-        }
-
-    val groups = mutableListOf<TokenSelectionGroupUiModel<PositionUiModelDialog>>()
+    val filteredLpPositions = rememberFilteredPositions(lpPositions, selectedPositions, searchQuery)
 
     fun buildItems(positions: List<PositionUiModelDialog>) =
         positions.map { GridTokenUiModel.SingleToken(data = it) }
@@ -403,38 +381,28 @@ internal fun PositionsSelectionDialog(
         )
     }
 
-    if (filteredBondPositions.isNotEmpty()) {
-        groups.add(
-            TokenSelectionGroupUiModel(
-                title = stringResource(R.string.defi_bond),
-                items = buildItems(filteredBondPositions),
-                mapper = ::buildMapper,
-                plusUiModel = null,
-            )
+    // Earn leads, the same order the chain screen's tab row uses and the one iOS's picker builds:
+    // the two lists describe the same positions, and disagreeing on which comes first is how a
+    // user hunts for the section they were just looking at.
+    val sections =
+        listOf(
+            stringResource(R.string.defi_tab_earn) to filteredEarnPositions,
+            stringResource(R.string.defi_bond) to filteredBondPositions,
+            stringResource(R.string.defi_stake) to filteredStakePositions,
+            stringResource(R.string.liquidity_pool) to filteredLpPositions,
         )
-    }
 
-    if (filteredStakePositions.isNotEmpty()) {
-        groups.add(
-            TokenSelectionGroupUiModel(
-                title = stringResource(R.string.defi_stake),
-                items = buildItems(filteredStakePositions),
-                mapper = ::buildMapper,
-                plusUiModel = null,
-            )
-        )
-    }
-
-    if (filteredLpPositions.isNotEmpty()) {
-        groups.add(
-            TokenSelectionGroupUiModel(
-                title = stringResource(R.string.liquidity_pool),
-                items = buildItems(filteredLpPositions),
-                mapper = ::buildMapper,
-                plusUiModel = null,
-            )
-        )
-    }
+    val groups =
+        sections
+            .filter { (_, positions) -> positions.isNotEmpty() }
+            .map { (title, positions) ->
+                TokenSelectionGroupUiModel(
+                    title = title,
+                    items = buildItems(positions),
+                    mapper = ::buildMapper,
+                    plusUiModel = null,
+                )
+            }
 
     TokenSelectionList(
         groups = groups,
@@ -471,6 +439,27 @@ internal fun PositionsSelectionDialog(
         onCancelClick = onCancelClick,
         onPasteClick = searchTextFieldState::setTextAndPlaceCursorAtEnd,
     )
+}
+
+/**
+ * One section of the picker: its positions stamped with the live selection, then narrowed to
+ * [searchQuery].
+ *
+ * Selection is applied here rather than by the caller because the picker owns the pending edit — a
+ * section is handed the catalogue of what exists, and which of it is on is answered in one place
+ * for every section.
+ */
+@Composable
+private fun rememberFilteredPositions(
+    positions: List<PositionUiModelDialog>,
+    selectedPositions: List<String>,
+    searchQuery: String,
+): List<PositionUiModelDialog> {
+    val selected =
+        remember(positions, selectedPositions) {
+            positions.map { it.copy(isSelected = selectedPositions.contains(it.positionKey)) }
+        }
+    return remember(searchQuery, selected) { selected.matching(searchQuery) }
 }
 
 /**
