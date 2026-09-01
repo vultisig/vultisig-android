@@ -1,18 +1,25 @@
 package com.vultisig.wallet.ui.screens.passcode
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -20,15 +27,23 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.BiometricUnlockAvailability
+import com.vultisig.wallet.ui.components.biometricUnlockAvailability
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.PasscodeInputField
 import com.vultisig.wallet.ui.components.inputs.PasscodeInputFieldState
+import com.vultisig.wallet.ui.components.rememberBiometricUnlockLauncher
 import com.vultisig.wallet.ui.models.passcode.PasscodeLockError
 import com.vultisig.wallet.ui.models.passcode.PasscodeLockUiModel
 import com.vultisig.wallet.ui.models.passcode.PasscodeLockViewModel
@@ -39,12 +54,41 @@ import com.vultisig.wallet.ui.theme.v2.V2
 @Composable
 internal fun PasscodeLockScreen(model: PasscodeLockViewModel = hiltViewModel()) {
     val state by model.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val launcher = rememberBiometricUnlockLauncher()
 
-    PasscodeLockScreen(state = state, textFieldState = model.textFieldState)
+    // A copy can outlive the hardware's willingness to release it — biometrics switched off in
+    // device settings, or a sensor locked out. Asking here keeps a link off the screen that could
+    // only ever answer with an error.
+    var isBiometricAvailable by
+        remember(context) {
+            mutableStateOf(
+                context.biometricUnlockAvailability() == BiometricUnlockAvailability.Available
+            )
+        }
+
+    // And a lockout expires, or the user switches biometrics back on, while this screen is still
+    // the one on top. Asking again on the way back keeps the link in step with the hardware.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        isBiometricAvailable =
+            context.biometricUnlockAvailability() == BiometricUnlockAvailability.Available
+    }
+
+    PasscodeLockScreen(
+        state = state,
+        textFieldState = model.textFieldState,
+        isBiometricUnlockAvailable = isBiometricAvailable,
+        onUseBiometricsClick = { model.onUseBiometricsClick(launcher) },
+    )
 }
 
 @Composable
-internal fun PasscodeLockScreen(state: PasscodeLockUiModel, textFieldState: TextFieldState) {
+internal fun PasscodeLockScreen(
+    state: PasscodeLockUiModel,
+    textFieldState: TextFieldState,
+    isBiometricUnlockAvailable: Boolean = false,
+    onUseBiometricsClick: () -> Unit = {},
+) {
     Box(
         contentAlignment = Alignment.Center,
         modifier =
@@ -110,7 +154,39 @@ internal fun PasscodeLockScreen(state: PasscodeLockUiModel, textFieldState: Text
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                 )
             }
+
+            if (state.isBiometricUnlockEnabled && isBiometricUnlockAvailable) {
+                UseBiometricsLink(onClick = onUseBiometricsClick)
+            }
         }
+    }
+}
+
+/**
+ * The shortcut, offered and never taken on its own.
+ *
+ * Deliberately a link rather than a button: it is the secondary way in, and the passcode field
+ * above it is the primary one. It stays tappable through a lockout — the throttle is there to slow
+ * down guessing at six digits, and a biometric match is not a guess.
+ */
+@Composable
+private fun UseBiometricsLink(onClick: () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(top = 36.dp).clickOnce(onClick = onClick),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_biometrics),
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+        )
+
+        Text(
+            text = stringResource(R.string.passcode_lock_use_biometrics),
+            color = Theme.v2.colors.alerts.info,
+            style = Theme.brockmann.button.medium.medium,
+        )
     }
 }
 
@@ -120,6 +196,8 @@ private fun PasscodeLockError.message(): String =
         is PasscodeLockError.Wrong -> wrongPasscodeMessage(remainingAttempts)
         is PasscodeLockError.LockedOut -> lockedOutMessage(remainingSeconds)
         is PasscodeLockError.NotDigits -> stringResource(R.string.passcode_not_digits)
+        is PasscodeLockError.BiometricUnavailable ->
+            stringResource(R.string.passcode_biometric_unavailable)
     }
 
 /**

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.platform.app.InstrumentationRegistry
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.passcode.AutoLockTimeout
+import com.vultisig.wallet.ui.components.BiometricUnlockAvailability
 import com.vultisig.wallet.ui.models.passcode.PasscodeSettingsUiModel
 import org.junit.Rule
 import org.junit.Test
@@ -46,10 +47,12 @@ class PasscodeSettingsExplanationTest {
                         autoLockTimeout = AutoLockTimeout.Never,
                         isReady = true,
                     ),
+                biometricAvailability = BiometricUnlockAvailability.Available,
                 onBackClick = {},
                 onPasscodeEnabledChange = {},
                 onChangePasscodeClick = {},
                 onAutoLockClick = {},
+                onBiometricUnlockChange = {},
             )
         }
     }

@@ -14,6 +14,8 @@ internal interface PasscodeModule {
 
     @Binds fun bindPasscodeStore(impl: SharedPreferencesPasscodeStore): PasscodeStore
 
+    @Binds fun bindBiometricUnlockStore(impl: KeyStoreBiometricUnlockStore): BiometricUnlockStore
+
     @Binds fun bindPasscodeRepository(impl: PasscodeRepositoryImpl): PasscodeRepository
 
     // Same @Singleton-scoped instance as the repository binding above: the in-memory data key must
