@@ -15,10 +15,10 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenId
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.carriesMemo
 import com.vultisig.wallet.data.models.isRippleIssuedToken
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -311,6 +311,7 @@ internal class SendFormGraph(
             accounts = accounts,
             selectedToken = selectedToken,
             addressFieldState = addressFieldState,
+            memoFieldState = memoFieldState,
             uiState = uiState,
             isSwitchingAccounts = isSwitchingAccounts,
             defiTypeProvider = defiTypeProvider,
@@ -520,13 +521,10 @@ internal class SendFormGraph(
                 val address = token.address
                 // The tag belongs to the destination account, not the asset.
                 val isDestinationTag = token.chain == Chain.Ripple
-                val hasMemo =
-                    (token.isNativeToken || token.chain.standard == TokenStandard.COSMOS) &&
-                        token.chain != Chain.Sui
+                val hasMemo = token.carriesMemo
 
-                // Issued currencies hide the memo field but submit still reads it, so text typed
-                // for another coin would be signed. TON jettons, SPL and TRC20 hide the field
-                // too, but keep signing their memo.
+                // Issued currencies use the destination-tag field, while submit still reads the
+                // memo text; clear anything typed for a previous asset before it can leak through.
                 if (token.isRippleIssuedToken) {
                     memoFieldState.clearText()
                 }

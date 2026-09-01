@@ -90,6 +90,19 @@ val Coin.isLpToken: Boolean
             else -> false
         }
 
+/**
+ * True when the transaction builder for this exact coin carries
+ * [com.vultisig.wallet.data.models.payload.KeysignPayload.memo] into the signed transaction.
+ */
+val Coin.carriesMemo: Boolean
+    get() =
+        chain != Chain.Sui &&
+            (isNativeToken ||
+                chain.standard == TokenStandard.COSMOS ||
+                chain == Chain.Ton ||
+                chain == Chain.Solana ||
+                chain == Chain.Tron)
+
 /** Returns true if this coin's chain allows zero-gas transactions. */
 fun Coin.allowZeroGas(): Boolean {
     return this.chain == Chain.Polkadot || this.chain == Chain.Bittensor || this.chain == Chain.Tron
