@@ -69,9 +69,10 @@ internal fun VsOverviewToken(
  * never named. [chainLogo] is null there because the resolved asset carries no payload chain badge.
  *
  * An empty [value] renders the ticker alone, for a reading that identifies the asset but states no
- * truthful quantity. [scope] is what the transaction committed to in words — "50% of your staked
- * position" — which stays exact even when the settled amount is only an estimate, so it is the last
- * thing to be dropped rather than the first.
+ * truthful quantity; an empty [ticker] drops the asset row entirely, for one that could not
+ * identify the asset either. [scope] is what the transaction committed to in words — "50% of your
+ * staked position" — which stays exact even when the settled amount is only an estimate, so it is
+ * the last thing to be dropped rather than the first.
  */
 @Composable
 internal fun VsOverviewToken(
@@ -106,27 +107,31 @@ internal fun VsOverviewToken(
             maxLines = 1,
         )
 
-        UiSpacer(12.dp)
+        // Naming an asset the reading could not establish would be a claim of its own, so the logo
+        // and the amount row are dropped together rather than falling back to the payload's coin.
+        if (ticker.isNotEmpty()) {
+            UiSpacer(12.dp)
 
-        TokenAndChainLogo(tokenLogo = tokenLogo, tokenTicker = ticker, chainLogo = chainLogo)
+            TokenAndChainLogo(tokenLogo = tokenLogo, tokenTicker = ticker, chainLogo = chainLogo)
 
-        UiSpacer(12.dp)
+            UiSpacer(12.dp)
 
-        val text = buildAnnotatedString {
-            if (value.isNotEmpty()) {
-                append(value)
-                append(" ")
+            val text = buildAnnotatedString {
+                if (value.isNotEmpty()) {
+                    append(value)
+                    append(" ")
+                }
+                withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(ticker) }
             }
-            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(ticker) }
-        }
 
-        Text(
-            text = text,
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-        )
+            Text(
+                text = text,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
+        }
 
         if (fiatValue != null) {
             Text(
@@ -137,7 +142,7 @@ internal fun VsOverviewToken(
         }
 
         if (scope != null) {
-            UiSpacer(4.dp)
+            UiSpacer(if (ticker.isEmpty()) 12.dp else 4.dp)
 
             Text(
                 text = scope,

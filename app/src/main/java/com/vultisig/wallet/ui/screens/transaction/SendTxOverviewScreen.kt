@@ -446,10 +446,19 @@ private fun doneHeroDisplay(tx: UiTransactionInfo): DoneHeroDisplay {
                     scope = hero.scope,
                 )
             } else {
-                // The position read resolved nothing, so the scope is the only quantity the
-                // decoder proved. Dropping it here would leave a verb over a blank amount and
-                // discard the one figure that is certain.
-                fallback.copy(verb = verb, value = "", fiatValue = null, scope = hero.scope)
+                // The position read resolved nothing, so the scope is the only thing the decoder
+                // proved — and it is shown alone. The payload's coin is the carrier here, not
+                // necessarily the asset the operation acted on: a TCY unstake is signed against a
+                // dust RUNE amount, and naming RUNE would be a claim the reading never made.
+                DoneHeroDisplay(
+                    verb = verb,
+                    tokenLogo = fallbackLogo,
+                    ticker = "",
+                    chainLogo = null,
+                    value = "",
+                    fiatValue = null,
+                    scope = hero.scope,
+                )
             }
         }
 
