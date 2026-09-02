@@ -342,7 +342,7 @@ class SwapQuoteRepositoryTest {
 
     private suspend fun fetchLiFiQuote(quote: LiFiSwapQuoteJson): EVMSwapQuoteJson {
         coEvery {
-            liFiChainApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any(), any())
+            liFiChainApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any(), any(), any())
         } returns LiFiSwapQuoteDeserialized.Result(quote)
 
         return (liFiSource.fetch(

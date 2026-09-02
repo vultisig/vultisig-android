@@ -24,7 +24,7 @@ interface LiFiChainApi {
         fromAddress: String,
         toAddress: String,
         bpsDiscount: Int,
-        slippageBps: Int? = null,
+        slippageBps: Int,
     ): LiFiSwapQuoteDeserialized
 
     companion object {
@@ -42,10 +42,12 @@ interface LiFiChainApi {
          * denomination cannot be inferred reliably for cross-chain swaps (#3300). Deriving the fee
          * from `dstAmount` sidesteps that ambiguity.
          */
-        fun integratorFeeAmount(dstAmount: BigInteger, bpsDiscount: Int = 0): BigInteger {
-            val effectiveBps = maxOf(0, INTEGRATOR_FEE_BPS - bpsDiscount)
-            return dstAmount * effectiveBps.toBigInteger() / BPS_DENOMINATOR
-        }
+        fun integratorFeeAmount(dstAmount: BigInteger, bpsDiscount: Int = 0): BigInteger =
+            dstAmount * effectiveIntegratorFeeBps(bpsDiscount).toBigInteger() / BPS_DENOMINATOR
+
+        /** The integrator fee actually charged once the caller's VULT tier discount is applied. */
+        fun effectiveIntegratorFeeBps(bpsDiscount: Int): Int =
+            maxOf(0, INTEGRATOR_FEE_BPS - bpsDiscount)
     }
 }
 
@@ -65,7 +67,7 @@ constructor(
         fromAddress: String,
         toAddress: String,
         bpsDiscount: Int,
-        slippageBps: Int?,
+        slippageBps: Int,
     ): LiFiSwapQuoteDeserialized {
         val bpsDiscountFee = round(bpsDiscount.toDouble()) / LiFiChainApi.BPS_DENOMINATOR_INT
         val updatedFeeIntegrator =
@@ -84,15 +86,15 @@ constructor(
                 parameter("fromAmount", fromAmount)
                 parameter("fromAddress", fromAddress)
                 parameter("toAddress", toAddress)
-                // LI.FI takes slippage as a fraction (0.01 = 1%); omitted = LI.FI's own default.
+                // LI.FI takes slippage as a fraction (0.01 = 1%). Always sent: omitting it
+                // leaves LI.FI's own 0.5%, too tight to survive a keysign ceremony, so the caller
+                // resolves an explicit tolerance for "Auto" too (see LiFiSlippage).
                 // Format via BigDecimal plain string: a Double would render tight tolerances (1–9
                 // bps) in scientific notation (e.g. 1.0E-4), which LI.FI rejects as non-numeric.
-                slippageBps?.let {
-                    parameter(
-                        "slippage",
-                        BigDecimal(it).movePointLeft(4).stripTrailingZeros().toPlainString(),
-                    )
-                }
+                parameter(
+                    "slippage",
+                    BigDecimal(slippageBps).movePointLeft(4).stripTrailingZeros().toPlainString(),
+                )
                 parameter("integrator", LiFiChainApi.INTEGRATOR_ACCOUNT)
                 parameter("fee", updatedFeeIntegrator)
             }
