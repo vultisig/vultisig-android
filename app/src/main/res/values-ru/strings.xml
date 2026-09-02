@@ -15,6 +15,8 @@
     <string name="swap_form_on_chain">на</string>
     <string name="select_asset_title">Выбрать актив</string>
     <string name="select_asset_no_result">Результат не найден.</string>
+    <string name="select_asset_no_token_found">Токен не найден</string>
+    <string name="select_asset_add_custom_token">+ Добавить пользовательский токен</string>
     <string name="select_asset_secured_badge">Залоговый</string>
     <string name="select_chain_chain_title">Сеть</string>
     <string name="select_chain_balance_title">Баланс</string>
@@ -1740,4 +1742,33 @@
     <string name="cosmos_staking_redelegate_cooldown_fallback">Исходный валидатор находится в периоде ожидания переделегирования</string>
     <string name="cosmos_staking_insufficient_fee_balance">Недостаточно ликвидных %1$s для оплаты комиссии сети. Сначала получите награды или пополните баланс.</string>
     <string name="cosmos_staking_max_entries_reached">Достигнуто максимальное число ожидающих запросов (%1$d) для этого валидатора. Дождитесь завершения одного из них, прежде чем продолжить.</string>
+    <!-- Transaction done screen: past-tense operation vocabulary read from the signed transaction -->
+    <string name="done_verb_sent">Отправлено</string>
+    <string name="done_verb_approved">Одобрено</string>
+    <string name="done_verb_staked">Застейкано</string>
+    <string name="done_verb_unstaked">Стейкинг отменён</string>
+    <string name="done_verb_bonded">Привязано</string>
+    <string name="done_verb_unbonded">Отвязано</string>
+    <string name="done_verb_rebonded">Перепривязано</string>
+    <string name="done_verb_left">Выход выполнен</string>
+    <string name="done_verb_delegated">Делегировано</string>
+    <string name="done_verb_undelegated">Делегирование отменено</string>
+    <string name="done_verb_redelegated">Переделегировано</string>
+    <string name="done_verb_claimed_rewards">Награды получены</string>
+    <string name="done_verb_minted">Отчеканено</string>
+    <string name="done_verb_redeemed">Выкуплено</string>
+    <string name="done_verb_withdrew">Выведено</string>
+    <string name="done_verb_added_liquidity">Ликвидность добавлена</string>
+    <string name="done_verb_removed_liquidity">Ликвидность удалена</string>
+    <string name="done_verb_merged">Объединено</string>
+    <string name="done_verb_unmerged">Объединение отменено</string>
+    <string name="done_verb_bridged">Переведено между сетями</string>
+    <string name="done_verb_voted">Голос отдан</string>
+    <string name="done_verb_deposited">Внесено</string>
+    <string name="done_verb_switched">Переключено</string>
+    <string name="done_verb_placed_limit_order">Лимитный ордер размещён</string>
+    <string name="limit_swap_cancel_done_sent">Отмена отправлена</string>
+    <string name="scope_your_whole_stake">весь ваш стейк</string>
+    <string name="scope_rewards_accrued_so_far">накопленные на данный момент награды</string>
+    <string name="withdrawing_share_of_staked_position">%1$s вашей стейкинг-позиции</string>
 </resources>

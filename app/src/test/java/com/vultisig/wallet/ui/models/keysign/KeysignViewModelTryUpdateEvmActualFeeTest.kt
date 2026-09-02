@@ -147,6 +147,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             inAppReviewRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
             pendingLimitOrderRepository = mockk(relaxed = true),
+            doneTransactionPresentation = mockk(relaxed = true),
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
 

@@ -1,19 +1,13 @@
 package com.vultisig.wallet.ui.screens
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
@@ -34,8 +28,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.maya.MayachainDefiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.defi.ton.TonDeFiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.defi.tron.TronDeFiPositionsScreen
-import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
-import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
+import com.vultisig.wallet.ui.screens.v2.home.components.BottomNavigatorOverlay
 
 @Composable
 internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewModel()) {
@@ -84,41 +77,23 @@ private fun ChainDashboardScreen(
     onBackClick: () -> Unit,
     content: @Composable () -> Unit = {},
 ) {
-    Scaffold(
-        topBar = {
-            if (uiModel.route !is Wallet) {
-                V2Topbar(title = null, onBackClick = onBackClick)
-            }
-        },
-        bottomBar = {
-            Box(modifier = Modifier.fillMaxWidth().animateContentSize()) {
-                if (uiModel.isBottomBarVisible) {
-                    Row(
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .align(Alignment.BottomCenter),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        CryptoConnectionSelect(
-                            activeType = uiModel.cryptoConnectionType,
-                            availableCryptoTypes = uiModel.availableCryptoTypes,
-                            onTypeClick = onTypeClick,
-                        )
-                        CameraButton(onClick = onCameraClick)
-                    }
+    BottomNavigatorOverlay(
+        isNavigatorVisible = uiModel.isBottomBarVisible,
+        activeType = uiModel.cryptoConnectionType,
+        availableCryptoTypes = uiModel.availableCryptoTypes,
+        onTypeClick = onTypeClick,
+        onCameraClick = onCameraClick,
+    ) {
+        Scaffold(
+            topBar = {
+                if (uiModel.route !is Wallet) {
+                    V2Topbar(title = null, onBackClick = onBackClick)
                 }
             }
-        },
-    ) { paddingValues ->
-        Box(
-            modifier =
-                Modifier.padding(
-                    top = paddingValues.calculateTopPadding(),
-                    bottom = paddingValues.calculateBottomPadding(),
-                )
-        ) {
-            content()
+        ) { paddingValues ->
+            Box(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
+                content()
+            }
         }
     }
 }

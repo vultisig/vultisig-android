@@ -13,6 +13,8 @@
     <string name="swap_form_on_chain">op</string>
     <string name="select_asset_title">Asset selecteren</string>
     <string name="select_asset_no_result">Geen resultaat gevonden.</string>
+    <string name="select_asset_no_token_found">Geen token gevonden</string>
+    <string name="select_asset_add_custom_token">+ Aangepaste token toevoegen</string>
     <string name="select_asset_secured_badge">Gedekt</string>
     <string name="select_chain_chain_title">Keten</string>
     <string name="select_chain_balance_title">Saldo</string>
@@ -1720,4 +1722,33 @@
     <string name="cosmos_staking_redelegate_cooldown_fallback">Bronvalidator heeft een herdelegatie-afkoelperiode</string>
     <string name="cosmos_staking_insufficient_fee_balance">Niet genoeg liquide %1$s om de netwerkkosten te dekken. Claim eerst beloningen of vul aan.</string>
     <string name="cosmos_staking_max_entries_reached">Je hebt het maximum van %1$d openstaande verzoeken voor deze validator bereikt. Wacht tot er één is voltooid voordat je doorgaat.</string>
+    <!-- Transaction done screen: past-tense operation vocabulary read from the signed transaction -->
+    <string name="done_verb_sent">Verzonden</string>
+    <string name="done_verb_approved">Goedgekeurd</string>
+    <string name="done_verb_staked">Gestaked</string>
+    <string name="done_verb_unstaked">Ontstaked</string>
+    <string name="done_verb_bonded">Gebonden</string>
+    <string name="done_verb_unbonded">Ontbonden</string>
+    <string name="done_verb_rebonded">Opnieuw gebonden</string>
+    <string name="done_verb_left">Verlaten</string>
+    <string name="done_verb_delegated">Gedelegeerd</string>
+    <string name="done_verb_undelegated">Delegatie ingetrokken</string>
+    <string name="done_verb_redelegated">Opnieuw gedelegeerd</string>
+    <string name="done_verb_claimed_rewards">Beloningen geclaimd</string>
+    <string name="done_verb_minted">Gemunt</string>
+    <string name="done_verb_redeemed">Ingewisseld</string>
+    <string name="done_verb_withdrew">Opgenomen</string>
+    <string name="done_verb_added_liquidity">Liquiditeit toegevoegd</string>
+    <string name="done_verb_removed_liquidity">Liquiditeit verwijderd</string>
+    <string name="done_verb_merged">Samengevoegd</string>
+    <string name="done_verb_unmerged">Gesplitst</string>
+    <string name="done_verb_bridged">Gebridged</string>
+    <string name="done_verb_voted">Gestemd</string>
+    <string name="done_verb_deposited">Gestort</string>
+    <string name="done_verb_switched">Gewisseld</string>
+    <string name="done_verb_placed_limit_order">Limietorder geplaatst</string>
+    <string name="limit_swap_cancel_done_sent">Annulering verzonden</string>
+    <string name="scope_your_whole_stake">je volledige stake</string>
+    <string name="scope_rewards_accrued_so_far">tot nu toe opgebouwde beloningen</string>
+    <string name="withdrawing_share_of_staked_position">%1$s van je gestakete positie</string>
 </resources>

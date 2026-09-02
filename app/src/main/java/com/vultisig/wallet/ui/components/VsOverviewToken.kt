@@ -46,9 +46,47 @@ internal fun VsOverviewToken(
     withContainer: Boolean = true,
 ) {
     val token: Coin = valuedToken.token
-    val chainLogo = token.chain.monoToneLogo
-    val value: String = valuedToken.value
 
+    VsOverviewToken(
+        header = header,
+        tokenLogo = getCoinLogo(token.logo),
+        ticker = token.ticker,
+        chainLogo =
+            token.chain.monoToneLogo.takeIf { !token.isNativeToken || token.chain.isLayer2 },
+        value = valuedToken.value,
+        fiatValue = valuedToken.fiatValue,
+        shape = shape,
+        modifier = modifier,
+        withContainer = withContainer,
+    )
+}
+
+/**
+ * The same card addressed by its display parts rather than by a [ValuedToken].
+ *
+ * Used where the asset shown is not the transaction's own coin — the done screen's decoder-driven
+ * hero resolves its asset from the signed units, which may be a chain-native denom the payload
+ * never named. [chainLogo] is null there because the resolved asset carries no payload chain badge.
+ *
+ * An empty [value] renders the ticker alone, for a reading that identifies the asset but states no
+ * truthful quantity; an empty [ticker] drops the asset row entirely, for one that could not
+ * identify the asset either. [scope] is what the transaction committed to in words — "50% of your
+ * staked position" — which stays exact even when the settled amount is only an estimate, so it is
+ * the last thing to be dropped rather than the first.
+ */
+@Composable
+internal fun VsOverviewToken(
+    header: String,
+    tokenLogo: ImageModel,
+    ticker: String,
+    chainLogo: Int?,
+    value: String,
+    fiatValue: String?,
+    shape: Shape,
+    modifier: Modifier = Modifier,
+    withContainer: Boolean = true,
+    scope: String? = null,
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier =
@@ -69,35 +107,50 @@ internal fun VsOverviewToken(
             maxLines = 1,
         )
 
-        UiSpacer(12.dp)
+        // Naming an asset the reading could not establish would be a claim of its own, so the logo
+        // and the amount row are dropped together rather than falling back to the payload's coin.
+        if (ticker.isNotEmpty()) {
+            UiSpacer(12.dp)
 
-        TokenAndChainLogo(
-            tokenLogo = getCoinLogo(token.logo),
-            tokenTicker = token.ticker,
-            chainLogo = chainLogo.takeIf { !token.isNativeToken || token.chain.isLayer2 },
-        )
+            TokenAndChainLogo(tokenLogo = tokenLogo, tokenTicker = ticker, chainLogo = chainLogo)
 
-        UiSpacer(12.dp)
+            UiSpacer(12.dp)
 
-        val text = buildAnnotatedString {
-            append(value)
-            append(" ")
-            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(token.ticker) }
+            val text = buildAnnotatedString {
+                if (value.isNotEmpty()) {
+                    append(value)
+                    append(" ")
+                }
+                withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) { append(ticker) }
+            }
+
+            Text(
+                text = text,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
         }
 
-        Text(
-            text = text,
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-        )
+        if (fiatValue != null) {
+            Text(
+                text = fiatValue,
+                style = Theme.brockmann.supplementary.captionSmall,
+                color = Theme.v2.colors.text.tertiary,
+            )
+        }
 
-        Text(
-            text = valuedToken.fiatValue,
-            style = Theme.brockmann.supplementary.captionSmall,
-            color = Theme.v2.colors.text.tertiary,
-        )
+        if (scope != null) {
+            UiSpacer(if (ticker.isEmpty()) 12.dp else 4.dp)
+
+            Text(
+                text = scope,
+                style = Theme.brockmann.supplementary.captionSmall,
+                color = Theme.v2.colors.text.tertiary,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 

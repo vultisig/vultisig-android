@@ -90,6 +90,8 @@
     <string name="dialog_default_error_title">Erro</string>
     <string name="select_asset_title">Selecionar ativo</string>
     <string name="select_asset_no_result">Nenhum resultado encontrado.</string>
+    <string name="select_asset_no_token_found">Nenhum token encontrado</string>
+    <string name="select_asset_add_custom_token">+ Adicionar token personalizado</string>
     <string name="select_asset_secured_badge">Garantido</string>
     <string name="select_chain_chain_title">Cadeia</string>
     <string name="select_chain_balance_title">Saldo</string>
@@ -1725,4 +1727,33 @@
     <string name="cosmos_staking_redelegate_cooldown_fallback">O validador de origem está num período de espera de redelegação</string>
     <string name="cosmos_staking_insufficient_fee_balance">Não há %1$s líquido suficiente para cobrir a taxa de rede. Reivindique as recompensas primeiro ou recarregue.</string>
     <string name="cosmos_staking_max_entries_reached">Você atingiu o máximo de %1$d solicitações pendentes para este validador. Aguarde a conclusão de uma antes de continuar.</string>
+    <!-- Transaction done screen: past-tense operation vocabulary read from the signed transaction -->
+    <string name="done_verb_sent">Enviado</string>
+    <string name="done_verb_approved">Aprovado</string>
+    <string name="done_verb_staked">Stake realizado</string>
+    <string name="done_verb_unstaked">Stake cancelado</string>
+    <string name="done_verb_bonded">Vinculado</string>
+    <string name="done_verb_unbonded">Desvinculado</string>
+    <string name="done_verb_rebonded">Revinculado</string>
+    <string name="done_verb_left">Saída concluída</string>
+    <string name="done_verb_delegated">Delegado</string>
+    <string name="done_verb_undelegated">Delegação cancelada</string>
+    <string name="done_verb_redelegated">Redelegado</string>
+    <string name="done_verb_claimed_rewards">Recompensas reivindicadas</string>
+    <string name="done_verb_minted">Cunhado</string>
+    <string name="done_verb_redeemed">Resgatado</string>
+    <string name="done_verb_withdrew">Sacado</string>
+    <string name="done_verb_added_liquidity">Liquidez adicionada</string>
+    <string name="done_verb_removed_liquidity">Liquidez removida</string>
+    <string name="done_verb_merged">Mesclado</string>
+    <string name="done_verb_unmerged">Separado</string>
+    <string name="done_verb_bridged">Transferido entre redes</string>
+    <string name="done_verb_voted">Voto registrado</string>
+    <string name="done_verb_deposited">Depositado</string>
+    <string name="done_verb_switched">Trocado</string>
+    <string name="done_verb_placed_limit_order">Ordem limite criada</string>
+    <string name="limit_swap_cancel_done_sent">Cancelamento enviado</string>
+    <string name="scope_your_whole_stake">todo o seu stake</string>
+    <string name="scope_rewards_accrued_so_far">recompensas acumuladas até agora</string>
+    <string name="withdrawing_share_of_staked_position">%1$s da sua posição em stake</string>
 </resources>

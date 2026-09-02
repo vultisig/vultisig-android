@@ -392,6 +392,10 @@ class PreviewActivity : ComponentActivity() {
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
                     "send_tx_done" -> SendTxDonePreview()
+                    "send_tx_done_decoded" -> SendTxDoneDecodedPreview()
+                    "send_tx_done_projected" -> SendTxDoneProjectedPreview()
+                    "send_tx_done_unresolved" -> SendTxDoneUnresolvedPreview()
+                    "send_tx_done_title" -> SendTxDoneTitleOnlyPreview()
                     "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "limit_orders_tab" -> LimitOrdersTabPreview()
@@ -1586,6 +1590,100 @@ private fun tonJettonSendState(decoded: Boolean): VerifyTransactionUiModel {
     )
 }
 
+/**
+ * The done card as the decoder drives it: the past-tense verb, and the asset and amount read from
+ * the signed content rather than from the payload's carrier coin.
+ *
+ * Stands in for a registered chain decoder, which the app does not have yet — every real payload
+ * currently decodes to `Unknown` and takes the [SendTxDonePreview] fallback instead.
+ */
+@Composable
+private fun SendTxDoneDecodedPreview() {
+    SendTxDoneWithOperationHero(
+        HeroContent.Send(
+            title = stringResource(R.string.done_verb_staked),
+            coin =
+                HeroCoinAmount(
+                    amount = "1,250.5",
+                    ticker = "TCY",
+                    logo = Coins.ThorChain.TCY.logo,
+                    fiatValue = "$412.66",
+                ),
+        )
+    )
+}
+
+/** The same card for an execution-set amount, where the projected quantity stays approximate. */
+@Composable
+private fun SendTxDoneProjectedPreview() {
+    SendTxDoneWithOperationHero(
+        HeroContent.Projected(
+            title = stringResource(R.string.done_verb_unstaked),
+            estimate =
+                HeroCoinAmount(
+                    amount = "625.25",
+                    ticker = "TCY",
+                    logo = Coins.ThorChain.TCY.logo,
+                    fiatValue = "$206.33",
+                ),
+            scope = stringResource(R.string.withdrawing_share_of_staked_position, "50%"),
+        )
+    )
+}
+
+/**
+ * The guard that matters: a position read that failed or timed out. The verb and the asset are
+ * still true, so both are shown — the amount and the fiat line are omitted rather than filled with
+ * the payload's carrier value, which for a fractional unstake is dust.
+ */
+@Composable
+private fun SendTxDoneUnresolvedPreview() {
+    SendTxDoneWithOperationHero(
+        HeroContent.Projected(
+            title = stringResource(R.string.done_verb_unstaked),
+            estimate = null,
+            scope = stringResource(R.string.withdrawing_share_of_staked_position, "50%"),
+        )
+    )
+}
+
+/** A reading that names the operation but states no quantity at all. */
+@Composable
+private fun SendTxDoneTitleOnlyPreview() {
+    SendTxDoneWithOperationHero(
+        HeroContent.Title(stringResource(R.string.done_verb_claimed_rewards))
+    )
+}
+
+@Composable
+private fun SendTxDoneWithOperationHero(operationHero: HeroContent) {
+    val runeCoin = Coins.ThorChain.RUNE
+
+    SendTxOverviewScreen(
+        showToolbar = true,
+        showSaveToAddressBook = false,
+        transactionHash = "9F2C1B...7A4E",
+        transactionLink = "https://runescan.io/tx/9F2C1B",
+        transactionStatus = TransactionStatus.Confirmed,
+        onComplete = {},
+        onBack = {},
+        onAddToAddressBook = {},
+        tx =
+            UiTransactionInfo(
+                type = UiTransactionInfoType.Deposit,
+                token = ValuedToken(token = runeCoin, value = "0.00000001", fiatValue = "$0.00"),
+                from = "thor1abcdefghijklmnopqrstuvwxyz0123456789ab",
+                to = "",
+                memo = "tcy-:5000",
+                networkFeeTokenValue = "0.02 RUNE",
+                networkFeeFiatValue = "$0.03",
+                operationHero = operationHero,
+            ),
+        isTransactionDetailVisible = false,
+        onTransactionDetailVisibleChange = {},
+    )
+}
+
 @Composable
 private fun SendTxDonePreview() {
     val ethCoin = Coins.Ethereum.ETH
@@ -2572,6 +2670,7 @@ private fun SelectAssetSecuredPreview(showSecured: Boolean) {
         searchFieldState = TextFieldState(),
         onAssetClick = {},
         onSelectChain = {},
+        onAddCustomTokenClick = {},
     )
 }
 

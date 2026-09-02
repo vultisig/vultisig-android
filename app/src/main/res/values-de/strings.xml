@@ -13,6 +13,8 @@
     <string name="vault_settings_delete_title">Löschen</string>
     <string name="select_asset_title">Asset auswählen</string>
     <string name="select_asset_no_result">Kein Ergebnis gefunden.</string>
+    <string name="select_asset_no_token_found">Kein Token gefunden</string>
+    <string name="select_asset_add_custom_token">+ Benutzerdefinierten Token hinzufügen</string>
     <string name="select_asset_secured_badge">Gesichert</string>
     <string name="select_chain_chain_title">Blockchain</string>
     <string name="select_chain_balance_title">Guthaben</string>
@@ -1728,4 +1730,33 @@
     <string name="cosmos_staking_redelegate_cooldown_fallback">Quell-Validator befindet sich in einer Redelegations-Abkühlphase</string>
     <string name="cosmos_staking_insufficient_fee_balance">Nicht genügend liquides %1$s zur Deckung der Netzwerkgebühr. Fordern Sie zuerst Belohnungen an oder laden Sie auf.</string>
     <string name="cosmos_staking_max_entries_reached">Du hast die maximale Anzahl von %1$d ausstehenden Anfragen für diesen Validator erreicht. Warte, bis eine abgeschlossen ist, bevor du fortfährst.</string>
+    <!-- Transaction done screen: past-tense operation vocabulary read from the signed transaction -->
+    <string name="done_verb_sent">Gesendet</string>
+    <string name="done_verb_approved">Genehmigt</string>
+    <string name="done_verb_staked">Gestakt</string>
+    <string name="done_verb_unstaked">Entstakt</string>
+    <string name="done_verb_bonded">Gebondet</string>
+    <string name="done_verb_unbonded">Bonding gelöst</string>
+    <string name="done_verb_rebonded">Neu gebondet</string>
+    <string name="done_verb_left">Verlassen</string>
+    <string name="done_verb_delegated">Delegiert</string>
+    <string name="done_verb_undelegated">Delegation beendet</string>
+    <string name="done_verb_redelegated">Neu delegiert</string>
+    <string name="done_verb_claimed_rewards">Belohnungen beansprucht</string>
+    <string name="done_verb_minted">Geprägt</string>
+    <string name="done_verb_redeemed">Eingelöst</string>
+    <string name="done_verb_withdrew">Ausgezahlt</string>
+    <string name="done_verb_added_liquidity">Liquidität hinzugefügt</string>
+    <string name="done_verb_removed_liquidity">Liquidität entfernt</string>
+    <string name="done_verb_merged">Zusammengeführt</string>
+    <string name="done_verb_unmerged">Getrennt</string>
+    <string name="done_verb_bridged">Kettenübergreifend übertragen</string>
+    <string name="done_verb_voted">Abgestimmt</string>
+    <string name="done_verb_deposited">Eingezahlt</string>
+    <string name="done_verb_switched">Gewechselt</string>
+    <string name="done_verb_placed_limit_order">Limit-Order platziert</string>
+    <string name="limit_swap_cancel_done_sent">Stornierung gesendet</string>
+    <string name="scope_your_whole_stake">dein gesamter Stake</string>
+    <string name="scope_rewards_accrued_so_far">bisher angefallene Belohnungen</string>
+    <string name="withdrawing_share_of_staked_position">%1$s deiner Stake-Position</string>
 </resources>

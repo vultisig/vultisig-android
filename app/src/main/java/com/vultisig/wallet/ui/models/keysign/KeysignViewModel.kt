@@ -64,10 +64,13 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.hero.retitled
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
+import com.vultisig.wallet.ui.models.transactiondecoding.DoneTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -284,6 +287,11 @@ internal data class KeysignUiState(
     val approveTxLink: String = "",
     val swapProgressLink: String? = null,
     val showSaveToAddressBook: Boolean = false,
+    /**
+     * The done screen's decoder-driven hero, resolved from the final signed payload. Null until it
+     * resolves, and null for every reading the normal-send card already describes better.
+     */
+    val operationHero: HeroContent? = null,
 )
 
 /**
@@ -333,6 +341,7 @@ constructor(
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val inAppReviewRepository: InAppReviewRepository,
     private val pendingLimitOrderRepository: PendingLimitOrderRepository,
+    private val doneTransactionPresentation: DoneTransactionPresentation,
 ) : ViewModel() {
 
     /** Creates [KeysignViewModel] with runtime-provided assisted parameters. */
@@ -420,21 +429,72 @@ constructor(
         if (target != null) {
             viewModelScope.safeLaunch {
                 val labels = resolveDestinationLabels(target.chain, target.dstAddress)
-                _state.update {
-                    it.copy(
+                _state.update { current ->
+                    current.copy(
                         showSaveToAddressBook = labels.showSaveToAddressBook,
+                        // Layer the labels onto whatever is in state, not onto the model captured
+                        // at construction. [loadDoneOperationHero] writes to the same field, and
+                        // rebuilding from the constructor's copy would drop its decoded verb
+                        // whenever this job happened to land second.
                         transactionUiModel =
-                            transactionTypeUiModel.withResolvedLabels(
-                                srcVaultName = vault.name,
-                                dstVaultName = labels.dstVaultName,
-                                dstAddressBookTitle = labels.dstAddressBookTitle,
-                            ),
+                            (current.transactionUiModel ?: transactionTypeUiModel)
+                                .withResolvedLabels(
+                                    srcVaultName = vault.name,
+                                    dstVaultName = labels.dstVaultName,
+                                    dstAddressBookTitle = labels.dstAddressBookTitle,
+                                ),
                     )
                 }
             }
         }
 
         observeInAppReviewEligibility()
+        loadDoneOperationHero()
+    }
+
+    /**
+     * Reads the final signed payload so the done screen describes what was actually signed rather
+     * than defaulting to "Sent".
+     *
+     * Both devices run this: the initiator and the co-signer construct this view model from the
+     * same payload, so they produce the same reading. It is deliberately best-effort — a failed or
+     * slow position read leaves the existing card exactly as it is, and never blocks the screen.
+     */
+    private fun loadDoneOperationHero() {
+        val payload = keysignPayload ?: return
+        // A swap done screen is owned by its own two-sided layout, which reads both legs from the
+        // swap payload. The decoder must not intercept it.
+        if (payload.swapPayload != null) return
+
+        viewModelScope.safeLaunch(
+            onError = { Timber.w(it, "Failed to resolve the done operation hero") }
+        ) {
+            // Both readings are decoded here, off the main thread. The state update below must
+            // stay cheap: `update` runs its lambda on the calling dispatcher and re-runs it on CAS
+            // contention, so decoding inside it would put repeated chain parsing on the UI thread.
+            val (hero, doneVerb) =
+                withContext(Dispatchers.IO) {
+                    doneTransactionPresentation.resolve(payload, vault.coins) to
+                        doneTransactionPresentation.specificTitle(payload)
+                }
+
+            _state.update { current ->
+                current.copy(
+                    operationHero = hero,
+                    // A Blockaid simulation owns figures the decoder cannot improve on, so only
+                    // its verb is replaced. Nothing happens when the reading is one the normal-send
+                    // card already describes.
+                    transactionUiModel = current.transactionUiModel?.retitledForDone(doneVerb),
+                )
+            }
+        }
+    }
+
+    /** Applies the done verb to an already-resolved simulated hero, preserving its figures. */
+    private fun TransactionTypeUiModel.retitledForDone(verb: String?): TransactionTypeUiModel {
+        val send = this as? TransactionTypeUiModel.Send ?: return this
+        val simulated = send.tx.heroContent ?: return this
+        return TransactionTypeUiModel.Send(send.tx.copy(heroContent = simulated.retitled(verb)))
     }
 
     /**

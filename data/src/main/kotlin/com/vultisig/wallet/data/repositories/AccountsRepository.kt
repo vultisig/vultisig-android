@@ -98,13 +98,13 @@ constructor(
         buildCacheAddresses(vaultId).flatMapLatest { (vaultCoins, addresses) ->
             channelFlow {
                 supervisorScope {
-                    // The DeFi-only receipts ride along: no vault carries one, so this refresh —
-                    // the only ungated one — is all that keeps the row they are valued from warm.
-                    // loadDeFiAddresses refreshes them too, but only on an explicit reload, and
-                    // its cached emission reads that row, so a cold start would otherwise value a
-                    // funded position at $0.00.
+                    // Position receipts ride along: no vault necessarily carries one, so this
+                    // refresh — the only ungated one — is all that keeps the row they are valued
+                    // from warm. loadDeFiAddresses refreshes them too, but only on an explicit
+                    // reload, and its cached emission reads that row, so a cold start would
+                    // otherwise value a funded position at $0.00.
                     val loadPrices = async {
-                        tokenPriceRepository.refresh(vaultCoins + defiOnlyReceiptsFor(vaultCoins))
+                        tokenPriceRepository.refresh(vaultCoins + injectedReceiptsFor(vaultCoins))
                     }
 
                     // Always emit the last-known DB snapshot first so the UI shows cached
@@ -692,17 +692,25 @@ constructor(
      *
      * A Kamino Earn position is held in its vault's underlying token, and a wallet can hold one
      * without ever holding that token itself — it may have deposited its whole balance, or
-     * deposited from another device. Accounts here are built from `vault.coins`, so without this
-     * the position resolves to an account that is not there and is silently dropped.
+     * deposited from another device. THORChain sTCY is similar for the Portfolio DeFi tab: the
+     * receipt can exist before the user manually enables that wallet token. Accounts here are built
+     * from `vault.coins`, so without this the position resolves to an account that is not there and
+     * is silently dropped.
      *
      * Every curated vault's token is offered rather than only the enabled ones: an unfunded
      * injection is dropped once its balance resolves, so opting out removes it either way.
      */
     private fun positionOnlyTokens(chain: Chain, tokens: List<Coin>): List<Coin> {
-        if (chain != Chain.Solana) return emptyList()
         val template = tokens.firstOrNull() ?: return emptyList()
         val held = tokens.mapTo(mutableSetOf()) { it.id.lowercase() }
-        return KaminoVaultRegistry.ALLOW_LIST.mapNotNull { it.coin }
+        val injectedTokens =
+            when (chain) {
+                Chain.Solana -> KaminoVaultRegistry.ALLOW_LIST.mapNotNull { it.coin }
+                Chain.ThorChain -> listOf(Coins.ThorChain.sTCY)
+                else -> emptyList()
+            }
+
+        return injectedTokens
             .distinctBy { it.id.lowercase() }
             .filterNot { it.id.lowercase() in held }
             .map { it.copy(address = template.address, hexPublicKey = template.hexPublicKey) }
@@ -771,7 +779,7 @@ constructor(
     }
 
     /**
-     * The DeFi-only receipts worth pricing for a vault holding [vaultCoins].
+     * The injected receipts worth pricing for a vault holding [vaultCoins].
      *
      * Only the chains the vault actually holds: [defiOnlyTokens] hangs a receipt off the chain's
      * native token, so a vault without the chain can never carry the position and its row is one
@@ -781,6 +789,13 @@ constructor(
      */
     private fun defiOnlyReceiptsFor(vaultCoins: List<Coin>): List<Coin> =
         Coins.defiOnly.filter { receipt -> vaultCoins.any { it.chain == receipt.chain } }
+
+    private fun injectedReceiptsFor(vaultCoins: List<Coin>): List<Coin> =
+        defiOnlyReceiptsFor(vaultCoins) +
+            listOf(Coins.ThorChain.sTCY).filter { receipt ->
+                vaultCoins.any { it.chain == receipt.chain } &&
+                    vaultCoins.none { it.id.equals(receipt.id, ignoreCase = true) }
+            }
 
     /**
      * Drops the DeFi-only accounts that resolved to nothing.
