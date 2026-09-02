@@ -180,6 +180,9 @@ val Chain.canSelectTokens: Boolean
             Chain.Tron,
             Chain.Ripple,
             Chain.Ton -> true
+            // Curated CNT only: the paste-a-contract half is gated separately by
+            // [canAddCustomToken], since no token search backs Cardano.
+            Chain.Cardano -> true
             Chain.ThorChain -> true
             Chain.CronosChain,
             Chain.ZkSync -> false
@@ -189,6 +192,16 @@ val Chain.canSelectTokens: Boolean
                     else -> false
                 }
         }
+
+/**
+ * Whether the token-selection sheet may offer the paste-a-contract flow alongside the curated list.
+ *
+ * Tracks [canSelectTokens] except where no `SearchTokenUseCase` branch backs the chain: Cardano
+ * ships a curated CNT catalog but has no asset lookup, so a pasted `<policy_id>.<asset_name_hex>`
+ * could only ever come back "not found". Offering the entry point anyway would be a dead end.
+ */
+val Chain.canAddCustomToken: Boolean
+    get() = canSelectTokens && this != Chain.Cardano
 
 val Chain.isSwapSupported: Boolean
     get() =

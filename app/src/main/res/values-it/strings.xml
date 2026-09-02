@@ -883,6 +883,7 @@
     <string name="tx_done_transaction_details_collapse">Riduci</string>
     <string name="vault_confirmation_vault_upgraded">Vault aggiornato</string>
     <string name="this_amount_would_leave_too_little_change">Questo importo lascerebbe troppo poco resto. 💡 Prova \"Invia Massimo\" (%1$s ADA) per evitare questo problema.</string>
+    <string name="send_error_cardano_native_token_unsupported">L\'invio di %1$s non è ancora supportato. I token nativi di Cardano possono essere detenuti e monitorati, ma non inviati.</string>
     <string name="swap_form_native">Nativo</string>
     <string name="swap_transaction_overview_approval_tx_hash">Hash di approvazione</string>
     <string name="swap_transaction_overview_track">Traccia</string>

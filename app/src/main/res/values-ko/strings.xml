@@ -1242,6 +1242,7 @@
     <string name="insufficient_balance_try_send">잔액이 부족합니다. \'최대 보내기\'로 %1$s ADA를 보내보세요.</string>
     <string name="insufficient_balance_ada">잔액 부족 (%1$s ADA). 이 거래를 완료하려면 더 많은 ADA가 필요합니다.</string>
     <string name="this_amount_would_leave_too_little_change">이 금액은 거스름돈이 너무 적게 남습니다. \'최대 보내기\' (%1$s ADA)를 사용해 보세요.</string>
+    <string name="send_error_cardano_native_token_unsupported">%1$s 전송은 아직 지원되지 않습니다. Cardano 네이티브 토큰은 보유 및 추적만 가능하며 전송할 수 없습니다.</string>
     <string name="swap_form_native">네이티브</string>
     <string name="swap_transaction_overview_approval_tx_hash">승인 Tx 해시</string>
     <string name="swap_transaction_overview_track">추적</string>

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.cardano.CardanoAssetResponseJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoBalanceResponseJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoSlotResponseJson
 import com.vultisig.wallet.data.api.models.cardano.CardanoTxStatusResponseJson
@@ -8,6 +9,7 @@ import com.vultisig.wallet.data.api.models.cardano.CardanoUtxoResponseJson
 import com.vultisig.wallet.data.api.models.cardano.OgmiosError
 import com.vultisig.wallet.data.api.models.cardano.OgmiosTransactionResponse
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.cardanoAssetId
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
@@ -35,6 +37,9 @@ class CardanoTransactionAlreadyBroadcastException(message: String) : Exception(m
 
 interface CardanoApi {
     suspend fun getBalance(coin: Coin): BigInteger
+
+    /** The held quantity of the native asset [coin] names through its `contractAddress`. */
+    suspend fun getTokenBalance(coin: Coin): BigInteger
 
     suspend fun getUTXOs(coin: Coin): List<UtxoInfo>
 
@@ -72,6 +77,32 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("Error in Cardano getBalance : ${e.message}")
+            throw e
+        }
+    }
+
+    override suspend fun getTokenBalance(coin: Coin): BigInteger {
+        val assetId = coin.contractAddress.lowercase()
+        require(assetId.isNotBlank()) { "Cardano token ${coin.ticker} has no asset id" }
+
+        val requestBody = mapOf("_addresses" to listOf(coin.address))
+        val response =
+            httpClient.post(url) {
+                url { path(apiV1Path, "address_assets") }
+                setBody(requestBody)
+            }
+        return try {
+            response
+                .bodyOrThrow<List<CardanoAssetResponseJson>>()
+                // An address can hold the same asset across several UTXOs, so Koios may return
+                // more than one row for it; the wallet balance is their sum.
+                .filter { cardanoAssetId(it.policyId ?: "", it.assetName ?: "") == assetId }
+                .fold(BigInteger.ZERO) { total, asset ->
+                    total + (asset.quantity?.toBigIntegerOrNull() ?: BigInteger.ZERO)
+                }
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e("Error in Cardano getTokenBalance : %s", e.message)
             throw e
         }
     }

@@ -352,6 +352,18 @@ internal class DefaultSendStrategy(
                         }
 
                         if (chain == Chain.Cardano) {
+                            // A CNT send needs a native-asset bundle in the signing input, which
+                            // CardanoHelper does not build yet (#5713). Without this the transfer
+                            // would be planned as plain ADA and move ADA under the token's label.
+                            if (!selectedToken.isNativeToken) {
+                                throw InvalidTransactionDataException(
+                                    UiText.FormattedText(
+                                        R.string.send_error_cardano_native_token_unsupported,
+                                        listOf(selectedToken.ticker),
+                                    )
+                                )
+                            }
+
                             chainValidationService.validateCardanoUTXORequirements(
                                 sendAmount = tokenAmountInt,
                                 totalBalance = selectedTokenValue.value,
