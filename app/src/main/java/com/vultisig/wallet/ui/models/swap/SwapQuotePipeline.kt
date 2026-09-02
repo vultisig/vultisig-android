@@ -481,9 +481,17 @@ internal class SwapQuotePipeline(
                     fiatValueToString(
                         undiscountedSwapFee(
                             netFee = quoteResult.affiliateFeeFiat,
-                            srcFiat = quoteResult.srcFiat,
-                            vultBpsDiscount = discountInfo.vultBpsDiscount,
-                            referralBpsDiscount = discountInfo.referralBpsDiscount,
+                            waived =
+                                listOf(
+                                    bpsOfSourceFiat(
+                                        quoteResult.srcFiat,
+                                        discountInfo.vultBpsDiscount,
+                                    ),
+                                    bpsOfSourceFiat(
+                                        quoteResult.srcFiat,
+                                        discountInfo.referralBpsDiscount,
+                                    ),
+                                ),
                         ),
                         asFee = true,
                     )

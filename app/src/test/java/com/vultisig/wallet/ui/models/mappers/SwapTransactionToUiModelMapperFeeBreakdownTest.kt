@@ -114,6 +114,41 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
     }
 
     @Test
+    fun `revalues the discount row with the fee, so a price move cannot unbalance the panel`() =
+        runTest {
+            // The source doubled between the quote and this screen. The fee rows are re-valued at
+            // the current price, so the discount row has to be too — pairing a current-price fee
+            // with the $0.40 discount recorded at quote time would leave the rows unable to
+            // subtract back to the fee Total Fee is built from.
+            every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
+            coEvery { fiatValueToStringMapper(any(), any()) } answers
+                {
+                    firstArg<FiatValue>().value.toPlainString()
+                }
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+            coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("400")
+            coEvery { convertTokenValueToFiat(usdt, dstValue, AppCurrency.USD) } returns usd("399")
+            coEvery { convertTokenValueToFiat(usdt, totalFees, AppCurrency.USD) } returns
+                usd("2.80")
+            coEvery { convertTokenValueToFiat(usdt, affiliateFee, AppCurrency.USD) } returns
+                usd("1.18")
+            coEvery { convertTokenValueToFiat(usdt, outboundFee, AppCurrency.USD) } returns
+                usd("2.36")
+
+            val uiModel =
+                mapper()
+                    .invoke(transaction(vultBpsDiscount = 20, vultBpsDiscountFiatValue = "$0.40"))
+
+            // 20 bps of the $400 source, not the recorded $0.40.
+            uiModel.vultBpsDiscountFiatValue shouldBe "0.800"
+            // $1.18 charged + that same $0.80, so the row subtracts back to $1.18.
+            uiModel.providerFee.fiatValue shouldBe "1.980"
+            // Total Fee is the net: gas $0.02 + affiliate $1.18 + outbound $2.36.
+            uiModel.totalFee shouldBe "3.56"
+        }
+
+    @Test
     fun `Swap Fee row keeps the charged fee when no discount applies`() = runTest {
         // Nothing was waived — a co-signer, or a vault with no tier — so there is no row below to
         // reconcile against and the provider's own figure stands.
@@ -417,6 +452,7 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
         outboundFee: TokenValue? = SwapTransactionToUiModelMapperFeeBreakdownTest.outboundFee,
         priceImpact: BigDecimal? = null,
         vultBpsDiscount: Int? = null,
+        vultBpsDiscountFiatValue: String? = null,
     ): RegularSwapTransaction =
         RegularSwapTransaction(
             id = "tx-1",
@@ -453,6 +489,7 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
             gasFeeFiatValue = usd("0.02"),
             priceImpact = priceImpact,
             vultBpsDiscount = vultBpsDiscount,
+            vultBpsDiscountFiatValue = vultBpsDiscountFiatValue,
         )
 
     private companion object {

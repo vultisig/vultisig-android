@@ -107,28 +107,38 @@ internal fun formatAffiliatePercent(): String =
     )
 
 /**
- * Amount for the Swap Fee row: the list-rate charge, i.e. the affiliate fee the provider actually
- * took plus every discount the rows below it itemize.
- *
- * Grossing up from the charged fee — rather than pricing [BASE_AFFILIATE_FEE_BPS] against [srcFiat]
- * — is what keeps the expanded breakdown reconciling to the net Total Fee: whatever the discount
- * rows subtract is exactly what was added here. It also survives the Ultimate tier, where the
- * provider charges nothing and there is no non-zero fee to scale.
- *
- * The discounts are priced the same way their rows are (source notional × bps), so an unpriced
- * source token leaves the row showing the provider's own figure rather than a fabricated zero.
+ * Prices [bps] against the source notional — the same arithmetic ConvertBpsToFiatUseCase uses for
+ * the discount rows themselves, so a row and the fee it was taken off can be derived from one
+ * snapshot. Null when there is nothing to show: no discount, or a source with no fiat price.
  */
-internal fun undiscountedSwapFee(
-    netFee: FiatValue,
-    srcFiat: FiatValue,
-    vultBpsDiscount: Int?,
-    referralBpsDiscount: Int?,
-): FiatValue {
-    val waivedBps = (vultBpsDiscount ?: 0) + (referralBpsDiscount ?: 0)
-    if (waivedBps <= 0) return netFee
-    // Same arithmetic as ConvertBpsToFiatUseCase, which prices the discount rows themselves.
-    val waived = srcFiat.value.multiply(waivedBps.toBigDecimal().divide(BPS_DENOMINATOR))
-    return FiatValue(value = netFee.value + waived, currency = netFee.currency)
+internal fun bpsOfSourceFiat(srcFiat: FiatValue, bps: Int?): FiatValue? {
+    if (bps == null || bps <= 0 || srcFiat.value <= BigDecimal.ZERO) return null
+    return FiatValue(
+        value = srcFiat.value.multiply(bps.toBigDecimal().divide(BPS_DENOMINATOR)),
+        currency = srcFiat.currency,
+    )
+}
+
+/**
+ * Amount for the Swap Fee row: the list-rate charge, i.e. the affiliate fee the provider actually
+ * took plus every [waived] discount the rows below it itemize.
+ *
+ * Grossing up from the charged fee — rather than pricing [BASE_AFFILIATE_FEE_BPS] against the
+ * source — is what keeps the expanded breakdown reconciling to the net Total Fee: whatever the
+ * discount rows subtract is exactly what was added here, which holds only while both are read off
+ * the same [bpsOfSourceFiat] values. It also survives the Ultimate tier, where the provider charges
+ * nothing and there is no non-zero fee to scale.
+ *
+ * An unpriced source prices no discount at all, leaving the row showing the provider's own figure
+ * rather than a fabricated zero.
+ */
+internal fun undiscountedSwapFee(netFee: FiatValue, waived: List<FiatValue?>): FiatValue {
+    val discounts = waived.filterNotNull()
+    if (discounts.isEmpty()) return netFee
+    return FiatValue(
+        value = discounts.fold(netFee.value) { total, discount -> total + discount.value },
+        currency = netFee.currency,
+    )
 }
 
 private val BPS_DENOMINATOR = BigDecimal(10_000)

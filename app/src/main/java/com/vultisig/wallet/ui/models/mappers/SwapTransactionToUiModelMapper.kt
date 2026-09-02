@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.swap.bpsOfSourceFiat
 import com.vultisig.wallet.ui.models.swap.clampDstFiatToSrcFiat
 import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
@@ -109,6 +110,14 @@ constructor(
         // keysign screens. Apply the same value-preserving clamp the swap form uses (#4878) so an
         // illiquid token's inflated market mark can't reappear on the screens the user signs from.
         val srcFiat = convertTokenValueToFiat(from.srcToken, from.srcTokenValue, currency)
+
+        // The discount rows and the fee they were taken off have to come off one price snapshot:
+        // the fee above them is re-valued here at the current price, so pairing it with the
+        // quote-time discount the transaction recorded would leave the breakdown unable to
+        // reconcile once the source price moves. Falls back to the recorded string only when the
+        // source has no price to value the discount against.
+        val vultDiscountFiat = bpsOfSourceFiat(srcFiat, from.vultBpsDiscount)
+        val referralDiscountFiat = bpsOfSourceFiat(srcFiat, from.referralBpsDiscount)
         val dstFiat =
             clampDstFiatToSrcFiat(
                 srcFiat,
@@ -185,9 +194,7 @@ constructor(
                         fiatValueToStringMapper(
                             undiscountedSwapFee(
                                 netFee = swapFeeFiat ?: quotesFeesFiat,
-                                srcFiat = srcFiat,
-                                vultBpsDiscount = from.vultBpsDiscount,
-                                referralBpsDiscount = from.referralBpsDiscount,
+                                waived = listOf(vultDiscountFiat, referralDiscountFiat),
                             ),
                             asFee = true,
                         ),
@@ -223,9 +230,13 @@ constructor(
             swapFeeIncludedInRate = from.swapFeeIncludedInRate,
             swapFeeHidden = isSwapKitUtxoSwap,
             vultBpsDiscount = from.vultBpsDiscount,
-            vultBpsDiscountFiatValue = from.vultBpsDiscountFiatValue,
+            vultBpsDiscountFiatValue =
+                vultDiscountFiat?.let { fiatValueToStringMapper(it, asFee = true) }
+                    ?: from.vultBpsDiscountFiatValue,
             referralBpsDiscount = from.referralBpsDiscount,
-            referralBpsDiscountFiatValue = from.referralBpsDiscountFiatValue,
+            referralBpsDiscountFiatValue =
+                referralDiscountFiat?.let { fiatValueToStringMapper(it, asFee = true) }
+                    ?: from.referralBpsDiscountFiatValue,
             minPayout = minPayout,
             priceImpactPercent = priceImpactDisplay?.percent,
             priceImpactLevel = priceImpactDisplay?.level,
