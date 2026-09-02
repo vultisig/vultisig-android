@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.screens.select
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +13,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.canSelectTokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLpToken
 import com.vultisig.wallet.data.models.isRippleIssuedToken
@@ -24,6 +26,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.ui.models.NetworkUiModel
+import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -34,6 +37,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -51,6 +55,7 @@ internal data class SelectAssetUiModel(
     val selectedChain: Chain = Chain.ThorChain,
     val chains: List<NetworkUiModel> = emptyList(),
     val assets: List<AssetUiModel> = emptyList(),
+    val canAddCustomToken: Boolean = false,
 )
 
 internal data class AssetUiModel(
@@ -87,8 +92,14 @@ constructor(
 
     val state =
         MutableStateFlow(
-            SelectAssetUiModel(selectedChain = Chain.fromRaw(args.preselectedNetworkId))
+            Chain.fromRaw(args.preselectedNetworkId).let { chain ->
+                SelectAssetUiModel(selectedChain = chain, canAddCustomToken = chain.canSelectTokens)
+            }
         )
+
+    // A custom token is written straight to the vault, and loadAddress reads the vault once per
+    // subscription, so the picker only picks the new token up when this restarts the chain flow.
+    private val assetsRefreshTrigger = MutableStateFlow(0)
 
     init {
         collectAssets()
@@ -100,8 +111,9 @@ constructor(
             val vault = vaultRepository.get(vaultId) ?: return@launch
             state
                 .map { it.selectedChain }
+                .combine(assetsRefreshTrigger) { chain, refresh -> chain to refresh }
                 .distinctUntilChanged()
-                .flatMapLatest { chain ->
+                .flatMapLatest { (chain, _) ->
                     combine(
                         accountRepository.loadAddress(vaultId, chain).catch {
                             Timber.e(it)
@@ -177,6 +189,7 @@ constructor(
     }
 
     private var isSelecting = false
+    private var addCustomTokenJob: Job? = null
 
     fun selectAsset(asset: AssetUiModel) {
         // Guards against a double-tap on two rows (realistically possible now that same-ticker
@@ -196,7 +209,26 @@ constructor(
     }
 
     fun selectChain(chain: Chain) {
-        state.update { it.copy(selectedChain = chain) }
+        state.update { it.copy(selectedChain = chain, canAddCustomToken = chain.canSelectTokens) }
+    }
+
+    fun addCustomToken() {
+        val chain = state.value.selectedChain
+        // One waiter at a time: dismissing the custom-token sheet leaves the previous request
+        // suspended, and a second tap would otherwise enable the next token twice.
+        addCustomTokenJob?.cancel()
+        addCustomTokenJob =
+            viewModelScope.launch {
+                navigator.route(Route.CustomToken(chain.raw))
+                val addedToken =
+                    requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID)
+                        ?: return@launch
+                enableTokenUseCase(vaultId, addedToken)
+                assetsRefreshTrigger.update { it + 1 }
+                // The query that found nothing still filters the list, so point it at what was
+                // just added instead of leaving the user on the same empty state.
+                searchFieldState.setTextAndPlaceCursorAtEnd(addedToken.ticker)
+            }
     }
 
     fun back() {

@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
+import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -20,6 +21,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -117,6 +122,57 @@ internal class SelectAssetViewModelTest {
 
             coVerify(exactly = 0) { enableTokenUseCase.invoke(any(), any()) }
             coVerify(exactly = 1) { requestResultRepository.respond(REQUEST_ID, any()) }
+        }
+
+    @Test
+    fun `canAddCustomToken follows the chain selected in the carousel`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+
+            // ThorChain is the preselected chain and supports custom tokens.
+            assertTrue(vm.state.value.canAddCustomToken)
+
+            vm.selectChain(Chain.ZkSync)
+            assertFalse(vm.state.value.canAddCustomToken)
+
+            vm.selectChain(Chain.Ethereum)
+            assertTrue(vm.state.value.canAddCustomToken)
+        }
+
+    @Test
+    fun `addCustomToken opens the custom token flow for the selected chain and enables the result`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            val customToken = usdcCoin()
+            coEvery { requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID) } returns
+                customToken
+
+            vm.selectChain(Chain.Ethereum)
+            vm.addCustomToken()
+
+            coVerify(exactly = 1) { navigator.route(Route.CustomToken(Chain.Ethereum.raw)) }
+            coVerify(exactly = 1) { enableTokenUseCase.invoke(VAULT_ID, customToken) }
+            // The query that found nothing would keep hiding the token that was just added.
+            assertEquals(customToken.ticker, vm.searchFieldState.text.toString())
+        }
+
+    @Test
+    fun `a dismissed custom token sheet leaves no waiter that double-enables the next token`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            val customToken = usdcCoin()
+            val pendingResult = CompletableDeferred<Coin?>()
+            coEvery { requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID) } coAnswers
+                {
+                    pendingResult.await()
+                }
+
+            // First tap is dismissed without adding anything, so its request never resolves.
+            vm.addCustomToken()
+            vm.addCustomToken()
+            pendingResult.complete(customToken)
+
+            coVerify(exactly = 1) { enableTokenUseCase.invoke(VAULT_ID, customToken) }
         }
 
     private fun createViewModel() =

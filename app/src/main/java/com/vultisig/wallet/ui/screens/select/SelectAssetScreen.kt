@@ -53,6 +53,7 @@ internal fun SelectAssetScreen(model: SelectAssetViewModel = hiltViewModel()) {
                 searchFieldState = model.searchFieldState,
                 onAssetClick = model::selectAsset,
                 onSelectChain = model::selectChain,
+                onAddCustomTokenClick = model::addCustomToken,
             )
         },
     )
@@ -64,6 +65,7 @@ internal fun SelectAssetScreen(
     searchFieldState: TextFieldState,
     onAssetClick: (AssetUiModel) -> Unit,
     onSelectChain: (Chain) -> Unit,
+    onAddCustomTokenClick: () -> Unit,
 ) {
 
     V2Scaffold(
@@ -85,8 +87,29 @@ internal fun SelectAssetScreen(
         content = {
             val assets = state.assets
             if (assets.isEmpty()) {
-                Column(modifier = Modifier.padding(all = 16.dp)) {
-                    NoFoundContent(message = stringResource(R.string.select_asset_no_result))
+                // 4.dp here plus the CTA's own 12.dp keeps Figma's 16.dp gap while giving the
+                // 12.sp label a tappable height.
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(all = 16.dp),
+                ) {
+                    NoFoundContent(
+                        message = stringResource(R.string.select_asset_no_token_found),
+                        icon = R.drawable.circle_dashed,
+                    )
+
+                    if (state.canAddCustomToken) {
+                        Text(
+                            text = stringResource(R.string.select_asset_add_custom_token),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.v2.colors.alerts.info,
+                            textAlign = TextAlign.Center,
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clickable(onClick = onAddCustomTokenClick)
+                                    .padding(vertical = 12.dp),
+                        )
+                    }
                 }
             } else {
                 LazyColumn(contentPadding = PaddingValues(all = 16.dp)) {
@@ -254,5 +277,6 @@ private fun SelectAssetScreenPreview() {
         searchFieldState = TextFieldState(),
         onAssetClick = {},
         onSelectChain = {},
+        onAddCustomTokenClick = {},
     )
 }

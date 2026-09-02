@@ -15,6 +15,8 @@
     <string name="swap_form_on_chain">на</string>
     <string name="select_asset_title">Выбрать актив</string>
     <string name="select_asset_no_result">Результат не найден.</string>
+    <string name="select_asset_no_token_found">Токен не найден</string>
+    <string name="select_asset_add_custom_token">+ Добавить пользовательский токен</string>
     <string name="select_asset_secured_badge">Залоговый</string>
     <string name="select_chain_chain_title">Сеть</string>
     <string name="select_chain_balance_title">Баланс</string>

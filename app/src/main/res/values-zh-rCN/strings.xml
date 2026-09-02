@@ -785,6 +785,8 @@
     <!-- Select Asset/Chain -->
     <string name="select_asset_title">选择资产</string>
     <string name="select_asset_no_result">未找到结果。</string>
+    <string name="select_asset_no_token_found">未找到代币</string>
+    <string name="select_asset_add_custom_token">+ 添加自定义代币</string>
     <string name="select_asset_secured_badge">担保</string>
     <string name="select_chain_chain_title">链</string>
     <string name="select_chain_balance_title">余额</string>
