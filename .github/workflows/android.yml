@@ -157,4 +157,4 @@ jobs:
           disable-spellchecker: true
           script: |
             # Run debug instrumented tests (connectedDebugAndroidTest)
-            ./gradlew app:connectedDebugAndroidTest --stacktrace
+            ./gradlew app:connectedDebugAndroidTest data:connectedDebugAndroidTest --stacktrace
