@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -45,10 +46,12 @@ class CardanoApiTokenBalanceTest {
 
     @Test
     fun `getTokenBalance sums matching rows past the first page`() = runTest {
+        val capture = MockHttpClient.RequestCapture()
         val api =
             CardanoApiImpl(
                 httpClient =
-                    MockHttpClient.respondingWithSequence(
+                    MockHttpClient.capturingRequestSequence(
+                        capture,
                         HttpStatusCode.OK to page(size = 1000, withSnek = true, snekQuantity = "5"),
                         HttpStatusCode.OK to page(size = 3, withSnek = true, snekQuantity = "7"),
                         jsonFormat = json,
@@ -57,7 +60,32 @@ class CardanoApiTokenBalanceTest {
             )
 
         assertEquals(BigInteger("12"), api.getTokenBalance(snek))
+        assertEquals(listOf("offset=0&limit=1000", "offset=1000&limit=1000"), capture.queries)
     }
+
+    @Test
+    fun `getTokenBalance fails rather than report a partial balance at the page ceiling`() =
+        runTest {
+            val fullPage = page(size = 1000, withSnek = true, snekQuantity = "5")
+            val calls = AtomicInteger(0)
+            val api =
+                CardanoApiImpl(
+                    httpClient =
+                        MockHttpClient.respondingWithGenerated(jsonFormat = json) {
+                            calls.incrementAndGet()
+                            fullPage
+                        },
+                    json = json,
+                )
+
+            val failure = runCatching { api.getTokenBalance(snek) }.exceptionOrNull()
+
+            assertTrue(
+                failure is IllegalStateException,
+                "expected the walk to fail at the ceiling, got $failure",
+            )
+            assertEquals(50, calls.get())
+        }
 
     @Test
     fun `getTokenBalance stops requesting once a page comes back short`() = runTest {

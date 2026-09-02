@@ -95,6 +95,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
         val requestBody = mapOf("_addresses" to listOf(coin.address))
         return try {
             var total = BigInteger.ZERO
+            var walkedToLastPage = false
             for (page in 0 until KOIOS_MAX_PAGES) {
                 val assets =
                     httpClient
@@ -116,7 +117,16 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
                         }
 
                 // A short page is the last one; a full page means there may be more rows.
-                if (assets.size < KOIOS_PAGE_SIZE) break
+                if (assets.size < KOIOS_PAGE_SIZE) {
+                    walkedToLastPage = true
+                    break
+                }
+            }
+            // Every page came back full, so the walk never proved it read the whole holding: the
+            // asset may sit past the ceiling. Fail rather than hand back a zero or an undercount.
+            check(walkedToLastPage) {
+                "Cardano address_assets exceeded ${KOIOS_MAX_PAGES * KOIOS_PAGE_SIZE} rows; " +
+                    "${coin.ticker} balance would be incomplete"
             }
             total
         } catch (e: Exception) {
