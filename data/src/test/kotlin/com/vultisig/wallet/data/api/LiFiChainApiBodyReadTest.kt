@@ -42,6 +42,7 @@ class LiFiChainApiBodyReadTest {
             fromAddress = "0xaddr",
             toAddress = "0xaddr",
             bpsDiscount = 0,
+            slippageBps = 100,
         )
 
     @Test

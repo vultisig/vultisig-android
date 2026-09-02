@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.repositories.swap.LiFiSlippage
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -18,6 +19,10 @@ import org.junit.jupiter.api.Test
  * Pins the `slippage` query param sent to LI.FI. LI.FI takes slippage as a decimal fraction, so the
  * basis-point value must be rendered as a plain decimal — tight tolerances (1–9 bps) must not be
  * stringified in scientific notation (e.g. `1.0E-4`), which LI.FI rejects as non-numeric.
+ *
+ * The param is never omitted: LI.FI's own default is 0.5%, too tight to survive a keysign ceremony
+ * (#5801), so the caller resolves a tolerance for "Auto" too. Tier selection itself is pinned by
+ * `LiFiSlippageTest`.
  */
 class LiFiChainApiSlippageTest {
 
@@ -42,7 +47,7 @@ class LiFiChainApiSlippageTest {
             json = json,
         )
 
-    private suspend fun LiFiChainApiImpl.quoteWith(slippageBps: Int?) =
+    private suspend fun LiFiChainApiImpl.quoteWith(slippageBps: Int) =
         getSwapQuote(
             fromChain = "1",
             toChain = "1",
@@ -76,12 +81,12 @@ class LiFiChainApiSlippageTest {
     }
 
     @Test
-    fun `auto slippage omits the parameter`() = runTest {
-        var hasSlippage = true
-        val api = apiCapturing { hasSlippage = it.url.parameters.contains("slippage") }
+    fun `the stable-pair auto tier is sent as 0,003`() = runTest {
+        var slippageParam: String? = null
+        val api = apiCapturing { slippageParam = it.url.parameters["slippage"] }
 
-        runCatching { api.quoteWith(slippageBps = null) }
+        runCatching { api.quoteWith(slippageBps = LiFiSlippage.STABLE_PAIR_BPS) }
 
-        assertEquals(false, hasSlippage)
+        assertEquals("0.003", slippageParam)
     }
 }

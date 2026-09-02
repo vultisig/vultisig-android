@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
 import com.vultisig.wallet.data.common.isNotEmptyContract
 import com.vultisig.wallet.data.models.oneInchChainId
 import javax.inject.Inject
+import timber.log.Timber
 
 internal class LiFiQuoteSource @Inject constructor(private val liFiChainApi: LiFiChainApi) :
     SwapQuoteSource {
@@ -24,6 +25,9 @@ internal class LiFiQuoteSource @Inject constructor(private val liFiChainApi: LiF
         val toToken =
             if (dstToken.ticker == "CRO") ZERO_ADDRESS
             else dstToken.contractAddress.ifEmpty { dstToken.ticker }
+        val slippageBps =
+            LiFiSlippage.resolveBps(request.slippageBps, srcToken.ticker, dstToken.ticker)
+        warnOnCombinedCost(slippageBps, request.bpsDiscount)
 
         val response =
             swapApiCall("LiFi") {
@@ -36,7 +40,7 @@ internal class LiFiQuoteSource @Inject constructor(private val liFiChainApi: LiF
                     fromAddress = request.srcAddress,
                     toAddress = request.dstAddress,
                     bpsDiscount = request.bpsDiscount,
-                    slippageBps = request.slippageBps,
+                    slippageBps = slippageBps,
                 )
             }
 
@@ -45,6 +49,23 @@ internal class LiFiQuoteSource @Inject constructor(private val liFiChainApi: LiF
                 throw SwapException.handleSwapException(response.error.message)
 
             is LiFiSwapQuoteDeserialized.Result -> SwapQuoteResult.Evm(response.data.toEvmQuote())
+        }
+    }
+
+    /**
+     * The integrator fee and the slippage tolerance are two independent costs the same swap pays,
+     * so a future fee bump must not quietly compound with a wide tolerance past
+     * [LiFiSlippage.MAX_COMBINED_COST_BPS]. Reported, never enforced — a user who deliberately
+     * picks a wide tolerance still gets the quote they asked for.
+     */
+    private fun warnOnCombinedCost(slippageBps: Int, bpsDiscount: Int) {
+        val combinedBps = LiFiChainApi.effectiveIntegratorFeeBps(bpsDiscount) + slippageBps
+        if (combinedBps > LiFiSlippage.MAX_COMBINED_COST_BPS) {
+            Timber.w(
+                "LiFi affiliate + slippage combined cost is %d bps, over the %d bps ceiling",
+                combinedBps,
+                LiFiSlippage.MAX_COMBINED_COST_BPS,
+            )
         }
     }
 

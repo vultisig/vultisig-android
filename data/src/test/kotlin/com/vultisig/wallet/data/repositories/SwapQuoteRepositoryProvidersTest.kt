@@ -43,6 +43,7 @@ import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import java.math.BigInteger
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -523,14 +524,18 @@ class SwapQuoteRepositoryProvidersTest {
             message = message,
         )
 
-    private fun liFiRequest() =
+    private fun liFiRequest(
+        srcToken: Coin = coin(Chain.Ethereum, "ETH"),
+        dstToken: Coin = coin(Chain.Ethereum, "USDC", contractAddress = "0xUsdc"),
+        slippageBps: Int? = null,
+    ) =
         SwapQuoteRequest(
-            srcToken = coin(Chain.Ethereum, "ETH"),
-            dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xUsdc"),
-            tokenValue =
-                TokenValue(value = BigInteger("1000000"), token = coin(Chain.Ethereum, "ETH")),
+            srcToken = srcToken,
+            dstToken = dstToken,
+            tokenValue = TokenValue(value = BigInteger("1000000"), token = srcToken),
             srcAddress = "0xWallet",
             dstAddress = "0xDest",
+            slippageBps = slippageBps,
         )
 
     @Test
@@ -577,6 +582,77 @@ class SwapQuoteRepositoryProvidersTest {
         assertThrows<SwapException.HighPriceImpact> {
             runBlocking { liFiSource.fetch(liFiRequest()) }
         }
+    }
+
+    @Test
+    fun `lifi resolves auto slippage to the volatile tier, never omitting the param`() = runTest {
+        val slippage = slot<Int>()
+        coEvery {
+            liFiChainApi.getSwapQuote(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                capture(slippage),
+            )
+        } returns LiFiSwapQuoteDeserialized.Result(liFiQuote())
+
+        liFiSource.fetch(liFiRequest())
+
+        assertEquals(100, slippage.captured)
+    }
+
+    @Test
+    fun `lifi resolves auto slippage to the stable tier on a stable pair`() = runTest {
+        val slippage = slot<Int>()
+        coEvery {
+            liFiChainApi.getSwapQuote(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                capture(slippage),
+            )
+        } returns LiFiSwapQuoteDeserialized.Result(liFiQuote())
+
+        liFiSource.fetch(
+            liFiRequest(
+                srcToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xUsdc"),
+                dstToken = coin(Chain.Ethereum, "USDT", contractAddress = "0xUsdt"),
+            )
+        )
+
+        assertEquals(30, slippage.captured)
+    }
+
+    @Test
+    fun `lifi forwards a user slippage instead of the auto tier`() = runTest {
+        val slippage = slot<Int>()
+        coEvery {
+            liFiChainApi.getSwapQuote(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                capture(slippage),
+            )
+        } returns LiFiSwapQuoteDeserialized.Result(liFiQuote())
+
+        liFiSource.fetch(liFiRequest(slippageBps = 300))
+
+        assertEquals(300, slippage.captured)
     }
 
     @Test

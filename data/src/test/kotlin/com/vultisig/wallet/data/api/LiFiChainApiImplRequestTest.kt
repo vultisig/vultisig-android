@@ -58,7 +58,7 @@ class LiFiChainApiImplRequestTest {
             fromAddress = "0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0",
             toAddress = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
             bpsDiscount = bpsDiscount,
-            slippageBps = null,
+            slippageBps = 100,
         )
         return requestedUrl
     }
