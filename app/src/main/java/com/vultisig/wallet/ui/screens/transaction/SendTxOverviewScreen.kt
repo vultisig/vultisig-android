@@ -77,6 +77,12 @@ internal fun SendTxOverviewScreen(
     // and surface the caution as the Figma caution box (amber banner) pinned at the bottom.
     val isUnverifiedFunction = tx.heroContent == HeroContent.Unverified
 
+    // A Blockaid verdict of "could not verify this function" is a claim about this exact
+    // transaction, and the caution banner below still makes it. Letting a decoder reading restate
+    // the same transaction as a confident "Approved 500 USDC" above that banner would put the two
+    // in direct contradiction, so the simulation's verdict wins and the reading stands down.
+    val operationHero = tx.operationHero.takeUnless { isUnverifiedFunction }
+
     TxDoneScaffold(
         transactionHash = transactionHash,
         transactionLink = transactionLink,
@@ -113,7 +119,7 @@ internal fun SendTxOverviewScreen(
                 // the asset it was read from, says more than the selector it was decoded out of.
                 // A Blockaid simulation above still wins, since it carries figures the decoder has
                 // no way to improve on.
-                functionName = tx.functionName.takeIf { tx.operationHero == null },
+                functionName = tx.functionName.takeIf { operationHero == null },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 val trustSet = tx.rippleTrustSet
@@ -172,7 +178,7 @@ internal fun SendTxOverviewScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        val display = doneHeroDisplay(tx)
+                        val display = doneHeroDisplay(tx, operationHero)
 
                         VsOverviewToken(
                             header = display.verb,
@@ -395,9 +401,12 @@ internal data class DoneHeroDisplay(
  * replaces the verb and, where the signed content states a truthful quantity, the asset and amount
  * with it. It never substitutes a zero or a carrier amount: a reading that resolved no amount shows
  * the asset alone.
+ *
+ * [operationHero] is passed in rather than read off [tx] because the caller gates it: a reading is
+ * stood down when a Blockaid simulation has already declared the same transaction unverifiable.
  */
 @Composable
-private fun doneHeroDisplay(tx: UiTransactionInfo): DoneHeroDisplay {
+private fun doneHeroDisplay(tx: UiTransactionInfo, operationHero: HeroContent?): DoneHeroDisplay {
     val token = tx.token.token
     val fallbackLogo = getCoinLogo(token.logo)
     val fallbackChainLogo =
@@ -419,7 +428,7 @@ private fun doneHeroDisplay(tx: UiTransactionInfo): DoneHeroDisplay {
             fiatValue = tx.token.fiatValue,
         )
 
-    val hero = tx.operationHero ?: return fallback
+    val hero = operationHero ?: return fallback
     val verb = hero.title ?: fallbackVerb
 
     return when (hero) {

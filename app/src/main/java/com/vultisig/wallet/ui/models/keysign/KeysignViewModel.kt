@@ -429,15 +429,20 @@ constructor(
         if (target != null) {
             viewModelScope.safeLaunch {
                 val labels = resolveDestinationLabels(target.chain, target.dstAddress)
-                _state.update {
-                    it.copy(
+                _state.update { current ->
+                    current.copy(
                         showSaveToAddressBook = labels.showSaveToAddressBook,
+                        // Layer the labels onto whatever is in state, not onto the model captured
+                        // at construction. [loadDoneOperationHero] writes to the same field, and
+                        // rebuilding from the constructor's copy would drop its decoded verb
+                        // whenever this job happened to land second.
                         transactionUiModel =
-                            transactionTypeUiModel.withResolvedLabels(
-                                srcVaultName = vault.name,
-                                dstVaultName = labels.dstVaultName,
-                                dstAddressBookTitle = labels.dstAddressBookTitle,
-                            ),
+                            (current.transactionUiModel ?: transactionTypeUiModel)
+                                .withResolvedLabels(
+                                    srcVaultName = vault.name,
+                                    dstVaultName = labels.dstVaultName,
+                                    dstAddressBookTitle = labels.dstAddressBookTitle,
+                                ),
                     )
                 }
             }
