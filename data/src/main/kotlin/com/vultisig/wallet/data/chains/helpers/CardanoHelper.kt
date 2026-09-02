@@ -90,6 +90,12 @@ object CardanoHelper {
         keysignPayload: KeysignPayload
     ): Cardano.SigningInput.Builder {
         require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
+        // Backstop for the send-form guard: [buildSigningInput] emits only a `Cardano.Transfer`
+        // amount, which the ledger reads as lovelace. Signing a native-asset payload here would
+        // move ADA under that token's label, so refuse until the asset bundle lands (#5713).
+        require(keysignPayload.coin.isNativeToken) {
+            "Cardano native-token sends are not supported yet: ${keysignPayload.coin.ticker}"
+        }
 
         val (byteFee, sendMaxAmount, ttl) =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Cardano

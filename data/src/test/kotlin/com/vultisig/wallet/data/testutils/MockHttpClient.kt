@@ -87,6 +87,12 @@ object MockHttpClient {
     class RequestCapture {
         val bodies = mutableListOf<String>()
 
+        /**
+         * Encoded query string of every request in order, for asserting the paging parameters a
+         * walk actually sent (e.g. `offset`/`limit` per page).
+         */
+        val queries = mutableListOf<String>()
+
         var lastBody: String = ""
             private set
 
@@ -94,10 +100,11 @@ object MockHttpClient {
         var lastPath: String = ""
             private set
 
-        internal fun record(body: String, path: String) {
+        internal fun record(body: String, path: String, query: String = "") {
             lastBody = body
             lastPath = path
             bodies += body
+            queries += query
         }
     }
 
@@ -117,6 +124,7 @@ object MockHttpClient {
                 capture.record(
                     body = request.body.toByteArray().decodeToString(),
                     path = request.url.encodedPath,
+                    query = request.url.encodedQuery,
                 )
                 respond(content = body, status = status, headers = JSON_HEADERS)
             }
@@ -143,6 +151,7 @@ object MockHttpClient {
                 capture.record(
                     body = request.body.toByteArray().decodeToString(),
                     path = request.url.encodedPath,
+                    query = request.url.encodedQuery,
                 )
                 val (status, body) = responses[minOf(index++, responses.size - 1)]
                 respond(content = body, status = status, headers = JSON_HEADERS)

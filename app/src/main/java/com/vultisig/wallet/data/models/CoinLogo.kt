@@ -155,6 +155,16 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "vkhype" -> R.drawable.vkhype
         "wsthype" -> R.drawable.wsthype
         "ada" -> R.drawable.cardano
+        "usdm" -> R.drawable.usdm
+        "iusd" -> R.drawable.iusd
+        "djed" -> R.drawable.djed
+        "lq" -> R.drawable.lq
+        "min" -> R.drawable.min
+        "snek" -> R.drawable.snek
+        "sundae" -> R.drawable.sundae
+        "iag" -> R.drawable.iag
+        "hosky" -> R.drawable.hosky
+        "wmtx" -> R.drawable.wmtx
         "aztec" -> R.drawable.aztec
         "qbtc" -> R.drawable.qbtc
         "rlusd" -> R.drawable.rlusd
