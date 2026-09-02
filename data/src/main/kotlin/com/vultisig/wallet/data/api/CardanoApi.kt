@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -60,6 +61,12 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
     private companion object {
         // Ogmios "UnknownOutputReference": the tx spends inputs the ledger no longer knows.
         const val OGMIOS_UNKNOWN_OUTPUT_REFERENCE_CODE = 3117
+        // Koios truncates an unpaginated response at 1000 rows, so address_assets has to be
+        // walked page by page: an address holding more distinct native assets than that would
+        // otherwise drop the rows the curated token actually sits in and report a zero balance.
+        const val KOIOS_PAGE_SIZE = 1000
+        // Stops the walk if the node ever keeps returning full pages (50k distinct assets).
+        const val KOIOS_MAX_PAGES = 50
     }
 
     override suspend fun getBalance(coin: Coin): BigInteger {
@@ -86,20 +93,32 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
         require(assetId.isNotBlank()) { "Cardano token ${coin.ticker} has no asset id" }
 
         val requestBody = mapOf("_addresses" to listOf(coin.address))
-        val response =
-            httpClient.post(url) {
-                url { path(apiV1Path, "address_assets") }
-                setBody(requestBody)
-            }
         return try {
-            response
-                .bodyOrThrow<List<CardanoAssetResponseJson>>()
+            var total = BigInteger.ZERO
+            for (page in 0 until KOIOS_MAX_PAGES) {
+                val assets =
+                    httpClient
+                        .post(url) {
+                            url { path(apiV1Path, "address_assets") }
+                            parameter("offset", page * KOIOS_PAGE_SIZE)
+                            parameter("limit", KOIOS_PAGE_SIZE)
+                            setBody(requestBody)
+                        }
+                        .bodyOrThrow<List<CardanoAssetResponseJson>>()
+
                 // An address can hold the same asset across several UTXOs, so Koios may return
                 // more than one row for it; the wallet balance is their sum.
-                .filter { cardanoAssetId(it.policyId ?: "", it.assetName ?: "") == assetId }
-                .fold(BigInteger.ZERO) { total, asset ->
-                    total + (asset.quantity?.toBigIntegerOrNull() ?: BigInteger.ZERO)
-                }
+                total =
+                    assets
+                        .filter { cardanoAssetId(it.policyId ?: "", it.assetName ?: "") == assetId }
+                        .fold(total) { sum, asset ->
+                            sum + (asset.quantity?.toBigIntegerOrNull() ?: BigInteger.ZERO)
+                        }
+
+                // A short page is the last one; a full page means there may be more rows.
+                if (assets.size < KOIOS_PAGE_SIZE) break
+            }
+            total
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("Error in Cardano getTokenBalance : %s", e.message)
