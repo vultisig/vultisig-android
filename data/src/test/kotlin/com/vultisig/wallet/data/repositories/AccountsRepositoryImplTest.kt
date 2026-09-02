@@ -452,6 +452,83 @@ internal class AccountsRepositoryImplTest {
     }
 
     @Test
+    fun `cached DeFi addresses carry the auto-compounding TCY position without wallet sTCY`() =
+        runTest {
+            val rune = Coins.ThorChain.RUNE.copy(address = THOR_ADDRESS)
+            val tcy = Coins.ThorChain.TCY.copy(address = THOR_ADDRESS)
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(rune, tcy))
+
+            coEvery {
+                balanceRepository.getDeFiCachedTokeBalanceAndPrice(THOR_ADDRESS, any(), VAULT_ID)
+            } returns
+                listOf(
+                    defiBalance(Coins.ThorChain.RUNE, amount = 0L, fiat = 0L),
+                    defiBalance(Coins.ThorChain.TCY, amount = 0L, fiat = 0L),
+                    defiBalance(Coins.ThorChain.sTCY, amount = STAKED, fiat = STAKED_FIAT),
+                )
+
+            val thorchain =
+                repository.loadDeFiAddresses(VAULT_ID, isRefresh = false).toList().last().first {
+                    it.chain == Chain.ThorChain
+                }
+
+            val compounding =
+                thorchain.accounts.firstOrNull { it.token.id == Coins.ThorChain.sTCY.id }
+            assertNotNull(compounding, "the DeFi row must carry an account for the sTCY receipt")
+            assertTrue(compounding.isPositionOnly)
+            assertEquals(STAKED, compounding.tokenValue?.value?.toLong())
+            assertEquals(
+                STAKED_FIAT,
+                thorchain.accounts.sumOf { it.fiatValue?.value?.toLong() ?: 0L },
+                "the chain's DeFi total must include the auto-compounding TCY position",
+            )
+        }
+
+    @Test
+    fun `refreshed DeFi addresses fetch and price the auto-compounding TCY position without wallet sTCY`() =
+        runTest {
+            val rune = Coins.ThorChain.RUNE.copy(address = THOR_ADDRESS)
+            val tcy = Coins.ThorChain.TCY.copy(address = THOR_ADDRESS)
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(rune, tcy))
+            coJustRun { tokenPriceRepository.refresh(any()) }
+            coEvery {
+                balanceRepository.getDeFiCachedTokeBalanceAndPrice(any(), any(), any())
+            } returns emptyList()
+            every {
+                balanceRepository.getDefiTokenBalanceAndPrice(THOR_ADDRESS, any(), VAULT_ID)
+            } returns flowOf(defiBalance(Coins.ThorChain.RUNE, amount = 0L, fiat = 0L))
+            every {
+                balanceRepository.getDefiTokenBalanceAndPrice(
+                    THOR_ADDRESS,
+                    match { it.id == Coins.ThorChain.sTCY.id },
+                    VAULT_ID,
+                )
+            } returns flowOf(defiBalance(Coins.ThorChain.sTCY, amount = STAKED, fiat = STAKED_FIAT))
+
+            val thorchain =
+                repository.loadDeFiAddresses(VAULT_ID, isRefresh = true).toList().last().first {
+                    it.chain == Chain.ThorChain
+                }
+
+            val compounding =
+                thorchain.accounts.firstOrNull { it.token.id == Coins.ThorChain.sTCY.id }
+            assertNotNull(compounding, "the refreshed DeFi row must carry the sTCY receipt")
+            assertTrue(compounding.isPositionOnly)
+            assertEquals(
+                STAKED_FIAT,
+                thorchain.accounts.sumOf { it.fiatValue?.value?.toLong() ?: 0L },
+                "the refreshed total must include the auto-compounding TCY position",
+            )
+            coVerify {
+                tokenPriceRepository.refresh(
+                    match { it.any { coin -> coin.id == Coins.ThorChain.sTCY.id } }
+                )
+            }
+        }
+
+    @Test
     fun `a vault holding no DeFi-only position carries no account for it`() = runTest {
         val rune = Coins.ThorChain.RUNE.copy(address = THOR_ADDRESS)
         coEvery { vaultRepository.get(VAULT_ID) } returns
@@ -593,6 +670,11 @@ internal class AccountsRepositoryImplTest {
         coVerify {
             tokenPriceRepository.refresh(
                 match { it.any { coin -> coin.id == Coins.ThorChain.sRUJI.id } }
+            )
+        }
+        coVerify {
+            tokenPriceRepository.refresh(
+                match { it.any { coin -> coin.id == Coins.ThorChain.sTCY.id } }
             )
         }
         job.cancel()

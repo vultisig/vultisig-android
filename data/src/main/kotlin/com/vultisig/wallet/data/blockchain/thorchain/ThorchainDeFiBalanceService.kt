@@ -168,7 +168,8 @@ class ThorchainDeFiBalanceService(
                         balances =
                             defaultDetails
                                 .filter {
-                                    it.coin.id.equals(Coins.ThorChain.yRUNE.id, true) ||
+                                    it.coin.id.equals(Coins.ThorChain.sTCY.id, true) ||
+                                        it.coin.id.equals(Coins.ThorChain.yRUNE.id, true) ||
                                         it.coin.id.equals(Coins.ThorChain.yTCY.id, true) ||
                                         it.coin.id.equals(Coins.ThorChain.ybRUNE.id, true)
                                 }
@@ -312,7 +313,8 @@ class ThorchainDeFiBalanceService(
 
                     stakingDetails
                         .filter {
-                            it.coin.id.equals(Coins.ThorChain.yTCY.id, true) ||
+                            it.coin.id.equals(Coins.ThorChain.sTCY.id, true) ||
+                                it.coin.id.equals(Coins.ThorChain.yTCY.id, true) ||
                                 it.coin.id.equals(Coins.ThorChain.yRUNE.id, true) ||
                                 it.coin.id.equals(Coins.ThorChain.ybRUNE.id, true)
                         }

@@ -57,6 +57,26 @@ internal class ThorchainDeFiBalanceServiceYbRuneTest {
         assertEquals(BigInteger("77000000"), balances.amountFor(Coins.ThorChain.ybRUNE.id))
     }
 
+    @Test
+    fun `a fetched sTCY position reaches the DeFi balances`() = runTest {
+        coEvery { defaultStakingPositionService.getStakingDetails(ADDRESS, VAULT_ID) } returns
+            flowOf(listOf(details(Coins.ThorChain.sTCY, BigInteger("100000000000"))))
+
+        val balances = service.getRemoteDeFiBalance(ADDRESS, VAULT_ID)
+
+        assertEquals(BigInteger("100000000000"), balances.amountFor(Coins.ThorChain.sTCY.id))
+    }
+
+    @Test
+    fun `a cached sTCY position reaches the DeFi balances`() = runTest {
+        coEvery { stakingDetailsRepository.getStakingDetails(VAULT_ID) } returns
+            listOf(details(Coins.ThorChain.sTCY, BigInteger("42000000000")))
+
+        val balances = service.getCacheDeFiBalance(ADDRESS, VAULT_ID)
+
+        assertEquals(BigInteger("42000000000"), balances.amountFor(Coins.ThorChain.sTCY.id))
+    }
+
     private fun List<com.vultisig.wallet.data.blockchain.model.DeFiBalance>.amountFor(
         coinId: String
     ): BigInteger =
