@@ -11,9 +11,10 @@ import org.junit.jupiter.api.Test
  *
  * Every field here is one a plausible-looking guess gets wrong: `priceProviderID` is not derivable
  * from the ticker (`usdm` and `iusd-2` are other chains' tokens), and the asset-name hex is not
- * derivable from the ticker either — USDM and DJED carry CIP-67 label prefixes, and WMTX's name
- * decodes to `WorldMobileTokenX`. A wrong id prices the token at zero and a wrong asset name makes
- * the entry unmatchable, neither of which fails loudly anywhere else.
+ * derivable from the ticker either — USDM carries a CIP-67 label prefix, DJED's name decodes to
+ * `DjedMicroUSD` (its sibling under the same policy is `ShenMicroUSD`) and WMTX's to
+ * `WorldMobileTokenX`. A wrong id prices the token at zero and a wrong asset name makes the entry
+ * unmatchable, neither of which fails loudly anywhere else.
  */
 internal class CardanoNativeTokenTest {
 
@@ -94,6 +95,7 @@ internal class CardanoNativeTokenTest {
                 ),
         )
 
+    /** Pins every field of every curated entry against [expected]. */
     @Test
     fun `each curated token carries the registry metadata`() {
         expected.forEach { (coin, row) ->
@@ -106,6 +108,7 @@ internal class CardanoNativeTokenTest {
         }
     }
 
+    /** Guards the order and completeness of `Coins.coins[Cardano]`, which drives the token list. */
     @Test
     fun `the catalogue publishes ADA plus the ten native tokens`() {
         assertEquals(
@@ -129,6 +132,7 @@ internal class CardanoNativeTokenTest {
         }
     }
 
+    /** A url here would bypass `getCoinLogo`, so the logo must stay a bundled drawable name. */
     @Test
     fun `every curated token has a bundled logo name rather than a url`() {
         expected.forEach { (coin, row) ->
@@ -137,6 +141,7 @@ internal class CardanoNativeTokenTest {
         }
     }
 
+    /** Mixed-case hex from a registry must still produce the chain's lowercase asset-id form. */
     @Test
     fun `the asset id builder lowercases and dot-separates its parts`() {
         assertTrue(
