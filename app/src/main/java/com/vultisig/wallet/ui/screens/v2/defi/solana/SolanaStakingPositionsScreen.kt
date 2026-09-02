@@ -60,6 +60,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.defi.InfoItem
 import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
+import com.vultisig.wallet.ui.screens.v2.home.components.LocalBottomNavigatorPadding
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -153,7 +154,8 @@ internal fun SolanaStakingPositionsContent(
                 Modifier.fillMaxSize()
                     .background(Theme.v2.colors.backgrounds.primary)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 12.dp, bottom = 12.dp + LocalBottomNavigatorPadding.current),
             horizontalAlignment = CenterHorizontally,
         ) {
             SolanaHeaderBanner(
