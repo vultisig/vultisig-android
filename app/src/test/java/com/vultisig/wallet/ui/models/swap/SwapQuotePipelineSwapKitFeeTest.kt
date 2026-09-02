@@ -13,6 +13,8 @@ import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson.Companion.TX_TYPE_
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapperImpl
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
 import io.kotest.matchers.shouldBe
@@ -20,7 +22,9 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.text.NumberFormat
 import java.time.Instant
+import java.util.Locale
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -39,6 +43,14 @@ internal class SwapQuotePipelineSwapKitFeeTest {
 
     private val swapDiscountChecker: SwapDiscountChecker = mockk()
 
+    private val fiatValueToString =
+        FiatValueToStringMapperImpl(
+            mockk<AppCurrencyRepository>().also {
+                coEvery { it.getCurrencyFormat() } returns
+                    NumberFormat.getCurrencyInstance(Locale.US)
+            }
+        )
+
     private val pipeline =
         SwapQuotePipeline(
             swapQuoteRepository = mockk(relaxed = true),
@@ -50,6 +62,7 @@ internal class SwapQuotePipelineSwapKitFeeTest {
             swapDiscountChecker = swapDiscountChecker,
             swapGasCalculator = mockk(relaxed = true),
             swapValidator = mockk(relaxed = true),
+            fiatValueToString = fiatValueToString,
         )
 
     init {
@@ -132,6 +145,8 @@ internal class SwapQuotePipelineSwapKitFeeTest {
                     comparableDstFiat = BigDecimal.ZERO,
                     feeText = "$1.50",
                     swapFeeFiat = swapFee,
+                    affiliateFeeFiat = swapFee,
+                    srcFiat = FiatValue(BigDecimal("100"), "USD"),
                 ),
         )
     }

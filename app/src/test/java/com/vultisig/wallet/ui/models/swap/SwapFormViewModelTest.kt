@@ -4442,6 +4442,8 @@ internal class SwapFormViewModelTest {
         comparableDstFiat: BigDecimal = BigDecimal("95.00"),
         feeText: String = "$0.00",
         swapFeeFiat: FiatValue = FiatValue(BigDecimal.ZERO, "USD"),
+        affiliateFeeFiat: FiatValue = swapFeeFiat,
+        srcFiat: FiatValue = FiatValue(BigDecimal.ZERO, "USD"),
         outboundFeeText: String? = null,
         swapFeePercent: String? = null,
     ): RankedQuotes {
@@ -4460,6 +4462,8 @@ internal class SwapFormViewModelTest {
                         comparableDstFiat = comparableDstFiat,
                         feeText = feeText,
                         swapFeeFiat = swapFeeFiat,
+                        affiliateFeeFiat = affiliateFeeFiat,
+                        srcFiat = srcFiat,
                         outboundFeeText = outboundFeeText,
                         swapFeePercent = swapFeePercent,
                     ),

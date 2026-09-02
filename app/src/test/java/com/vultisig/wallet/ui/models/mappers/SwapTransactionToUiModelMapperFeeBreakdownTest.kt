@@ -86,6 +86,56 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
     }
 
     @Test
+    fun `Swap Fee row shows the list rate, with the tier discount added back`() = runTest {
+        // A Gold vault is quoted at 30 bps, so the provider charges $0.59 on a $200 swap. The
+        // verify screen itemizes the 20 bps VULT discount on its own row underneath, so showing
+        // the charged fee here read as two separate cuts. The row shows what the swap costs
+        // undiscounted; subtracting the discount row lands back on the fee Total Fee is built
+        // from.
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("200")
+        coEvery { convertTokenValueToFiat(usdt, dstValue, AppCurrency.USD) } returns usd("199")
+        coEvery { convertTokenValueToFiat(usdt, totalFees, AppCurrency.USD) } returns usd("1.40")
+        coEvery { convertTokenValueToFiat(usdt, affiliateFee, AppCurrency.USD) } returns usd("0.59")
+        coEvery { convertTokenValueToFiat(usdt, outboundFee, AppCurrency.USD) } returns usd("1.18")
+
+        val uiModel = mapper().invoke(transaction(vultBpsDiscount = 20))
+
+        // $0.59 charged + 20 bps of the $200 source = the undiscounted $0.99.
+        uiModel.providerFee.fiatValue shouldBe "0.990"
+        // Total Fee stays net: gas $0.02 + affiliate $0.59 + outbound $1.18.
+        uiModel.totalFee shouldBe "1.79"
+    }
+
+    @Test
+    fun `Swap Fee row keeps the charged fee when no discount applies`() = runTest {
+        // Nothing was waived — a co-signer, or a vault with no tier — so there is no row below to
+        // reconcile against and the provider's own figure stands.
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("200")
+        coEvery { convertTokenValueToFiat(usdt, dstValue, AppCurrency.USD) } returns usd("199")
+        coEvery { convertTokenValueToFiat(usdt, totalFees, AppCurrency.USD) } returns usd("1.40")
+        coEvery { convertTokenValueToFiat(usdt, affiliateFee, AppCurrency.USD) } returns usd("0.99")
+        coEvery { convertTokenValueToFiat(usdt, outboundFee, AppCurrency.USD) } returns usd("1.18")
+
+        val uiModel = mapper().invoke(transaction())
+
+        uiModel.providerFee.fiatValue shouldBe "0.99"
+    }
+
+    @Test
     fun `keeps the opaque total when there is no fee breakdown`() = runTest {
         every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
         every { mapTokenValueToDecimalUiString(any()) } returns "0"
@@ -366,6 +416,7 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
         swapFee: TokenValue? = affiliateFee,
         outboundFee: TokenValue? = SwapTransactionToUiModelMapperFeeBreakdownTest.outboundFee,
         priceImpact: BigDecimal? = null,
+        vultBpsDiscount: Int? = null,
     ): RegularSwapTransaction =
         RegularSwapTransaction(
             id = "tx-1",
@@ -401,6 +452,7 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
             isApprovalRequired = false,
             gasFeeFiatValue = usd("0.02"),
             priceImpact = priceImpact,
+            vultBpsDiscount = vultBpsDiscount,
         )
 
     private companion object {

@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
+import com.vultisig.wallet.ui.models.swap.undiscountedSwapFee
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -178,7 +179,18 @@ constructor(
                 ValuedToken(
                     token = tokenValue,
                     value = (from.swapFee ?: from.estimatedFees).value.toString(),
-                    fiatValue = fiatValueToStringMapper(swapFeeFiat ?: quotesFeesFiat, asFee = true),
+                    // List-rate fee, matching the swap form: the charged affiliate fee plus the
+                    // discounts the rows below restate, so the row is not netted twice.
+                    fiatValue =
+                        fiatValueToStringMapper(
+                            undiscountedSwapFee(
+                                netFee = swapFeeFiat ?: quotesFeesFiat,
+                                srcFiat = srcFiat,
+                                vultBpsDiscount = from.vultBpsDiscount,
+                                referralBpsDiscount = from.referralBpsDiscount,
+                            ),
+                            asFee = true,
+                        ),
                 ),
             outboundFee = outboundFeeFiat?.let { fiatValueToStringMapper(it, asFee = true) },
             networkFee =
