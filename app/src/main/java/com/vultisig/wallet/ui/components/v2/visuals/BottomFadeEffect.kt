@@ -8,16 +8,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun BottomFadeEffect(modifier: Modifier = Modifier) {
+internal fun BottomFadeEffect(modifier: Modifier = Modifier, height: Dp = 60.dp) {
     Box(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(60.dp)
+                .height(height)
                 .background(
                     brush =
                         Brush.verticalGradient(

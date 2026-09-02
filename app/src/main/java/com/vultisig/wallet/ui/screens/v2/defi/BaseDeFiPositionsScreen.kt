@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
+import com.vultisig.wallet.ui.screens.v2.home.components.LocalBottomNavigatorPadding
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.serialization.Serializable
 
@@ -50,7 +51,8 @@ fun BaseDeFiPositionsScreenContent(
                 Modifier.fillMaxSize()
                     .background(Theme.v2.colors.backgrounds.primary)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 12.dp, bottom = 12.dp + LocalBottomNavigatorPadding.current),
             horizontalAlignment = CenterHorizontally,
         ) {
             BalanceBanner(

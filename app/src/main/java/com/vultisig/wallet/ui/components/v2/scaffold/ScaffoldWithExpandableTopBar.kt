@@ -31,7 +31,6 @@ internal fun ScaffoldWithExpandableTopBar(
     topBarExpandedContent: @Composable BoxScope.() -> Unit,
     topBarCollapsedContent: (@Composable BoxScope.() -> Unit)? = null,
     scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
-    bottomBarContent: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
@@ -55,7 +54,6 @@ internal fun ScaffoldWithExpandableTopBar(
                     backgroundColor = backgroundColor,
                 )
             },
-            bottomBar = bottomBarContent,
         ) { paddingValues ->
             // A downward drag that starts on a non-scrollable region of the content (the empty area
             // below a short list, headers, banners) would otherwise never reach PullToRefreshBox,

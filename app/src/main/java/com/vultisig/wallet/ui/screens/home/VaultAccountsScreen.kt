@@ -50,7 +50,6 @@ import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
-import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
@@ -59,11 +58,11 @@ import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.Notifi
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultNotificationOptInBottomSheet
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.Banners
-import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
+import com.vultisig.wallet.ui.screens.v2.home.components.BottomNavigatorOverlay
 import com.vultisig.wallet.ui.screens.v2.home.components.ChooseVaultButton
-import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 import com.vultisig.wallet.ui.screens.v2.home.components.DefiExpandedTopbarContent
 import com.vultisig.wallet.ui.screens.v2.home.components.HomePageTabMenuAndSearchBar
+import com.vultisig.wallet.ui.screens.v2.home.components.LocalBottomNavigatorPadding
 import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
@@ -182,188 +181,177 @@ internal fun VaultAccountsScreen(
 
     val context = LocalContext.current
 
-    ScaffoldWithExpandableTopBar(
-        snackbarState = snackbarState,
-        isRefreshing = state.isRefreshing,
-        onRefresh = onRefresh,
-        topBarCollapsedContent = {
-            Column(modifier = Modifier.padding(top = 16.dp)) {
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .background(Theme.v2.colors.backgrounds.primary)
-                            .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    ChooseVaultButton(
+    BottomNavigatorOverlay(
+        isNavigatorVisible = isBottomBarVisible.value,
+        activeType = state.cryptoConnectionType,
+        onTypeClick = onCryptoConnectionTypeClick,
+        onCameraClick = openCamera,
+    ) {
+        ScaffoldWithExpandableTopBar(
+            snackbarState = snackbarState,
+            isRefreshing = state.isRefreshing,
+            onRefresh = onRefresh,
+            topBarCollapsedContent = {
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .background(Theme.v2.colors.backgrounds.primary)
+                                .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        ChooseVaultButton(
+                            vaultName = state.vaultName,
+                            isFastVault = state.isFastVault,
+                            onClick = onToggleVaultListClick,
+                        )
+
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = stringResource(R.string.home_portfolio_balance),
+                                color = Theme.v2.colors.text.tertiary,
+                                style = Theme.brockmann.body.s.medium,
+                            )
+                            UiSpacer(size = 2.dp)
+
+                            LoadableValue(
+                                value = state.totalFiatValue,
+                                isVisible = state.isBalanceValueVisible,
+                                style = Theme.satoshi.price.bodyS,
+                                color = Theme.v2.colors.text.primary,
+                            )
+                        }
+                    }
+
+                    UiSpacer(size = 16.dp)
+
+                    UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+                    UiSpacer(size = 16.dp)
+                }
+            },
+            topBarExpandedContent = {
+                ExpandedTopbarContainer {
+                    TopRow(
+                        onOpenHistoryClick = onOpenHistoryClick,
+                        onOpenSettingsClick = onOpenSettingsClick,
+                        onToggleVaultListClick = onToggleVaultListClick,
                         vaultName = state.vaultName,
                         isFastVault = state.isFastVault,
-                        onClick = onToggleVaultListClick,
                     )
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = stringResource(R.string.home_portfolio_balance),
-                            color = Theme.v2.colors.text.tertiary,
-                            style = Theme.brockmann.body.s.medium,
-                        )
-                        UiSpacer(size = 2.dp)
-
-                        LoadableValue(
-                            value = state.totalFiatValue,
-                            isVisible = state.isBalanceValueVisible,
-                            style = Theme.satoshi.price.bodyS,
-                            color = Theme.v2.colors.text.primary,
-                        )
-                    }
-                }
-
-                UiSpacer(size = 16.dp)
-
-                UiHorizontalDivider(color = Theme.v2.colors.border.light)
-
-                UiSpacer(size = 16.dp)
-            }
-        },
-        topBarExpandedContent = {
-            ExpandedTopbarContainer {
-                TopRow(
-                    onOpenHistoryClick = onOpenHistoryClick,
-                    onOpenSettingsClick = onOpenSettingsClick,
-                    onToggleVaultListClick = onToggleVaultListClick,
-                    vaultName = state.vaultName,
-                    isFastVault = state.isFastVault,
-                )
-                AnimatedContent(targetState = isWallet, transitionSpec = slideAndFadeSpec()) {
-                    isWalletTabSelected ->
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        UiSpacer(size = 24.dp)
-                        if (isWalletTabSelected) {
-                            WalletExpandedTopbarContent(
-                                state = state,
-                                onToggleBalanceVisibility = onToggleBalanceVisibility,
-                                onSend = onSend,
-                                onSwap = onSwap,
-                                onBuy = onBuy,
-                                onReceive = onReceive,
-                            )
-                        } else {
-                            DefiExpandedTopbarContent(
-                                state = state,
-                                onToggleBalanceVisibility = onToggleBalanceVisibility,
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        bottomBarContent =
-            if (isBottomBarVisible.value) {
-                {
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
-                                    .align(Alignment.BottomCenter),
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                    AnimatedContent(targetState = isWallet, transitionSpec = slideAndFadeSpec()) {
+                        isWalletTabSelected ->
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            CryptoConnectionSelect(
-                                onTypeClick = onCryptoConnectionTypeClick,
-                                activeType = state.cryptoConnectionType,
-                            )
-                            CameraButton(onClick = openCamera)
-                        }
-                    }
-                }
-            } else {
-                {}
-            },
-        content = { innerPadding ->
-            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                LazyColumn(
-                    modifier =
-                        Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 30.dp),
-                ) {
-                    item {
-                        AnimatedVisibility(
-                            visible =
-                                state.banners.isNotEmpty() &&
-                                    state.cryptoConnectionType == CryptoConnectionType.Wallet,
-                            enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically(),
-                        ) {
-                            Banners(
-                                modifier =
-                                    Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
-                                banners = state.banners,
-                                onBannerClick = onBannerClick,
-                                onBannerDismiss = onBannerDismiss,
-                                context = context,
-                            )
-                        }
-                    }
-
-                    item {
-                        HomePageTabMenuAndSearchBar(
-                            modifier =
-                                Modifier.animateItem()
-                                    .padding(horizontal = 16.dp)
-                                    .padding(bottom = 16.dp),
-                            onEditClick = onChooseChains,
-                            isTabMenu = isTabMenu,
-                            onSearchClick = { isTabMenu = false },
-                            onCancelSearchClick = { isTabMenu = true },
-                            searchTextFieldState = state.searchTextFieldState,
-                        )
-                    }
-
-                    item {
-                        TopShineContainer(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            when {
-                                isShowingSearchResult.value && state.noChainFound ->
-                                    NoChainFound(onChooseChains = onChooseChains)
-
-                                // Only once the accounts flow has emitted does an empty list mean
-                                // the user disabled every chain; before that it just means the
-                                // addresses are still being derived, which on a cold start with
-                                // many chains takes seconds.
-                                state.areAccountsLoaded && state.getAccounts.isEmpty() ->
-                                    NotEnabledContainer(
-                                        title =
-                                            stringResource(R.string.home_page_no_chains_enabled),
-                                        content =
-                                            stringResource(
-                                                R.string.home_page_no_chain_enabled_desc
-                                            ),
-                                        // Rendered inside the chain-list container above, so it
-                                        // steps down rather than matching it.
-                                        radius = Theme.v2.radius.md,
-                                    )
-
-                                else ->
-                                    AccountList(
-                                        onAccountClick = onAccountClick,
-                                        snackbarState = snackbarState,
-                                        isBalanceVisible = state.isBalanceValueVisible,
-                                        accounts = state.getAccounts,
-                                        showAddress = isWallet,
-                                    )
+                            UiSpacer(size = 24.dp)
+                            if (isWalletTabSelected) {
+                                WalletExpandedTopbarContent(
+                                    state = state,
+                                    onToggleBalanceVisibility = onToggleBalanceVisibility,
+                                    onSend = onSend,
+                                    onSwap = onSwap,
+                                    onBuy = onBuy,
+                                    onReceive = onReceive,
+                                )
+                            } else {
+                                DefiExpandedTopbarContent(
+                                    state = state,
+                                    onToggleBalanceVisibility = onToggleBalanceVisibility,
+                                )
                             }
                         }
                     }
                 }
-                if (isTabMenu) {
-                    BottomFadeEffect(modifier = Modifier.align(Alignment.BottomCenter))
+            },
+            content = { innerPadding ->
+                Box(
+                    modifier =
+                        Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())
+                ) {
+                    LazyColumn(
+                        modifier =
+                            Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = LocalBottomNavigatorPadding.current),
+                    ) {
+                        item {
+                            AnimatedVisibility(
+                                visible =
+                                    state.banners.isNotEmpty() &&
+                                        state.cryptoConnectionType == CryptoConnectionType.Wallet,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically(),
+                            ) {
+                                Banners(
+                                    modifier =
+                                        Modifier.padding(horizontal = 16.dp)
+                                            .padding(bottom = 16.dp),
+                                    banners = state.banners,
+                                    onBannerClick = onBannerClick,
+                                    onBannerDismiss = onBannerDismiss,
+                                    context = context,
+                                )
+                            }
+                        }
+
+                        item {
+                            HomePageTabMenuAndSearchBar(
+                                modifier =
+                                    Modifier.animateItem()
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 16.dp),
+                                onEditClick = onChooseChains,
+                                isTabMenu = isTabMenu,
+                                onSearchClick = { isTabMenu = false },
+                                onCancelSearchClick = { isTabMenu = true },
+                                searchTextFieldState = state.searchTextFieldState,
+                            )
+                        }
+
+                        item {
+                            TopShineContainer(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                when {
+                                    isShowingSearchResult.value && state.noChainFound ->
+                                        NoChainFound(onChooseChains = onChooseChains)
+
+                                    // Only once the accounts flow has emitted does an
+                                    // empty list mean the user disabled every chain;
+                                    // before that it just means the addresses are still
+                                    // being derived, which on a cold start with many
+                                    // chains takes seconds.
+                                    state.areAccountsLoaded && state.getAccounts.isEmpty() ->
+                                        NotEnabledContainer(
+                                            title =
+                                                stringResource(
+                                                    R.string.home_page_no_chains_enabled
+                                                ),
+                                            content =
+                                                stringResource(
+                                                    R.string.home_page_no_chain_enabled_desc
+                                                ),
+                                            // Rendered inside the chain-list container above, so it
+                                            // steps down rather than matching it.
+                                            radius = Theme.v2.radius.md,
+                                        )
+
+                                    else ->
+                                        AccountList(
+                                            onAccountClick = onAccountClick,
+                                            snackbarState = snackbarState,
+                                            isBalanceVisible = state.isBalanceValueVisible,
+                                            accounts = state.getAccounts,
+                                            showAddress = isWallet,
+                                        )
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-        },
-    )
+            },
+        )
+    }
 }
 
 @Preview

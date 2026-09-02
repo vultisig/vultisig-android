@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,7 +45,6 @@ import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
-import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
@@ -58,6 +58,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionItem
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionRow
 import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
+import com.vultisig.wallet.ui.screens.v2.home.components.LocalBottomNavigatorPadding
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.KeyboardAware
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -94,6 +95,8 @@ internal fun ChainTokensScreen(
         onDismissQbtcBanner = viewModel::dismissQbtcClaimBanner,
     )
 }
+
+internal const val TokenListTestTag = "chain_token_list"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -254,9 +257,14 @@ internal fun ChainTokensScreen(
         },
         content = { paddingValues ->
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                // Reserved on the column, not inside the card: the token list wraps its
+                // content, so bottom padding there would inflate the card with dead space when
+                // it holds a single token.
                 Column(
                     modifier =
-                        Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize()
+                        Modifier.background(Theme.v2.colors.backgrounds.primary)
+                            .fillMaxSize()
+                            .padding(bottom = LocalBottomNavigatorPadding.current)
                 ) {
                     ChainTokensTabMenuAndSearchBar(
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -269,7 +277,9 @@ internal fun ChainTokensScreen(
                         canSelectTokens = uiModel.canSelectTokens,
                     )
 
-                    TopShineContainer(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                    TopShineContainer(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp).testTag(TokenListTestTag)
+                    ) {
                         LazyColumn {
                             itemsIndexed(items = uiModel.tokens, key = { _, token -> token.id }) {
                                 index,
@@ -314,13 +324,15 @@ internal fun ChainTokensScreen(
                     }
                 }
 
+                // The floating navigator already fades the foot of the screen, so the CTA only
+                // has to clear it.
                 if (uiModel.showClaimQbtcButton) {
                     ClaimQbtcBottomCta(
                         onClaim = onClaimQbtc,
-                        modifier = Modifier.align(Alignment.BottomCenter),
+                        modifier =
+                            Modifier.align(Alignment.BottomCenter)
+                                .padding(bottom = LocalBottomNavigatorPadding.current),
                     )
-                } else {
-                    BottomFadeEffect(modifier = Modifier.align(Alignment.BottomCenter))
                 }
             }
         },

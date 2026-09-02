@@ -54,6 +54,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
+import com.vultisig.wallet.ui.screens.v2.home.components.LocalBottomNavigatorPadding
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.delay
@@ -137,7 +138,13 @@ private fun TonDeFiPositionsScreenContent(
             // instead of pinning the header above the list, mirroring iOS (#4761).
             LazyColumn(
                 modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                contentPadding =
+                    PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 16.dp,
+                        bottom = 16.dp + LocalBottomNavigatorPadding.current,
+                    ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item {

@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.hasMayaStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions.ADD_LP
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions.REMOVE_LP
+import com.vultisig.wallet.ui.screens.v2.home.components.LocalBottomNavigatorPadding
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
@@ -144,7 +145,8 @@ internal fun MayachainDefiPositionsScreenContent(
                 Modifier.fillMaxSize()
                     .background(Theme.v2.colors.backgrounds.primary)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 12.dp, bottom = 12.dp + LocalBottomNavigatorPadding.current),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             BalanceBanner(
