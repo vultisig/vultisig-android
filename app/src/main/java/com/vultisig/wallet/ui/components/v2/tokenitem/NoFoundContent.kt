@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.v2.tokenitem
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,7 +21,10 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Preview
 @Composable
-internal fun NoFoundContent(message: String = "No chains found") {
+internal fun NoFoundContent(
+    message: String = "No chains found",
+    @DrawableRes icon: Int = R.drawable.iconcrypto,
+) {
     TopShineContainer {
         Column(
             horizontalAlignment = Alignment.Companion.CenterHorizontally,
@@ -28,7 +32,7 @@ internal fun NoFoundContent(message: String = "No chains found") {
             modifier = Modifier.Companion.fillMaxWidth().padding(vertical = 24.dp),
         ) {
             Image(
-                painter = painterResource(R.drawable.iconcrypto),
+                painter = painterResource(icon),
                 contentDescription = null,
                 modifier = Modifier.Companion.size(20.dp),
             )

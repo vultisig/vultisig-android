@@ -2572,6 +2572,7 @@ private fun SelectAssetSecuredPreview(showSecured: Boolean) {
         searchFieldState = TextFieldState(),
         onAssetClick = {},
         onSelectChain = {},
+        onAddCustomTokenClick = {},
     )
 }
 
