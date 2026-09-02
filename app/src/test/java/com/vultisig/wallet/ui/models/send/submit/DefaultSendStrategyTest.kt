@@ -1859,6 +1859,76 @@ internal class DefaultSendStrategyTest {
         }
     }
 
+    /**
+     * A Cardano native token cannot be signed yet (CardanoHelper builds no asset bundle), so the
+     * send must be refused before planning — not left to the signer, which would only fail after
+     * the transaction was staged and the Verify screen shown.
+     */
+    @Test
+    fun `submit rejects a Cardano native-token send before planning`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val snekCoin = snekCoin()
+            val adaCoin = adaCoin()
+            val account =
+                Account(
+                    token = snekCoin,
+                    tokenValue = TokenValue(BigInteger.valueOf(1_000_000L), snekCoin),
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            accounts.value =
+                listOf(
+                    account,
+                    Account(
+                        token = adaCoin,
+                        tokenValue = TokenValue(BigInteger.valueOf(10_000_000L), adaCoin),
+                        fiatValue = null,
+                        price = null,
+                    ),
+                )
+            addressFieldState.setTextAndPlaceCursorAtEnd("addr1dest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Cardano,
+                    gasFee = TokenValue(BigInteger.valueOf(180_000L), adaCoin),
+                    dstAddress = "addr1dest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            assertEquals(
+                R.string.send_error_cardano_native_token_unsupported,
+                (lastError as UiText.FormattedText).resId,
+            )
+            coVerify(exactly = 0) { transactionRepository.addTransaction(any()) }
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    private fun snekCoin(): Coin =
+        Coin(
+            chain = Chain.Cardano,
+            ticker = "SNEK",
+            logo = "",
+            address = "addr1self",
+            decimal = 0,
+            hexPublicKey = "",
+            priceProviderID = "snek",
+            contractAddress = "279c909f348e533da5808898f87f9a14bb2c3dfbbacccd631d927a3f.534e454b",
+            isNativeToken = false,
+        )
+
     private fun adaCoin(): Coin =
         Coin(
             chain = Chain.Cardano,
