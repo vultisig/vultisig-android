@@ -1,5 +1,23 @@
 package com.vultisig.wallet.data.models
 
+/** The separator between a Cardano asset's policy id and its asset name. */
+private const val CARDANO_ASSET_ID_SEPARATOR = "."
+
+/**
+ * A Cardano native token's `<policy_id>.<asset_name_hex>` asset id, lowercase hex.
+ *
+ * This is the identifier the rest of the Cardano stack uses, so storing it verbatim as a
+ * [Coin.contractAddress] lets a discovery or lookup path match a curated entry without
+ * normalization. The asset name is kept as hex rather than decoded text because it is not always
+ * text: CIP-67 label prefixes (USDM's `0014df10`, for instance) decode to unprintable bytes, so a
+ * ticker derived from the hex would be wrong.
+ *
+ * @param policyId the minting policy's script hash, hex.
+ * @param assetNameHex the asset name, hex — CIP-67 prefix included when the asset carries one.
+ */
+fun cardanoAssetId(policyId: String, assetNameHex: String): String =
+    "${policyId.lowercase()}$CARDANO_ASSET_ID_SEPARATOR${assetNameHex.lowercase()}"
+
 object Coins {
     object Akash {
         val AKT =
@@ -4211,7 +4229,186 @@ object Coins {
                 contractAddress = "",
                 isNativeToken = true,
             )
-        val all = listOf(ADA)
+
+        /**
+         * Mehen USDM. Its asset name carries the CIP-67 label-333 prefix `0014df10`, so the hex
+         * does **not** decode to the ticker — deriving `USDM` from it yields `_USDM`, which is why
+         * the curated entry has to win over any metadata a provider returns.
+         */
+        val USDM =
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "USDM",
+                logo = "usdm",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "usdm-2",
+                contractAddress =
+                    cardanoAssetId(
+                        policyId = "c48cbb3d5e57ed56e276bc45f99ab39abe94e6cd7ac39fb402da47ad",
+                        assetNameHex = "0014df105553444d",
+                    ),
+                isNativeToken = false,
+            )
+
+        /** Indigo Protocol's iUSD. Priced as `iusd`; `iusd-2` is Initia's unrelated token. */
+        val IUSD =
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "iUSD",
+                logo = "iusd",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "iusd",
+                contractAddress =
+                    cardanoAssetId(
+                        policyId = "f66d78b4a3cb3d37afa0ec36461e51ecbde00f26c8f0a68f94b69880",
+                        assetNameHex = "69555344",
+                    ),
+                isNativeToken = false,
+            )
+
+        /** COTI's Djed. Its asset name decodes to `DjedMicroUSD`, not to the ticker. */
+        val DJED =
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "DJED",
+                logo = "djed",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "djed",
+                contractAddress =
+                    cardanoAssetId(
+                        policyId = "8db269c3ec630e06ae29f74bc39edd1f87c819f1056206e879a1cd61",
+                        assetNameHex = "446a65644d6963726f555344",
+                    ),
+                isNativeToken = false,
+            )
+
+        val LQ =
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "LQ",
+                logo = "lq",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "liqwid-finance",
+                contractAddress =
+                    cardanoAssetId(
+                        policyId = "da8c30857834c6ae7203935b89278c532b3995245295456f993e1d24",
+                        assetNameHex = "4c51",
+                    ),
+                isNativeToken = false,
+            )
+
+        val MIN =
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "MIN",
+                logo = "min",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "minswap",
+                contractAddress =
+                    cardanoAssetId(
+                        policyId = "29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c6",
+                        assetNameHex = "4d494e",
+                    ),
+                isNativeToken = false,
+            )
+
+        val SNEK =
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "SNEK",
+                logo = "snek",
+                address = "",
+                decimal = 0,
+                hexPublicKey = "",
+                priceProviderID = "snek",
+                contractAddress =
+                    cardanoAssetId(
+                        policyId = "279c909f348e533da5808898f87f9a14bb2c3dfbbacccd631d927a3f",
+                        assetNameHex = "534e454b",
+                    ),
+                isNativeToken = false,
+            )
+
+        val SUNDAE =
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "SUNDAE",
+                logo = "sundae",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "sundaeswap",
+                contractAddress =
+                    cardanoAssetId(
+                        policyId = "9a9693a9a37912a5097918f97918d15240c92ab729a0b7c4aa144d77",
+                        assetNameHex = "53554e444145",
+                    ),
+                isNativeToken = false,
+            )
+
+        val IAG =
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "IAG",
+                logo = "iag",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "iagon",
+                contractAddress =
+                    cardanoAssetId(
+                        policyId = "5d16cc1a177b5d9ba9cfa9793b07e60f1fb70fea1f8aef064415d114",
+                        assetNameHex = "494147",
+                    ),
+                isNativeToken = false,
+            )
+
+        val HOSKY =
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "HOSKY",
+                logo = "hosky",
+                address = "",
+                decimal = 0,
+                hexPublicKey = "",
+                priceProviderID = "hosky",
+                contractAddress =
+                    cardanoAssetId(
+                        policyId = "a0028f350aaabe0545fdcb56b039bfb08e4bb4d8c4d7c3c7d481c235",
+                        assetNameHex = "484f534b59",
+                    ),
+                isNativeToken = false,
+            )
+
+        /** World Mobile Token. Its asset name decodes to `WorldMobileTokenX`. */
+        val WMTX =
+            Coin(
+                chain = Chain.Cardano,
+                ticker = "WMTX",
+                logo = "wmtx",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "world-mobile-token",
+                contractAddress =
+                    cardanoAssetId(
+                        policyId = "e5a42a1a1d3d1da71b0449663c32798725888d2eb0843c4dabeca05a",
+                        assetNameHex = "576f726c644d6f62696c65546f6b656e58",
+                    ),
+                isNativeToken = false,
+            )
+
+        val all = listOf(ADA, USDM, IUSD, DJED, LQ, MIN, SNEK, SUNDAE, IAG, HOSKY, WMTX)
     }
 
     object Qbtc {

@@ -606,7 +606,12 @@ constructor(
                                     rippleApi.getTokenBalance(coin)
                                 }
                             Chain.Tron -> tronApi.getBalance(coin)
-                            Chain.Cardano -> cardanoApi.getBalance(coin)
+                            Chain.Cardano ->
+                                if (coin.isNativeToken) {
+                                    cardanoApi.getBalance(coin)
+                                } else {
+                                    cardanoApi.getTokenBalance(coin)
+                                }
                         },
                         coin.ticker,
                         coin.decimal,

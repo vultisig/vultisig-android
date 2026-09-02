@@ -1274,6 +1274,7 @@
     <string name="insufficient_balance_try_send">Insufficient balance. Try \'Send Max\' to send %1$s ADA instead.</string>
     <string name="insufficient_balance_ada">Insufficient balance (%1$s ADA). You need more ADA to complete this transaction.</string>
     <string name="this_amount_would_leave_too_little_change">This amount would leave too little change. 💡 Try \'Send Max\' (%1$s ADA) to avoid this issue.</string>
+    <string name="send_error_cardano_native_token_unsupported">Sending %1$s isn\'t supported yet. Cardano native tokens can be held and tracked, but not sent.</string>
     <string name="swap_form_native">Native</string>
     <string name="swap_transaction_overview_approval_tx_hash">Approval Tx Hash</string>
     <string name="swap_transaction_overview_track">Track</string>
