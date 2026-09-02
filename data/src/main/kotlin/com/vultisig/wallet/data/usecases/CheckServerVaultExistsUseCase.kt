@@ -18,8 +18,14 @@ constructor(private val vultiSignerRepository: VultiSignerRepository) :
 
     override suspend fun invoke(mnemonic: String): Boolean {
         val wallet = HDWallet(mnemonic, "")
+        val masterKey =
+            checkNotNull(wallet.getMasterKey(Curve.SECP256K1)) {
+                "SECP256K1 master key derivation failed"
+            }
         val ecdsaPubKey =
-            wallet.getMasterKey(Curve.SECP256K1).getPublicKeySecp256k1(true).data().toHexString()
+            checkNotNull(masterKey.getPublicKeySecp256k1(true)) { "Public key derivation failed" }
+                .data()
+                .toHexString()
 
         return vultiSignerRepository.hasFastSign(ecdsaPubKey)
     }
