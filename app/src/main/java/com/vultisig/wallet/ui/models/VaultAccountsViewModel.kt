@@ -143,6 +143,11 @@ internal data class AccountUiModel(
     val assetsSize: Int = 0,
     val nativeTokenTicker: String = "",
     val isDeFiProvider: Boolean = false,
+    /**
+     * Active DeFi positions on the chain, or null while none of them has resolved yet. Only ever
+     * set on a DeFi row; a wallet row keeps reporting its token count instead.
+     */
+    val defiPositionsCount: Int? = null,
 )
 
 @HiltViewModel

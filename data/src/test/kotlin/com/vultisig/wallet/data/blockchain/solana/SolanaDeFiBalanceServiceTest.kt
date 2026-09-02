@@ -43,6 +43,18 @@ internal class SolanaDeFiBalanceServiceTest {
         // The pipeline resolves one balance per coin, so leaving these as two entries would report
         // whichever it matched first as the whole position.
         assertEquals(BigInteger("1500000000"), balance.amount)
+        assertEquals(2, balance.positionCount)
+    }
+
+    @Test
+    fun `a grouped Kamino token keeps its original number of positions`() = runTest {
+        coEvery { kamino.getRemoteDeFiBalance(ADDRESS, VAULT_ID) } returns
+            balances(Coins.Solana.USDC to BigInteger("250000000")).withPositionCount(2)
+
+        val balance = service().getRemoteDeFiBalance(ADDRESS, VAULT_ID).single().balances.single()
+
+        assertEquals(BigInteger("250000000"), balance.amount)
+        assertEquals(2, balance.positionCount)
     }
 
     @Test
@@ -103,6 +115,13 @@ internal class SolanaDeFiBalanceServiceTest {
                 balances = entries.map { (coin, amount) -> DeFiBalance.Balance(coin, amount) },
             )
         )
+
+    private fun List<DeFiBalance>.withPositionCount(positionCount: Int) = map { defiBalance ->
+        defiBalance.copy(
+            balances =
+                defiBalance.balances.map { balance -> balance.copy(positionCount = positionCount) }
+        )
+    }
 
     private companion object {
         const val VAULT_ID = "vault-id"

@@ -22,6 +22,7 @@ data class Account(
      * form may spend.
      */
     val isPositionOnly: Boolean = false,
+    val defiPositionsCount: Int? = null,
 ) {
     companion object {
         val EMPTY = Account(token = Coin.EMPTY, tokenValue = null, fiatValue = null, price = null)
@@ -77,5 +78,25 @@ fun List<Account>.calculateAccountsPartialFiatValue(): FiatValue? {
     if (resolved.isEmpty()) return null
     return resolved.fold(FiatValue(BigDecimal.ZERO, resolved.first().currency)) { acc, fiatValue ->
         FiatValue(acc.value + fiatValue.value, fiatValue.currency)
+    }
+}
+
+/**
+ * How many of the chain's DeFi positions currently hold something.
+ *
+ * A DeFi address carries one account per token the chain can hold a position in — the vault's own
+ * coins plus the injected receipts — and each one's token value *is* the position it backs, so an
+ * account above zero is an active position and a zero is a position the vault has not opened. That
+ * makes this the count behind the very figure the row already paints, which sums the same accounts.
+ *
+ * Null while nothing has resolved yet: a cold start would otherwise report a funded chain as having
+ * no positions for as long as its balances take to arrive.
+ */
+fun List<Account>.calculateActiveDefiPositionsCount(): Int? {
+    if (isEmpty()) return 0
+    if (none { it.tokenValue != null }) return null
+    return sumOf { account ->
+        val tokenValue = account.tokenValue ?: return@sumOf 0
+        if (tokenValue.value.signum() > 0) account.defiPositionsCount ?: 1 else 0
     }
 }

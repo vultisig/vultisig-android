@@ -10,5 +10,6 @@ data class DeFiBalance(val chain: Chain, val balances: List<Balance>) {
         val amount: BigInteger,
         val coinRewards: Coin? = null,
         val rewardsAmount: BigInteger = BigInteger.ZERO,
+        val positionCount: Int? = null,
     )
 }

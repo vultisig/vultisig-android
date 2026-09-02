@@ -3,7 +3,11 @@ package com.vultisig.wallet.data.models
 import java.math.BigDecimal
 import java.math.BigInteger
 
-data class TokenBalance(val tokenValue: TokenValue?, val fiatValue: FiatValue?)
+data class TokenBalance(
+    val tokenValue: TokenValue?,
+    val fiatValue: FiatValue?,
+    val defiPositionsCount: Int? = null,
+)
 
 data class TokenBalanceAndPrice(val tokenBalance: TokenBalance, val price: FiatValue?)
 

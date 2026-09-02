@@ -1259,6 +1259,11 @@
     <string name="add">Dodaj</string>
     <string name="remove">Ukloni</string>
     <string name="no_positions_found">Nema pronađenih pozicija</string>
+    <plurals name="defi_chain_positions_count">
+        <item quantity="one">%1$d pozicija</item>
+        <item quantity="few">%1$d pozicije</item>
+        <item quantity="other">%1$d pozicija</item>
+    </plurals>
     <string name="select_positions">Odaberite pozicije</string>
     <string name="enable_at_least_one_position">Omogućite barem jednu poziciju za pregled stanja i upravljanje pozicijama.</string>
     <string name="bandwidth">Propusnost</string>

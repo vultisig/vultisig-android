@@ -1259,6 +1259,12 @@
     <string name="add">Добавить</string>
     <string name="remove">Удалить</string>
     <string name="no_positions_found">Позиции не найдены</string>
+    <plurals name="defi_chain_positions_count">
+        <item quantity="one">%1$d позиция</item>
+        <item quantity="few">%1$d позиции</item>
+        <item quantity="many">%1$d позиций</item>
+        <item quantity="other">%1$d позиции</item>
+    </plurals>
     <string name="select_positions">Выбрать позиции</string>
     <string name="enable_at_least_one_position">Включите хотя бы одну позицию для просмотра балансов и управления позициями.</string>
     <string name="bandwidth">пропускная способность</string>

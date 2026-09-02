@@ -1254,6 +1254,11 @@
     <string name="add">Añadir</string>
     <string name="remove">Eliminar</string>
     <string name="no_positions_found">No se encontraron posiciones</string>
+    <plurals name="defi_chain_positions_count">
+        <item quantity="one">%1$d posición</item>
+        <item quantity="many">%1$d de posiciones</item>
+        <item quantity="other">%1$d posiciones</item>
+    </plurals>
     <string name="select_positions">Seleccionar posiciones</string>
     <string name="enable_at_least_one_position">Habilite al menos una posición para ver saldos y gestionar posiciones.</string>
     <string name="bandwidth">Ancho de banda</string>

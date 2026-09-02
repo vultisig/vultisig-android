@@ -50,9 +50,17 @@ class SolanaDeFiBalanceService(
                 .flatMap { it.balances }
                 .groupBy { it.coin.id.lowercase() }
                 .map { (_, group) ->
-                    group.reduce { running, balance ->
-                        running.copy(amount = running.amount + balance.amount)
-                    }
+                    val amount =
+                        group.fold(BigInteger.ZERO) { running, balance -> running + balance.amount }
+                    val positionCount =
+                        group.sumOf { balance ->
+                            if (balance.amount > BigInteger.ZERO) {
+                                balance.positionCount ?: 1
+                            } else {
+                                0
+                            }
+                        }
+                    group.first().copy(amount = amount, positionCount = positionCount)
                 }
                 .filter { it.amount > BigInteger.ZERO }
 

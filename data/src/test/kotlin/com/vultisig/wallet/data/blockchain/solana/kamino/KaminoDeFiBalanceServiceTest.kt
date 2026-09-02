@@ -76,6 +76,7 @@ internal class KaminoDeFiBalanceServiceTest {
 
         assertEquals(1, balances.size)
         assertEquals(BigInteger("150000000"), balances.single().amount)
+        assertEquals(2, balances.single().positionCount)
     }
 
     @Test
