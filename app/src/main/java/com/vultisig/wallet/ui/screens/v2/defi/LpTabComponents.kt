@@ -58,7 +58,7 @@ internal fun LpTabContent(
         state.positions.forEach { lpPosition ->
             LpWidget(
                 state = lpPosition,
-                isLoading = state.isLoading,
+                isLoading = lpPosition.isLoading,
                 onClickAdd = { onClickAdd(lpPosition.positionKey) },
                 onClickRemove = { onClickRemove(lpPosition.positionKey) },
             )

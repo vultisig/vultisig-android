@@ -147,6 +147,7 @@ constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val defiPositionsRepository: DefiPositionsRepository,
     private val fiatValueCalculator: DefiFiatValueCalculator,
+    private val snapshotCache: DeFiPositionsSnapshotCache,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -190,7 +191,7 @@ constructor(
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
         if (_state.value !is MayachainDefiUiState.Success) {
-            _state.value = MayachainDefiUiState.Success(MayachainDefiPositionsUiModel())
+            _state.value = MayachainDefiUiState.Success(restoredModel(vaultId))
         }
         loadBalanceVisibility()
         savedPositionsJob?.cancel()
@@ -201,6 +202,31 @@ constructor(
         observeTotalRawJob = observeTotalRaw()
         currencyJob?.cancel()
         currencyJob = observeCurrencyChanges()
+    }
+
+    /**
+     * The state this vault's screen was last showing, so a re-entry starts from the cards, totals
+     * and enabled set the user left behind rather than from an empty model whose defaults would
+     * flash the CACAO positions back on. Everything in it is refreshed by the loads [setData] kicks
+     * off straight after; only the position picker is dropped, because a sheet the user closed by
+     * leaving the screen must not reopen itself.
+     */
+    private fun restoredModel(vaultId: VaultId): MayachainDefiPositionsUiModel {
+        val cached =
+            snapshotCache.read(vaultId, MayachainDefiPositionsUiModel::class)
+                ?: return MayachainDefiPositionsUiModel()
+        return cached.copy(
+            showPositionSelectionDialog = false,
+            tempSelectedPositions = cached.selectedPositions,
+        )
+    }
+
+    override fun onCleared() {
+        val model = (_state.value as? MayachainDefiUiState.Success)?.data
+        if (::vaultId.isInitialized && model != null) {
+            snapshotCache.write(vaultId, model)
+        }
+        super.onCleared()
     }
 
     /**
@@ -229,6 +255,7 @@ constructor(
                 .drop(1)
                 .collect {
                     resetTotalsToPending()
+                    dropFiatPricedInPreviousCurrency()
 
                     bondedNodesRefreshTrigger.value++
                     loadBondedJob?.cancel()
@@ -251,6 +278,31 @@ constructor(
         _totalStakingRaw.value = null
         _totalLpFiat.value = null
         updateModel { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
+    }
+
+    /**
+     * Drops the fiat the cards carry when the display currency changes.
+     *
+     * Every other reload now leaves settled figures in place and swaps them when the fresh ones
+     * land, which is what stops a re-entry looking like a first open. A currency switch is the one
+     * case where that would be wrong: these strings were formatted for the currency being left, so
+     * they are cleared here and the reload puts each card back on its shimmer until it can price
+     * them again.
+     */
+    private fun dropFiatPricedInPreviousCurrency() {
+        updateModel { current ->
+            current.copy(
+                bonded = current.bonded.copy(totalBondedPrice = null),
+                staking =
+                    current.staking.copy(
+                        positions =
+                            current.staking.positions.map { position ->
+                                position.copy(isLoading = true, stakedFiatDisplay = null)
+                            }
+                    ),
+                lp = current.lp.copy(positions = emptyList(), livePoolKeys = emptySet()),
+            )
+        }
     }
 
     private fun observeTotalRaw(): Job =
@@ -352,7 +404,12 @@ constructor(
             return
         }
 
-        updateModel { it.copy(bonded = it.bonded.copy(isLoading = true)) }
+        // A total the last load already priced stays on screen while this one runs. The shimmer
+        // belongs to a cold start; re-arming it on every entry and pull is what made a re-entry
+        // look like a first open.
+        updateModel {
+            it.copy(bonded = it.bonded.copy(isLoading = it.bonded.totalBondedPrice == null))
+        }
 
         try {
             val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
@@ -459,7 +516,14 @@ constructor(
                 canStake = false,
                 canUnstake = false,
             )
-        updateModel { it.copy(staking = StakingTabUiModel(positions = listOf(loadingPosition))) }
+        // A card the last load already settled stays up while this one runs, and is replaced in
+        // place when it lands; only a position with nothing behind it yet gets the placeholder.
+        val settled = currentModel.staking.positions.filterNot { it.isLoading }
+        updateModel {
+            it.copy(
+                staking = StakingTabUiModel(positions = settled.ifEmpty { listOf(loadingPosition) })
+            )
+        }
 
         try {
             val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
@@ -657,7 +721,7 @@ constructor(
         // pools would otherwise park the LP leg here for good and strand the header on its spinner,
         // pull-to-refresh included. loadLpPositionsForDialog calls back here once it settles.
         if (!model.lpDialogLoaded) {
-            updateModel { it.copy(lp = it.lp.copy(isLoading = true)) }
+            updateModel { it.copy(lp = it.lp.copy(isLoading = it.lp.positions.isEmpty())) }
             return
         }
 
@@ -668,7 +732,7 @@ constructor(
             return
         }
 
-        updateModel { it.copy(lp = it.lp.copy(isLoading = true)) }
+        updateModel { it.copy(lp = it.lp.copy(isLoading = it.lp.positions.isEmpty())) }
 
         loadLpJob?.cancel()
         loadLpJob =
@@ -676,30 +740,50 @@ constructor(
                 onError = { e ->
                     Timber.e(e, "Failed to load Maya LP positions")
                     reportLpFiat(BigDecimal.ZERO)
-                    updateModel { it.copy(lp = it.lp.copy(isLoading = false)) }
+                    updateModel {
+                        it.copy(
+                            lp =
+                                it.lp.copy(
+                                    isLoading = false,
+                                    positions =
+                                        it.lp.positions.map { p -> p.copy(isLoading = false) },
+                                )
+                        )
+                    }
                 }
             ) {
                 // The zero has to be resolved before the placeholders are built: a failed load
                 // freezes these exact objects into the terminal state, so a placeholder that
                 // snapshotted an unresolved zero would strand the card on the dash for good.
                 val zero = zeroFiat()
+                // Pools the last load already priced keep their card; only a pool with nothing
+                // behind it yet falls back to the placeholder, and the shimmer is raised only for
+                // those — a refresh over cards that already carry figures leaves them readable.
+                val lpTab = currentModel.lp
+                val loaded =
+                    lpTab.positions
+                        .filter { it.positionKey in lpTab.livePoolKeys }
+                        .associateBy { it.positionKey }
                 val placeholderPositions =
                     selectedPools.map { pool ->
                         val assetTicker = pool.ticker.substringAfter("/")
-                        LpPositionUiModel(
-                            titleLp = "${pool.ticker} Pool",
-                            totalPriceLp = zero,
-                            icon = pool.logo,
-                            assetTicker = assetTicker,
-                            apr = null,
-                            position = "0 CACAO + 0 $assetTicker",
-                            positionKey = pool.positionKey,
-                            canRemove = false,
-                            chainLogo = pool.chainLogo as? Int,
-                        )
+                        loaded[pool.positionKey]?.copy(isLoading = false)
+                            ?: LpPositionUiModel(
+                                titleLp = "${pool.ticker} Pool",
+                                totalPriceLp = zero,
+                                icon = pool.logo,
+                                assetTicker = assetTicker,
+                                apr = null,
+                                position = "0 CACAO + 0 $assetTicker",
+                                positionKey = pool.positionKey,
+                                canRemove = false,
+                                chainLogo = pool.chainLogo as? Int,
+                                isLoading = true,
+                            )
                     }
+                val isCold = selectedPools.any { loaded[it.positionKey] == null }
                 updateModel {
-                    it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholderPositions))
+                    it.copy(lp = it.lp.copy(isLoading = isCold, positions = placeholderPositions))
                 }
 
                 val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
@@ -713,7 +797,12 @@ constructor(
                     reportLpFiat(BigDecimal.ZERO)
                     updateModel {
                         it.copy(
-                            lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
+                            lp =
+                                it.lp.copy(
+                                    isLoading = false,
+                                    positions =
+                                        placeholderPositions.map { p -> p.copy(isLoading = false) },
+                                )
                         )
                     }
                     return@safeLaunch
@@ -724,7 +813,12 @@ constructor(
                     reportLpFiat(BigDecimal.ZERO)
                     updateModel {
                         it.copy(
-                            lp = LpTabUiModel(isLoading = false, positions = placeholderPositions)
+                            lp =
+                                it.lp.copy(
+                                    isLoading = false,
+                                    positions =
+                                        placeholderPositions.map { p -> p.copy(isLoading = false) },
+                                )
                         )
                     }
                     return@safeLaunch
@@ -898,8 +992,17 @@ constructor(
                         // header total rather than admit a value is missing.
                         LpLegTotal.Unavailable
                     }
+                val livePoolKeys =
+                    if (isPriceable) selectedPools.map { it.positionKey }.toSet() else emptySet()
                 updateModel {
-                    it.copy(lp = LpTabUiModel(isLoading = false, positions = lpPositions))
+                    it.copy(
+                        lp =
+                            it.lp.copy(
+                                isLoading = false,
+                                positions = lpPositions,
+                                livePoolKeys = livePoolKeys,
+                            )
+                    )
                 }
             }
     }

@@ -79,6 +79,8 @@ internal class MayachainDefiPositionsViewModelTest {
     private lateinit var appCurrencyRepository: AppCurrencyRepository
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
     private lateinit var defiPositionsRepository: DefiPositionsRepository
+    // The real cache, not a mock: these tests assert the round trip a nav pop and a re-entry make.
+    private lateinit var snapshotCache: DeFiPositionsSnapshotCache
 
     @BeforeEach
     fun setUp() {
@@ -93,6 +95,7 @@ internal class MayachainDefiPositionsViewModelTest {
         appCurrencyRepository = mockk(relaxed = true)
         balanceVisibilityRepository = mockk(relaxed = true)
         defiPositionsRepository = mockk(relaxed = true)
+        snapshotCache = DeFiPositionsSnapshotCache()
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
@@ -899,6 +902,113 @@ internal class MayachainDefiPositionsViewModelTest {
         data.totalAmountPrice shouldBe settled.totalAmountPrice
     }
 
+    @Test
+    fun `a refresh leaves the settled bonded total up instead of blanking it`() = runTest {
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flowOf(listOf(bondedNode(amount = HUNDRED_CACAO)))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        assertEquals("$200.00", successData(vm).bonded.totalBondedPrice)
+
+        // The refresh never answers, so what is on screen is what the previous load left.
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flow { awaitCancellation() }
+        vm.setData(VAULT_ID)
+
+        val bonded = successData(vm).bonded
+        assertFalse(bonded.isLoading, "a priced total must not go back to its shimmer on a refresh")
+        assertEquals("100.00000000 CACAO", bonded.totalBondedAmount)
+        assertEquals("$200.00", bonded.totalBondedPrice)
+    }
+
+    @Test
+    fun `a refresh leaves the settled staking card up instead of replacing it`() = runTest {
+        coEvery { mayaCacaoStakingService.getStakingDetails(CACAO_ADDRESS) } returns
+            flowOf(
+                MayaCacaoStakingDetails(stakeAmount = FIFTY_CACAO, apr = null, canUnstake = true)
+            )
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val settled = successData(vm).staking.positions.single()
+        assertFalse(settled.isLoading)
+
+        // The refresh never answers, so what is on screen is what the previous load left.
+        coEvery { mayaCacaoStakingService.getStakingDetails(CACAO_ADDRESS) } returns
+            flow { awaitCancellation() }
+        vm.setData(VAULT_ID)
+
+        val position = successData(vm).staking.positions.single()
+        assertFalse(position.isLoading, "a settled card must not be swapped for a placeholder")
+        assertEquals(settled.stakedAmountDisplay, position.stakedAmountDisplay)
+        assertEquals(settled.stakedFiatDisplay, position.stakedFiatDisplay)
+    }
+
+    @Test
+    fun `a re-entry paints the state the screen was last showing`() = runTest {
+        // Popping back to the DeFi list destroys this view-model, so the next open used to
+        // cold-start: zeroed cards, header on a spinner, and the enabled set flashing back to the
+        // CACAO defaults until the store answered.
+        snapshotCache.write(VAULT_ID, LAST_RENDERED)
+        neverAnswersSelection()
+
+        val data = successData(createViewModel().also { it.setData(VAULT_ID) })
+
+        assertEquals("$12.34", data.totalAmountPrice)
+        assertFalse(data.isTotalAmountLoading)
+        assertEquals("5 CACAO", data.bonded.totalBondedAmount)
+        // An empty selection is a choice the user made, and it survives the re-entry rather than
+        // being replaced by the defaults.
+        assertEquals(emptyList(), data.selectedPositions)
+        assertEquals(data.selectedPositions, data.tempSelectedPositions)
+    }
+
+    @Test
+    fun `a re-entry leaves the cached LP cards up instead of zeroing them`() = runTest {
+        // The snapshot brings the cards back, but the set naming which of them a read actually
+        // answered used to live in the view-model. A re-entry started that set empty, so the first
+        // reload swapped every restored card for a zero placeholder until the network answered.
+        selectPositions(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY, BTC_POOL)
+        givenLpPool(liquidityUnits = "100", units = "1000")
+        createViewModel().also { it.setData(VAULT_ID) }.clearForTest()
+
+        // The re-entry's own read never answers, so what is on screen is what the cache restored.
+        coEvery { mayachainBondRepository.getMemberDetails(CACAO_ADDRESS) } coAnswers
+            {
+                awaitCancellation()
+            }
+        val lp = successData(createViewModel().also { it.setData(VAULT_ID) }).lp
+
+        assertFalse(lp.isLoading, "a restored LP card must not go back to its shimmer")
+        assertEquals("$0.40", lp.positions.single().totalPriceLp)
+    }
+
+    @Test
+    fun `a re-entry does not reopen the position picker`() = runTest {
+        snapshotCache.write(VAULT_ID, LAST_RENDERED.copy(showPositionSelectionDialog = true))
+        neverAnswersSelection()
+
+        val data = successData(createViewModel().also { it.setData(VAULT_ID) })
+
+        assertFalse(data.showPositionSelectionDialog)
+    }
+
+    @Test
+    fun `hands the rendered state to the cache when the screen is popped`() = runTest {
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        val rendered = successData(vm)
+
+        vm.clearForTest()
+
+        assertEquals(rendered, snapshotCache.read(VAULT_ID, MayachainDefiPositionsUiModel::class))
+    }
+
+    /**
+     * Leaves the saved-selection read suspended, so nothing the loads do can overwrite a restored
+     * snapshot while the assertion runs.
+     */
+    private fun neverAnswersSelection() {
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
+            flow { awaitCancellation() }
+    }
+
     private fun selectPositions(vararg keys: String) {
         coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
             flowOf(keys.toSet())
@@ -982,10 +1092,22 @@ internal class MayachainDefiPositionsViewModelTest {
             // Real calculator over the mocked price repository: the fiat assertions below stay
             // end-to-end rather than asserting against a stubbed conversion.
             fiatValueCalculator = DefiFiatValueCalculator(tokenPriceRepository),
+            snapshotCache = snapshotCache,
             ioDispatcher = testDispatcher,
         )
 
     private companion object {
+        /** A settled screen, as the cache would have it after the user walked away from one. */
+        val LAST_RENDERED =
+            MayachainDefiPositionsUiModel(
+                totalAmountPrice = "$12.34",
+                isTotalAmountLoading = false,
+                bonded =
+                    BondedTabUiModel(totalBondedAmount = "5 CACAO", totalBondedPrice = "$10.00"),
+                selectedPositions = emptyList(),
+                tempSelectedPositions = emptyList(),
+            )
+
         const val VAULT_ID = "vault-1"
         const val CACAO_ADDRESS = "maya1cacaoaddress"
         const val NODE_ADDRESS = "maya1qwertyuiopasdfgh"

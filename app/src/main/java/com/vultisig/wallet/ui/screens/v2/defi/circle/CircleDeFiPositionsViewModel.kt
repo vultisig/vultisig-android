@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
+import com.vultisig.wallet.ui.models.defi.DeFiPositionsSnapshotCache
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -53,6 +54,13 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/**
+ * Last-known Circle state for a vault: what the screen rendered, plus the MSCA account it was
+ * routing withdrawals to. The address is held outside the state, so it travels with it — restoring
+ * an open account without it would leave Withdraw dead until the reload lands.
+ */
+internal data class CircleDeFiSnapshot(val model: DefiUiModel, val mscaAddress: String?)
+
 /** ViewModel for the Circle USDC DeFi positions screen. */
 @HiltViewModel
 internal class CircleDeFiPositionsViewModel
@@ -69,6 +77,7 @@ constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val snapshotCache: DeFiPositionsSnapshotCache,
     @ApplicationContext private val context: Context,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -76,6 +85,9 @@ constructor(
     private lateinit var vaultId: String
     private var mscaAddress: String? = null
     private var loadJob: Job? = null
+
+    // Guards the one-shot restore, so a later setData cannot seed over a rendered load.
+    private var hasRestoredSnapshot = false
 
     private val _state =
         MutableStateFlow(
@@ -98,9 +110,33 @@ constructor(
     /** Initializes the ViewModel with [vaultId] and starts loading positions. */
     fun setData(vaultId: String) {
         this.vaultId = vaultId
+        restoreSnapshot(vaultId)
         loadBalanceVisibility()
         loadAccountStatus()
         loadCirclePositions()
+    }
+
+    /**
+     * Paints the deposit this vault last showed instead of the banner's loading state. The load
+     * [setData] starts right after re-reads the account and the balance, so a restored figure only
+     * stands for as long as the network takes to answer.
+     */
+    private fun restoreSnapshot(vaultId: String) {
+        if (hasRestoredSnapshot) return
+        hasRestoredSnapshot = true
+        val cached = snapshotCache.read(vaultId, CircleDeFiSnapshot::class) ?: return
+        mscaAddress = cached.mscaAddress
+        _state.value = cached.model
+    }
+
+    override fun onCleared() {
+        if (::vaultId.isInitialized) {
+            snapshotCache.write(
+                vaultId,
+                CircleDeFiSnapshot(model = _state.value, mscaAddress = mscaAddress),
+            )
+        }
+        super.onCleared()
     }
 
     /** Triggers a user-initiated pull-to-refresh; resets [isRefreshing] when complete. */
@@ -144,12 +180,17 @@ constructor(
         loadJob =
             viewModelScope.launch {
                 try {
-                    // Initial UI
+                    // Only cold-start into the loading state. A screen already showing a deposit —
+                    // restored from the snapshot, or refreshed by a pull — keeps its figures while
+                    // this read runs, rather than blanking a position the user holds for the
+                    // duration of a network call.
                     _state.update { currentState ->
-                        currentState.copy(
-                            isTotalAmountLoading = true,
-                            circleDefi = currentState.circleDefi.copy(isLoading = true),
-                        )
+                        if (currentState.totalAmountPrice != null) currentState
+                        else
+                            currentState.copy(
+                                isTotalAmountLoading = true,
+                                circleDefi = currentState.circleDefi.copy(isLoading = true),
+                            )
                     }
 
                     // Check account exists

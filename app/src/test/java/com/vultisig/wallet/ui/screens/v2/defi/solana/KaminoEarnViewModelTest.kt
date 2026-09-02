@@ -19,8 +19,11 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.KaminoVaultSelectionRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.ui.models.defi.DeFiPositionsSnapshotCache
+import com.vultisig.wallet.ui.models.defi.clearForTest
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.screens.v2.defi.DefiFiatTotal
 import io.kotest.assertions.withClue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -35,7 +38,9 @@ import java.text.NumberFormat
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -58,6 +63,8 @@ internal class KaminoEarnViewModelTest {
     private lateinit var tokenPriceRepository: TokenPriceRepository
     private lateinit var appCurrencyRepository: AppCurrencyRepository
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
+    // The real cache, not a mock: these tests assert the round trip a nav pop and a re-entry make.
+    private lateinit var snapshotCache: DeFiPositionsSnapshotCache
 
     private val defaultLocale = Locale.getDefault()
 
@@ -75,6 +82,7 @@ internal class KaminoEarnViewModelTest {
         tokenPriceRepository = mockk(relaxed = true)
         appCurrencyRepository = mockk(relaxed = true)
         balanceVisibilityRepository = mockk(relaxed = true)
+        snapshotCache = DeFiPositionsSnapshotCache()
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
@@ -102,8 +110,78 @@ internal class KaminoEarnViewModelTest {
             tokenPriceRepository = tokenPriceRepository,
             appCurrencyRepository = appCurrencyRepository,
             balanceVisibilityRepository = balanceVisibilityRepository,
+            snapshotCache = snapshotCache,
             ioDispatcher = testDispatcher,
         )
+
+    @Test
+    fun `a re-entry paints the cards the tab was last showing`() = runTest {
+        // Earn is the tab the Solana screen opens on, so this cold start is the wait every
+        // re-entry paid: no cards, no total, until the vault fan-out came back.
+        snapshotCache.write(VAULT_ID, LAST_RENDERED)
+        // Suspend the selection read so the only state on screen is the restored one.
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flow { awaitCancellation() }
+
+        val state = viewModel().also { it.setData(VAULT_ID) }.state.value
+
+        state.rows.map { it.vaultAddress } shouldBe listOf(STEAKHOUSE.address)
+        state.rows.single().depositedDisplay shouldBe "100 USDC"
+        state.totalValue.shouldNotBeNull().value shouldBe BigDecimal("100")
+        state.hasEnabledVaults shouldBe true
+    }
+
+    @Test
+    fun `a restored total survives the next load rather than being dropped on sight`() = runTest {
+        // The total answers one question — this selection, in this currency — and the coverage it
+        // was summed over travels with it. Without that the load drops it the moment it starts,
+        // which is the flash the snapshot exists to remove.
+        snapshotCache.write(VAULT_ID, LAST_RENDERED)
+        // The selection the restored total was summed over, so the load gets far enough to run its
+        // drop check for real; the fan-out behind it is held, so nothing can rebuild the figures
+        // and the total on screen is still the restored one.
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address))
+        coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } coAnswers { awaitCancellation() }
+
+        val state = viewModel().also { it.setData(VAULT_ID) }.state.value
+
+        state.totalValue.shouldNotBeNull().value shouldBe BigDecimal("100")
+        state.rows.single().depositedDisplay shouldBe "100 USDC"
+    }
+
+    @Test
+    fun `a re-entry does not reopen the vault picker`() = runTest {
+        snapshotCache.write(
+            VAULT_ID,
+            LAST_RENDERED.copy(
+                model =
+                    LAST_RENDERED.model.copy(
+                        isShowingPicker = true,
+                        pendingSelection = setOf(STEAKHOUSE.address),
+                    )
+            ),
+        )
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flow { awaitCancellation() }
+
+        val state = viewModel().also { it.setData(VAULT_ID) }.state.value
+
+        state.isShowingPicker shouldBe false
+        state.pendingSelection shouldBe emptySet()
+    }
+
+    @Test
+    fun `hands the rendered cards to the cache when the screen is popped`() = runTest {
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns flowOf(emptySet())
+        val vm = viewModel().also { it.setData(VAULT_ID) }
+        val rendered = vm.state.value
+
+        vm.clearForTest()
+
+        snapshotCache.read(VAULT_ID, KaminoEarnSnapshot::class).shouldNotBeNull().model shouldBe
+            rendered
+    }
 
     private fun stubVault(name: String) =
         KaminoVaultStateJson(
@@ -736,6 +814,37 @@ internal class KaminoEarnViewModelTest {
 
         val STEAKHOUSE = KaminoVaultRegistry.STEAKHOUSE_USDC
         val ALLEZ = KaminoVaultRegistry.ALLEZ_SOL
+
+        /** A settled tab, as the cache would have it after the user walked away from one. */
+        val LAST_RENDERED =
+            KaminoEarnSnapshot(
+                model =
+                    KaminoEarnUiModel(
+                        hasEnabledVaults = true,
+                        rows =
+                            listOf(
+                                KaminoEarnRow(
+                                    vaultAddress = STEAKHOUSE.address,
+                                    name = "Steakhouse USDC",
+                                    curator = STEAKHOUSE.curator,
+                                    riskTier = STEAKHOUSE.riskTier,
+                                    tokenLogo = "usdc",
+                                    tokenTicker = "USDC",
+                                    depositedDisplay = "100 USDC",
+                                    depositedFiat = "$100.00",
+                                    apyDisplay = "5.00%",
+                                    pnlDisplay = null,
+                                    pnlFiat = null,
+                                    pnlDirection = KaminoEarnRow.PnlDirection.FLAT,
+                                    fiatValue = BigDecimal("100"),
+                                    hasPosition = true,
+                                )
+                            ),
+                        totalValue = DefiFiatTotal(BigDecimal("100"), AppCurrency.USD),
+                    ),
+                totalCoverage = setOf(STEAKHOUSE.address),
+                pricedCurrency = AppCurrency.USD,
+            )
 
         val VAULT =
             Vault(
