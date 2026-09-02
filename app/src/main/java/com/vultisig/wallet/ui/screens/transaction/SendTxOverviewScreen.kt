@@ -109,7 +109,11 @@ internal fun SendTxOverviewScreen(
         tokenContent = {
             TransactionHero(
                 heroContent = tx.heroContent.takeUnless { it == HeroContent.Unverified },
-                functionName = tx.functionName,
+                // A decoder reading outranks the raw function name: "Approved", with the amount and
+                // the asset it was read from, says more than the selector it was decoded out of.
+                // A Blockaid simulation above still wins, since it carries figures the decoder has
+                // no way to improve on.
+                functionName = tx.functionName.takeIf { tx.operationHero == null },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 val trustSet = tx.rippleTrustSet
@@ -424,9 +428,9 @@ private fun doneHeroDisplay(tx: UiTransactionInfo): DoneHeroDisplay {
                 verb = verb,
                 tokenLogo = getCoinLogo(hero.coin.logo),
                 ticker = hero.coin.ticker,
-                // The decoder resolves its asset from the signed units, which may not be the
-                // payload's coin, so the payload's chain badge would mislabel it.
-                chainLogo = null,
+                // The badge travels with the resolved asset rather than the payload's coin, so a
+                // decoded USDC amount keeps its Base or Arbitrum context.
+                chainLogo = hero.coin.chainLogo,
                 value = hero.coin.amount,
                 fiatValue = hero.coin.fiatValue,
             )
@@ -438,7 +442,7 @@ private fun doneHeroDisplay(tx: UiTransactionInfo): DoneHeroDisplay {
                     verb = verb,
                     tokenLogo = getCoinLogo(estimate.logo),
                     ticker = estimate.ticker,
-                    chainLogo = null,
+                    chainLogo = estimate.chainLogo,
                     // A projection settles at execution, so it stays visibly approximate — and the
                     // scope below it is the part that stays exact.
                     value = "≈ ${estimate.amount}",

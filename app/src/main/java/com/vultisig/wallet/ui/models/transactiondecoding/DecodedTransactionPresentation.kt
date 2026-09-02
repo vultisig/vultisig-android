@@ -4,6 +4,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.isLayer2
+import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.transaction_decoding.DecodedAmount
 import com.vultisig.wallet.data.models.transaction_decoding.DecodedAsset
 import com.vultisig.wallet.data.models.transaction_decoding.DecodedOperation
@@ -121,6 +123,11 @@ constructor(
             ticker = coin.ticker,
             logo = coin.logo,
             fiatValue = fiat,
+            // The badge follows the resolved asset, under the same rule the card applies to every
+            // other token: a USDC amount keeps its Base or Arbitrum context, a native asset needs
+            // no badge, and an L2 native keeps one because its ticker alone is ambiguous.
+            chainLogo =
+                coin.chain.monoToneLogo.takeIf { !coin.isNativeToken || coin.chain.isLayer2 },
         )
     }
 

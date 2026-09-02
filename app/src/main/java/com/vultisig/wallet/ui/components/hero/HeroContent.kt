@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.hero
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 
 /**
@@ -76,6 +77,10 @@ internal fun HeroContent.retitled(title: String?): HeroContent =
  * `fiatValue` is the pre-formatted fiat worth of `amount` (e.g. `$12.34`), rendered as a sub-line
  * under the amount. Null when no price was resolvable, or for callers that intentionally omit fiat
  * — a Blockaid simulation prices nothing, so only decoder-built amounts populate it.
+ *
+ * `chainLogo` is the badge drawable for the asset's own chain, so a decoder-resolved token keeps
+ * the chain context the card gives every other token. Null when the amount came from a source that
+ * resolved no chain — a Blockaid simulation — or for a native asset that needs no badge.
  */
 @Immutable
 data class HeroCoinAmount(
@@ -83,4 +88,5 @@ data class HeroCoinAmount(
     val ticker: String,
     val logo: String,
     val fiatValue: String? = null,
+    @DrawableRes val chainLogo: Int? = null,
 )

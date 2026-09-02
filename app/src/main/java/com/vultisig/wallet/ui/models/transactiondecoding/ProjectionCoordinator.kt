@@ -11,6 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -62,11 +63,23 @@ constructor(@ApplicationContext private val context: Context) {
         val TIMEOUT = 5.seconds
 
         /**
-         * Applies the same deadline to every optional position read. Every failure — a timeout, a
-         * network error, an empty answer — degrades to the existing scope rather than fabricating a
-         * number.
+         * Applies the same deadline to every optional position read. An ordinary reader failure — a
+         * network error, a malformed response, an empty answer — degrades to the existing scope
+         * rather than fabricating a number.
+         *
+         * Cancellation is rethrown rather than swallowed. The deadline itself cancels through
+         * [withTimeoutOrNull], and a caller going away (the view model being cleared) must not be
+         * turned into a silent null that leaves the rest of the coroutine running.
          */
         suspend fun estimate(read: suspend () -> HeroCoinAmount?): HeroCoinAmount? =
-            withTimeoutOrNull(TIMEOUT) { runCatching { read() }.getOrNull() }
+            withTimeoutOrNull(TIMEOUT) {
+                try {
+                    read()
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (_: Exception) {
+                    null
+                }
+            }
     }
 }
