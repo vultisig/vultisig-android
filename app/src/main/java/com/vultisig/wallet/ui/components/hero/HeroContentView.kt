@@ -54,6 +54,7 @@ internal fun HeroContentView(content: HeroContent, modifier: Modifier = Modifier
                 )
             is HeroContent.Send -> SendHero(content)
             is HeroContent.Swap -> SwapHero(content)
+            is HeroContent.Projected -> ProjectedHero(content)
         }
     }
 }
@@ -134,6 +135,24 @@ private fun SendHero(content: HeroContent.Send) {
     HeroCoinRow(coin = content.coin, iconSize = 36.dp)
 }
 
+/**
+ * An execution-set quantity: the scope the transaction commits to is always shown, and an estimate
+ * is rendered above it only when a position read resolved one. The estimate is prefixed so it can
+ * never be mistaken for a committed amount.
+ */
+@Composable
+private fun ProjectedHero(content: HeroContent.Projected) {
+    content.title?.let { TitleAbove(it) }
+    content.estimate?.let { HeroCoinRow(coin = it, iconSize = 36.dp, approximate = true) }
+    Text(
+        text = content.scope,
+        style = Theme.brockmann.body.s.medium,
+        color = Theme.v2.colors.text.tertiary,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
 @Composable
 private fun SwapHero(content: HeroContent.Swap) {
     content.title?.let { TitleAbove(it) }
@@ -160,7 +179,7 @@ private fun TitleAbove(title: String) {
 }
 
 @Composable
-private fun HeroCoinRow(coin: HeroCoinAmount, iconSize: Dp) {
+private fun HeroCoinRow(coin: HeroCoinAmount, iconSize: Dp, approximate: Boolean = false) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -209,8 +228,9 @@ private fun HeroCoinRow(coin: HeroCoinAmount, iconSize: Dp) {
         }
         val tertiaryColor = Theme.v2.colors.text.tertiary
         val text =
-            remember(coin.amount, coin.ticker, tertiaryColor) {
+            remember(coin.amount, coin.ticker, tertiaryColor, approximate) {
                 buildAnnotatedString {
+                    if (approximate) append("≈ ")
                     append(coin.amount)
                     withStyle(SpanStyle(color = tertiaryColor)) { append(" ${coin.ticker}") }
                 }
@@ -226,6 +246,17 @@ private fun HeroCoinRow(coin: HeroCoinAmount, iconSize: Dp) {
             // ellipsis the user has no cue that the displayed value is truncated.
             overflow = TextOverflow.Ellipsis,
         )
+        // Only decoder-built amounts carry a price; a Blockaid simulation resolves none, so the
+        // sub-line is absent rather than showing a zero worth.
+        coin.fiatValue?.let { fiat ->
+            Text(
+                text = fiat,
+                style = Theme.brockmann.supplementary.captionSmall,
+                color = tertiaryColor,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
+        }
     }
 }
 

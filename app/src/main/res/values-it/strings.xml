@@ -1731,4 +1731,33 @@
     <string name="cosmos_staking_redelegate_cooldown_fallback">Il validatore di origine è in un periodo di attesa di ridelegazione</string>
     <string name="cosmos_staking_insufficient_fee_balance">%1$s liquido insufficiente per coprire la commissione di rete. Riscuoti prima le ricompense o ricarica.</string>
     <string name="cosmos_staking_max_entries_reached">Hai raggiunto il numero massimo di %1$d richieste in sospeso per questo validatore. Attendi che una si completi prima di continuare.</string>
+    <!-- Transaction done screen: past-tense operation vocabulary read from the signed transaction -->
+    <string name="done_verb_sent">Inviato</string>
+    <string name="done_verb_approved">Approvato</string>
+    <string name="done_verb_staked">Messo in stake</string>
+    <string name="done_verb_unstaked">Stake annullato</string>
+    <string name="done_verb_bonded">Vincolato</string>
+    <string name="done_verb_unbonded">Svincolato</string>
+    <string name="done_verb_rebonded">Rivincolato</string>
+    <string name="done_verb_left">Uscito</string>
+    <string name="done_verb_delegated">Delegato</string>
+    <string name="done_verb_undelegated">Delega annullata</string>
+    <string name="done_verb_redelegated">Ridelegato</string>
+    <string name="done_verb_claimed_rewards">Ricompense reclamate</string>
+    <string name="done_verb_minted">Coniato</string>
+    <string name="done_verb_redeemed">Riscattato</string>
+    <string name="done_verb_withdrew">Prelevato</string>
+    <string name="done_verb_added_liquidity">Liquidità aggiunta</string>
+    <string name="done_verb_removed_liquidity">Liquidità rimossa</string>
+    <string name="done_verb_merged">Unito</string>
+    <string name="done_verb_unmerged">Separato</string>
+    <string name="done_verb_bridged">Trasferito tra catene</string>
+    <string name="done_verb_voted">Voto espresso</string>
+    <string name="done_verb_deposited">Depositato</string>
+    <string name="done_verb_switched">Spostato</string>
+    <string name="done_verb_placed_limit_order">Ordine limite piazzato</string>
+    <string name="limit_swap_cancel_done_sent">Annullamento inviato</string>
+    <string name="scope_your_whole_stake">tutto il tuo stake</string>
+    <string name="scope_rewards_accrued_so_far">ricompense maturate finora</string>
+    <string name="withdrawing_share_of_staked_position">%1$s della tua posizione in stake</string>
 </resources>

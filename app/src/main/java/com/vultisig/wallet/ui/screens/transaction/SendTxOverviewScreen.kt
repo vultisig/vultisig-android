@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,9 +25,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.RippleDappTx
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.RippleTrustSetDisplay
+import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.SignRippleDisplayView
@@ -72,6 +77,12 @@ internal fun SendTxOverviewScreen(
     // and surface the caution as the Figma caution box (amber banner) pinned at the bottom.
     val isUnverifiedFunction = tx.heroContent == HeroContent.Unverified
 
+    // A Blockaid verdict of "could not verify this function" is a claim about this exact
+    // transaction, and the caution banner below still makes it. Letting a decoder reading restate
+    // the same transaction as a confident "Approved 500 USDC" above that banner would put the two
+    // in direct contradiction, so the simulation's verdict wins and the reading stands down.
+    val operationHero = tx.operationHero.takeUnless { isUnverifiedFunction }
+
     TxDoneScaffold(
         transactionHash = transactionHash,
         transactionLink = transactionLink,
@@ -104,7 +115,11 @@ internal fun SendTxOverviewScreen(
         tokenContent = {
             TransactionHero(
                 heroContent = tx.heroContent.takeUnless { it == HeroContent.Unverified },
-                functionName = tx.functionName,
+                // A decoder reading outranks the raw function name: "Approved", with the amount and
+                // the asset it was read from, says more than the selector it was decoded out of.
+                // A Blockaid simulation above still wins, since it carries figures the decoder has
+                // no way to improve on.
+                functionName = tx.functionName.takeIf { operationHero == null },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 val trustSet = tx.rippleTrustSet
@@ -163,14 +178,16 @@ internal fun SendTxOverviewScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
+                        val display = doneHeroDisplay(tx, operationHero)
+
                         VsOverviewToken(
-                            header =
-                                if (tx.type == UiTransactionInfoType.Send) {
-                                    stringResource(R.string.tx_overview_screen_tx_send)
-                                } else {
-                                    stringResource(R.string.tx_overview_screen_tx_deposit)
-                                },
-                            valuedToken = tx.token,
+                            header = display.verb,
+                            tokenLogo = display.tokenLogo,
+                            ticker = display.ticker,
+                            chainLogo = display.chainLogo,
+                            value = display.value,
+                            fiatValue = display.fiatValue,
+                            scope = display.scope,
                             shape = Theme.v2.radius.xl,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -354,6 +371,129 @@ internal fun SendTxOverviewScreen(
     )
 }
 
+/**
+ * The verb, asset, amount, and fiat the done card renders.
+ *
+ * Mirrors the iOS `DoneHeroDisplay`. It selects between the decoder-driven reading and the existing
+ * normal-send presentation; the card itself is unchanged either way, and every field falls back to
+ * what the transaction already computed rather than to a fabricated figure.
+ */
+@Immutable
+internal data class DoneHeroDisplay(
+    val verb: String,
+    val tokenLogo: ImageModel,
+    val ticker: String,
+    val chainLogo: Int?,
+    val value: String,
+    val fiatValue: String?,
+    /**
+     * What the transaction committed to in words, for an amount that only settles at execution.
+     * Null for every reading whose quantity is stated outright by the signed content.
+     */
+    val scope: String? = null,
+)
+
+/**
+ * Builds the done card's display.
+ *
+ * With no decoder reading — a plain transfer, an unreadable transaction — this is exactly the
+ * existing card: the send/deposit header and the transaction's own token and figures. A reading
+ * replaces the verb and, where the signed content states a truthful quantity, the asset and amount
+ * with it. It never substitutes a zero or a carrier amount: a reading that resolved no amount shows
+ * the asset alone.
+ *
+ * [operationHero] is passed in rather than read off [tx] because the caller gates it: a reading is
+ * stood down when a Blockaid simulation has already declared the same transaction unverifiable.
+ */
+@Composable
+private fun doneHeroDisplay(tx: UiTransactionInfo, operationHero: HeroContent?): DoneHeroDisplay {
+    val token = tx.token.token
+    val fallbackLogo = getCoinLogo(token.logo)
+    val fallbackChainLogo =
+        token.chain.monoToneLogo.takeIf { !token.isNativeToken || token.chain.isLayer2 }
+    val fallbackVerb =
+        if (tx.type == UiTransactionInfoType.Send) {
+            stringResource(R.string.tx_overview_screen_tx_send)
+        } else {
+            stringResource(R.string.tx_overview_screen_tx_deposit)
+        }
+
+    val fallback =
+        DoneHeroDisplay(
+            verb = fallbackVerb,
+            tokenLogo = fallbackLogo,
+            ticker = token.ticker,
+            chainLogo = fallbackChainLogo,
+            value = tx.token.value,
+            fiatValue = tx.token.fiatValue,
+        )
+
+    val hero = operationHero ?: return fallback
+    val verb = hero.title ?: fallbackVerb
+
+    return when (hero) {
+        is HeroContent.Send ->
+            DoneHeroDisplay(
+                verb = verb,
+                tokenLogo = getCoinLogo(hero.coin.logo),
+                ticker = hero.coin.ticker,
+                // The badge travels with the resolved asset rather than the payload's coin, so a
+                // decoded USDC amount keeps its Base or Arbitrum context.
+                chainLogo = hero.coin.chainLogo,
+                value = hero.coin.amount,
+                fiatValue = hero.coin.fiatValue,
+            )
+
+        is HeroContent.Projected -> {
+            val estimate = hero.estimate
+            if (estimate != null) {
+                DoneHeroDisplay(
+                    verb = verb,
+                    tokenLogo = getCoinLogo(estimate.logo),
+                    ticker = estimate.ticker,
+                    chainLogo = estimate.chainLogo,
+                    // A projection settles at execution, so it stays visibly approximate — and the
+                    // scope below it is the part that stays exact.
+                    value = "≈ ${estimate.amount}",
+                    fiatValue = estimate.fiatValue,
+                    scope = hero.scope,
+                )
+            } else {
+                // The position read resolved nothing, so the scope is the only thing the decoder
+                // proved — and it is shown alone. The payload's coin is the carrier here, not
+                // necessarily the asset the operation acted on: a TCY unstake is signed against a
+                // dust RUNE amount, and naming RUNE would be a claim the reading never made.
+                DoneHeroDisplay(
+                    verb = verb,
+                    tokenLogo = fallbackLogo,
+                    ticker = "",
+                    chainLogo = null,
+                    value = "",
+                    fiatValue = null,
+                    scope = hero.scope,
+                )
+            }
+        }
+
+        // A title-only reading names an operation and nothing else. Keeping the payload token
+        // would pair "Claimed rewards" with branding for an asset the reading never identified.
+        is HeroContent.Title ->
+            DoneHeroDisplay(
+                verb = verb,
+                tokenLogo = fallbackLogo,
+                ticker = "",
+                chainLogo = null,
+                value = "",
+                fiatValue = null,
+            )
+
+        // A swap done screen is owned by its own two-sided layout, and an Unverified hero is never
+        // produced by the decoder; both keep the transaction's existing figures.
+        is HeroContent.Swap,
+        HeroContent.Unverified -> fallback
+    }
+}
+
 @Composable
 private fun AddToAddressBookButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     Row(
@@ -497,6 +637,12 @@ internal data class UiTransactionInfo(
      * Carried through from [com.vultisig.wallet.ui.models.TransactionDetailsUiModel.heroContent].
      */
     val heroContent: HeroContent? = null,
+    /**
+     * Decoder-selected operation data for the existing normal-send done hero. Kept separate from
+     * [heroContent], whose Blockaid-simulated figures own a richer layout, so a decoder reading can
+     * relabel the card without discarding trusted amounts.
+     */
+    val operationHero: HeroContent? = null,
     /**
      * Decoded terms of a dApp-supplied XRPL transaction (SignRipple). When present the done screen
      * shows the decoded summary (Type / Selling / Buying / Issuer) instead of a "0 XRP" hero — the

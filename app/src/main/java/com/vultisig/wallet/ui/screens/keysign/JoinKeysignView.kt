@@ -223,6 +223,7 @@ internal fun JoinKeysignView() {
                     hasBackClick = false,
                     dappMetadata = dappMetadata,
                     coinLogoRes = keysignViewModel.coinLogoRes,
+                    operationHero = keysignUiState.operationHero,
                 )
             }
 
