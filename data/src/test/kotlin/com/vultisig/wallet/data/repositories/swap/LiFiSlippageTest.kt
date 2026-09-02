@@ -48,6 +48,13 @@ class LiFiSlippageTest {
     }
 
     @Test
+    fun `a non-positive override falls back to the tier instead of sending zero`() {
+        assertEquals(30, LiFiSlippage.resolveBps(0, "USDC", "USDT"))
+        assertEquals(100, LiFiSlippage.resolveBps(0, "ETH", "WBTC"))
+        assertEquals(100, LiFiSlippage.resolveBps(-25, "ETH", "WBTC"))
+    }
+
+    @Test
     fun `every auto tier is a real tolerance, never zero`() {
         assertTrue(LiFiSlippage.STABLE_PAIR_BPS > 0)
         assertTrue(LiFiSlippage.DEFAULT_BPS > LiFiSlippage.STABLE_PAIR_BPS)

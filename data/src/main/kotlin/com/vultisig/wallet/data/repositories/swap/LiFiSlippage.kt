@@ -60,10 +60,17 @@ internal object LiFiSlippage {
 
     /**
      * [override] is the user's own tolerance in basis points, or null for "Auto" — in which case
-     * the pair picks the tier. Never returns null, so the `slippage` param is always sent.
+     * the pair picks the tier. Never returns null or zero, so the `slippage` param is always sent
+     * and always a real tolerance.
+     *
+     * A non-positive [override] falls back to the tier rather than throwing: the swap form only
+     * ever hands over a preset or a value it already clamped to 1 bps and up, so this is an
+     * unreachable state, and failing a quote over it would be a worse outcome than quoting at the
+     * Auto tolerance.
      */
     fun resolveBps(override: Int?, srcTicker: String, dstTicker: String): Int =
-        override ?: if (isStablePair(srcTicker, dstTicker)) STABLE_PAIR_BPS else DEFAULT_BPS
+        override?.takeIf { it > 0 }
+            ?: if (isStablePair(srcTicker, dstTicker)) STABLE_PAIR_BPS else DEFAULT_BPS
 
     private fun isStable(ticker: String): Boolean = ticker.uppercase() in STABLE_TICKERS
 }
