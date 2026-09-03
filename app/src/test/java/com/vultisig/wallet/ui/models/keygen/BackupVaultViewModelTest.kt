@@ -104,6 +104,8 @@ internal class BackupVaultViewModelTest {
             snackbarFlow = snackbarFlow,
             saveBackupToUri = saveBackupToUri,
             deleteBackupDocument = deleteBackupDocument,
+            ioDispatcher = testDispatcher,
+            defaultDispatcher = testDispatcher,
         )
     }
 
