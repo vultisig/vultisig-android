@@ -1406,6 +1406,8 @@
     <string name="transaction_status_confirmed_label">Confirmada</string>
     <string name="transaction_status_failed_label">Fallida</string>
     <string name="transaction_status_refunded_label">Reembolsada</string>
+    <string name="transaction_status_failed_slippage_label">El precio superó la tolerancia de deslizamiento</string>
+    <string name="transaction_status_failed_slippage_description">El precio cambió antes de que se ejecutara este intercambio, por lo que el pago habría sido inferior a lo permitido por su tolerancia de deslizamiento y la red lo revirtió. Aumente la tolerancia de deslizamiento o inténtelo de nuevo.</string>
     <string name="transaction_status_in_progress_label">En progreso…</string>
     <string name="transaction_status_signed_label">Firmada</string>
     <string name="transaction_history_to_label">Para</string>

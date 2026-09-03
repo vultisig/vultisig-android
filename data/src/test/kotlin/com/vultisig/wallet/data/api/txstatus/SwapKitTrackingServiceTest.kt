@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.api.txstatus
 
+import com.vultisig.wallet.data.api.EvmApi
+import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.chains.ton.TonJettonTransfer
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTrackRequest
@@ -16,6 +18,8 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import java.math.BigInteger
@@ -34,10 +38,14 @@ class SwapKitTrackingServiceTest {
 
     private val api: SwapKitApi = mockk()
     private val tonApi: TonApi = mockk()
+    private val evmApi: EvmApi = mockk()
+    private val evmApiFactory: EvmApiFactory = mockk {
+        every { createEvmApi(any()) } returns evmApi
+    }
     private val transactionHistoryRepository: TransactionHistoryRepository = mockk()
 
     private fun service(): SwapKitTrackingService =
-        SwapKitTrackingServiceImpl(api, tonApi, transactionHistoryRepository)
+        SwapKitTrackingServiceImpl(api, tonApi, evmApiFactory, transactionHistoryRepository)
 
     private val userAddress = "UQuser000000000000000000000000000000000000000000user"
     private val escrow = "EQAbWJ3Y1HgIIvcMq1prG1anlDC0T3cZlAU7luPT6LmTpvbJ"
@@ -146,6 +154,44 @@ class SwapKitTrackingServiceTest {
     fun `untrackable chain returns Pending without hitting the API`() = runTest {
         service().checkSettlementStatus("0xbroadcast", Chain.Polkadot) shouldBe
             TransactionResult.Pending
+    }
+
+    @Test
+    fun `an EVM failure is explained with the deposit transaction's own revert reason`() = runTest {
+        coEvery { api.track(any()) } returns SwapKitTrackResponseJson(trackingStatus = "reverted")
+        coEvery { evmApi.getRevertReason("0xbroadcast") } returns "Insufficient output"
+
+        service().checkSettlementStatus("0xbroadcast", Chain.Ethereum) shouldBe
+            TransactionResult.Failed("Insufficient output")
+    }
+
+    /** `/track` said it failed; the chain has nothing to add. The row keeps what `/track` said. */
+    @Test
+    fun `an unexplained EVM failure keeps the tracking reason`() = runTest {
+        coEvery { api.track(any()) } returns SwapKitTrackResponseJson(trackingStatus = "reverted")
+        coEvery { evmApi.getRevertReason("0xbroadcast") } returns null
+
+        service().checkSettlementStatus("0xbroadcast", Chain.Ethereum) shouldBe
+            TransactionResult.Failed("SwapKit failed: reverted")
+    }
+
+    @Test
+    fun `a reason lookup that throws leaves the failure intact`() = runTest {
+        coEvery { api.track(any()) } returns SwapKitTrackResponseJson(trackingStatus = "reverted")
+        coEvery { evmApi.getRevertReason(any()) } throws RuntimeException("boom")
+
+        service().checkSettlementStatus("0xbroadcast", Chain.Ethereum) shouldBe
+            TransactionResult.Failed("SwapKit failed: reverted")
+    }
+
+    /** Only an EVM deposit can be replayed; a Solana failure must not reach for an EVM node. */
+    @Test
+    fun `a non-EVM failure is left alone`() = runTest {
+        coEvery { api.track(any()) } returns SwapKitTrackResponseJson(trackingStatus = "failed")
+
+        service().checkSettlementStatus("sig", Chain.Solana) shouldBe
+            TransactionResult.Failed("SwapKit failed: failed")
+        coVerify(exactly = 0) { evmApi.getRevertReason(any()) }
     }
 
     @Test

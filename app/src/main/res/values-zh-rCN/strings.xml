@@ -1736,6 +1736,8 @@
     <string name="transaction_status_confirmed_label">成功</string>
     <string name="transaction_status_failed_label">错误</string>
     <string name="transaction_status_refunded_label">已退款</string>
+    <string name="transaction_status_failed_slippage_label">价格超出滑点容差</string>
+    <string name="transaction_status_failed_slippage_description">此次交换执行前价格发生变动，支付金额将低于您的滑点容差允许的范围，网络已撤销该交易。请提高滑点容差或重试。</string>
     <string name="transaction_status_in_progress_label">进行中…</string>
     <string name="transaction_status_signed_label">已签名</string>
     <string name="transaction_history_to_label">至</string>

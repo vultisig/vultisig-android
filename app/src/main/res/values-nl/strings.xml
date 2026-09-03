@@ -1402,6 +1402,8 @@
     <string name="transaction_status_confirmed_label">Geslaagd</string>
     <string name="transaction_status_failed_label">Fout</string>
     <string name="transaction_status_refunded_label">Terugbetaald</string>
+    <string name="transaction_status_failed_slippage_label">Prijs ging voorbij de slippage-tolerantie</string>
+    <string name="transaction_status_failed_slippage_description">De prijs veranderde voordat deze wissel werd uitgevoerd, waardoor de uitbetaling lager zou zijn dan uw slippage-tolerantie toestaat en het netwerk hem heeft teruggedraaid. Verhoog uw slippage-tolerantie of probeer het opnieuw.</string>
     <string name="transaction_status_in_progress_label">Bezig…</string>
     <string name="transaction_status_signed_label">Ondertekend</string>
     <string name="transaction_history_to_label">Aan</string>

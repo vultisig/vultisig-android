@@ -119,7 +119,19 @@ internal fun TransactionDetailBottomSheet(
                 val refundReason = refunded?.reason?.asString()?.takeIf { it.isNotBlank() }
                 if (refundReason != null) {
                     UiSpacer(size = 16.dp)
-                    RefundReasonBanner(reason = refundReason)
+                    ReasonBanner(reason = refundReason, tint = Theme.v2.colors.alerts.warning)
+                }
+
+                // The row itself only ever says "Error". The sheet is where there is room to say
+                // what the user can do about it, for the failures the app can recognise (#5802).
+                val failureExplanation =
+                    (item.status as? TransactionStatusUiModel.Failed)?.explanation
+                if (failureExplanation != null) {
+                    UiSpacer(size = 16.dp)
+                    ReasonBanner(
+                        reason = stringResource(failureExplanation.descriptionRes),
+                        tint = Theme.v2.colors.alerts.error,
+                    )
                 }
 
                 UiSpacer(size = 24.dp)
@@ -397,27 +409,23 @@ private fun DetailInfoRows(
 }
 
 /**
- * Banner used in the transaction detail sheet to expose the THORChain/MayaChain refund reason
- * returned by Midgard. Sits alongside the explorer link so the user can both read the reason and
- * inspect the on-chain refund.
+ * Banner used in the transaction detail sheet to explain an outcome the row can only label: the
+ * THORChain/MayaChain refund reason returned by Midgard, or why a swap failed. Sits alongside the
+ * explorer link so the user can both read the reason and inspect the transaction on-chain.
+ *
+ * [tint] carries the severity — warning for a refund, which returned the funds, and error for a
+ * failure, which did not.
  */
 @Composable
-internal fun RefundReasonBanner(reason: String) {
+internal fun ReasonBanner(reason: String, tint: Color) {
     Text(
         text = reason.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) },
         style = Theme.brockmann.supplementary.footnote,
-        color = Theme.v2.colors.alerts.warning,
+        color = tint,
         modifier =
             Modifier.fillMaxWidth()
-                .border(
-                    width = 1.dp,
-                    color = Theme.v2.colors.alerts.warning.copy(alpha = 0.4f),
-                    shape = Theme.v2.radius.md,
-                )
-                .background(
-                    color = Theme.v2.colors.alerts.warning.copy(alpha = 0.10f),
-                    shape = Theme.v2.radius.md,
-                )
+                .border(width = 1.dp, color = tint.copy(alpha = 0.4f), shape = Theme.v2.radius.md)
+                .background(color = tint.copy(alpha = 0.10f), shape = Theme.v2.radius.md)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
     )
 }

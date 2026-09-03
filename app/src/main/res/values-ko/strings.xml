@@ -1434,6 +1434,8 @@
     <string name="transaction_status_confirmed_label">성공</string>
     <string name="transaction_status_failed_label">오류</string>
     <string name="transaction_status_refunded_label">환불됨</string>
+    <string name="transaction_status_failed_slippage_label">가격이 슬리피지 허용 범위를 벗어났습니다</string>
+    <string name="transaction_status_failed_slippage_description">이 스왑이 실행되기 전에 가격이 변동되어 슬리피지 허용 범위보다 적은 금액을 받게 되므로 네트워크가 거래를 되돌렸습니다. 슬리피지 허용 범위를 높이거나 다시 시도하세요.</string>
     <string name="transaction_status_in_progress_label">진행 중…</string>
     <string name="transaction_status_signed_label">서명됨</string>
     <string name="transaction_history_to_label">수신</string>
