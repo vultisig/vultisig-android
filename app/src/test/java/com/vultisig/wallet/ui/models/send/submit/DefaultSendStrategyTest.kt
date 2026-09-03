@@ -1949,6 +1949,88 @@ internal class DefaultSendStrategyTest {
         }
     }
 
+    /**
+     * ADA held covers the byte fee (180,000 lovelace) but not the extra
+     * `CardanoHelper.MIN_LOVELACE_ON_TOKEN_OUTPUT` (1.5 ADA) the token's recipient output pins.
+     * Submit must reject this up front rather than staging a keysign that WalletCore's planner
+     * would only refuse once signing has started.
+     */
+    @Test
+    fun `submit rejects a Cardano native-token send when ADA covers the fee but not the token output floor`() =
+        runTest {
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                val snekCoin = snekCoin()
+                val adaCoin = adaCoin()
+                val account =
+                    Account(
+                        token = snekCoin,
+                        tokenValue = TokenValue(BigInteger.valueOf(1_000_000L), snekCoin),
+                        fiatValue = null,
+                        price = null,
+                    )
+                vaultId = "vault-1"
+                selectedAccount = account
+                accounts.value =
+                    listOf(
+                        account,
+                        Account(
+                            token = adaCoin,
+                            tokenValue = TokenValue(BigInteger.valueOf(200_000L), adaCoin),
+                            fiatValue = null,
+                            price = null,
+                        ),
+                    )
+                addressFieldState.setTextAndPlaceCursorAtEnd("addr1dest")
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1000")
+                coEvery { accountValidator.validate() } returns
+                    ValidatedAccount(
+                        vaultId = "vault-1",
+                        selectedAccount = account,
+                        chain = Chain.Cardano,
+                        gasFee = TokenValue(BigInteger.valueOf(180_000L), adaCoin),
+                        dstAddress = "addr1dest",
+                    )
+                coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+                coEvery {
+                    blockChainSpecificRepository.getSpecific(
+                        chain = any(),
+                        address = any(),
+                        token = any(),
+                        gasFee = any(),
+                        isSwap = any(),
+                        isMaxAmountEnabled = any(),
+                        isDeposit = any(),
+                        dstAddress = any(),
+                        tokenAmountValue = any(),
+                        memo = any(),
+                        isThorchainRouterDeposit = any(),
+                    )
+                } returns
+                    BlockChainSpecificAndUtxo(
+                        BlockChainSpecific.Cardano(
+                            byteFee = 180_000L,
+                            sendMaxAmount = false,
+                            ttl = 1_000UL,
+                        )
+                    )
+                every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+                coEvery { getAvailableTokenBalance(any(), any()) } returns
+                    TokenValue(BigInteger.valueOf(1_000_000L), snekCoin)
+
+                build(this).submit()
+                advanceUntilIdle()
+
+                assertEquals(
+                    R.string.insufficient_native_token,
+                    (lastError as UiText.FormattedText).resId,
+                )
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+        }
+
     private fun snekCoin(): Coin =
         Coin(
             chain = Chain.Cardano,

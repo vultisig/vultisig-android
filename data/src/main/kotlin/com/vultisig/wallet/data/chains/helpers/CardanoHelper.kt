@@ -39,7 +39,7 @@ object CardanoHelper {
      * it dynamically (`Cardano.outputMinAdaAmount`) would be tighter but would put a per-device
      * value into the signed body, which is exactly what breaks a mixed-platform ceremony.
      */
-    private const val MIN_LOVELACE_ON_TOKEN_OUTPUT = 1_500_000L
+    const val MIN_LOVELACE_ON_TOKEN_OUTPUT = 1_500_000L
 
     /**
      * Assembles a [Cardano.SigningInput.Builder] from raw transaction parameters.
