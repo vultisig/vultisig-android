@@ -28,6 +28,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.models.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Broadcasted
@@ -40,6 +41,7 @@ import com.vultisig.wallet.ui.screens.transaction.components.TransactionStatusWi
 import com.vultisig.wallet.ui.screens.transaction.components.TypeBadge
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 
 @Composable
 internal fun SwapTransactionCard(
@@ -56,7 +58,7 @@ internal fun SwapTransactionCard(
         borderType = ContainerBorderType.Bordered(),
     ) {
         Box {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(swapCardPadding)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -129,6 +131,22 @@ internal fun SwapTransactionCard(
                             SendAmountText(amount = item.fromAmount, token = item.fromToken)
                         }
                     }
+
+                    val explanation = (item.status as? TransactionStatusUiModel.Failed)?.explanation
+                    if (explanation != null) {
+                        UiSpacer(size = 8.dp)
+                        Text(
+                            text = stringResource(explanation.labelRes),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.v2.colors.alerts.error,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        // The provider badge is anchored over this corner and overhangs the card's
+                        // own bottom padding, so a last flow child would be printed underneath it.
+                        if (item.provider.isNotEmpty()) {
+                            UiSpacer(size = viaBadgeClearance)
+                        }
+                    }
                 }
             }
 
@@ -170,6 +188,23 @@ private fun SwapAmountText(amount: String, token: String, modifier: Modifier = M
     )
 }
 
+private val viaBadgeVerticalPadding = 8.dp
+
+/** The provider logo — the tallest thing the badge ever holds, so it sets the badge's height. */
+private const val VIA_BADGE_CONTENT_SIZE = 16
+
+private val swapCardPadding = 16.dp
+
+private val failureLineGap = 8.dp
+
+/**
+ * How far the failure line has to be lifted to clear the provider badge. Derived from the badge's
+ * own geometry rather than eyeballed, so the two cannot drift apart: the badge is absolutely
+ * positioned over the card's bottom-end corner and stands taller than the padding it overhangs.
+ */
+private val viaBadgeClearance =
+    viaBadgeVerticalPadding * 2 + VIA_BADGE_CONTENT_SIZE.dp - swapCardPadding + failureLineGap
+
 @Composable
 private fun ViaBadge(provider: String, providerLogo: ImageModel?, modifier: Modifier = Modifier) {
     // The badge is anchored to the card's bottom-end corner, so its outer corner is not its own
@@ -189,10 +224,15 @@ private fun ViaBadge(provider: String, providerLogo: ImageModel?, modifier: Modi
             modifier
                 .background(color = Theme.v2.colors.backgrounds.tertiary_2, shape = shape)
                 .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
-                .padding(start = 8.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                .padding(
+                    start = 8.dp,
+                    end = 16.dp,
+                    top = viaBadgeVerticalPadding,
+                    bottom = viaBadgeVerticalPadding,
+                ),
     ) {
         if (providerLogo != null) {
-            TokenCircle(logo = providerLogo, ticker = provider, size = 16)
+            TokenCircle(logo = providerLogo, ticker = provider, size = VIA_BADGE_CONTENT_SIZE)
         }
         Text(
             text =
@@ -252,6 +292,42 @@ private fun PreviewSwapCardPending() {
                 previewSwapItem.copy(
                     status = Pending,
                     timestamp = System.currentTimeMillis() - 5_000L,
+                ),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewSwapCardFailedOnSlippage() {
+    OnBoardingComposeTheme {
+        SwapTransactionCard(
+            item =
+                previewSwapItem.copy(
+                    status =
+                        TransactionStatusUiModel.Failed(
+                            reason = UiText.DynamicString("Insufficient output"),
+                            explanation = TransactionFailureExplanation.MIN_OUTPUT_SLIPPAGE,
+                        ),
+                    provider = "LI.FI",
+                ),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewSwapCardFailedWithoutExplanation() {
+    OnBoardingComposeTheme {
+        SwapTransactionCard(
+            item =
+                previewSwapItem.copy(
+                    status =
+                        TransactionStatusUiModel.Failed(
+                            reason = UiText.DynamicString("Transaction reverted")
+                        )
                 ),
             modifier = Modifier.fillMaxWidth().padding(16.dp),
         )

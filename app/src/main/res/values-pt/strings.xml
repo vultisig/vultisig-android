@@ -1407,6 +1407,8 @@
     <string name="transaction_status_confirmed_label">Bem-sucedida</string>
     <string name="transaction_status_failed_label">Erro</string>
     <string name="transaction_status_refunded_label">Reembolsada</string>
+    <string name="transaction_status_failed_slippage_label">O preço ultrapassou a tolerância de derrapagem</string>
+    <string name="transaction_status_failed_slippage_description">O preço mudou antes de esta troca ser executada, portanto o pagamento teria sido inferior ao permitido pela sua tolerância de derrapagem e a rede reverteu-a. Aumente a tolerância de derrapagem ou tente novamente.</string>
     <string name="transaction_status_in_progress_label">Em andamento…</string>
     <string name="transaction_status_signed_label">Assinada</string>
     <string name="transaction_history_to_label">Para</string>

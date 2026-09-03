@@ -4,6 +4,7 @@ import java.math.BigInteger
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 
 @Serializable
 data class RpcPayload(
@@ -63,6 +64,39 @@ data class RpcResponseResultJson(
 
 @Serializable
 data class RpcError(@SerialName("code") val code: Int, @SerialName("message") val message: String)
+
+/**
+ * The subset of `eth_getTransactionByHash` needed to replay a mined transaction with `eth_call`.
+ * Every field but `from` is optional: a contract creation has no `to`, and a node that omits
+ * `blockNumber` is still reporting a pending transaction, which cannot be replayed at a block.
+ */
+@Serializable
+data class EvmTxByHashJson(
+    @SerialName("from") val from: String,
+    @SerialName("to") val to: String? = null,
+    @SerialName("input") val input: String? = null,
+    @SerialName("value") val value: String? = null,
+    @SerialName("gas") val gas: String? = null,
+    @SerialName("blockNumber") val blockNumber: String? = null,
+)
+
+/**
+ * An `eth_call` error, kept separate from [RpcError] because a revert's payload arrives under
+ * `data` in a shape the node chooses — a hex string on most, a nested object on some — so it is
+ * modelled as a raw [JsonElement] and narrowed at the point of decoding.
+ */
+@Serializable
+data class EvmCallErrorJson(
+    @SerialName("code") val code: Int? = null,
+    @SerialName("message") val message: String? = null,
+    @SerialName("data") val data: JsonElement? = null,
+)
+
+@Serializable
+data class EvmCallResponseJson(
+    @SerialName("result") val result: String? = null,
+    @SerialName("error") val error: EvmCallErrorJson? = null,
+)
 
 @Serializable data class ErrorSendTransactionJson(@SerialName("message") val message: String)
 

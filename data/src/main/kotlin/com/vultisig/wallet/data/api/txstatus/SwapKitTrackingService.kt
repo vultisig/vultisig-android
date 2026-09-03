@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api.txstatus
 
+import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.chains.ton.tonUserFriendlyAddress
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTrackRequest
@@ -7,6 +8,7 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitTrackResponseJson
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import java.math.BigDecimal
@@ -49,6 +51,7 @@ internal class SwapKitTrackingServiceImpl
 constructor(
     private val api: SwapKitApi,
     private val tonApi: TonApi,
+    private val evmApiFactory: EvmApiFactory,
     private val transactionHistoryRepository: TransactionHistoryRepository,
 ) : SwapKitTrackingService {
 
@@ -75,6 +78,12 @@ constructor(
                     response.fromAsset == response.toAsset
             ) {
                 resolveTonSettlement(response, broadcastHash, chain)
+            } else if (result is TransactionResult.Failed) {
+                // Layer 2: `/track` names the leg that failed, never why. On EVM the deposit tx
+                // itself can say — an aggregator's min-output check reverts with a reason — so the
+                // chain is asked before the row is retired, since a terminal row is never polled
+                // again and the block ages out of a non-archive node's state.
+                withEvmRevertReason(result, broadcastHash, chain)
             } else {
                 result
             }
@@ -84,6 +93,29 @@ constructor(
             Timber.w(e, "SwapKit /track check failed for %s on %s", broadcastHash, chain.raw)
             TransactionResult.Pending
         }
+    }
+
+    /**
+     * Replaces `/track`'s generic failure text with the deposit transaction's own revert reason
+     * when the source chain is EVM and the node still states one. A non-EVM chain, or a replay that
+     * answers nothing, leaves [failure] exactly as `/track` reported it.
+     */
+    private suspend fun withEvmRevertReason(
+        failure: TransactionResult.Failed,
+        broadcastHash: String,
+        chain: Chain,
+    ): TransactionResult {
+        if (chain.standard != TokenStandard.EVM) return failure
+        val reason =
+            try {
+                evmApiFactory.createEvmApi(chain).getRevertReason(broadcastHash)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.d(e, "revert reason lookup failed for %s on %s", broadcastHash, chain.raw)
+                null
+            }
+        return reason?.let(TransactionResult::Failed) ?: failure
     }
 
     /**

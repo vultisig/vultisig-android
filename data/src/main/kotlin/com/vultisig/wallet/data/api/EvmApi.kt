@@ -2,14 +2,17 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.CustomTokenResponse
 import com.vultisig.wallet.data.api.models.EvmBaseFeeJson
+import com.vultisig.wallet.data.api.models.EvmCallResponseJson
 import com.vultisig.wallet.data.api.models.EvmFeeHistoryResponseJson
 import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
+import com.vultisig.wallet.data.api.models.EvmTxByHashJson
 import com.vultisig.wallet.data.api.models.EvmTxStatusJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.RpcResponse
 import com.vultisig.wallet.data.api.models.RpcResponseJson
 import com.vultisig.wallet.data.api.models.SendTransactionJson
 import com.vultisig.wallet.data.api.models.ZkGasFee
+import com.vultisig.wallet.data.api.txstatus.EvmRevertReason
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.EthereumRlpEncoder
 import com.vultisig.wallet.data.chains.helpers.Multicall3
@@ -29,6 +32,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -100,6 +104,16 @@ interface EvmApi {
     ): Map<String, BigInteger>
 
     suspend fun getTxStatus(txHash: String): EvmRpcResponseJson<EvmTxStatusJson>?
+
+    /**
+     * Replays a mined transaction with `eth_call` and returns the revert reason the node reports,
+     * or null when it reports none — the receipt only carries a pass/fail bit, so this is the only
+     * way to learn *why* a swap failed.
+     *
+     * Best called soon after the failure: the replay needs the state at the transaction's block,
+     * which a non-archive node keeps for a limited window and then discards.
+     */
+    suspend fun getRevertReason(txHash: String): String?
 
     /**
      * Prices the L1 data-availability fee of an OP-stack L2 transaction via the `GasPriceOracle`
@@ -804,6 +818,60 @@ class EvmApiImp(
                 null
             }
         return rpcResp
+    }
+
+    override suspend fun getRevertReason(txHash: String): String? {
+        val tx =
+            try {
+                fetch<EvmRpcResponseJson<EvmTxByHashJson>>(
+                        method = "eth_getTransactionByHash",
+                        params = buildJsonArray { add(txHash) },
+                    )
+                    .result
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.d("revert reason: cannot read tx %s — %s", txHash, e.message)
+                null
+            } ?: return null
+
+        // A contract creation has no callee to replay against, and a transaction still in the
+        // mempool has no block to replay at.
+        val to = tx.to?.takeIf { it.isNotBlank() } ?: return null
+        val blockNumber = tx.blockNumber?.takeIf { it.isNotBlank() } ?: return null
+
+        return try {
+            val response =
+                fetch<EvmCallResponseJson>(
+                    method = "eth_call",
+                    params =
+                        buildJsonArray {
+                            addJsonObject {
+                                put("from", tx.from)
+                                put("to", to)
+                                tx.input?.let { put("data", it) }
+                                tx.value?.let { put("value", it) }
+                                tx.gas?.let { put("gas", it) }
+                            }
+                            // The transaction's own block, not its predecessor: a swap whose
+                            // approval leg landed in the same block would otherwise replay without
+                            // that approval and report an allowance failure instead of the real
+                            // reason. The transaction reverted, so it left no state of its own for
+                            // the replay to trip over.
+                            add(blockNumber)
+                        },
+                )
+            EvmRevertReason.decode(response.error?.message, response.error?.data)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: NetworkException) {
+            // A node that answers a revert with a non-2xx still states the reason in the body, and
+            // NetworkException carries the extracted message.
+            EvmRevertReason.decode(e.message, data = null)
+        } catch (e: Exception) {
+            Timber.d("revert reason: replay failed for %s — %s", txHash, e.message)
+            null
+        }
     }
 
     companion object {

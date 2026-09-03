@@ -90,7 +90,13 @@ sealed interface TransactionStatusUiModel {
 
     data object Confirmed : TransactionStatusUiModel
 
-    data class Failed(val reason: UiText?) : TransactionStatusUiModel
+    /**
+     * @param reason the raw on-chain / provider text, kept for diagnostics.
+     * @param explanation what that reason means for the user, when the app recognises it. Null
+     *   leaves the row reporting a bare failure, as it always has.
+     */
+    data class Failed(val reason: UiText?, val explanation: TransactionFailureExplanation? = null) :
+        TransactionStatusUiModel
 
     /**
      * THORChain/MayaChain inbound tx that the network refunded (paused pool, unmet swap limit,
@@ -657,7 +663,10 @@ constructor(
 
                 TransactionStatus.CONFIRMED -> TransactionStatusUiModel.Confirmed
                 TransactionStatus.FAILED ->
-                    TransactionStatusUiModel.Failed(UiText.DynamicString(failureReason.orEmpty()))
+                    TransactionStatusUiModel.Failed(
+                        reason = UiText.DynamicString(failureReason.orEmpty()),
+                        explanation = TransactionFailureExplanation.from(failureReason),
+                    )
                 TransactionStatus.REFUNDED ->
                     TransactionStatusUiModel.Refunded(UiText.DynamicString(failureReason.orEmpty()))
                 // NotFound is transient — the indexer has not seen the tx yet. Render as Pending.
