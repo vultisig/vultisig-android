@@ -68,6 +68,7 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.hero.retitled
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
@@ -229,8 +230,16 @@ sealed interface TransactionStatus {
     /** Transaction has been confirmed on-chain. */
     data object Confirmed : TransactionStatus
 
-    /** Transaction failed or was rejected. */
-    data class Failed(val cause: UiText) : TransactionStatus
+    /**
+     * Transaction failed or was rejected.
+     *
+     * @param cause the raw provider / on-chain text, kept for diagnostics.
+     * @param explanation what that cause means for the user, when the app recognises it. This is
+     *   the screen the user decides whether to retry on, so a failure it can explain is explained
+     *   here and not only in history (#5802).
+     */
+    data class Failed(val cause: UiText, val explanation: TransactionFailureExplanation? = null) :
+        TransactionStatus
 
     /**
      * Transaction was accepted by the chain but refunded by the protocol (e.g. THORChain/Maya `type
@@ -1232,7 +1241,11 @@ constructor(
     private fun TransactionResult.toTransactionStatus() =
         when (this) {
             TransactionResult.Confirmed -> TransactionStatus.Confirmed
-            is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
+            is TransactionResult.Failed ->
+                TransactionStatus.Failed(
+                    cause = this.reason.asUiText(),
+                    explanation = TransactionFailureExplanation.from(this.reason),
+                )
             is TransactionResult.Refunded -> TransactionStatus.Refunded(this.reason.asUiText())
             TransactionResult.TimedOut -> TransactionStatus.StillConfirming
             TransactionResult.NotFound,

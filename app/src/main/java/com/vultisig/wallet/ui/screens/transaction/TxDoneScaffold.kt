@@ -272,15 +272,24 @@ private fun SuccessTransaction(
         // Surface the protocol's refund reason (paused pool, slip exceeded, etc.) on the done
         // screen. Kept outside the collapsed block above so it stays visible when the user expands
         // Transaction Details. Only Refunded carries a clean Midgard reason; Failed.cause is a raw
-        // provider error string (JSON blob, untranslated timeout literal) and is not shown here.
+        // provider error string (JSON blob, untranslated timeout literal) and is not shown here —
+        // a recognised failure is explained through its own banner below instead.
         (transactionStatus as? TransactionStatus.Refunded)
             ?.reason
             ?.asString()
             ?.takeIf { it.isNotBlank() }
             ?.let { reason ->
-                RefundReasonBanner(reason = reason)
+                ReasonBanner(reason = reason, tint = Theme.v2.colors.alerts.warning)
                 UiSpacer(8.dp)
             }
+
+        (transactionStatus as? TransactionStatus.Failed)?.explanation?.let { explanation ->
+            ReasonBanner(
+                reason = stringResource(explanation.descriptionRes),
+                tint = Theme.v2.colors.alerts.error,
+            )
+            UiSpacer(8.dp)
+        }
 
         dappMetadata
             ?.takeUnless { it.isEmpty }

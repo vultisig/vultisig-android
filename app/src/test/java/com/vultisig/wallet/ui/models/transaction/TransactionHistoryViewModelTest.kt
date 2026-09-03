@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.usecases.RefreshLimitOrdersUseCase
 import com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase
 import com.vultisig.wallet.ui.models.TransactionAssetUiModel
+import com.vultisig.wallet.ui.models.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryTab
 import com.vultisig.wallet.ui.models.TransactionHistoryViewModel
@@ -313,6 +314,56 @@ internal class TransactionHistoryViewModelTest {
         testScope.runCurrent()
 
         coVerify(exactly = 2) { refreshPendingTransactions(VAULT_ID) }
+    }
+
+    /**
+     * A failed row must reach the UI carrying an explanation the screen can show, not just the raw
+     * router text — that text is what history used to have and could say nothing useful about
+     * (#5802).
+     */
+    @Test
+    fun `a min-output revert reaches the UI as a slippage explanation`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(
+                listOf(
+                    inFlightEntity()
+                        .copy(
+                            status = TransactionStatus.FAILED,
+                            failureReason = "execution reverted: Insufficient output",
+                        )
+                )
+            )
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        val status =
+            vm.uiState.value.groups.single().transactions.single().status
+                as TransactionStatusUiModel.Failed
+        status.explanation shouldBe TransactionFailureExplanation.MIN_OUTPUT_SLIPPAGE
+    }
+
+    /** An unrecognised reason leaves the row exactly as it was: labelled "Error", nothing more. */
+    @Test
+    fun `an unrecognised failure reason produces no explanation`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(
+                listOf(
+                    inFlightEntity()
+                        .copy(
+                            status = TransactionStatus.FAILED,
+                            failureReason = "Transaction reverted",
+                        )
+                )
+            )
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        val status =
+            vm.uiState.value.groups.single().transactions.single().status
+                as TransactionStatusUiModel.Failed
+        status.explanation.shouldBeNull()
     }
 
     /** Leaving the screen stops the timer: a backgrounded history screen must not keep polling. */

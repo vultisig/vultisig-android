@@ -1415,6 +1415,8 @@
     <string name="transaction_status_confirmed_label">Potvrđeno</string>
     <string name="transaction_status_failed_label">Neuspješno</string>
     <string name="transaction_status_refunded_label">Vraćeno</string>
+    <string name="transaction_status_failed_slippage_label">Cijena je premašila toleranciju proklizavanja</string>
+    <string name="transaction_status_failed_slippage_description">Cijena se promijenila prije nego što je ova zamjena izvršena, pa bi isplata bila manja od one koju dopušta vaša tolerancija proklizavanja i mreža ju je poništila. Povećajte toleranciju proklizavanja ili pokušajte ponovno.</string>
     <string name="transaction_status_in_progress_label">U tijeku…</string>
     <string name="transaction_status_signed_label">Potpisano</string>
     <string name="transaction_history_to_label">Za</string>

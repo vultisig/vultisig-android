@@ -1411,6 +1411,8 @@
     <string name="transaction_status_confirmed_label">Riuscita</string>
     <string name="transaction_status_failed_label">Errore</string>
     <string name="transaction_status_refunded_label">Rimborsata</string>
+    <string name="transaction_status_failed_slippage_label">Il prezzo ha superato la tolleranza di slippage</string>
+    <string name="transaction_status_failed_slippage_description">Il prezzo è cambiato prima che questo scambio venisse eseguito, quindi il pagamento sarebbe stato inferiore a quanto consentito dalla tua tolleranza di slippage e la rete lo ha annullato. Aumenta la tolleranza di slippage o riprova.</string>
     <string name="transaction_status_in_progress_label">In corso…</string>
     <string name="transaction_status_signed_label">Firmata</string>
     <string name="transaction_history_to_label">A</string>

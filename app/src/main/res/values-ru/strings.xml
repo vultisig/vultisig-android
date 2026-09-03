@@ -1417,6 +1417,8 @@
     <string name="transaction_status_confirmed_label">Успешно</string>
     <string name="transaction_status_failed_label">Ошибка</string>
     <string name="transaction_status_refunded_label">Возвращено</string>
+    <string name="transaction_status_failed_slippage_label">Цена вышла за допустимое проскальзывание</string>
+    <string name="transaction_status_failed_slippage_description">Цена изменилась до исполнения этого обмена, поэтому выплата оказалась бы меньше, чем допускает ваше проскальзывание, и сеть отменила транзакцию. Увеличьте допустимое проскальзывание или попробуйте снова.</string>
     <string name="transaction_status_in_progress_label">В процессе…</string>
     <string name="transaction_status_signed_label">Подписано</string>
     <string name="transaction_history_to_label">На</string>
