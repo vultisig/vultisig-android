@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.crypto
 
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.utils.Numeric
+import java.math.BigInteger
 import kotlin.experimental.and
 import timber.log.Timber
 import wallet.core.jni.Bech32
@@ -10,6 +11,26 @@ import wallet.core.jni.Hash
 object CardanoUtils {
 
     private const val KEY_SIZE = 32
+
+    /**
+     * Encodes a native-token quantity the way WalletCore's Cardano signer reads
+     * `TokenAmount.amount`: minimal big-endian magnitude bytes, a single `0x00` for zero.
+     *
+     * [BigInteger.toByteArray] is two's-complement, so it prefixes a `0x00` sign byte whenever the
+     * top bit of the leading magnitude byte is set — 255 encodes as `00 ff`. Leaving that byte in
+     * would change the serialized signing input and therefore the sighash, against iOS
+     * (`BigUInt.serialize()`) and the SDK (`amountToBytes`), which both emit the magnitude alone.
+     */
+    fun tokenAmountBytes(amount: BigInteger): ByteArray {
+        require(amount.signum() >= 0) { "Cardano token amount must not be negative" }
+        val bytes = amount.toByteArray()
+        // toByteArray() never emits more than one leading sign byte for a non-negative value.
+        return if (bytes.size > 1 && bytes[0] == 0.toByte()) {
+            bytes.copyOfRange(1, bytes.size)
+        } else {
+            bytes
+        }
+    }
 
     fun createExtendedKey(spendingKeyHex: String, chainCodeHex: String): ByteArray {
         val spendingKeyData = Numeric.hexStringToByteArray(spendingKeyHex)

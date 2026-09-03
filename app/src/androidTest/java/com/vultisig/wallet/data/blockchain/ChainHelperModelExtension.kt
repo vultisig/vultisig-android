@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain
 
+// Explicit imports win over the same-package corpus models of the same name.
 import BlockchainSpecific
 import Coin
 import KeysignPayload
@@ -16,6 +17,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import com.vultisig.wallet.data.models.proto.v1.SignSolanaProto
@@ -41,8 +43,20 @@ fun KeysignPayload.toInternalKeySignPayload():
         toAmount = this.toAmount.toBigInteger(),
         blockChainSpecific = this.blockchainSpecific.toBlockChainSpecific(coin, this.toAddress),
         utxos =
-            this.utxoInfo?.map {
-                UtxoInfo(hash = it.hash, amount = it.amount, index = it.index.toUInt())
+            this.utxoInfo?.map { utxo ->
+                UtxoInfo(
+                    hash = utxo.hash,
+                    amount = utxo.amount,
+                    index = utxo.index.toUInt(),
+                    cardanoTokens =
+                        utxo.cardanoTokens.orEmpty().map { asset ->
+                            CardanoTokenAsset(
+                                policyId = asset.policyId,
+                                assetNameHex = asset.assetNameHex,
+                                amount = asset.amount.toBigInteger(),
+                            )
+                        },
+                )
             } ?: emptyList(),
         signAmino =
             this.signData?.signAmino?.let {

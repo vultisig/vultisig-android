@@ -1,5 +1,8 @@
 package com.vultisig.wallet.data.crypto
 
+import java.math.BigInteger
+import kotlin.test.assertContentEquals
+import kotlin.test.assertFailsWith
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -138,5 +141,43 @@ class CardanoUtilsTest {
         assertEquals(0x84.toByte(), upgraded[0])
         assertEquals(0xF5.toByte(), upgraded[upgraded.size - 2]) // is_valid spliced before aux
         assertEquals(0xF6.toByte(), upgraded[upgraded.size - 1])
+    }
+
+    /**
+     * WalletCore reads `TokenAmount.amount` as an unsigned big-endian magnitude. iOS
+     * (`BigUInt.serialize()`) and the SDK (`amountToBytes`) both emit exactly that, so a stray
+     * two's-complement sign byte here would change the serialized signing input and split the
+     * sighash across platforms.
+     */
+    @Test
+    fun `tokenAmountBytes encodes zero as a single zero byte`() {
+        assertContentEquals(byteArrayOf(0), CardanoUtils.tokenAmountBytes(BigInteger.ZERO))
+    }
+
+    @Test
+    fun `tokenAmountBytes strips the two's-complement sign byte`() {
+        // 255 is 0x00FF as two's complement; the wire carries 0xFF alone.
+        assertContentEquals(hex("ff"), CardanoUtils.tokenAmountBytes(BigInteger.valueOf(255)))
+        assertContentEquals(hex("ffff"), CardanoUtils.tokenAmountBytes(BigInteger.valueOf(65535)))
+    }
+
+    @Test
+    fun `tokenAmountBytes keeps a leading byte that is real magnitude`() {
+        // 256 is 0x0100 — the leading 0x01 is magnitude, not a sign byte.
+        assertContentEquals(hex("0100"), CardanoUtils.tokenAmountBytes(BigInteger.valueOf(256)))
+        assertContentEquals(hex("01"), CardanoUtils.tokenAmountBytes(BigInteger.ONE))
+    }
+
+    @Test
+    fun `tokenAmountBytes handles a quantity past Long range`() {
+        val huge = BigInteger("18446744073709551616") // 2^64
+        assertContentEquals(hex("010000000000000000"), CardanoUtils.tokenAmountBytes(huge))
+    }
+
+    @Test
+    fun `tokenAmountBytes refuses a negative quantity`() {
+        assertFailsWith<IllegalArgumentException> {
+            CardanoUtils.tokenAmountBytes(BigInteger.valueOf(-1))
+        }
     }
 }
