@@ -1860,82 +1860,93 @@ internal class DefaultSendStrategyTest {
     }
 
     /**
-     * A Cardano native token cannot be signed yet (CardanoHelper builds no asset bundle), so the
-     * send must be refused before planning — not left to the signer, which would only fail after
-     * the transaction was staged and the Verify screen shown.
+     * A Cardano native-token send builds a real asset bundle now, so submit must plan and stage it
+     * like any other token rather than refusing it up front. The staged amount stays in the token's
+     * own base units — the lovelace floor the recipient output needs is the signer's business, and
+     * folding it in here would send the wrong number of tokens.
      */
     @Test
-    fun `submit rejects a Cardano native-token send before planning`() = runTest {
-        val snekCoin = snekCoin()
-        val adaCoin = adaCoin()
-        val account =
-            Account(
-                token = snekCoin,
-                tokenValue = TokenValue(BigInteger.valueOf(1_000_000L), snekCoin),
-                fiatValue = null,
-                price = null,
-            )
-        vaultId = "vault-1"
-        selectedAccount = account
-        addressFieldState.setTextAndPlaceCursorAtEnd("addr1dest")
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
-        coEvery { accountValidator.validate() } returns
-            ValidatedAccount(
-                vaultId = "vault-1",
-                selectedAccount = account,
-                chain = Chain.Cardano,
-                gasFee = TokenValue(BigInteger.valueOf(180_000L), adaCoin),
-                dstAddress = "addr1dest",
-            )
-        coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
-        every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+    fun `submit stages a Cardano native-token send in the token's own units`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val snekCoin = snekCoin()
+            val adaCoin = adaCoin()
+            val account =
+                Account(
+                    token = snekCoin,
+                    tokenValue = TokenValue(BigInteger.valueOf(1_000_000L), snekCoin),
+                    fiatValue = null,
+                    price = null,
+                )
+            vaultId = "vault-1"
+            selectedAccount = account
+            // A token send pays its fee in ADA, so the native account has to be on hand.
+            accounts.value =
+                listOf(
+                    account,
+                    Account(
+                        token = adaCoin,
+                        tokenValue = TokenValue(BigInteger.valueOf(10_000_000L), adaCoin),
+                        fiatValue = null,
+                        price = null,
+                    ),
+                )
+            addressFieldState.setTextAndPlaceCursorAtEnd("addr1dest")
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1000")
+            coEvery { accountValidator.validate() } returns
+                ValidatedAccount(
+                    vaultId = "vault-1",
+                    selectedAccount = account,
+                    chain = Chain.Cardano,
+                    gasFee = TokenValue(BigInteger.valueOf(180_000L), adaCoin),
+                    dstAddress = "addr1dest",
+                )
+            coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } returns
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Cardano(
+                        byteFee = 180_000L,
+                        sendMaxAmount = false,
+                        ttl = 1_000UL,
+                    )
+                )
+            every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(BigInteger.valueOf(1_000_000L), snekCoin)
+            coEvery { gasFeeToEstimatedFee(any()) } returns
+                EstimatedGasFee(
+                    formattedFiatValue = "$0.10",
+                    formattedTokenValue = "0.18 ADA",
+                    tokenValue = TokenValue(BigInteger.valueOf(180_000L), adaCoin),
+                    fiatValue = mockk(relaxed = true),
+                )
+            val captured = slot<Transaction>()
+            coEvery { transactionRepository.addTransaction(capture(captured)) } returns Unit
 
-        build(this).submit()
-        advanceUntilIdle()
+            build(this).submit()
+            advanceUntilIdle()
 
-        assertEquals(
-            UiText.FormattedText(
-                R.string.send_error_cardano_native_token_unsupported,
-                listOf("SNEK"),
-            ),
-            lastError,
-        )
-    }
-
-    /**
-     * The same refusal seen from the other side: nothing is staged, so the Verify screen the
-     * strategy routes to on success is never reached.
-     */
-    @Test
-    fun `submit stages no transaction for a Cardano native token`() = runTest {
-        val snekCoin = snekCoin()
-        val adaCoin = adaCoin()
-        val account =
-            Account(
-                token = snekCoin,
-                tokenValue = TokenValue(BigInteger.valueOf(1_000_000L), snekCoin),
-                fiatValue = null,
-                price = null,
-            )
-        vaultId = "vault-1"
-        selectedAccount = account
-        addressFieldState.setTextAndPlaceCursorAtEnd("addr1dest")
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
-        coEvery { accountValidator.validate() } returns
-            ValidatedAccount(
-                vaultId = "vault-1",
-                selectedAccount = account,
-                chain = Chain.Cardano,
-                gasFee = TokenValue(BigInteger.valueOf(180_000L), adaCoin),
-                dstAddress = "addr1dest",
-            )
-        coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
-        every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
-
-        build(this).submit()
-        advanceUntilIdle()
-
-        coVerify(exactly = 0) { transactionRepository.addTransaction(any()) }
+            assertNull(lastError, "Expected no error; got $lastError")
+            assertEquals(BigInteger.valueOf(1_000L), captured.captured.tokenValue.value)
+            assertEquals("SNEK", captured.captured.tokenValue.unit)
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
     }
 
     private fun snekCoin(): Coin =
