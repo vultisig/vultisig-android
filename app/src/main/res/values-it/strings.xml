@@ -1758,6 +1758,23 @@
     <string name="done_verb_switched">Spostato</string>
     <string name="done_verb_placed_limit_order">Ordine limite piazzato</string>
     <string name="limit_swap_cancel_done_sent">Annullamento inviato</string>
+    <!-- Verify screens: present-progressive operation vocabulary read from the transaction about to be signed -->
+    <string name="verify_verb_bonding">Stai vincolando</string>
+    <string name="verify_verb_unbonding">Stai svincolando</string>
+    <string name="verify_verb_rebonding">Stai rivincolando</string>
+    <string name="verify_verb_leaving">Stai uscendo</string>
+    <string name="verify_verb_depositing">Stai depositando</string>
+    <string name="verify_verb_withdrawing">Stai prelevando</string>
+    <string name="verify_verb_switching">Stai spostando</string>
+    <string name="verify_verb_delegating">Stai delegando</string>
+    <string name="verify_verb_undelegating">Stai annullando la delega</string>
+    <string name="verify_verb_redelegating">Stai ridelegando</string>
+    <string name="verify_verb_adding_liquidity">Stai aggiungendo liquidità</string>
+    <string name="verify_verb_redeeming">Stai riscattando</string>
+    <string name="verify_verb_minting">Stai coniando</string>
+    <string name="verify_verb_merging">Stai unendo</string>
+    <string name="verify_verb_unmerging">Stai separando</string>
+    <string name="verify_verb_bridging">Stai trasferendo tra catene</string>
     <string name="scope_your_whole_stake">tutto il tuo stake</string>
     <string name="scope_rewards_accrued_so_far">ricompense maturate finora</string>
     <string name="withdrawing_share_of_staked_position">%1$s della tua posizione in stake</string>

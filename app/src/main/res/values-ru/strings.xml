@@ -1768,6 +1768,23 @@
     <string name="done_verb_switched">Переключено</string>
     <string name="done_verb_placed_limit_order">Лимитный ордер размещён</string>
     <string name="limit_swap_cancel_done_sent">Отмена отправлена</string>
+    <!-- Verify screens: present-progressive operation vocabulary read from the transaction about to be signed -->
+    <string name="verify_verb_bonding">Вы привязываете</string>
+    <string name="verify_verb_unbonding">Вы отвязываете</string>
+    <string name="verify_verb_rebonding">Вы перепривязываете</string>
+    <string name="verify_verb_leaving">Вы выходите</string>
+    <string name="verify_verb_depositing">Вы вносите</string>
+    <string name="verify_verb_withdrawing">Вы выводите</string>
+    <string name="verify_verb_switching">Вы переключаете</string>
+    <string name="verify_verb_delegating">Вы делегируете</string>
+    <string name="verify_verb_undelegating">Вы отменяете делегирование</string>
+    <string name="verify_verb_redelegating">Вы переделегируете</string>
+    <string name="verify_verb_adding_liquidity">Вы добавляете ликвидность</string>
+    <string name="verify_verb_redeeming">Вы выкупаете</string>
+    <string name="verify_verb_minting">Вы чеканите</string>
+    <string name="verify_verb_merging">Вы объединяете</string>
+    <string name="verify_verb_unmerging">Вы отменяете объединение</string>
+    <string name="verify_verb_bridging">Вы переводите между сетями</string>
     <string name="scope_your_whole_stake">весь ваш стейк</string>
     <string name="scope_rewards_accrued_so_far">накопленные на данный момент награды</string>
     <string name="withdrawing_share_of_staked_position">%1$s вашей стейкинг-позиции</string>

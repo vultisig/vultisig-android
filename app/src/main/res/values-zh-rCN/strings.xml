@@ -2078,6 +2078,23 @@
     <string name="done_verb_switched">已切换</string>
     <string name="done_verb_placed_limit_order">已下限价单</string>
     <string name="limit_swap_cancel_done_sent">取消已发送</string>
+    <!-- Verify screens: present-progressive operation vocabulary read from the transaction about to be signed -->
+    <string name="verify_verb_bonding">您正在绑定</string>
+    <string name="verify_verb_unbonding">您正在解绑</string>
+    <string name="verify_verb_rebonding">您正在重新绑定</string>
+    <string name="verify_verb_leaving">您正在退出</string>
+    <string name="verify_verb_depositing">您正在存入</string>
+    <string name="verify_verb_withdrawing">您正在提取</string>
+    <string name="verify_verb_switching">您正在切换</string>
+    <string name="verify_verb_delegating">您正在委托</string>
+    <string name="verify_verb_undelegating">您正在解除委托</string>
+    <string name="verify_verb_redelegating">您正在重新委托</string>
+    <string name="verify_verb_adding_liquidity">您正在添加流动性</string>
+    <string name="verify_verb_redeeming">您正在赎回</string>
+    <string name="verify_verb_minting">您正在铸造</string>
+    <string name="verify_verb_merging">您正在合并</string>
+    <string name="verify_verb_unmerging">您正在取消合并</string>
+    <string name="verify_verb_bridging">您正在跨链转账</string>
     <string name="scope_your_whole_stake">您的全部质押</string>
     <string name="scope_rewards_accrued_so_far">至今累积的奖励</string>
     <string name="withdrawing_share_of_staked_position">您质押仓位的 %1$s</string>

@@ -3,6 +3,8 @@ package com.vultisig.wallet.data.models.transaction_decoding
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingPayload
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingPayload
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -358,3 +360,49 @@ data class InitiatingTransactionContent(
     override val hasOpaqueSignedContent: Boolean
         get() = cosmosStakingIntent != null || stakingIntent != null
 }
+
+/**
+ * The transaction type the wire discriminator carries, for the chains that set one. Read off the
+ * chain-specific block on the initiator exactly as [KeysignPayloadContent] reads it off the built
+ * payload, so both sides of a ceremony classify the same transaction the same way.
+ */
+private fun BlockChainSpecific.decodedTransactionType(): TransactionType =
+    (this as? BlockChainSpecific.Cosmos)?.transactionType
+        ?: (this as? BlockChainSpecific.THORChain)?.transactionType
+        ?: TransactionType.TRANSACTION_TYPE_UNSPECIFIED
+
+/**
+ * An initiator's send, viewed through the decoder API before a keysign payload exists. Carries no
+ * staking intent: a send that reaches this screen is a transfer or a dApp-supplied transaction, and
+ * the structured staking flows build their transactions elsewhere.
+ */
+fun Transaction.asSignedTransactionContent(): SignedTransactionContent =
+    InitiatingTransactionContent(
+        chain = token.chain,
+        isNativeCoin = token.isNativeToken,
+        rawToAddress = dstAddress,
+        rawAmount = SignedAmount.Committed(tokenValue.value),
+        rawMemo = memo?.takeIf { it.isNotEmpty() },
+        rawTransactionType = blockChainSpecific.decodedTransactionType(),
+        rawWasmPayload = null,
+        stakingIntent = null,
+        cosmosStakingIntent = null,
+    )
+
+/**
+ * An initiator's deposit — the DeFi flows: bond, stake, mint, liquidity, secured assets — viewed
+ * through the decoder API before a keysign payload exists. The structured staking intents are the
+ * ones the signer builds the signed bytes from, so they are what the reading is entitled to.
+ */
+fun DepositTransaction.asSignedTransactionContent(): SignedTransactionContent =
+    InitiatingTransactionContent(
+        chain = srcToken.chain,
+        isNativeCoin = srcToken.isNativeToken,
+        rawToAddress = dstAddress,
+        rawAmount = SignedAmount.Committed(srcTokenValue.value),
+        rawMemo = memo.takeIf { it.isNotEmpty() },
+        rawTransactionType = blockChainSpecific.decodedTransactionType(),
+        rawWasmPayload = wasmExecuteContractPayload,
+        stakingIntent = solanaStakingPayload,
+        cosmosStakingIntent = cosmosStakingPayload,
+    )

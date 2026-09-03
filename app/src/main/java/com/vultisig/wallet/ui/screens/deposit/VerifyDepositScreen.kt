@@ -44,6 +44,7 @@ import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.dapp.DappRequestBanner
+import com.vultisig.wallet.ui.components.hero.HeroContentView
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -142,28 +143,37 @@ internal fun VerifyDepositScreen(
                             )
                             .padding(all = 24.dp)
                 ) {
-                    Text(
-                        text = stringResource(tx.titleRes),
-                        style = Theme.brockmann.headings.subtitle,
-                        color = Theme.v2.colors.text.secondary,
-                    )
-
-                    // Which order is being closed, in THORChain's own asset spelling. A cancel
-                    // moves
-                    // no funds by design, so the amount below it is either zero or the dust Bifrost
-                    // needs to observe — the pair is the only thing that identifies the order.
-                    tx.limitCancelPair?.let { pair ->
-                        UiSpacer(4.dp)
+                    val hero = tx.heroContent
+                    if (hero != null) {
+                        // What the transaction actually does, read from what will be signed. It
+                        // replaces the header and the amount together, because a projected reading
+                        // states its scope ("your whole stake") in place of a figure.
+                        HeroContentView(content = hero, verbAlignment = Alignment.Start)
+                    } else {
                         Text(
-                            text = pair,
-                            style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.tertiary,
+                            text = stringResource(tx.titleRes),
+                            style = Theme.brockmann.headings.subtitle,
+                            color = Theme.v2.colors.text.secondary,
                         )
+
+                        // Which order is being closed, in THORChain's own asset spelling. A cancel
+                        // moves
+                        // no funds by design, so the amount below it is either zero or the dust
+                        // Bifrost needs to observe — the pair is the only thing that identifies the
+                        // order.
+                        tx.limitCancelPair?.let { pair ->
+                            UiSpacer(4.dp)
+                            Text(
+                                text = pair,
+                                style = Theme.brockmann.supplementary.footnote,
+                                color = Theme.v2.colors.text.tertiary,
+                            )
+                        }
+
+                        UiSpacer(24.dp)
+
+                        SwapToken(valuedToken = tx.token, isLoading = state.isLoading)
                     }
-
-                    UiSpacer(24.dp)
-
-                    SwapToken(valuedToken = tx.token, isLoading = state.isLoading)
 
                     // A joining co-signer's Kamino withdraw: the amount above is a token
                     // projection of a share figure, at a rate that never crossed the wire. Naming

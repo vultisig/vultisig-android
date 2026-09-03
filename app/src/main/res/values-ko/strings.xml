@@ -1771,6 +1771,23 @@
     <string name="done_verb_switched">전환됨</string>
     <string name="done_verb_placed_limit_order">지정가 주문 생성됨</string>
     <string name="limit_swap_cancel_done_sent">취소 전송됨</string>
+    <!-- Verify screens: present-progressive operation vocabulary read from the transaction about to be signed -->
+    <string name="verify_verb_bonding">본딩 중</string>
+    <string name="verify_verb_unbonding">언본딩 중</string>
+    <string name="verify_verb_rebonding">재본딩 중</string>
+    <string name="verify_verb_leaving">탈퇴 중</string>
+    <string name="verify_verb_depositing">입금 중</string>
+    <string name="verify_verb_withdrawing">출금 중</string>
+    <string name="verify_verb_switching">전환 중</string>
+    <string name="verify_verb_delegating">위임 중</string>
+    <string name="verify_verb_undelegating">위임 해제 중</string>
+    <string name="verify_verb_redelegating">재위임 중</string>
+    <string name="verify_verb_adding_liquidity">유동성 추가 중</string>
+    <string name="verify_verb_redeeming">상환 중</string>
+    <string name="verify_verb_minting">발행 중</string>
+    <string name="verify_verb_merging">병합 중</string>
+    <string name="verify_verb_unmerging">병합 해제 중</string>
+    <string name="verify_verb_bridging">브리지 중</string>
     <string name="scope_your_whole_stake">스테이킹 전액</string>
     <string name="scope_rewards_accrued_so_far">현재까지 누적된 보상</string>
     <string name="withdrawing_share_of_staked_position">스테이킹 포지션의 %1$s</string>

@@ -1813,6 +1813,23 @@
     <string name="done_verb_switched">Switched</string>
     <string name="done_verb_placed_limit_order">Placed limit order</string>
     <string name="limit_swap_cancel_done_sent">Cancellation sent</string>
+    <!-- Verify screens: present-progressive operation vocabulary read from the transaction about to be signed -->
+    <string name="verify_verb_bonding">You’re bonding</string>
+    <string name="verify_verb_unbonding">You’re unbonding</string>
+    <string name="verify_verb_rebonding">You’re rebonding</string>
+    <string name="verify_verb_leaving">You’re leaving</string>
+    <string name="verify_verb_depositing">You’re depositing</string>
+    <string name="verify_verb_withdrawing">You’re withdrawing</string>
+    <string name="verify_verb_switching">You’re switching</string>
+    <string name="verify_verb_delegating">You’re delegating</string>
+    <string name="verify_verb_undelegating">You’re undelegating</string>
+    <string name="verify_verb_redelegating">You’re redelegating</string>
+    <string name="verify_verb_adding_liquidity">You’re adding liquidity</string>
+    <string name="verify_verb_redeeming">You’re redeeming</string>
+    <string name="verify_verb_minting">You’re minting</string>
+    <string name="verify_verb_merging">You’re merging</string>
+    <string name="verify_verb_unmerging">You’re unmerging</string>
+    <string name="verify_verb_bridging">You’re bridging</string>
     <string name="scope_your_whole_stake">your whole stake</string>
     <string name="scope_rewards_accrued_so_far">rewards accrued so far</string>
     <string name="withdrawing_share_of_staked_position">%1$s of your staked position</string>

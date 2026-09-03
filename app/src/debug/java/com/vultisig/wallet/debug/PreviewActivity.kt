@@ -396,6 +396,20 @@ class PreviewActivity : ComponentActivity() {
                     "send_tx_done_projected" -> SendTxDoneProjectedPreview()
                     "send_tx_done_unresolved" -> SendTxDoneUnresolvedPreview()
                     "send_tx_done_title" -> SendTxDoneTitleOnlyPreview()
+                    "verify_decoded_deposit_before" -> VerifyDecodedDepositPreview(hero = null)
+                    "verify_decoded_deposit_after" ->
+                        VerifyDecodedDepositPreview(hero = decodedStakeHero(), memo = "tcy+")
+                    "verify_decoded_deposit_projected" ->
+                        VerifyDecodedDepositPreview(
+                            hero = decodedUnstakeProjection(resolved = true)
+                        )
+                    "verify_decoded_deposit_unresolved" ->
+                        VerifyDecodedDepositPreview(
+                            hero = decodedUnstakeProjection(resolved = false)
+                        )
+                    "verify_decoded_send_before" -> VerifyDecodedSendHeroPreview(hero = null)
+                    "verify_decoded_send_after" ->
+                        VerifyDecodedSendHeroPreview(hero = decodedBondHero())
                     "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "limit_orders_tab" -> LimitOrdersTabPreview()
@@ -1681,6 +1695,136 @@ private fun SendTxDoneWithOperationHero(operationHero: HeroContent) {
             ),
         isTransactionDetailVisible = false,
         onTransactionDetailVisibleChange = {},
+    )
+}
+
+/**
+ * The three heroes a decoded reading can produce on Verify, against the surfaces that render them.
+ *
+ * They exist because the reading itself is not reachable yet: `SignedTransactionDecoder` registers
+ * no chain readers, so every transaction decodes to `Unknown` and each screen keeps its own
+ * presentation. These feed the resolved hero straight into the UI model, which is exactly what the
+ * view models do once a chain decoder lands, so the rendering, the vocabulary, and the left-aligned
+ * verb are all verifiable now.
+ *
+ * The data is the TCY position the done-screen previews use, so a Verify and a Done capture read as
+ * the same transaction at two points in time.
+ */
+@Composable
+private fun decodedStakeHero(): HeroContent =
+    HeroContent.Send(
+        title = stringResource(R.string.cosmos_staking_youre_staking),
+        coin =
+            HeroCoinAmount(
+                amount = "1,250.5",
+                ticker = "TCY",
+                logo = Coins.ThorChain.TCY.logo,
+                fiatValue = "$412.66",
+            ),
+    )
+
+/**
+ * An execution-set quantity. [resolved] = true is a position read that answered; false is the guard
+ * that matters — a read that failed or timed out. The verb and the signed scope are true either
+ * way, so both are shown; only the estimate is dropped, rather than being backfilled with the
+ * payload's carrier amount, which for a fractional unstake is dust.
+ */
+@Composable
+private fun decodedUnstakeProjection(resolved: Boolean): HeroContent =
+    HeroContent.Projected(
+        title = stringResource(R.string.cosmos_staking_youre_unstaking),
+        estimate =
+            if (resolved) {
+                HeroCoinAmount(
+                    amount = "625.25",
+                    ticker = "TCY",
+                    logo = Coins.ThorChain.TCY.logo,
+                    fiatValue = "$206.33",
+                )
+            } else {
+                null
+            },
+        scope = stringResource(R.string.withdrawing_share_of_staked_position, "50%"),
+    )
+
+@Composable
+private fun decodedBondHero(): HeroContent =
+    HeroContent.Send(
+        title = stringResource(R.string.verify_verb_bonding),
+        coin =
+            HeroCoinAmount(
+                amount = "75",
+                ticker = "RUNE",
+                logo = Coins.ThorChain.RUNE.logo,
+                fiatValue = "$337.50",
+            ),
+    )
+
+/**
+ * The function-call Verify surface. A null [hero] is the state before a chain decoder lands: the
+ * generic "You’re sending" header over the carrier amount, which for a `tcy-` unstake is one
+ * satoshi-scale dust figure that says nothing about the position being closed.
+ */
+@Composable
+private fun VerifyDecodedDepositPreview(hero: HeroContent?, memo: String = "tcy-:5000") {
+    val rune = Coins.ThorChain.RUNE
+    VerifyDepositScreen(
+        state =
+            VerifyDepositUiModel(
+                depositTransactionUiModel =
+                    DepositTransactionUiModel(
+                        token =
+                            ValuedToken(token = rune, value = "0.00000001", fiatValue = "$0.00"),
+                        srcAddress = "thor1abcdefghijklmnopqrstuvwxyz0123456789ab",
+                        srcVaultName = "Main Vault",
+                        dstAddress = "thor1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz9k8lqe",
+                        memo = memo,
+                        networkFeeTokenValue = "0.02 RUNE",
+                        networkFeeFiatValue = "$0.03",
+                        titleRes = R.string.verify_deposit_sending,
+                        heroContent = hero,
+                    ),
+                isLoading = false,
+            ),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
+    )
+}
+
+/**
+ * The Send Verify surface, which both the initiator and a joining co-signer render. A null [hero]
+ * is the current state: the native-amount card with no verb over it.
+ */
+@Composable
+private fun VerifyDecodedSendHeroPreview(hero: HeroContent?) {
+    val rune = Coins.ThorChain.RUNE
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        token = ValuedToken(token = rune, value = "75", fiatValue = "$337.50"),
+                        srcAddress = "thor1abcdefghijklmnopqrstuvwxyz0123456789ab",
+                        srcVaultName = "Main Vault",
+                        dstAddress = "thor1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz9k8lqe",
+                        memo = "BOND:thor1node0000000000000000000000000000000000",
+                        networkFeeTokenValue = "0.02 RUNE",
+                        networkFeeFiatValue = "$0.03",
+                        heroContent = hero,
+                    ),
+                hasFastSign = true,
+            ),
+        isConsentsEnabled = true,
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.keysign_sign_transaction),
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
     )
 }
 

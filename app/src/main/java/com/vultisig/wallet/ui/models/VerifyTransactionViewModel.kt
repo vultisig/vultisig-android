@@ -9,10 +9,12 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.chains.helpers.RippleDappTx
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.RippleTrustSetDisplay
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
+import com.vultisig.wallet.data.models.transaction_decoding.asSignedTransactionContent
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ContractAbiRepository
@@ -40,6 +42,7 @@ import com.vultisig.wallet.ui.models.keysign.isUnlimitedApproval
 import com.vultisig.wallet.ui.models.keysign.prettifyEvmFunctionName
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transactiondecoding.VerifyTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -227,6 +230,7 @@ constructor(
     private val tokenRepository: TokenRepository,
     @param:PrettyJson private val json: Json,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val verifyTransactionPresentation: VerifyTransactionPresentation,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -382,7 +386,8 @@ constructor(
 
             val allVaults = withContext(ioDispatcher) { vaultRepository.getAll() }
             val chain = tx.token.chain
-            val srcVaultName = allVaults.find { it.id == vaultId }?.name
+            val signingVault = allVaults.find { it.id == vaultId }
+            val srcVaultName = signingVault?.name
             val dstVaultName =
                 resolveDstVaultName(
                     allVaults = allVaults,
@@ -462,7 +467,38 @@ constructor(
 
             _uiState.update { it.copy(transaction = namedUiModel) }
 
+            loadDecodedHero(tx, signingVault?.coins.orEmpty())
             scanTransaction()
+        }
+    }
+
+    /**
+     * Reads what this transaction actually does, so a send-routed DeFi operation names itself
+     * rather than reading as a plain transfer. A transfer — which is what nearly everything on this
+     * screen is — is a reading the decoder is deliberately silent on, so the screen keeps its own
+     * presentation.
+     *
+     * Best-effort and never a signing dependency: a failed read leaves the screen exactly as it is.
+     */
+    private fun loadDecodedHero(tx: Transaction, trustedCoins: List<Coin>) {
+        viewModelScope.safeLaunch(
+            onError = { Timber.w(it, "Failed to resolve the decoded verify hero") }
+        ) {
+            val hero =
+                withContext(ioDispatcher) {
+                    verifyTransactionPresentation.resolve(
+                        content = tx.asSignedTransactionContent(),
+                        coin = tx.token,
+                        trustedCoins = trustedCoins,
+                    )
+                } ?: return@safeLaunch
+
+            _uiState.update {
+                it.copy(
+                    transaction =
+                        it.transaction.copy(heroContent = hero.applyTo(it.transaction.heroContent))
+                )
+            }
         }
     }
 

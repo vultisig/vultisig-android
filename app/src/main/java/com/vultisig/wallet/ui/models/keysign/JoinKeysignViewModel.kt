@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
+import com.vultisig.wallet.data.models.transaction_decoding.asSignedTransactionContent
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -50,9 +51,12 @@ import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
+import com.vultisig.wallet.ui.models.mappers.depositVerifyAcceptsDecodedHero
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.models.transactiondecoding.VerifyHero
+import com.vultisig.wallet.ui.models.transactiondecoding.VerifyTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -275,6 +279,7 @@ constructor(
     private val keysignViewModelFactory: KeysignViewModel.Factory,
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
+    private val verifyTransactionPresentation: VerifyTransactionPresentation,
     private val qbtcClaimCosign: QbtcClaimCosignUseCase,
     private val tonDappHeroResolver: TonDappHeroResolver,
     private val resolveQbtcClaimCoins: ResolveQbtcClaimCoinsUseCase,
@@ -323,6 +328,14 @@ constructor(
     private var _jobWaitingForKeysignStart: Job? = null
     private var blockaidSimulationJob: Job? = null
     private var tonJettonHeroJob: Job? = null
+    private var decodedVerifyHeroJob: Job? = null
+
+    /**
+     * The decoded reading of the payload on the verify screen, kept so a simulation hero landing
+     * after it can still borrow the decoded verb. Volatile because the simulation jobs read it from
+     * their own coroutines.
+     */
+    @Volatile private var decodedVerifyHero: VerifyHero? = null
     private val isJoiningKeysign = AtomicBoolean(false)
     private var isNavigateToHome: Boolean = false
 
@@ -630,15 +643,19 @@ constructor(
 
             // A Kamino payload states none of what it is in a field — no memo, no deposit flag —
             // so it reaches the deposit screen on the strength of its own bytes or not at all.
-            kamino != null ->
+            kamino != null -> {
                 applyVerifyResult(
                     joinDepositUiModelBuilder.build(payload, _currentVault.id, kamino)
                 )
+                loadDecodedVerifyHero(payload, _currentVault.coins)
+            }
 
-            isDepositPayload(payload) ->
+            isDepositPayload(payload) -> {
                 // Resolve against _currentVault (post auto-switch), matching the swap/send builders
                 // and the done-screen, so a vault-switched ceremony shows one From name everywhere.
                 applyVerifyResult(joinDepositUiModelBuilder.build(payload, _currentVault.id))
+                loadDecodedVerifyHero(payload, _currentVault.coins)
+            }
 
             else -> {
                 val sendResult =
@@ -660,6 +677,7 @@ constructor(
                 } else {
                     loadBlockaidSimulation(payload, sendResult.functionName)
                 }
+                loadDecodedVerifyHero(payload, sendResult.vaultCoins)
                 scanTransaction(sendResult.transaction)
             }
         }
@@ -765,7 +783,14 @@ constructor(
                         isRawDappTransaction = payload.signSolana != null,
                     )
                 updateSendUiModel(verifyUiModel) { current ->
-                    current.copy(transaction = current.transaction.copy(heroContent = hero))
+                    // The decoded reading, when there is one, keeps the simulation's figures and
+                    // contributes only its verb — see [loadDecodedVerifyHero] for the ordering.
+                    current.copy(
+                        transaction =
+                            current.transaction.copy(
+                                heroContent = decodedVerifyHero?.applyTo(hero) ?: hero
+                            )
+                    )
                 }
                 // Mirror the resolved hero into [transactionTypeUiModel] so the
                 // done screen's `KeysignViewModel` carries the same content forward
@@ -777,6 +802,73 @@ constructor(
                 }
             }
     }
+
+    /**
+     * Reads what the payload actually signs so a joining device names the operation rather than
+     * defaulting to the send wording. Best-effort and never a signing dependency: an unreadable
+     * transaction, a failed position read, or a silent reading all leave the screen as it is.
+     *
+     * The result is held in [decodedVerifyHero] as well as applied, because the simulation jobs
+     * above resolve concurrently and may land in either order — whichever writes second reapplies
+     * the reading, so the verb survives the race.
+     *
+     * Deliberately confined to [verifyUiModel]. The done screen resolves its own past-tense
+     * vocabulary from the same payload, so mirroring a present-progressive verb into
+     * [transactionTypeUiModel] the way the simulation heroes do would show "You’re staking" on a
+     * transaction that has already been signed.
+     */
+    private fun loadDecodedVerifyHero(payload: KeysignPayload, vaultCoins: List<Coin>) {
+        decodedVerifyHeroJob?.cancel()
+        decodedVerifyHeroJob =
+            viewModelScope.safeLaunch(
+                onError = { Timber.w(it, "Failed to resolve the decoded verify hero") }
+            ) {
+                val resolved =
+                    withContext(Dispatchers.IO) {
+                        verifyTransactionPresentation.resolve(
+                            content = payload.asSignedTransactionContent(),
+                            coin = payload.coin,
+                            trustedCoins = vaultCoins,
+                        )
+                    } ?: return@safeLaunch
+
+                decodedVerifyHero = resolved
+                verifyUiModel.update { it.withDecodedHero(resolved) }
+            }
+    }
+
+    /**
+     * Places a decoded reading on whichever verify surface this ceremony is showing. A swap or a
+     * message signature is never displaced: both render their own two-sided or raw presentation,
+     * which a verb cannot improve on.
+     */
+    private fun VerifyUiModel.withDecodedHero(hero: VerifyHero): VerifyUiModel =
+        when (this) {
+            is VerifyUiModel.Send ->
+                VerifyUiModel.Send(
+                    model.copy(
+                        transaction =
+                            model.transaction.copy(
+                                heroContent = hero.applyTo(model.transaction.heroContent)
+                            )
+                    )
+                )
+
+            is VerifyUiModel.Deposit -> {
+                val deposit = model.depositTransactionUiModel
+                if (!depositVerifyAcceptsDecodedHero(deposit.titleRes)) this
+                else
+                    VerifyUiModel.Deposit(
+                        model.copy(
+                            depositTransactionUiModel =
+                                deposit.copy(heroContent = hero.applyTo(deposit.heroContent))
+                        )
+                    )
+            }
+
+            is VerifyUiModel.Swap,
+            is VerifyUiModel.SignMessage -> this
+        }
 
     /**
      * Resolve the jetton hero for a TonConnect request from the decoded message bodies. Surfaces
@@ -808,7 +900,10 @@ constructor(
      */
     private fun pushTonHero(hero: HeroContent) {
         updateSendUiModel(verifyUiModel) { current ->
-            current.copy(transaction = current.transaction.copy(heroContent = hero))
+            current.copy(
+                transaction =
+                    current.transaction.copy(heroContent = decodedVerifyHero?.applyTo(hero) ?: hero)
+            )
         }
         (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
             transactionTypeUiModel = TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))
@@ -1076,6 +1171,8 @@ constructor(
     private fun cleanUp() {
         _jobWaitingForKeysignStart?.cancel()
         blockaidSimulationJob?.cancel()
+        tonJettonHeroJob?.cancel()
+        decodedVerifyHeroJob?.cancel()
     }
 
     private fun waitForKeysignToStart() {
