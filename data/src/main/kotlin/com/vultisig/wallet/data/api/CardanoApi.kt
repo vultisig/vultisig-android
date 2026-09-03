@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.models.cardano.OgmiosError
 import com.vultisig.wallet.data.api.models.cardano.OgmiosTransactionResponse
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.cardanoAssetId
+import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
@@ -137,7 +138,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
     }
 
     override suspend fun getUTXOs(coin: Coin): List<UtxoInfo> {
-        val requestBody = CardanoUtxoRequestJson(listOf(coin.address))
+        val requestBody = CardanoUtxoRequestJson(addresses = listOf(coin.address), extended = true)
         val response =
             httpClient.post(url) {
                 url { path(apiV1Path, "address_utxos") }
@@ -153,11 +154,43 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
         }
     }
 
-    private fun List<CardanoUtxoResponseJson>.toUtxos() = map { utxo ->
-        UtxoInfo(
-            hash = utxo.txHash ?: "",
-            amount = utxo.value?.toLong() ?: 0L,
-            index = utxo.txIndex?.toUInt() ?: 0u,
+    /**
+     * Maps Koios rows to [UtxoInfo], ordered by `(hash, index)`.
+     *
+     * The order is part of the signed bytes: WalletCore's planner consumes the inputs as given, and
+     * the payload this produces is what every co-signer reads. Koios does not promise a stable
+     * order, so pinning one here keeps a re-fetch from producing a different keysign session for
+     * the same wallet state.
+     */
+    private fun List<CardanoUtxoResponseJson>.toUtxos(): List<UtxoInfo> =
+        mapNotNull { utxo ->
+                val assets = utxo.assetList.orEmpty()
+                val tokens = assets.mapNotNull { it.toTokenAsset() }
+                if (tokens.size != assets.size) {
+                    // A half-read UTxO would understate its bundle, and signing that builds a body
+                    // that does not conserve the assets it spends. Drop the whole UTxO instead.
+                    Timber.w("Dropping Cardano UTxO %s: unparseable asset row", utxo.txHash)
+                    return@mapNotNull null
+                }
+                UtxoInfo(
+                    hash = utxo.txHash ?: "",
+                    amount = utxo.value?.toLong() ?: 0L,
+                    index = utxo.txIndex?.toUInt() ?: 0u,
+                    // Sorted so the proto serialises identically however Koios ordered the row.
+                    cardanoTokens =
+                        tokens.sortedWith(compareBy({ it.policyId }, { it.assetNameHex })),
+                )
+            }
+            .sortedWith(compareBy({ it.hash }, { it.index }))
+
+    private fun CardanoAssetResponseJson.toTokenAsset(): CardanoTokenAsset? {
+        val policyId = policyId?.lowercase() ?: return null
+        val amount = quantity?.toBigIntegerOrNull() ?: return null
+        if (amount.signum() < 0) return null
+        return CardanoTokenAsset(
+            policyId = policyId,
+            assetNameHex = assetName.orEmpty().lowercase(),
+            amount = amount,
         )
     }
 

@@ -3,6 +3,12 @@ package com.vultisig.wallet.data.models
 /** The separator between a Cardano asset's policy id and its asset name. */
 private const val CARDANO_ASSET_ID_SEPARATOR = "."
 
+/** A minting policy is a 28-byte script hash. */
+private const val CARDANO_POLICY_ID_HEX_LENGTH = 56
+
+/** CIP-14 caps an asset name at 32 bytes. */
+private const val CARDANO_ASSET_NAME_MAX_HEX_LENGTH = 64
+
 /**
  * A Cardano native token's `<policy_id>.<asset_name_hex>` asset id, lowercase hex.
  *
@@ -17,6 +23,33 @@ private const val CARDANO_ASSET_ID_SEPARATOR = "."
  */
 fun cardanoAssetId(policyId: String, assetNameHex: String): String =
     "${policyId.lowercase()}$CARDANO_ASSET_ID_SEPARATOR${assetNameHex.lowercase()}"
+
+/** The two halves of a Cardano asset id, lowercase hex. */
+data class CardanoAssetId(val policyId: String, val assetNameHex: String)
+
+/**
+ * Splits a `<policy_id>.<asset_name_hex>` [Coin.contractAddress] back into its halves, or `null`
+ * when the id is malformed.
+ *
+ * The halves are pushed into a Cardano signing input as raw hex, so an id that is not well-formed
+ * hex of the right length would produce a transaction body the ledger rejects. Validating here
+ * keeps that failure at the point the id is read rather than at broadcast. Mirrors iOS
+ * `CardanoAssetId.parse`.
+ */
+fun parseCardanoAssetId(assetId: String): CardanoAssetId? {
+    val policyId = assetId.substringBefore(CARDANO_ASSET_ID_SEPARATOR, missingDelimiterValue = "")
+    if (policyId.length != CARDANO_POLICY_ID_HEX_LENGTH || !policyId.isLowercaseHex()) return null
+
+    // An asset name encodes raw bytes, so its hex is even-length; empty is legal (a policy's
+    // unnamed asset).
+    val assetNameHex = assetId.substringAfter(CARDANO_ASSET_ID_SEPARATOR)
+    if (assetNameHex.length > CARDANO_ASSET_NAME_MAX_HEX_LENGTH) return null
+    if (assetNameHex.length % 2 != 0 || !assetNameHex.isLowercaseHex()) return null
+
+    return CardanoAssetId(policyId = policyId, assetNameHex = assetNameHex)
+}
+
+private fun String.isLowercaseHex(): Boolean = all { it in '0'..'9' || it in 'a'..'f' }
 
 object Coins {
     object Akash {

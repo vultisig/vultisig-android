@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -39,7 +40,14 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 from.utxoInfo
                     .asSequence()
                     .filterNotNull()
-                    .map { UtxoInfo(hash = it.hash, amount = it.amount, index = it.index) }
+                    .map {
+                        UtxoInfo(
+                            hash = it.hash,
+                            amount = it.amount,
+                            index = it.index,
+                            cardanoTokens = it.cardanoTokens.toCardanoTokenAssets(),
+                        )
+                    }
                     .toList(),
             approvePayload =
                 from.erc20ApprovePayload?.let {
@@ -329,6 +337,24 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             logo = logo,
             isNativeToken = isNativeToken,
         )
+
+    /**
+     * Reads the Cardano native assets an initiator attached to a UTxO.
+     *
+     * A malformed quantity is refused rather than dropped: signing on a bundle that silently lost a
+     * row would move assets the payload does not describe.
+     */
+    private fun List<vultisig.keysign.v1.CardanoTokenAsset?>.toCardanoTokenAssets():
+        List<CardanoTokenAsset> =
+        filterNotNull().map { asset ->
+            CardanoTokenAsset(
+                policyId = asset.policyId,
+                assetNameHex = asset.assetNameHex,
+                amount =
+                    asset.amount.toBigIntegerOrNull()
+                        ?: error("Cardano token ${asset.policyId} has a malformed amount"),
+            )
+        }
 
     private fun ThorChainSwapPayloadProto.toThorChainSwapPayload() =
         THORChainSwapPayload(
