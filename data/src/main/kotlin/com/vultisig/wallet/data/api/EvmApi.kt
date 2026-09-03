@@ -865,8 +865,10 @@ class EvmApiImp(
         } catch (e: CancellationException) {
             throw e
         } catch (e: NetworkException) {
-            // A node that answers a revert with a non-2xx still states the reason in the body, and
-            // NetworkException carries the extracted message.
+            // bodyOrThrow only extracts the error message for 2xx-with-bad-body cases; a non-2xx
+            // response carries the raw body text here, which usually won't match decode()'s known
+            // prefixes/shapes. That's fine — decode() returns null and the caller falls back to a
+            // generic error message.
             EvmRevertReason.decode(e.message, data = null)
         } catch (e: Exception) {
             Timber.d("revert reason: replay failed for %s — %s", txHash, e.message)
