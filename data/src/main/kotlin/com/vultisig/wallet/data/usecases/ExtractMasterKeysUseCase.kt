@@ -32,8 +32,16 @@ internal class ExtractMasterKeysUseCaseImpl @Inject constructor() : ExtractMaste
         if (mnemonic.isBlank()) return null
         val wallet = HDWallet(mnemonic, "")
 
-        val ecdsaMasterKey = wallet.getMasterKey(Curve.SECP256K1).data()
-        val eddsaSeed = wallet.getMasterKey(Curve.ED25519).data()
+        val ecdsaMasterKey =
+            checkNotNull(wallet.getMasterKey(Curve.SECP256K1)) {
+                    "SECP256K1 master key derivation failed"
+                }
+                .data()
+        val eddsaSeed =
+            checkNotNull(wallet.getMasterKey(Curve.ED25519)) {
+                    "ED25519 master key derivation failed"
+                }
+                .data()
         val eddsaMasterKey = Ed25519ScalarUtil.clampThenUniformScalar(eddsaSeed)
 
         // Chain code: HMAC-SHA512("Bitcoin seed", wallet seed) -> bytes [32:64]

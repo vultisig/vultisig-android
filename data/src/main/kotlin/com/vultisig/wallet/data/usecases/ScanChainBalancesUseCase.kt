@@ -69,6 +69,16 @@ constructor(
                 else -> wallet.getAddressForCoin(chain.coinType)
             }
 
+        if (address == null) {
+            Timber.d("Address derivation failed for %s", chain.id)
+            return ChainBalanceResult(
+                chain = chain,
+                derivationPath = derivationPath,
+                address = "",
+                hasBalance = false,
+            )
+        }
+
         val hasBalance =
             try {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)

@@ -17,8 +17,14 @@ constructor(private val vaultRepository: VaultRepository) : CheckMnemonicDuplica
 
     override suspend fun invoke(mnemonic: String): Boolean {
         val wallet = HDWallet(mnemonic, "")
+        val masterKey =
+            checkNotNull(wallet.getMasterKey(Curve.SECP256K1)) {
+                "SECP256K1 master key derivation failed"
+            }
         val ecdsaPubKey =
-            wallet.getMasterKey(Curve.SECP256K1).getPublicKeySecp256k1(true).data().toHexString()
+            checkNotNull(masterKey.getPublicKeySecp256k1(true)) { "Public key derivation failed" }
+                .data()
+                .toHexString()
 
         return vaultRepository.getByEcdsa(ecdsaPubKey) != null
     }

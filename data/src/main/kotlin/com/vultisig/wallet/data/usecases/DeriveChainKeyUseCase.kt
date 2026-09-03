@@ -31,9 +31,16 @@ internal class DeriveChainKeyUseCaseImpl @Inject constructor() : DeriveChainKeyU
         val keyData =
             when {
                 chain == Chain.Solana && chainSetting.derivationPath == DerivationPath.Phantom ->
-                    wallet.getKeyDerivation(chain.coinType, Derivation.SOLANASOLANA).data()
+                    checkNotNull(wallet.getKeyDerivation(chain.coinType, Derivation.SOLANASOLANA)) {
+                            "Key derivation failed for ${chain.raw}"
+                        }
+                        .data()
 
-                else -> wallet.getKeyForCoin(chain.coinType).data()
+                else ->
+                    checkNotNull(wallet.getKeyForCoin(chain.coinType)) {
+                            "Key derivation failed for ${chain.raw}"
+                        }
+                        .data()
             }
 
         val privateKeyHex =
