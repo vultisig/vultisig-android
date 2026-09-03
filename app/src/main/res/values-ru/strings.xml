@@ -734,6 +734,9 @@
     <string name="signing_error_transaction_timeout">Время транзакции истекло из-за медленного подписания. Попробуйте ещё раз.</string>
     <string name="hint_message_to_sign">Сообщение для подписи</string>
     <string name="verify_sign_message_message_sign">Сообщение для подписи</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Расшифрованное сообщение</string>
+    <string name="verify_sign_message_message_hash">Хеш сообщения</string>
     <string name="address_book_empty_description">Храните все важные адреса в одном месте.</string>
     <string name="address_book_empty_title">Ваша адресная книга пуста.</string>
     <string name="check_updates_settings_title">Проверить Обновления</string>

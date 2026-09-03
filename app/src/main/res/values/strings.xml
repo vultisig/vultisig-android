@@ -568,6 +568,9 @@
     <string name="verify_sign_message_signing_method">Signing method</string>
     <string name="hint_message_to_sign">Message to sign</string>
     <string name="verify_sign_message_message_sign">Message to sign</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Decoded message</string>
+    <string name="verify_sign_message_message_hash">Message hash</string>
     <string name="sign_message_sign_screen_title">Sign message</string>
     <string name="vault_settings_sign_message_description">Sign custom message</string>
     <string name="swap_screen_invalid_specific_and_utxo">Specific calculation failed</string>

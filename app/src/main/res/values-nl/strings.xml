@@ -730,6 +730,9 @@
     <string name="signing_error_transaction_timeout">Transactie is verlopen vanwege trage ondertekening. Probeer het opnieuw.</string>
     <string name="hint_message_to_sign">Bericht om te ondertekenen</string>
     <string name="verify_sign_message_message_sign">Bericht om te ondertekenen</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Gedecodeerd bericht</string>
+    <string name="verify_sign_message_message_hash">Berichthash</string>
     <string name="address_book_empty_description">Houd al uw belangrijke adressen op één plek bij elkaar.</string>
     <string name="address_book_empty_title">Uw adresboek is leeg</string>
     <string name="check_updates_settings_title">Controleer op Updates</string>

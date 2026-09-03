@@ -731,6 +731,9 @@
     <string name="signing_error_transaction_timeout">Tempo limite da transação excedido devido à lentidão na assinatura. Por favor, tente novamente.</string>
     <string name="hint_message_to_sign">Mensagem para assinar</string>
     <string name="verify_sign_message_message_sign">Mensagem para assinar</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Mensagem decodificada</string>
+    <string name="verify_sign_message_message_hash">Hash da mensagem</string>
     <string name="address_book_empty_description">Mantenha todos os seus endereços importantes organizados num só lugar.</string>
     <string name="address_book_empty_title">A sua agenda está vazia.</string>
     <string name="check_updates_settings_title">Verificar Atualizações</string>

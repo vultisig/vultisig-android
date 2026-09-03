@@ -733,6 +733,9 @@
     <string name="signing_error_transaction_timeout">Die Transaktion ist aufgrund langsamer Signierung fehlgeschlagen. Bitte versuchen Sie es erneut.</string>
     <string name="hint_message_to_sign">Zu unterschreibende Nachricht</string>
     <string name="verify_sign_message_message_sign">Zu unterschreibende Nachricht</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Dekodierte Nachricht</string>
+    <string name="verify_sign_message_message_hash">Nachrichten-Hash</string>
     <string name="address_book_empty_description">Bewahren Sie alle wichtigen Adressen an einem Ort auf.</string>
     <string name="address_book_empty_title">Ihr Adressbuch ist leer</string>
     <string name="check_updates_settings_title">Aktualisierungen prüfen</string>

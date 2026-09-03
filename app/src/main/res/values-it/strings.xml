@@ -733,6 +733,9 @@
     <string name="signing_error_transaction_timeout">Timeout della transazione dovuto alla firma lenta. Riprova.</string>
     <string name="hint_message_to_sign">Messaggio da firmare</string>
     <string name="verify_sign_message_message_sign">Messaggio da firmare</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Messaggio decodificato</string>
+    <string name="verify_sign_message_message_hash">Hash del messaggio</string>
     <string name="address_book_empty_description">Tieni tutti i tuoi indirizzi importanti organizzati in un unico posto.</string>
     <string name="address_book_empty_title">La tua rubrica è vuota</string>
     <string name="check_updates_settings_title">Controlla gli Aggiornamenti</string>

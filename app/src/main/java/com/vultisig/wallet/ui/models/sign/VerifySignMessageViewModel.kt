@@ -24,7 +24,13 @@ import timber.log.Timber
 
 internal data class SignMessageTransactionUiModel(
     val method: String = "",
+    /**
+     * The payload exactly as it will be signed. Always rendered: a reading is shown alongside it,
+     * never instead of it.
+     */
     val message: String = "",
+    /** What [message] turned out to be, or null when it is already plain text. */
+    val decoded: DecodedCustomMessage? = null,
 )
 
 internal data class VerifySignMessageUiModel(
@@ -39,6 +45,7 @@ internal class VerifySignMessageViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val customMessagePayloadRepo: CustomMessagePayloadRepo,
+    private val customMessageDecoder: CustomMessageDecoder,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysignUseCase: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
@@ -71,6 +78,16 @@ constructor(
                         )
                 )
             }
+
+            // Best-effort and never a signing dependency: the payload above is already on screen,
+            // and a reading that fails or is refused simply adds nothing to it.
+            val decoded =
+                customMessageDecoder.decode(
+                    method = payload.method,
+                    message = payload.message,
+                    chain = payload.chain,
+                )
+            state.update { it.copy(model = it.model.copy(decoded = decoded)) }
         }
 
         loadFastSign()

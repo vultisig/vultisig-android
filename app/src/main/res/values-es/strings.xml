@@ -735,6 +735,9 @@
     <string name="signing_error_transaction_timeout">La transacción caducó por firma lenta. Inténtalo de nuevo.</string>
     <string name="hint_message_to_sign">Mensaje para firmar</string>
     <string name="verify_sign_message_message_sign">Mensaje para firmar</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Mensaje decodificado</string>
+    <string name="verify_sign_message_message_hash">Hash del mensaje</string>
     <string name="address_book_empty_description">Mantén todas tus direcciones importantes organizadas en un solo lugar.</string>
     <string name="address_book_empty_title">Tu libreta de direcciones está vacía</string>
     <string name="check_updates_settings_title">Consultar actualizaciones</string>

@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.ResolveKaminoRelayedInt
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
-import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -52,6 +51,7 @@ import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
 import com.vultisig.wallet.ui.models.mappers.depositVerifyAcceptsDecodedHero
+import com.vultisig.wallet.ui.models.sign.CustomMessageDecoder
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
@@ -280,6 +280,7 @@ constructor(
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
     private val verifyTransactionPresentation: VerifyTransactionPresentation,
+    private val customMessageDecoder: CustomMessageDecoder,
     private val qbtcClaimCosign: QbtcClaimCosignUseCase,
     private val tonDappHeroResolver: TonDappHeroResolver,
     private val resolveQbtcClaimCoins: ResolveQbtcClaimCoinsUseCase,
@@ -292,8 +293,6 @@ constructor(
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
-
-        private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
     }
 
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
@@ -329,6 +328,7 @@ constructor(
     private var blockaidSimulationJob: Job? = null
     private var tonJettonHeroJob: Job? = null
     private var decodedVerifyHeroJob: Job? = null
+    private var decodedCustomMessageJob: Job? = null
 
     /**
      * The decoded reading of the payload on the verify screen, kept so a simulation hero landing
@@ -557,10 +557,12 @@ constructor(
 
         customMessagePayload = customMessage
 
+        // The payload exactly as it will be signed. A reading of it arrives separately and is
+        // shown alongside, so the bytes are on screen from the first frame either way.
         val model =
             SignMessageTransactionUiModel(
                 method = customMessage.method,
-                message = getNormalizedCustomMessage(customMessage),
+                message = customMessage.message,
             )
 
         transactionTypeUiModel = TransactionTypeUiModel.SignMessage(model)
@@ -568,23 +570,40 @@ constructor(
         verifyUiModel.value =
             VerifyUiModel.SignMessage(model = VerifySignMessageUiModel(model = model))
 
+        loadDecodedCustomMessage(customMessage)
+
         return true
     }
 
-    private fun getNormalizedCustomMessage(customMessage: CustomMessagePayload) =
-        // For "eth_signTypedData_v4", the extension sends both the message and the domain
-        // as pre-hashed values. Because these fields are already hashed, the original data
-        // cannot be decoded from the resulting hex string.
-        // Therefore, we display the raw hex instead.
-        //
-        // Reference:
-        // https://github.com/ethers-io/ethers.js/blob/98c49d091eb84a9146dfba8476f18e4c3e3d1d31/src.ts/hash/typed-data.ts#L520
-        // https://github.com/vultisig/vultisig-windows/blob/e7e5b388ca022c9e3f02a85346336b837857a856/core/inpage-provider/popup/view/resolvers/signMessage/overview/index.tsx#L36
-        if (customMessage.method.equals(other = ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) {
-            customMessage.message
-        } else {
-            customMessage.message.normalizeMessageFormat()
-        }
+    /**
+     * Reads the custom message so a joining device says what it is signing rather than showing a
+     * bare hex string. Resolved off the join path because it can reach the network: the verify
+     * screen is already rendered by the time this lands, and a failed read simply adds nothing.
+     *
+     * The initiator resolves the same reading through the same decoder, so both devices agree.
+     */
+    private fun loadDecodedCustomMessage(customMessage: CustomMessagePayload) {
+        decodedCustomMessageJob?.cancel()
+        decodedCustomMessageJob =
+            viewModelScope.safeLaunch(
+                onError = { Timber.w(it, "Failed to decode the custom message") }
+            ) {
+                val decoded =
+                    customMessageDecoder.decode(
+                        method = customMessage.method,
+                        message = customMessage.message,
+                        chain = customMessage.chain,
+                    ) ?: return@safeLaunch
+
+                verifyUiModel.update { current ->
+                    if (current !is VerifyUiModel.SignMessage) current
+                    else
+                        VerifyUiModel.SignMessage(
+                            current.model.copy(model = current.model.model.copy(decoded = decoded))
+                        )
+                }
+            }
+    }
 
     private suspend fun handleKeysignMessage(proto: KeysignMessageProto): Boolean {
         val message = mapKeysignMessageFromProto(proto)
@@ -1173,6 +1192,7 @@ constructor(
         blockaidSimulationJob?.cancel()
         tonJettonHeroJob?.cancel()
         decodedVerifyHeroJob?.cancel()
+        decodedCustomMessageJob?.cancel()
     }
 
     private fun waitForKeysignToStart() {

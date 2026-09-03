@@ -734,6 +734,9 @@
     <string name="signing_error_transaction_timeout">Vrijeme transakcije je isteklo zbog sporog potpisivanja. Pokušajte ponovno.</string>
     <string name="hint_message_to_sign">Poruka za potpis</string>
     <string name="verify_sign_message_message_sign">Poruka za potpis</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Dekodirana poruka</string>
+    <string name="verify_sign_message_message_hash">Hash poruke</string>
     <string name="address_book_empty_description">Držite sve važne adrese organizirane na jednom mjestu.</string>
     <string name="address_book_empty_title">Vaš adresar je prazan</string>
     <string name="check_updates_settings_title">Provjerite Ažuriranja</string>
