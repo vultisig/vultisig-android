@@ -58,7 +58,7 @@ constructor(
         code: String,
     ): ReferralDiscountResult {
         val referralBpsDiscount =
-            THORChainSwaps.REFERRED_USER_FEE_RATE_BP.takeUnless { tierType == TierType.ULTIMATE }
+            referralBpsFor(tierType)
                 ?: return ReferralDiscountResult(
                     referralBpsDiscount = null,
                     referralBpsDiscountFiatValue = null,
@@ -75,3 +75,10 @@ constructor(
         )
     }
 }
+
+/**
+ * Referral discount in bps for a swap at [tierType], or null when none applies: Ultimate already
+ * pays no affiliate fee, so there is nothing left for a referral to take off.
+ */
+internal fun referralBpsFor(tierType: TierType?): Int? =
+    THORChainSwaps.REFERRED_USER_FEE_RATE_BP.takeUnless { tierType == TierType.ULTIMATE }

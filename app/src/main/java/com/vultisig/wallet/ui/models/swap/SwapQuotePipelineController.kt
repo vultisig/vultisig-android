@@ -605,13 +605,26 @@ constructor(
                     fetch.swapFeeIncludedInRate ||
                         (fetch.quote is SwapQuote.SwapKit &&
                             srcToken.chain.standard == TokenStandard.UTXO)
+                // Grossed to the list rate exactly as the breakdown this row opens does, so a route
+                // can't advertise one fee in the picker and a larger one a tap later. Whatever the
+                // breakdown adds back onto the charged fee is added here too, off the same source
+                // snapshot — the row carries no rate of its own, so it passes no [listRate].
+                val discountBps = candidate.candidate.discountBps()
+                val pickerFee =
+                    swapFeeRow(
+                            provider = candidate.candidate.provider,
+                            netFee = fetch.swapFeeFiat,
+                            listRate = null,
+                            discountBps = discountBps,
+                            pricedDiscounts = discountBps.map { bpsOfSourceFiat(fetch.srcFiat, it) },
+                        )
+                        .fee
                 SwapRouteUiModel(
                     provider = candidate.candidate.provider,
                     name = fetch.providerUiText,
                     logo = getProviderLogo(candidate.candidate.provider.getSwapProviderId()),
                     feeText =
-                        if (hidesSwapFee) null
-                        else fiatValueToString(fetch.swapFeeFiat, asFee = true),
+                        if (hidesSwapFee) null else fiatValueToString(pickerFee, asFee = true),
                     etaText =
                         etaSeconds?.let {
                             UiText.FormattedText(R.string.swap_route_eta, listOf(it))

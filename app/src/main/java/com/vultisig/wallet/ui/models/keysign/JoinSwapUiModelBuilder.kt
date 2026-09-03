@@ -33,19 +33,24 @@ import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import com.vultisig.wallet.data.swap.limit.toThorchainFixedPoint
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
 import com.vultisig.wallet.ui.models.swap.LimitOrderLabels
+import com.vultisig.wallet.ui.models.swap.SwapFeeRow
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.models.swap.bpsOfSourceFiat
 import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
+import com.vultisig.wallet.ui.models.swap.formatAffiliatePercent
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
+import com.vultisig.wallet.ui.models.swap.swapFeeRow
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +75,7 @@ constructor(
     private val swapQuoteRepository: SwapQuoteRepository,
     private val mapSwapTransactionToHistoryData: SwapTransactionToHistoryDataMapper,
     private val formatLimitOrderLabels: FormatLimitOrderLabelsUseCase,
+    private val getDiscountBps: GetDiscountBpsUseCase,
 ) {
 
     /**
@@ -261,6 +267,40 @@ constructor(
                     if (isOneInchIncludedInRate) networkGasFeeFiatValue
                     else estimatedFee + networkGasFeeFiatValue
 
+                // The co-signer resolves the initiator's VULT tier itself instead of reading it off
+                // the wire, which carries only the net fee (#5329). The discount is a function of
+                // the vault's VULT balance and tier NFT, and both devices are the same vault, so
+                // the same inputs give the same bps — letting this screen show the list rate and
+                // the discount row the initiator's verify screen shows, rather than a bare net fee
+                // that disagreed with it by the discount (#5803).
+                //
+                // A balance that crosses a tier boundary between the initiator's quote and this
+                // read would price the row differently; that is the same approximate parity the
+                // Thor/Maya/SwapKit fee re-fetches on this path already accept. A failed or
+                // unresolvable read yields no discount, which leaves the row exactly as it was
+                // before: the charged fee, claiming no rate.
+                //
+                // Only the VULT tier is re-derivable, and only it is needed: the referral discount
+                // applies to THORChain alone, which is a payload of its own, and its code is the
+                // initiator's local state rather than anything the vault can recompute.
+                val evmProvider = swapProviderFromWireId(swapPayload.data.provider)
+                val vultBps = evmProvider?.let { getDiscountBps(vault.id, it) }?.takeIf { it > 0 }
+                val vultDiscountFiat =
+                    bpsOfSourceFiat(
+                        convertTokenValueToFiat(srcToken, srcTokenValue, currency),
+                        vultBps,
+                    )
+                val feeRow =
+                    evmProvider?.let {
+                        swapFeeRow(
+                            provider = it,
+                            netFee = estimatedFee,
+                            listRate = formatAffiliatePercent(),
+                            discountBps = listOf(vultBps),
+                            pricedDiscounts = listOf(vultDiscountFiat),
+                        )
+                    } ?: SwapFeeRow(fee = estimatedFee, percent = null, isListRate = false)
+
                 val swapTransaction =
                     SwapTransactionUiModel(
                         src =
@@ -285,7 +325,7 @@ constructor(
                             ValuedToken(
                                 token = feeToken,
                                 value = value.toString(),
-                                fiatValue = fiatValueToStringMapper(estimatedFee, asFee = true),
+                                fiatValue = fiatValueToStringMapper(feeRow.fee, asFee = true),
                             ),
                         networkFee =
                             ValuedToken(
@@ -306,12 +346,14 @@ constructor(
                         totalFee = fiatValueToStringMapper(swapFeeForTotal, asFee = true),
                         provider = provider,
                         swapFeeIncludedInRate = isOneInchIncludedInRate,
-                        // No percentage on the join path: the affiliate rate is net of the
-                        // initiator's VULT tier discount, which the signed payload doesn't carry
-                        // and can't be recovered here. Showing the base 0.50% would contradict a
-                        // discounted initiator's verify screen, so the row omits the percent
-                        // entirely — as every other provider does on this path (#5358 review).
-                        swapFeePercent = null,
+                        swapFeePercent = feeRow.percent,
+                        // Rows follow the fee: shown only when it was grossed to the list rate, so
+                        // subtracting them lands back on the net fee the total is built from.
+                        vultBpsDiscount = vultBps?.takeIf { feeRow.isListRate },
+                        vultBpsDiscountFiatValue =
+                            vultDiscountFiat
+                                ?.takeIf { feeRow.isListRate }
+                                ?.let { fiatValueToStringMapper(it, asFee = true) },
                     )
 
                 JoinKeysignVerifyResult(

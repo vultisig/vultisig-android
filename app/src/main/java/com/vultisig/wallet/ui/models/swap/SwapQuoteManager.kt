@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
+import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.data.utils.plus
 import com.vultisig.wallet.data.utils.thorswapMultiplier
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -128,9 +129,6 @@ internal fun bpsOfSourceFiat(srcFiat: FiatValue, bps: Int?): FiatValue? {
  * discount rows subtract is exactly what was added here, which holds only while both are read off
  * the same [bpsOfSourceFiat] values. It also survives the Ultimate tier, where the provider charges
  * nothing and there is no non-zero fee to scale.
- *
- * An unpriced source prices no discount at all, leaving the row showing the provider's own figure
- * rather than a fabricated zero.
  */
 internal fun undiscountedSwapFee(netFee: FiatValue, waived: List<FiatValue?>): FiatValue {
     val discounts = waived.filterNotNull()
@@ -141,6 +139,54 @@ internal fun undiscountedSwapFee(netFee: FiatValue, waived: List<FiatValue?>): F
     )
 }
 
+/**
+ * The Swap Fee row as displayed: the amount, and the rate its title claims (null for none).
+ *
+ * [isListRate] says the amount was grossed back up to the list rate, so subtracting the discount
+ * rows lands on the net fee the Total Fee is built from — which is what makes those rows safe to
+ * show. It is not the same as [percent] being non-null: a caller with no rate string to display
+ * still grosses the amount.
+ */
+internal data class SwapFeeRow(val fee: FiatValue, val percent: String?, val isListRate: Boolean)
+
+/**
+ * Resolves the Swap Fee row from one price snapshot, so the amount and the [listRate] above it can
+ * never disagree. [discountBps] are the discounts that apply, [pricedDiscounts] the same list
+ * valued against the source by [bpsOfSourceFiat].
+ *
+ * The row keeps the provider's own net figure and drops the rate in the two cases where it cannot
+ * honestly claim the list rate:
+ * - **The itemized amount is not an affiliate charge.** SwapKit reports its source-chain inbound
+ *   (deposit) cost as the quote's fee and bakes its affiliate fee into the quoted destination
+ *   amount instead, so adding a tier discount there would invent a discount on a network cost and
+ *   inflate the row on every tiered cross-chain route — and titling that cost with an affiliate
+ *   rate would be wrong however it is valued.
+ * - **A discount applies but the source has no fiat price.** Nothing can be added back, so the
+ *   amount stays the discounted one, and "0.50%" over it would restate the very double-billing read
+ *   this row exists to fix (#5803).
+ */
+internal fun swapFeeRow(
+    provider: SwapProvider,
+    netFee: FiatValue,
+    listRate: String?,
+    discountBps: List<Int?>,
+    pricedDiscounts: List<FiatValue?>,
+): SwapFeeRow {
+    if (provider == SwapProvider.SWAPKIT) {
+        return SwapFeeRow(fee = netFee, percent = null, isListRate = false)
+    }
+    val applied = discountBps.count { it != null && it > 0 }
+    val priced = pricedDiscounts.filterNotNull()
+    if (priced.size < applied) {
+        return SwapFeeRow(fee = netFee, percent = null, isListRate = false)
+    }
+    return SwapFeeRow(
+        fee = undiscountedSwapFee(netFee = netFee, waived = priced),
+        percent = listRate,
+        isListRate = true,
+    )
+}
+
 private val BPS_DENOMINATOR = BigDecimal(10_000)
 
 internal data class QuoteCandidate(
@@ -148,6 +194,20 @@ internal data class QuoteCandidate(
     val vultBPSDiscount: Int?,
     val referral: String?,
 )
+
+/**
+ * Discounts that apply to this candidate's quote, in bps: the VULT tier always, plus the referral
+ * rate on THORChain alone — the only provider [SwapQuotePipeline.buildSuccess] resolves a referral
+ * for. Sharing the rule keeps a Select-route row and the breakdown it opens from pricing different
+ * discounts onto the same route.
+ */
+internal fun QuoteCandidate.discountBps(): List<Int?> =
+    listOf(
+        vultBPSDiscount,
+        if (provider == SwapProvider.THORCHAIN && referral != null) {
+            referralBpsFor(vultBPSDiscount?.getTierType())
+        } else null,
+    )
 
 internal data class BestQuote(val candidate: QuoteCandidate, val result: QuoteFetchResult)
 

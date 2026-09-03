@@ -2987,7 +2987,9 @@ internal class SwapFormViewModelTest {
                     any(),
                     any(),
                 )
-            } returns createDefaultQuoteFetchResult()
+                // A priced source: the discount row is only shown when the fee above it could be
+                // grossed by that same amount, which an unpriced source can't do.
+            } returns createDefaultQuoteFetchResult(srcFiat = FiatValue(BigDecimal("1000"), "USD"))
 
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()

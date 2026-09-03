@@ -400,7 +400,7 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
             vultBpsDiscount = 0,
         )
 
-    private fun swapKitEvmTransaction(): RegularSwapTransaction =
+    private fun swapKitEvmTransaction(vultBpsDiscount: Int? = null): RegularSwapTransaction =
         RegularSwapTransaction(
             id = "tx-swapkit",
             vaultId = "vault-1",
@@ -445,7 +445,57 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
                 ),
             isApprovalRequired = false,
             gasFeeFiatValue = usd("3.50"),
+            swapFeePercent = "0.50%",
+            vultBpsDiscount = vultBpsDiscount,
         )
+
+    @Test
+    fun `never grosses a SwapKit fee, which is an inbound cost no discount came off`() = runTest {
+        // SwapKit reports the source-chain inbound (deposit) cost as its fee and bakes the
+        // affiliate fee into the quoted destination amount. Adding a Gold tier's 20 bps onto that
+        // would invent a discount on a network cost — and the row below it would subtract from a
+        // fee it was never added to.
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { tokenRepository.getNativeToken(eth.chain.id) } returns eth
+        coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("400")
+        coEvery { convertTokenValueToFiat(eth, inboundPlaceholder, AppCurrency.USD) } returns
+            usd("0.60")
+
+        val uiModel = mapper().invoke(swapKitEvmTransaction(vultBpsDiscount = 20))
+
+        uiModel.providerFee.fiatValue shouldBe "0.60"
+        uiModel.swapFeePercent shouldBe null
+        uiModel.vultBpsDiscountFiatValue shouldBe null
+    }
+
+    @Test
+    fun `drops the rate and the discount row when the source has lost its price`() = runTest {
+        // Without a source price the discount can't be valued, so the fee can't be grossed by it.
+        // Titling the charged fee "0.50%" would then restate the double cut #5803 removes, and the
+        // row would read "-$0.00" against a fee it never came off.
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { convertTokenValueToFiat(usdt, affiliateFee, AppCurrency.USD) } returns usd("1.18")
+        coEvery { convertTokenValueToFiat(usdt, outboundFee, AppCurrency.USD) } returns usd("2.36")
+
+        val uiModel =
+            mapper().invoke(transaction(vultBpsDiscount = 20, vultBpsDiscountFiatValue = "$0.40"))
+
+        uiModel.providerFee.fiatValue shouldBe "1.18"
+        uiModel.swapFeePercent shouldBe null
+        uiModel.vultBpsDiscountFiatValue shouldBe null
+    }
 
     private fun transaction(
         swapFee: TokenValue? = affiliateFee,

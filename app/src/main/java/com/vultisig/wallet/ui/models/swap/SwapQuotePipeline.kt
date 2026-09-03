@@ -467,8 +467,34 @@ internal class SwapQuotePipeline(
             else quoteResult.swapFeeFiat
         // The row is titled with the list rate, so its amount is the fee the provider charged plus
         // every discount the rows below it itemize: together they are what the swap would have
-        // cost undiscounted, and subtracting those rows lands back on the net Total Fee.
-        //
+        // cost undiscounted, and subtracting those rows lands back on the net Total Fee. Both come
+        // off the one source snapshot below, so the rows and the fee they were taken from can never
+        // disagree.
+        val vultDiscountFiat = bpsOfSourceFiat(quoteResult.srcFiat, discountInfo.vultBpsDiscount)
+        val referralDiscountFiat =
+            bpsOfSourceFiat(quoteResult.srcFiat, discountInfo.referralBpsDiscount)
+        val feeRow =
+            swapFeeRow(
+                provider = provider,
+                netFee = quoteResult.affiliateFeeFiat,
+                listRate = quoteResult.swapFeePercent,
+                discountBps =
+                    listOf(discountInfo.vultBpsDiscount, discountInfo.referralBpsDiscount),
+                pricedDiscounts = listOf(vultDiscountFiat, referralDiscountFiat),
+            )
+        // The discount rows show exactly when the fee above them was grossed to the list rate —
+        // [swapFeeRow] returns a rate only then. A row that subtracts from a fee it was never added
+        // to states a saving the panel cannot reconcile: an unpriced source values every discount
+        // at "-$0.00", and SwapKit's itemized amount is an inbound deposit cost no affiliate
+        // discount was ever taken off.
+        if (!feeRow.isListRate) {
+            discountInfo =
+                discountInfo.copy(
+                    vultBpsDiscountFiatValue = null,
+                    referralBpsDiscountFiatValue = null,
+                )
+        }
+
         // Empty text hides the row entirely (iOS `swapFeeString` returns `.empty` here): a SwapKit
         // UTXO deposit's cost is already surfaced as the Network Fee, so there is no separate swap
         // fee to show rather than a redundant "$0.00" row. A provider that bakes its fee into the
@@ -477,28 +503,11 @@ internal class SwapQuotePipeline(
             when {
                 isSwapKitUtxoSwap -> ""
                 quoteResult.swapFeeIncludedInRate -> quoteResult.feeText
-                else ->
-                    fiatValueToString(
-                        undiscountedSwapFee(
-                            netFee = quoteResult.affiliateFeeFiat,
-                            waived =
-                                listOf(
-                                    bpsOfSourceFiat(
-                                        quoteResult.srcFiat,
-                                        discountInfo.vultBpsDiscount,
-                                    ),
-                                    bpsOfSourceFiat(
-                                        quoteResult.srcFiat,
-                                        discountInfo.referralBpsDiscount,
-                                    ),
-                                ),
-                        ),
-                        asFee = true,
-                    )
+                else -> fiatValueToString(feeRow.fee, asFee = true)
             }
         // The SwapKit UTXO/Cardano deposit cost is shown once as the Network Fee and the Swap Fee
         // row is hidden entirely, so drop its percentage too (there is no row to label).
-        val swapFeePercent = if (isSwapKitUtxoSwap) null else quoteResult.swapFeePercent
+        val swapFeePercent = if (isSwapKitUtxoSwap) null else feeRow.percent
 
         val priceImpactDisplay = formatPriceImpact(quoteResult.priceImpact)
 

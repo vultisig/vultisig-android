@@ -92,28 +92,77 @@ internal class SwapQuotePipelineSwapFeeRowTest {
         result.feeText shouldBe "$0.99"
     }
 
+    @Test
+    fun `leaves a SwapKit inbound fee alone rather than grossing a network cost`() = runTest {
+        // SwapKit itemizes its source-chain inbound (deposit) cost as the quote's fee and bakes the
+        // affiliate fee into the quoted destination amount, so there is no affiliate charge here to
+        // gross up: adding the tier discount would invent a discount on a network cost, and titling
+        // that cost "0.50%" would be wrong however it is valued.
+        discountedAt(20, TierType.GOLD)
+
+        val result =
+            buildSuccess(charged = "0.59", srcFiat = "200", provider = SwapProvider.SWAPKIT)
+
+        result.feeText shouldBe "$0.59"
+        result.swapFeePercent shouldBe null
+        // And no discount row either: it would subtract from a fee it was never added to.
+        result.discountInfo.vultBpsDiscountFiatValue shouldBe null
+    }
+
+    @Test
+    fun `drops the rate and the discount row when the source has no price`() = runTest {
+        // Nothing can be added back to the charged fee, so it stays as the provider quoted it —
+        // and "0.50%" over a discounted amount would restate the double-billing read this row
+        // exists to fix. The discount row would read "-$0.00" against a fee it never came off.
+        discountedAt(20, TierType.GOLD)
+
+        val result = buildSuccess(charged = "0.59", srcFiat = "0")
+
+        result.feeText shouldBe "$0.59"
+        result.swapFeePercent shouldBe null
+        result.discountInfo.vultBpsDiscountFiatValue shouldBe null
+    }
+
+    @Test
+    fun `keeps the discount row when the source is priced`() = runTest {
+        discountedAt(20, TierType.GOLD)
+
+        val result = buildSuccess(charged = "0.59", srcFiat = "200")
+
+        result.swapFeePercent shouldBe "0.50%"
+        result.discountInfo.vultBpsDiscountFiatValue shouldBe "$0.40"
+    }
+
     private fun discountedAt(bps: Int?, tier: TierType?) {
         coEvery { swapDiscountChecker.checkVultBpsDiscount(any(), any(), any()) } returns
             VultDiscountResult(bps, bps?.let { "$0.40" }, tier)
     }
 
-    private suspend fun buildSuccess(charged: String, srcFiat: String) =
+    private suspend fun buildSuccess(
+        charged: String,
+        srcFiat: String,
+        provider: SwapProvider = SwapProvider.LIFI,
+    ) =
         pipeline.buildSuccess(
-            bestQuote = bestQuote(charged = charged, srcFiat = srcFiat),
+            bestQuote = bestQuote(charged = charged, srcFiat = srcFiat, provider = provider),
             src = sendSrc(usdc),
             srcTokenValue = BigInteger.valueOf(200_000_000),
             tokenValue = TokenValue(BigInteger.valueOf(200_000_000), usdc),
             currentDiscountInfo = DiscountInfo(),
         )
 
-    private fun bestQuote(charged: String, srcFiat: String): BestQuote {
+    private fun bestQuote(
+        charged: String,
+        srcFiat: String,
+        provider: SwapProvider = SwapProvider.LIFI,
+    ): BestQuote {
         val chargedFiat = FiatValue(BigDecimal(charged), "USD")
         return BestQuote(
-            candidate = QuoteCandidate(SwapProvider.LIFI, vultBPSDiscount = 20, referral = null),
+            candidate = QuoteCandidate(provider, vultBPSDiscount = 20, referral = null),
             result =
                 QuoteFetchResult(
                     quote = mockk<SwapQuote>(relaxed = true),
-                    provider = SwapProvider.LIFI,
+                    provider = provider,
                     providerUiText = UiText.DynamicString("LI.FI"),
                     srcFiatValueText = "$$srcFiat",
                     estimatedDstTokenValue = "0",
