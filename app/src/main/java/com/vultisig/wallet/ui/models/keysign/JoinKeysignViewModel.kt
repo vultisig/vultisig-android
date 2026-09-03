@@ -838,6 +838,12 @@ constructor(
      */
     private fun loadDecodedVerifyHero(payload: KeysignPayload, vaultCoins: List<Coin>) {
         decodedVerifyHeroJob?.cancel()
+        // A reading belongs to exactly one payload. Cleared before the read rather than only
+        // written after it, so a payload whose reading is silent, unreadable, or fails leaves
+        // nothing behind: NSD can re-surface a mediator service and drive this a second time, and
+        // a retained verb would let the simulation paths below retitle the new transaction with
+        // the previous one's operation.
+        decodedVerifyHero = null
         decodedVerifyHeroJob =
             viewModelScope.safeLaunch(
                 onError = { Timber.w(it, "Failed to resolve the decoded verify hero") }
@@ -849,9 +855,11 @@ constructor(
                             coin = payload.coin,
                             trustedCoins = vaultCoins,
                         )
-                    } ?: return@safeLaunch
+                    }
 
                 decodedVerifyHero = resolved
+                if (resolved == null) return@safeLaunch
+
                 verifyUiModel.update { it.withDecodedHero(resolved) }
             }
     }
