@@ -115,6 +115,7 @@ internal class VerifyDepositViewModelTest {
             ioDispatcher = testDispatcher,
             launchKeysign = launchKeysign,
             isVaultHasFastSignById = isVaultHasFastSignById,
+            verifyTransactionPresentation = mockk(relaxed = true),
         )
 
     /**

@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.nativeToken
+import com.vultisig.wallet.data.models.transaction_decoding.asSignedTransactionContent
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -18,11 +19,15 @@ import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.depositVerifyAcceptsDecodedHero
 import com.vultisig.wallet.ui.models.mappers.depositVerifyTitleRes
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transactiondecoding.VerifyTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
@@ -90,6 +95,13 @@ internal data class DepositTransactionUiModel(
      * (issue #5644). iOS surfaces the same case as `.amountUnverifiable`.
      */
     val unverifiedWithdrawShares: String? = null,
+    /**
+     * The decoded reading of the transaction about to be signed, when the screen has nothing more
+     * specific of its own to say. Replaces the header verb and the amount below it; null everywhere
+     * the screen already names the operation — a limit-order cancel, a Kamino deposit or withdraw,
+     * an unbond — and for every reading the decoder is deliberately silent on.
+     */
+    val heroContent: HeroContent? = null,
 )
 
 internal data class VerifyDepositUiModel(
@@ -121,6 +133,7 @@ constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
+    private val verifyTransactionPresentation: VerifyTransactionPresentation,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifyDepositUiModel())
@@ -176,6 +189,8 @@ constructor(
                         )
                 state.update { it.copy(depositTransactionUiModel = depositTransactionUiModel) }
 
+                loadDecodedHero(transaction)
+
                 // Keep isLoading true (Sign button disabled) until the balance lookup resolves, so
                 // a zero-balance voter cannot tap Sign mid round-trip while hasEnoughBalance is
                 // still at its default true and start the doomed ceremony this targets (#5044).
@@ -196,6 +211,47 @@ constructor(
 
         loadFastSign()
         loadPassword()
+    }
+
+    /**
+     * Reads what this deposit actually does from the transaction the signer builds from, so the
+     * header names the operation rather than calling every DeFi transaction a send.
+     *
+     * Best-effort and never a signing dependency: an unreadable transaction, a failed position
+     * read, or a reading the decoder is silent on all leave the screen exactly as it is. A screen
+     * that already names the operation keeps its own presentation — see
+     * [depositVerifyAcceptsDecodedHero].
+     */
+    private fun loadDecodedHero(transaction: DepositTransaction) {
+        if (
+            !depositVerifyAcceptsDecodedHero(
+                depositVerifyTitleRes(transaction.operation, transaction.memo)
+            )
+        ) {
+            return
+        }
+
+        viewModelScope.safeLaunch(
+            onError = { Timber.w(it, "Failed to resolve the decoded deposit verify hero") }
+        ) {
+            val hero =
+                withContext(ioDispatcher) {
+                    verifyTransactionPresentation.resolve(
+                        content = transaction.asSignedTransactionContent(),
+                        coin = transaction.srcToken,
+                        trustedCoins = vaultRepository.get(transaction.vaultId)?.coins.orEmpty(),
+                    )
+                } ?: return@safeLaunch
+
+            state.update {
+                it.copy(
+                    depositTransactionUiModel =
+                        it.depositTransactionUiModel.copy(
+                            heroContent = hero.applyTo(it.depositTransactionUiModel.heroContent)
+                        )
+                )
+            }
+        }
     }
 
     /**

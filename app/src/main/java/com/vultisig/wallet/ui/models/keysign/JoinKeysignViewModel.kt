@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.ResolveKaminoRelayedInt
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
-import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -34,6 +33,7 @@ import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
+import com.vultisig.wallet.data.models.transaction_decoding.asSignedTransactionContent
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -50,9 +50,13 @@ import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
+import com.vultisig.wallet.ui.models.mappers.depositVerifyAcceptsDecodedHero
+import com.vultisig.wallet.ui.models.sign.CustomMessageDecoder
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.models.transactiondecoding.VerifyHero
+import com.vultisig.wallet.ui.models.transactiondecoding.VerifyTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -275,6 +279,8 @@ constructor(
     private val keysignViewModelFactory: KeysignViewModel.Factory,
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
+    private val verifyTransactionPresentation: VerifyTransactionPresentation,
+    private val customMessageDecoder: CustomMessageDecoder,
     private val qbtcClaimCosign: QbtcClaimCosignUseCase,
     private val tonDappHeroResolver: TonDappHeroResolver,
     private val resolveQbtcClaimCoins: ResolveQbtcClaimCoinsUseCase,
@@ -287,8 +293,6 @@ constructor(
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
-
-        private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
     }
 
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
@@ -323,6 +327,15 @@ constructor(
     private var _jobWaitingForKeysignStart: Job? = null
     private var blockaidSimulationJob: Job? = null
     private var tonJettonHeroJob: Job? = null
+    private var decodedVerifyHeroJob: Job? = null
+    private var decodedCustomMessageJob: Job? = null
+
+    /**
+     * The decoded reading of the payload on the verify screen, kept so a simulation hero landing
+     * after it can still borrow the decoded verb. Volatile because the simulation jobs read it from
+     * their own coroutines.
+     */
+    @Volatile private var decodedVerifyHero: VerifyHero? = null
     private val isJoiningKeysign = AtomicBoolean(false)
     private var isNavigateToHome: Boolean = false
 
@@ -544,10 +557,12 @@ constructor(
 
         customMessagePayload = customMessage
 
+        // The payload exactly as it will be signed. A reading of it arrives separately and is
+        // shown alongside, so the bytes are on screen from the first frame either way.
         val model =
             SignMessageTransactionUiModel(
                 method = customMessage.method,
-                message = getNormalizedCustomMessage(customMessage),
+                message = customMessage.message,
             )
 
         transactionTypeUiModel = TransactionTypeUiModel.SignMessage(model)
@@ -555,23 +570,40 @@ constructor(
         verifyUiModel.value =
             VerifyUiModel.SignMessage(model = VerifySignMessageUiModel(model = model))
 
+        loadDecodedCustomMessage(customMessage)
+
         return true
     }
 
-    private fun getNormalizedCustomMessage(customMessage: CustomMessagePayload) =
-        // For "eth_signTypedData_v4", the extension sends both the message and the domain
-        // as pre-hashed values. Because these fields are already hashed, the original data
-        // cannot be decoded from the resulting hex string.
-        // Therefore, we display the raw hex instead.
-        //
-        // Reference:
-        // https://github.com/ethers-io/ethers.js/blob/98c49d091eb84a9146dfba8476f18e4c3e3d1d31/src.ts/hash/typed-data.ts#L520
-        // https://github.com/vultisig/vultisig-windows/blob/e7e5b388ca022c9e3f02a85346336b837857a856/core/inpage-provider/popup/view/resolvers/signMessage/overview/index.tsx#L36
-        if (customMessage.method.equals(other = ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) {
-            customMessage.message
-        } else {
-            customMessage.message.normalizeMessageFormat()
-        }
+    /**
+     * Reads the custom message so a joining device says what it is signing rather than showing a
+     * bare hex string. Resolved off the join path because it can reach the network: the verify
+     * screen is already rendered by the time this lands, and a failed read simply adds nothing.
+     *
+     * The initiator resolves the same reading through the same decoder, so both devices agree.
+     */
+    private fun loadDecodedCustomMessage(customMessage: CustomMessagePayload) {
+        decodedCustomMessageJob?.cancel()
+        decodedCustomMessageJob =
+            viewModelScope.safeLaunch(
+                onError = { Timber.w(it, "Failed to decode the custom message") }
+            ) {
+                val decoded =
+                    customMessageDecoder.decode(
+                        method = customMessage.method,
+                        message = customMessage.message,
+                        chain = customMessage.chain,
+                    ) ?: return@safeLaunch
+
+                verifyUiModel.update { current ->
+                    if (current !is VerifyUiModel.SignMessage) current
+                    else
+                        VerifyUiModel.SignMessage(
+                            current.model.copy(model = current.model.model.copy(decoded = decoded))
+                        )
+                }
+            }
+    }
 
     private suspend fun handleKeysignMessage(proto: KeysignMessageProto): Boolean {
         val message = mapKeysignMessageFromProto(proto)
@@ -630,15 +662,19 @@ constructor(
 
             // A Kamino payload states none of what it is in a field — no memo, no deposit flag —
             // so it reaches the deposit screen on the strength of its own bytes or not at all.
-            kamino != null ->
+            kamino != null -> {
                 applyVerifyResult(
                     joinDepositUiModelBuilder.build(payload, _currentVault.id, kamino)
                 )
+                loadDecodedVerifyHero(payload, _currentVault.coins)
+            }
 
-            isDepositPayload(payload) ->
+            isDepositPayload(payload) -> {
                 // Resolve against _currentVault (post auto-switch), matching the swap/send builders
                 // and the done-screen, so a vault-switched ceremony shows one From name everywhere.
                 applyVerifyResult(joinDepositUiModelBuilder.build(payload, _currentVault.id))
+                loadDecodedVerifyHero(payload, _currentVault.coins)
+            }
 
             else -> {
                 val sendResult =
@@ -660,6 +696,7 @@ constructor(
                 } else {
                     loadBlockaidSimulation(payload, sendResult.functionName)
                 }
+                loadDecodedVerifyHero(payload, sendResult.vaultCoins)
                 scanTransaction(sendResult.transaction)
             }
         }
@@ -765,7 +802,14 @@ constructor(
                         isRawDappTransaction = payload.signSolana != null,
                     )
                 updateSendUiModel(verifyUiModel) { current ->
-                    current.copy(transaction = current.transaction.copy(heroContent = hero))
+                    // The decoded reading, when there is one, keeps the simulation's figures and
+                    // contributes only its verb — see [loadDecodedVerifyHero] for the ordering.
+                    current.copy(
+                        transaction =
+                            current.transaction.copy(
+                                heroContent = decodedVerifyHero?.applyTo(hero) ?: hero
+                            )
+                    )
                 }
                 // Mirror the resolved hero into [transactionTypeUiModel] so the
                 // done screen's `KeysignViewModel` carries the same content forward
@@ -777,6 +821,81 @@ constructor(
                 }
             }
     }
+
+    /**
+     * Reads what the payload actually signs so a joining device names the operation rather than
+     * defaulting to the send wording. Best-effort and never a signing dependency: an unreadable
+     * transaction, a failed position read, or a silent reading all leave the screen as it is.
+     *
+     * The result is held in [decodedVerifyHero] as well as applied, because the simulation jobs
+     * above resolve concurrently and may land in either order — whichever writes second reapplies
+     * the reading, so the verb survives the race.
+     *
+     * Deliberately confined to [verifyUiModel]. The done screen resolves its own past-tense
+     * vocabulary from the same payload, so mirroring a present-progressive verb into
+     * [transactionTypeUiModel] the way the simulation heroes do would show "You’re staking" on a
+     * transaction that has already been signed.
+     */
+    private fun loadDecodedVerifyHero(payload: KeysignPayload, vaultCoins: List<Coin>) {
+        decodedVerifyHeroJob?.cancel()
+        // A reading belongs to exactly one payload. Cleared before the read rather than only
+        // written after it, so a payload whose reading is silent, unreadable, or fails leaves
+        // nothing behind: NSD can re-surface a mediator service and drive this a second time, and
+        // a retained verb would let the simulation paths below retitle the new transaction with
+        // the previous one's operation.
+        decodedVerifyHero = null
+        decodedVerifyHeroJob =
+            viewModelScope.safeLaunch(
+                onError = { Timber.w(it, "Failed to resolve the decoded verify hero") }
+            ) {
+                val resolved =
+                    withContext(Dispatchers.IO) {
+                        verifyTransactionPresentation.resolve(
+                            content = payload.asSignedTransactionContent(),
+                            coin = payload.coin,
+                            trustedCoins = vaultCoins,
+                        )
+                    }
+
+                decodedVerifyHero = resolved
+                if (resolved == null) return@safeLaunch
+
+                verifyUiModel.update { it.withDecodedHero(resolved) }
+            }
+    }
+
+    /**
+     * Places a decoded reading on whichever verify surface this ceremony is showing. A swap or a
+     * message signature is never displaced: both render their own two-sided or raw presentation,
+     * which a verb cannot improve on.
+     */
+    private fun VerifyUiModel.withDecodedHero(hero: VerifyHero): VerifyUiModel =
+        when (this) {
+            is VerifyUiModel.Send ->
+                VerifyUiModel.Send(
+                    model.copy(
+                        transaction =
+                            model.transaction.copy(
+                                heroContent = hero.applyTo(model.transaction.heroContent)
+                            )
+                    )
+                )
+
+            is VerifyUiModel.Deposit -> {
+                val deposit = model.depositTransactionUiModel
+                if (!depositVerifyAcceptsDecodedHero(deposit.titleRes)) this
+                else
+                    VerifyUiModel.Deposit(
+                        model.copy(
+                            depositTransactionUiModel =
+                                deposit.copy(heroContent = hero.applyTo(deposit.heroContent))
+                        )
+                    )
+            }
+
+            is VerifyUiModel.Swap,
+            is VerifyUiModel.SignMessage -> this
+        }
 
     /**
      * Resolve the jetton hero for a TonConnect request from the decoded message bodies. Surfaces
@@ -808,7 +927,10 @@ constructor(
      */
     private fun pushTonHero(hero: HeroContent) {
         updateSendUiModel(verifyUiModel) { current ->
-            current.copy(transaction = current.transaction.copy(heroContent = hero))
+            current.copy(
+                transaction =
+                    current.transaction.copy(heroContent = decodedVerifyHero?.applyTo(hero) ?: hero)
+            )
         }
         (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
             transactionTypeUiModel = TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))
@@ -1076,6 +1198,9 @@ constructor(
     private fun cleanUp() {
         _jobWaitingForKeysignStart?.cancel()
         blockaidSimulationJob?.cancel()
+        tonJettonHeroJob?.cancel()
+        decodedVerifyHeroJob?.cancel()
+        decodedCustomMessageJob?.cancel()
     }
 
     private fun waitForKeysignToStart() {

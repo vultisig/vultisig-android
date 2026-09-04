@@ -153,6 +153,9 @@ import com.vultisig.wallet.ui.models.send.GasSettingsUiModel
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
+import com.vultisig.wallet.ui.models.sign.DecodedCustomMessage
+import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
+import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.solanastaking.KaminoAmountUiState
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakePositionRow
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState
@@ -204,6 +207,7 @@ import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
+import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.swap.components.LimitSwapForm
@@ -396,6 +400,38 @@ class PreviewActivity : ComponentActivity() {
                     "send_tx_done_projected" -> SendTxDoneProjectedPreview()
                     "send_tx_done_unresolved" -> SendTxDoneUnresolvedPreview()
                     "send_tx_done_title" -> SendTxDoneTitleOnlyPreview()
+                    "verify_decoded_deposit_before" -> VerifyDecodedDepositPreview(hero = null)
+                    "verify_decoded_deposit_after" ->
+                        VerifyDecodedDepositPreview(hero = decodedStakeHero(), memo = "tcy+")
+                    "verify_decoded_deposit_projected" ->
+                        VerifyDecodedDepositPreview(
+                            hero = decodedUnstakeProjection(resolved = true)
+                        )
+                    "verify_decoded_deposit_unresolved" ->
+                        VerifyDecodedDepositPreview(
+                            hero = decodedUnstakeProjection(resolved = false)
+                        )
+                    "verify_decoded_send_before" -> VerifyDecodedSendHeroPreview(hero = null)
+                    "verify_decoded_send_after" ->
+                        VerifyDecodedSendHeroPreview(hero = decodedBondHero())
+                    "sign_message_hash_before" -> SignMessageDecodedPreview(decoded = null)
+                    "sign_message_hash_after" ->
+                        SignMessageDecodedPreview(decoded = DecodedCustomMessage.Hash)
+                    "sign_message_text" ->
+                        SignMessageDecodedPreview(
+                            decoded = DecodedCustomMessage.Text("Sign in to Uniswap")
+                        )
+                    "sign_message_call" ->
+                        SignMessageDecodedPreview(
+                            message = SIGN_MESSAGE_CALLDATA,
+                            decoded =
+                                DecodedCustomMessage.ContractCall(
+                                    function = "transfer(address,uint256)",
+                                    arguments =
+                                        "[{\"name\":\"to\",\"value\":\"0x9876…5432\"}," +
+                                            "{\"name\":\"amount\",\"value\":\"125000000\"}]",
+                                ),
+                        )
                     "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "limit_orders_tab" -> LimitOrdersTabPreview()
@@ -1681,6 +1717,178 @@ private fun SendTxDoneWithOperationHero(operationHero: HeroContent) {
             ),
         isTransactionDetailVisible = false,
         onTransactionDetailVisibleChange = {},
+    )
+}
+
+/**
+ * The three heroes a decoded reading can produce on Verify, against the surfaces that render them.
+ *
+ * They exist because the reading itself is not reachable yet: `SignedTransactionDecoder` registers
+ * no chain readers, so every transaction decodes to `Unknown` and each screen keeps its own
+ * presentation. These feed the resolved hero straight into the UI model, which is exactly what the
+ * view models do once a chain decoder lands, so the rendering, the vocabulary, and the left-aligned
+ * verb are all verifiable now.
+ *
+ * The data is the TCY position the done-screen previews use, so a Verify and a Done capture read as
+ * the same transaction at two points in time.
+ */
+@Composable
+private fun decodedStakeHero(): HeroContent =
+    HeroContent.Send(
+        title = stringResource(R.string.cosmos_staking_youre_staking),
+        coin =
+            HeroCoinAmount(
+                amount = "1,250.5",
+                ticker = "TCY",
+                logo = Coins.ThorChain.TCY.logo,
+                fiatValue = "$412.66",
+            ),
+    )
+
+/**
+ * An execution-set quantity. [resolved] = true is a position read that answered; false is the guard
+ * that matters — a read that failed or timed out. The verb and the signed scope are true either
+ * way, so both are shown; only the estimate is dropped, rather than being backfilled with the
+ * payload's carrier amount, which for a fractional unstake is dust.
+ */
+@Composable
+private fun decodedUnstakeProjection(resolved: Boolean): HeroContent =
+    HeroContent.Projected(
+        title = stringResource(R.string.cosmos_staking_youre_unstaking),
+        estimate =
+            if (resolved) {
+                HeroCoinAmount(
+                    amount = "625.25",
+                    ticker = "TCY",
+                    logo = Coins.ThorChain.TCY.logo,
+                    fiatValue = "$206.33",
+                )
+            } else {
+                null
+            },
+        scope = stringResource(R.string.withdrawing_share_of_staked_position, "50%"),
+    )
+
+@Composable
+private fun decodedBondHero(): HeroContent =
+    HeroContent.Send(
+        title = stringResource(R.string.verify_verb_bonding),
+        coin =
+            HeroCoinAmount(
+                amount = "75",
+                ticker = "RUNE",
+                logo = Coins.ThorChain.RUNE.logo,
+                fiatValue = "$337.50",
+            ),
+    )
+
+/**
+ * The function-call Verify surface. A null [hero] is the state before a chain decoder lands: the
+ * generic "You’re sending" header over the carrier amount, which for a `tcy-` unstake is one
+ * satoshi-scale dust figure that says nothing about the position being closed.
+ */
+@Composable
+private fun VerifyDecodedDepositPreview(hero: HeroContent?, memo: String = "tcy-:5000") {
+    val rune = Coins.ThorChain.RUNE
+    VerifyDepositScreen(
+        state =
+            VerifyDepositUiModel(
+                depositTransactionUiModel =
+                    DepositTransactionUiModel(
+                        token =
+                            ValuedToken(token = rune, value = "0.00000001", fiatValue = "$0.00"),
+                        srcAddress = "thor1abcdefghijklmnopqrstuvwxyz0123456789ab",
+                        srcVaultName = "Main Vault",
+                        dstAddress = "thor1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz9k8lqe",
+                        memo = memo,
+                        networkFeeTokenValue = "0.02 RUNE",
+                        networkFeeFiatValue = "$0.03",
+                        titleRes = R.string.verify_deposit_sending,
+                        heroContent = hero,
+                    ),
+                isLoading = false,
+            ),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
+    )
+}
+
+/**
+ * The Send Verify surface, which both the initiator and a joining co-signer render. A null [hero]
+ * is the current state: the native-amount card with no verb over it.
+ */
+@Composable
+private fun VerifyDecodedSendHeroPreview(hero: HeroContent?) {
+    val rune = Coins.ThorChain.RUNE
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        token = ValuedToken(token = rune, value = "75", fiatValue = "$337.50"),
+                        srcAddress = "thor1abcdefghijklmnopqrstuvwxyz0123456789ab",
+                        srcVaultName = "Main Vault",
+                        dstAddress = "thor1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz9k8lqe",
+                        memo = "BOND:thor1node0000000000000000000000000000000000",
+                        networkFeeTokenValue = "0.02 RUNE",
+                        networkFeeFiatValue = "$0.03",
+                        heroContent = hero,
+                    ),
+                hasFastSign = true,
+            ),
+        isConsentsEnabled = true,
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.keysign_sign_transaction),
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+    )
+}
+
+/** The 32-byte digest from the reported case: opaque, and not calldata. */
+private const val SIGN_MESSAGE_DIGEST =
+    "0xfc2e852f3d6effd607b325d140a32237c00ef518b06e0b02c420ba62f9964bd8"
+
+/** Real `transfer(address,uint256)` calldata: a 4-byte selector plus two 32-byte words. */
+private const val SIGN_MESSAGE_CALLDATA =
+    "0xa9059cbb0000000000000000000000009876543210fedcba9876543210fedcba98765432" +
+        "0000000000000000000000000000000000000000000000000000000007735940"
+
+/**
+ * The sign_message Verify screen, which renders a reading of the payload above the payload itself.
+ *
+ * [decoded] `null` is the state before a reading lands — and the state this screen was always in: a
+ * bare 32-byte digest with nothing saying that is what it is. [DecodedCustomMessage.Hash] names it.
+ * The other two are the cases that carry real content.
+ *
+ * The digest is the one from issue reproduction: iOS labels it "Contract Function Call (fc2e852f)"
+ * by reading its first four bytes as a selector, which is not what those bytes are.
+ */
+@Composable
+private fun SignMessageDecodedPreview(
+    decoded: DecodedCustomMessage?,
+    message: String = SIGN_MESSAGE_DIGEST,
+) {
+    VerifySignMessageScreen(
+        state =
+            VerifySignMessageUiModel(
+                model =
+                    SignMessageTransactionUiModel(
+                        method = "sign_message",
+                        message = message,
+                        decoded = decoded,
+                    )
+            ),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onBackClick = {},
+        onFastSignClick = {},
+        onConfirm = {},
     )
 }
 

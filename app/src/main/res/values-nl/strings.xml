@@ -730,6 +730,9 @@
     <string name="signing_error_transaction_timeout">Transactie is verlopen vanwege trage ondertekening. Probeer het opnieuw.</string>
     <string name="hint_message_to_sign">Bericht om te ondertekenen</string>
     <string name="verify_sign_message_message_sign">Bericht om te ondertekenen</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Gedecodeerd bericht</string>
+    <string name="verify_sign_message_message_hash">Berichthash</string>
     <string name="address_book_empty_description">Houd al uw belangrijke adressen op één plek bij elkaar.</string>
     <string name="address_book_empty_title">Uw adresboek is leeg</string>
     <string name="check_updates_settings_title">Controleer op Updates</string>
@@ -1750,6 +1753,23 @@
     <string name="done_verb_switched">Gewisseld</string>
     <string name="done_verb_placed_limit_order">Limietorder geplaatst</string>
     <string name="limit_swap_cancel_done_sent">Annulering verzonden</string>
+    <!-- Verify screens: present-progressive operation vocabulary read from the transaction about to be signed -->
+    <string name="verify_verb_bonding">Je bindt</string>
+    <string name="verify_verb_unbonding">Je ontbindt</string>
+    <string name="verify_verb_rebonding">Je bindt opnieuw</string>
+    <string name="verify_verb_leaving">Je verlaat</string>
+    <string name="verify_verb_depositing">Je stort</string>
+    <string name="verify_verb_withdrawing">Je neemt op</string>
+    <string name="verify_verb_switching">Je wisselt</string>
+    <string name="verify_verb_delegating">Je delegeert</string>
+    <string name="verify_verb_undelegating">Je trekt de delegatie in</string>
+    <string name="verify_verb_redelegating">Je delegeert opnieuw</string>
+    <string name="verify_verb_adding_liquidity">Je voegt liquiditeit toe</string>
+    <string name="verify_verb_redeeming">Je wisselt in</string>
+    <string name="verify_verb_minting">Je munt</string>
+    <string name="verify_verb_merging">Je voegt samen</string>
+    <string name="verify_verb_unmerging">Je splitst</string>
+    <string name="verify_verb_bridging">Je bridget</string>
     <string name="scope_your_whole_stake">je volledige stake</string>
     <string name="scope_rewards_accrued_so_far">tot nu toe opgebouwde beloningen</string>
     <string name="withdrawing_share_of_staked_position">%1$s van je gestakete positie</string>

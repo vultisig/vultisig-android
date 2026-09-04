@@ -734,6 +734,9 @@
     <string name="signing_error_transaction_timeout">Vrijeme transakcije je isteklo zbog sporog potpisivanja. Pokušajte ponovno.</string>
     <string name="hint_message_to_sign">Poruka za potpis</string>
     <string name="verify_sign_message_message_sign">Poruka za potpis</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Dekodirana poruka</string>
+    <string name="verify_sign_message_message_hash">Hash poruke</string>
     <string name="address_book_empty_description">Držite sve važne adrese organizirane na jednom mjestu.</string>
     <string name="address_book_empty_title">Vaš adresar je prazan</string>
     <string name="check_updates_settings_title">Provjerite Ažuriranja</string>
@@ -1767,6 +1770,23 @@
     <string name="done_verb_switched">Prebačeno</string>
     <string name="done_verb_placed_limit_order">Postavljen limit nalog</string>
     <string name="limit_swap_cancel_done_sent">Otkazivanje poslano</string>
+    <!-- Verify screens: present-progressive operation vocabulary read from the transaction about to be signed -->
+    <string name="verify_verb_bonding">Vezujete</string>
+    <string name="verify_verb_unbonding">Odvezujete</string>
+    <string name="verify_verb_rebonding">Ponovno vezujete</string>
+    <string name="verify_verb_leaving">Napuštate</string>
+    <string name="verify_verb_depositing">Polažete</string>
+    <string name="verify_verb_withdrawing">Podižete</string>
+    <string name="verify_verb_switching">Prebacujete</string>
+    <string name="verify_verb_delegating">Delegirate</string>
+    <string name="verify_verb_undelegating">Poništavate delegaciju</string>
+    <string name="verify_verb_redelegating">Ponovno delegirate</string>
+    <string name="verify_verb_adding_liquidity">Dodajete likvidnost</string>
+    <string name="verify_verb_redeeming">Otkupljujete</string>
+    <string name="verify_verb_minting">Kujete</string>
+    <string name="verify_verb_merging">Spajate</string>
+    <string name="verify_verb_unmerging">Razdvajate</string>
+    <string name="verify_verb_bridging">Premošćujete</string>
     <string name="scope_your_whole_stake">cijeli vaš ulog</string>
     <string name="scope_rewards_accrued_so_far">do sada stečene nagrade</string>
     <string name="withdrawing_share_of_staked_position">%1$s vaše uložene pozicije</string>

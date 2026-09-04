@@ -242,6 +242,9 @@ internal fun VerifySendScreen(
                         heroContent = tx.heroContent,
                         functionName = heroTitle,
                         modifier = Modifier.fillMaxWidth(),
+                        // Verify leads with the verb, so it sits against the card's left edge with
+                        // the rows below it. Done keeps the centred default.
+                        verbAlignment = Alignment.Start,
                     ) {
                         val rippleDapp = tx.signRipple
                         if (rippleDapp != null) {

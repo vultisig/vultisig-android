@@ -735,6 +735,9 @@
     <string name="signing_error_transaction_timeout">La transacción caducó por firma lenta. Inténtalo de nuevo.</string>
     <string name="hint_message_to_sign">Mensaje para firmar</string>
     <string name="verify_sign_message_message_sign">Mensaje para firmar</string>
+    <!-- Sign-message Verify: what the signed payload turned out to be -->
+    <string name="verify_sign_message_decoded_message">Mensaje decodificado</string>
+    <string name="verify_sign_message_message_hash">Hash del mensaje</string>
     <string name="address_book_empty_description">Mantén todas tus direcciones importantes organizadas en un solo lugar.</string>
     <string name="address_book_empty_title">Tu libreta de direcciones está vacía</string>
     <string name="check_updates_settings_title">Consultar actualizaciones</string>
@@ -1757,6 +1760,23 @@
     <string name="done_verb_switched">Cambiado</string>
     <string name="done_verb_placed_limit_order">Orden límite creada</string>
     <string name="limit_swap_cancel_done_sent">Cancelación enviada</string>
+    <!-- Verify screens: present-progressive operation vocabulary read from the transaction about to be signed -->
+    <string name="verify_verb_bonding">Estás vinculando</string>
+    <string name="verify_verb_unbonding">Estás desvinculando</string>
+    <string name="verify_verb_rebonding">Estás revinculando</string>
+    <string name="verify_verb_leaving">Estás saliendo</string>
+    <string name="verify_verb_depositing">Estás depositando</string>
+    <string name="verify_verb_withdrawing">Estás retirando</string>
+    <string name="verify_verb_switching">Estás cambiando</string>
+    <string name="verify_verb_delegating">Estás delegando</string>
+    <string name="verify_verb_undelegating">Estás cancelando la delegación</string>
+    <string name="verify_verb_redelegating">Estás redelegando</string>
+    <string name="verify_verb_adding_liquidity">Estás añadiendo liquidez</string>
+    <string name="verify_verb_redeeming">Estás canjeando</string>
+    <string name="verify_verb_minting">Estás acuñando</string>
+    <string name="verify_verb_merging">Estás fusionando</string>
+    <string name="verify_verb_unmerging">Estás separando</string>
+    <string name="verify_verb_bridging">Estás transfiriendo entre cadenas</string>
     <string name="scope_your_whole_stake">todo tu stake</string>
     <string name="scope_rewards_accrued_so_far">recompensas acumuladas hasta ahora</string>
     <string name="withdrawing_share_of_staked_position">%1$s de tu posición en staking</string>

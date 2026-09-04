@@ -43,6 +43,19 @@ internal fun depositVerifyTitleRes(operation: String, memo: String = ""): Int =
         else -> R.string.verify_deposit_sending
     }
 
+/**
+ * Whether a decoded reading may replace this screen's header.
+ *
+ * Only the generic "You're sending" is displaceable. Every other title is a specific presentation
+ * the screen resolved from its own structured knowledge — a limit-order cancel identified by its
+ * memo, a Kamino deposit or withdraw, an unbond — and those describe the transaction at least as
+ * well as a decoded verb would, while carrying rows (the order pair, the donated-dust warning) that
+ * belong with them. This is the ordering the iOS `TransactionHeroResolver` encodes by registering
+ * its specific providers ahead of the decoder.
+ */
+internal fun depositVerifyAcceptsDecodedHero(@StringRes titleRes: Int): Boolean =
+    titleRes == R.string.verify_deposit_sending
+
 internal class DepositTransactionUiModelMapperImpl
 @Inject
 constructor(

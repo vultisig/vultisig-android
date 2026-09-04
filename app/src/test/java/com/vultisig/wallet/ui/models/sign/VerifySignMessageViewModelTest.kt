@@ -84,6 +84,7 @@ internal class VerifySignMessageViewModelTest {
                     mapOf(SendDst.ARG_TRANSACTION_ID to TX_ID, SendDst.ARG_VAULT_ID to VAULT_ID)
                 ),
             customMessagePayloadRepo = customMessagePayloadRepo,
+            customMessageDecoder = mockk(relaxed = true),
             vaultPasswordRepository = vaultPasswordRepository,
             launchKeysignUseCase = launchKeysign,
             isVaultHasFastSignById = isVaultHasFastSignById,

@@ -150,6 +150,7 @@ internal class VerifyTransactionViewModelTest {
             tokenRepository = tokenRepository,
             json = json,
             ioDispatcher = testDispatcher,
+            verifyTransactionPresentation = mockk(relaxed = true),
         )
 
     /** Verifies checkConsentAddress sets consentAddress true. */

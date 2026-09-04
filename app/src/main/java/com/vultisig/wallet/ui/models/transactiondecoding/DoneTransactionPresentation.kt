@@ -45,7 +45,7 @@ constructor(
             DecodedTransactionPresentation.doneTitleRes(decoded.operation)?.let(context::getString)
                 ?: return null
 
-        return presentation.hero(decoded, trustedCoin(payload, trustedCoins), title)
+        return presentation.hero(decoded, trustedCoins.trustedMatchFor(payload.coin), title)
     }
 
     /**
@@ -64,20 +64,8 @@ constructor(
             return it
         }
 
-        return presentation.hero(decoded, trustedCoin(payload, trustedCoins), title)
+        return presentation.hero(decoded, trustedCoins.trustedMatchFor(payload.coin), title)
     }
-
-    /**
-     * The vault's own coin for the payload's asset, which carries the trusted decimals and logo.
-     * Falls back to the payload's coin when the vault holds no match — the payload is peer-supplied
-     * on a co-signer, so a local match is preferred wherever one exists.
-     */
-    private fun trustedCoin(payload: KeysignPayload, coins: List<Coin>): Coin =
-        coins.firstOrNull {
-            it.chain == payload.coin.chain &&
-                it.ticker.equals(payload.coin.ticker, ignoreCase = true) &&
-                it.contractAddress.equals(payload.coin.contractAddress, ignoreCase = true)
-        } ?: payload.coin
 
     companion object {
         /**

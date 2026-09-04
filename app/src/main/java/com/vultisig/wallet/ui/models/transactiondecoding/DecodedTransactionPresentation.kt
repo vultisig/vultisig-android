@@ -26,6 +26,18 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
 
 /**
+ * The vault's own coin for [coin], which carries the trusted decimals and logo. Falls back to
+ * [coin] itself when the vault holds no match — on a joining co-signer that coin is peer-supplied,
+ * so a local match is preferred wherever one exists.
+ */
+internal fun List<Coin>.trustedMatchFor(coin: Coin): Coin =
+    firstOrNull {
+        it.chain == coin.chain &&
+            it.ticker.equals(coin.ticker, ignoreCase = true) &&
+            it.contractAddress.equals(coin.contractAddress, ignoreCase = true)
+    } ?: coin
+
+/**
  * Converts provenance-aware readings into display content. This is the single boundary where
  * unsigned ticker, logo, and decimal metadata may enter.
  *
@@ -197,6 +209,57 @@ constructor(
                 DecodedOperation.SwitchChain -> R.string.done_verb_switched
                 DecodedOperation.LimitOrderPlacement -> R.string.done_verb_placed_limit_order
                 DecodedOperation.LimitOrderCancel -> R.string.limit_swap_cancel_done_sent
+            }
+
+        /**
+         * Verify uses present-progressive copy: the transaction has not been signed yet, so the
+         * verb names what the user is about to do. Every operation carries an explicit decision,
+         * and the null branch is the deliberately-silent set — readings whose surface already
+         * describes the transaction better than a verb could.
+         *
+         * A transfer is what the send screens are; a swap is rendered two-sided by its own verify
+         * screen; an approval names its spender and allowance; a vote moves nothing, so the verb
+         * would be the whole hero; a contract call of unknown shape and an unreadable transaction
+         * have nothing to add. `RemoveLiquidity` is silent for a different reason: naming it would
+         * displace the carrier amount the transaction actually charges.
+         */
+        fun verifyTitleRes(operation: DecodedOperation): Int? =
+            when (operation) {
+                DecodedOperation.Transfer,
+                DecodedOperation.Swap,
+                DecodedOperation.Approve,
+                DecodedOperation.Vote,
+                DecodedOperation.ContractCall,
+                DecodedOperation.RemoveLiquidity,
+                DecodedOperation.Unknown -> null
+
+                // The Cosmos staking verify screen already ships this exact wording in all ten
+                // locales; reusing it keeps a decoded delegate reading identical to the screen a
+                // user reaches the same operation through.
+                DecodedOperation.Stake -> R.string.cosmos_staking_youre_staking
+                DecodedOperation.Unstake -> R.string.cosmos_staking_youre_unstaking
+                DecodedOperation.ClaimRewards -> R.string.cosmos_staking_youre_claiming
+
+                DecodedOperation.Bond -> R.string.verify_verb_bonding
+                DecodedOperation.Unbond -> R.string.verify_verb_unbonding
+                DecodedOperation.Rebond -> R.string.verify_verb_rebonding
+                DecodedOperation.Leave -> R.string.verify_verb_leaving
+                DecodedOperation.SecuredAssetDeposit -> R.string.verify_verb_depositing
+                DecodedOperation.SecuredAssetWithdraw -> R.string.verify_verb_withdrawing
+                DecodedOperation.SwitchChain -> R.string.verify_verb_switching
+                DecodedOperation.Delegate -> R.string.verify_verb_delegating
+                DecodedOperation.Undelegate -> R.string.verify_verb_undelegating
+                DecodedOperation.Redelegate -> R.string.verify_verb_redelegating
+                DecodedOperation.AddLiquidity -> R.string.verify_verb_adding_liquidity
+                DecodedOperation.Redeem -> R.string.verify_verb_redeeming
+                DecodedOperation.Mint -> R.string.verify_verb_minting
+                DecodedOperation.Merge -> R.string.verify_verb_merging
+                DecodedOperation.Unmerge -> R.string.verify_verb_unmerging
+                DecodedOperation.IbcTransfer -> R.string.verify_verb_bridging
+
+                // The limit-order screens own this wording already, on both routes.
+                DecodedOperation.LimitOrderPlacement -> R.string.verify_limit_order_title
+                DecodedOperation.LimitOrderCancel -> R.string.verify_limit_order_cancel_title
             }
 
         /**

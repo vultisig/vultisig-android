@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.sign.DecodedCustomMessage
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageViewModel
@@ -82,6 +83,7 @@ internal fun VerifySignMessageScreen(
     VerifySignMessageScreen(
         method = transactionUiModel.method,
         message = transactionUiModel.message,
+        decoded = transactionUiModel.decoded,
         confirmTitle = confirmTitle,
         hasFastSign = state.hasFastSign,
         onFastSignClick = onFastSignClick,
@@ -95,6 +97,7 @@ internal fun VerifySignMessageScreen(
 private fun VerifySignMessageScreen(
     method: String,
     message: String,
+    decoded: DecodedCustomMessage?,
     hasFastSign: Boolean,
     hasToolbar: Boolean,
     confirmTitle: String,
@@ -141,8 +144,45 @@ private fun VerifySignMessageScreen(
                 value = method,
             )
 
+            // What the payload turned out to be, when it could be read. Shown above the payload
+            // rather than in place of it, so nothing that gets signed is ever hidden behind a
+            // friendlier rendering of it.
+            when (decoded) {
+                is DecodedCustomMessage.Text ->
+                    SignMessageCard(
+                        title = stringResource(R.string.verify_sign_message_decoded_message),
+                        value = decoded.value,
+                    )
+
+                is DecodedCustomMessage.ContractCall -> {
+                    SignMessageCard(
+                        title =
+                            stringResource(R.string.verify_transaction_function_signature_title),
+                        value = decoded.function,
+                    )
+                    decoded.arguments?.let { arguments ->
+                        SignMessageCard(
+                            title =
+                                stringResource(R.string.verify_transaction_function_inputs_title),
+                            value = arguments,
+                        )
+                    }
+                }
+
+                // A digest is named by the card below rather than described by one of its own.
+                DecodedCustomMessage.Hash,
+                null -> Unit
+            }
+
             SignMessageCard(
-                title = stringResource(R.string.verify_sign_message_message_sign),
+                title =
+                    stringResource(
+                        if (decoded is DecodedCustomMessage.Hash) {
+                            R.string.verify_sign_message_message_hash
+                        } else {
+                            R.string.verify_sign_message_message_sign
+                        }
+                    ),
                 value = message,
             )
         }
@@ -155,6 +195,7 @@ private fun VerifySignMessageScreenPreview() {
     VerifySignMessageScreen(
         method = "method",
         message = "message",
+        decoded = null,
         confirmTitle = "Sign",
         hasFastSign = false,
         hasToolbar = false,

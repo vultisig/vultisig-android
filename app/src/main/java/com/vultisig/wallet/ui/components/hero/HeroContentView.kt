@@ -37,24 +37,37 @@ import java.util.Locale
  * The composable owns no padding or background — the parent card provides those — so it can be
  * dropped into the existing `tokenContent` slot of `TxDoneScaffold` and the inner column of
  * `VerifySendScreen` without altering surrounding layout.
+ *
+ * [verbAlignment] places the verb and the copy that qualifies it. Verify leads with the verb, so it
+ * passes [Alignment.Start]; the done screens keep the centred default. Figures are unaffected: a
+ * coin row and a swap's two legs are centred on every surface.
  */
 @Composable
-internal fun HeroContentView(content: HeroContent, modifier: Modifier = Modifier) {
+internal fun HeroContentView(
+    content: HeroContent,
+    modifier: Modifier = Modifier,
+    verbAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+) {
+    val verbTextAlign = if (verbAlignment == Alignment.Start) TextAlign.Start else TextAlign.Center
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         when (content) {
-            is HeroContent.Title -> TitleOnlyHero(text = content.title, caption = null)
+            is HeroContent.Title ->
+                TitleOnlyHero(text = content.title, caption = null, textAlign = verbTextAlign)
             HeroContent.Unverified ->
                 TitleOnlyHero(
                     text = stringResource(R.string.dapp_hero_unverified_function_title),
                     caption = stringResource(R.string.dapp_hero_unverified_function_subtitle),
+                    textAlign = verbTextAlign,
                 )
-            is HeroContent.Send -> SendHero(content)
+            is HeroContent.Send -> SendHero(content, verbTextAlign)
+            // A swap states both legs, so its verb sits over a two-row figure and stays centred
+            // on every surface — the same exception iOS makes.
             is HeroContent.Swap -> SwapHero(content)
-            is HeroContent.Projected -> ProjectedHero(content)
+            is HeroContent.Projected -> ProjectedHero(content, verbTextAlign)
         }
     }
 }
@@ -72,12 +85,22 @@ internal fun TransactionHero(
     heroContent: HeroContent?,
     functionName: String?,
     modifier: Modifier = Modifier,
+    verbAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     content: @Composable () -> Unit,
 ) {
     when {
-        heroContent != null -> HeroContentView(content = heroContent, modifier = modifier)
+        heroContent != null ->
+            HeroContentView(
+                content = heroContent,
+                modifier = modifier,
+                verbAlignment = verbAlignment,
+            )
         functionName != null ->
-            HeroContentView(content = HeroContent.Title(functionName), modifier = modifier)
+            HeroContentView(
+                content = HeroContent.Title(functionName),
+                modifier = modifier,
+                verbAlignment = verbAlignment,
+            )
         else -> content()
     }
 }
@@ -96,7 +119,7 @@ internal fun TransactionHero(
  * Unverified state passes a non-null caption.
  */
 @Composable
-private fun TitleOnlyHero(text: String, caption: String?) {
+private fun TitleOnlyHero(text: String, caption: String?, textAlign: TextAlign) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -114,7 +137,7 @@ private fun TitleOnlyHero(text: String, caption: String?) {
             text = text,
             style = Theme.brockmann.headings.title2,
             color = Theme.v2.colors.text.primary,
-            textAlign = TextAlign.Center,
+            textAlign = textAlign,
             modifier = Modifier.fillMaxWidth(),
         )
         if (caption != null) {
@@ -122,7 +145,7 @@ private fun TitleOnlyHero(text: String, caption: String?) {
                 text = caption,
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.tertiary,
-                textAlign = TextAlign.Center,
+                textAlign = textAlign,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -130,8 +153,8 @@ private fun TitleOnlyHero(text: String, caption: String?) {
 }
 
 @Composable
-private fun SendHero(content: HeroContent.Send) {
-    content.title?.let { TitleAbove(it) }
+private fun SendHero(content: HeroContent.Send, verbTextAlign: TextAlign) {
+    content.title?.let { TitleAbove(it, verbTextAlign) }
     HeroCoinRow(coin = content.coin, iconSize = 36.dp)
 }
 
@@ -141,21 +164,22 @@ private fun SendHero(content: HeroContent.Send) {
  * never be mistaken for a committed amount.
  */
 @Composable
-private fun ProjectedHero(content: HeroContent.Projected) {
-    content.title?.let { TitleAbove(it) }
+private fun ProjectedHero(content: HeroContent.Projected, verbTextAlign: TextAlign) {
+    content.title?.let { TitleAbove(it, verbTextAlign) }
     content.estimate?.let { HeroCoinRow(coin = it, iconSize = 36.dp, approximate = true) }
+    // The scope qualifies the verb rather than the figure, so it follows the verb's alignment.
     Text(
         text = content.scope,
         style = Theme.brockmann.body.s.medium,
         color = Theme.v2.colors.text.tertiary,
-        textAlign = TextAlign.Center,
+        textAlign = verbTextAlign,
         modifier = Modifier.fillMaxWidth(),
     )
 }
 
 @Composable
 private fun SwapHero(content: HeroContent.Swap) {
-    content.title?.let { TitleAbove(it) }
+    content.title?.let { TitleAbove(it, TextAlign.Center) }
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -168,12 +192,12 @@ private fun SwapHero(content: HeroContent.Swap) {
 }
 
 @Composable
-private fun TitleAbove(title: String) {
+private fun TitleAbove(title: String, textAlign: TextAlign) {
     Text(
         text = title,
         style = Theme.brockmann.body.s.medium,
         color = Theme.v2.colors.text.secondary,
-        textAlign = TextAlign.Center,
+        textAlign = textAlign,
         modifier = Modifier.fillMaxWidth(),
     )
 }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.KeysignVerify
@@ -86,6 +87,7 @@ import dagger.assisted.AssistedInject
 import java.util.*
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -351,6 +353,13 @@ constructor(
     private val inAppReviewRepository: InAppReviewRepository,
     private val pendingLimitOrderRepository: PendingLimitOrderRepository,
     private val doneTransactionPresentation: DoneTransactionPresentation,
+    /**
+     * Injected so the two reads this view model starts at construction stay on the caller's
+     * scheduler. With a hardcoded [Dispatchers.IO] they hop to a real pool thread and resume back
+     * onto `Dispatchers.Main`, which under test can land after `resetMain()` — an uncaught
+     * `IllegalStateException` that surfaces on whichever test runs next in the same JVM.
+     */
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     /** Creates [KeysignViewModel] with runtime-provided assisted parameters. */
@@ -482,7 +491,7 @@ constructor(
             // stay cheap: `update` runs its lambda on the calling dispatcher and re-runs it on CAS
             // contention, so decoding inside it would put repeated chain parsing on the UI thread.
             val (hero, doneVerb) =
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     doneTransactionPresentation.resolve(payload, vault.coins) to
                         doneTransactionPresentation.specificTitle(payload)
                 }
@@ -553,7 +562,7 @@ constructor(
         chain: Chain,
         dstAddress: String,
     ): DestinationLabels {
-        val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+        val allVaults = withContext(ioDispatcher) { vaultRepository.getAll() }
         val dstVaultName =
             resolveDstVaultName(
                 allVaults = allVaults,
