@@ -47,8 +47,13 @@ object SolanaStakingTransactionReader {
     private const val PUBLIC_KEY_BYTES = 32
     private const val MAX_SEED_BYTES = 32
 
-    /** `Initialize` carries an Authorized (2 keys) plus a Lockup (2 keys + a timestamp). */
+    /**
+     * `Initialize` is a 4-byte discriminator, an `Authorized { staker, withdrawer }` of two public
+     * keys, and a `Lockup { unix_timestamp: i64, epoch: u64, custodian }` — 4 + 64 + 48.
+     */
     private const val INITIALIZE_DATA_BYTES = 116
+
+    private const val AUTHORIZED_STAKER_OFFSET = 4
 
     private const val CREATE_ACCOUNT_DATA_BYTES = 52
 
@@ -97,6 +102,15 @@ object SolanaStakingTransactionReader {
             STAKE_WITHDRAW -> {
                 // Withdraw data carries the lamports leaving the stake account.
                 if (instruction.data.size != 12 || instruction.accounts.size != 5) return null
+
+                // Account 1 is where the lamports go and account 4 is the authority permitting it.
+                // A transaction can name this wallet as the authority and somebody else as the
+                // recipient, which would read as "you're withdrawing" over funds leaving for an
+                // address the screen never shows. WalletCore builds this app's withdrawals with
+                // the signer as both, so requiring that refuses the mismatch and accepts every
+                // transaction this app produces.
+                if (instruction.accounts[1] != instruction.accounts[4]) return null
+
                 val lamports = instruction.data.littleEndianU64(offset = 4) ?: return null
                 SolanaStakingReading(
                     operation = DecodedOperation.WithdrawStake,
@@ -135,6 +149,11 @@ object SolanaStakingTransactionReader {
         val payer = create.accounts.getOrNull(0) ?: return null
         if (payer != delegate.accounts.getOrNull(5)) return null
         if (payer != initialize.authorizedStaker()) return null
+
+        // The withdrawer matters more than the staker: it is the authority that can take the
+        // lamports back out. Left unchecked, a transaction could name this wallet as staker while
+        // handing withdrawal to someone else — the wallet funds the account and cannot empty it.
+        if (payer != initialize.authorizedWithdrawer()) return null
 
         val vote = delegate.accounts.getOrNull(1) ?: return null
 
@@ -208,9 +227,17 @@ object SolanaStakingTransactionReader {
             data.size == 4 &&
             data.discriminator() == STAKE_DELEGATE
 
-    /** The staker `Initialize` authorises, which must be the account paying for the stake. */
+    /**
+     * `Initialize` carries `Authorized { staker, withdrawer }` straight after the discriminator, so
+     * the staker is the first key and the withdrawer the second.
+     */
     private fun KaminoTxInstruction.authorizedStaker(): String? =
-        data.takeIf { it.size == INITIALIZE_DATA_BYTES }?.base58(offset = 4)
+        data.takeIf { it.size == INITIALIZE_DATA_BYTES }?.base58(offset = AUTHORIZED_STAKER_OFFSET)
+
+    private fun KaminoTxInstruction.authorizedWithdrawer(): String? =
+        data
+            .takeIf { it.size == INITIALIZE_DATA_BYTES }
+            ?.base58(offset = AUTHORIZED_STAKER_OFFSET + PUBLIC_KEY_BYTES)
 
     /** True when any account this instruction names came from an unresolved lookup table. */
     private val KaminoTxInstruction.namesAnUnresolvedAccount: Boolean
