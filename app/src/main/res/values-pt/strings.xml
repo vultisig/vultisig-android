@@ -398,6 +398,7 @@
     <string name="deposit_form_bonded_lp_units">Unidades LP vinculadas</string>
     <string name="deposit_form_no_bonded_assets_on_node">Nenhum ativo vinculado encontrado neste nó</string>
     <string name="deposit_form_bonded_assets_load_failed">Não foi possível carregar os ativos vinculados deste nó</string>
+    <string name="deposit_form_bonded_assets_loading">Carregando ativos vinculados…</string>
     <string name="deposit_form_estimated_bond_value">Valor estimado do bond</string>
     <string name="join_keysign_error_wrong_vault_share">A mesma partilha do cofre. Por favor, altere a partilha para assinar</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Alterar cofre</string>

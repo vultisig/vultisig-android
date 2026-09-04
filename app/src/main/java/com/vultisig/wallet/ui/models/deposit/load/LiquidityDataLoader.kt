@@ -12,10 +12,12 @@ import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
+import com.vultisig.wallet.ui.models.deposit.BondAssetsState
 import com.vultisig.wallet.ui.models.deposit.BondedUnitsCeiling
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.RemoveLpCalculator
+import com.vultisig.wallet.ui.models.deposit.bondedUnitsCeiling
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.assisted.Assisted
@@ -117,8 +119,7 @@ constructor(
                 bondableAssets = emptyList(),
                 selectedBondAsset = "",
                 availableLpUnits = null,
-                bondedUnitsCeiling = null,
-                bondAssetsLoadFailed = false,
+                bondAssetsState = BondAssetsState.Loading,
                 removeLpUnitsDivisor = BigInteger.ZERO,
                 removeLpPoolDepth = BigInteger.ZERO,
             )
@@ -132,8 +133,9 @@ constructor(
                         ?: run {
                             state.update {
                                 it.copy(
+                                    bondAssetsState = BondAssetsState.Failed,
                                     errorText =
-                                        UiText.StringResource(R.string.dialog_default_error_body)
+                                        UiText.StringResource(R.string.dialog_default_error_body),
                                 )
                             }
                             return@safeLaunch
@@ -151,6 +153,7 @@ constructor(
                         bondableAssets = assets,
                         selectedBondAsset = firstAsset,
                         availableLpUnits = firstPool?.availableUnits,
+                        bondAssetsState = BondAssetsState.Loaded(),
                         removeLpUnitsDivisor =
                             firstPool?.totalPoolLpUnits?.toBigInteger() ?: BigInteger.ZERO,
                         removeLpPoolDepth =
@@ -174,23 +177,9 @@ constructor(
      * its own would otherwise claim the node holds nothing when we never found out.
      */
     fun loadMayaBondedAssets(nodeAddress: String) {
-        loadMayaBondableAssetsJob?.cancel()
-        lpBondPoolMap = emptyMap()
-        clearBondedUnits()
-        state.update {
-            it.copy(
-                bondableAssets = emptyList(),
-                selectedBondAsset = "",
-                availableLpUnits = null,
-                bondedUnitsCeiling = null,
-                bondAssetsLoadFailed = false,
-                lpUnitsError = null,
-                removeLpUnitsDivisor = BigInteger.ZERO,
-                removeLpPoolDepth = BigInteger.ZERO,
-            )
-        }
-        assetsFieldState.clearText()
+        clearBondedAssets()
         if (nodeAddress.isBlank()) return
+        state.update { it.copy(bondAssetsState = BondAssetsState.Loading) }
         loadMayaBondableAssetsJob =
             scope.safeLaunch(onError = ::onBondAssetsLoadFailed) {
                 val bondAddress =
@@ -199,7 +188,7 @@ constructor(
                         ?: run {
                             // Not knowing our own address is a load failure like any other: the
                             // node may well hold a position, we just cannot ask about it.
-                            state.update { it.copy(bondAssetsLoadFailed = true) }
+                            state.update { it.copy(bondAssetsState = BondAssetsState.Failed) }
                             return@safeLaunch
                         }
                 val bondedByPool =
@@ -217,13 +206,42 @@ constructor(
                     it.copy(
                         bondableAssets = assets,
                         selectedBondAsset = firstAsset,
-                        bondedUnitsCeiling = bondedCeilingFor(firstAsset),
+                        bondAssetsState = BondAssetsState.Loaded(bondedCeilingFor(firstAsset)),
                     )
                 }
                 if (firstAsset.isNotEmpty()) {
                     assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
                 }
             }
+    }
+
+    /**
+     * Drops everything the Unbond form holds for one node: the cached position, the asset list and
+     * selection, and the two fields they are read back through.
+     *
+     * The node-address watcher calls this on the keystroke, ahead of its debounce, and not only
+     * [loadMayaBondedAssets] once the replacement load starts. Dropping the ceiling alone would
+     * leave the previous node's pools in the picker for the whole debounce, and selecting one
+     * restores that node's ceiling through [bondedCeilingFor] — a figure the form would then show,
+     * and Max would fill, for a node it no longer names.
+     */
+    fun clearBondedAssets() {
+        loadMayaBondableAssetsJob?.cancel()
+        lpBondPoolMap = emptyMap()
+        clearBondedUnits()
+        state.update {
+            it.copy(
+                bondableAssets = emptyList(),
+                selectedBondAsset = "",
+                availableLpUnits = null,
+                bondAssetsState = BondAssetsState.Idle,
+                lpUnitsError = null,
+                removeLpUnitsDivisor = BigInteger.ZERO,
+                removeLpPoolDepth = BigInteger.ZERO,
+            )
+        }
+        assetsFieldState.clearText()
+        lpUnitsFieldState.clearText()
     }
 
     /** Forgets the loaded unbond position so no ceiling can outlive the node it was read from. */
@@ -234,7 +252,7 @@ constructor(
 
     private fun onBondAssetsLoadFailed(error: Throwable) {
         Timber.e(error, "Error loading Maya bond assets")
-        state.update { it.copy(bondAssetsLoadFailed = true) }
+        state.update { it.copy(bondAssetsState = BondAssetsState.Failed) }
     }
 
     /**

@@ -39,11 +39,13 @@ import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.SelectionCard
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.models.deposit.BondAssetsState
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
+import com.vultisig.wallet.ui.models.deposit.bondedUnitsCeiling
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -382,27 +384,44 @@ internal fun DepositFormScreen(
                                 // Unbond lists what one node holds for this vault, so an empty
                                 // list is an answer and a failed fetch is not: neither may fall
                                 // back to free text, which would let the user sign an UNBOND for
-                                // a pool they hold nothing in on this node.
+                                // a pool they hold nothing in on this node. Which of the two this
+                                // is — and whether it is neither, the fetch still being in flight
+                                // — only the load state can say.
                                 isUnbond ->
-                                    BondAssetsMessage(
-                                        message =
-                                            stringResource(
-                                                if (state.bondAssetsLoadFailed)
-                                                    R.string.deposit_form_bonded_assets_load_failed
-                                                else R.string.deposit_form_no_bonded_assets_on_node
-                                            ),
-                                        actionText =
-                                            stringResource(R.string.retry).takeIf {
-                                                state.bondAssetsLoadFailed
-                                            },
-                                        onAction = onRetryLoadBondAssets,
-                                    )
+                                    when (state.bondAssetsState) {
+                                        BondAssetsState.Idle -> Unit
+                                        BondAssetsState.Loading ->
+                                            BondAssetsMessage(
+                                                message =
+                                                    stringResource(
+                                                        R.string.deposit_form_bonded_assets_loading
+                                                    )
+                                            )
+                                        BondAssetsState.Failed ->
+                                            BondAssetsMessage(
+                                                message =
+                                                    stringResource(
+                                                        R.string
+                                                            .deposit_form_bonded_assets_load_failed
+                                                    ),
+                                                actionText = stringResource(R.string.retry),
+                                                onAction = onRetryLoadBondAssets,
+                                            )
+                                        is BondAssetsState.Loaded ->
+                                            BondAssetsMessage(
+                                                message =
+                                                    stringResource(
+                                                        R.string
+                                                            .deposit_form_no_bonded_assets_on_node
+                                                    )
+                                            )
+                                    }
 
                                 // Bond keeps its typed-asset fallback — the surplus list can be
                                 // legitimately empty — but no longer swallows the failure that
                                 // produced this branch.
                                 else -> {
-                                    if (state.bondAssetsLoadFailed) {
+                                    if (state.bondAssetsState == BondAssetsState.Failed) {
                                         BondAssetsMessage(
                                             message =
                                                 stringResource(

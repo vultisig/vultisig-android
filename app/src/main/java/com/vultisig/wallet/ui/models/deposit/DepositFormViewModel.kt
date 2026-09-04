@@ -92,6 +92,35 @@ internal data class BondedUnitsCeiling(
     val units: String,
 )
 
+/**
+ * How far the MayaChain bond-asset fetch behind the Bond / Unbond form has got.
+ *
+ * The list of pools it produces cannot answer this on its own: empty means "this node holds nothing
+ * for you", "we have not asked yet", "we are asking" and "we could not find out" all at once, and
+ * only the last is worth a Retry while none of the others may claim the node is empty.
+ */
+internal sealed interface BondAssetsState {
+    /** Nothing has been asked for — the Unbond form has no node address to scope a fetch to. */
+    data object Idle : BondAssetsState
+
+    /** A fetch is in flight; the form may not yet say the node holds nothing. */
+    data object Loading : BondAssetsState
+
+    /** The fetch failed. Distinct from an empty result, and the only state worth a retry. */
+    data object Failed : BondAssetsState
+
+    /**
+     * The fetch landed. [ceiling] is Unbond's limit for the selected pool on the node it was read
+     * from; Bond leaves it null, its ceiling being the address-wide
+     * [DepositFormUiModel.availableLpUnits].
+     */
+    data class Loaded(val ceiling: BondedUnitsCeiling? = null) : BondAssetsState
+}
+
+/** Unbond's node- and pool-scoped ceiling, once loaded. */
+internal val DepositFormUiModel.bondedUnitsCeiling: BondedUnitsCeiling?
+    get() = (bondAssetsState as? BondAssetsState.Loaded)?.ceiling
+
 @Immutable
 internal data class DepositFormUiModel(
     val selectedToken: Coin = Coins.ThorChain.RUNE,
@@ -133,11 +162,9 @@ internal data class DepositFormUiModel(
     val selectedBondAsset: String = "",
     val availableLpUnits: String? = null,
     // Unbond's ceiling is node-scoped and so cannot share availableLpUnits, which Bond fills with
-    // an address-wide surplus.
-    val bondedUnitsCeiling: BondedUnitsCeiling? = null,
-    // Distinguishes "this node holds nothing for you" from "we could not find out": both leave the
-    // asset list empty, and only the second is worth a retry.
-    val bondAssetsLoadFailed: Boolean = false,
+    // an address-wide surplus. It rides on the load state because it is only meaningful once that
+    // load has landed.
+    val bondAssetsState: BondAssetsState = BondAssetsState.Idle,
     // For Maya: total LP units in the pool. For THORChain remove-LP, this stores the user's own
     // units (the calculator divides by it so that selectedUnits/userUnits gives the redeem
     // fraction).
@@ -460,8 +487,10 @@ constructor(
             it.copy(
                 selectedBondAsset = asset,
                 availableLpUnits = pool?.availableUnits,
-                bondedUnitsCeiling =
-                    if (isUnbond) liquidityDataLoader.bondedCeilingFor(asset) else null,
+                bondAssetsState =
+                    if (isUnbond)
+                        BondAssetsState.Loaded(liquidityDataLoader.bondedCeilingFor(asset))
+                    else it.bondAssetsState,
                 removeLpUnitsDivisor = pool?.totalPoolLpUnits?.toBigInteger() ?: BigInteger.ZERO,
                 removeLpPoolDepth = pool?.poolCacaoDepth?.toBigInteger() ?: BigInteger.ZERO,
                 lpUnitsError = null,

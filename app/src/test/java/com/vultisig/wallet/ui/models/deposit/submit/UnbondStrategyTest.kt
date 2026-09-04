@@ -14,10 +14,13 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
+import com.vultisig.wallet.ui.models.deposit.BondAssetsState
 import com.vultisig.wallet.ui.models.deposit.BondedUnitsCeiling
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -92,7 +95,7 @@ internal class UnbondStrategyTest {
                 )
                 .build()
 
-        assertEquals("UNBOND:MAYA.CACAO:1000:mayaNode", tx.memo)
+        tx.memo shouldBe "UNBOND:MAYA.CACAO:1000:mayaNode"
     }
 
     @Test
@@ -103,7 +106,7 @@ internal class UnbondStrategyTest {
         assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
         lpUnits.setTextAndPlaceCursorAtEnd("1001")
 
-        assertFailsWith<InvalidTransactionDataException> {
+        shouldThrow<InvalidTransactionDataException> {
             build(
                     Chain.MayaChain,
                     selectedTokenChain = Chain.MayaChain,
@@ -123,7 +126,7 @@ internal class UnbondStrategyTest {
         assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
         lpUnits.setTextAndPlaceCursorAtEnd("500")
 
-        assertFailsWith<InvalidTransactionDataException> {
+        shouldThrow<InvalidTransactionDataException> {
             build(
                     Chain.MayaChain,
                     selectedTokenChain = Chain.MayaChain,
@@ -141,7 +144,7 @@ internal class UnbondStrategyTest {
         assets.setTextAndPlaceCursorAtEnd("ETH.ETH")
         lpUnits.setTextAndPlaceCursorAtEnd("500")
 
-        assertFailsWith<InvalidTransactionDataException> {
+        shouldThrow<InvalidTransactionDataException> {
             build(
                     Chain.MayaChain,
                     selectedTokenChain = Chain.MayaChain,
@@ -159,7 +162,7 @@ internal class UnbondStrategyTest {
         assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
         lpUnits.setTextAndPlaceCursorAtEnd("1000")
 
-        assertFailsWith<InvalidTransactionDataException> {
+        shouldThrow<InvalidTransactionDataException> {
             build(Chain.MayaChain, selectedTokenChain = Chain.MayaChain).build()
         }
     }
@@ -173,8 +176,10 @@ internal class UnbondStrategyTest {
             depositChain = Chain.MayaChain,
             depositOption = DepositOption.Unbond,
             selectedBondAsset = asset,
-            bondedUnitsCeiling =
-                BondedUnitsCeiling(nodeAddress = node, asset = asset, units = units),
+            bondAssetsState =
+                BondAssetsState.Loaded(
+                    BondedUnitsCeiling(nodeAddress = node, asset = asset, units = units)
+                ),
         )
 
     @Test

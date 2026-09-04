@@ -522,6 +522,7 @@
     <string name="deposit_form_bonded_lp_units">Bonded LP Units</string>
     <string name="deposit_form_no_bonded_assets_on_node">No bonded assets found on this node</string>
     <string name="deposit_form_bonded_assets_load_failed">Couldn\'t load your bonded assets for this node</string>
+    <string name="deposit_form_bonded_assets_loading">Loading bonded assets…</string>
     <string name="deposit_form_estimated_bond_value">Estimated Bond Value</string>
     <string name="join_keysign_error_wrong_vault_share">Same vault share. Please change the share to sign</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Change Vault</string>

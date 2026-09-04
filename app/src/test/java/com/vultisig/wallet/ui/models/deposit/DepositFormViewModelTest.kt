@@ -50,12 +50,14 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -501,9 +503,9 @@ internal class DepositFormViewModelTest {
             advanceUntilIdle()
             val loaded = vm.state.first { it.bondableAssets.isNotEmpty() }
 
-            assertEquals(listOf("MAYA.CACAO"), loaded.bondableAssets)
-            assertEquals("500000", loaded.bondedUnitsCeiling?.units)
-            assertEquals(MAYA_NODE, loaded.bondedUnitsCeiling?.nodeAddress)
+            loaded.bondableAssets shouldBe listOf("MAYA.CACAO")
+            loaded.bondedUnitsCeiling?.units shouldBe "500000"
+            loaded.bondedUnitsCeiling?.nodeAddress shouldBe MAYA_NODE
         }
 
     @Test
@@ -520,11 +522,11 @@ internal class DepositFormViewModelTest {
 
         vm.lpUnitsFieldState.setTextAndPlaceCursorAtEnd("500001")
         vm.validateLpUnits()
-        assertNotNull(vm.state.value.lpUnitsError)
+        vm.state.value.lpUnitsError.shouldNotBeNull()
 
         vm.lpUnitsFieldState.setTextAndPlaceCursorAtEnd("500000")
         vm.validateLpUnits()
-        assertEquals(null, vm.state.value.lpUnitsError)
+        vm.state.value.lpUnitsError shouldBe null
     }
 
     @Test
@@ -538,10 +540,10 @@ internal class DepositFormViewModelTest {
 
             vm.loadData("vault1", Chain.MayaChain.raw, "unbond", MAYA_NODE)
             advanceUntilIdle()
-            val loaded = vm.state.first { it.bondAssetsLoadFailed }
+            val loaded = vm.state.first { it.bondAssetsState == BondAssetsState.Failed }
 
-            assertTrue(loaded.bondableAssets.isEmpty())
-            assertNull(loaded.bondedUnitsCeiling)
+            loaded.bondableAssets.shouldBeEmpty()
+            loaded.bondedUnitsCeiling shouldBe null
         }
 
     private fun givenMayaVaultAddress() {

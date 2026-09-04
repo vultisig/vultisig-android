@@ -187,10 +187,10 @@ constructor(
      * Keeps the Unbond asset list and its LP-unit ceiling tied to the node in the address field.
      *
      * The node cannot be read once and kept: the field is editable, and the route only prefills it.
-     * Every edit re-scopes what is bonded, hence what is unbondable — so the ceiling is dropped on
-     * the first keystroke rather than when the replacement lands. In between, the field already
-     * names the new node while the figure still describes the previous one, and the memo is built
-     * from the field.
+     * Every edit re-scopes what is bonded, hence what is unbondable — so the whole position is
+     * dropped on the keystroke rather than when the replacement lands. In between, the field
+     * already names the new node while the pools, the ceiling and the units would still describe
+     * the previous one, and the memo is built from the field.
      */
     private fun watchNodeAddressForUnbond() {
         nodeAddressWatchJob =
@@ -200,7 +200,7 @@ constructor(
                     .map { it.toString() }
                     .distinctUntilChanged()
                     .collectLatest { nodeAddress ->
-                        state.update { it.copy(bondedUnitsCeiling = null) }
+                        liquidityDataLoader.clearBondedAssets()
                         delay(NODE_ADDRESS_DEBOUNCE_MS)
                         liquidityDataLoader.loadMayaBondedAssets(nodeAddress)
                     }

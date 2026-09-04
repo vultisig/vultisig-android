@@ -18,6 +18,8 @@ import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -91,7 +93,7 @@ internal class BondStrategyTest {
         assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
         lpUnits.setTextAndPlaceCursorAtEnd("501")
 
-        assertFailsWith<InvalidTransactionDataException> {
+        shouldThrow<InvalidTransactionDataException> {
             build(Chain.MayaChain, availableLpUnits = "500").build()
         }
     }
@@ -109,7 +111,7 @@ internal class BondStrategyTest {
 
         val tx = build(Chain.MayaChain).build()
 
-        assertEquals("BOND:MAYA.CACAO:9999:mayaNode", tx.memo)
+        tx.memo shouldBe "BOND:MAYA.CACAO:9999:mayaNode"
     }
 
     @Test

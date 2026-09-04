@@ -7,6 +7,9 @@ import com.vultisig.wallet.data.api.MayaMemberDetails
 import com.vultisig.wallet.data.api.MayaMemberPool
 import com.vultisig.wallet.data.api.MayaNodeInfo
 import com.vultisig.wallet.data.api.MayaNodePool
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.maps.shouldBeEmpty
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlin.test.assertEquals
@@ -267,7 +270,7 @@ internal class MayachainBondRepositoryImplTest {
 
         val result = repository.getBondedLpUnitsOnNode(nodeAddress = "node1", bondAddress = "addr1")
 
-        assertEquals(mapOf("MAYA.CACAO" to 500000L), result)
+        result shouldBe mapOf("MAYA.CACAO" to 500000L)
     }
 
     @Test
@@ -293,7 +296,7 @@ internal class MayachainBondRepositoryImplTest {
 
         val result = repository.getBondedLpUnitsOnNode(nodeAddress = "node1", bondAddress = "addr1")
 
-        assertEquals(mapOf("MAYA.CACAO" to 500000L), result)
+        result shouldBe mapOf("MAYA.CACAO" to 500000L)
     }
 
     @Test
@@ -312,7 +315,7 @@ internal class MayachainBondRepositoryImplTest {
             val result =
                 repository.getBondedLpUnitsOnNode(nodeAddress = "node1", bondAddress = "addr1")
 
-            assertTrue(result.isEmpty())
+            result.shouldBeEmpty()
         }
 
     @Test
@@ -334,7 +337,7 @@ internal class MayachainBondRepositoryImplTest {
 
         val result = repository.getBondedLpUnitsOnNode(nodeAddress = "node1", bondAddress = "addr1")
 
-        assertEquals(mapOf("MAYA.CACAO" to 500000L), result)
+        result shouldBe mapOf("MAYA.CACAO" to 500000L)
     }
 
     @Test
@@ -342,10 +345,10 @@ internal class MayachainBondRepositoryImplTest {
         coEvery { api.getNodeDetails("node1") } throws RuntimeException("Node API failure")
 
         val thrown =
-            assertFailsWith<RuntimeException> {
+            shouldThrow<RuntimeException> {
                 repository.getBondedLpUnitsOnNode(nodeAddress = "node1", bondAddress = "addr1")
             }
-        assertEquals("Node API failure", thrown.message)
+        thrown.message shouldBe "Node API failure"
     }
 
     @Test

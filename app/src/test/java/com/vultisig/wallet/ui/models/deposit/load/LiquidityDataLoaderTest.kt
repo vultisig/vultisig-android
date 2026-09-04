@@ -8,16 +8,17 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
+import com.vultisig.wallet.ui.models.deposit.BondAssetsState
 import com.vultisig.wallet.ui.models.deposit.BondedUnitsCeiling
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
+import com.vultisig.wallet.ui.models.deposit.bondedUnitsCeiling
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -77,14 +78,13 @@ internal class LiquidityDataLoaderTest {
             awaitLoad()
 
             val current = state.value
-            assertEquals(listOf("MAYA.CACAO", "ETH.ETH"), current.bondableAssets)
-            assertEquals("MAYA.CACAO", current.selectedBondAsset)
-            assertEquals(
-                BondedUnitsCeiling(nodeAddress = NODE, asset = "MAYA.CACAO", units = "500000"),
-                current.bondedUnitsCeiling,
-            )
-            assertEquals("MAYA.CACAO", assetsField.text.toString())
-            assertFalse(current.bondAssetsLoadFailed)
+            current.bondableAssets shouldBe listOf("MAYA.CACAO", "ETH.ETH")
+            current.selectedBondAsset shouldBe "MAYA.CACAO"
+            current.bondAssetsState shouldBe
+                BondAssetsState.Loaded(
+                    BondedUnitsCeiling(nodeAddress = NODE, asset = "MAYA.CACAO", units = "500000")
+                )
+            assetsField.text.toString() shouldBe "MAYA.CACAO"
         }
 
     @Test
@@ -95,8 +95,8 @@ internal class LiquidityDataLoaderTest {
         loader.loadMayaBondedAssets(NODE)
         awaitLoad()
 
-        assertEquals(listOf("MAYA.CACAO"), state.value.bondableAssets)
-        assertEquals("500000", state.value.bondedUnitsCeiling?.units)
+        state.value.bondableAssets shouldBe listOf("MAYA.CACAO")
+        state.value.bondedUnitsCeiling?.units shouldBe "500000"
     }
 
     @Test
@@ -107,9 +107,9 @@ internal class LiquidityDataLoaderTest {
         awaitLoad()
 
         val current = state.value
-        assertTrue(current.bondableAssets.isEmpty())
-        assertNull(current.bondedUnitsCeiling)
-        assertFalse(current.bondAssetsLoadFailed)
+        current.bondableAssets.shouldBeEmpty()
+        // Loaded, not Failed: the node was asked and answered that it holds nothing.
+        current.bondAssetsState shouldBe BondAssetsState.Loaded()
     }
 
     @Test
@@ -122,10 +122,30 @@ internal class LiquidityDataLoaderTest {
             awaitLoad()
 
             val current = state.value
-            assertTrue(current.bondableAssets.isEmpty())
-            assertNull(current.bondedUnitsCeiling)
-            assertTrue(current.bondAssetsLoadFailed)
+            current.bondableAssets.shouldBeEmpty()
+            current.bondAssetsState shouldBe BondAssetsState.Failed
         }
+
+    @Test
+    fun `loadMayaBondedAssets reports loading before it can claim the node is empty`() = runTest {
+        val fetch = CompletableDeferred<Map<String, Long>>()
+        coEvery { bondRepository.getBondedLpUnitsOnNode(NODE, VAULT_ADDRESS) } coAnswers
+            {
+                fetch.await()
+            }
+
+        loader.loadMayaBondedAssets(NODE)
+
+        // The pool list is empty in flight exactly as it is on an empty node, so only the state
+        // stops the form from telling the user this node holds nothing before it has been asked.
+        state.value.bondableAssets.shouldBeEmpty()
+        state.value.bondAssetsState shouldBe BondAssetsState.Loading
+
+        fetch.complete(mapOf("MAYA.CACAO" to 500_000L))
+        awaitLoad()
+
+        state.value.bondedUnitsCeiling?.units shouldBe "500000"
+    }
 
     @Test
     fun `loadMayaBondedAssets asks nothing while the node address is blank`() = runTest {
@@ -133,8 +153,9 @@ internal class LiquidityDataLoaderTest {
         awaitLoad()
 
         coVerify(exactly = 0) { bondRepository.getBondedLpUnitsOnNode(any(), any()) }
-        assertTrue(state.value.bondableAssets.isEmpty())
-        assertFalse(state.value.bondAssetsLoadFailed)
+        state.value.bondableAssets.shouldBeEmpty()
+        // Idle, not Failed: a form with no node named yet has nothing to retry.
+        state.value.bondAssetsState shouldBe BondAssetsState.Idle
     }
 
     @Test
@@ -148,8 +169,27 @@ internal class LiquidityDataLoaderTest {
         loader.loadMayaBondedAssets("otherNode")
         awaitLoad()
 
-        assertNull(state.value.bondedUnitsCeiling)
-        assertTrue(state.value.bondableAssets.isEmpty())
+        state.value.bondedUnitsCeiling shouldBe null
+        state.value.bondableAssets.shouldBeEmpty()
+    }
+
+    @Test
+    fun `clearBondedAssets leaves no pool of the previous node selectable`() = runTest {
+        givenBonded(mapOf("MAYA.CACAO" to 500_000L))
+        loader.loadMayaBondedAssets(NODE)
+        awaitLoad()
+        lpUnitsField.setTextAndPlaceCursorAtEnd("500000")
+
+        loader.clearBondedAssets()
+
+        // The picker runs off bondableAssets and selecting one reads bondedCeilingFor, so both
+        // have to be empty for the debounce window to hold no ceiling from the previous node.
+        state.value.bondableAssets.shouldBeEmpty()
+        state.value.selectedBondAsset shouldBe ""
+        loader.bondedCeilingFor("MAYA.CACAO") shouldBe null
+        state.value.bondAssetsState shouldBe BondAssetsState.Idle
+        assetsField.text.toString() shouldBe ""
+        lpUnitsField.text.toString() shouldBe ""
     }
 
     @Test
@@ -159,8 +199,8 @@ internal class LiquidityDataLoaderTest {
         loader.loadMayaBondedAssets(NODE)
         awaitLoad()
 
-        assertEquals("500000", loader.bondedCeilingFor("MAYA.CACAO")?.units)
-        assertNull(loader.bondedCeilingFor("ETH.ETH"))
+        loader.bondedCeilingFor("MAYA.CACAO")?.units shouldBe "500000"
+        loader.bondedCeilingFor("ETH.ETH") shouldBe null
     }
 
     @Test
@@ -172,7 +212,7 @@ internal class LiquidityDataLoaderTest {
 
         loader.setMaxLpUnits()
 
-        assertEquals("500000", lpUnitsField.text.toString())
+        lpUnitsField.text.toString() shouldBe "500000"
     }
 
     private fun givenBonded(pools: Map<String, Long>) {

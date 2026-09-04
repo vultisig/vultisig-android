@@ -511,6 +511,7 @@
     <string name="deposit_form_bonded_lp_units">본딩된 LP 유닛</string>
     <string name="deposit_form_no_bonded_assets_on_node">이 노드에 본딩된 자산이 없습니다</string>
     <string name="deposit_form_bonded_assets_load_failed">이 노드의 본딩된 자산을 불러오지 못했습니다</string>
+    <string name="deposit_form_bonded_assets_loading">본딩된 자산 로드 중…</string>
     <string name="deposit_form_estimated_bond_value">예상 본드 가치</string>
     <string name="join_keysign_error_wrong_vault_share">동일한 볼트 공유입니다. 서명할 공유를 변경해 주세요</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">볼트 변경</string>
