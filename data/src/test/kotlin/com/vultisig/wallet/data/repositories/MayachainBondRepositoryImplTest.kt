@@ -244,6 +244,110 @@ internal class MayachainBondRepositoryImplTest {
         assertTrue(result.isEmpty())
     }
 
+    private fun nodeWithProviders(nodeAddress: String, vararg providers: MayaBondProvider) =
+        MayaNodeInfo(
+            nodeAddress = nodeAddress,
+            status = "Active",
+            bondProviders = MayaBondProviders(nodeOperatorFee = "0", providers = providers.toList()),
+        )
+
+    @Test
+    fun `getBondedLpUnitsOnNode returns a pool the vault is fully bonded to`() = runTest {
+        // The case getLpBondableAssetsWithUnits filters out by design: committing the whole LP
+        // position to one node leaves no surplus, and is the standard bonding pattern.
+        coEvery { api.getNodeDetails("node1") } returns
+            nodeWithProviders(
+                "node1",
+                MayaBondProvider(
+                    bondAddress = "addr1",
+                    bonded = true,
+                    pools = mapOf("MAYA.CACAO" to "500000"),
+                ),
+            )
+
+        val result = repository.getBondedLpUnitsOnNode(nodeAddress = "node1", bondAddress = "addr1")
+
+        assertEquals(mapOf("MAYA.CACAO" to 500000L), result)
+    }
+
+    @Test
+    fun `getBondedLpUnitsOnNode reads only the node it was asked about`() = runTest {
+        coEvery { api.getNodeDetails("node1") } returns
+            nodeWithProviders(
+                "node1",
+                MayaBondProvider(
+                    bondAddress = "addr1",
+                    bonded = true,
+                    pools = mapOf("MAYA.CACAO" to "500000"),
+                ),
+            )
+        coEvery { api.getNodeDetails("node2") } returns
+            nodeWithProviders(
+                "node2",
+                MayaBondProvider(
+                    bondAddress = "addr1",
+                    bonded = true,
+                    pools = mapOf("ETH.ETH" to "700000"),
+                ),
+            )
+
+        val result = repository.getBondedLpUnitsOnNode(nodeAddress = "node1", bondAddress = "addr1")
+
+        assertEquals(mapOf("MAYA.CACAO" to 500000L), result)
+    }
+
+    @Test
+    fun `getBondedLpUnitsOnNode returns empty when the vault is not a provider on the node`() =
+        runTest {
+            coEvery { api.getNodeDetails("node1") } returns
+                nodeWithProviders(
+                    "node1",
+                    MayaBondProvider(
+                        bondAddress = "someoneElse",
+                        bonded = true,
+                        pools = mapOf("MAYA.CACAO" to "500000"),
+                    ),
+                )
+
+            val result =
+                repository.getBondedLpUnitsOnNode(nodeAddress = "node1", bondAddress = "addr1")
+
+            assertTrue(result.isEmpty())
+        }
+
+    @Test
+    fun `getBondedLpUnitsOnNode sums duplicate provider entries and drops empty pools`() = runTest {
+        coEvery { api.getNodeDetails("node1") } returns
+            nodeWithProviders(
+                "node1",
+                MayaBondProvider(
+                    bondAddress = "addr1",
+                    bonded = true,
+                    pools = mapOf("MAYA.CACAO" to "200000", "ETH.ETH" to "0"),
+                ),
+                MayaBondProvider(
+                    bondAddress = "addr1",
+                    bonded = true,
+                    pools = mapOf("MAYA.CACAO" to "300000"),
+                ),
+            )
+
+        val result = repository.getBondedLpUnitsOnNode(nodeAddress = "node1", bondAddress = "addr1")
+
+        assertEquals(mapOf("MAYA.CACAO" to 500000L), result)
+    }
+
+    @Test
+    fun `getBondedLpUnitsOnNode propagates exception from getNodeDetails`() = runTest {
+        coEvery { api.getNodeDetails("node1") } throws RuntimeException("Node API failure")
+
+        val thrown =
+            assertFailsWith<RuntimeException> {
+                repository.getBondedLpUnitsOnNode(nodeAddress = "node1", bondAddress = "addr1")
+            }
+        assertEquals("Node API failure", thrown.message)
+    }
+
     @Test
     fun `getLpBondableAssetsWithUnits propagates exception from getAllNodes`() = runTest {
         coEvery { api.getMayaNodePools() } returns

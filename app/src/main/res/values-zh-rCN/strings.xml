@@ -664,6 +664,8 @@
 
     <!-- Deposit Errors -->
     <string name="deposit_error_invalid_lpunits">LP 单位无效</string>
+    <string name="deposit_error_lpunits_exceeds_available">超出可用 LP 单位</string>
+    <string name="deposit_error_lpunits_exceeds_bonded">超出绑定到此节点的 LP 单位</string>
     <string name="deposit_error_invalid_assets">资产无效</string>
     <string name="deposit_error_chain_not_enabled">请在此保险库中启用 %1$s 以提取 %2$s</string>
 
@@ -678,6 +680,9 @@
     <string name="deposit_form_screen_asset_selection">选择资产</string>
     <string name="deposit_form_screen_lpunits">LP 单位</string>
     <string name="deposit_form_available_lp_units">可用 LP 单位</string>
+    <string name="deposit_form_bonded_lp_units">已绑定 LP 单位</string>
+    <string name="deposit_form_no_bonded_assets_on_node">在此节点上未找到已绑定资产</string>
+    <string name="deposit_form_bonded_assets_load_failed">无法加载此节点的已绑定资产</string>
     <string name="deposit_form_estimated_bond_value">预计质押价值</string>
 
     <!-- Join Keysign Error -->

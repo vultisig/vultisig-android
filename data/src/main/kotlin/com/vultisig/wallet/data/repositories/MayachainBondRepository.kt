@@ -35,6 +35,16 @@ interface MayachainBondRepository {
 
     suspend fun getLpBondableAssetsWithUnits(address: String): Map<String, LpBondablePool>
 
+    /**
+     * The LP units [bondAddress] has bonded to [nodeAddress], keyed by pool.
+     *
+     * Unbonding is per node: `UNBOND:{asset}:{units}:{node}` spends against that one node's
+     * bond-provider record, so the address-wide surplus [getLpBondableAssetsWithUnits] reports
+     * cannot say what is unbondable here — least of all for a pool bonded in full, which that
+     * surplus excludes by design. An empty map means this address holds nothing on this node.
+     */
+    suspend fun getBondedLpUnitsOnNode(nodeAddress: String, bondAddress: String): Map<String, Long>
+
     suspend fun getMemberDetails(address: String): MayaMemberDetails
 
     suspend fun getLpPoolStats(): List<MayaLpPoolStats>
@@ -171,6 +181,33 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching LP bondable assets with units for address: $address")
+            throw e
+        }
+    }
+
+    override suspend fun getBondedLpUnitsOnNode(
+        nodeAddress: String,
+        bondAddress: String,
+    ): Map<String, Long> {
+        return try {
+            val bondedByPool = mutableMapOf<String, Long>()
+            for (provider in getNodeDetails(nodeAddress).bondProviders.providers) {
+                if (provider.bondAddress != bondAddress) continue
+                for ((pool, units) in provider.pools) {
+                    bondedByPool[pool] = (bondedByPool[pool] ?: 0L) + (units.toLongOrNull() ?: 0L)
+                }
+            }
+            // A pool listed at zero is not a position, and offering it would let the form build an
+            // UNBOND memo the node has nothing to apply it against.
+            bondedByPool.filterValues { it > 0L }
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e(
+                e,
+                "Error fetching bonded LP units on node %s for %s",
+                nodeAddress,
+                bondAddress,
+            )
             throw e
         }
     }

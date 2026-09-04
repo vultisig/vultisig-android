@@ -381,6 +381,8 @@
     <string name="no_barcodes_found">Keine Barcodes gefunden</string>
     <string name="reshare_start_join_reshare_button">Reshare beitreten</string>
     <string name="deposit_error_invalid_lpunits">LP-Einheiten sind ungültig</string>
+    <string name="deposit_error_lpunits_exceeds_available">Übersteigt Ihre verfügbaren LP-Einheiten</string>
+    <string name="deposit_error_lpunits_exceeds_bonded">Übersteigt die an diese Node gebundenen LP-Einheiten</string>
     <string name="deposit_error_invalid_assets">Assets ist ungültig</string>
     <string name="deposit_error_chain_not_enabled">Aktivieren Sie %1$s in diesem Tresor, um %2$s abzuheben</string>
     <string name="deposit_error_has_not_reached_maturity">Diese Einlage hat ihre Fälligkeit noch nicht erreicht.</string>
@@ -393,6 +395,9 @@
     <string name="deposit_form_screen_asset_selection">Anlagenauswahl</string>
     <string name="deposit_form_screen_lpunits">LP-Einheiten</string>
     <string name="deposit_form_available_lp_units">Verfügbare LP-Einheiten</string>
+    <string name="deposit_form_bonded_lp_units">Gebundene LP-Einheiten</string>
+    <string name="deposit_form_no_bonded_assets_on_node">Keine gebundenen Vermögenswerte auf dieser Node gefunden</string>
+    <string name="deposit_form_bonded_assets_load_failed">Gebundene Vermögenswerte für diese Node konnten nicht geladen werden</string>
     <string name="deposit_form_estimated_bond_value">Geschätzter Bondwert</string>
     <string name="join_keysign_error_wrong_vault_share">Dieselbe Tresorfreigabe. Bitte ändern Sie die Freigabe zum Signieren</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Tresor ändern</string>

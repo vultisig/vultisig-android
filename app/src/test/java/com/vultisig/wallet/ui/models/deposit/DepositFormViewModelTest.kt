@@ -55,6 +55,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -62,6 +63,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -484,6 +486,81 @@ internal class DepositFormViewModelTest {
             R.string.deposit_error_lp_paused_pool,
             (errorText as UiText.FormattedText).resId,
         )
+    }
+
+    @Test
+    fun `Maya Unbond loads the pools bonded to the routed node, including a full position`() =
+        runTest {
+            val vm = buildViewModel()
+            givenMayaVaultAddress()
+            coEvery {
+                mayachainBondRepository.getBondedLpUnitsOnNode(MAYA_NODE, MAYA_VAULT_ADDRESS)
+            } returns mapOf("MAYA.CACAO" to 500_000L)
+
+            vm.loadData("vault1", Chain.MayaChain.raw, "unbond", MAYA_NODE)
+            advanceUntilIdle()
+            val loaded = vm.state.first { it.bondableAssets.isNotEmpty() }
+
+            assertEquals(listOf("MAYA.CACAO"), loaded.bondableAssets)
+            assertEquals("500000", loaded.bondedUnitsCeiling?.units)
+            assertEquals(MAYA_NODE, loaded.bondedUnitsCeiling?.nodeAddress)
+        }
+
+    @Test
+    fun `Maya Unbond rejects more LP units than the node has bonded`() = runTest {
+        val vm = buildViewModel()
+        givenMayaVaultAddress()
+        coEvery {
+            mayachainBondRepository.getBondedLpUnitsOnNode(MAYA_NODE, MAYA_VAULT_ADDRESS)
+        } returns mapOf("MAYA.CACAO" to 500_000L)
+
+        vm.loadData("vault1", Chain.MayaChain.raw, "unbond", MAYA_NODE)
+        advanceUntilIdle()
+        vm.state.first { it.bondableAssets.isNotEmpty() }
+
+        vm.lpUnitsFieldState.setTextAndPlaceCursorAtEnd("500001")
+        vm.validateLpUnits()
+        assertNotNull(vm.state.value.lpUnitsError)
+
+        vm.lpUnitsFieldState.setTextAndPlaceCursorAtEnd("500000")
+        vm.validateLpUnits()
+        assertEquals(null, vm.state.value.lpUnitsError)
+    }
+
+    @Test
+    fun `Maya Unbond flags a failed bonded-asset fetch instead of showing an empty node`() =
+        runTest {
+            val vm = buildViewModel()
+            givenMayaVaultAddress()
+            coEvery {
+                mayachainBondRepository.getBondedLpUnitsOnNode(MAYA_NODE, MAYA_VAULT_ADDRESS)
+            } throws RuntimeException("node api down")
+
+            vm.loadData("vault1", Chain.MayaChain.raw, "unbond", MAYA_NODE)
+            advanceUntilIdle()
+            val loaded = vm.state.first { it.bondAssetsLoadFailed }
+
+            assertTrue(loaded.bondableAssets.isEmpty())
+            assertNull(loaded.bondedUnitsCeiling)
+        }
+
+    private fun givenMayaVaultAddress() {
+        coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.MayaChain,
+                    address = MAYA_VAULT_ADDRESS,
+                    accounts =
+                        listOf(
+                            Account(
+                                token = Coins.MayaChain.CACAO,
+                                tokenValue = null,
+                                fiatValue = null,
+                                price = null,
+                            )
+                        ),
+                )
+            )
     }
 
     @Test
@@ -1002,5 +1079,10 @@ internal class DepositFormViewModelTest {
         vm.validateLpUnits()
 
         assertEquals(null, vm.state.value.lpUnitsError)
+    }
+
+    private companion object {
+        const val MAYA_NODE = "mayaNode1"
+        const val MAYA_VAULT_ADDRESS = "maya1someaddress"
     }
 }

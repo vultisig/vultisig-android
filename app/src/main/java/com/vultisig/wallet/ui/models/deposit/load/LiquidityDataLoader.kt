@@ -12,7 +12,9 @@ import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
+import com.vultisig.wallet.ui.models.deposit.BondedUnitsCeiling
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
+import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.RemoveLpCalculator
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import timber.log.Timber
 
 /**
  * Owns LP / liquidity-pool data loading extracted from `DepositFormViewModel` so the Maya bondable
@@ -77,11 +80,26 @@ constructor(
     }
 
     private var lpBondPoolMap: Map<String, LpBondablePool> = emptyMap()
+    private var bondedUnitsByPool: Map<String, Long> = emptyMap()
+    private var bondedUnitsNodeAddress: String = ""
     private var loadMayaBondableAssetsJob: Job? = null
     private var loadLpJob: Job? = null
 
     /** Returns the bondable pool previously loaded for [asset], or `null` if not loaded. */
     fun bondPoolFor(asset: String): LpBondablePool? = lpBondPoolMap[asset]
+
+    /**
+     * The unbond ceiling for [asset] on the node the bonded units were last loaded for, or `null`
+     * when that node holds nothing in that pool for this vault.
+     */
+    fun bondedCeilingFor(asset: String): BondedUnitsCeiling? =
+        bondedUnitsByPool[asset]?.let {
+            BondedUnitsCeiling(
+                nodeAddress = bondedUnitsNodeAddress,
+                asset = asset,
+                units = it.toString(),
+            )
+        }
 
     /** Cancels any in-flight remove-LP fetch so it can't write stale state into a new option. */
     fun cancelLoad() {
@@ -93,18 +111,21 @@ constructor(
     fun loadMayaBondableAssets() {
         loadMayaBondableAssetsJob?.cancel()
         lpBondPoolMap = emptyMap()
+        clearBondedUnits()
         state.update {
             it.copy(
                 bondableAssets = emptyList(),
                 selectedBondAsset = "",
                 availableLpUnits = null,
+                bondedUnitsCeiling = null,
+                bondAssetsLoadFailed = false,
                 removeLpUnitsDivisor = BigInteger.ZERO,
                 removeLpPoolDepth = BigInteger.ZERO,
             )
         }
         assetsFieldState.clearText()
         loadMayaBondableAssetsJob =
-            scope.safeLaunch {
+            scope.safeLaunch(onError = ::onBondAssetsLoadFailed) {
                 val userAddress =
                     withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
                         ?.address
@@ -140,6 +161,80 @@ constructor(
                     assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
                 }
             }
+    }
+
+    /**
+     * Loads the Maya pools [nodeAddress] holds LP units for on behalf of this vault (Unbond).
+     *
+     * Deliberately not the bondable-asset load: that one is address-wide and reports the surplus
+     * *not* yet bonded, so it hides exactly the pools a fully-bonded user came here to unbond.
+     *
+     * A blank [nodeAddress] is not a failure — the field is simply not filled in yet — so it clears
+     * the list and stops. Anything that did fail is recorded on the state, because an empty list on
+     * its own would otherwise claim the node holds nothing when we never found out.
+     */
+    fun loadMayaBondedAssets(nodeAddress: String) {
+        loadMayaBondableAssetsJob?.cancel()
+        lpBondPoolMap = emptyMap()
+        clearBondedUnits()
+        state.update {
+            it.copy(
+                bondableAssets = emptyList(),
+                selectedBondAsset = "",
+                availableLpUnits = null,
+                bondedUnitsCeiling = null,
+                bondAssetsLoadFailed = false,
+                lpUnitsError = null,
+                removeLpUnitsDivisor = BigInteger.ZERO,
+                removeLpPoolDepth = BigInteger.ZERO,
+            )
+        }
+        assetsFieldState.clearText()
+        if (nodeAddress.isBlank()) return
+        loadMayaBondableAssetsJob =
+            scope.safeLaunch(onError = ::onBondAssetsLoadFailed) {
+                val bondAddress =
+                    withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                        ?.address
+                        ?: run {
+                            // Not knowing our own address is a load failure like any other: the
+                            // node may well hold a position, we just cannot ask about it.
+                            state.update { it.copy(bondAssetsLoadFailed = true) }
+                            return@safeLaunch
+                        }
+                val bondedByPool =
+                    withContext(Dispatchers.IO) {
+                        mayachainBondRepository.getBondedLpUnitsOnNode(
+                            nodeAddress = nodeAddress,
+                            bondAddress = bondAddress,
+                        )
+                    }
+                bondedUnitsByPool = bondedByPool
+                bondedUnitsNodeAddress = nodeAddress
+                val assets = bondedByPool.keys.toList()
+                val firstAsset = assets.firstOrNull() ?: ""
+                state.update {
+                    it.copy(
+                        bondableAssets = assets,
+                        selectedBondAsset = firstAsset,
+                        bondedUnitsCeiling = bondedCeilingFor(firstAsset),
+                    )
+                }
+                if (firstAsset.isNotEmpty()) {
+                    assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
+                }
+            }
+    }
+
+    /** Forgets the loaded unbond position so no ceiling can outlive the node it was read from. */
+    private fun clearBondedUnits() {
+        bondedUnitsByPool = emptyMap()
+        bondedUnitsNodeAddress = ""
+    }
+
+    private fun onBondAssetsLoadFailed(error: Throwable) {
+        Timber.e(error, "Error loading Maya bond assets")
+        state.update { it.copy(bondAssetsLoadFailed = true) }
     }
 
     /**
@@ -396,8 +491,14 @@ constructor(
 
     /** Fills the LP-units field with the full available units for the loaded position. */
     fun setMaxLpUnits() {
-        val units = state.value.availableLpUnits ?: return
+        val current = state.value
+        val units =
+            when (current.depositOption) {
+                DepositOption.Unbond -> current.bondedUnitsCeiling?.units
+                else -> current.availableLpUnits
+            } ?: return
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(units)
+        state.update { it.copy(lpUnitsError = null) }
     }
 
     /** Applies a slider [percent] (0f..1f) to compute the selected units and redeem display. */

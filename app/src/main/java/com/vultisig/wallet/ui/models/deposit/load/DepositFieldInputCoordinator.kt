@@ -10,6 +10,8 @@ import com.vultisig.wallet.ui.models.deposit.DepositFieldStates
 import com.vultisig.wallet.ui.models.deposit.DepositFieldValidator
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
+import com.vultisig.wallet.ui.models.deposit.bondLpUnitsCeiling
+import com.vultisig.wallet.ui.models.deposit.unbondLpUnitsCeiling
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -180,16 +182,39 @@ constructor(
         }
     }
 
-    /** Validates the LP-units field, surfacing inline errors. */
+    /**
+     * Validates the LP-units field: the character check, then the ceiling the loaded MayaChain
+     * position allows.
+     *
+     * MayaChain rejects an over-ceiling BOND/UNBOND rather than clamping it, refunding the deposit
+     * minus the network fee — so the figure has to be caught here, before the user spends a
+     * multi-device keysign ceremony on a memo the chain will not apply.
+     */
     fun validateLpUnits() {
         val lpUnits = fields.lpUnitsFieldState.text.toString()
-        state.update {
-            it.copy(
-                lpUnitsError =
-                    if (!fieldValidator.isLpUnitCharsValid(lpUnits))
-                        UiText.StringResource(R.string.deposit_error_invalid_lpunits)
-                    else null
-            )
+        state.update { it.copy(lpUnitsError = lpUnitsErrorOrNull(lpUnits, it)) }
+    }
+
+    private fun lpUnitsErrorOrNull(lpUnits: String, current: DepositFormUiModel): UiText? {
+        if (!fieldValidator.isLpUnitCharsValid(lpUnits)) {
+            return UiText.StringResource(R.string.deposit_error_invalid_lpunits)
+        }
+        val ceiling =
+            when (current.depositOption) {
+                DepositOption.Bond -> current.bondLpUnitsCeiling()
+                DepositOption.Unbond ->
+                    current.unbondLpUnitsCeiling(
+                        nodeAddress = fields.nodeAddressFieldState.text.toString(),
+                        asset = fields.assetsFieldState.text.toString(),
+                    )
+                else -> null
+            } ?: return null
+        val entered = lpUnits.toBigIntegerOrNull() ?: return null
+        if (entered <= ceiling) return null
+        return if (current.depositOption == DepositOption.Unbond) {
+            UiText.StringResource(R.string.deposit_error_lpunits_exceeds_bonded)
+        } else {
+            UiText.StringResource(R.string.deposit_error_lpunits_exceeds_available)
         }
     }
 

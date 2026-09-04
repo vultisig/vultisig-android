@@ -381,6 +381,8 @@
     <string name="no_barcodes_found">Nessun codice a barre trovato</string>
     <string name="reshare_start_join_reshare_button">Unisciti a Reshare</string>
     <string name="deposit_error_invalid_lpunits">Le unità LP non sono valide</string>
+    <string name="deposit_error_lpunits_exceeds_available">Supera le unità LP disponibili</string>
+    <string name="deposit_error_lpunits_exceeds_bonded">Supera le unità LP vincolate a questo nodo</string>
     <string name="deposit_error_invalid_assets">Le risorse non sono valide</string>
     <string name="deposit_error_chain_not_enabled">Abilita %1$s in questo vault per prelevare %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Questo deposito non ha ancora raggiunto il suo periodo di scadenza</string>
@@ -393,6 +395,9 @@
     <string name="deposit_form_screen_asset_selection">Selezione asset</string>
     <string name="deposit_form_screen_lpunits">Unità LP</string>
     <string name="deposit_form_available_lp_units">Unità LP disponibili</string>
+    <string name="deposit_form_bonded_lp_units">Unità LP vincolate</string>
+    <string name="deposit_form_no_bonded_assets_on_node">Nessuna attività vincolata trovata su questo nodo</string>
+    <string name="deposit_form_bonded_assets_load_failed">Impossibile caricare le attività vincolate per questo nodo</string>
     <string name="deposit_form_estimated_bond_value">Valore stimato del bond</string>
     <string name="join_keysign_error_wrong_vault_share">Stessa condivisione del vault. Modifica la condivisione per firmare</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button">Cambia Vault</string>

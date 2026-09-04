@@ -84,6 +84,35 @@ internal class BondStrategyTest {
     }
 
     @Test
+    fun `Maya bond throws when the entered units exceed the bondable surplus`() = runTest {
+        coEvery { chainRepo.isValid(Chain.MayaChain, "mayaNode") } returns true
+        every { assetsValidator.invoke("MAYA.CACAO") } returns true
+        nodeAddress.setTextAndPlaceCursorAtEnd("mayaNode")
+        assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
+        lpUnits.setTextAndPlaceCursorAtEnd("501")
+
+        assertFailsWith<InvalidTransactionDataException> {
+            build(Chain.MayaChain, availableLpUnits = "500").build()
+        }
+    }
+
+    @Test
+    fun `Maya bond builds when no surplus was loaded`() = runTest {
+        // Bond still accepts a typed asset when the pool list comes back empty, and that path has
+        // no figure to measure against — unlike Unbond, which requires its node-scoped ceiling.
+        coEvery { chainRepo.isValid(Chain.MayaChain, "mayaNode") } returns true
+        every { assetsValidator.invoke("MAYA.CACAO") } returns true
+        givenSpecific()
+        nodeAddress.setTextAndPlaceCursorAtEnd("mayaNode")
+        assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
+        lpUnits.setTextAndPlaceCursorAtEnd("9999")
+
+        val tx = build(Chain.MayaChain).build()
+
+        assertEquals("BOND:MAYA.CACAO:9999:mayaNode", tx.memo)
+    }
+
+    @Test
     fun `Thor bond throws when token amount is missing or zero`() = runTest {
         coEvery { chainRepo.isValid(Chain.ThorChain, "thorNode") } returns true
         nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
@@ -101,12 +130,20 @@ internal class BondStrategyTest {
         }
     }
 
-    private fun build(chain: Chain, isWhitelistFailed: Boolean = false) =
+    private fun build(
+        chain: Chain,
+        isWhitelistFailed: Boolean = false,
+        availableLpUnits: String? = null,
+    ) =
         BondStrategy(
             vaultIdProvider = { "vault-1" },
             chainProvider = { chain },
             stateProvider = {
-                DepositFormUiModel(depositChain = chain, isWhitelistFailed = isWhitelistFailed)
+                DepositFormUiModel(
+                    depositChain = chain,
+                    isWhitelistFailed = isWhitelistFailed,
+                    availableLpUnits = availableLpUnits,
+                )
             },
             selectedTokenProvider = { runeCoin() },
             selectedAccountProvider = { mockk(relaxed = true) },

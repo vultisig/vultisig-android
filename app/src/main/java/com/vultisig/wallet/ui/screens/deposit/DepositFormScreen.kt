@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.deposit
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +32,7 @@ import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
@@ -99,6 +101,8 @@ internal fun DepositFormScreen(
         onOpenSelectToken = model::selectToken,
         onSelectSecureAsset = model::onSelectSecureAsset,
         onSelectBondAsset = model::selectBondAsset,
+        onSetMaxLpUnits = model::setMaxLpUnits,
+        onRetryLoadBondAssets = model::retryLoadBondAssets,
     )
 }
 
@@ -143,6 +147,8 @@ internal fun DepositFormScreen(
     onOpenSelectToken: () -> Unit = {},
     onSelectSecureAsset: (TokenWithdrawSecureAsset) -> Unit = {},
     onSelectBondAsset: (String) -> Unit = {},
+    onSetMaxLpUnits: () -> Unit = {},
+    onRetryLoadBondAssets: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -342,35 +348,80 @@ internal fun DepositFormScreen(
                     }
 
                     if (depositOption in listOf(DepositOption.Bond, DepositOption.Unbond)) {
-                        FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_provider_title),
-                            hint = stringResource(R.string.deposit_form_provider_hint),
-                            keyboardType = KeyboardType.Text,
-                            textFieldState = providerFieldState,
-                            onLostFocus = onProviderLostFocus,
-                            error = state.providerError,
-                        ) {
-                            PasteIcon(onPaste = onSetProvider)
-                            UiSpacer(size = 8.dp)
+                        val isMayaBond =
+                            depositChain == Chain.MayaChain && depositOption == DepositOption.Bond
+                        // MayaChain rejects a bond memo that carries both an asset and a provider
+                        // ("cannot set provider address or operator fee when bonding with an
+                        // asset"), and this form always emits the asset — so the field cannot be
+                        // offered here.
+                        if (!isMayaBond) {
+                            FormTextFieldCard(
+                                title = stringResource(R.string.deposit_form_provider_title),
+                                hint = stringResource(R.string.deposit_form_provider_hint),
+                                keyboardType = KeyboardType.Text,
+                                textFieldState = providerFieldState,
+                                onLostFocus = onProviderLostFocus,
+                                error = state.providerError,
+                            ) {
+                                PasteIcon(onPaste = onSetProvider)
+                                UiSpacer(size = 8.dp)
+                            }
                         }
 
                         if (depositChain == Chain.MayaChain) {
-                            if (state.bondableAssets.isNotEmpty()) {
-                                FormSelection(
-                                    selected = state.selectedBondAsset,
-                                    options = state.bondableAssets,
-                                    onSelectOption = onSelectBondAsset,
-                                    mapTypeToString = { it },
-                                )
-                            } else {
-                                FormTextFieldCard(
-                                    title = stringResource(R.string.deposit_form_screen_assets),
-                                    hint = stringResource(R.string.deposit_form_enter_asset_hint),
-                                    keyboardType = KeyboardType.Text,
-                                    textFieldState = assetsFieldState,
-                                    onLostFocus = onAssetsLostFocus,
-                                    error = state.assetsError,
-                                )
+                            val isUnbond = depositOption == DepositOption.Unbond
+                            when {
+                                state.bondableAssets.isNotEmpty() ->
+                                    FormSelection(
+                                        selected = state.selectedBondAsset,
+                                        options = state.bondableAssets,
+                                        onSelectOption = onSelectBondAsset,
+                                        mapTypeToString = { it },
+                                    )
+
+                                // Unbond lists what one node holds for this vault, so an empty
+                                // list is an answer and a failed fetch is not: neither may fall
+                                // back to free text, which would let the user sign an UNBOND for
+                                // a pool they hold nothing in on this node.
+                                isUnbond ->
+                                    BondAssetsMessage(
+                                        message =
+                                            stringResource(
+                                                if (state.bondAssetsLoadFailed)
+                                                    R.string.deposit_form_bonded_assets_load_failed
+                                                else R.string.deposit_form_no_bonded_assets_on_node
+                                            ),
+                                        actionText =
+                                            stringResource(R.string.retry).takeIf {
+                                                state.bondAssetsLoadFailed
+                                            },
+                                        onAction = onRetryLoadBondAssets,
+                                    )
+
+                                // Bond keeps its typed-asset fallback — the surplus list can be
+                                // legitimately empty — but no longer swallows the failure that
+                                // produced this branch.
+                                else -> {
+                                    if (state.bondAssetsLoadFailed) {
+                                        BondAssetsMessage(
+                                            message =
+                                                stringResource(
+                                                    R.string.deposit_form_bonded_assets_load_failed
+                                                ),
+                                            actionText = stringResource(R.string.retry),
+                                            onAction = onRetryLoadBondAssets,
+                                        )
+                                    }
+                                    FormTextFieldCard(
+                                        title = stringResource(R.string.deposit_form_screen_assets),
+                                        hint =
+                                            stringResource(R.string.deposit_form_enter_asset_hint),
+                                        keyboardType = KeyboardType.Text,
+                                        textFieldState = assetsFieldState,
+                                        onLostFocus = onAssetsLostFocus,
+                                        error = state.assetsError,
+                                    )
+                                }
                             }
 
                             FormTextFieldCard(
@@ -381,6 +432,21 @@ internal fun DepositFormScreen(
                                 onLostFocus = onLpUnitsLostFocus,
                                 error = state.lpUnitsError,
                             )
+
+                            val ceiling =
+                                if (isUnbond) state.bondedUnitsCeiling?.units
+                                else state.availableLpUnits
+                            if (ceiling != null) {
+                                LpUnitsCeilingRow(
+                                    label =
+                                        stringResource(
+                                            if (isUnbond) R.string.deposit_form_bonded_lp_units
+                                            else R.string.deposit_form_available_lp_units
+                                        ),
+                                    units = ceiling,
+                                    onSetMax = onSetMaxLpUnits,
+                                )
+                            }
                         }
                     }
 
@@ -527,6 +593,67 @@ internal fun DepositFormScreen(
                 else VsButtonState.Enabled,
             modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(all = 16.dp),
         )
+    }
+}
+
+/** Explains why no asset picker is shown, with an optional action such as retrying the load. */
+@Composable
+private fun BondAssetsMessage(
+    message: String,
+    actionText: String? = null,
+    onAction: () -> Unit = {},
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = message,
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.v2.colors.text.tertiary,
+            modifier = Modifier.weight(1f),
+        )
+        if (actionText != null) {
+            Text(
+                text = actionText,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.primary.accent4,
+                modifier = Modifier.clickOnce(onClick = onAction),
+            )
+        }
+    }
+}
+
+/** Shows the LP-unit ceiling for the selected pool, with a max affordance that fills it exactly. */
+@Composable
+private fun LpUnitsCeilingRow(label: String, units: String, onSetMax: () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = label,
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.v2.colors.text.tertiary,
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = units,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.tertiary,
+            )
+            Text(
+                text = stringResource(R.string.send_screen_max).lowercase(),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.primary.accent4,
+                modifier = Modifier.clickOnce(onClick = onSetMax),
+            )
+        }
     }
 }
 
