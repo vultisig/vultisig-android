@@ -19,6 +19,13 @@ sealed class DecodedAmount {
     /** Base units exactly as the signed content carries them. */
     data class Units(val value: BigInteger, val asset: DecodedAsset) : DecodedAmount()
 
+    /**
+     * Exact funding of a newly created account. Distinct from [Units] because it is not the
+     * operation's amount: part of it stays behind as the account's rent reserve, so what actually
+     * gets staked is lower and only chain state can say by how much.
+     */
+    data class AccountFunding(val value: BigInteger, val asset: DecodedAsset) : DecodedAmount()
+
     /** A signed share in basis points; resolving the position is enrichment. */
     data class Fraction(val basisPoints: Int, val asset: DecodedAsset) : DecodedAmount()
 
@@ -43,6 +50,12 @@ enum class DecodedOperation {
     ClaimRewards,
     Mint,
     Redeem,
+
+    /**
+     * Withdrawing lamports out of a Solana stake account, which is a separate step from [Unstake] —
+     * deactivation cools the account, and the funds move only on this.
+     */
+    WithdrawStake,
     AddLiquidity,
     RemoveLiquidity,
     Merge,
@@ -62,6 +75,9 @@ enum class DecodedOperation {
 sealed class DecodedCounterparty {
     /** A network node. */
     data class Node(val value: String) : DecodedCounterparty()
+
+    /** A Solana stake account, which holds one delegation. */
+    data class StakeAccount(val value: String) : DecodedCounterparty()
 
     /** A validator. */
     data class Validator(val value: String) : DecodedCounterparty()

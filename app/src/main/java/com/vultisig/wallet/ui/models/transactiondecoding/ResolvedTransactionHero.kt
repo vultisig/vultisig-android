@@ -23,9 +23,8 @@ internal interface PositionReading {
  * Resolves optional chain-state amounts behind decoder-layer readers, keeping chain knowledge out
  * of the keysign view models.
  *
- * Mirrors the iOS `ResolvedTransactionHero`. The registry is empty until the per-chain signed
- * decoders land; with no reader matching, callers fall back to the signed amount the decoder
- * already read.
+ * Mirrors the iOS `ResolvedTransactionHero`. With no reader matching — or with a read that fails or
+ * times out — callers fall back to the signed amount the decoder already read.
  */
 @Singleton
 internal class ResolvedTransactionHero
@@ -33,10 +32,16 @@ internal class ResolvedTransactionHero
 constructor(
     private val decoder: SignedTransactionDecoder,
     private val projectionCoordinator: ProjectionCoordinator,
+    solanaDelegatedAmount: SolanaDelegatedAmountReader,
+    solanaStakeAccountAmount: SolanaStakeAccountAmountReader,
 ) {
 
-    /** Chain readers are registered here as their signed decoders become available. */
-    private val readers: List<PositionReading> = emptyList()
+    /**
+     * Chain readers, in the order they are asked. Each declares the operations it answers for, so
+     * the first match wins and no reader sees a transaction it did not claim.
+     */
+    private val readers: List<PositionReading> =
+        listOf(solanaDelegatedAmount, solanaStakeAccountAmount)
 
     /** Resolves through the first reader matching a trusted local coin. */
     suspend fun resolve(

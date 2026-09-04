@@ -45,6 +45,14 @@ constructor(@ApplicationContext private val context: Context) {
                     else -> null
                 }
 
+            // The funding is exact, but part of it stays behind as the account's rent reserve,
+            // so the scope says which part of it is actually being staked. A reader turns that
+            // into a figure; without one the sentence is still true.
+            is DecodedAmount.AccountFunding ->
+                context.getString(R.string.scope_delegated_amount_after_rent).takeIf {
+                    decoded.operation == DecodedOperation.Delegate
+                }
+
             is DecodedAmount.Units -> null
         }
 

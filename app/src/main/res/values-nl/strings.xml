@@ -1771,5 +1771,6 @@
     <string name="verify_verb_bridging">Je bridget</string>
     <string name="scope_your_whole_stake">je volledige stake</string>
     <string name="scope_rewards_accrued_so_far">tot nu toe opgebouwde beloningen</string>
+    <string name="scope_delegated_amount_after_rent">het gedelegeerde bedrag na de huurreserve</string>
     <string name="withdrawing_share_of_staked_position">%1$s van je gestakete positie</string>
 </resources>
