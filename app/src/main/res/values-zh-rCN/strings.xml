@@ -1011,7 +1011,6 @@
     <string name="insufficient_balance_try_send">余额不足。尝试"发送最大"以发送 %1$s ADA。</string>
     <string name="insufficient_balance_ada">余额不足（%1$s ADA）。您需要更多 ADA 来完成此交易。</string>
     <string name="this_amount_would_leave_too_little_change">此金额将留下太少的找零。💡 尝试"发送最大"（%1$s ADA）以避免此问题。</string>
-    <string name="send_error_cardano_native_token_unsupported">暂不支持发送 %1$s。Cardano 原生代币可以持有和查看，但无法发送。</string>
 
     <!-- Referral -->
     <string name="must_be_enabled_before_proceeding">在继续之前必须启用 %1$s。</string>

@@ -56,6 +56,14 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         hash = it.hash,
                         amount = it.amount,
                         index = it.index,
+                        cardanoTokens =
+                            it.cardanoTokens.map { asset ->
+                                vultisig.keysign.v1.CardanoTokenAsset(
+                                    policyId = asset.policyId,
+                                    assetNameHex = asset.assetNameHex,
+                                    amount = asset.amount.toString(),
+                                )
+                            },
                     )
                 },
             ethereumSpecific =

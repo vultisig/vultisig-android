@@ -214,7 +214,21 @@ data class IbcDenomTrace(
     val height: String,
 )
 
-@Serializable data class UtxoInfo(val hash: String, val index: Long, val amount: Long)
+@Serializable
+data class UtxoInfo(
+    val hash: String,
+    val index: Long,
+    val amount: Long,
+    /** Cardano-only native assets on this UTxO; absent for every other UTXO chain. */
+    @SerialName("cardano_tokens") val cardanoTokens: List<CardanoTokenAsset>? = null,
+)
+
+@Serializable
+data class CardanoTokenAsset(
+    @SerialName("policy_id") val policyId: String,
+    @SerialName("asset_name_hex") val assetNameHex: String,
+    val amount: String,
+)
 
 @Serializable
 data class SignData(

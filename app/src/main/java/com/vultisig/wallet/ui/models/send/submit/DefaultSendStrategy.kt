@@ -6,6 +6,7 @@ import androidx.compose.runtime.snapshots.Snapshot
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
+import com.vultisig.wallet.data.chains.helpers.CardanoHelper
 import com.vultisig.wallet.data.chains.helpers.RippleDestinationTag
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
@@ -261,18 +262,6 @@ internal class DefaultSendStrategy(
                         }
                     }
 
-                    if (chain == Chain.Cardano && !selectedToken.isNativeToken) {
-                        // A CNT send needs a native-asset bundle in the signing input, which
-                        // CardanoHelper does not build yet (#5713). Without this the transfer
-                        // would be planned as plain ADA and move ADA under the token's label.
-                        throw InvalidTransactionDataException(
-                            UiText.FormattedText(
-                                R.string.send_error_cardano_native_token_unsupported,
-                                listOf(selectedToken.ticker),
-                            )
-                        )
-                    }
-
                     val isThorchainRouterDeposit =
                         defiTypeProvider() == DeFiNavActions.ADD_LP &&
                             !selectedToken.isNativeToken &&
@@ -419,18 +408,38 @@ internal class DefaultSendStrategy(
                                     listOf(selectedToken.ticker),
                                 )
                             )
-                        } else if (nativeTokenValue < spendableGasFee.value) {
+                        } else {
                             // Gate on the fee this send actually pays, not the base gas fee:
                             // raised Advanced Gas Settings are what an ERC-20 transfer reserves,
                             // so checking the unraised value would let a native balance that
                             // cannot cover them through to a full MPC keysign that only fails at
-                            // broadcast.
-                            throw InvalidTransactionDataException(
-                                UiText.FormattedText(
-                                    R.string.insufficient_native_token,
-                                    listOf(nativeTokenAccount.token.ticker),
+                            // broadcast. A Cardano native-token send also pins its recipient
+                            // output to CardanoHelper.MIN_LOVELACE_ON_TOKEN_OUTPUT, so that floor
+                            // must be reserved on top of the fee or WalletCore's planner rejects
+                            // the plan mid-keysign instead of here. Cardano's fee is read from
+                            // `specific`, not `spendableGasFee`: it was just re-planned by
+                            // getSpecific() for this exact send and can differ from the earlier
+                            // validation-step estimate.
+                            val requiredNativeValue =
+                                if (chain == Chain.Cardano) {
+                                    val cardanoByteFee =
+                                        (specific.blockChainSpecific as? BlockChainSpecific.Cardano)
+                                            ?.byteFee ?: error("Cardano-specific fee is missing")
+                                    BigInteger.valueOf(cardanoByteFee) +
+                                        BigInteger.valueOf(
+                                            CardanoHelper.MIN_LOVELACE_ON_TOKEN_OUTPUT
+                                        )
+                                } else {
+                                    spendableGasFee.value
+                                }
+                            if (nativeTokenValue < requiredNativeValue) {
+                                throw InvalidTransactionDataException(
+                                    UiText.FormattedText(
+                                        R.string.insufficient_native_token,
+                                        listOf(nativeTokenAccount.token.ticker),
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
 

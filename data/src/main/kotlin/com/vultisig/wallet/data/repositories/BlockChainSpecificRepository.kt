@@ -272,9 +272,9 @@ constructor(
                         if (dstAddress != null && tokenAmountValue != null) {
                             try {
                                 CardanoHelper.estimateFee(
-                                    toAmount = tokenAmountValue.toLong(),
+                                    coin = token,
+                                    toAmount = tokenAmountValue,
                                     toAddress = dstAddress,
-                                    changeAddress = address,
                                     sendMaxAmount = isMaxAmountEnabled,
                                     ttl = ttl.toLong(),
                                     utxos = utxos,

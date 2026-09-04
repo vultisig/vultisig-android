@@ -45,6 +45,7 @@ import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import vultisig.keysign.v1.SignSui
 import vultisig.keysign.v1.SignTon
@@ -885,9 +886,9 @@ class ChainHelpersTest {
             // fee: it must cover Cardano's fixed minimum (minFeeB = 155_381 lovelace).
             val derivedFee =
                 CardanoHelper.estimateFee(
-                    toAmount = internalPayload.toAmount.toLong(),
+                    coin = internalPayload.coin,
+                    toAmount = internalPayload.toAmount,
                     toAddress = internalPayload.toAddress,
-                    changeAddress = internalPayload.coin.address,
                     sendMaxAmount = cardano.sendMaxAmount,
                     ttl = cardano.ttl.toLong(),
                     utxos = internalPayload.utxos,
@@ -899,6 +900,40 @@ class ChainHelpersTest {
                 derivedFee >= 155_381,
             )
         }
+    }
+
+    /**
+     * The native-asset bundle has to land in the signed bytes, not merely on the payload. Changing
+     * the token quantity must move the sighash; a body that hashed the same either dropped the
+     * bundle or planned the send as plain ADA, which is what would move ADA under the token's
+     * label.
+     */
+    @Test
+    fun cardanoTokenBundleReachesTheSighash() {
+        val transactions: List<TransactionData> = loadTransactionData(CARDANO_JSON_FILE)
+        val tokenPayload =
+            transactions
+                .map { it.keysignPayload.toInternalKeySignPayload() }
+                .firstOrNull { !it.coin.isNativeToken }
+        if (tokenPayload == null) {
+            fail("cardano.json carries no native-token case")
+            return
+        }
+
+        // The input the planner spends declares what it holds, so the body can conserve it.
+        assertTrue(tokenPayload.utxos.any { it.cardanoTokens.isNotEmpty() })
+
+        val hash = CardanoHelper.getPreSignedImageHash(tokenPayload)
+        assertTrue(
+            "Expected 64-char hex hash but got: ${hash[0]}",
+            hash[0].matches(Regex("[0-9a-f]{64}")),
+        )
+
+        val doubled =
+            CardanoHelper.getPreSignedImageHash(
+                tokenPayload.copy(toAmount = tokenPayload.toAmount * BigInteger.valueOf(2))
+            )
+        assertNotEquals(hash, doubled)
     }
 
     @Test
@@ -1135,7 +1170,7 @@ class ChainHelpersTest {
         // preserving the cross-signer agreement required by #5421 and vultisig-sdk#1585.
         // -3: kujira.json, dropped with the chain — the other corpora still carry it, so the sync
         // check reports it as missing here rather than as a hash disagreement.
-        private const val EXPECTED_CASE_COUNT = 85
+        private const val EXPECTED_CASE_COUNT = 86
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"
