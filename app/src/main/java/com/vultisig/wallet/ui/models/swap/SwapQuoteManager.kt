@@ -112,9 +112,10 @@ internal fun formatAffiliatePercent(): String =
     )
 
 /**
- * Prices [bps] against the source notional — the same arithmetic ConvertBpsToFiatUseCase uses for
- * the discount rows themselves, so a row and the fee it was taken off can be derived from one
- * snapshot. Null when there is nothing to show: no discount, or a source with no fiat price.
+ * Prices [bps] against the source notional. The only place a discount is valued — every surface
+ * takes both the grossed fee and the rows under it from [swapFeeRow], so a row and the fee it was
+ * taken off are read from one snapshot rather than from two price reads a moment apart. Null when
+ * there is nothing to show: no discount, or a source with no fiat price.
  */
 internal fun bpsOfSourceFiat(srcFiat: FiatValue, bps: Int?): FiatValue? {
     if (bps == null || bps <= 0 || srcFiat.value <= BigDecimal.ZERO) return null

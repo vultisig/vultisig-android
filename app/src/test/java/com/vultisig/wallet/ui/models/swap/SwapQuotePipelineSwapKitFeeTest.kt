@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -66,8 +67,8 @@ internal class SwapQuotePipelineSwapKitFeeTest {
         )
 
     init {
-        coEvery { swapDiscountChecker.checkVultBpsDiscount(any(), any(), any()) } returns
-            VultDiscountResult(null, null, null)
+        every { swapDiscountChecker.checkVultBpsDiscount(any()) } returns
+            VultDiscountResult(null, null)
     }
 
     private val swapFee = FiatValue(BigDecimal("1.50"), "USD")

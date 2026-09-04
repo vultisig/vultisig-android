@@ -422,31 +422,18 @@ internal class SwapQuotePipeline(
         if (provider == SwapProvider.THORCHAIN) {
             referral?.let { code ->
                 val tierType = vultBPSDiscount?.getTierType()
-                val result =
-                    swapDiscountChecker.checkReferralBpsDiscount(
-                        tierType,
-                        srcToken,
-                        tokenValue,
-                        code,
-                    )
+                val result = swapDiscountChecker.checkReferralBpsDiscount(tierType, code)
                 referralCodeToStore = result.referralCode
-                discountInfo =
-                    discountInfo.copy(
-                        referralBpsDiscount = result.referralBpsDiscount,
-                        referralBpsDiscountFiatValue = result.referralBpsDiscountFiatValue,
-                    )
+                discountInfo = discountInfo.copy(referralBpsDiscount = result.referralBpsDiscount)
             }
         } else {
-            discountInfo =
-                discountInfo.copy(referralBpsDiscount = null, referralBpsDiscountFiatValue = null)
+            discountInfo = discountInfo.copy(referralBpsDiscount = null)
         }
 
-        val vultResult =
-            swapDiscountChecker.checkVultBpsDiscount(srcToken, tokenValue, vultBPSDiscount)
+        val vultResult = swapDiscountChecker.checkVultBpsDiscount(vultBPSDiscount)
         discountInfo =
             discountInfo.copy(
                 vultBpsDiscount = vultResult.vultBpsDiscount,
-                vultBpsDiscountFiatValue = vultResult.vultBpsDiscountFiatValue,
                 tierType = vultResult.tierType,
             )
 
@@ -483,18 +470,19 @@ internal class SwapQuotePipeline(
                     ),
                 feeIncludedInRate = quoteResult.swapFeeIncludedInRate,
             )
-        // The discount rows show exactly when the fee above them was grossed to the list rate —
-        // [swapFeeRow] returns a rate only then. A row that subtracts from a fee it was never added
-        // to states a saving the panel cannot reconcile: an unpriced source values every discount
-        // at "-$0.00", and SwapKit's itemized amount is an inbound deposit cost no affiliate
-        // discount was ever taken off.
-        if (!feeRow.isListRate) {
-            discountInfo =
-                discountInfo.copy(
-                    vultBpsDiscountFiatValue = null,
-                    referralBpsDiscountFiatValue = null,
-                )
-        }
+        // The rows are valued by [swapFeeRow] off the very snapshot it grossed the fee from, and
+        // never priced a second time here: a later price read can land on a different tick, and
+        // then the rows no longer subtract to the fee above them. They are non-null exactly when
+        // that fee was grossed — a row taken off a fee it was never added to states a saving the
+        // panel cannot reconcile: an unpriced source values every discount at "-$0.00", and
+        // SwapKit's itemized amount is an inbound deposit cost no affiliate discount came off.
+        discountInfo =
+            discountInfo.copy(
+                vultBpsDiscountFiatValue =
+                    feeRow.vultDiscount?.let { fiatValueToString(it, asFee = true) },
+                referralBpsDiscountFiatValue =
+                    feeRow.referralDiscount?.let { fiatValueToString(it, asFee = true) },
+            )
 
         // Empty text hides the row entirely (iOS `swapFeeString` returns `.empty` here): a SwapKit
         // UTXO deposit's cost is already surfaced as the Network Fee, so there is no separate swap

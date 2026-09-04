@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.utils.UiText
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -124,18 +125,23 @@ internal class SwapQuotePipelineSwapFeeRowTest {
     }
 
     @Test
-    fun `keeps the discount row when the source is priced`() = runTest {
+    fun `values the discount row off the fee it was added to`() = runTest {
         discountedAt(20, TierType.GOLD)
 
         val result = buildSuccess(charged = "0.59", srcFiat = "200")
 
+        // The row is exactly what the fee above it was grossed by: $0.59 charged + $0.40 waived =
+        // $0.99, so subtracting the row lands back on the net fee the Total Fee is built from. Both
+        // come off this one source snapshot — valuing the row from a second, later price read let a
+        // tick between the two leave that subtraction short.
         result.swapFeePercent shouldBe "0.50%"
+        result.feeText shouldBe "$0.99"
         result.discountInfo.vultBpsDiscountFiatValue shouldBe "$0.40"
     }
 
     private fun discountedAt(bps: Int?, tier: TierType?) {
-        coEvery { swapDiscountChecker.checkVultBpsDiscount(any(), any(), any()) } returns
-            VultDiscountResult(bps, bps?.let { "$0.40" }, tier)
+        every { swapDiscountChecker.checkVultBpsDiscount(any()) } returns
+            VultDiscountResult(bps, tier)
     }
 
     private suspend fun buildSuccess(

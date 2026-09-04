@@ -1,76 +1,39 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
-import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.usecases.ConvertBpsToFiatUseCase
 import com.vultisig.wallet.data.usecases.getTierType
-import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.screens.settings.TierType
 import javax.inject.Inject
 
-internal data class VultDiscountResult(
-    val vultBpsDiscount: Int?,
-    val vultBpsDiscountFiatValue: String?,
-    val tierType: TierType?,
-)
+internal data class VultDiscountResult(val vultBpsDiscount: Int?, val tierType: TierType?)
 
 internal data class ReferralDiscountResult(
     val referralBpsDiscount: Int?,
-    val referralBpsDiscountFiatValue: String?,
     val referralCode: String?,
 )
 
-internal class SwapDiscountChecker
-@Inject
-constructor(
-    private val convertBpsToFiat: ConvertBpsToFiatUseCase,
-    private val fiatValueToString: FiatValueToStringMapper,
-) {
+/**
+ * Resolves which discounts apply to a quote, in basis points.
+ *
+ * It deliberately does not value them: [swapFeeRow] prices the rows off the same source snapshot it
+ * grosses the fee from, so the row and the fee it is subtracted from cannot be read from two
+ * different prices. Pricing them a second time here — off a price read a moment after the quote's —
+ * is what let a tick between the two reads leave the panel unable to reconcile (#5803).
+ */
+internal class SwapDiscountChecker @Inject constructor() {
 
-    suspend fun checkVultBpsDiscount(
-        srcToken: Coin,
-        tokenValue: TokenValue,
-        vultBPSDiscount: Int?,
-    ): VultDiscountResult {
-        if (vultBPSDiscount == null) {
-            return VultDiscountResult(
-                vultBpsDiscount = null,
-                vultBpsDiscountFiatValue = null,
-                tierType = null,
-            )
-        }
-        val vultBpsDiscountFiat =
-            convertBpsToFiat(token = srcToken, tokenValue = tokenValue, bps = vultBPSDiscount)
-        val vultBpsDiscountFiatValue = fiatValueToString(vultBpsDiscountFiat, asFee = true)
-        val tierType = vultBPSDiscount.getTierType()
-        return VultDiscountResult(
+    fun checkVultBpsDiscount(vultBPSDiscount: Int?): VultDiscountResult =
+        VultDiscountResult(
             vultBpsDiscount = vultBPSDiscount,
-            vultBpsDiscountFiatValue = vultBpsDiscountFiatValue,
-            tierType = tierType,
+            tierType = vultBPSDiscount?.getTierType(),
         )
-    }
 
-    suspend fun checkReferralBpsDiscount(
-        tierType: TierType?,
-        srcToken: Coin,
-        tokenValue: TokenValue,
-        code: String,
-    ): ReferralDiscountResult {
+    fun checkReferralBpsDiscount(tierType: TierType?, code: String): ReferralDiscountResult {
         val referralBpsDiscount =
             referralBpsFor(tierType)
-                ?: return ReferralDiscountResult(
-                    referralBpsDiscount = null,
-                    referralBpsDiscountFiatValue = null,
-                    referralCode = null,
-                )
-        val referralBpsDiscountFiat =
-            convertBpsToFiat(token = srcToken, tokenValue = tokenValue, bps = referralBpsDiscount)
-        val referralBpsDiscountFiatFormatted =
-            fiatValueToString(referralBpsDiscountFiat, asFee = true)
+                ?: return ReferralDiscountResult(referralBpsDiscount = null, referralCode = null)
         return ReferralDiscountResult(
             referralBpsDiscount = referralBpsDiscount,
-            referralBpsDiscountFiatValue = referralBpsDiscountFiatFormatted,
             referralCode = code,
         )
     }
