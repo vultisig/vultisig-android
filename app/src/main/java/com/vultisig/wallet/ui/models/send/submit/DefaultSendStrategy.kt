@@ -416,10 +416,16 @@ internal class DefaultSendStrategy(
                             // broadcast. A Cardano native-token send also pins its recipient
                             // output to CardanoHelper.MIN_LOVELACE_ON_TOKEN_OUTPUT, so that floor
                             // must be reserved on top of the fee or WalletCore's planner rejects
-                            // the plan mid-keysign instead of here.
+                            // the plan mid-keysign instead of here. Cardano's fee is read from
+                            // `specific`, not `spendableGasFee`: it was just re-planned by
+                            // getSpecific() for this exact send and can differ from the earlier
+                            // validation-step estimate.
                             val requiredNativeValue =
                                 if (chain == Chain.Cardano) {
-                                    spendableGasFee.value +
+                                    val cardanoByteFee =
+                                        (specific.blockChainSpecific as? BlockChainSpecific.Cardano)
+                                            ?.byteFee ?: error("Cardano-specific fee is missing")
+                                    BigInteger.valueOf(cardanoByteFee) +
                                         BigInteger.valueOf(
                                             CardanoHelper.MIN_LOVELACE_ON_TOKEN_OUTPUT
                                         )

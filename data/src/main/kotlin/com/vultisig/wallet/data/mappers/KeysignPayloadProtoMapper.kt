@@ -9,6 +9,8 @@ import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.THORChainSwapPayload
+import com.vultisig.wallet.data.models.cardanoAssetId
+import com.vultisig.wallet.data.models.parseCardanoAssetId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
 import com.vultisig.wallet.data.models.payload.DAppMetadata
@@ -341,20 +343,25 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
     /**
      * Reads the Cardano native assets an initiator attached to a UTxO.
      *
-     * A malformed quantity is refused rather than dropped: signing on a bundle that silently lost a
-     * row would move assets the payload does not describe.
+     * A malformed row is refused rather than dropped: signing on a bundle that silently lost or
+     * loosened a row would move assets the payload does not describe, or push identifiers a
+     * co-signer never agreed to into the signing input's TokenAmount.
      */
     private fun List<vultisig.keysign.v1.CardanoTokenAsset?>.toCardanoTokenAssets():
-        List<CardanoTokenAsset> =
-        filterNotNull().map { asset ->
-            CardanoTokenAsset(
-                policyId = asset.policyId,
-                assetNameHex = asset.assetNameHex,
-                amount =
-                    asset.amount.toBigIntegerOrNull()
-                        ?: error("Cardano token ${asset.policyId} has a malformed amount"),
-            )
-        }
+        List<CardanoTokenAsset> = map { asset ->
+        val proto = asset ?: error("Cardano token asset row is missing")
+        val assetId =
+            parseCardanoAssetId(cardanoAssetId(proto.policyId, proto.assetNameHex))
+                ?: error("Cardano token ${proto.policyId} has a malformed asset id")
+        val amount =
+            proto.amount.toBigIntegerOrNull()?.takeIf { it.signum() >= 0 }
+                ?: error("Cardano token ${proto.policyId} has a malformed amount")
+        CardanoTokenAsset(
+            policyId = assetId.policyId,
+            assetNameHex = assetId.assetNameHex,
+            amount = amount,
+        )
+    }
 
     private fun ThorChainSwapPayloadProto.toThorChainSwapPayload() =
         THORChainSwapPayload(

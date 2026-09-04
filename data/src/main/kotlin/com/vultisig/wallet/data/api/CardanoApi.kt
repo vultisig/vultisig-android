@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.models.cardano.OgmiosError
 import com.vultisig.wallet.data.api.models.cardano.OgmiosTransactionResponse
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.cardanoAssetId
+import com.vultisig.wallet.data.models.parseCardanoAssetId
 import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.bodyOrThrow
@@ -184,12 +185,17 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
             .sortedWith(compareBy({ it.hash }, { it.index }))
 
     private fun CardanoAssetResponseJson.toTokenAsset(): CardanoTokenAsset? {
-        val policyId = policyId?.lowercase() ?: return null
         val amount = quantity?.toBigIntegerOrNull() ?: return null
         if (amount.signum() < 0) return null
+        // Validates hex format and length, same contract as the id read back off a Coin's
+        // contractAddress — an id this loose would push malformed hex straight into the signing
+        // input's TokenAmount.
+        val assetId =
+            parseCardanoAssetId(cardanoAssetId(policyId ?: return null, assetName.orEmpty()))
+                ?: return null
         return CardanoTokenAsset(
-            policyId = policyId,
-            assetNameHex = assetName.orEmpty().lowercase(),
+            policyId = assetId.policyId,
+            assetNameHex = assetId.assetNameHex,
             amount = amount,
         )
     }
