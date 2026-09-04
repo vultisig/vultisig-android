@@ -10,9 +10,9 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
+import com.vultisig.wallet.ui.models.swap.SwapDiscountBps
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
-import com.vultisig.wallet.ui.models.swap.bpsOfSourceFiat
 import com.vultisig.wallet.ui.models.swap.clampDstFiatToSrcFiat
 import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
@@ -116,19 +116,19 @@ constructor(
         // quote-time discount the transaction recorded would leave the breakdown unable to
         // reconcile once the source price moves. A source with no price prices no discount at all,
         // which [swapFeeRow] answers by leaving the fee ungrossed and the rows hidden.
-        val vultDiscountFiat = bpsOfSourceFiat(srcFiat, from.vultBpsDiscount)
-        val referralDiscountFiat = bpsOfSourceFiat(srcFiat, from.referralBpsDiscount)
         val feeRow =
             swapFeeRow(
                 provider = provider,
                 netFee = swapFeeFiat ?: quotesFeesFiat,
                 listRate = from.swapFeePercent,
-                discountBps = listOf(from.vultBpsDiscount, from.referralBpsDiscount),
-                pricedDiscounts = listOf(vultDiscountFiat, referralDiscountFiat),
+                srcFiat = srcFiat,
+                discounts =
+                    SwapDiscountBps(
+                        vult = from.vultBpsDiscount,
+                        referral = from.referralBpsDiscount,
+                    ),
+                feeIncludedInRate = from.swapFeeIncludedInRate,
             )
-        // A row that subtracts from a fee it was never added to can't be reconciled against the
-        // total, so the rows follow the fee: they appear only when it carries the list rate.
-        val showsDiscountRows = feeRow.isListRate
         val dstFiat =
             clampDstFiatToSrcFiat(
                 srcFiat,
@@ -238,18 +238,16 @@ constructor(
             swapFeeIncludedInRate = from.swapFeeIncludedInRate,
             swapFeeHidden = isSwapKitUtxoSwap,
             vultBpsDiscount = from.vultBpsDiscount,
-            // Shown exactly when the fee above was grossed to the list rate, and never falling
-            // back to the amount the form recorded: that one was priced at quote time while the fee
-            // row is re-valued here, so pairing them is what let a price move unbalance the panel.
+            // Priced by [swapFeeRow] off the same snapshot as the fee above, and non-null only when
+            // that fee was grossed to the list rate — a row that subtracts from a fee it was never
+            // added to cannot be reconciled against the total. Never falls back to the amount the
+            // form recorded either: that one was priced at quote time while the fee row is
+            // re-valued here, so pairing them is what let a price move unbalance the panel.
             vultBpsDiscountFiatValue =
-                vultDiscountFiat
-                    ?.takeIf { showsDiscountRows }
-                    ?.let { fiatValueToStringMapper(it, asFee = true) },
+                feeRow.vultDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
             referralBpsDiscount = from.referralBpsDiscount,
             referralBpsDiscountFiatValue =
-                referralDiscountFiat
-                    ?.takeIf { showsDiscountRows }
-                    ?.let { fiatValueToStringMapper(it, asFee = true) },
+                feeRow.referralDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
             minPayout = minPayout,
             priceImpactPercent = priceImpactDisplay?.percent,
             priceImpactLevel = priceImpactDisplay?.level,

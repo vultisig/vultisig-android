@@ -609,14 +609,14 @@ constructor(
                 // can't advertise one fee in the picker and a larger one a tap later. Whatever the
                 // breakdown adds back onto the charged fee is added here too, off the same source
                 // snapshot — the row carries no rate of its own, so it passes no [listRate].
-                val discountBps = candidate.candidate.discountBps()
                 val pickerFee =
                     swapFeeRow(
                             provider = candidate.candidate.provider,
                             netFee = fetch.swapFeeFiat,
                             listRate = null,
-                            discountBps = discountBps,
-                            pricedDiscounts = discountBps.map { bpsOfSourceFiat(fetch.srcFiat, it) },
+                            srcFiat = fetch.srcFiat,
+                            discounts = candidate.candidate.discountBps(),
+                            feeIncludedInRate = fetch.swapFeeIncludedInRate,
                         )
                         .fee
                 SwapRouteUiModel(

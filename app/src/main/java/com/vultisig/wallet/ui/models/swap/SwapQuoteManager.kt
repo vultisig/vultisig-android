@@ -63,9 +63,13 @@ internal data class QuoteFetchResult(
     val comparableDstFiat: BigDecimal,
     val feeText: String,
     val swapFeeFiat: FiatValue,
-    // Affiliate-only fee the provider actually charged, which [feeText] renders verbatim.
-    // [swapFeeFiat] additionally carries the outbound fee — that has a row of its own — so the Swap
-    // Fee row cannot be grossed up to the list rate from it.
+    // Affiliate-only fee the provider actually charged, which [feeText] renders verbatim, and what
+    // the breakdown's Swap Fee row grosses to the list rate: [swapFeeFiat] additionally carries the
+    // outbound fee, which has a row of its own on that screen.
+    // The Select-route picker grosses [swapFeeFiat] instead, deliberately — its column compares
+    // whole routes against each other, so dropping the outbound leg would understate every
+    // THORChain/Maya row. Grossing either figure adds back the same discounts, so that column reads
+    // "swap + outbound, undiscounted" and stays one subtraction away from the breakdown's two rows.
     val affiliateFeeFiat: FiatValue,
     // Source amount in fiat, the notional every affiliate rate is charged against. Prices the
     // discounts [undiscountedSwapFee] adds back onto [affiliateFeeFiat].
@@ -130,60 +134,86 @@ internal fun bpsOfSourceFiat(srcFiat: FiatValue, bps: Int?): FiatValue? {
  * the same [bpsOfSourceFiat] values. It also survives the Ultimate tier, where the provider charges
  * nothing and there is no non-zero fee to scale.
  */
-internal fun undiscountedSwapFee(netFee: FiatValue, waived: List<FiatValue?>): FiatValue {
-    val discounts = waived.filterNotNull()
-    if (discounts.isEmpty()) return netFee
-    return FiatValue(
-        value = discounts.fold(netFee.value) { total, discount -> total + discount.value },
-        currency = netFee.currency,
-    )
+internal fun undiscountedSwapFee(netFee: FiatValue, waived: List<FiatValue?>): FiatValue =
+    waived.filterNotNull().fold(netFee) { total, discount -> total + discount }
+
+/**
+ * The discounts that apply to one quote, in basis points: the VULT tier discount, and the referral
+ * rate THORChain alone grants.
+ *
+ * They travel together because [swapFeeRow] prices them itself. Every call site used to hand-pair a
+ * bps list with a separately valued fiat list, which is one edit away from grossing a fee that was
+ * already grossed, or from itemizing a discount the fee above it never included.
+ */
+internal data class SwapDiscountBps(val vult: Int? = null, val referral: Int? = null) {
+    /** How many actually reduce the fee — a null or non-positive rate discounts nothing. */
+    internal val applied: Int
+        get() = listOf(vult, referral).count { it != null && it > 0 }
 }
 
 /**
- * The Swap Fee row as displayed: the amount, and the rate its title claims (null for none).
+ * The Swap Fee row as displayed: the amount, the rate its title claims (null for none), and the
+ * discounts to itemize beneath it (null each when there is no row to show).
  *
  * [isListRate] says the amount was grossed back up to the list rate, so subtracting the discount
  * rows lands on the net fee the Total Fee is built from — which is what makes those rows safe to
  * show. It is not the same as [percent] being non-null: a caller with no rate string to display
  * still grosses the amount.
  */
-internal data class SwapFeeRow(val fee: FiatValue, val percent: String?, val isListRate: Boolean)
+internal data class SwapFeeRow(
+    val fee: FiatValue,
+    val percent: String?,
+    val isListRate: Boolean,
+    val vultDiscount: FiatValue? = null,
+    val referralDiscount: FiatValue? = null,
+)
 
 /**
- * Resolves the Swap Fee row from one price snapshot, so the amount and the [listRate] above it can
- * never disagree. [discountBps] are the discounts that apply, [pricedDiscounts] the same list
- * valued against the source by [bpsOfSourceFiat].
+ * Resolves the Swap Fee row — amount, rate, and the discount rows under it — from one price
+ * snapshot ([srcFiat]), so no two of the three can be derived from different numbers.
  *
- * The row keeps the provider's own net figure and drops the rate in the two cases where it cannot
- * honestly claim the list rate:
+ * The row keeps the provider's own charged figure, drops the rate, and itemizes nothing in the
+ * three cases below. They share a shape: a discount applies that this row has no way to show, and a
+ * "0.50%" title over a fee that was never grossed restates the double-billing read the row exists
+ * to fix (#5803).
  * - **The itemized amount is not an affiliate charge.** SwapKit reports its source-chain inbound
  *   (deposit) cost as the quote's fee and bakes its affiliate fee into the quoted destination
  *   amount instead, so adding a tier discount there would invent a discount on a network cost and
  *   inflate the row on every tiered cross-chain route — and titling that cost with an affiliate
- *   rate would be wrong however it is valued.
- * - **A discount applies but the source has no fiat price.** Nothing can be added back, so the
- *   amount stays the discounted one, and "0.50%" over it would restate the very double-billing read
- *   this row exists to fix (#5803).
+ *   rate would be wrong however it is valued, discount or none.
+ * - **[feeIncludedInRate] and a discount applies.** 1inch itemizes no affiliate fee at all; the row
+ *   renders "included in quoted rate" where the amount would go. There is no figure to gross, so a
+ *   discount row beneath it would subtract from nothing. Undiscounted, the list rate is exactly
+ *   what was charged, so the title keeps it.
+ * - **A discount applies but the source has no fiat price.** Nothing can be valued, so nothing can
+ *   be added back or itemized.
  */
 internal fun swapFeeRow(
     provider: SwapProvider,
     netFee: FiatValue,
     listRate: String?,
-    discountBps: List<Int?>,
-    pricedDiscounts: List<FiatValue?>,
+    srcFiat: FiatValue,
+    discounts: SwapDiscountBps,
+    feeIncludedInRate: Boolean = false,
 ): SwapFeeRow {
-    if (provider == SwapProvider.SWAPKIT) {
-        return SwapFeeRow(fee = netFee, percent = null, isListRate = false)
+    val charged = SwapFeeRow(fee = netFee, percent = null, isListRate = false)
+    if (provider == SwapProvider.SWAPKIT) return charged
+    // Nothing was discounted, so the charged fee already is the list rate: no grossing and no rows,
+    // and the title states the rate the provider actually took.
+    if (discounts.applied == 0) {
+        return SwapFeeRow(fee = netFee, percent = listRate, isListRate = true)
     }
-    val applied = discountBps.count { it != null && it > 0 }
-    val priced = pricedDiscounts.filterNotNull()
-    if (priced.size < applied) {
-        return SwapFeeRow(fee = netFee, percent = null, isListRate = false)
-    }
+    if (feeIncludedInRate) return charged
+    val vult = bpsOfSourceFiat(srcFiat, discounts.vult)
+    val referral = bpsOfSourceFiat(srcFiat, discounts.referral)
+    val priced = listOfNotNull(vult, referral)
+    if (priced.size < discounts.applied) return charged
     return SwapFeeRow(
         fee = undiscountedSwapFee(netFee = netFee, waived = priced),
         percent = listRate,
         isListRate = true,
+        vultDiscount = vult,
+        referralDiscount = referral,
     )
 }
 
@@ -201,12 +231,13 @@ internal data class QuoteCandidate(
  * for. Sharing the rule keeps a Select-route row and the breakdown it opens from pricing different
  * discounts onto the same route.
  */
-internal fun QuoteCandidate.discountBps(): List<Int?> =
-    listOf(
-        vultBPSDiscount,
-        if (provider == SwapProvider.THORCHAIN && referral != null) {
-            referralBpsFor(vultBPSDiscount?.getTierType())
-        } else null,
+internal fun QuoteCandidate.discountBps(): SwapDiscountBps =
+    SwapDiscountBps(
+        vult = vultBPSDiscount,
+        referral =
+            if (provider == SwapProvider.THORCHAIN && this.referral != null) {
+                referralBpsFor(vultBPSDiscount?.getTierType())
+            } else null,
     )
 
 internal data class BestQuote(val candidate: QuoteCandidate, val result: QuoteFetchResult)

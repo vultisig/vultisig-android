@@ -18,20 +18,33 @@ internal class SwapFeeRowTest {
 
     private val usd = { amount: String -> FiatValue(BigDecimal(amount), "USD") }
 
+    /** A $200 source notional, so 20 bps prices at $0.40 and 10 bps at $0.20. */
+    private val srcFiat = usd("200.00")
+
+    /** BigDecimal equality is scale-sensitive, and the row's arithmetic fixes no scale. */
+    private infix fun FiatValue?.shouldBeUsd(amount: String?) {
+        val plain = { v: BigDecimal -> v.stripTrailingZeros().toPlainString() }
+        this?.let { plain(it.value) to it.currency } shouldBe
+            amount?.let { plain(BigDecimal(it)) to "USD" }
+    }
+
     @Test
     fun `grosses the charged fee by the discounts the rows below itemize`() {
         val row =
             swapFeeRow(
                 provider = SwapProvider.KYBER,
-                netFee = usd("0.60"),
+                netFee = usd("0.40"),
                 listRate = "0.50%",
-                discountBps = listOf(20, null),
-                pricedDiscounts = listOf(usd("0.40"), null),
+                srcFiat = srcFiat,
+                discounts = SwapDiscountBps(vult = 20, referral = 10),
             )
 
-        row.fee shouldBe usd("1.00")
+        row.fee shouldBeUsd "1.00"
         row.percent shouldBe "0.50%"
         row.isListRate shouldBe true
+        // Priced off the same snapshot as the fee, so gross − rows lands back on the net exactly.
+        row.vultDiscount shouldBeUsd "0.40"
+        row.referralDiscount shouldBeUsd "0.20"
     }
 
     @Test
@@ -43,11 +56,11 @@ internal class SwapFeeRowTest {
                 provider = SwapProvider.KYBER,
                 netFee = usd("0.60"),
                 listRate = null,
-                discountBps = listOf(20),
-                pricedDiscounts = listOf(usd("0.40")),
+                srcFiat = srcFiat,
+                discounts = SwapDiscountBps(vult = 20),
             )
 
-        row.fee shouldBe usd("1.00")
+        row.fee shouldBeUsd "1.00"
         row.isListRate shouldBe true
     }
 
@@ -58,13 +71,14 @@ internal class SwapFeeRowTest {
                 provider = SwapProvider.SWAPKIT,
                 netFee = usd("0.60"),
                 listRate = "0.50%",
-                discountBps = listOf(20),
-                pricedDiscounts = listOf(usd("0.40")),
+                srcFiat = srcFiat,
+                discounts = SwapDiscountBps(vult = 20),
             )
 
-        row.fee shouldBe usd("0.60")
+        row.fee shouldBeUsd "0.60"
         row.percent shouldBe null
         row.isListRate shouldBe false
+        row.vultDiscount shouldBeUsd null
     }
 
     @Test
@@ -74,13 +88,14 @@ internal class SwapFeeRowTest {
                 provider = SwapProvider.KYBER,
                 netFee = usd("0.60"),
                 listRate = "0.50%",
-                discountBps = listOf(20),
-                pricedDiscounts = listOf(null),
+                srcFiat = usd("0"),
+                discounts = SwapDiscountBps(vult = 20),
             )
 
-        row.fee shouldBe usd("0.60")
+        row.fee shouldBeUsd "0.60"
         row.percent shouldBe null
         row.isListRate shouldBe false
+        row.vultDiscount shouldBeUsd null
     }
 
     @Test
@@ -90,13 +105,52 @@ internal class SwapFeeRowTest {
                 provider = SwapProvider.KYBER,
                 netFee = usd("1.00"),
                 listRate = "0.50%",
-                discountBps = listOf(null, 0),
-                pricedDiscounts = listOf(null, null),
+                srcFiat = srcFiat,
+                discounts = SwapDiscountBps(vult = null, referral = 0),
             )
 
-        row.fee shouldBe usd("1.00")
+        row.fee shouldBeUsd "1.00"
         row.percent shouldBe "0.50%"
         row.isListRate shouldBe true
+    }
+
+    @Test
+    fun `states the list rate for an undiscounted fee baked into the quoted rate`() {
+        // 1inch itemizes no amount; the row renders "included in quoted rate" where one would go.
+        // With nothing discounted, the rate the title claims is exactly the rate that was charged.
+        val row =
+            swapFeeRow(
+                provider = SwapProvider.ONEINCH,
+                netFee = usd("0.00"),
+                listRate = "0.50%",
+                srcFiat = srcFiat,
+                discounts = SwapDiscountBps(),
+                feeIncludedInRate = true,
+            )
+
+        row.percent shouldBe "0.50%"
+        row.isListRate shouldBe true
+        row.vultDiscount shouldBeUsd null
+    }
+
+    @Test
+    fun `drops the rate and the discount row when a discounted fee is baked into the rate`() {
+        // There is no itemized 1inch fee to gross, so a "-$0.40" row under it would subtract from
+        // nothing — and "0.50%" is not the rate a Gold vault paid.
+        val row =
+            swapFeeRow(
+                provider = SwapProvider.ONEINCH,
+                netFee = usd("0.00"),
+                listRate = "0.50%",
+                srcFiat = srcFiat,
+                discounts = SwapDiscountBps(vult = 20),
+                feeIncludedInRate = true,
+            )
+
+        row.fee shouldBeUsd "0.00"
+        row.percent shouldBe null
+        row.isListRate shouldBe false
+        row.vultDiscount shouldBeUsd null
     }
 
     @Test
@@ -107,14 +161,14 @@ internal class SwapFeeRowTest {
         val kyber =
             QuoteCandidate(SwapProvider.KYBER, GOLD_DISCOUNT_BPS, referral = "vulti").discountBps()
 
-        thor shouldBe listOf(GOLD_DISCOUNT_BPS, THORChainSwaps.REFERRED_USER_FEE_RATE_BP)
+        thor shouldBe SwapDiscountBps(GOLD_DISCOUNT_BPS, THORChainSwaps.REFERRED_USER_FEE_RATE_BP)
         // Every other provider resolves no referral, so the picker row must not price one.
-        kyber shouldBe listOf(GOLD_DISCOUNT_BPS, null)
+        kyber shouldBe SwapDiscountBps(GOLD_DISCOUNT_BPS, null)
     }
 
     @Test
     fun `resolves no referral discount at Ultimate, which already pays nothing`() {
         QuoteCandidate(SwapProvider.THORCHAIN, ULTIMATE_DISCOUNT_BPS, referral = "vulti")
-            .discountBps() shouldBe listOf(ULTIMATE_DISCOUNT_BPS, null)
+            .discountBps() shouldBe SwapDiscountBps(ULTIMATE_DISCOUNT_BPS, null)
     }
 }

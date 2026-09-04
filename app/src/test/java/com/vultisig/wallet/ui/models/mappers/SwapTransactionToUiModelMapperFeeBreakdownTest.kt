@@ -352,7 +352,29 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
             gasFeeFiatValue = usd("0.51"),
         )
 
-    private fun oneInchTransaction(): RegularSwapTransaction =
+    @Test
+    fun `never itemizes a 1inch discount, whose fee is baked into the quoted rate`() = runTest {
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { tokenRepository.getNativeToken(eth.chain.id) } returns eth
+        // A priceable source, so the row is dropped for being un-itemizable rather than unpriced.
+        coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("200")
+
+        val uiModel = mapper().invoke(oneInchTransaction(vultBpsDiscount = 20))
+
+        // The row reads "included in quoted rate" with no amount, so there is nothing for a
+        // "-$0.40" beneath it to subtract from — and 0.50% is not the rate a Gold vault paid.
+        uiModel.swapFeeIncludedInRate shouldBe true
+        uiModel.swapFeePercent shouldBe null
+        uiModel.vultBpsDiscountFiatValue shouldBe null
+    }
+
+    private fun oneInchTransaction(vultBpsDiscount: Int = 0): RegularSwapTransaction =
         RegularSwapTransaction(
             id = "tx-1inch",
             vaultId = "vault-1",
@@ -397,7 +419,7 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
             gasFeeFiatValue = usd("3.50"),
             swapFeeIncludedInRate = true,
             swapFeePercent = "0.50%",
-            vultBpsDiscount = 0,
+            vultBpsDiscount = vultBpsDiscount,
         )
 
     private fun swapKitEvmTransaction(vultBpsDiscount: Int? = null): RegularSwapTransaction =

@@ -470,17 +470,18 @@ internal class SwapQuotePipeline(
         // cost undiscounted, and subtracting those rows lands back on the net Total Fee. Both come
         // off the one source snapshot below, so the rows and the fee they were taken from can never
         // disagree.
-        val vultDiscountFiat = bpsOfSourceFiat(quoteResult.srcFiat, discountInfo.vultBpsDiscount)
-        val referralDiscountFiat =
-            bpsOfSourceFiat(quoteResult.srcFiat, discountInfo.referralBpsDiscount)
         val feeRow =
             swapFeeRow(
                 provider = provider,
                 netFee = quoteResult.affiliateFeeFiat,
                 listRate = quoteResult.swapFeePercent,
-                discountBps =
-                    listOf(discountInfo.vultBpsDiscount, discountInfo.referralBpsDiscount),
-                pricedDiscounts = listOf(vultDiscountFiat, referralDiscountFiat),
+                srcFiat = quoteResult.srcFiat,
+                discounts =
+                    SwapDiscountBps(
+                        vult = discountInfo.vultBpsDiscount,
+                        referral = discountInfo.referralBpsDiscount,
+                    ),
+                feeIncludedInRate = quoteResult.swapFeeIncludedInRate,
             )
         // The discount rows show exactly when the fee above them was grossed to the list rate —
         // [swapFeeRow] returns a rate only then. A row that subtracts from a fee it was never added

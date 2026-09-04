@@ -96,6 +96,81 @@ internal class JoinSwapVultDiscountTest {
         swap.swapTransactionUiModel.vultBpsDiscountFiatValue shouldBe null
     }
 
+    @Test
+    fun `charges the tier before grossing a LI-FI fee it derives itself`() = runTest {
+        // No swap-fee stamp on the wire, so the fee is recomputed from the destination amount.
+        // `integratorFeeAmount` defaults to the UNDISCOUNTED rate, and grossing that would bill
+        // the discount twice: 50 bps of the $200 dst is $1.00, plus $0.40 again = $1.40.
+        stubFees(vultBps = 20, provider = SwapProvider.LIFI)
+
+        val tx =
+            builder()
+                .build(payload(), swapPayload(unstamped(SwapProvider.LIFI)), vault, AppCurrency.USD)
+
+        val swap = tx.transactionTypeUiModel as TransactionTypeUiModel.Swap
+        // 30 bps charged ($0.60) grossed by the $0.40 waived: the list rate, once.
+        swap.swapTransactionUiModel.providerFee.fiatValue shouldBe "1.00"
+        swap.swapTransactionUiModel.swapFeePercent shouldBe "0.50%"
+        swap.swapTransactionUiModel.vultBpsDiscountFiatValue shouldBe "0.40"
+    }
+
+    @Test
+    fun `neither grosses nor itemizes a 1inch fee, which is baked into the quoted rate`() =
+        runTest {
+            // 1inch itemizes no affiliate fee, so the join screen falls back to a gas placeholder
+            // for
+            // the amount and renders "included in quoted rate" over it. There is nothing to gross,
+            // and
+            // a discount row under it would subtract from a fee it was never added to.
+            stubFees(vultBps = 20, provider = SwapProvider.ONEINCH)
+
+            val tx =
+                builder()
+                    .build(
+                        payload(),
+                        swapPayload(unstamped(SwapProvider.ONEINCH)),
+                        vault,
+                        AppCurrency.USD,
+                    )
+
+            val swap = tx.transactionTypeUiModel as TransactionTypeUiModel.Swap
+            swap.swapTransactionUiModel.swapFeeIncludedInRate shouldBe true
+            swap.swapTransactionUiModel.swapFeePercent shouldBe null
+            swap.swapTransactionUiModel.vultBpsDiscount shouldBe null
+            swap.swapTransactionUiModel.vultBpsDiscountFiatValue shouldBe null
+        }
+
+    /** A quote from a sender that stamps no swap-fee coin context (iOS, Windows, older Android). */
+    private fun unstamped(provider: SwapProvider) =
+        OneInchSwapTxJson(
+                from = "0xsrc",
+                to = "0xRouter",
+                gas = 100_000L,
+                data = "0xdata",
+                value = "0",
+                gasPrice = "1000000000",
+                swapFee = "",
+                swapFeeTokenContract = "",
+                swapFeeChain = "",
+                swapFeeDecimals = null,
+            )
+            .let { it to provider }
+
+    private fun stubFees(vultBps: Int, provider: SwapProvider = SwapProvider.KYBER) {
+        stubFees(vultBps)
+        coEvery { getDiscountBps(vault.id, provider) } returns vultBps
+        // Declared after the base stubs so it wins: any destination-token amount reads as dollars
+        // at 6 decimals, so a fee the builder derives itself is priced by the same rule as one
+        // stamped on the wire — and a fee grossed twice shows up as twice the dollars.
+        coEvery { convertTokenValueToFiat(usdc, any(), AppCurrency.USD) } answers
+            {
+                FiatValue(
+                    BigDecimal(secondArg<TokenValue>().value).divide(BigDecimal(1_000_000)),
+                    "USD",
+                )
+            }
+    }
+
     private fun stubFees(vultBps: Int) {
         every { mapTokenValueToDecimalUiString(any()) } returns "0"
         every { mapSwapTransactionToHistoryData(any()) } returns mockk(relaxed = true)
@@ -137,7 +212,21 @@ internal class JoinSwapVultDiscountTest {
             wasmExecuteContractPayload = null,
         )
 
-    private fun swapPayload() =
+    private fun swapPayload(override: Pair<OneInchSwapTxJson, SwapProvider>? = null) =
+        override?.let { (tx, provider) ->
+            SwapPayload.EVM(
+                EVMSwapPayloadJson(
+                    fromCoin = eth,
+                    toCoin = usdc,
+                    fromAmount = srcValue.value,
+                    toAmountDecimal = BigDecimal("200"),
+                    quote = EVMSwapQuoteJson(dstAmount = "200000000", tx = tx),
+                    provider = provider.getSwapProviderId(),
+                )
+            )
+        } ?: defaultSwapPayload()
+
+    private fun defaultSwapPayload() =
         SwapPayload.EVM(
             EVMSwapPayloadJson(
                 fromCoin = eth,
