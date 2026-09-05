@@ -1,5 +1,8 @@
 package com.vultisig.wallet.data.models.transaction_decoding
 
+import com.vultisig.wallet.data.blockchain.cosmos.CosmosSignDocDecoder
+import com.vultisig.wallet.data.blockchain.cosmos.CosmosTransactionDecoder
+import com.vultisig.wallet.data.blockchain.maya.MayaChainTransactionDecoder
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaTransactionDecoder
 import dagger.Module
 import dagger.Provides
@@ -22,6 +25,17 @@ internal object TransactionDecodingModule {
     @Provides
     @Singleton
     fun provideSignedTransactionDecoder(
-        solana: SolanaTransactionDecoder
-    ): SignedTransactionDecoder = SignedTransactionDecoder().apply { register(solana) }
+        solana: SolanaTransactionDecoder,
+        cosmosSignDoc: CosmosSignDocDecoder,
+        cosmos: CosmosTransactionDecoder,
+        maya: MayaChainTransactionDecoder,
+    ): SignedTransactionDecoder =
+        SignedTransactionDecoder().apply {
+            register(solana)
+            // The signed body outranks the sidecars that travel beside it, so the SignDoc reader
+            // is asked before the memo and wire-type grammar on the same chains.
+            register(cosmosSignDoc)
+            register(cosmos)
+            register(maya)
+        }
 }
