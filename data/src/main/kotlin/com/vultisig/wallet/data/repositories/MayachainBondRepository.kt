@@ -155,17 +155,7 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
                     .associate { it.pool to (it.liquidityUnits.toLongOrNull() ?: 0L) }
             if (memberPools.isEmpty()) return emptyMap()
 
-            val bondedByPool = mutableMapOf<String, Long>()
-            for (node in getAllNodes()) {
-                for (provider in node.bondProviders.providers) {
-                    if (provider.bondAddress == address) {
-                        for ((pool, units) in provider.pools) {
-                            bondedByPool[pool] =
-                                (bondedByPool[pool] ?: 0L) + (units.toLongOrNull() ?: 0L)
-                        }
-                    }
-                }
-            }
+            val bondedByPool = bondedUnitsByPool(getAllNodes(), address)
 
             memberPools
                 .mapValues { (pool, total) -> maxOf(0L, total - (bondedByPool[pool] ?: 0L)) }
@@ -190,16 +180,11 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
         bondAddress: String,
     ): Map<String, Long> {
         return try {
-            val bondedByPool = mutableMapOf<String, Long>()
-            for (provider in getNodeDetails(nodeAddress).bondProviders.providers) {
-                if (provider.bondAddress != bondAddress) continue
-                for ((pool, units) in provider.pools) {
-                    bondedByPool[pool] = (bondedByPool[pool] ?: 0L) + (units.toLongOrNull() ?: 0L)
-                }
-            }
             // A pool listed at zero is not a position, and offering it would let the form build an
             // UNBOND memo the node has nothing to apply it against.
-            bondedByPool.filterValues { it > 0L }
+            bondedUnitsByPool(listOf(getNodeDetails(nodeAddress)), bondAddress).filterValues {
+                it > 0L
+            }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(
@@ -210,6 +195,29 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
             )
             throw e
         }
+    }
+
+    /**
+     * The LP units [bondAddress] has bonded across [nodes], summed per pool.
+     *
+     * One address can hold a provider record on several nodes, and both the address-wide surplus
+     * and the position on a single node are read off those same records, so they are added up the
+     * same way here.
+     */
+    private fun bondedUnitsByPool(
+        nodes: List<MayaNodeInfo>,
+        bondAddress: String,
+    ): Map<String, Long> {
+        val bondedByPool = mutableMapOf<String, Long>()
+        for (node in nodes) {
+            for (provider in node.bondProviders.providers) {
+                if (provider.bondAddress != bondAddress) continue
+                for ((pool, units) in provider.pools) {
+                    bondedByPool[pool] = (bondedByPool[pool] ?: 0L) + (units.toLongOrNull() ?: 0L)
+                }
+            }
+        }
+        return bondedByPool
     }
 
     override suspend fun getMemberDetails(address: String): MayaMemberDetails {
