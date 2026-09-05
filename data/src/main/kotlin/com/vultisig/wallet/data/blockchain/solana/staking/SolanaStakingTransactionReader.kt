@@ -1,8 +1,12 @@
 package com.vultisig.wallet.data.blockchain.solana.staking
 
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoComputeBudget
+import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoDecodedTransaction
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoTransactionDecoder
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoTxInstruction
+import com.vultisig.wallet.data.chains.helpers.SOLANA_MAX_PRIORITY_FEE_PRICE
+import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
+import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.crypto.Base58Codec
 import com.vultisig.wallet.data.models.transaction_decoding.DecodedAmount
 import com.vultisig.wallet.data.models.transaction_decoding.DecodedAsset
@@ -57,15 +61,40 @@ object SolanaStakingTransactionReader {
 
     private const val CREATE_ACCOUNT_DATA_BYTES = 52
 
-    /** Reads one relayed transaction, or refuses it. */
-    fun read(base64Transaction: String): SolanaStakingReading? {
+    /**
+     * The compute-unit limit every staking transaction this app builds reserves.
+     * `BlockChainSpecificRepository` pins it for all of Solana, and the staking payload builder
+     * passes that through to `SolanaHelper`, so a relayed transaction reserving anything else was
+     * not built by this app.
+     */
+    private val EXPECTED_UNIT_LIMIT: BigInteger =
+        BigInteger.valueOf(SOLANA_PRIORITY_FEE_LIMIT.toLong())
+
+    /** The clamp `SolanaApi.getMedianPriorityFee` and `SolanaHelper` apply to the sampled price. */
+    private val MINIMUM_UNIT_PRICE: BigInteger = BigInteger.valueOf(SOLANA_PRIORITY_FEE_PRICE)
+
+    private val MAXIMUM_UNIT_PRICE: BigInteger = BigInteger.valueOf(SOLANA_MAX_PRIORITY_FEE_PRICE)
+
+    /**
+     * Reads one relayed transaction, or refuses it.
+     *
+     * @param signerAddress the vault's own Solana address. Everything below is read as a claim
+     *   about *this* wallet, so without it a transaction that merely names the wallet in an
+     *   authority slot would be described as the wallet's own.
+     */
+    fun read(base64Transaction: String, signerAddress: String): SolanaStakingReading? {
+        if (signerAddress.isEmpty()) return null
+
         val decoded =
             runCatching { KaminoTransactionDecoder.decode(base64Transaction) }.getOrNull()
                 ?: return null
 
-        // Compute-budget entries accompany staking without moving value, so they are ignored
-        // rather than treated as part of the sequence. Order is otherwise preserved: the shapes
-        // below are positional.
+        if (!decoded.isSignableBy(signerAddress)) return null
+        if (!decoded.carriesAnAcceptableComputeBudget()) return null
+
+        // Compute-budget entries are checked above rather than matched as part of the sequence:
+        // they move no value, and their position is WalletCore's to choose. Order is otherwise
+        // preserved — the shapes below are positional.
         val instructions =
             decoded.instructions.filterNot { it.programId == KaminoComputeBudget.PROGRAM_ID }
 
@@ -75,23 +104,74 @@ object SolanaStakingTransactionReader {
         if (instructions.any { it.namesAnUnresolvedAccount }) return null
 
         return when (instructions.size) {
-            1 -> readStandalone(instructions[0])
-            3 -> readDelegation(instructions)
+            1 -> readStandalone(instructions[0], signerAddress)
+            3 -> readDelegation(instructions, signerAddress)
             else -> null
         }
+    }
+
+    /**
+     * Whether the envelope is one this wallet alone completes.
+     *
+     * The raw-signing path splices this vault's signature into slot 0 and leaves the rest of the
+     * envelope exactly as it arrived. So the fee payer — message account key 0, not any account an
+     * instruction happens to name first — must be the wallet, one signature must be all the message
+     * declares, and every slot must still be an empty placeholder. Otherwise the wallet pays for
+     * somebody else's transaction, signs one that is broadcast incomplete, or countersigns beside a
+     * signature it never saw. These are the same three checks the Kamino raw-Solana path makes for
+     * the same reason.
+     */
+    private fun KaminoDecodedTransaction.isSignableBy(signerAddress: String): Boolean =
+        feePayer == signerAddress && requiredSignatures == 1 && isUnsigned
+
+    /**
+     * Whether the compute budget is one this app would have set.
+     *
+     * The budget is not inert: unit price times unit limit is the priority fee the runtime charges,
+     * and the screen this reading feeds describes only the staking action. So each ComputeBudget
+     * instruction has to parse, neither kind may repeat, and the values have to be the ones this
+     * app clamps to. A transaction carrying no budget at all is accepted — it pays the base fee
+     * only, which is the one direction that cannot overcharge — and the two instructions' order is
+     * not checked, since it is WalletCore's to pick on both platforms and changes nothing about
+     * what is charged.
+     */
+    private fun KaminoDecodedTransaction.carriesAnAcceptableComputeBudget(): Boolean {
+        val budget = instructions.filter { it.programId == KaminoComputeBudget.PROGRAM_ID }
+        if (budget.isEmpty()) return true
+
+        val limits = budget.mapNotNull { KaminoComputeBudget.unitLimitArgument(it.data) }
+        val prices = budget.mapNotNull { KaminoComputeBudget.unitPriceArgument(it.data) }
+
+        // Anything unparseable, duplicated, or from neither entry point leaves a budget instruction
+        // unaccounted for, and an unaccounted-for instruction is one nothing here is checking.
+        if (limits.size + prices.size != budget.size) return false
+        if (limits.size > 1 || prices.size > 1) return false
+
+        limits.singleOrNull()?.let { if (it != EXPECTED_UNIT_LIMIT) return false }
+        prices.singleOrNull()?.let {
+            if (it < MINIMUM_UNIT_PRICE || it > MAXIMUM_UNIT_PRICE) return false
+        }
+        return true
     }
 
     /**
      * Deactivate and withdraw each stand alone. A delegate never does — it only reaches this app as
      * the third instruction of a create/initialize/delegate sequence — so it is refused here.
      */
-    private fun readStandalone(instruction: KaminoTxInstruction): SolanaStakingReading? {
+    private fun readStandalone(
+        instruction: KaminoTxInstruction,
+        signerAddress: String,
+    ): SolanaStakingReading? {
         if (instruction.programId != SolanaStakingConfig.STAKE_PROGRAM_ID) return null
 
         return when (instruction.data.discriminator()) {
             STAKE_DEACTIVATE -> {
                 // Deactivation cools the whole account and names no quantity.
                 if (instruction.data.size != 4 || instruction.accounts.size != 3) return null
+
+                // Account 2 is the stake authority. A deactivation authorised by anyone else is
+                // not this wallet's to describe, whatever the envelope says about who pays.
+                if (instruction.accounts[2] != signerAddress) return null
                 SolanaStakingReading(
                     operation = DecodedOperation.Unstake,
                     amount = DecodedAmount.Unstated,
@@ -107,9 +187,10 @@ object SolanaStakingTransactionReader {
                 // A transaction can name this wallet as the authority and somebody else as the
                 // recipient, which would read as "you're withdrawing" over funds leaving for an
                 // address the screen never shows. WalletCore builds this app's withdrawals with
-                // the signer as both, so requiring that refuses the mismatch and accepts every
-                // transaction this app produces.
-                if (instruction.accounts[1] != instruction.accounts[4]) return null
+                // the signer as both, so requiring that of both refuses the mismatch and accepts
+                // every transaction this app produces.
+                if (instruction.accounts[1] != signerAddress) return null
+                if (instruction.accounts[4] != signerAddress) return null
 
                 val lamports = instruction.data.littleEndianU64(offset = 4) ?: return null
                 SolanaStakingReading(
@@ -131,7 +212,10 @@ object SolanaStakingTransactionReader {
      * could fund one account and delegate a different one, and the funding figure shown would
      * describe neither.
      */
-    private fun readDelegation(instructions: List<KaminoTxInstruction>): SolanaStakingReading? {
+    private fun readDelegation(
+        instructions: List<KaminoTxInstruction>,
+        signerAddress: String,
+    ): SolanaStakingReading? {
         val (create, initialize, delegate) =
             Triple(instructions[0], instructions[1], instructions[2])
 
@@ -143,10 +227,11 @@ object SolanaStakingTransactionReader {
         if (createdStake != initialize.accounts.getOrNull(0)) return null
         if (createdStake != delegate.accounts.getOrNull(0)) return null
 
-        // The payer must be the account the delegation is authorised by, and the account the
-        // initialize instruction names as staker. Otherwise the funds are the signer's while the
-        // stake is somebody else's.
+        // The payer must be this wallet, the account the delegation is authorised by, and the
+        // account the initialize instruction names as staker. Otherwise the funds are the signer's
+        // while the stake is somebody else's.
         val payer = create.accounts.getOrNull(0) ?: return null
+        if (payer != signerAddress) return null
         if (payer != delegate.accounts.getOrNull(5)) return null
         if (payer != initialize.authorizedStaker()) return null
 

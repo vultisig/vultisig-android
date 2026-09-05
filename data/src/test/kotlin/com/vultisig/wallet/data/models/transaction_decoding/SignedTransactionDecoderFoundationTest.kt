@@ -266,6 +266,7 @@ class SignedTransactionDecoderFoundationTest {
     ) : SignedTransactionContent {
         override val chain: Chain = contentChain
         override val isNativeCoin = true
+        override val signerAddress = "signer"
         override val rawToAddress = "destination"
         override val rawAmount = SignedAmount.Committed(42.toBigInteger())
         override val signedData: OpaqueSignedContent? = null

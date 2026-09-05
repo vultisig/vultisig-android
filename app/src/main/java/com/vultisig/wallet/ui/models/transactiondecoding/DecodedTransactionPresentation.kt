@@ -26,16 +26,22 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
 
 /**
+ * The vault's own coin for [coin], or null when the vault holds no match. A chain read keyed off a
+ * coin — its address, its decimals — has to run on one of these, never on the peer-supplied coin a
+ * joining co-signer was handed.
+ */
+internal fun List<Coin>.trustedCoinFor(coin: Coin): Coin? = firstOrNull {
+    it.chain == coin.chain &&
+        it.ticker.equals(coin.ticker, ignoreCase = true) &&
+        it.contractAddress.equals(coin.contractAddress, ignoreCase = true)
+}
+
+/**
  * The vault's own coin for [coin], which carries the trusted decimals and logo. Falls back to
  * [coin] itself when the vault holds no match — on a joining co-signer that coin is peer-supplied,
  * so a local match is preferred wherever one exists.
  */
-internal fun List<Coin>.trustedMatchFor(coin: Coin): Coin =
-    firstOrNull {
-        it.chain == coin.chain &&
-            it.ticker.equals(coin.ticker, ignoreCase = true) &&
-            it.contractAddress.equals(coin.contractAddress, ignoreCase = true)
-    } ?: coin
+internal fun List<Coin>.trustedMatchFor(coin: Coin): Coin = trustedCoinFor(coin) ?: coin
 
 /**
  * Converts provenance-aware readings into display content. This is the single boundary where

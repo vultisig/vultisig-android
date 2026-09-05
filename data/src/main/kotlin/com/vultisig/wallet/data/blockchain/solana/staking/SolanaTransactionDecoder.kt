@@ -34,7 +34,9 @@ class SolanaTransactionDecoder @Inject constructor() : TransactionContentDecoder
         // Several relayed transactions have no single operation between them, so naming one would
         // describe only part of what is being signed.
         val raw = solana.rawTransactions.singleOrNull() ?: return null
-        val reading = SolanaStakingTransactionReader.read(raw) ?: return null
+        val reading =
+            SolanaStakingTransactionReader.read(raw, signerAddress = tx.signerAddress)
+                ?: return null
 
         return DecodedTransaction(
             operation = reading.operation,

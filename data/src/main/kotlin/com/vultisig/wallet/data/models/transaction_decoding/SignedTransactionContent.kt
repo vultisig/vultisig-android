@@ -126,6 +126,16 @@ interface SignedTransactionContent {
     /** Whether the chain settles the moved asset as its native coin. */
     val isNativeCoin: Boolean
 
+    /**
+     * The signing account's own address on [chain] — the vault's address, the same on both devices.
+     *
+     * A decoder that reads opaque signed bytes needs it to tell "this transaction is ours" from
+     * "this transaction merely names us somewhere": a relayed transaction can put the wallet in an
+     * authority slot while paying its fee from, or sending its proceeds to, an account the wallet
+     * does not control.
+     */
+    val signerAddress: String
+
     // MARK: Ungated fields
     // Decoders should prefer `corroborated`; `raw` access requires explicit proof.
 
@@ -227,6 +237,9 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
 
     override val isNativeCoin: Boolean
         get() = payload.coin.isNativeToken
+
+    override val signerAddress: String
+        get() = payload.coin.address
 
     override val rawToAddress: String
         get() = payload.toAddress
@@ -341,6 +354,7 @@ private data class KeysignPayloadContent(val payload: KeysignPayload) : SignedTr
 data class InitiatingTransactionContent(
     override val chain: Chain,
     override val isNativeCoin: Boolean,
+    override val signerAddress: String,
     override val rawToAddress: String,
     override val rawAmount: SignedAmount,
     override val rawMemo: String?,
@@ -380,6 +394,7 @@ fun Transaction.asSignedTransactionContent(): SignedTransactionContent =
     InitiatingTransactionContent(
         chain = token.chain,
         isNativeCoin = token.isNativeToken,
+        signerAddress = token.address,
         rawToAddress = dstAddress,
         rawAmount = SignedAmount.Committed(tokenValue.value),
         rawMemo = memo?.takeIf { it.isNotEmpty() },
@@ -398,6 +413,7 @@ fun DepositTransaction.asSignedTransactionContent(): SignedTransactionContent =
     InitiatingTransactionContent(
         chain = srcToken.chain,
         isNativeCoin = srcToken.isNativeToken,
+        signerAddress = srcToken.address,
         rawToAddress = dstAddress,
         rawAmount = SignedAmount.Committed(srcTokenValue.value),
         rawMemo = memo.takeIf { it.isNotEmpty() },
