@@ -49,11 +49,14 @@ class CosmosTransactionDecoder @Inject constructor() : TransactionContentDecoder
         val fields = memo.split(":")
         val head = fields.firstOrNull() ?: return null
 
-        // The chain matches these heads case-insensitively.
+        // The chain matches these heads case-insensitively. Each is matched against its whole
+        // layout: a memo with fields this grammar cannot account for is one the reader does not
+        // recognise, and naming it anyway would present an ambiguous string as a verified action.
         return when (head.uppercase()) {
-            // `SWITCH` moves the asset to the sender's THORChain address.
+            // `SWITCH:<address>` moves the asset to the sender's THORChain address.
             "SWITCH" -> {
-                if (fields.getOrNull(1).isNullOrEmpty()) return null
+                if (fields.size != SWITCH_FIELDS) return null
+                if (fields[SWITCH_ADDRESS_FIELD].isEmpty()) return null
                 DecodedTransaction(
                     operation = DecodedOperation.SwitchChain,
                     amount = carried(content.amount),
@@ -61,11 +64,13 @@ class CosmosTransactionDecoder @Inject constructor() : TransactionContentDecoder
                 )
             }
 
-            // Governance votes move no quantity. `QBTC_VOTE` is what this app builds; `DYDX_VOTE`
-            // is the same grammar from an iOS initiator, and a co-signer has to read both.
+            // `<CHAIN>_VOTE:<option>:<proposal>` moves no quantity. `QBTC_VOTE` is what this app
+            // builds; `DYDX_VOTE` is the same grammar from an iOS initiator, and a co-signer has
+            // to read both.
             "QBTC_VOTE",
             "DYDX_VOTE" -> {
-                if (fields.getOrNull(2).isNullOrEmpty()) return null
+                if (fields.size != VOTE_FIELDS) return null
+                if (fields.drop(1).any { it.isEmpty() }) return null
                 DecodedTransaction(
                     operation = DecodedOperation.Vote,
                     amount = DecodedAmount.Unstated,
@@ -99,6 +104,14 @@ class CosmosTransactionDecoder @Inject constructor() : TransactionContentDecoder
     private companion object {
         /** An earlier approve or swap route makes the sidecar memo inert. */
         val MEMO_PRECEDENCE = MemoPrecedence.MemoIsInertWhenRoutedEarlier
+
+        const val SWITCH_FIELDS = 2
+        const val SWITCH_ADDRESS_FIELD = 1
+
+        /**
+         * The head, the option, and the proposal id — `GovernanceViewModel` writes exactly three.
+         */
+        const val VOTE_FIELDS = 3
 
         /** What the transaction carries, when it carries a figure at all. */
         fun carried(signed: SignedAmount): DecodedAmount =
