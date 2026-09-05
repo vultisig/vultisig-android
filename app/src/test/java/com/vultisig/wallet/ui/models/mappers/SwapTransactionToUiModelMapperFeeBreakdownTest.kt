@@ -86,6 +86,91 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
     }
 
     @Test
+    fun `Swap Fee row shows the list rate, with the tier discount added back`() = runTest {
+        // A Gold vault is quoted at 30 bps, so the provider charges $0.59 on a $200 swap. The
+        // verify screen itemizes the 20 bps VULT discount on its own row underneath, so showing
+        // the charged fee here read as two separate cuts. The row shows what the swap costs
+        // undiscounted; subtracting the discount row lands back on the fee Total Fee is built
+        // from.
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("200")
+        coEvery { convertTokenValueToFiat(usdt, dstValue, AppCurrency.USD) } returns usd("199")
+        coEvery { convertTokenValueToFiat(usdt, totalFees, AppCurrency.USD) } returns usd("1.40")
+        coEvery { convertTokenValueToFiat(usdt, affiliateFee, AppCurrency.USD) } returns usd("0.59")
+        coEvery { convertTokenValueToFiat(usdt, outboundFee, AppCurrency.USD) } returns usd("1.18")
+
+        val uiModel = mapper().invoke(transaction(vultBpsDiscount = 20))
+
+        // $0.59 charged + 20 bps of the $200 source = the undiscounted $0.99.
+        uiModel.providerFee.fiatValue shouldBe "0.990"
+        // Total Fee stays net: gas $0.02 + affiliate $0.59 + outbound $1.18.
+        uiModel.totalFee shouldBe "1.79"
+    }
+
+    @Test
+    fun `revalues the discount row with the fee, so a price move cannot unbalance the panel`() =
+        runTest {
+            // The source doubled between the quote and this screen. The fee rows are re-valued at
+            // the current price, so the discount row has to be too — pairing a current-price fee
+            // with the $0.40 discount recorded at quote time would leave the rows unable to
+            // subtract back to the fee Total Fee is built from.
+            every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
+            coEvery { fiatValueToStringMapper(any(), any()) } answers
+                {
+                    firstArg<FiatValue>().value.toPlainString()
+                }
+            coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+            coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("400")
+            coEvery { convertTokenValueToFiat(usdt, dstValue, AppCurrency.USD) } returns usd("399")
+            coEvery { convertTokenValueToFiat(usdt, totalFees, AppCurrency.USD) } returns
+                usd("2.80")
+            coEvery { convertTokenValueToFiat(usdt, affiliateFee, AppCurrency.USD) } returns
+                usd("1.18")
+            coEvery { convertTokenValueToFiat(usdt, outboundFee, AppCurrency.USD) } returns
+                usd("2.36")
+
+            val uiModel =
+                mapper()
+                    .invoke(transaction(vultBpsDiscount = 20, vultBpsDiscountFiatValue = "$0.40"))
+
+            // 20 bps of the $400 source, not the recorded $0.40.
+            uiModel.vultBpsDiscountFiatValue shouldBe "0.800"
+            // $1.18 charged + that same $0.80, so the row subtracts back to $1.18.
+            uiModel.providerFee.fiatValue shouldBe "1.980"
+            // Total Fee is the net: gas $0.02 + affiliate $1.18 + outbound $2.36.
+            uiModel.totalFee shouldBe "3.56"
+        }
+
+    @Test
+    fun `Swap Fee row keeps the charged fee when no discount applies`() = runTest {
+        // Nothing was waived — a co-signer, or a vault with no tier — so there is no row below to
+        // reconcile against and the provider's own figure stands.
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("200")
+        coEvery { convertTokenValueToFiat(usdt, dstValue, AppCurrency.USD) } returns usd("199")
+        coEvery { convertTokenValueToFiat(usdt, totalFees, AppCurrency.USD) } returns usd("1.40")
+        coEvery { convertTokenValueToFiat(usdt, affiliateFee, AppCurrency.USD) } returns usd("0.99")
+        coEvery { convertTokenValueToFiat(usdt, outboundFee, AppCurrency.USD) } returns usd("1.18")
+
+        val uiModel = mapper().invoke(transaction())
+
+        uiModel.providerFee.fiatValue shouldBe "0.99"
+    }
+
+    @Test
     fun `keeps the opaque total when there is no fee breakdown`() = runTest {
         every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
         every { mapTokenValueToDecimalUiString(any()) } returns "0"
@@ -267,7 +352,29 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
             gasFeeFiatValue = usd("0.51"),
         )
 
-    private fun oneInchTransaction(): RegularSwapTransaction =
+    @Test
+    fun `never itemizes a 1inch discount, whose fee is baked into the quoted rate`() = runTest {
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { tokenRepository.getNativeToken(eth.chain.id) } returns eth
+        // A priceable source, so the row is dropped for being un-itemizable rather than unpriced.
+        coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("200")
+
+        val uiModel = mapper().invoke(oneInchTransaction(vultBpsDiscount = 20))
+
+        // The row reads "included in quoted rate" with no amount, so there is nothing for a
+        // "-$0.40" beneath it to subtract from — and 0.50% is not the rate a Gold vault paid.
+        uiModel.swapFeeIncludedInRate shouldBe true
+        uiModel.swapFeePercent shouldBe null
+        uiModel.vultBpsDiscountFiatValue shouldBe null
+    }
+
+    private fun oneInchTransaction(vultBpsDiscount: Int = 0): RegularSwapTransaction =
         RegularSwapTransaction(
             id = "tx-1inch",
             vaultId = "vault-1",
@@ -312,10 +419,10 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
             gasFeeFiatValue = usd("3.50"),
             swapFeeIncludedInRate = true,
             swapFeePercent = "0.50%",
-            vultBpsDiscount = 0,
+            vultBpsDiscount = vultBpsDiscount,
         )
 
-    private fun swapKitEvmTransaction(): RegularSwapTransaction =
+    private fun swapKitEvmTransaction(vultBpsDiscount: Int? = null): RegularSwapTransaction =
         RegularSwapTransaction(
             id = "tx-swapkit",
             vaultId = "vault-1",
@@ -360,12 +467,64 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
                 ),
             isApprovalRequired = false,
             gasFeeFiatValue = usd("3.50"),
+            swapFeePercent = "0.50%",
+            vultBpsDiscount = vultBpsDiscount,
         )
+
+    @Test
+    fun `never grosses a SwapKit fee, which is an inbound cost no discount came off`() = runTest {
+        // SwapKit reports the source-chain inbound (deposit) cost as its fee and bakes the
+        // affiliate fee into the quoted destination amount. Adding a Gold tier's 20 bps onto that
+        // would invent a discount on a network cost — and the row below it would subtract from a
+        // fee it was never added to.
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { tokenRepository.getNativeToken(eth.chain.id) } returns eth
+        coEvery { convertTokenValueToFiat(eth, srcValue, AppCurrency.USD) } returns usd("400")
+        coEvery { convertTokenValueToFiat(eth, inboundPlaceholder, AppCurrency.USD) } returns
+            usd("0.60")
+
+        val uiModel = mapper().invoke(swapKitEvmTransaction(vultBpsDiscount = 20))
+
+        uiModel.providerFee.fiatValue shouldBe "0.60"
+        uiModel.swapFeePercent shouldBe null
+        uiModel.vultBpsDiscountFiatValue shouldBe null
+    }
+
+    @Test
+    fun `drops the rate and the discount row when the source has lost its price`() = runTest {
+        // Without a source price the discount can't be valued, so the fee can't be grossed by it.
+        // Titling the charged fee "0.50%" would then restate the double cut #5803 removes, and the
+        // row would read "-$0.00" against a fee it never came off.
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { convertTokenValueToFiat(usdt, affiliateFee, AppCurrency.USD) } returns usd("1.18")
+        coEvery { convertTokenValueToFiat(usdt, outboundFee, AppCurrency.USD) } returns usd("2.36")
+
+        val uiModel =
+            mapper().invoke(transaction(vultBpsDiscount = 20, vultBpsDiscountFiatValue = "$0.40"))
+
+        uiModel.providerFee.fiatValue shouldBe "1.18"
+        uiModel.swapFeePercent shouldBe null
+        uiModel.vultBpsDiscountFiatValue shouldBe null
+    }
 
     private fun transaction(
         swapFee: TokenValue? = affiliateFee,
         outboundFee: TokenValue? = SwapTransactionToUiModelMapperFeeBreakdownTest.outboundFee,
         priceImpact: BigDecimal? = null,
+        vultBpsDiscount: Int? = null,
+        vultBpsDiscountFiatValue: String? = null,
     ): RegularSwapTransaction =
         RegularSwapTransaction(
             id = "tx-1",
@@ -401,6 +560,8 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
             isApprovalRequired = false,
             gasFeeFiatValue = usd("0.02"),
             priceImpact = priceImpact,
+            vultBpsDiscount = vultBpsDiscount,
+            vultBpsDiscountFiatValue = vultBpsDiscountFiatValue,
         )
 
     private companion object {

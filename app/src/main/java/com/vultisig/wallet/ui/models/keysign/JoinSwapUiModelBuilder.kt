@@ -33,19 +33,24 @@ import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import com.vultisig.wallet.data.swap.limit.toThorchainFixedPoint
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
 import com.vultisig.wallet.ui.models.swap.LimitOrderLabels
+import com.vultisig.wallet.ui.models.swap.SwapDiscountBps
+import com.vultisig.wallet.ui.models.swap.SwapFeeRow
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
+import com.vultisig.wallet.ui.models.swap.formatAffiliatePercent
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
+import com.vultisig.wallet.ui.models.swap.swapFeeRow
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +75,7 @@ constructor(
     private val swapQuoteRepository: SwapQuoteRepository,
     private val mapSwapTransactionToHistoryData: SwapTransactionToHistoryDataMapper,
     private val formatLimitOrderLabels: FormatLimitOrderLabelsUseCase,
+    private val getDiscountBps: GetDiscountBpsUseCase,
 ) {
 
     /**
@@ -231,13 +237,38 @@ constructor(
                             else -> nativeToken
                         }
 
+                // The co-signer resolves the initiator's VULT tier itself instead of reading it off
+                // the wire, which carries only the net fee (#5329). The discount is a function of
+                // the vault's VULT balance and tier NFT, and both devices are the same vault, so
+                // the same inputs give the same bps — letting this screen show the list rate and
+                // the discount row the initiator's verify screen shows, rather than a bare net fee
+                // that disagreed with it by the discount (#5803).
+                //
+                // A balance that crosses a tier boundary between the initiator's quote and this
+                // read would price the row differently; that is the same approximate parity the
+                // Thor/Maya/SwapKit fee re-fetches on this path already accept. A failed or
+                // unresolvable read yields no discount, which leaves the row exactly as it was
+                // before: the charged fee, claiming no rate.
+                //
+                // Only the VULT tier is re-derivable, and only it is needed: the referral discount
+                // applies to THORChain alone, which is a payload of its own, and its code is the
+                // initiator's local state rather than anything the vault can recompute.
+                val evmProvider = swapProviderFromWireId(swapPayload.data.provider)
+                val vultBps = evmProvider?.let { getDiscountBps(vault.id, it) }?.takeIf { it > 0 }
+
                 val value =
                     when {
                         explicitSwapFee != null -> explicitSwapFee.second
-                        // VULT tier discount isn't available in the join flow, so this
-                        // uses the base integrator rate. The difference vs. the initiator
-                        // display is at most 0.5% of dstAmount.
-                        isLiFi -> LiFiChainApi.integratorFeeAmount(dstAmount = dstTokenValue.value)
+                        // Charges the tier the same way the initiator's own quote does
+                        // (`SwapQuoteManager` passes the identical bps), so this is the net
+                        // fee — which is what the row below grosses back up to the list rate.
+                        // Left undiscounted it would already BE the list rate, and grossing
+                        // it would bill the discount a second time.
+                        isLiFi ->
+                            LiFiChainApi.integratorFeeAmount(
+                                dstAmount = dstTokenValue.value,
+                                bpsDiscount = vultBps ?: 0,
+                            )
                         oneInchSwapTxJson.swapFee.isNotEmpty() &&
                             oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null ->
                             oneInchSwapTxJson.swapFee.toBigInteger()
@@ -260,6 +291,18 @@ constructor(
                 val swapFeeForTotal =
                     if (isOneInchIncludedInRate) networkGasFeeFiatValue
                     else estimatedFee + networkGasFeeFiatValue
+
+                val feeRow =
+                    evmProvider?.let {
+                        swapFeeRow(
+                            provider = it,
+                            netFee = estimatedFee,
+                            listRate = formatAffiliatePercent(),
+                            srcFiat = convertTokenValueToFiat(srcToken, srcTokenValue, currency),
+                            discounts = SwapDiscountBps(vult = vultBps),
+                            feeIncludedInRate = isOneInchIncludedInRate,
+                        )
+                    } ?: SwapFeeRow(fee = estimatedFee, percent = null, isListRate = false)
 
                 val swapTransaction =
                     SwapTransactionUiModel(
@@ -285,7 +328,7 @@ constructor(
                             ValuedToken(
                                 token = feeToken,
                                 value = value.toString(),
-                                fiatValue = fiatValueToStringMapper(estimatedFee, asFee = true),
+                                fiatValue = fiatValueToStringMapper(feeRow.fee, asFee = true),
                             ),
                         networkFee =
                             ValuedToken(
@@ -306,12 +349,12 @@ constructor(
                         totalFee = fiatValueToStringMapper(swapFeeForTotal, asFee = true),
                         provider = provider,
                         swapFeeIncludedInRate = isOneInchIncludedInRate,
-                        // No percentage on the join path: the affiliate rate is net of the
-                        // initiator's VULT tier discount, which the signed payload doesn't carry
-                        // and can't be recovered here. Showing the base 0.50% would contradict a
-                        // discounted initiator's verify screen, so the row omits the percent
-                        // entirely — as every other provider does on this path (#5358 review).
-                        swapFeePercent = null,
+                        swapFeePercent = feeRow.percent,
+                        // Rows follow the fee: shown only when it was grossed to the list rate, so
+                        // subtracting them lands back on the net fee the total is built from.
+                        vultBpsDiscount = vultBps?.takeIf { feeRow.isListRate },
+                        vultBpsDiscountFiatValue =
+                            feeRow.vultDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
                     )
 
                 JoinKeysignVerifyResult(
@@ -347,6 +390,17 @@ constructor(
                         transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel),
                     )
                 }
+                // Re-fetching with no discount quoted the co-signer the full 50 bps while the
+                // initiator had signed a discounted one, so the two devices disagreed on the
+                // affiliate fee AND on the Total Fee built from it. The tier is a function of the
+                // vault's VULT balance and tier NFT and both devices are the same vault, so
+                // resolving it here reproduces the initiator's quote — the same derivation the EVM
+                // branch uses, for the same #5329 reason.
+                //
+                // The referral code is the one input that stays out of reach: it is the
+                // initiator's local state, not anything the vault can recompute, so a referred
+                // swap still prices its referral leg undiscounted here.
+                val thorVultBps = getDiscountBps(vault.id, SwapProvider.THORCHAIN).takeIf { it > 0 }
                 val quote =
                     swapQuoteRepository
                         .getQuote(
@@ -356,6 +410,7 @@ constructor(
                                 dstToken = dstToken,
                                 tokenValue = srcTokenValue,
                                 dstAddress = swapPayload.data.toAddress,
+                                bpsDiscount = thorVultBps ?: 0,
                             ),
                         )
                         .expectNative(SwapProvider.THORCHAIN)
@@ -390,6 +445,8 @@ constructor(
                                 dstToken = dstToken,
                                 currency = currency,
                             ),
+                        feeProvider = SwapProvider.THORCHAIN,
+                        vultBps = thorVultBps,
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -424,6 +481,17 @@ constructor(
                         transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel),
                     )
                 }
+                // Re-fetching with no discount quoted the co-signer the full 50 bps while the
+                // initiator had signed a discounted one, so the two devices disagreed on the
+                // affiliate fee AND on the Total Fee built from it. The tier is a function of the
+                // vault's VULT balance and tier NFT and both devices are the same vault, so
+                // resolving it here reproduces the initiator's quote — the same derivation the EVM
+                // branch uses, for the same #5329 reason.
+                //
+                // The referral code is the one input that stays out of reach: it is the
+                // initiator's local state, not anything the vault can recompute, so a referred
+                // swap still prices its referral leg undiscounted here.
+                val mayaVultBps = getDiscountBps(vault.id, SwapProvider.MAYA).takeIf { it > 0 }
                 val quote =
                     swapQuoteRepository
                         .getQuote(
@@ -434,6 +502,7 @@ constructor(
                                 tokenValue = srcTokenValue,
                                 dstAddress = swapPayload.data.toAddress,
                                 isAffiliate = true,
+                                bpsDiscount = mayaVultBps ?: 0,
                             ),
                         )
                         .expectNative(SwapProvider.MAYA)
@@ -458,6 +527,8 @@ constructor(
                                 memo = payload.memo,
                                 dstToken = dstToken,
                             ),
+                        feeProvider = SwapProvider.MAYA,
+                        vultBps = mayaVultBps,
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -564,6 +635,11 @@ constructor(
         // Non-null only for a THORChain `=<` limit order, recovered from the signed memo. Drives
         // the Target Price / expiry row (#4154).
         limitOrderLabels: LimitOrderLabels? = null,
+        // The provider whose affiliate rate titles the Swap Fee row, and the vault's tier in bps.
+        // Both null for a branch with no affiliate charge to label (an LP add, a SwapKit inbound
+        // cost), which leaves the row exactly as it was: the charged fee, claiming no rate.
+        feeProvider: SwapProvider? = null,
+        vultBps: Int? = null,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
 
@@ -572,6 +648,21 @@ constructor(
         val outboundFeeFiat =
             outboundFee?.let { convertTokenValueToFiat(providerFeeToken, it, currency) }
         val displaySwapFee = swapFeeFiat ?: estimatedFee
+        val srcFiat = convertTokenValueToFiat(srcToken, srcTokenValue, currency)
+        // Grossed back up to the list rate with the discount itemized beneath it, the same row the
+        // initiator's verify screen shows. [feesFiatForTotal] deliberately keeps the *net* fee: the
+        // total is what both devices are signing, and the row minus its discount is what reconciles
+        // to it.
+        val feeRow =
+            feeProvider?.let {
+                swapFeeRow(
+                    provider = it,
+                    netFee = displaySwapFee,
+                    listRate = formatAffiliatePercent(),
+                    srcFiat = srcFiat,
+                    discounts = SwapDiscountBps(vult = vultBps),
+                )
+            } ?: SwapFeeRow(fee = displaySwapFee, percent = null, isListRate = false)
         // Total mirrors the swap form: gas + affiliate + outbound (liquidity already in dst
         // amount).
         val feesFiatForTotal =
@@ -585,10 +676,7 @@ constructor(
                 ValuedToken(
                     value = mapTokenValueToDecimalUiString(srcTokenValue),
                     token = srcToken,
-                    fiatValue =
-                        fiatValueToStringMapper(
-                            convertTokenValueToFiat(srcToken, srcTokenValue, currency)
-                        ),
+                    fiatValue = fiatValueToStringMapper(srcFiat),
                 ),
             dst =
                 ValuedToken(
@@ -610,7 +698,7 @@ constructor(
                 ValuedToken(
                     token = providerFeeToken,
                     value = (swapFee ?: providerFee).value.toString(),
-                    fiatValue = fiatValueToStringMapper(displaySwapFee, asFee = true),
+                    fiatValue = fiatValueToStringMapper(feeRow.fee, asFee = true),
                 ),
             outboundFee = outboundFeeFiat?.let { fiatValueToStringMapper(it, asFee = true) },
             networkFeeFormatted =
@@ -626,6 +714,12 @@ constructor(
             providerLabel = providerLabel,
             externalRecipient = externalRecipient,
             swapFeeHidden = swapFeeHidden,
+            swapFeePercent = feeRow.percent,
+            // Rows follow the fee: shown only when it was grossed to the list rate, so subtracting
+            // them lands back on the net fee the total is built from.
+            vultBpsDiscount = vultBps?.takeIf { feeRow.isListRate },
+            vultBpsDiscountFiatValue =
+                feeRow.vultDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
             minPayout = minPayout?.let { mapTokenValueToDecimalUiString(it) },
             isLimitOrder = isLimitOrder,
             limitTargetPriceLabel = limitOrderLabels?.targetPriceLabel,

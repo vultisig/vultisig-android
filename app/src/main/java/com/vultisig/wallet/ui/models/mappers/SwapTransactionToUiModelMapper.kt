@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
+import com.vultisig.wallet.ui.models.swap.SwapDiscountBps
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.clampDstFiatToSrcFiat
@@ -17,6 +18,7 @@ import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
+import com.vultisig.wallet.ui.models.swap.swapFeeRow
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -108,6 +110,25 @@ constructor(
         // keysign screens. Apply the same value-preserving clamp the swap form uses (#4878) so an
         // illiquid token's inflated market mark can't reappear on the screens the user signs from.
         val srcFiat = convertTokenValueToFiat(from.srcToken, from.srcTokenValue, currency)
+
+        // The discount rows and the fee they were taken off have to come off one price snapshot:
+        // the fee above them is re-valued here at the current price, so pairing it with the
+        // quote-time discount the transaction recorded would leave the breakdown unable to
+        // reconcile once the source price moves. A source with no price prices no discount at all,
+        // which [swapFeeRow] answers by leaving the fee ungrossed and the rows hidden.
+        val feeRow =
+            swapFeeRow(
+                provider = provider,
+                netFee = swapFeeFiat ?: quotesFeesFiat,
+                listRate = from.swapFeePercent,
+                srcFiat = srcFiat,
+                discounts =
+                    SwapDiscountBps(
+                        vult = from.vultBpsDiscount,
+                        referral = from.referralBpsDiscount,
+                    ),
+                feeIncludedInRate = from.swapFeeIncludedInRate,
+            )
         val dstFiat =
             clampDstFiatToSrcFiat(
                 srcFiat,
@@ -178,7 +199,9 @@ constructor(
                 ValuedToken(
                     token = tokenValue,
                     value = (from.swapFee ?: from.estimatedFees).value.toString(),
-                    fiatValue = fiatValueToStringMapper(swapFeeFiat ?: quotesFeesFiat, asFee = true),
+                    // List-rate fee, matching the swap form: the charged affiliate fee plus the
+                    // discounts the rows below restate, so the row is not netted twice.
+                    fiatValue = fiatValueToStringMapper(feeRow.fee, asFee = true),
                 ),
             outboundFee = outboundFeeFiat?.let { fiatValueToStringMapper(it, asFee = true) },
             networkFee =
@@ -207,13 +230,24 @@ constructor(
             expectedDstDecimal = from.expectedDstTokenValue.decimal.toPlainString(),
             externalRecipient =
                 (from as? SwapTransaction.RegularSwapTransaction)?.externalRecipient,
-            swapFeePercent = from.swapFeePercent,
+            // Resolved here rather than read off the transaction: the fee above is re-valued at
+            // the current price, and a source that has lost its price since Continue can no longer
+            // be grossed up — so the rate the form recorded would then sit over a discounted
+            // amount (see [swapFeeRow]).
+            swapFeePercent = feeRow.percent,
             swapFeeIncludedInRate = from.swapFeeIncludedInRate,
             swapFeeHidden = isSwapKitUtxoSwap,
             vultBpsDiscount = from.vultBpsDiscount,
-            vultBpsDiscountFiatValue = from.vultBpsDiscountFiatValue,
+            // Priced by [swapFeeRow] off the same snapshot as the fee above, and non-null only when
+            // that fee was grossed to the list rate — a row that subtracts from a fee it was never
+            // added to cannot be reconciled against the total. Never falls back to the amount the
+            // form recorded either: that one was priced at quote time while the fee row is
+            // re-valued here, so pairing them is what let a price move unbalance the panel.
+            vultBpsDiscountFiatValue =
+                feeRow.vultDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
             referralBpsDiscount = from.referralBpsDiscount,
-            referralBpsDiscountFiatValue = from.referralBpsDiscountFiatValue,
+            referralBpsDiscountFiatValue =
+                feeRow.referralDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
             minPayout = minPayout,
             priceImpactPercent = priceImpactDisplay?.percent,
             priceImpactLevel = priceImpactDisplay?.level,

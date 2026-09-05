@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.DefaultDispatcher
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.mappers.exportableOrNull
 import com.vultisig.wallet.data.models.TssAction
@@ -33,7 +35,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.reflect.typeOf
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +58,8 @@ constructor(
     private val snackbarFlow: SnackbarFlow,
     private val saveBackupToUri: SaveBackupToUriUseCase,
     private val deleteBackupDocument: DeleteBackupDocumentUseCase,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val args =
@@ -168,7 +172,7 @@ constructor(
         }
 
         val backup =
-            withContext(Dispatchers.Default) {
+            withContext(defaultDispatcher) {
                 val proto = mapVaultToProto.exportableOrNull(vault) ?: return@withContext null
                 createVaultBackup(proto, password)
             }
@@ -202,7 +206,7 @@ constructor(
             val vaultId = args.vaultId
 
             if (backupSuccess) {
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     vaultDataStoreRepository.setBackupStatus(args.vaultId, true)
                 }
 

@@ -199,10 +199,10 @@ internal class SwapFormViewModelTest {
 
         swapValidator = SwapValidator()
         swapDiscountChecker = mockk(relaxed = true)
-        coEvery { swapDiscountChecker.checkVultBpsDiscount(any(), any(), any()) } returns
-            VultDiscountResult(null, null, null)
-        coEvery { swapDiscountChecker.checkReferralBpsDiscount(any(), any(), any(), any()) } returns
-            ReferralDiscountResult(null, null, null)
+        every { swapDiscountChecker.checkVultBpsDiscount(any()) } returns
+            VultDiscountResult(null, null)
+        every { swapDiscountChecker.checkReferralBpsDiscount(any(), any()) } returns
+            ReferralDiscountResult(null, null)
 
         swapGasCalculator = mockk(relaxed = true)
         coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
@@ -2967,12 +2967,13 @@ internal class SwapFormViewModelTest {
     fun `calculateFees checks VULT BPS discount when available`() =
         runTest(mainDispatcher) {
             coEvery { getDiscountBpsUseCase.invoke(any(), any()) } returns 50
-            coEvery { swapDiscountChecker.checkVultBpsDiscount(any(), any(), any()) } returns
-                VultDiscountResult(
-                    vultBpsDiscount = 50,
-                    vultBpsDiscountFiatValue = "$5.00",
-                    tierType = null,
-                )
+            every { swapDiscountChecker.checkVultBpsDiscount(any()) } returns
+                VultDiscountResult(vultBpsDiscount = 50, tierType = null)
+            // The row is valued off the fee row's own snapshot — 50 bps of the $1000 source below —
+            // rather than by a second price read, so this is the only value it can be asked for.
+            coEvery {
+                fiatValueToString(match { it.value.compareTo(BigDecimal("5")) == 0 }, true)
+            } returns "$5.00"
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
                 listOf(SwapProvider.THORCHAIN)
             coEvery {
@@ -2987,7 +2988,9 @@ internal class SwapFormViewModelTest {
                     any(),
                     any(),
                 )
-            } returns createDefaultQuoteFetchResult()
+                // A priced source: the discount row is only shown when the fee above it could be
+                // grossed by that same amount, which an unpriced source can't do.
+            } returns createDefaultQuoteFetchResult(srcFiat = FiatValue(BigDecimal("1000"), "USD"))
 
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()
@@ -4442,6 +4445,8 @@ internal class SwapFormViewModelTest {
         comparableDstFiat: BigDecimal = BigDecimal("95.00"),
         feeText: String = "$0.00",
         swapFeeFiat: FiatValue = FiatValue(BigDecimal.ZERO, "USD"),
+        affiliateFeeFiat: FiatValue = swapFeeFiat,
+        srcFiat: FiatValue = FiatValue(BigDecimal.ZERO, "USD"),
         outboundFeeText: String? = null,
         swapFeePercent: String? = null,
     ): RankedQuotes {
@@ -4460,6 +4465,8 @@ internal class SwapFormViewModelTest {
                         comparableDstFiat = comparableDstFiat,
                         feeText = feeText,
                         swapFeeFiat = swapFeeFiat,
+                        affiliateFeeFiat = affiliateFeeFiat,
+                        srcFiat = srcFiat,
                         outboundFeeText = outboundFeeText,
                         swapFeePercent = swapFeePercent,
                     ),

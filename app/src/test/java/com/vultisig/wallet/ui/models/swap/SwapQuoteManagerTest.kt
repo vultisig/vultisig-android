@@ -1298,14 +1298,73 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
-    fun `formatAffiliatePercent sources the net rate from the sent bps`() {
-        // Base 50 bps with no discount, reduced by the VULT discount, clamped at zero. This is the
-        // Swap Fee row title (#5358).
-        formatAffiliatePercent(null) shouldBe "0.50%"
-        formatAffiliatePercent(0) shouldBe "0.50%"
-        formatAffiliatePercent(20) shouldBe "0.30%"
-        formatAffiliatePercent(50) shouldBe "0.00%" // Ultimate tier: full discount.
-        formatAffiliatePercent(60) shouldBe "0.00%" // Over-discount never goes negative.
+    fun `formatAffiliatePercent renders the list rate, not the discounted rate`() {
+        // The Swap Fee row title is the undiscounted base rate: every discount is itemized on its
+        // own row below, so netting them here too billed one discount twice.
+        formatAffiliatePercent() shouldBe "0.50%"
+    }
+
+    @Test
+    fun `undiscountedSwapFee adds the itemized discounts back onto the charged fee`() {
+        // 200 USDC swapped at Gold: the provider charged 30 bps ($0.59 of destination), the VULT
+        // row claims 20 bps of the source. The row shows the two together, so subtracting the
+        // discount rows below lands back on the fee the total is built from.
+        val srcFiat = FiatValue(BigDecimal("200"), "USD")
+        val fee =
+            undiscountedSwapFee(
+                netFee = FiatValue(BigDecimal("0.59"), "USD"),
+                waived = listOf(bpsOfSourceFiat(srcFiat, 20), bpsOfSourceFiat(srcFiat, null)),
+            )
+
+        fee.value.compareTo(BigDecimal("0.99")) shouldBe 0
+        fee.currency shouldBe "USD"
+    }
+
+    @Test
+    fun `undiscountedSwapFee prices the Ultimate tier off the source, with nothing charged`() {
+        // A fully discounted vault pays no affiliate fee at all, so there is no charge to scale
+        // from — the row still has to disclose the 50 bps the tier waived.
+        val srcFiat = FiatValue(BigDecimal("200"), "USD")
+        val fee =
+            undiscountedSwapFee(
+                netFee = FiatValue(BigDecimal.ZERO, "USD"),
+                waived = listOf(bpsOfSourceFiat(srcFiat, 50)),
+            )
+
+        fee.value.compareTo(BigDecimal("1.00")) shouldBe 0
+    }
+
+    @Test
+    fun `undiscountedSwapFee counts the referral row too`() {
+        // Both discount rows subtract from this one, so both are added back or the expanded
+        // breakdown stops reconciling to Total Fees.
+        val srcFiat = FiatValue(BigDecimal("200"), "USD")
+        val fee =
+            undiscountedSwapFee(
+                netFee = FiatValue(BigDecimal("0.70"), "USD"),
+                waived = listOf(bpsOfSourceFiat(srcFiat, 5), bpsOfSourceFiat(srcFiat, 10)),
+            )
+
+        fee.value.compareTo(BigDecimal("1.00")) shouldBe 0
+    }
+
+    @Test
+    fun `undiscountedSwapFee falls back to the charged fee with nothing priced to add back`() {
+        val charged = FiatValue(BigDecimal("0.99"), "USD")
+
+        undiscountedSwapFee(charged, listOf(null, null)) shouldBe charged
+    }
+
+    @Test
+    fun `bpsOfSourceFiat prices a discount row, and declines to when it cannot`() {
+        val srcFiat = FiatValue(BigDecimal("200"), "USD")
+
+        bpsOfSourceFiat(srcFiat, 20)!!.value.compareTo(BigDecimal("0.40")) shouldBe 0
+        bpsOfSourceFiat(srcFiat, null) shouldBe null
+        bpsOfSourceFiat(srcFiat, 0) shouldBe null
+        // Unpriced source token: showing the provider's own figure on the fee row beats grossing
+        // it up by a fabricated $0.00 discount.
+        bpsOfSourceFiat(FiatValue(BigDecimal.ZERO, "USD"), 20) shouldBe null
     }
 
     @Test
@@ -1356,7 +1415,7 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
-    fun `fetchQuote 1inch swap fee percent reflects the VULT discount`() = runTest {
+    fun `fetchQuote 1inch swap fee percent stays the list rate under a VULT discount`() = runTest {
         val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
         val usdc = coin(Chain.Ethereum, "USDC", "0xdst", 6)
         coEvery { tokenRepository.getNativeToken(any()) } returns eth
@@ -1382,7 +1441,8 @@ internal class SwapQuoteManagerTest {
                     amount = BigDecimal.ONE,
                 )
 
-        result.swapFeePercent shouldBe "0.30%"
+        // The discount has its own row; the title stays the list rate.
+        result.swapFeePercent shouldBe "0.50%"
         result.swapFeeIncludedInRate shouldBe true
     }
 
@@ -1953,6 +2013,8 @@ internal class SwapQuoteManagerTest {
                     comparableDstFiat = BigDecimal(netFiat),
                     feeText = "",
                     swapFeeFiat = FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker),
+                    affiliateFeeFiat = FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker),
+                    srcFiat = FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker),
                     sourceGasWei = sourceGasWei?.let { BigInteger.valueOf(it) },
                 ),
         )

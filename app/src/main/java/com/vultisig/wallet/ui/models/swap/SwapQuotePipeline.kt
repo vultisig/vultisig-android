@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.getTierType
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
@@ -144,6 +145,7 @@ internal class SwapQuotePipeline(
     private val swapDiscountChecker: SwapDiscountChecker,
     private val swapGasCalculator: SwapGasCalculator,
     private val swapValidator: SwapValidator,
+    private val fiatValueToString: FiatValueToStringMapper,
 ) {
 
     /**
@@ -420,31 +422,18 @@ internal class SwapQuotePipeline(
         if (provider == SwapProvider.THORCHAIN) {
             referral?.let { code ->
                 val tierType = vultBPSDiscount?.getTierType()
-                val result =
-                    swapDiscountChecker.checkReferralBpsDiscount(
-                        tierType,
-                        srcToken,
-                        tokenValue,
-                        code,
-                    )
+                val result = swapDiscountChecker.checkReferralBpsDiscount(tierType, code)
                 referralCodeToStore = result.referralCode
-                discountInfo =
-                    discountInfo.copy(
-                        referralBpsDiscount = result.referralBpsDiscount,
-                        referralBpsDiscountFiatValue = result.referralBpsDiscountFiatValue,
-                    )
+                discountInfo = discountInfo.copy(referralBpsDiscount = result.referralBpsDiscount)
             }
         } else {
-            discountInfo =
-                discountInfo.copy(referralBpsDiscount = null, referralBpsDiscountFiatValue = null)
+            discountInfo = discountInfo.copy(referralBpsDiscount = null)
         }
 
-        val vultResult =
-            swapDiscountChecker.checkVultBpsDiscount(srcToken, tokenValue, vultBPSDiscount)
+        val vultResult = swapDiscountChecker.checkVultBpsDiscount(vultBPSDiscount)
         discountInfo =
             discountInfo.copy(
                 vultBpsDiscount = vultResult.vultBpsDiscount,
-                vultBpsDiscountFiatValue = vultResult.vultBpsDiscountFiatValue,
                 tierType = vultResult.tierType,
             )
 
@@ -463,13 +452,51 @@ internal class SwapQuotePipeline(
         val effectiveSwapFeeFiat =
             if (isSwapKitUtxoSwap) FiatValue(BigDecimal.ZERO, quoteResult.swapFeeFiat.currency)
             else quoteResult.swapFeeFiat
-        // Empty text hides the swap-fee breakdown row entirely (iOS `swapFeeString` returns
-        // `.empty` here): the deposit cost is already surfaced as the Network Fee, so there is no
-        // separate swap fee to show rather than a redundant "$0.00" row.
-        val feeText = if (isSwapKitUtxoSwap) "" else quoteResult.feeText
+        // The row is titled with the list rate, so its amount is the fee the provider charged plus
+        // every discount the rows below it itemize: together they are what the swap would have
+        // cost undiscounted, and subtracting those rows lands back on the net Total Fee. Both come
+        // off the one source snapshot below, so the rows and the fee they were taken from can never
+        // disagree.
+        val feeRow =
+            swapFeeRow(
+                provider = provider,
+                netFee = quoteResult.affiliateFeeFiat,
+                listRate = quoteResult.swapFeePercent,
+                srcFiat = quoteResult.srcFiat,
+                discounts =
+                    SwapDiscountBps(
+                        vult = discountInfo.vultBpsDiscount,
+                        referral = discountInfo.referralBpsDiscount,
+                    ),
+                feeIncludedInRate = quoteResult.swapFeeIncludedInRate,
+            )
+        // The rows are valued by [swapFeeRow] off the very snapshot it grossed the fee from, and
+        // never priced a second time here: a later price read can land on a different tick, and
+        // then the rows no longer subtract to the fee above them. They are non-null exactly when
+        // that fee was grossed — a row taken off a fee it was never added to states a saving the
+        // panel cannot reconcile: an unpriced source values every discount at "-$0.00", and
+        // SwapKit's itemized amount is an inbound deposit cost no affiliate discount came off.
+        discountInfo =
+            discountInfo.copy(
+                vultBpsDiscountFiatValue =
+                    feeRow.vultDiscount?.let { fiatValueToString(it, asFee = true) },
+                referralBpsDiscountFiatValue =
+                    feeRow.referralDiscount?.let { fiatValueToString(it, asFee = true) },
+            )
+
+        // Empty text hides the row entirely (iOS `swapFeeString` returns `.empty` here): a SwapKit
+        // UTXO deposit's cost is already surfaced as the Network Fee, so there is no separate swap
+        // fee to show rather than a redundant "$0.00" row. A provider that bakes its fee into the
+        // quoted rate itemizes no amount to gross up and keeps its "included in quoted rate" copy.
+        val feeText =
+            when {
+                isSwapKitUtxoSwap -> ""
+                quoteResult.swapFeeIncludedInRate -> quoteResult.feeText
+                else -> fiatValueToString(feeRow.fee, asFee = true)
+            }
         // The SwapKit UTXO/Cardano deposit cost is shown once as the Network Fee and the Swap Fee
         // row is hidden entirely, so drop its percentage too (there is no row to label).
-        val swapFeePercent = if (isSwapKitUtxoSwap) null else quoteResult.swapFeePercent
+        val swapFeePercent = if (isSwapKitUtxoSwap) null else feeRow.percent
 
         val priceImpactDisplay = formatPriceImpact(quoteResult.priceImpact)
 

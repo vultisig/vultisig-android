@@ -46,9 +46,10 @@ constructor(
 ) : GetDiscountBpsUseCase {
 
     // A quote fetch asks for the discount once per swap provider candidate, all at the same time,
-    // so a vault with no cached VULT row would fire one duplicate eth_call per candidate. Share a
-    // single live read per vault behind a lock and a short-lived cache; the null of a failed read
-    // is cached too, so a failure does not retry once per candidate either.
+    // so a vault would otherwise fire one duplicate eth_call per candidate. Share a single live
+    // read per vault behind a lock and a short-lived cache; the null of a failed read is cached
+    // too, so a failure does not retry once per candidate either. This is what makes reading the
+    // balance live rather than off the untimestamped Room row affordable — see [getVultBalance].
     // The per-vault lock only serialises calls for the same vault, so the store itself has to be
     // safe for concurrent access across vaults.
     private val liveVultBalanceCache = ConcurrentHashMap<String, LiveVultBalance>()
@@ -95,25 +96,29 @@ constructor(
                 vault.coins.find { it.id == Coins.Ethereum.VULT.id }
                     ?: Coins.Ethereum.VULT.copy(address = address, hexPublicKey = derivedPublicKey)
 
-            val cachedBalance =
-                balanceRepository
-                    .getCachedTokenBalances(listOf(address), listOf(vultCoin))
-                    .find { it.coinId == Coins.Ethereum.VULT.id }
-                    ?.tokenBalance
-                    ?.tokenValue
-                    ?.value
-
-            // A missing cache entry is not a zero balance — a vault that never refreshed VULT would
-            // otherwise be shown a fabricated 0. Read it live instead; that read fills the cache,
-            // so later calls take the cached path again, and a failed read stays null (fail
-            // closed).
-            return cachedBalance ?: getLiveBalance(vaultId, address, vultCoin)
+            // The Room balance row carries no timestamp, so once written it is handed back
+            // forever: a co-signer device that is rarely opened would decide the vault's tier from
+            // a balance read weeks ago and re-quote a discount the initiator never signed, leaving
+            // the two devices disagreeing on the fee of the transaction they are both about to
+            // sign. Read live first — the per-vault lock and TTL below still keep one quote
+            // fetch's candidates to a single eth_call — and keep the cached row only for when that
+            // read fails, since a stale tier beats fabricating "no discount" for a holder. A
+            // missing cache entry is likewise not a zero balance, so it stays null (fail closed).
+            return getLiveBalance(vaultId, address, vultCoin) ?: cachedBalance(address, vultCoin)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             return null
         }
     }
+
+    private suspend fun cachedBalance(address: String, coin: Coin): BigInteger? =
+        balanceRepository
+            .getCachedTokenBalances(listOf(address), listOf(coin))
+            .find { it.coinId == Coins.Ethereum.VULT.id }
+            ?.tokenBalance
+            ?.tokenValue
+            ?.value
 
     private suspend fun getLiveBalance(vaultId: String, address: String, coin: Coin): BigInteger? =
         lockFor(vaultId).withLock {
@@ -152,8 +157,10 @@ constructor(
     }
 
     companion object {
-        // Long enough to cover the concurrent candidates of one quote fetch, short enough that a
-        // refresh still sees a fresh balance.
+        // Long enough to cover the concurrent candidates of one quote fetch and to bound how
+        // often a re-quoting swap screen goes back to the chain, short enough that a refresh —
+        // or the swap that follows the VULT purchase which earned the tier — still sees a fresh
+        // balance.
         private const val LIVE_BALANCE_TTL_MS = 12 * 1000L
 
         // Discount amounts in basis points
