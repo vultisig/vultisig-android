@@ -1787,5 +1787,6 @@
     <string name="verify_verb_bridging">Stai trasferendo tra catene</string>
     <string name="scope_your_whole_stake">tutto il tuo stake</string>
     <string name="scope_rewards_accrued_so_far">ricompense maturate finora</string>
+    <string name="scope_delegated_amount_after_rent">l’importo delegato dopo la riserva di affitto</string>
     <string name="withdrawing_share_of_staked_position">%1$s della tua posizione in stake</string>
 </resources>

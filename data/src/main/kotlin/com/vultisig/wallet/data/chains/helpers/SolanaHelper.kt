@@ -27,6 +27,14 @@ import wallet.core.jni.proto.Solana
 internal const val SOLANA_PRIORITY_FEE_PRICE = 1000000L
 internal const val SOLANA_PRIORITY_FEE_LIMIT = 100000
 
+/**
+ * Ceiling on the micro-lamports-per-compute-unit price, 100x the floor — about 0.01 SOL of priority
+ * fee at [SOLANA_PRIORITY_FEE_LIMIT] units. Every price this app signs is clamped into
+ * `[SOLANA_PRIORITY_FEE_PRICE, SOLANA_MAX_PRIORITY_FEE_PRICE]` when it is sampled, so the same
+ * range is what a co-signer holds a relayed transaction's compute budget to.
+ */
+internal const val SOLANA_MAX_PRIORITY_FEE_PRICE = 100_000_000L
+
 const val SOLANA_DEFAULT_CONTRACT_ADDRESS = "So11111111111111111111111111111111111111112"
 
 /**

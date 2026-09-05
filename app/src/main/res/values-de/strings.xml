@@ -1785,5 +1785,6 @@
     <string name="verify_verb_bridging">Du überträgst kettenübergreifend</string>
     <string name="scope_your_whole_stake">dein gesamter Stake</string>
     <string name="scope_rewards_accrued_so_far">bisher angefallene Belohnungen</string>
+    <string name="scope_delegated_amount_after_rent">der delegierte Betrag nach Abzug der Mietreserve</string>
     <string name="withdrawing_share_of_staked_position">%1$s deiner Stake-Position</string>
 </resources>

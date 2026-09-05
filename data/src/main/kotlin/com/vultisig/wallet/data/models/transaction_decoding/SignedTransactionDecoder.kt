@@ -2,8 +2,6 @@ package com.vultisig.wallet.data.models.transaction_decoding
 
 import com.vultisig.wallet.data.models.Chain
 import java.util.concurrent.CopyOnWriteArrayList
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 
 /**
@@ -27,18 +25,18 @@ interface TransactionContentDecoder {
 
 /**
  * Reads operations from content that will actually be signed. Maintains an ordered registry of
- * chain-family decoders and attempts each in precedence order. The foundation registers no chain
- * readers, so every transaction remains unreadable.
+ * chain-family decoders and attempts each in precedence order. A transaction no registered reader
+ * can prove an operation for stays unreadable, and every surface keeps its own presentation.
  *
- * Scoped as [Singleton] for true app-level shared instance across the app. All decoder
- * registrations are visible to any consumer, ensuring consistent provenance verification.
+ * Constructed through [TransactionDecodingModule], which is where the registered readers and their
+ * precedence live. It is a single app-level instance, so those registrations are visible to every
+ * consumer and both devices in a ceremony read the same transaction the same way.
  *
  * The registry is thread-safe: concurrent calls to register, unregister, and clear are safe due to
  * the use of CopyOnWriteArrayList, which prevents ConcurrentModificationException during iteration
  * in [decode].
  */
-@Singleton
-class SignedTransactionDecoder @Inject constructor() {
+class SignedTransactionDecoder {
 
     /** Registered readers in precedence order. Thread-safe for concurrent access. */
     private val decoders: CopyOnWriteArrayList<TransactionContentDecoder> = CopyOnWriteArrayList()

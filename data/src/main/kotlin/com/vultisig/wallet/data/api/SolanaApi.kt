@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.api.models.SplTokenInfo
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaStakingConfig
+import com.vultisig.wallet.data.chains.helpers.SOLANA_MAX_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
@@ -270,7 +271,7 @@ internal class SolanaApiImp(
                     ?.sorted()
                     .orEmpty()
             val median = solanaMedianPriorityFee(nonZeroFees, fallback)
-            maxOf(median, fallback).coerceAtMost(MAX_PRIORITY_FEE_PRICE.toBigInteger())
+            maxOf(median, fallback).coerceAtMost(SOLANA_MAX_PRIORITY_FEE_PRICE.toBigInteger())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -738,9 +739,6 @@ internal class SolanaApiImp(
         // SolanaHelper.ataRentLamports, which uses this value as its only source (no live RPC
         // call).
         private const val SPL_TOKEN_ACCOUNT_RENT_EXEMPT_LAMPORTS_BOOTSTRAP = 2_039_280L
-        // 100x the floor — caps priority fee at ~0.01 SOL per tx to prevent overpayment
-        // during congestion spikes or compromised RPC proxy
-        private const val MAX_PRIORITY_FEE_PRICE = 100_000_000L
     }
 }
 

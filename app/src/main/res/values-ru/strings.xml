@@ -1797,5 +1797,6 @@
     <string name="verify_verb_bridging">Вы переводите между сетями</string>
     <string name="scope_your_whole_stake">весь ваш стейк</string>
     <string name="scope_rewards_accrued_so_far">накопленные на данный момент награды</string>
+    <string name="scope_delegated_amount_after_rent">делегированная сумма за вычетом резерва за аренду</string>
     <string name="withdrawing_share_of_staked_position">%1$s вашей стейкинг-позиции</string>
 </resources>

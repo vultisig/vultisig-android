@@ -26,16 +26,22 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
 
 /**
+ * The vault's own coin for [coin], or null when the vault holds no match. A chain read keyed off a
+ * coin — its address, its decimals — has to run on one of these, never on the peer-supplied coin a
+ * joining co-signer was handed.
+ */
+internal fun List<Coin>.trustedCoinFor(coin: Coin): Coin? = firstOrNull {
+    it.chain == coin.chain &&
+        it.ticker.equals(coin.ticker, ignoreCase = true) &&
+        it.contractAddress.equals(coin.contractAddress, ignoreCase = true)
+}
+
+/**
  * The vault's own coin for [coin], which carries the trusted decimals and logo. Falls back to
  * [coin] itself when the vault holds no match — on a joining co-signer that coin is peer-supplied,
  * so a local match is preferred wherever one exists.
  */
-internal fun List<Coin>.trustedMatchFor(coin: Coin): Coin =
-    firstOrNull {
-        it.chain == coin.chain &&
-            it.ticker.equals(coin.ticker, ignoreCase = true) &&
-            it.contractAddress.equals(coin.contractAddress, ignoreCase = true)
-    } ?: coin
+internal fun List<Coin>.trustedMatchFor(coin: Coin): Coin = trustedCoinFor(coin) ?: coin
 
 /**
  * Converts provenance-aware readings into display content. This is the single boundary where
@@ -85,6 +91,10 @@ constructor(
                             ?: titleOnly
                 }
 
+            // The rent reserve has to be read live before this can be shown as stake, so the
+            // funding figure is deliberately not rendered: it is larger than what gets staked.
+            is DecodedAmount.AccountFunding -> titleOnly
+
             // Projection and localized scope arrive with fractional readers.
             is DecodedAmount.Fraction -> titleOnly
             DecodedAmount.Unstated -> titleOnly
@@ -96,7 +106,15 @@ constructor(
      * rounds-to-nothing quantity degrades to the bare verb rather than presenting a carrier amount
      * as the operation amount.
      */
-    private suspend fun sendHero(title: String, coin: Coin, raw: BigInteger): HeroContent? {
+    private suspend fun sendHero(title: String, coin: Coin, raw: BigInteger): HeroContent? =
+        heroAmount(coin, raw)?.let { HeroContent.Send(title = title, coin = it) }
+
+    /**
+     * A display amount for [raw] base units of [coin], or null when there is nothing truthful to
+     * show. Shared with the position readers, so a projected estimate is formatted and priced by
+     * exactly the same rules as a signed amount.
+     */
+    suspend fun heroAmount(coin: Coin, raw: BigInteger): HeroCoinAmount? {
         // Values wider than the precision the display formatter carries are refused rather than
         // rounded: an amount that cannot be represented exactly is not shown at all.
         if (raw.abs().toString().length > MAX_SIGNIFICANT_DIGITS) return null
@@ -111,7 +129,7 @@ constructor(
         // Only a bare "0" parses; a grouped or suffixed amount throws and is kept.
         if (runCatching { BigDecimal(amount) }.getOrNull()?.signum() == 0) return null
 
-        return HeroContent.Send(title = title, coin = heroAmount(coin, tokenValue, amount))
+        return heroAmount(coin, tokenValue, amount)
     }
 
     /**
@@ -198,7 +216,8 @@ constructor(
                 DecodedOperation.ClaimRewards -> R.string.done_verb_claimed_rewards
                 DecodedOperation.Mint -> R.string.done_verb_minted
                 DecodedOperation.Redeem -> R.string.done_verb_redeemed
-                DecodedOperation.SecuredAssetWithdraw -> R.string.done_verb_withdrew
+                DecodedOperation.SecuredAssetWithdraw,
+                DecodedOperation.WithdrawStake -> R.string.done_verb_withdrew
                 DecodedOperation.AddLiquidity -> R.string.done_verb_added_liquidity
                 DecodedOperation.RemoveLiquidity -> R.string.done_verb_removed_liquidity
                 DecodedOperation.Merge -> R.string.done_verb_merged
@@ -245,7 +264,8 @@ constructor(
                 DecodedOperation.Rebond -> R.string.verify_verb_rebonding
                 DecodedOperation.Leave -> R.string.verify_verb_leaving
                 DecodedOperation.SecuredAssetDeposit -> R.string.verify_verb_depositing
-                DecodedOperation.SecuredAssetWithdraw -> R.string.verify_verb_withdrawing
+                DecodedOperation.SecuredAssetWithdraw,
+                DecodedOperation.WithdrawStake -> R.string.verify_verb_withdrawing
                 DecodedOperation.SwitchChain -> R.string.verify_verb_switching
                 DecodedOperation.Delegate -> R.string.verify_verb_delegating
                 DecodedOperation.Undelegate -> R.string.verify_verb_undelegating

@@ -74,10 +74,14 @@ constructor(
             DecodedTransactionPresentation.verifyTitleRes(decoded.operation)
                 ?.let(context::getString) ?: return null
 
+        // A projection reads chain state keyed off the coin, so it runs only on the vault's own
+        // coin; the decoded hero falls back to the peer-supplied one for its display metadata.
+        val trusted = trustedCoins.trustedCoinFor(coin)
+
         return VerifyHero(
             verb = title,
-            projected = resolvedTransactionHero.resolve(content, trustedCoins, title),
-            decoded = presentation.hero(decoded, trustedCoins.trustedMatchFor(coin), title),
+            projected = trusted?.let { resolvedTransactionHero.resolve(content, it, title) },
+            decoded = presentation.hero(decoded, trusted ?: coin, title),
         )
     }
 }

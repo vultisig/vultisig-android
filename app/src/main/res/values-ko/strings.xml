@@ -1800,5 +1800,6 @@
     <string name="verify_verb_bridging">브리지 중</string>
     <string name="scope_your_whole_stake">스테이킹 전액</string>
     <string name="scope_rewards_accrued_so_far">현재까지 누적된 보상</string>
+    <string name="scope_delegated_amount_after_rent">임대 예치금을 제외한 위임 금액</string>
     <string name="withdrawing_share_of_staked_position">스테이킹 포지션의 %1$s</string>
 </resources>

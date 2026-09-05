@@ -2107,5 +2107,6 @@
     <string name="verify_verb_bridging">您正在跨链转账</string>
     <string name="scope_your_whole_stake">您的全部质押</string>
     <string name="scope_rewards_accrued_so_far">至今累积的奖励</string>
+    <string name="scope_delegated_amount_after_rent">扣除租金储备后的委托金额</string>
     <string name="withdrawing_share_of_staked_position">您质押仓位的 %1$s</string>
 </resources>

@@ -1842,5 +1842,6 @@
     <string name="verify_verb_bridging">You’re bridging</string>
     <string name="scope_your_whole_stake">your whole stake</string>
     <string name="scope_rewards_accrued_so_far">rewards accrued so far</string>
+    <string name="scope_delegated_amount_after_rent">the delegated amount after deducting the rent reserve</string>
     <string name="withdrawing_share_of_staked_position">%1$s of your staked position</string>
 </resources>

@@ -60,11 +60,17 @@ constructor(
             DecodedTransactionPresentation.doneTitleRes(decoded.operation)?.let(context::getString)
                 ?: return null
 
-        resolvedTransactionHero.resolve(content, trustedCoins, title)?.let {
-            return it
+        // A projection reads chain state keyed off the coin, so it runs only on the vault's own
+        // coin; the fallback hero takes the peer-supplied one for its display metadata.
+        val trusted = trustedCoins.trustedCoinFor(payload.coin)
+
+        trusted?.let { coin ->
+            resolvedTransactionHero.resolve(content, coin, title)?.let {
+                return it
+            }
         }
 
-        return presentation.hero(decoded, trustedCoins.trustedMatchFor(payload.coin), title)
+        return presentation.hero(decoded, trusted ?: payload.coin, title)
     }
 
     companion object {

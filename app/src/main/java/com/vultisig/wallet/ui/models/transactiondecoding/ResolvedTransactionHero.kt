@@ -23,9 +23,8 @@ internal interface PositionReading {
  * Resolves optional chain-state amounts behind decoder-layer readers, keeping chain knowledge out
  * of the keysign view models.
  *
- * Mirrors the iOS `ResolvedTransactionHero`. The registry is empty until the per-chain signed
- * decoders land; with no reader matching, callers fall back to the signed amount the decoder
- * already read.
+ * Mirrors the iOS `ResolvedTransactionHero`. With no reader matching — or with a read that fails or
+ * times out — callers fall back to the signed amount the decoder already read.
  */
 @Singleton
 internal class ResolvedTransactionHero
@@ -33,22 +32,35 @@ internal class ResolvedTransactionHero
 constructor(
     private val decoder: SignedTransactionDecoder,
     private val projectionCoordinator: ProjectionCoordinator,
+    solanaDelegatedAmount: SolanaDelegatedAmountReader,
+    solanaStakeAccountAmount: SolanaStakeAccountAmountReader,
 ) {
 
-    /** Chain readers are registered here as their signed decoders become available. */
-    private val readers: List<PositionReading> = emptyList()
+    /**
+     * Chain readers, in the order they are asked. Each declares the operations it answers for, so
+     * the first match wins and no reader sees a transaction it did not claim.
+     */
+    private val readers: List<PositionReading> =
+        listOf(solanaDelegatedAmount, solanaStakeAccountAmount)
 
-    /** Resolves through the first reader matching a trusted local coin. */
+    /**
+     * Resolves through the first reader that answers for [coin] — the vault's own coin for this
+     * transaction, which the caller already holds.
+     *
+     * The coin is passed rather than searched for: a reader claims an operation and a chain, not a
+     * particular token, so scanning the vault for the first coin a reader accepts could hand a
+     * Solana stake reading an SPL token and price the amount at that token's decimals and rate.
+     */
     suspend fun resolve(
         content: SignedTransactionContent,
-        trustedCoins: List<Coin>,
+        coin: Coin,
         title: String,
         readers: List<PositionReading> = this.readers,
     ): HeroContent? {
         val decoded = decoder.decode(content)
 
         for (reader in readers) {
-            val coin = trustedCoins.firstOrNull { reader.handles(decoded, it) } ?: continue
+            if (!reader.handles(decoded, coin)) continue
             val amount = ProjectionCoordinator.estimate { reader.amount(decoded, coin) }
             return projectionCoordinator.hero(decoded, title, amount)
         }
