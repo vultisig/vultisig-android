@@ -14,8 +14,13 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
+import com.vultisig.wallet.ui.models.deposit.BondAssetsState
+import com.vultisig.wallet.ui.models.deposit.BondedUnitsCeiling
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
+import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -61,11 +66,121 @@ internal class UnbondStrategyTest {
         assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
         lpUnits.setTextAndPlaceCursorAtEnd("1000")
 
-        val tx = build(Chain.MayaChain, selectedTokenChain = Chain.MayaChain).build()
+        val tx =
+            build(
+                    Chain.MayaChain,
+                    selectedTokenChain = Chain.MayaChain,
+                    state = mayaUnbondState(units = "1000"),
+                )
+                .build()
 
         assertEquals("UNBOND:MAYA.CACAO:1000:mayaNode", tx.memo)
         assertEquals(BigInteger.ONE, tx.srcTokenValue.value)
     }
+
+    @Test
+    fun `Maya unbond builds when the entered units equal the bonded ceiling`() = runTest {
+        coEvery { chainRepo.isValid(Chain.MayaChain, "mayaNode") } returns true
+        every { assetsValidator.invoke("MAYA.CACAO") } returns true
+        givenSpecific()
+        nodeAddress.setTextAndPlaceCursorAtEnd("mayaNode")
+        assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
+        lpUnits.setTextAndPlaceCursorAtEnd("1000")
+
+        val tx =
+            build(
+                    Chain.MayaChain,
+                    selectedTokenChain = Chain.MayaChain,
+                    state = mayaUnbondState(units = "1000"),
+                )
+                .build()
+
+        tx.memo shouldBe "UNBOND:MAYA.CACAO:1000:mayaNode"
+    }
+
+    @Test
+    fun `Maya unbond throws when the entered units exceed what is bonded to the node`() = runTest {
+        coEvery { chainRepo.isValid(Chain.MayaChain, "mayaNode") } returns true
+        every { assetsValidator.invoke("MAYA.CACAO") } returns true
+        nodeAddress.setTextAndPlaceCursorAtEnd("mayaNode")
+        assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
+        lpUnits.setTextAndPlaceCursorAtEnd("1001")
+
+        shouldThrow<InvalidTransactionDataException> {
+            build(
+                    Chain.MayaChain,
+                    selectedTokenChain = Chain.MayaChain,
+                    state = mayaUnbondState(units = "1000"),
+                )
+                .build()
+        }
+    }
+
+    @Test
+    fun `Maya unbond throws when the ceiling was measured on a different node`() = runTest {
+        // The address field can be re-typed after the units were fetched, and the memo is built
+        // from the field: a ceiling from the previous node must not authorise this one.
+        coEvery { chainRepo.isValid(Chain.MayaChain, "otherNode") } returns true
+        every { assetsValidator.invoke("MAYA.CACAO") } returns true
+        nodeAddress.setTextAndPlaceCursorAtEnd("otherNode")
+        assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
+        lpUnits.setTextAndPlaceCursorAtEnd("500")
+
+        shouldThrow<InvalidTransactionDataException> {
+            build(
+                    Chain.MayaChain,
+                    selectedTokenChain = Chain.MayaChain,
+                    state = mayaUnbondState(units = "1000"),
+                )
+                .build()
+        }
+    }
+
+    @Test
+    fun `Maya unbond throws when the ceiling belongs to another pool`() = runTest {
+        coEvery { chainRepo.isValid(Chain.MayaChain, "mayaNode") } returns true
+        every { assetsValidator.invoke("ETH.ETH") } returns true
+        nodeAddress.setTextAndPlaceCursorAtEnd("mayaNode")
+        assets.setTextAndPlaceCursorAtEnd("ETH.ETH")
+        lpUnits.setTextAndPlaceCursorAtEnd("500")
+
+        shouldThrow<InvalidTransactionDataException> {
+            build(
+                    Chain.MayaChain,
+                    selectedTokenChain = Chain.MayaChain,
+                    state = mayaUnbondState(units = "1000"),
+                )
+                .build()
+        }
+    }
+
+    @Test
+    fun `Maya unbond throws when no bonded position was loaded`() = runTest {
+        coEvery { chainRepo.isValid(Chain.MayaChain, "mayaNode") } returns true
+        every { assetsValidator.invoke("MAYA.CACAO") } returns true
+        nodeAddress.setTextAndPlaceCursorAtEnd("mayaNode")
+        assets.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
+        lpUnits.setTextAndPlaceCursorAtEnd("1000")
+
+        shouldThrow<InvalidTransactionDataException> {
+            build(Chain.MayaChain, selectedTokenChain = Chain.MayaChain).build()
+        }
+    }
+
+    private fun mayaUnbondState(
+        units: String,
+        node: String = "mayaNode",
+        asset: String = "MAYA.CACAO",
+    ) =
+        DepositFormUiModel(
+            depositChain = Chain.MayaChain,
+            depositOption = DepositOption.Unbond,
+            selectedBondAsset = asset,
+            bondAssetsState =
+                BondAssetsState.Loaded(
+                    BondedUnitsCeiling(nodeAddress = node, asset = asset, units = units)
+                ),
+        )
 
     @Test
     fun `Thor unbond throws when amount is zero`() = runTest {
@@ -76,11 +191,15 @@ internal class UnbondStrategyTest {
         assertFailsWith<InvalidTransactionDataException> { build(Chain.ThorChain).build() }
     }
 
-    private fun build(chain: Chain, selectedTokenChain: Chain = Chain.ThorChain) =
+    private fun build(
+        chain: Chain,
+        selectedTokenChain: Chain = Chain.ThorChain,
+        state: DepositFormUiModel = DepositFormUiModel(depositChain = chain),
+    ) =
         UnbondStrategy(
             vaultIdProvider = { "vault-1" },
             chainProvider = { chain },
-            stateProvider = { DepositFormUiModel(depositChain = chain) },
+            stateProvider = { state },
             selectedTokenProvider = { coin(selectedTokenChain) },
             nodeAddressFieldState = nodeAddress,
             tokenAmountFieldState = tokenAmount,

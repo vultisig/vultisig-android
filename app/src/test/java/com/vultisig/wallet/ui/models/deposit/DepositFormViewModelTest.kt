@@ -50,6 +50,9 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -62,6 +65,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -484,6 +488,81 @@ internal class DepositFormViewModelTest {
             R.string.deposit_error_lp_paused_pool,
             (errorText as UiText.FormattedText).resId,
         )
+    }
+
+    @Test
+    fun `Maya Unbond loads the pools bonded to the routed node, including a full position`() =
+        runTest {
+            val vm = buildViewModel()
+            givenMayaVaultAddress()
+            coEvery {
+                mayachainBondRepository.getBondedLpUnitsOnNode(MAYA_NODE, MAYA_VAULT_ADDRESS)
+            } returns mapOf("MAYA.CACAO" to 500_000L)
+
+            vm.loadData("vault1", Chain.MayaChain.raw, "unbond", MAYA_NODE)
+            advanceUntilIdle()
+            val loaded = vm.state.first { it.bondableAssets.isNotEmpty() }
+
+            loaded.bondableAssets shouldBe listOf("MAYA.CACAO")
+            loaded.bondedUnitsCeiling?.units shouldBe "500000"
+            loaded.bondedUnitsCeiling?.nodeAddress shouldBe MAYA_NODE
+        }
+
+    @Test
+    fun `Maya Unbond rejects more LP units than the node has bonded`() = runTest {
+        val vm = buildViewModel()
+        givenMayaVaultAddress()
+        coEvery {
+            mayachainBondRepository.getBondedLpUnitsOnNode(MAYA_NODE, MAYA_VAULT_ADDRESS)
+        } returns mapOf("MAYA.CACAO" to 500_000L)
+
+        vm.loadData("vault1", Chain.MayaChain.raw, "unbond", MAYA_NODE)
+        advanceUntilIdle()
+        vm.state.first { it.bondableAssets.isNotEmpty() }
+
+        vm.lpUnitsFieldState.setTextAndPlaceCursorAtEnd("500001")
+        vm.validateLpUnits()
+        vm.state.value.lpUnitsError.shouldNotBeNull()
+
+        vm.lpUnitsFieldState.setTextAndPlaceCursorAtEnd("500000")
+        vm.validateLpUnits()
+        vm.state.value.lpUnitsError shouldBe null
+    }
+
+    @Test
+    fun `Maya Unbond flags a failed bonded-asset fetch instead of showing an empty node`() =
+        runTest {
+            val vm = buildViewModel()
+            givenMayaVaultAddress()
+            coEvery {
+                mayachainBondRepository.getBondedLpUnitsOnNode(MAYA_NODE, MAYA_VAULT_ADDRESS)
+            } throws RuntimeException("node api down")
+
+            vm.loadData("vault1", Chain.MayaChain.raw, "unbond", MAYA_NODE)
+            advanceUntilIdle()
+            val loaded = vm.state.first { it.bondAssetsState == BondAssetsState.Failed }
+
+            loaded.bondableAssets.shouldBeEmpty()
+            loaded.bondedUnitsCeiling shouldBe null
+        }
+
+    private fun givenMayaVaultAddress() {
+        coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.MayaChain,
+                    address = MAYA_VAULT_ADDRESS,
+                    accounts =
+                        listOf(
+                            Account(
+                                token = Coins.MayaChain.CACAO,
+                                tokenValue = null,
+                                fiatValue = null,
+                                price = null,
+                            )
+                        ),
+                )
+            )
     }
 
     @Test
@@ -1002,5 +1081,10 @@ internal class DepositFormViewModelTest {
         vm.validateLpUnits()
 
         assertEquals(null, vm.state.value.lpUnitsError)
+    }
+
+    private companion object {
+        const val MAYA_NODE = "mayaNode1"
+        const val MAYA_VAULT_ADDRESS = "maya1someaddress"
     }
 }

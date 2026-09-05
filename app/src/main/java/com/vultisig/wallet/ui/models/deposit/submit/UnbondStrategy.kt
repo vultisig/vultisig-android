@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
+import com.vultisig.wallet.ui.models.deposit.unbondLpUnitsCeiling
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
@@ -23,10 +24,10 @@ import java.util.UUID
 /**
  * Builds an Unbond [DepositTransaction] for THORChain or MayaChain.
  *
- * Known gap: unlike the deleted Send-form path (`AccountsLoader.publishUnbond`) and the iOS/Windows
- * clients, this does not cap the amount to the specific node's bonded balance — only to the
- * wallet's combined RUNE balance via the displayed max. A follow-up should port that per-node
- * ceiling here.
+ * On MayaChain the LP units are capped at what this vault has bonded to the node named in the memo,
+ * read back through [unbondLpUnitsCeiling]. Known gap: THORChain's leg still caps only at the
+ * wallet's combined RUNE balance via the displayed max, not at the node's bonded balance the way
+ * the deleted Send-form path (`AccountsLoader.publishUnbond`) and the iOS/Windows clients do.
  */
 internal class UnbondStrategy(
     private val vaultIdProvider: () -> String?,
@@ -83,6 +84,23 @@ internal class UnbondStrategy(
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.deposit_error_invalid_lpunits)
             )
+        }
+
+        if (depositChain == Chain.MayaChain) {
+            // A ceiling is required, not merely respected when present. It carries the node and
+            // pool it was measured for, so demanding one here is what rules out a figure fetched
+            // for a different node: the memo is assembled from the live address field, while the
+            // fetch that refreshes the ceiling is debounced behind it.
+            val ceiling =
+                state.unbondLpUnitsCeiling(nodeAddress = nodeAddress, asset = assets)
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.deposit_form_bonded_assets_load_failed)
+                    )
+            if ((lpUnits.toBigIntegerOrNull() ?: BigInteger.ZERO) > ceiling) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.deposit_error_lpunits_exceeds_bonded)
+                )
+            }
         }
 
         val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()

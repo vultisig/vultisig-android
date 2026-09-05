@@ -76,6 +76,51 @@ internal enum class DepositOption {
     RemoveLiquidity,
 }
 
+/**
+ * The LP-unit ceiling an Unbond may spend, carrying the position it was measured for.
+ *
+ * MayaChain applies `UNBOND` against one node's bond-provider record, so the figure only means
+ * anything alongside the node and pool it was read from. The node address is a live field — it can
+ * be typed or pasted after the units were fetched, and the memo is built from the field — so a bare
+ * number could not tell "this much is bonded on the node in the field" from "on the node that was
+ * in the field a moment ago". This can, and [unbondLpUnitsCeiling] refuses the second.
+ */
+@Immutable
+internal data class BondedUnitsCeiling(
+    val nodeAddress: String,
+    val asset: String,
+    val units: String,
+)
+
+/**
+ * How far the MayaChain bond-asset fetch behind the Bond / Unbond form has got.
+ *
+ * The list of pools it produces cannot answer this on its own: empty means "this node holds nothing
+ * for you", "we have not asked yet", "we are asking" and "we could not find out" all at once, and
+ * only the last is worth a Retry while none of the others may claim the node is empty.
+ */
+internal sealed interface BondAssetsState {
+    /** Nothing has been asked for — the Unbond form has no node address to scope a fetch to. */
+    data object Idle : BondAssetsState
+
+    /** A fetch is in flight; the form may not yet say the node holds nothing. */
+    data object Loading : BondAssetsState
+
+    /** The fetch failed. Distinct from an empty result, and the only state worth a retry. */
+    data object Failed : BondAssetsState
+
+    /**
+     * The fetch landed. [ceiling] is Unbond's limit for the selected pool on the node it was read
+     * from; Bond leaves it null, its ceiling being the address-wide
+     * [DepositFormUiModel.availableLpUnits].
+     */
+    data class Loaded(val ceiling: BondedUnitsCeiling? = null) : BondAssetsState
+}
+
+/** Unbond's node- and pool-scoped ceiling, once loaded. */
+internal val DepositFormUiModel.bondedUnitsCeiling: BondedUnitsCeiling?
+    get() = (bondAssetsState as? BondAssetsState.Loaded)?.ceiling
+
 @Immutable
 internal data class DepositFormUiModel(
     val selectedToken: Coin = Coins.ThorChain.RUNE,
@@ -116,6 +161,10 @@ internal data class DepositFormUiModel(
     val bondableAssets: List<String> = emptyList(),
     val selectedBondAsset: String = "",
     val availableLpUnits: String? = null,
+    // Unbond's ceiling is node-scoped and so cannot share availableLpUnits, which Bond fills with
+    // an address-wide surplus. It rides on the load state because it is only meaningful once that
+    // load has landed.
+    val bondAssetsState: BondAssetsState = BondAssetsState.Idle,
     // For Maya: total LP units in the pool. For THORChain remove-LP, this stores the user's own
     // units (the calculator divides by it so that selectedUnits/userUnits gives the redeem
     // fraction).
@@ -143,6 +192,37 @@ internal data class DepositFormUiModel(
     // removeLpPoolDepth is for the RUNE side.
     val removeLpAssetRedeemBase: BigInteger = BigInteger.ZERO,
 )
+
+/**
+ * The LP units this vault may still bond, or `null` when no position has been loaded.
+ *
+ * MayaChain rejects an over-ceiling BOND/UNBOND outright — it neither clamps nor partially applies
+ * — and refunds the deposit minus the network fee, so the figure is worth catching before a keysign
+ * ceremony is spent on a memo the chain will not apply. Bond measures its ceiling address-wide (the
+ * surplus not yet bonded anywhere), so it holds for whichever node the memo names.
+ */
+internal fun DepositFormUiModel.bondLpUnitsCeiling(): BigInteger? =
+    if (depositChain != Chain.MayaChain) null else availableLpUnits?.toBigIntegerOrNull()
+
+/**
+ * The LP units this vault has bonded to [nodeAddress] in pool [asset], or `null` when no ceiling is
+ * known for that exact position.
+ *
+ * Unbond spends against one node's bond-provider record, so its ceiling answers only for the node
+ * and pool it was measured on. Both are passed in from the fields the memo itself is built from,
+ * rather than read off the state: once either moves on, this reports nothing rather than a limit
+ * belonging to a position the memo no longer names.
+ */
+internal fun DepositFormUiModel.unbondLpUnitsCeiling(
+    nodeAddress: String,
+    asset: String,
+): BigInteger? =
+    if (depositChain != Chain.MayaChain) null
+    else
+        bondedUnitsCeiling
+            ?.takeIf { it.nodeAddress == nodeAddress && it.asset == asset }
+            ?.units
+            ?.toBigIntegerOrNull()
 
 @HiltViewModel
 internal class DepositFormViewModel
@@ -397,11 +477,20 @@ constructor(
     }
 
     fun selectBondAsset(asset: String) {
-        val pool = liquidityDataLoader.bondPoolFor(asset)
+        // Each option carries its own ceiling: Bond the address-wide surplus for the pool, Unbond
+        // the units this vault has bonded to the node in the address field. Switching pool replaces
+        // one and must leave no trace of the other, or the field would be measured against a
+        // position the memo does not name.
+        val isUnbond = state.value.depositOption == DepositOption.Unbond
+        val pool = if (isUnbond) null else liquidityDataLoader.bondPoolFor(asset)
         _state.update {
             it.copy(
                 selectedBondAsset = asset,
                 availableLpUnits = pool?.availableUnits,
+                bondAssetsState =
+                    if (isUnbond)
+                        BondAssetsState.Loaded(liquidityDataLoader.bondedCeilingFor(asset))
+                    else it.bondAssetsState,
                 removeLpUnitsDivisor = pool?.totalPoolLpUnits?.toBigInteger() ?: BigInteger.ZERO,
                 removeLpPoolDepth = pool?.poolCacaoDepth?.toBigInteger() ?: BigInteger.ZERO,
                 lpUnitsError = null,
@@ -414,6 +503,14 @@ constructor(
     fun setMaxLpUnits() {
         liquidityDataLoader.setMaxLpUnits()
     }
+
+    /**
+     * Re-runs the MayaChain bondable / bonded asset fetch for the option on screen.
+     *
+     * Exposed so a transient failure is recoverable in place: Unbond is the get-my-money-out
+     * direction, and without a loaded position it now refuses to submit at all.
+     */
+    fun retryLoadBondAssets() = depositOptionCoordinator.retryLoadMayaBondAssets()
 
     fun setRemoveLpPercent(percent: Float) {
         liquidityDataLoader.setRemoveLpPercent(percent)

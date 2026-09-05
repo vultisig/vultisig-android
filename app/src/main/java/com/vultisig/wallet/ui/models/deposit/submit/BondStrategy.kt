@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
+import com.vultisig.wallet.ui.models.deposit.bondLpUnitsCeiling
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigInteger
@@ -87,6 +88,19 @@ internal class BondStrategy(
         if (depositChain == Chain.MayaChain && !isLpUnitCharsValid(lpUnits)) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.deposit_error_invalid_lpunits)
+            )
+        }
+
+        // Enforced when a surplus was loaded, not required the way Unbond requires its ceiling:
+        // Bond still accepts a typed asset when the pool list comes back empty, and that path has
+        // no figure to measure against.
+        val bondableUnits = state.bondLpUnitsCeiling()
+        if (
+            bondableUnits != null &&
+                (lpUnits.toBigIntegerOrNull() ?: BigInteger.ZERO) > bondableUnits
+        ) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_lpunits_exceeds_available)
             )
         }
 

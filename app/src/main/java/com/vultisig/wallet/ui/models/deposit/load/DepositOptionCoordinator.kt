@@ -20,16 +20,21 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -87,6 +92,7 @@ constructor(
     }
 
     private var withdrawSecuredAssetJob: Job? = null
+    private var nodeAddressWatchJob: Job? = null
 
     /**
      * Switches the active deposit form to [option], resetting the form fields and running the
@@ -99,6 +105,8 @@ constructor(
         // Stop the previous WithdrawSecuredAsset address collector so re-selecting the option does
         // not leak an additional permanent collector running handleWithdrawSecuredAsset.
         withdrawSecuredAssetJob?.cancel()
+        // Likewise the Unbond node-address watcher: it belongs to the option being left.
+        nodeAddressWatchJob?.cancel()
         scope.launch {
             resetTextFields()
             state.update { it.copy(depositOption = option) }
@@ -113,9 +121,9 @@ constructor(
                     state.update {
                         it.copy(selectedToken = defaultBondToken, unstakableAmount = null)
                     }
-                    if (chain == Chain.MayaChain) {
-                        liquidityDataLoader.loadMayaBondableAssets()
-                    }
+                    // The Maya asset load runs after the node-address prefill below: Unbond is
+                    // scoped to that node, and reading the field before it is filled would ask
+                    // about no node at all.
                 }
 
                 DepositOption.Leave -> {
@@ -164,6 +172,51 @@ constructor(
             if (!bondAddress.isNullOrEmpty()) {
                 fields.nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress)
             }
+
+            if (chain == Chain.MayaChain) {
+                when (option) {
+                    DepositOption.Bond -> liquidityDataLoader.loadMayaBondableAssets()
+                    DepositOption.Unbond -> watchNodeAddressForUnbond()
+                    else -> Unit
+                }
+            }
+        }
+    }
+
+    /**
+     * Keeps the Unbond asset list and its LP-unit ceiling tied to the node in the address field.
+     *
+     * The node cannot be read once and kept: the field is editable, and the route only prefills it.
+     * Every edit re-scopes what is bonded, hence what is unbondable — so the whole position is
+     * dropped on the keystroke rather than when the replacement lands. In between, the field
+     * already names the new node while the pools, the ceiling and the units would still describe
+     * the previous one, and the memo is built from the field.
+     */
+    private fun watchNodeAddressForUnbond() {
+        nodeAddressWatchJob =
+            scope.launch {
+                fields.nodeAddressFieldState
+                    .textAsFlow()
+                    .map { it.toString() }
+                    .distinctUntilChanged()
+                    .collectLatest { nodeAddress ->
+                        liquidityDataLoader.clearBondedAssets()
+                        delay(NODE_ADDRESS_DEBOUNCE_MS)
+                        liquidityDataLoader.loadMayaBondedAssets(nodeAddress)
+                    }
+            }
+    }
+
+    /** Re-runs the MayaChain asset load for the option on screen, after a failed fetch. */
+    fun retryLoadMayaBondAssets() {
+        if (chainProvider() != Chain.MayaChain) return
+        when (state.value.depositOption) {
+            DepositOption.Bond -> liquidityDataLoader.loadMayaBondableAssets()
+            DepositOption.Unbond ->
+                liquidityDataLoader.loadMayaBondedAssets(
+                    fields.nodeAddressFieldState.text.toString()
+                )
+            else -> Unit
         }
     }
 
@@ -268,5 +321,11 @@ constructor(
                 providerError = null,
             )
         }
+    }
+
+    companion object {
+        // Long enough that typing a node address does not fire a request per keystroke, short
+        // enough that a paste is answered before the user reaches the units field.
+        private const val NODE_ADDRESS_DEBOUNCE_MS = 300L
     }
 }
