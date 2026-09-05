@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.NO_
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_DISCOUNT_BPS
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
@@ -66,47 +67,73 @@ class GetDiscountBpsUseCaseTest {
     }
 
     @Test
-    fun `getVultBalance keeps using the cached balance of an enabled VULT coin`() = runTest {
-        val cachedBalance = SILVER_TIER_THRESHOLD
+    fun `getVultBalance prefers the live balance over an untimestamped cached row`() = runTest {
+        // The Room row has no timestamp, so a co-signer device opened once months ago would keep
+        // quoting the tier it held then. A vault that has since sold its VULT must not be
+        // discounted on the transaction the initiator is signing undiscounted.
         val vultCoin = Coins.Ethereum.VULT.copy(address = ethAddress)
         givenVault(coins = listOf(vultCoin))
-        coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
-            listOf(
-                TokenBalanceWrapped(
-                    tokenBalance =
-                        TokenBalance(
-                            tokenValue = TokenValue(cachedBalance, vultCoin),
-                            fiatValue = null,
-                        ),
-                    address = ethAddress,
-                    coinId = Coins.Ethereum.VULT.id,
-                )
-            )
+        givenCachedBalance(vultCoin, SILVER_TIER_THRESHOLD)
+        coEvery { balanceRepository.getBalanceOrNull(ethAddress, any()) } returns BigInteger.ZERO
         coEvery { tiersNFTRepository.hasTierNFT(vaultId) } returns false
 
-        assertEquals(cachedBalance, useCase.getVultBalance(vaultId))
+        assertEquals(BigInteger.ZERO, useCase.getVultBalance(vaultId))
+        assertFalse(useCase.hasReachedSilverTier(vaultId))
+        assertEquals(NO_DISCOUNT_BPS, useCase.invoke(vaultId, SwapProvider.THORCHAIN))
+    }
+
+    @Test
+    fun `getVultBalance sees a tier the cached row predates`() = runTest {
+        val vultCoin = Coins.Ethereum.VULT.copy(address = ethAddress)
+        givenVault(coins = listOf(vultCoin))
+        givenCachedBalance(vultCoin, BigInteger.ZERO)
+        coEvery { balanceRepository.getBalanceOrNull(ethAddress, any()) } returns
+            SILVER_TIER_THRESHOLD
+        coEvery { tiersNFTRepository.hasTierNFT(vaultId) } returns false
+
+        assertEquals(SILVER_TIER_THRESHOLD, useCase.getVultBalance(vaultId))
         assertEquals(SILVER_DISCOUNT_BPS, useCase.invoke(vaultId, SwapProvider.THORCHAIN))
     }
 
     @Test
-    fun `getVultBalance returns a cached zero without a live read`() = runTest {
+    fun `getVultBalance falls back to the cached row when the live read fails`() = runTest {
+        // A stale tier still beats fabricating "no discount" for a holder who has one.
         val vultCoin = Coins.Ethereum.VULT.copy(address = ethAddress)
         givenVault(coins = listOf(vultCoin))
+        givenCachedBalance(vultCoin, SILVER_TIER_THRESHOLD)
+        coEvery { balanceRepository.getBalanceOrNull(ethAddress, any()) } returns null
+        coEvery { tiersNFTRepository.hasTierNFT(vaultId) } returns false
+
+        assertEquals(SILVER_TIER_THRESHOLD, useCase.getVultBalance(vaultId))
+        assertEquals(SILVER_DISCOUNT_BPS, useCase.invoke(vaultId, SwapProvider.THORCHAIN))
+    }
+
+    @Test
+    fun `getVultBalance reads the chain once per vault within the TTL`() = runTest {
+        // Reading live on every call is only affordable because one quote fetch's provider
+        // candidates share a single read.
+        val vultCoin = Coins.Ethereum.VULT.copy(address = ethAddress)
+        givenVault(coins = listOf(vultCoin))
+        coEvery { balanceRepository.getBalanceOrNull(ethAddress, any()) } returns
+            SILVER_TIER_THRESHOLD
+        coEvery { tiersNFTRepository.hasTierNFT(vaultId) } returns false
+
+        repeat(3) { useCase.invoke(vaultId, SwapProvider.THORCHAIN) }
+
+        coVerify(exactly = 1) { balanceRepository.getBalanceOrNull(ethAddress, any()) }
+        coVerify(exactly = 0) { balanceRepository.getCachedTokenBalances(any(), any()) }
+    }
+
+    private fun givenCachedBalance(vultCoin: Coin, balance: BigInteger) {
         coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
             listOf(
                 TokenBalanceWrapped(
                     tokenBalance =
-                        TokenBalance(
-                            tokenValue = TokenValue(BigInteger.ZERO, vultCoin),
-                            fiatValue = null,
-                        ),
+                        TokenBalance(tokenValue = TokenValue(balance, vultCoin), fiatValue = null),
                     address = ethAddress,
                     coinId = Coins.Ethereum.VULT.id,
                 )
             )
-
-        assertEquals(BigInteger.ZERO, useCase.getVultBalance(vaultId))
-        assertFalse(useCase.hasReachedSilverTier(vaultId))
     }
 
     private fun givenVault(coins: List<Coin>) {
