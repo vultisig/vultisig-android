@@ -101,6 +101,8 @@ val Coin.isLpToken: Boolean
 val Coin.carriesMemo: Boolean
     get() =
         chain != Chain.Sui &&
+            chain != Chain.Polkadot &&
+            chain != Chain.Bittensor &&
             (isNativeToken ||
                 chain.standard == TokenStandard.COSMOS ||
                 chain == Chain.Ton ||
