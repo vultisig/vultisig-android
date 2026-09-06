@@ -399,7 +399,7 @@ class EvmApiImp(
             memo
                 ?.takeIf { it.isNotEmpty() }
                 ?.toByteArray()
-                ?.joinToString(separator = "") { "%02x".format(it) } ?: "ffffffff"
+                ?.joinToString(separator = "") { "%02x".format(it) } ?: ""
 
         val rpcResp =
             fetch<RpcResponse>(
@@ -414,8 +414,10 @@ class EvmApiImp(
                 },
             )
         if (rpcResp.error != null) {
-            Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
-            return BigInteger.ZERO
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "estimate gas rpc error: ${rpcResp.error.message}",
+            )
         }
 
         return rpcResp.result.convertToBigIntegerOrZero()
