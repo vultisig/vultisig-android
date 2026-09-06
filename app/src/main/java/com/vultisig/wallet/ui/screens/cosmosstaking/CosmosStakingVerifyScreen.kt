@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.hero.HeroContentView
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
@@ -142,30 +143,38 @@ private fun SummaryCard(state: CosmosStakingVerifyUiState) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // Hero: headline + amount.
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(state.headlineRes),
-                style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.secondary,
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AsyncImage(
-                    model = getCoinLogo(state.coinLogo),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp).clip(CircleShape),
-                )
-                UiSpacer(size = 8.dp)
+        val hero = state.heroContent
+        if (hero != null) {
+            // What the staking intent proves it does, read from what will be signed. It replaces
+            // the headline and the amount together, because a claim states its scope ("rewards
+            // accrued so far") in place of a figure.
+            HeroContentView(content = hero, verbAlignment = Alignment.Start)
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = state.amount,
-                    style = Theme.brockmann.body.l.medium,
-                    color = Theme.v2.colors.text.primary,
+                    text = stringResource(state.headlineRes),
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.v2.colors.text.secondary,
                 )
-                UiSpacer(size = 4.dp)
-                Text(
-                    text = state.ticker,
-                    style = Theme.brockmann.body.l.medium,
-                    color = Theme.v2.colors.text.tertiary,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AsyncImage(
+                        model = getCoinLogo(state.coinLogo),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp).clip(CircleShape),
+                    )
+                    UiSpacer(size = 8.dp)
+                    Text(
+                        text = state.amount,
+                        style = Theme.brockmann.body.l.medium,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                    UiSpacer(size = 4.dp)
+                    Text(
+                        text = state.ticker,
+                        style = Theme.brockmann.body.l.medium,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+                }
             }
         }
 

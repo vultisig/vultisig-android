@@ -9,12 +9,17 @@ import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingPayload
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.transaction_decoding.asSignedTransactionContent
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
+import com.vultisig.wallet.ui.models.transactiondecoding.VerifyTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -41,6 +46,12 @@ internal data class CosmosStakingVerifyValidatorRow(val labelRes: Int, val value
 
 internal data class CosmosStakingVerifyUiState(
     val headlineRes: Int = R.string.cosmos_staking_youre_staking,
+    /**
+     * What the transaction proves it does, read from the intent the signer will encode. Replaces
+     * the headline and the amount together, because a claim states its scope ("rewards accrued so
+     * far") in place of a figure. Null until the read lands, and on any read that fails.
+     */
+    val heroContent: HeroContent? = null,
     val amount: String = "",
     val ticker: String = "",
     val coinLogo: String = "",
@@ -74,6 +85,7 @@ constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val launchKeysign: LaunchKeysignUseCase,
+    private val verifyTransactionPresentation: VerifyTransactionPresentation,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -151,6 +163,8 @@ constructor(
                 )
             }
 
+            loadDecodedHero(tx, vault?.coins.orEmpty())
+
             val byAddress =
                 withContext(ioDispatcher) {
                     runCatching { cosmosStakingService.fetchValidators(coin.chain) }
@@ -160,6 +174,30 @@ constructor(
             if (byAddress.isNotEmpty()) {
                 _state.update { it.copy(validatorRows = buildValidatorRows(payload, byAddress)) }
             }
+        }
+    }
+
+    /**
+     * Reads the staking intent through the shared decoder, so this screen and a joining co-signer's
+     * keysign confirmation name the same operation for the same transaction.
+     *
+     * Best-effort and never a signing dependency: a failed read leaves the screen's own headline
+     * and amount exactly as they are.
+     */
+    private fun loadDecodedHero(tx: DepositTransaction, trustedCoins: List<Coin>) {
+        viewModelScope.safeLaunch(
+            onError = { Timber.w(it, "Failed to resolve the decoded staking verify hero") }
+        ) {
+            val hero =
+                withContext(ioDispatcher) {
+                    verifyTransactionPresentation.resolve(
+                        content = tx.asSignedTransactionContent(),
+                        coin = tx.srcToken,
+                        trustedCoins = trustedCoins,
+                    )
+                } ?: return@safeLaunch
+
+            _state.update { it.copy(heroContent = hero.applyTo(it.heroContent)) }
         }
     }
 
