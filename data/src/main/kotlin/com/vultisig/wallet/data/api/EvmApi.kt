@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.models.RpcResponseJson
 import com.vultisig.wallet.data.api.models.SendTransactionJson
 import com.vultisig.wallet.data.api.models.ZkGasFee
 import com.vultisig.wallet.data.api.txstatus.EvmRevertReason
+import com.vultisig.wallet.data.blockchain.ethereum.memoCallData
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.EthereumRlpEncoder
 import com.vultisig.wallet.data.chains.helpers.Multicall3
@@ -395,11 +396,7 @@ class EvmApiImp(
         value: BigInteger,
         memo: String?,
     ): BigInteger {
-        val memoDataHex =
-            memo
-                ?.takeIf { it.isNotEmpty() }
-                ?.toByteArray()
-                ?.joinToString(separator = "") { "%02x".format(it) } ?: "ffffffff"
+        val memoDataHex = Numeric.toHexStringNoPrefix(memoCallData(memo))
 
         val rpcResp =
             fetch<RpcResponse>(
@@ -414,11 +411,22 @@ class EvmApiImp(
                 },
             )
         if (rpcResp.error != null) {
-            Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
-            return BigInteger.ZERO
+            Timber.d("estimate gas rpc error: %s", rpcResp.error.message)
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "estimate gas rpc error: ${rpcResp.error.message}",
+            )
         }
 
-        return rpcResp.result.convertToBigIntegerOrZero()
+        val estimateHex =
+            rpcResp.result?.stripHexPrefix()?.takeIf {
+                it.isNotBlank() && it.all { char -> char.digitToIntOrNull(16) != null }
+            }
+                ?: throw NetworkException(
+                    httpStatusCode = 0,
+                    message = "estimate gas rpc returned invalid result: ${rpcResp.result}",
+                )
+        return BigInteger(estimateHex, 16)
     }
 
     suspend fun estimateGasForCallDataTransfer(

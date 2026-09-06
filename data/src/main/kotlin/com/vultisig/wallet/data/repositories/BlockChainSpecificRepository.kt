@@ -43,6 +43,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.max
 import com.vultisig.wallet.data.utils.increaseByPercent
@@ -220,12 +221,20 @@ constructor(
                             when {
                                 routerDepositGasLimit != null -> routerDepositGasLimit
                                 token.isNativeToken ->
-                                    evmApi.estimateGasForEthTransaction(
-                                        senderAddress = token.address,
-                                        recipientAddress = recipientAddress,
-                                        value = tokenAmountValue ?: BigInteger.ZERO,
-                                        memo = memo,
-                                    )
+                                    try {
+                                        evmApi.estimateGasForEthTransaction(
+                                            senderAddress = token.address,
+                                            recipientAddress = recipientAddress,
+                                            value = tokenAmountValue ?: BigInteger.ZERO,
+                                            memo = memo,
+                                        )
+                                    } catch (e: NetworkException) {
+                                        Timber.d(
+                                            e,
+                                            "native EVM gas estimate failed; using default limit",
+                                        )
+                                        defaultGasLimit
+                                    }
                                 else ->
                                     evmApi
                                         .estimateGasForERC20Transfer(

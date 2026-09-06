@@ -39,6 +39,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.increaseByPercent
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -89,6 +90,50 @@ internal class BlockChainSpecificRepositoryImplTest {
             priorityFee = BigInteger("22"),
         )
     }
+
+    @Test
+    fun `native EVM specific falls back to default gas limit when gas estimation fails`() =
+        runTest {
+            val destination = "0xdestination"
+            val coin = evmCoin(chain = Chain.Ethereum, isNativeToken = true)
+            val result =
+                repository(
+                        evmApi =
+                            evmApi(
+                                nativeGasErrorsByRecipient =
+                                    mapOf(
+                                        destination to
+                                            NetworkException(
+                                                httpStatusCode = 0,
+                                                message = "estimate gas rpc error",
+                                            )
+                                    )
+                            ),
+                        evmFeeService =
+                            evmFeeService(
+                                feesByRecipient =
+                                    mapOf(destination to (BigInteger("111") to BigInteger("22")))
+                            ),
+                    )
+                    .getSpecific(
+                        chain = Chain.Ethereum,
+                        address = SOURCE_ADDRESS,
+                        token = coin,
+                        gasFee = TokenValue(BigInteger.ONE, coin),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                        dstAddress = destination,
+                        tokenAmountValue = BigInteger.TEN,
+                    )
+
+            assertEthereumSpecific(
+                result = result,
+                gasLimit = BigInteger("23000"),
+                maxFeePerGas = BigInteger("111"),
+                priorityFee = BigInteger("22"),
+            )
+        }
 
     @Test
     fun `Zcash UTXO specific carries the live branch id fetched from ZcashApi`() = runTest {
@@ -1069,6 +1114,7 @@ internal class BlockChainSpecificRepositoryImplTest {
 
     private fun evmApi(
         nativeGasByRecipient: Map<String, BigInteger> = emptyMap(),
+        nativeGasErrorsByRecipient: Map<String, NetworkException> = emptyMap(),
         erc20GasByRecipient: Map<String, BigInteger> = emptyMap(),
         zkFeesByRecipient: Map<String, ZkGasFee> = emptyMap(),
     ): EvmApi = mockk {
@@ -1077,6 +1123,7 @@ internal class BlockChainSpecificRepositoryImplTest {
         coEvery { estimateGasForEthTransaction(any(), any(), any(), any()) } answers
             {
                 val recipient = invocation.args[1] as String
+                nativeGasErrorsByRecipient[recipient]?.let { throw it }
                 nativeGasByRecipient[recipient] ?: BigInteger("1000")
             }
 
