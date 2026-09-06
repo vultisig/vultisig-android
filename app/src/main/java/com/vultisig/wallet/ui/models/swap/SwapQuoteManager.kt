@@ -25,7 +25,6 @@ import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
-import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.data.utils.plus
 import com.vultisig.wallet.data.utils.thorswapMultiplier
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -237,7 +236,7 @@ internal fun QuoteCandidate.discountBps(): SwapDiscountBps =
         vult = vultBPSDiscount,
         referral =
             if (provider == SwapProvider.THORCHAIN && this.referral != null) {
-                referralBpsFor(vultBPSDiscount?.getTierType())
+                referralBpsFor(vultBPSDiscount)
             } else null,
     )
 
