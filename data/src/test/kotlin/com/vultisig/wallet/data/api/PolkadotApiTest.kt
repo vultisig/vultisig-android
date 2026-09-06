@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.PolkadotGetStorageJson
+import com.vultisig.wallet.data.api.models.RpcError
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -11,6 +13,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -150,6 +153,26 @@ class PolkadotApiTest {
                 api.isExtrinsicInBlockRange(EXT_HASH, fromBlock = 98, toBlock = 100)
             }
         }
+
+    @Test
+    fun `parseBalanceStorageResponse throws on a JSON-RPC error envelope instead of returning zero`() {
+        assertFailsWith<IllegalStateException> {
+            parseBalanceStorageResponse(
+                PolkadotGetStorageJson(
+                    result = null,
+                    error = RpcError(code = -32000, message = "boom"),
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `parseBalanceStorageResponse returns zero for a genuinely absent storage entry`() {
+        assertEquals(
+            BigInteger.ZERO,
+            parseBalanceStorageResponse(PolkadotGetStorageJson(result = null, error = null)),
+        )
+    }
 
     private fun nullResultResponse(): String = """{"jsonrpc":"2.0","id":1,"result":null}"""
 

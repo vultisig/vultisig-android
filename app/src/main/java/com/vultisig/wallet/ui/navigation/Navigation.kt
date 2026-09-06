@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.navigation
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.annotation.Keep
 import androidx.navigation.NavType
@@ -716,21 +717,40 @@ internal val BackupPasswordTypeNavType = createNavType<BackupVault.BackupPasswor
 
 internal val ChainDashboardRouteNavType = createNavType<ChainDashboardRoute>()
 
+/**
+ * Tolerates unknown keys so a back stack serialized by an older process still restores after a
+ * route argument gains a field.
+ */
+private val navTypeJson = Json { ignoreUnknownKeys = true }
+
+/**
+ * [NavType.serializeAsValue] output is spliced straight into the route string by
+ * `RouteBuilder.addPath`, so it must be percent-encoded — otherwise a `/`, `?`, `#` or space
+ * anywhere in the JSON (a THORChain memo carried by a send deeplink, for instance) changes the
+ * shape of the route and it stops matching its destination.
+ *
+ * [NavType.parseValue] does NOT decode, matching the built-in `NavType.StringType`: the framework
+ * has already run `Uri.decode` on the matched value by then (`NavDeepLink.getMatchingPathArguments`
+ * for path args, `Uri.getQueryParameters` for query args). Decoding again would corrupt any payload
+ * holding a literal percent sequence.
+ *
+ * [put] and [get] stay unencoded — they cross a [Bundle], not a route string.
+ */
 private inline fun <reified T> createNavType(isNullableAllowed: Boolean = false): NavType<T> =
     object : NavType<T>(isNullableAllowed = isNullableAllowed) {
         override fun put(bundle: Bundle, key: String, value: T) {
-            bundle.putString(key, Json.encodeToString(value))
+            bundle.putString(key, navTypeJson.encodeToString(value))
         }
 
-        override fun get(bundle: Bundle, key: String): T {
-            return Json.decodeFromString(bundle.getString(key)!!)
+        override fun get(bundle: Bundle, key: String): T? {
+            return bundle.getString(key)?.let { navTypeJson.decodeFromString(it) }
         }
 
         override fun parseValue(value: String): T {
-            return Json.decodeFromString(value)
+            return navTypeJson.decodeFromString(value)
         }
 
         override fun serializeAsValue(value: T): String {
-            return Json.encodeToString(value)
+            return Uri.encode(navTypeJson.encodeToString(value))
         }
     }

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import androidx.annotation.VisibleForTesting
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.crypto.cosmosTxBodyMemo
@@ -152,7 +153,8 @@ class CosmosHelper(
         )
     }
 
-    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+    @VisibleForTesting
+    internal fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val atomData =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
                 ?: error("Invalid blockChainSpecific for Cosmos")
@@ -269,15 +271,9 @@ class CosmosHelper(
                                                 listOf(
                                                     Cosmos.Amount.newBuilder()
                                                         .setDenom(
-                                                            if (
-                                                                keysignPayload.coin.contractAddress
-                                                                    .contains("factory/") ||
-                                                                    keysignPayload.coin
-                                                                        .contractAddress
-                                                                        .contains("ibc/")
-                                                            )
-                                                                keysignPayload.coin.contractAddress
-                                                            else denom
+                                                            if (keysignPayload.coin.isNativeToken)
+                                                                denom
+                                                            else keysignPayload.coin.contractAddress
                                                         )
                                                         .setAmount(
                                                             keysignPayload.toAmount.toString()

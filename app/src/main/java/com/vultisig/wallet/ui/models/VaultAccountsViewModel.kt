@@ -367,6 +367,12 @@ constructor(
 
     private suspend fun ensureVultEnabled(vault: Vault): Boolean {
         if (vault.coins.any { it.id == Coins.Ethereum.VULT.id }) return true
+        // A token the user turned off is recorded in the disabled list. Without this check the
+        // auto-enable below would put VULT back on every app open — and, worse, enabling also
+        // clears the disabled record, so the choice could never stick.
+        if (vaultRepository.getDisabledCoinIds(vault.id).any { it == Coins.Ethereum.VULT.id }) {
+            return false
+        }
         if (vault.coins.none { it.chain == Chain.Ethereum }) {
             Timber.d("Ethereum chain not enabled, cannot enable VULT token")
             return false
