@@ -631,9 +631,10 @@ constructor(
             }
 
     override suspend fun getBalanceOrNull(address: String, coin: Coin): BigInteger? =
-        // Solana native is the one read that reports failure as a value rather than as a throw, so
-        // it is asked through the nullable overload; every other chain surfaces a failed read as an
-        // exception out of the flow, which [runCatchingCancellable] turns into the same null.
+        // Solana native is the only read that reports failure as a value rather than as a throw
+        // (see [SolanaApi.getBalance]), so it is asked through the nullable overload; every other
+        // chain surfaces a failed read as an exception out of the flow, which
+        // [runCatchingCancellable] turns into the same null.
         if (coin.chain == Solana && coin.isNativeToken) {
             solanaApi.getBalanceOrNull(address)
         } else {

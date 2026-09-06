@@ -22,10 +22,18 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
-import timber.log.Timber
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.Hash
+
+// A genuinely absent storage entry (result == null with no error) means the account has never
+// held a balance, which is a real zero rather than a failed read. An error envelope, or a
+// transport failure surfaced by postRpc, must propagate instead of masquerading as that zero.
+internal fun parseBalanceStorageResponse(response: PolkadotGetStorageJson): BigInteger {
+    response.error?.let { error("Polkadot RPC error fetching balance: ${it.message}") }
+    val hex = response.result?.removePrefix("0x") ?: return BigInteger.ZERO
+    return parsePolkadotFreeBalance(hex)
+}
 
 internal fun parsePolkadotFreeBalance(hex: String): BigInteger {
     // minimum 64 hex chars = 32 bytes: 16-byte header (4×u32) + 16-byte free balance (u128)
@@ -86,29 +94,20 @@ interface PolkadotApi {
 internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpClient) :
     PolkadotApi {
     override suspend fun getBalance(address: String): BigInteger {
-        try {
-            val pubKey = AnyAddress(address, CoinType.POLKADOT).data()
-            val blake2b128 = Hash.blake2b(pubKey, 16)
-            val storageKey =
-                "0x" +
-                    SYSTEM_ACCOUNT_PREFIX +
-                    blake2b128.joinToString("") { "%02x".format(it) } +
-                    pubKey.joinToString("") { "%02x".format(it) }
-            val result =
-                httpClient
-                    .postRpc<PolkadotGetStorageJson>(
-                        url = POLKADOT_API_URL,
-                        method = "state_getStorage",
-                        params = buildJsonArray { add(storageKey) },
-                    )
-                    .result ?: return BigInteger.ZERO
-            val hex = result.removePrefix("0x")
-            return parsePolkadotFreeBalance(hex)
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e(e, "Error fetching Polkadot balance")
-            return BigInteger.ZERO
-        }
+        val pubKey = AnyAddress(address, CoinType.POLKADOT).data()
+        val blake2b128 = Hash.blake2b(pubKey, 16)
+        val storageKey =
+            "0x" +
+                SYSTEM_ACCOUNT_PREFIX +
+                blake2b128.joinToString("") { "%02x".format(it) } +
+                pubKey.joinToString("") { "%02x".format(it) }
+        val response =
+            httpClient.postRpc<PolkadotGetStorageJson>(
+                url = POLKADOT_API_URL,
+                method = "state_getStorage",
+                params = buildJsonArray { add(storageKey) },
+            )
+        return parseBalanceStorageResponse(response)
     }
 
     override suspend fun getNonce(address: String): BigInteger {

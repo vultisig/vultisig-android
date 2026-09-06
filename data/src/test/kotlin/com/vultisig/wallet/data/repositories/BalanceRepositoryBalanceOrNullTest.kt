@@ -49,6 +49,7 @@ class BalanceRepositoryBalanceOrNullTest {
     private val thorChainApi = mockk<ThorChainApi>(relaxed = true)
     private val blockchairApi = mockk<BlockChairApi>(relaxed = true)
     private val cardanoApi = mockk<CardanoApi>(relaxed = true)
+    private val polkadotApi = mockk<PolkadotApi>(relaxed = true)
     private val tokenValueDao = mockk<TokenValueDao>(relaxed = true)
 
     private val repository =
@@ -63,7 +64,7 @@ class BalanceRepositoryBalanceOrNullTest {
             tokenPriceRepository = mockk<TokenPriceRepository>(relaxed = true),
             appCurrencyRepository = mockk<AppCurrencyRepository>(relaxed = true),
             tronResourceDataSource = mockk<TronResourceDataSource>(relaxed = true),
-            polkadotApi = mockk<PolkadotApi>(relaxed = true),
+            polkadotApi = polkadotApi,
             bittensorApi = mockk<BittensorApi>(relaxed = true),
             suiApi = mockk<SuiApi>(relaxed = true),
             tonApi = mockk<TonApi>(relaxed = true),
@@ -162,6 +163,17 @@ class BalanceRepositoryBalanceOrNullTest {
         }
 
         coVerify(exactly = 0) { solanaApi.getBalance(any()) }
+        coVerify(exactly = 0) { tokenValueDao.insertTokenValue(any<TokenValueEntity>()) }
+    }
+
+    @Test
+    fun `a Polkadot balance failure propagates and is not persisted as zero`() = runTest {
+        coEvery { polkadotApi.getBalance(ADDRESS) } throws IllegalStateException("node down")
+
+        assertThrows<IllegalStateException> {
+            repository.getTokenValue(ADDRESS, Coins.Polkadot.DOT).first()
+        }
+
         coVerify(exactly = 0) { tokenValueDao.insertTokenValue(any<TokenValueEntity>()) }
     }
 
