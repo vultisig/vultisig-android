@@ -124,7 +124,11 @@ dependencies {
     implementation(libs.androidx.security)
 
     // test
-    testCompileOnly(files("../app/libs/mobile-tss-lib.aar"))
+    // Not compileOnly: TssMessenger implements the gomobile `tss.Messenger` interface, so JUnit
+    // cannot even resolve a test class that names it unless the AAR's classes are on the test
+    // runtime classpath too. Only the interface is loaded — instantiating a native tss type still
+    // needs the gojni library and stays out of unit tests.
+    testImplementation(files("../app/libs/mobile-tss-lib.aar"))
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)

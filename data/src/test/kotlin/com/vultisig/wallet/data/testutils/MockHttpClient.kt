@@ -8,6 +8,8 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpCallValidator
+import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -18,6 +20,7 @@ import io.ktor.util.appendIfNameAbsent
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.serialization.json.Json
 
 /**
@@ -205,6 +208,48 @@ object MockHttpClient {
     }
 
     /**
+     * Builds a client that fails its first [failures] calls with the throwable [failWith] produces,
+     * then answers [status] / [body] for every call after that. Mirrors the relay fault the awaited
+     * TSS send has to survive: a peer's first outbound POSTs are rejected and then let through.
+     *
+     * [onCall] receives the zero-based call index before each call is served, for counting.
+     */
+    fun failingThenResponding(
+        failures: Int,
+        failWith: () -> Throwable,
+        status: HttpStatusCode = HttpStatusCode.OK,
+        body: String = "",
+        onCall: (Int) -> Unit = {},
+    ): HttpClient {
+        var index = 0
+        return HttpClient(
+            MockEngine {
+                val call = index++
+                onCall(call)
+                if (call < failures) throw failWith()
+                respond(content = body, status = status, headers = JSON_HEADERS)
+            }
+        ) {
+            installDefaults()
+        }
+    }
+
+    /**
+     * Builds a client whose transport never answers, so only a caller-imposed request timeout ends
+     * the call. Used to prove the awaited relay send caps a hung POST instead of letting it eat the
+     * ceremony's stall budget.
+     */
+    fun hanging(onCall: () -> Unit = {}): HttpClient =
+        HttpClient(
+            MockEngine {
+                onCall()
+                awaitCancellation()
+            }
+        ) {
+            installDefaults()
+        }
+
+    /**
      * Installs the standard plugins matching production
      * [com.vultisig.wallet.data.networkutils.HttpClientConfigurator].
      */
@@ -223,6 +268,8 @@ object MockHttpClient {
                 }
             }
         }
+        // Inert unless a request opts in with `timeout { … }`, exactly as in production.
+        install(HttpTimeout)
     }
 
     /**
@@ -233,7 +280,8 @@ object MockHttpClient {
      */
     private fun IOException.toNetworkException(): NetworkException =
         when (this) {
-            is SocketTimeoutException ->
+            is SocketTimeoutException,
+            is HttpRequestTimeoutException ->
                 NetworkException(0, "Connection timed out", NetworkErrorKind.Timeout, this)
             is UnknownHostException ->
                 NetworkException(0, "No internet connection", NetworkErrorKind.NoConnectivity, this)

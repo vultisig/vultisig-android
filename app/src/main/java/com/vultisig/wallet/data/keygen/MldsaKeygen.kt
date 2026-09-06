@@ -57,6 +57,7 @@ class MldsaKeygen(
         )
 
     private val cache = mutableMapOf<String, Any>()
+    private val stall = CeremonyStallClock()
     var setupMessage: ByteArray = byteArrayOf()
     var keyshare: MldsaKeyshare? = null
     private var activeMessageId: String? = null
@@ -114,7 +115,7 @@ class MldsaKeygen(
     }
 
     @Throws(Exception::class)
-    private fun processMldsaOutboundMessage(handle: Handle) {
+    private suspend fun processMldsaOutboundMessage(handle: Handle) {
         while (true) {
             val (result, outboundMessage) = getMldsaOutboundMessage(handle)
             if (result != LIB_OK) {
@@ -124,21 +125,27 @@ class MldsaKeygen(
                 return
             }
 
+            val encodedOutboundMessage = Base64.encode(outboundMessage)
             val message = outboundMessage.toMldsaGoSlice()
-            try {
-                val encodedOutboundMessage = Base64.encode(outboundMessage)
-                for (i in keygenCommittee.indices) {
-                    val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
-                    if (receiverArray.isEmpty()) {
-                        break
+            // Collect the receivers and release the native slice before sending: the fan-out
+            // suspends for as long as the relay makes it, and nothing reads the slice by then.
+            val receivers =
+                try {
+                    buildList {
+                        for (i in keygenCommittee.indices) {
+                            val receiverArray =
+                                getOutboundMessageReceiver(handle, message, i.toLong())
+                            if (receiverArray.isEmpty()) {
+                                break
+                            }
+                            add(receiverArray.toString(Charsets.UTF_8))
+                        }
                     }
-                    val receiverString = receiverArray.toString(Charsets.UTF_8)
-                    Timber.d("sending message from $localPartyId to: $receiverString")
-                    messenger.send(localPartyId, receiverString, encodedOutboundMessage)
+                } finally {
+                    message.free()
                 }
-            } finally {
-                message.free()
-            }
+
+            messenger.fanOut(localPartyId, receivers, encodedOutboundMessage)
         }
     }
 
@@ -146,7 +153,7 @@ class MldsaKeygen(
     private suspend fun pullInboundMessages(handle: Handle): Boolean {
         Timber.d("start pulling inbound messages for MLDSA keygen")
 
-        val start = System.nanoTime()
+        stall.reset()
         while (true) {
             try {
                 val msgs =
@@ -166,9 +173,10 @@ class MldsaKeygen(
                 delay(1000) // backoff delay
             }
 
-            val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
-            if (elapsedTime > 60) {
-                error("timeout: MLDSA keygen did not finish within 60 seconds")
+            if (stall.isStalled()) {
+                error(
+                    "timeout: MLDSA keygen made no progress for " + "${stall.limitSeconds} seconds"
+                )
             }
         }
     }
@@ -207,6 +215,7 @@ class MldsaKeygen(
                 error("fail to apply message to mldsa, $result")
             }
             cache[key] = Any()
+            stall.markProgress()
             deleteMessageFromServer(msg.hash)
             processMldsaOutboundMessage(handle)
 

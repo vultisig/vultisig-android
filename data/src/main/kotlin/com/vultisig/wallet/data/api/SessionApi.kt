@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -17,6 +18,7 @@ import io.ktor.http.isSuccess
 import java.io.IOException
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -40,7 +42,20 @@ interface SessionApi {
 
     suspend fun getParticipants(serverUrl: String, sessionId: String): List<String>
 
-    suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message)
+    /**
+     * Posts one TSS message to the relay.
+     *
+     * @param budget bounded retry budget with a short per-request timeout, for callers that await
+     *   the send and need it to fail inside the ceremony stall limit. `null` keeps the shared relay
+     *   retry and the client's default timeouts, which is what the legacy GG20
+     *   [com.vultisig.wallet.data.tss.TssMessenger.send] path still wants.
+     */
+    suspend fun sendTssMessage(
+        serverUrl: String,
+        messageId: String?,
+        message: Message,
+        budget: RelaySendBudget? = null,
+    )
 
     suspend fun getTssMessages(
         serverUrl: String,
@@ -149,12 +164,20 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
             .bodyOrThrow<List<String>>()
     }
 
-    override suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message) {
-        withRelayRetry {
+    override suspend fun sendTssMessage(
+        serverUrl: String,
+        messageId: String?,
+        message: Message,
+        budget: RelaySendBudget?,
+    ) {
+        withRelayBudget(budget) { timeoutMillis ->
             httpClient
                 .post(serverUrl) {
                     if (!messageId.isNullOrEmpty()) {
                         header(MESSAGE_ID_HEADER_TITLE, messageId)
+                    }
+                    if (timeoutMillis != null) {
+                        timeout { requestTimeoutMillis = timeoutMillis }
                     }
                     setBody(json.encodeToString(message))
                 }
@@ -271,11 +294,35 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         }
     }
 
-    private suspend fun <T> withRelayRetry(block: suspend () -> T): T {
+    private suspend fun <T> withRelayRetry(block: suspend () -> T): T =
+        withRelayBudget(budget = null) { block() }
+
+    /**
+     * Runs [block] under a bounded relay retry, retrying only 5xx and transport faults and throwing
+     * a 4xx or a cancellation at once.
+     *
+     * With no [budget] this is the shared relay policy every endpoint has used since #4667: three
+     * attempts, 1 s then 2 s of backoff, and the client's own timeouts. A [budget] tightens all
+     * three for one call — the awaited TSS send needs its whole retry sequence to finish inside the
+     * ceremony stall, so it caps each request and abandons the send rather than sleeping a backoff
+     * that would overshoot the deadline.
+     *
+     * [block] receives the millisecond cap for its request, or `null` when there is none.
+     */
+    private suspend fun <T> withRelayBudget(
+        budget: RelaySendBudget?,
+        block: suspend (requestTimeoutMillis: Long?) -> T,
+    ): T {
+        val maxAttempts = budget?.maxAttempts ?: RELAY_MAX_RETRIES
         var lastException: Exception? = null
-        repeat(RELAY_MAX_RETRIES) { attempt ->
+        repeat(maxAttempts) { attempt ->
+            val requestTimeoutMillis =
+                if (budget == null) null
+                else
+                    budget.requestTimeoutMillisAt(System.nanoTime())
+                        ?: throw RelaySendDeadlineExceededException(lastException)
             try {
-                return block()
+                return block(requestTimeoutMillis)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: HttpException) {
@@ -297,12 +344,20 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
                     "Relay request transport failure (${e.kind}), retrying (attempt ${attempt + 1})",
                 )
             }
-            if (attempt < RELAY_MAX_RETRIES - 1) {
-                delay(RELAY_BACKOFF_MS * (1L shl attempt))
+            if (attempt < maxAttempts - 1) {
+                val backoff =
+                    budget?.backoffAfter(attempt)?.inWholeMilliseconds
+                        ?: (RELAY_BACKOFF_MS * (1L shl attempt))
+                if (
+                    budget != null && !budget.backoffFitsAt(backoff.milliseconds, System.nanoTime())
+                ) {
+                    throw RelaySendDeadlineExceededException(lastException)
+                }
+                delay(backoff)
             }
         }
         throw lastException
-            ?: IllegalStateException("Relay request failed after $RELAY_MAX_RETRIES retries")
+            ?: IllegalStateException("Relay request failed after $maxAttempts retries")
     }
 
     companion object {

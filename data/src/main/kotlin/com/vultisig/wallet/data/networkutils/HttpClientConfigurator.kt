@@ -7,6 +7,8 @@ import io.ktor.client.engine.HttpClientEngineConfig
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpCallValidator
 import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -36,6 +38,10 @@ import kotlinx.serialization.json.Json
  *    exponential backoff: on transport [IOException]s/read-timeouts and on 5xx/429/408 responses.
  *    Non-idempotent requests (e.g. POST broadcasts) are never auto-retried, so a write the server
  *    received but slow-ACKed is not silently resent.
+ * 5. **HttpTimeout** — installed with no defaults, so it is inert unless a request opts in with
+ *    `timeout { requestTimeoutMillis = … }`. Only the awaited TSS relay send does, to keep one hung
+ *    POST from eating the ceremony's stall budget; every other call keeps the engine timeouts
+ *    configured in `NetworkModule`.
  *
  * The retry plugin fires first: if all retries fail, the [IOException] propagates to
  * [HttpCallValidator], which wraps it in a [NetworkException].
@@ -59,6 +65,10 @@ class HttpClientConfigurator @Inject constructor(private val json: Json) {
                     }
                 }
             }
+
+            // No default values: the plugin only engages for a request that sets its own
+            // `timeout { … }`, so installing it here changes nothing for existing callers.
+            install(HttpTimeout)
 
             install(HttpRequestRetry) {
                 exponentialDelay()
@@ -99,7 +109,10 @@ private fun isSafeMethod(method: HttpMethod): Boolean =
  */
 private fun IOException.toNetworkException(): NetworkException =
     when (this) {
-        is SocketTimeoutException ->
+        is SocketTimeoutException,
+        // Ktor's per-request budget expiring is a timeout like any other. Without this branch it
+        // falls through to the generic Transport case and reads as a dead connection in logs.
+        is HttpRequestTimeoutException ->
             NetworkException(0, "Connection timed out", NetworkErrorKind.Timeout, this)
         is UnknownHostException ->
             NetworkException(0, "No internet connection", NetworkErrorKind.NoConnectivity, this)

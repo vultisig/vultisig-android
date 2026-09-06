@@ -71,6 +71,7 @@ class SchnorrKeygen(
         )
 
     val cache = mutableMapOf<String, Any>()
+    private val stall = CeremonyStallClock()
     var keyshare: DKLSKeyshare? = null
     private var activeMessageId: String? = null
 
@@ -125,7 +126,7 @@ class SchnorrKeygen(
         }
     }
 
-    private fun processSchnorrOutboundMessage(handle: Handle) {
+    private suspend fun processSchnorrOutboundMessage(handle: Handle) {
         while (true) {
             val (result, outboundMessage) = getSchnorrOutboundMessage(handle)
             if (result != LIB_OK) {
@@ -135,28 +136,34 @@ class SchnorrKeygen(
                 return
             }
 
+            val encodedOutboundMessage = Base64.encode(outboundMessage)
             val message = outboundMessage.toSchnorrGoSlice()
-            try {
-                val encodedOutboundMessage = Base64.encode(outboundMessage)
-                for (i in keygenCommittee.indices) {
-                    val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
-                    if (receiverArray.isEmpty()) {
-                        break
+            // Collect the receivers and release the native slice before sending: the fan-out
+            // suspends for as long as the relay makes it, and nothing reads the slice by then.
+            val receivers =
+                try {
+                    buildList {
+                        for (i in keygenCommittee.indices) {
+                            val receiverArray =
+                                getOutboundMessageReceiver(handle, message, i.toLong())
+                            if (receiverArray.isEmpty()) {
+                                break
+                            }
+                            add(String(receiverArray, Charsets.UTF_8))
+                        }
                     }
-                    val receiverString = String(receiverArray, Charsets.UTF_8)
-                    Timber.d("sending message from $localPartyId to: $receiverString")
-                    messenger.send(localPartyId, receiverString, encodedOutboundMessage)
+                } finally {
+                    message.free()
                 }
-            } finally {
-                message.free()
-            }
+
+            messenger.fanOut(localPartyId, receivers, encodedOutboundMessage)
         }
     }
 
     private suspend fun pullInboundMessages(handle: Handle): Boolean {
         Timber.d("start pulling inbound messages")
 
-        val start = System.nanoTime()
+        stall.reset()
         while (true) {
             try {
                 val msgs =
@@ -176,9 +183,11 @@ class SchnorrKeygen(
                 delay(1000)
             }
 
-            val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
-            if (elapsedTime > 60) {
-                error("timeout: Schnorr keygen did not finish within 60 seconds")
+            if (stall.isStalled()) {
+                error(
+                    "timeout: Schnorr keygen made no progress for " +
+                        "${stall.limitSeconds} seconds"
+                )
             }
         }
     }
@@ -229,6 +238,7 @@ class SchnorrKeygen(
                 error("fail to apply message to schnorr, $result")
             }
             cache[key] = Any()
+            stall.markProgress()
             deleteMessageFromServer(msg.hash)
             processSchnorrOutboundMessage(handle)
             if (isFinished[0] != 0) {

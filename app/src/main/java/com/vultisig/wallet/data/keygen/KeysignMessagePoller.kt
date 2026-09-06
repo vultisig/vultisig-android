@@ -34,6 +34,17 @@ internal class KeysignMessagePoller(
     private val heardFromEver = mutableSetOf<String>()
     private var waitingNotified = false
 
+    /**
+     * [System.nanoTime] instant the current attempt's deadline expires, or `null` before the first
+     * [poll]. Relay work started from inside `applyMessages` — the outbound fan-out an applied
+     * message triggers — reads it so a send's own retry budget is clipped to what is left of the
+     * attempt. Without that clip an awaited send could spend its full budget inside a deadline that
+     * had already passed, turning a recoverable relay failure into a signing timeout.
+     */
+    @Volatile
+    var attemptDeadlineNanos: Long? = null
+        private set
+
     /** Whether any peer has answered since [resetForNewMessage]; the retry budget depends on it. */
     val hasHeardFromAnyPeer: Boolean
         get() = heardFromEver.isNotEmpty()
@@ -78,6 +89,7 @@ internal class KeysignMessagePoller(
 
         heardFromThisWindow.clear()
         val startedAt = nanoTime()
+        attemptDeadlineNanos = startedAt + ATTEMPT_TIMEOUT.inWholeNanoseconds
         var lastBatchAt = startedAt
         while (true) {
             try {
