@@ -4,11 +4,12 @@ package com.vultisig.wallet.data.keygen
 
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.withClue
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.comparables.shouldBeLessThan
+import io.kotest.matchers.shouldBe
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -50,11 +51,9 @@ class RelayFanOutTest {
 
         messenger(api, this).fanOut("deviceA", listOf("deviceB", "deviceC"), "payload")
 
-        assertEquals(2, api.sentMessages.size)
-        assertContentEquals(
-            listOf(listOf("deviceB"), listOf("deviceC")),
-            api.sentMessages.map { it.to }.sortedBy { it.first() },
-        )
+        api.sentMessages.size shouldBe 2
+        api.sentMessages.map { it.to }.sortedBy { it.first() } shouldContainExactly
+            listOf(listOf("deviceB"), listOf("deviceC"))
     }
 
     /**
@@ -68,12 +67,10 @@ class RelayFanOutTest {
 
         messenger(api, this).fanOut("deviceA", listOf("deviceB", "deviceC", "deviceD"), "payload")
 
-        assertEquals(3, api.sentMessages.size)
-        assertEquals(
-            sendDuration,
-            currentTime,
-            "three 5 s sends must cost 5 s in parallel, not 15 s in sequence",
-        )
+        api.sentMessages.size shouldBe 3
+        withClue("three 5 s sends must cost 5 s in parallel, not 15 s in sequence") {
+            currentTime shouldBe sendDuration
+        }
     }
 
     /**
@@ -85,10 +82,10 @@ class RelayFanOutTest {
         val api = FakeRelaySessionApi(onSend = { error("relay rejected the message") })
 
         val failure =
-            assertFailsWith<IllegalStateException> {
+            shouldThrow<IllegalStateException> {
                 messenger(api, this).fanOut("deviceA", listOf("deviceB", "deviceC"), "payload")
             }
-        assertEquals("relay rejected the message", failure.message)
+        failure.message shouldBe "relay rejected the message"
     }
 
     /** A round that has already failed should not keep paying for the peers still in flight. */
@@ -104,12 +101,14 @@ class RelayFanOutTest {
                 }
             )
 
-        assertFailsWith<IllegalStateException> {
+        shouldThrow<IllegalStateException> {
             messenger(api, this).fanOut("deviceA", listOf("deviceB", "deviceC"), "payload")
         }
 
-        assertEquals(0, completed.get(), "the sibling send should have been cancelled")
-        assertTrue(currentTime < 30_000, "the caller must not wait out the cancelled send")
+        withClue("the sibling send should have been cancelled") { completed.get() shouldBe 0 }
+        withClue("the caller must not wait out the cancelled send") {
+            currentTime shouldBeLessThan 30_000L
+        }
     }
 
     @Test
@@ -118,7 +117,7 @@ class RelayFanOutTest {
 
         messenger(api, this).fanOut("deviceA", emptyList(), "payload")
 
-        assertEquals(0, api.sentMessages.size)
+        api.sentMessages.size shouldBe 0
     }
 
     @Test
@@ -128,6 +127,6 @@ class RelayFanOutTest {
         messenger(api, CoroutineScope(Dispatchers.Default))
             .fanOut("deviceA", listOf("deviceB"), "payload")
 
-        assertEquals(1, api.sentMessages.size)
+        api.sentMessages.size shouldBe 1
     }
 }

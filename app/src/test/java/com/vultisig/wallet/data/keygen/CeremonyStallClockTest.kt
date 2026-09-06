@@ -1,8 +1,7 @@
 package com.vultisig.wallet.data.keygen
 
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
 import kotlin.time.Duration.Companion.seconds
 import org.junit.jupiter.api.Test
 
@@ -32,7 +31,7 @@ class CeremonyStallClockTest {
     fun `a fresh clock is not stalled`() {
         val fake = FakeClock()
 
-        assertFalse(clockOf(fake).isStalled())
+        clockOf(fake).isStalled() shouldBe false
     }
 
     @Test
@@ -42,7 +41,7 @@ class CeremonyStallClockTest {
 
         fake.advance(59)
 
-        assertFalse(stall.isStalled())
+        stall.isStalled() shouldBe false
     }
 
     @Test
@@ -52,7 +51,7 @@ class CeremonyStallClockTest {
 
         fake.advance(61)
 
-        assertTrue(stall.isStalled())
+        stall.isStalled() shouldBe true
     }
 
     /**
@@ -66,12 +65,14 @@ class CeremonyStallClockTest {
 
         repeat(10) {
             fake.advance(30)
-            assertFalse(stall.isStalled(), "30 s between messages must not trip the stall")
+            withClue("30 s between messages must not trip the stall") {
+                stall.isStalled() shouldBe false
+            }
             stall.markProgress()
         }
 
         // Five minutes of ceremony, none of it silent for 60 s.
-        assertFalse(stall.isStalled())
+        stall.isStalled() shouldBe false
     }
 
     @Test
@@ -83,7 +84,9 @@ class CeremonyStallClockTest {
         stall.markProgress()
         fake.advance(61)
 
-        assertTrue(stall.isStalled(), "a real stall must still fail inside the limit")
+        withClue("a real stall must still fail inside the limit") {
+            stall.isStalled() shouldBe true
+        }
     }
 
     @Test
@@ -92,11 +95,11 @@ class CeremonyStallClockTest {
         val stall = clockOf(fake)
 
         fake.advance(61)
-        assertTrue(stall.isStalled())
+        stall.isStalled() shouldBe true
 
         stall.reset()
 
-        assertFalse(stall.isStalled(), "a retry gets a fresh peer-wait window")
+        withClue("a retry gets a fresh peer-wait window") { stall.isStalled() shouldBe false }
     }
 
     @Test
@@ -106,12 +109,12 @@ class CeremonyStallClockTest {
 
         fake.advance(45)
 
-        assertEquals(45.seconds, stall.sinceProgress())
+        stall.sinceProgress() shouldBe 45.seconds
     }
 
     @Test
     fun `limitSeconds exposes the configured limit`() {
-        assertEquals(60L, clockOf(FakeClock()).limitSeconds)
-        assertEquals(90L, clockOf(FakeClock(), limit = 90.seconds).limitSeconds)
+        clockOf(FakeClock()).limitSeconds shouldBe 60L
+        clockOf(FakeClock(), limit = 90.seconds).limitSeconds shouldBe 90L
     }
 }
