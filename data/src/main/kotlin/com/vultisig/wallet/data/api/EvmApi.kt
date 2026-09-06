@@ -411,11 +411,22 @@ class EvmApiImp(
                 },
             )
         if (rpcResp.error != null) {
-            Timber.d("estimate gas rpc error: ${rpcResp.error.message}")
-            return BigInteger.ZERO
+            Timber.d("estimate gas rpc error: %s", rpcResp.error.message)
+            throw NetworkException(
+                httpStatusCode = 0,
+                message = "estimate gas rpc error: ${rpcResp.error.message}",
+            )
         }
 
-        return rpcResp.result.convertToBigIntegerOrZero()
+        val estimateHex =
+            rpcResp.result?.stripHexPrefix()?.takeIf {
+                it.isNotBlank() && it.all { char -> char.digitToIntOrNull(16) != null }
+            }
+                ?: throw NetworkException(
+                    httpStatusCode = 0,
+                    message = "estimate gas rpc returned invalid result: ${rpcResp.result}",
+                )
+        return BigInteger(estimateHex, 16)
     }
 
     suspend fun estimateGasForCallDataTransfer(
