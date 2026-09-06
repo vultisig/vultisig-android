@@ -40,28 +40,31 @@ class CosmosSignDocDecoder @Inject constructor() : TransactionContentDecoder {
         val body = CosmosSignDocReader.read(direct.bodyBytes) ?: return null
 
         // An active SignDoc withholds the sidecar memo, so `CosmosTransactionDecoder` never reaches
-        // a switch or a governance vote here — and the body's own memo is the signed one anyway.
-        // It outranks a bare transfer, which is the message a memo-driven operation rides on: a
-        // switch is a `MsgSend` wearing a memo, and describing it as a send names the wrong verb.
-        val messages = body.reading
-        if (messages == null || messages.operation == DecodedOperation.Transfer) {
-            body.memo?.let(CosmosMemoReader::read)?.let { memo ->
-                return DecodedTransaction(
-                    operation = memo.operation,
-                    // The figure is the one the message commits to, when the verb moves it at all.
-                    amount =
-                        if (memo.movesTheCarriedAmount) messages?.amount ?: DecodedAmount.Unstated
-                        else DecodedAmount.Unstated,
-                    // The memo names the operation, not who it settles with; the address the send
-                    // carries is a module or vault account rather than the counterparty.
-                    counterparty = null,
-                    evidence = DecodedEvidence.SignedData,
-                )
-            }
+        // a switch here — and the body's own memo is the signed one anyway. A switch is a `MsgSend`
+        // wearing a memo, so the memo says what the transfer is for and describing it as a send
+        // names the wrong verb.
+        //
+        // The memo speaks only over the transfer it rides on, and only for a verb a transfer can
+        // carry. It never speaks for a message this could not read — that body is already refused —
+        // nor over a message that states its own operation, where the memo would be a peer-supplied
+        // string outranking the bytes the chain will act on.
+        val reading = body.reading
+        if (reading.operation == DecodedOperation.Transfer) {
+            body.memo
+                ?.let(CosmosMemoReader::read)
+                ?.takeIf { it.carrier == CosmosMemoReader.Carrier.Transfer }
+                ?.let { memo ->
+                    return DecodedTransaction(
+                        operation = memo.operation,
+                        // The figure is the one the send itself commits to.
+                        amount = reading.amount,
+                        // The memo names the operation, not who it settles with; the address the
+                        // send carries is a module or vault account rather than a counterparty.
+                        counterparty = null,
+                        evidence = DecodedEvidence.SignedData,
+                    )
+                }
         }
-
-        // Messages of no type this names, and no memo to fall back on, name nothing.
-        val reading = messages ?: return null
 
         return DecodedTransaction(
             operation = reading.operation,

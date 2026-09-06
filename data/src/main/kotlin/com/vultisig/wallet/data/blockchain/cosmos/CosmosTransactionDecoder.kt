@@ -49,9 +49,13 @@ class CosmosTransactionDecoder @Inject constructor() : TransactionContentDecoder
         val reading = CosmosMemoReader.read(memo) ?: return null
         return DecodedTransaction(
             operation = reading.operation,
+            // Only a verb a transfer carries moves the transaction's figure; a vote rides beside
+            // its own message and states no quantity.
             amount =
-                if (reading.movesTheCarriedAmount) carried(content.amount)
-                else DecodedAmount.Unstated,
+                when (reading.carrier) {
+                    CosmosMemoReader.Carrier.Transfer -> carried(content.amount)
+                    CosmosMemoReader.Carrier.OwnMessage -> DecodedAmount.Unstated
+                },
             evidence = DecodedEvidence.Memo,
         )
     }

@@ -28,14 +28,13 @@ internal object CosmosSignDocReader {
     )
 
     /**
-     * A body that walked cleanly: what its messages say, when they are of a type this names, and
-     * the memo the body itself commits to.
+     * A body that read completely: what its messages say, and the memo the body itself commits to.
      *
-     * Both are read in one pass because both are signed. A body whose messages this cannot name
-     * still has a memo that the chain acts on — a switch and a governance vote are exactly that —
-     * and dropping it would leave a co-signer reading an unnamed transaction.
+     * Both are read in one pass because both are signed. The memo is carried alongside rather than
+     * instead of the reading: a memo can say what a transfer is for, but only the message says what
+     * the chain will do, so a caller that wants to use one has to check it against the other.
      */
-    data class Body(val reading: Reading?, val memo: String?)
+    data class Body(val reading: Reading, val memo: String?)
 
     // MARK: - Refusal limits
 
@@ -48,8 +47,17 @@ internal object CosmosSignDocReader {
     /** Bounds unknown-field scans. */
     private const val MAX_FIELDS = 512
 
-    /** `cosmos.bank.v1beta1.MsgSend`, the one non-staking message this names. */
+    /** `cosmos.bank.v1beta1.MsgSend`, the transfer every memo-carried operation rides on. */
     private const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
+
+    /**
+     * A governance vote states itself in its own message — `QBTCTransactionHelper` writes the
+     * v1beta1 form and iOS's dYdX helper has wallet-core write it, so reading the message rather
+     * than the memo beside it is both stronger evidence and the same verb on either initiator. The
+     * v1 module is accepted too, since a dApp may build against it and the field offsets match.
+     */
+    private const val MSG_VOTE_TYPE_URL = "/cosmos.gov.v1beta1.MsgVote"
+    private const val MSG_VOTE_V1_TYPE_URL = "/cosmos.gov.v1.MsgVote"
 
     /** `TxBody.memo`. */
     private const val MEMO_FIELD = 2L
@@ -66,16 +74,15 @@ internal object CosmosSignDocReader {
         val walked = walk(body) ?: return null
         val messages = walked.messages.takeIf { it.isNotEmpty() } ?: return null
 
-        // Messages of no type this names leave the memo as the only thing the body states.
-        val shapes = messages.map { shape(it.url) }
-        if (shapes.all { it == null }) return Body(reading = null, memo = walked.memo)
-
-        // Every message must decode, and they must agree on one operation. A body that mixes verbs
-        // has no single one to name, and naming either would describe only part of what is signed.
+        // Every message must be of a type this names and must decode, and they must agree on one
+        // operation. A message this cannot name is refused rather than described by the memo beside
+        // it: the memo is peer-supplied text, and letting it speak for an unreadable message is how
+        // a `MsgExec` gets presented as a switch. A body that mixes verbs has no single one to
+        // name, and naming either would describe only part of what is signed.
         val readings = ArrayList<Reading>(messages.size)
-        for ((message, shape) in messages.zip(shapes)) {
-            // A recognised message riding beside an unrecognised one is the same partial reading.
-            readings.add(read(message.value, shape ?: return null) ?: return null)
+        for (message in messages) {
+            val shape = shape(message.url) ?: return null
+            readings.add(read(message.value, shape) ?: return null)
         }
 
         val first = readings.first()
@@ -160,38 +167,58 @@ internal object CosmosSignDocReader {
 
     // MARK: - The messages this can corroborate
 
+    /** What the address a message names is, to the reading. */
+    private enum class Named {
+        /** The validator the operation is directed at. */
+        Validator,
+
+        /** The account a transfer settles with. */
+        Recipient,
+
+        /** The signer's own account: proof the message is well-formed, not a counterparty. */
+        Signer,
+    }
+
     /** Where one message type keeps the address and the `Coin` this reads. */
     private data class Shape(
         val operation: DecodedOperation,
         val addressField: Long,
         val amountField: Long?,
+        val named: Named,
     )
 
-    /**
-     * Names only the message types whose values are decoded here. A null shape is a type this
-     * cannot name — distinct from a named type whose body would not read, which is a refusal.
-     */
+    /** Names only the message types whose values are decoded here; anything else is refused. */
     private fun shape(url: String): Shape? =
         when (url) {
             // delegator 1, validator 2, amount 3 (Coin)
             CosmosStakingHelper.MSG_DELEGATE_TYPE_URL ->
-                Shape(DecodedOperation.Delegate, addressField = 2L, amountField = 3L)
+                Shape(DecodedOperation.Delegate, 2L, amountField = 3L, named = Named.Validator)
 
             CosmosStakingHelper.MSG_UNDELEGATE_TYPE_URL ->
-                Shape(DecodedOperation.Undelegate, addressField = 2L, amountField = 3L)
+                Shape(DecodedOperation.Undelegate, 2L, amountField = 3L, named = Named.Validator)
 
             // Source is field 2, destination field 3 — the destination is the relevant
             // counterparty, and reading the wrong one names the validator being left.
             CosmosStakingHelper.MSG_BEGIN_REDELEGATE_TYPE_URL ->
-                Shape(DecodedOperation.Redelegate, addressField = 3L, amountField = 4L)
+                Shape(DecodedOperation.Redelegate, 3L, amountField = 4L, named = Named.Validator)
 
             // A reward withdrawal carries no Coin: the chain settles what has accrued.
             CosmosStakingHelper.MSG_WITHDRAW_DELEGATOR_REWARD_TYPE_URL ->
-                Shape(DecodedOperation.ClaimRewards, addressField = 2L, amountField = null)
+                Shape(
+                    DecodedOperation.ClaimRewards,
+                    2L,
+                    amountField = null,
+                    named = Named.Validator,
+                )
 
             // from 1, to 2, amount 3 (repeated Coin)
             MSG_SEND_TYPE_URL ->
-                Shape(DecodedOperation.Transfer, addressField = 2L, amountField = 3L)
+                Shape(DecodedOperation.Transfer, 2L, amountField = 3L, named = Named.Recipient)
+
+            // proposal 1, voter 2, option 3. The voter is the signer, and a ballot moves nothing.
+            MSG_VOTE_TYPE_URL,
+            MSG_VOTE_V1_TYPE_URL ->
+                Shape(DecodedOperation.Vote, 2L, amountField = null, named = Named.Signer)
 
             else -> null
         }
@@ -235,9 +262,11 @@ internal object CosmosSignDocReader {
             operation = shape.operation,
             amount = amount,
             counterparty =
-                if (shape.operation == DecodedOperation.Transfer)
-                    DecodedCounterparty.Contract(address)
-                else DecodedCounterparty.Validator(address),
+                when (shape.named) {
+                    Named.Validator -> DecodedCounterparty.Validator(address)
+                    Named.Recipient -> DecodedCounterparty.Contract(address)
+                    Named.Signer -> null
+                },
         )
     }
 
