@@ -37,7 +37,31 @@ class CosmosSignDocDecoder @Inject constructor() : TransactionContentDecoder {
 
         if (!tx.signedDataBodyIsActive) return null
         val direct = tx.signedData as? OpaqueSignedContent.CosmosSignDirect ?: return null
-        val reading = CosmosSignDocReader.read(direct.bodyBytes) ?: return null
+        val body = CosmosSignDocReader.read(direct.bodyBytes) ?: return null
+
+        // An active SignDoc withholds the sidecar memo, so `CosmosTransactionDecoder` never reaches
+        // a switch or a governance vote here — and the body's own memo is the signed one anyway.
+        // It outranks a bare transfer, which is the message a memo-driven operation rides on: a
+        // switch is a `MsgSend` wearing a memo, and describing it as a send names the wrong verb.
+        val messages = body.reading
+        if (messages == null || messages.operation == DecodedOperation.Transfer) {
+            body.memo?.let(CosmosMemoReader::read)?.let { memo ->
+                return DecodedTransaction(
+                    operation = memo.operation,
+                    // The figure is the one the message commits to, when the verb moves it at all.
+                    amount =
+                        if (memo.movesTheCarriedAmount) messages?.amount ?: DecodedAmount.Unstated
+                        else DecodedAmount.Unstated,
+                    // The memo names the operation, not who it settles with; the address the send
+                    // carries is a module or vault account rather than the counterparty.
+                    counterparty = null,
+                    evidence = DecodedEvidence.SignedData,
+                )
+            }
+        }
+
+        // Messages of no type this names, and no memo to fall back on, name nothing.
+        val reading = messages ?: return null
 
         return DecodedTransaction(
             operation = reading.operation,
@@ -119,9 +143,9 @@ class CosmosSignDocDecoder @Inject constructor() : TransactionContentDecoder {
 
     private companion object {
         /**
-         * Matches the batch ceiling the SignDoc reader enforces on the co-signer side, so an intent
-         * that could not have produced a readable body is refused on the initiator too.
+         * The batch ceiling the SignDoc reader enforces on the co-signer side, so an intent that
+         * could not have produced a readable body is refused on the initiator too.
          */
-        const val MAX_CLAIM_VALIDATORS = 64
+        const val MAX_CLAIM_VALIDATORS = CosmosSignDocReader.MAX_MESSAGES
     }
 }

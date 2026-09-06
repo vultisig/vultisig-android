@@ -47,10 +47,13 @@ class MayaChainTransactionDecoder @Inject constructor() : TransactionContentDeco
                 )
             }
 
-            // `POOL-:<basisPoints>[:affiliate:rate]`. iOS builds the bare two-field form and this
-            // app appends an affiliate and a rate, so a co-signer has to accept both.
+            // `POOL-:<basisPoints>` or `POOL-:<basisPoints>:<affiliate>:<rate>`. iOS builds the
+            // bare form and this app appends an affiliate and a rate, so a co-signer has to accept
+            // both — but only those two: a memo stopping between them names an affiliate whose fee
+            // it does not state.
             "POOL-" -> {
                 if (fields.size !in POOL_WITHDRAW_FIELDS) return null
+                if (fields.drop(BASIS_POINTS_FIELD).any { it.isEmpty() }) return null
                 val bps = fields[BASIS_POINTS_FIELD].toIntOrNull() ?: return null
                 if (bps !in 1..MAX_BASIS_POINTS) return null
                 DecodedTransaction(
@@ -118,7 +121,9 @@ class MayaChainTransactionDecoder @Inject constructor() : TransactionContentDeco
 
         const val POOL_DEPOSIT_FIELDS = 1
         const val BASIS_POINTS_FIELD = 1
-        val POOL_WITHDRAW_FIELDS = 2..4
+
+        /** The bare basis-point form, or the one carrying both an affiliate and its rate. */
+        val POOL_WITHDRAW_FIELDS = setOf(2, 4)
 
         const val LEAVE_FIELDS = 2
         const val LEAVE_NODE_FIELD = 1

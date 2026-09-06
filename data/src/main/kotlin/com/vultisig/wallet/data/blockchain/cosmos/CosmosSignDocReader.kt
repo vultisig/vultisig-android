@@ -20,12 +20,22 @@ import java.math.BigInteger
  */
 internal object CosmosSignDocReader {
 
-    /** What a SignDoc body turned out to be. */
+    /** What a SignDoc body's messages turned out to be. */
     data class Reading(
         val operation: DecodedOperation,
         val amount: DecodedAmount,
         val counterparty: DecodedCounterparty?,
     )
+
+    /**
+     * A body that walked cleanly: what its messages say, when they are of a type this names, and
+     * the memo the body itself commits to.
+     *
+     * Both are read in one pass because both are signed. A body whose messages this cannot name
+     * still has a memo that the chain acts on — a switch and a governance vote are exactly that —
+     * and dropping it would leave a co-signer reading an unnamed transaction.
+     */
+    data class Body(val reading: Reading?, val memo: String?)
 
     // MARK: - Refusal limits
 
@@ -33,7 +43,7 @@ internal object CosmosSignDocReader {
     private const val MAX_BODY_BYTES = 64 * 1024
 
     /** Messages in one body. A batched rewards claim sends one per validator. */
-    private const val MAX_MESSAGES = 64
+    internal const val MAX_MESSAGES = 64
 
     /** Bounds unknown-field scans. */
     private const val MAX_FIELDS = 512
@@ -41,22 +51,31 @@ internal object CosmosSignDocReader {
     /** `cosmos.bank.v1beta1.MsgSend`, the one non-staking message this names. */
     private const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
 
+    /** `TxBody.memo`. */
+    private const val MEMO_FIELD = 2L
+
     /**
      * Reads one complete SignDoc body, or refuses it.
      *
      * @param body the decoded `SignDirect.bodyBytes` — already base64-decoded by
      *   [com.vultisig.wallet.data.models.transaction_decoding.OpaqueSignedContent.CosmosSignDirect].
      */
-    fun read(body: ByteArray): Reading? {
+    fun read(body: ByteArray): Body? {
         if (body.isEmpty() || body.size > MAX_BODY_BYTES) return null
 
-        val messages = messageBodies(body)?.takeIf { it.isNotEmpty() } ?: return null
+        val walked = walk(body) ?: return null
+        val messages = walked.messages.takeIf { it.isNotEmpty() } ?: return null
+
+        // Messages of no type this names leave the memo as the only thing the body states.
+        val shapes = messages.map { shape(it.url) }
+        if (shapes.all { it == null }) return Body(reading = null, memo = walked.memo)
 
         // Every message must decode, and they must agree on one operation. A body that mixes verbs
         // has no single one to name, and naming either would describe only part of what is signed.
         val readings = ArrayList<Reading>(messages.size)
-        for (message in messages) {
-            readings.add(read(message) ?: return null)
+        for ((message, shape) in messages.zip(shapes)) {
+            // A recognised message riding beside an unrecognised one is the same partial reading.
+            readings.add(read(message.value, shape ?: return null) ?: return null)
         }
 
         val first = readings.first()
@@ -64,38 +83,52 @@ internal object CosmosSignDocReader {
 
         // A homogeneous batch has one verb but no single amount or counterparty.
         if (readings.size > 1) {
-            return Reading(
-                operation = first.operation,
-                amount = DecodedAmount.Unstated,
-                counterparty = null,
+            return Body(
+                reading =
+                    Reading(
+                        operation = first.operation,
+                        amount = DecodedAmount.Unstated,
+                        counterparty = null,
+                    ),
+                memo = walked.memo,
             )
         }
-        return first
+        return Body(reading = first, memo = walked.memo)
     }
 
     /** One `Any` in `TxBody.messages`. */
     private data class AnyMessage(val url: String, val value: ByteArray)
 
-    /** Reads every `Any` in `TxBody.messages`; a partial result is refused. */
-    private fun messageBodies(body: ByteArray): List<AnyMessage>? {
+    /** A `TxBody` walked to its end. */
+    private data class Walked(val messages: List<AnyMessage>, val memo: String?)
+
+    /** Reads every `Any` in `TxBody.messages` and the body's memo; a partial result is refused. */
+    private fun walk(body: ByteArray): Walked? {
         val reader = ByteReader(body)
         val messages = mutableListOf<AnyMessage>()
+        var memo: String? = null
         var fields = 0
 
         while (!reader.isAtEnd) {
             if (++fields > MAX_FIELDS) return null
             val tag = reader.readTag() ?: return null
 
-            if (tag.field == 1L && tag.wire == WireType.LengthDelimited) {
-                if (messages.size >= MAX_MESSAGES) return null
-                val any = reader.readLengthDelimited() ?: return null
-                messages.add(anyContents(any) ?: return null)
-            } else {
-                if (!reader.skip(tag.wire)) return null
+            when {
+                tag.field == 1L && tag.wire == WireType.LengthDelimited -> {
+                    if (messages.size >= MAX_MESSAGES) return null
+                    val any = reader.readLengthDelimited() ?: return null
+                    messages.add(anyContents(any) ?: return null)
+                }
+
+                // Reading to the end preserves protobuf's last-one-wins semantics here too.
+                tag.field == MEMO_FIELD && tag.wire == WireType.LengthDelimited ->
+                    memo = reader.readUtf8() ?: return null
+
+                else -> if (!reader.skip(tag.wire)) return null
             }
         }
 
-        return messages
+        return Walked(messages, memo?.takeIf { it.isNotEmpty() })
     }
 
     /** Reads to the end, which preserves protobuf's last-one-wins semantics. */
@@ -127,64 +160,44 @@ internal object CosmosSignDocReader {
 
     // MARK: - The messages this can corroborate
 
-    /** Names only the message types whose values are decoded here. */
-    private fun read(message: AnyMessage): Reading? =
-        when (message.url) {
+    /** Where one message type keeps the address and the `Coin` this reads. */
+    private data class Shape(
+        val operation: DecodedOperation,
+        val addressField: Long,
+        val amountField: Long?,
+    )
+
+    /**
+     * Names only the message types whose values are decoded here. A null shape is a type this
+     * cannot name — distinct from a named type whose body would not read, which is a refusal.
+     */
+    private fun shape(url: String): Shape? =
+        when (url) {
             // delegator 1, validator 2, amount 3 (Coin)
             CosmosStakingHelper.MSG_DELEGATE_TYPE_URL ->
-                readAddressed(
-                    message.value,
-                    DecodedOperation.Delegate,
-                    validatorField = 2L,
-                    amountField = 3L,
-                )
+                Shape(DecodedOperation.Delegate, addressField = 2L, amountField = 3L)
 
             CosmosStakingHelper.MSG_UNDELEGATE_TYPE_URL ->
-                readAddressed(
-                    message.value,
-                    DecodedOperation.Undelegate,
-                    validatorField = 2L,
-                    amountField = 3L,
-                )
+                Shape(DecodedOperation.Undelegate, addressField = 2L, amountField = 3L)
 
             // Source is field 2, destination field 3 — the destination is the relevant
             // counterparty, and reading the wrong one names the validator being left.
             CosmosStakingHelper.MSG_BEGIN_REDELEGATE_TYPE_URL ->
-                readAddressed(
-                    message.value,
-                    DecodedOperation.Redelegate,
-                    validatorField = 3L,
-                    amountField = 4L,
-                )
+                Shape(DecodedOperation.Redelegate, addressField = 3L, amountField = 4L)
 
             // A reward withdrawal carries no Coin: the chain settles what has accrued.
             CosmosStakingHelper.MSG_WITHDRAW_DELEGATOR_REWARD_TYPE_URL ->
-                readAddressed(
-                    message.value,
-                    DecodedOperation.ClaimRewards,
-                    validatorField = 2L,
-                    amountField = null,
-                )
+                Shape(DecodedOperation.ClaimRewards, addressField = 2L, amountField = null)
 
             // from 1, to 2, amount 3 (repeated Coin)
             MSG_SEND_TYPE_URL ->
-                readAddressed(
-                    message.value,
-                    DecodedOperation.Transfer,
-                    validatorField = 2L,
-                    amountField = 3L,
-                )
+                Shape(DecodedOperation.Transfer, addressField = 2L, amountField = 3L)
 
             else -> null
         }
 
     /** Pulls the named address and an optional `Coin` out of one message body. */
-    private fun readAddressed(
-        body: ByteArray,
-        operation: DecodedOperation,
-        validatorField: Long,
-        amountField: Long?,
-    ): Reading? {
+    private fun read(body: ByteArray, shape: Shape): Reading? {
         val reader = ByteReader(body)
         var address: String? = null
         val coins = mutableListOf<Pair<String, BigInteger>>()
@@ -195,11 +208,11 @@ internal object CosmosSignDocReader {
             val tag = reader.readTag() ?: return null
 
             when {
-                tag.field == validatorField && tag.wire == WireType.LengthDelimited ->
+                tag.field == shape.addressField && tag.wire == WireType.LengthDelimited ->
                     address = reader.readUtf8() ?: return null
 
-                amountField != null &&
-                    tag.field == amountField &&
+                shape.amountField != null &&
+                    tag.field == shape.amountField &&
                     tag.wire == WireType.LengthDelimited -> {
                     val raw = reader.readLengthDelimited() ?: return null
                     coins.add(coin(raw) ?: return null)
@@ -219,10 +232,11 @@ internal object CosmosSignDocReader {
             else DecodedAmount.Unstated
 
         return Reading(
-            operation = operation,
+            operation = shape.operation,
             amount = amount,
             counterparty =
-                if (operation == DecodedOperation.Transfer) DecodedCounterparty.Contract(address)
+                if (shape.operation == DecodedOperation.Transfer)
+                    DecodedCounterparty.Contract(address)
                 else DecodedCounterparty.Validator(address),
         )
     }
