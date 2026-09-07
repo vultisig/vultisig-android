@@ -1,7 +1,9 @@
 package com.vultisig.wallet.data.keygen
 
+import com.vultisig.wallet.data.api.RelaySendFailedException
 import com.vultisig.wallet.data.mediator.Message
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -95,6 +97,49 @@ class KeysignMessagePollerTest {
 
         failure.message shouldContain "keysign timed out after 60s"
         clock.elapsed shouldBe ATTEMPT_TIMEOUT + POLL_INTERVAL
+    }
+
+    /**
+     * The other half of the test above, from issue #5813. A message that will not apply is
+     * tolerated; an outbound round that never reached the relay is not. Swallowing this one leaves
+     * the attempt polling out the full deadline for a reply no peer can send, when the keysign
+     * wrapper could consult the relay for a finished signature and restart the attempt at once.
+     */
+    @Test
+    fun `a failed outbound send ends the attempt instead of polling out the deadline`() = runTest {
+        val clock = TestClock()
+        val sessionApi = relay(clock) { listOf(peerMessage()) }
+
+        val failure =
+            shouldThrow<RelaySendFailedException> {
+                poller(sessionApi, clock).poll(MESSAGE_ID) {
+                    throw RelaySendFailedException("failed to send the message to $PEER")
+                }
+            }
+
+        failure.message shouldContain PEER
+        withClue("the attempt must end on the failing poll, not 60 s later") {
+            clock.elapsed shouldBe POLL_INTERVAL
+        }
+    }
+
+    /**
+     * A ban is the library's verdict on a peer, not a transient failure. Polling on would report it
+     * as a timeout, which the keysign wrapper retries — signing again against a party DKLS has
+     * already banned.
+     */
+    @Test
+    fun `a banned party ends the attempt instead of polling out the deadline`() = runTest {
+        val clock = TestClock()
+        val sessionApi = relay(clock) { listOf(peerMessage()) }
+
+        val failure =
+            shouldThrow<MaliciousPartyException> {
+                poller(sessionApi, clock).poll(MESSAGE_ID) { throw MaliciousPartyException(PEER) }
+            }
+
+        failure.partyID shouldBe PEER
+        clock.elapsed shouldBe POLL_INTERVAL
     }
 
     @Test

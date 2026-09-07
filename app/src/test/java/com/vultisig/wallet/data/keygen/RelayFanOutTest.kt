@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.data.keygen
 
+import com.vultisig.wallet.data.api.RelaySendFailedException
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import io.kotest.assertions.throwables.shouldThrow
@@ -76,16 +77,22 @@ class RelayFanOutTest {
     /**
      * The whole point of #5813: a send that cannot be delivered has to surface. Before the fix it
      * was logged and dropped, and the ceremony waited out the stall for a reply nobody would send.
+     *
+     * It surfaces as a [RelaySendFailedException] whatever the underlying fault was, because the
+     * poll loop that receives it tells a lost send from a failed relay read by type alone.
      */
     @Test
     fun `a failing send propagates to the caller`() = runTest {
         val api = FakeRelaySessionApi(onSend = { error("relay rejected the message") })
 
         val failure =
-            shouldThrow<IllegalStateException> {
+            shouldThrow<RelaySendFailedException> {
                 messenger(api, this).fanOut("deviceA", listOf("deviceB", "deviceC"), "payload")
             }
-        failure.message shouldBe "relay rejected the message"
+        // Read the chain, not `cause`: kotlinx.coroutines recovers the stack trace across the
+        // `async` boundary by re-wrapping the exception in a copy of itself.
+        val rootCause = generateSequence(failure.cause) { it.cause }.last()
+        rootCause.message shouldBe "relay rejected the message"
     }
 
     /** A round that has already failed should not keep paying for the peers still in flight. */
@@ -101,7 +108,7 @@ class RelayFanOutTest {
                 }
             )
 
-        shouldThrow<IllegalStateException> {
+        shouldThrow<RelaySendFailedException> {
             messenger(api, this).fanOut("deviceA", listOf("deviceB", "deviceC"), "payload")
         }
 

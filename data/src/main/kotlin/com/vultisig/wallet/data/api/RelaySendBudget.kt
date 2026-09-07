@@ -70,6 +70,20 @@ data class RelaySendBudget(
     }
 }
 
+/**
+ * Thrown when an awaited relay send did not reach the relay: the budget above was spent, the relay
+ * rejected the message outright, or the deadline expired mid-retry.
+ *
+ * It has its own type because the ceremony poll loops must not treat it as a failed read. Each of
+ * them wraps both `getTssMessages` and the outbound round an applied inbound message triggers in
+ * one broad `catch`, so an unmarked send failure is logged as "Failed to get messages" and the loop
+ * keeps polling for a reply that can never arrive — the exact issue #5813 stall the awaited send
+ * exists to end. `KeysignMessagePoller.poll` and the keygen `pullInboundMessages` loops rethrow
+ * this ahead of that catch so the attempt restarts at once.
+ */
+open class RelaySendFailedException(message: String, cause: Throwable? = null) :
+    Exception(message, cause)
+
 /** Thrown when a relay send is abandoned because its ceremony deadline expired mid-retry. */
 class RelaySendDeadlineExceededException(cause: Throwable? = null) :
-    Exception("relay send abandoned: the ceremony deadline expired", cause)
+    RelaySendFailedException("relay send abandoned: the ceremony deadline expired", cause)

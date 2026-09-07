@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.tss
 
 import com.vultisig.wallet.data.api.RelaySendBudget
+import com.vultisig.wallet.data.api.RelaySendFailedException
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.encryptNoEncode
 import com.vultisig.wallet.data.common.md5
@@ -51,17 +52,30 @@ class TssMessenger(
      * every attempt carries the same hash and sequence number and the relay and receiver dedupe it
      * instead of applying it twice.
      *
+     * Every failure leaves as a [RelaySendFailedException]. The ceremony poll loops key on that
+     * type to tell "my own message never landed" — fatal to the attempt — from the failed relay
+     * read they log and retry, so a send failure that arrived as a bare `IOException` would be
+     * swallowed by the very loop waiting on the reply it just lost.
+     *
      * @param deadlineNanos [System.nanoTime] instant this send may not outlive, or `null` for the
      *   full [RelaySendBudget]. Callers whose own deadline is absolute pass one so the send cannot
      *   outlive the round it belongs to.
      */
     suspend fun sendAwait(from: String, to: String, body: String, deadlineNanos: Long? = null) {
-        sessionApi.sendTssMessage(
-            serverUrl = serverUrl,
-            messageId = messageID,
-            message = buildMessage(from, to, body),
-            budget = RelaySendBudget(deadlineNanos = deadlineNanos),
-        )
+        try {
+            sessionApi.sendTssMessage(
+                serverUrl = serverUrl,
+                messageId = messageID,
+                message = buildMessage(from, to, body),
+                budget = RelaySendBudget(deadlineNanos = deadlineNanos),
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: RelaySendFailedException) {
+            throw e
+        } catch (e: Exception) {
+            throw RelaySendFailedException("failed to send the message to $to", e)
+        }
     }
 
     /**

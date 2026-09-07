@@ -28,6 +28,7 @@ import com.silencelaboratories.goschnorr.goschnorr.tss_buffer_free
 import com.silencelaboratories.goschnorr.schnorr_lib_error
 import com.silencelaboratories.goschnorr.schnorr_lib_error.LIB_OK
 import com.silencelaboratories.goschnorr.tss_buffer
+import com.vultisig.wallet.data.api.RelaySendFailedException
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.TssAction
@@ -177,6 +178,12 @@ class SchnorrKeygen(
                     delay(1000)
                 }
             } catch (e: CancellationException) {
+                throw e
+            } catch (e: RelaySendFailedException) {
+                // The outbound round an applied message triggered never landed, so no peer will
+                // answer it — and applying that message has already reset the stall clock, so
+                // logging this as a failed read leaves the loop waiting well past the limit for a
+                // reply nobody will send (#5813). The retry wrapper restarts the attempt instead.
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")

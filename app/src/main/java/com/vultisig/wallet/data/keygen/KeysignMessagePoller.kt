@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.keygen
 
+import com.vultisig.wallet.data.api.RelaySendFailedException
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.Message
 import kotlin.time.Duration
@@ -80,6 +81,12 @@ internal class KeysignMessagePoller(
      * deadline whenever a batch arrives would keep a doomed attempt alive until the relay expires
      * the message, stranding the user on the signing screen (#5488). Only the silent-peer hint
      * reads the resettable clock.
+     *
+     * Tolerating such a message is why a failure inside [applyMessages] is logged and re-polled
+     * rather than thrown. Two are not tolerable and leave at once: a [RelaySendFailedException]
+     * from the outbound round an applied message triggers, and a [MaliciousPartyException]. Neither
+     * can improve by polling again, and both have a caller that handles them better than a timeout
+     * 60 s later.
      */
     suspend fun poll(
         messageID: String,
@@ -104,6 +111,15 @@ internal class KeysignMessagePoller(
                     delay(POLL_INTERVAL)
                 }
             } catch (e: CancellationException) {
+                throw e
+            } catch (e: RelaySendFailedException) {
+                // This device's own outbound round never landed, so the reply being polled for
+                // cannot arrive. Logging it as a failed read would park the attempt here until the
+                // deadline; the keysign wrapper can recover or restart it now instead.
+                throw e
+            } catch (e: MaliciousPartyException) {
+                // A protocol verdict from the library, not a transient failure. The wrapper's
+                // no-retry branch has to see it rather than the timeout it would otherwise become.
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")

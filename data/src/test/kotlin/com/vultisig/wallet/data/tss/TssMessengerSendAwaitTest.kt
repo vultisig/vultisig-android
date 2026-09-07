@@ -4,6 +4,7 @@ package com.vultisig.wallet.data.tss
 
 import com.vultisig.wallet.data.api.RelaySendBudget
 import com.vultisig.wallet.data.api.RelaySendDeadlineExceededException
+import com.vultisig.wallet.data.api.RelaySendFailedException
 import com.vultisig.wallet.data.api.SessionApiImpl
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.mediator.Message
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -160,14 +162,23 @@ class TssMessengerSendAwaitTest {
         assertContentEquals((1..16).toList(), capture.bodies.map(::sequenceNoOf).sorted())
     }
 
+    /**
+     * The type is load-bearing, not decoration: the ceremony poll loops wrap the relay read and the
+     * outbound round in one broad catch, and tell a lost send from a failed read by this class
+     * alone. A bare transport exception here is swallowed by the loop waiting on the reply.
+     */
     @Test
-    fun `sendAwait throws once the budget is spent`() = runTest {
+    fun `sendAwait throws a marked send failure once the budget is spent`() = runTest {
         val calls = AtomicInteger(0)
         val messenger = messenger(alwaysFailing { calls.incrementAndGet() }, this)
 
-        assertFailsWith<NetworkException> {
-            messenger.sendAwait("deviceA", "deviceB", "round-one-payload")
-        }
+        val failure =
+            assertFailsWith<RelaySendFailedException> {
+                messenger.sendAwait("deviceA", "deviceB", "round-one-payload")
+            }
+
+        assertEquals("failed to send the message to deviceB", failure.message)
+        assertIs<NetworkException>(failure.cause, "the transport fault must stay on the cause")
         assertEquals(RelaySendBudget.DEFAULT_MAX_ATTEMPTS, calls.get())
     }
 
@@ -197,9 +208,12 @@ class TssMessengerSendAwaitTest {
                 onCall = { calls.incrementAndGet() },
             )
 
-        assertFailsWith<HttpException> {
-            messenger(client, this).sendAwait("deviceA", "deviceB", "round-one-payload")
-        }
+        val failure =
+            assertFailsWith<RelaySendFailedException> {
+                messenger(client, this).sendAwait("deviceA", "deviceB", "round-one-payload")
+            }
+
+        assertIs<HttpException>(failure.cause, "the rejection status must stay on the cause")
         assertEquals(1, calls.get())
         assertEquals(0L, currentTime, "a 4xx must not spend any backoff")
     }
@@ -219,15 +233,18 @@ class TssMessengerSendAwaitTest {
                 onCall = { calls.incrementAndGet() },
             )
 
-        assertFailsWith<RelaySendDeadlineExceededException> {
-            messenger(client, this)
-                .sendAwait(
-                    from = "deviceA",
-                    to = "deviceB",
-                    body = "round-one-payload",
-                    deadlineNanos = System.nanoTime() - 1,
-                )
-        }
+        val failure =
+            assertFailsWith<RelaySendDeadlineExceededException> {
+                messenger(client, this)
+                    .sendAwait(
+                        from = "deviceA",
+                        to = "deviceB",
+                        body = "round-one-payload",
+                        deadlineNanos = System.nanoTime() - 1,
+                    )
+            }
+
+        assertIs<RelaySendFailedException>(failure, "the poll loops key on the marked type")
         assertEquals(0, calls.get(), "no request should be started past the deadline")
     }
 
