@@ -103,6 +103,7 @@ import com.vultisig.wallet.ui.models.TokenInfoUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.TransactionHistoryGroupUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryTab
@@ -4218,6 +4219,58 @@ private fun SwapsTabPreview() {
                                         fromAddress = "0xAb...234",
                                         toAddress = "0xAb...234",
                                         feeEstimate = "$1.10",
+                                    ),
+                                    TransactionHistoryItemUiModel.Swap(
+                                        id = "S3",
+                                        txHash = "0x123",
+                                        chain = "Ethereum",
+                                        status =
+                                            TransactionStatusUiModel.Failed(
+                                                reason =
+                                                    UiText.DynamicString("Insufficient output"),
+                                                explanation =
+                                                    TransactionFailureExplanation
+                                                        .MIN_OUTPUT_SLIPPAGE,
+                                            ),
+                                        explorerUrl = "",
+                                        timestamp = 0L,
+                                        fromToken = "USDC",
+                                        fromAmount = "34,752.57",
+                                        fromChain = "Ethereum",
+                                        fromTokenLogo = R.drawable.usdc,
+                                        toToken = "ETH",
+                                        toAmount = "20.50",
+                                        toChain = "Ethereum",
+                                        toTokenLogo = R.drawable.ethereum,
+                                        provider = "LI.FI",
+                                        providerLogo = null,
+                                        fiatValue = "$34,752.57",
+                                        fromAddress = "0xAb...234",
+                                        toAddress = "0xAb...234",
+                                        feeEstimate = "$1.10",
+                                    ),
+                                    TransactionHistoryItemUiModel.Swap(
+                                        id = "S4",
+                                        txHash = "0x456",
+                                        chain = "THORChain",
+                                        status = TransactionStatusUiModel.Confirmed,
+                                        explorerUrl = "",
+                                        timestamp = 0L,
+                                        fromToken = "USDC",
+                                        fromAmount = "220.192",
+                                        fromChain = "Ethereum",
+                                        fromTokenLogo = R.drawable.usdc,
+                                        toToken = "SOL",
+                                        toAmount = "200.50",
+                                        toChain = "Solana",
+                                        toTokenLogo = R.drawable.solana,
+                                        provider = "THORChain",
+                                        providerLogo = R.drawable.rune,
+                                        fiatValue = "$220.19",
+                                        fromAddress = "0xAb...234",
+                                        toAddress = "So1anaAddr",
+                                        feeEstimate = "$0.11",
+                                        isLimitOrder = true,
                                     ),
                                 ),
                         )
