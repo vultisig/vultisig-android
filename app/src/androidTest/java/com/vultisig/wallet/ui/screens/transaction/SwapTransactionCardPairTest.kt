@@ -1,8 +1,12 @@
 package com.vultisig.wallet.ui.screens.transaction
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.width
 import androidx.test.platform.app.InstrumentationRegistry
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.models.TransactionFailureExplanation
@@ -99,6 +103,26 @@ class SwapTransactionCardPairTest {
 
         compose.onNodeWithText("+0.0261 BTC").assertIsDisplayed()
         compose.onNodeWithText("RUNE → BTC").assertIsDisplayed()
+    }
+
+    @Test
+    fun aLongRouteCannotSqueezeTheLegsBelowItsOwnHalf() {
+        start(
+            swap.copy(
+                fromToken = "USDC.eth.axl",
+                toAmount = "12,345,678.90123456",
+                toToken = "ASTRO-IBC",
+            )
+        )
+
+        // The pill used to be measured at its full intrinsic width before the legs were offered
+        // anything, so a long route left the amounts as little more than an ellipsis. Both halves
+        // of the row now get the same share of what the pair logo leaves.
+        val pill = compose.onNodeWithText("USDC.eth.axl → ASTRO-IBC").getUnclippedBoundsInRoot()
+        // Equal weights can still land a pixel apart on an odd row width, so allow a hair.
+        compose
+            .onNodeWithText("+12,345,678.90123456 ASTRO-IBC")
+            .assertWidthIsAtLeast(pill.width - 1.dp)
     }
 
     @Test

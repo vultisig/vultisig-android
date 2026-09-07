@@ -9,16 +9,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -26,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
@@ -158,7 +162,16 @@ internal fun SwapTransactionCard(
                                 color = Theme.v2.colors.text.tertiary,
                             )
                         }
-                        SwapPairPill(fromToken = item.fromToken, toToken = item.toToken)
+                        // The pill and the legs each get half of what the logo leaves, so a long
+                        // route can no longer measure itself first and squeeze the amounts down
+                        // to an ellipsis. The box holds the pill against the card's edge whether
+                        // the route needs that half or a fraction of it.
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.CenterEnd,
+                        ) {
+                            SwapPairPill(fromToken = item.fromToken, toToken = item.toToken)
+                        }
                     }
                 }
             }
@@ -237,30 +250,41 @@ private fun SwapPairLogo(
     toToken: String,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        SwapPairLogoHalf(logo = fromLogo, ticker = fromToken, half = Alignment.CenterStart)
-        SwapPairLogoHalf(logo = toLogo, ticker = toToken, half = Alignment.CenterEnd)
+    Box(modifier = modifier.size(swapPairLogoSize)) {
+        SwapPairLogoHalf(logo = fromLogo, ticker = fromToken, half = swapPairLeadingHalf)
+        SwapPairLogoHalf(logo = toLogo, ticker = toToken, half = swapPairTrailingHalf)
     }
 }
 
 @Composable
-private fun SwapPairLogoHalf(logo: ImageModel, ticker: String, half: Alignment) {
-    Box(
+private fun SwapPairLogoHalf(logo: ImageModel, ticker: String, half: Shape) {
+    // The plate is what lets a logo be halved at all. Most of the app's coin artwork is drawn on
+    // transparency, and half of that is a fragment of a glyph rather than half a disc, so without
+    // it the mark closes on one side and frays on the other. The design seats every coin on a
+    // plate of its own for the same reason.
+    TokenCircle(
         modifier =
-            Modifier.size(width = swapPairLogoSize / 2, height = swapPairLogoSize).clipToBounds(),
-        contentAlignment = half,
-    ) {
-        // requiredSize, not size: the logo has to keep its full diameter against a window half its
-        // width, which is precisely what makes the visible edge a half-circle rather than a
-        // squeeze.
-        TokenCircle(
-            modifier = Modifier.requiredSize(swapPairLogoSize),
-            logo = logo,
-            ticker = ticker,
-            size = SWAP_PAIR_LOGO_SIZE,
-        )
-    }
+            Modifier.clip(half)
+                .background(color = Theme.v2.colors.neutrals.n900, shape = CircleShape),
+        logo = logo,
+        ticker = ticker,
+        size = SWAP_PAIR_LOGO_SIZE,
+    )
 }
+
+/**
+ * The half of the mark a logo keeps. Both logos are drawn at their full diameter over the same
+ * 24dp, each clipped to the half that faces the other, so the two close into one circle instead of
+ * each being squeezed into a window narrower than itself.
+ */
+private fun swapPairHalfShape(leading: Boolean) = GenericShape { size, layoutDirection ->
+    val left = if (leading == (layoutDirection == LayoutDirection.Ltr)) 0f else size.width / 2f
+    addRect(Rect(left = left, top = 0f, right = left + size.width / 2f, bottom = size.height))
+}
+
+private val swapPairLeadingHalf = swapPairHalfShape(leading = true)
+
+private val swapPairTrailingHalf = swapPairHalfShape(leading = false)
 
 /** `USDC → SOL`, the route the card is about, in the corner the badge used to hold. */
 @Composable
@@ -270,6 +294,7 @@ private fun SwapPairPill(fromToken: String, toToken: String, modifier: Modifier 
         style = Theme.brockmann.supplementary.caption,
         color = Theme.v2.colors.text.primary,
         maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier =
             modifier
                 .background(
