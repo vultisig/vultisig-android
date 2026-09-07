@@ -103,6 +103,10 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
      */
     private fun buildCallData(keysignPayload: KeysignPayload): ByteArray {
         val destBytes = ss58Decode(keysignPayload.toAddress)
+        require(!isBurnAccountId(destBytes)) {
+            "Refusing to sign a transfer to the all-zero AccountId ($BURN_ADDRESS): " +
+                "no key can produce that account, so the transferred TAO is unrecoverable"
+        }
         val amount = keysignPayload.toAmount
         require(amount >= BigInteger.ZERO) { "Transfer amount must be non-negative, got $amount" }
 
@@ -174,6 +178,25 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
         private const val METADATA_HASH_DISABLED: Byte = 0x00
         const val DEFAULT_FEE_RAO = 200_000L
         private const val SS58_PREFIX = 42
+
+        /**
+         * The all-zero 32-byte AccountId under Bittensor's SS58 prefix, the Substrate equivalent of
+         * `0x0` — no private key derives it, so anything transferred there is destroyed.
+         *
+         * Spelled out rather than derived from [ZERO_ACCOUNT_ID] so a recipient check stays a pure
+         * string comparison off the JNI, which is what lets it be unit tested; the SS58 parity test
+         * pins this constant against [ss58Decode] so the two cannot drift.
+         *
+         * Only this spelling can reach a Bittensor recipient check: an address is admitted by
+         * `isValidSS58(…, SS58_PREFIX)`, and SS58 admits exactly one encoding per prefix.
+         */
+        const val BURN_ADDRESS = "5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM"
+
+        private val ZERO_ACCOUNT_ID = ByteArray(32)
+
+        /** Whether [accountId] is the unspendable all-zero account behind [BURN_ADDRESS]. */
+        fun isBurnAccountId(accountId: ByteArray): Boolean =
+            accountId.contentEquals(ZERO_ACCOUNT_ID)
 
         private fun compactEncode(value: BigInteger): ByteArray {
             require(value >= BigInteger.ZERO) {

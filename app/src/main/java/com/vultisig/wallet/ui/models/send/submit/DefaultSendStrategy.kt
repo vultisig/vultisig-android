@@ -154,6 +154,10 @@ internal class DefaultSendStrategy(
                             throw InvalidTransactionDataException(
                                 UiText.StringResource(R.string.error_recipient_not_a_wallet_address)
                             )
+                        RecipientValidity.BurnAddress ->
+                            throw InvalidTransactionDataException(
+                                UiText.StringResource(R.string.error_recipient_burn_address)
+                            )
                     }
 
                     val selectedTokenValue =

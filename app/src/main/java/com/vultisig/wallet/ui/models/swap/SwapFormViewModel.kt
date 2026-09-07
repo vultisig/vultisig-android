@@ -659,6 +659,8 @@ constructor(
                 UiText.StringResource(R.string.swap_external_recipient_invalid)
             RecipientValidity.NotAWalletAddress ->
                 UiText.StringResource(R.string.error_recipient_not_a_wallet_address)
+            RecipientValidity.BurnAddress ->
+                UiText.StringResource(R.string.error_recipient_burn_address)
         }
     }
 

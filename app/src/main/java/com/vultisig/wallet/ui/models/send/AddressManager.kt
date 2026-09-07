@@ -138,7 +138,7 @@ internal class AddressManager(
             return
         }
 
-        when (chainAccountAddressRepository.validateRecipient(chain, addressStr)) {
+        when (val validity = chainAccountAddressRepository.validateRecipient(chain, addressStr)) {
             RecipientValidity.Valid -> {
                 // Only clear ENS label if the user typed a new raw address,
                 // not when we programmatically set the field to the resolved address.
@@ -149,12 +149,14 @@ internal class AddressManager(
                 _addressError.value = null
                 _onAddressValidated.tryEmit(Unit)
             }
-            // A token account or program address is a well-formed address, so there is no name for
-            // the resolver to find — reject it here instead of sending it round that path.
-            RecipientValidity.NotAWalletAddress -> {
+            // A token account, program address or burn address is a well-formed address, so
+            // there is no name for the resolver to find — reject it here instead of sending it
+            // round that path.
+            RecipientValidity.NotAWalletAddress,
+            RecipientValidity.BurnAddress -> {
                 _resolvedDstAddress.value = null
                 _dstAddressLabel.value = null
-                _addressError.value = RecipientValidity.NotAWalletAddress
+                _addressError.value = validity
             }
             RecipientValidity.InvalidForChain -> {
                 // Clear stale resolved address while async resolution is in-flight

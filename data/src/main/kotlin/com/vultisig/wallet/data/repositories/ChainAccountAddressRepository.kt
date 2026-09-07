@@ -65,6 +65,16 @@ enum class RecipientValidity {
      * account sits on the curve like any wallet. Only what the cluster reports is refused.
      */
     NotAWalletAddress,
+
+    /**
+     * A well-formed address that provably nobody holds the key to, so funds sent there are
+     * destroyed: on Bittensor, the all-zero Substrate AccountId ([BittensorHelper.BURN_ADDRESS]).
+     *
+     * Distinct from [NotAWalletAddress] because the two are not the same claim and do not deserve
+     * the same wording: a Solana token account is real and owned, it just strands the transfer,
+     * whereas this account cannot be signed for by anyone.
+     */
+    BurnAddress,
 }
 
 private const val EDDSA_PUB_KEY_HEX_LENGTH = 64
@@ -186,6 +196,8 @@ constructor(private val solanaApi: SolanaApi) : ChainAccountAddressRepository {
     override suspend fun validateRecipient(chain: Chain, address: String): RecipientValidity =
         when {
             !isValid(chain, address) -> RecipientValidity.InvalidForChain
+            chain == Chain.Bittensor && address == BittensorHelper.BURN_ADDRESS ->
+                RecipientValidity.BurnAddress
             chain != Chain.Solana -> RecipientValidity.Valid
             else -> solanaRecipientVerdict(address)
         }

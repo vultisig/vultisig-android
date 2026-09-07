@@ -268,6 +268,8 @@ constructor(
             RecipientValidity.InvalidForChain -> invalidForChain(chain)
             RecipientValidity.NotAWalletAddress ->
                 UiText.StringResource(R.string.error_recipient_not_a_wallet_address)
+            RecipientValidity.BurnAddress ->
+                UiText.StringResource(R.string.error_recipient_burn_address)
         }
     }
 
