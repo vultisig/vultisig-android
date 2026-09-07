@@ -97,6 +97,7 @@ import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.KeysignMessage
 import vultisig.keysign.v1.TransactionType
+import wallet.core.jni.TONAddressConverter
 
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
@@ -692,7 +693,7 @@ constructor(
                 // decoded BOC instead.
                 val chain = payload.coin.chain
                 if (chain == Chain.Ton && payload.signTon != null) {
-                    loadTonDappHero(payload, sendResult.vaultCoins)
+                    loadTonDappDisplay(payload, sendResult.vaultCoins)
                 } else {
                     loadBlockaidSimulation(payload, sendResult.functionName)
                 }
@@ -898,26 +899,62 @@ constructor(
         }
 
     /**
-     * Resolve the jetton hero for a TonConnect request from the decoded message bodies. Surfaces
-     * the first vault-held jetton transfer's real amount + ticker + logo in place of the misleading
-     * gas value. Best-effort: on a network failure or an unrecognised jetton the verify screen
-     * keeps its existing display. Mirrors [loadBlockaidSimulation] — Blockaid doesn't cover TON, so
-     * this is the TON hero path. Cancels any prior run (NSD can re-fire) and pushes the hero into
-     * both the verify model and [transactionTypeUiModel] so the done screen carries it forward.
+     * Resolve what a TonConnect request is really moving, from the decoded message bodies: each
+     * jetton row's ticker and scale, then the jetton hero — the first vault-held jetton transfer's
+     * real amount + ticker + logo in place of the misleading gas value. The rows are pushed
+     * separately because a jetton the vault does not hold resolves no hero, and its row is then the
+     * only place the transferred quantity appears at all.
+     *
+     * Best-effort: on a network failure or an unrecognised jetton the rows keep their raw
+     * quantities and the verify screen keeps its existing hero. Mirrors [loadBlockaidSimulation] —
+     * Blockaid doesn't cover TON, so this is the TON path. Cancels any prior run (NSD can re-fire)
+     * and pushes into both the verify model and [transactionTypeUiModel] so the done screen carries
+     * the same content forward.
      */
-    private fun loadTonDappHero(payload: KeysignPayload, vaultCoins: List<Coin>) {
+    private fun loadTonDappDisplay(payload: KeysignPayload, vaultCoins: List<Coin>) {
         val messages = payload.signTon?.tonMessages?.filterNotNull().orEmpty()
         if (messages.isEmpty()) return
         tonJettonHeroJob?.cancel()
         tonJettonHeroJob =
             viewModelScope.safeLaunch(
-                onError = { Timber.w(it, "TON dApp hero resolution failed during dApp signing") }
+                onError = { Timber.w(it, "TON dApp display resolution failed during dApp signing") }
             ) {
+                // Rows first, and independently of the hero: a jetton the vault does not hold
+                // resolves no hero at all, and that is precisely when the rows are the only place
+                // the transferred quantity can appear.
+                val jettonCoins =
+                    withContext(Dispatchers.IO) {
+                        tonDappHeroResolver.resolveJettonRowCoins(payload, vaultCoins)
+                    }
+                if (jettonCoins.isNotEmpty()) pushTonMessageRows(payload, jettonCoins)
+
                 val hero =
                     withContext(Dispatchers.IO) { tonDappHeroResolver(payload, vaultCoins) }
                         ?: return@safeLaunch
                 pushTonHero(hero)
             }
+    }
+
+    /**
+     * Rebuild the per-message rows now that the jetton tickers and scales are known, and mirror
+     * them into [transactionTypeUiModel] the way [pushTonHero] does. The rows are a pure function
+     * of the payload, so they are re-derived rather than patched in place.
+     */
+    private fun pushTonMessageRows(payload: KeysignPayload, jettonCoins: Map<String, TonHeroCoin>) {
+        val rows =
+            mapTonMessages(
+                payload.signTon,
+                fromAddress = payload.coin.address,
+                jettonCoins = jettonCoins,
+            ) { rawAddress ->
+                TONAddressConverter.toUserFriendly(rawAddress, true, false) ?: rawAddress
+            }
+        updateSendUiModel(verifyUiModel) { current ->
+            current.copy(transaction = current.transaction.copy(tonMessages = rows))
+        }
+        (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
+            transactionTypeUiModel = TransactionTypeUiModel.Send(send.tx.copy(tonMessages = rows))
+        }
     }
 
     /**
