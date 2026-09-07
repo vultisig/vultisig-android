@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.crypto.ton.TonMessageBodyDecoder
 import com.vultisig.wallet.data.crypto.ton.TonMessageBodyIntent
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.ui.components.hero.HeroCoinAmount
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -25,10 +26,16 @@ private val SWAP_SIDECAR_MAX_NANOTON: BigInteger = BigInteger.valueOf(10_000_000
  * When the request contains a swap, small self-addressed transfers (gas sidecars) are dropped so
  * the list mirrors the swap hero instead of repeating its gas plumbing. [fromAddress] is the
  * signer's TON address used to identify those sidecars.
+ *
+ * A jetton transfer's own quantity is always shown, keyed off the message destination (the sender's
+ * jetton wallet) in [jettonCoins] for its ticker and scale. That map costs network lookups, so this
+ * pass runs with whatever is already known — nothing on the first pass — and the quantity degrades
+ * to its raw base units rather than disappearing or borrowing a guessed ticker.
  */
 internal fun mapTonMessages(
     signTon: SignTon?,
     fromAddress: String?,
+    jettonCoins: Map<String, TonHeroCoin> = emptyMap(),
     formatAddress: (String) -> String,
 ): List<TonMessageUiModel> {
     val rawDecoded =
@@ -76,6 +83,7 @@ internal fun mapTonMessages(
                     operation = TonMessageOperation.JettonTransfer,
                     recipient = formatAddress(intent.destination),
                     amount = formatTon(intent.forwardTonAmount),
+                    tokenAmount = formatJettonQuantity(intent.amount, jettonCoins[message.to]),
                     rawPayload = rawPayload,
                     hasStateInit = hasStateInit,
                 )
@@ -167,8 +175,20 @@ internal suspend fun resolveTonJettonHero(
 private fun formatTon(nanotons: BigInteger): String {
     val whole = nanotons / NANOTON_DIVISOR
     val fraction = (nanotons % NANOTON_DIVISOR).toString().padStart(9, '0').trimEnd('0')
-    return if (fraction.isEmpty()) "$whole TON" else "$whole.$fraction TON"
+    // The app brands the native TON coin GRAM (Coins.Ton.TON.ticker), which is what the labels
+    // beside these values say, so the unit here has to agree with them.
+    val unit = Coins.Ton.TON.ticker
+    return if (fraction.isEmpty()) "$whole $unit" else "$whole.$fraction $unit"
 }
+
+/**
+ * A jetton transfer's quantity for its message row: scaled and tickered when [coin] resolved, and
+ * otherwise the raw base units on their own. An unresolved jetton is exactly the case this row
+ * exists for — the vault does not hold it, so no hero can speak for it — and a bare integer at
+ * least states the magnitude, where a guessed ticker or an omitted row would not.
+ */
+private fun formatJettonQuantity(raw: BigInteger, coin: TonHeroCoin?): String =
+    if (coin == null) raw.toString() else "${formatJettonAmount(raw, coin.decimals)} ${coin.ticker}"
 
 private fun formatJettonAmount(raw: BigInteger, decimals: Int): String =
     if (decimals <= 0) {

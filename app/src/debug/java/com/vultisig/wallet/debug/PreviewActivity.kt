@@ -461,6 +461,8 @@ class PreviewActivity : ComponentActivity() {
                     "ton_display_multi" -> TonDisplayPreview(messageCount = 4)
                     "verify_ton_jetton_before" -> VerifyTonJettonPreview(decoded = false)
                     "verify_ton_jetton_after" -> VerifyTonJettonPreview(decoded = true)
+                    "verify_ton_jetton_unheld" ->
+                        VerifyTonJettonPreview(decoded = true, heldInVault = false)
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
                     "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
@@ -1504,7 +1506,7 @@ private fun TonDisplayPreview(messageCount: Int) {
                     TonMessageUiModel(
                         operation = TonMessageOperation.Transfer,
                         recipient = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        amount = "0.25 TON",
+                        amount = "0.25 GRAM",
                         rawPayload = null,
                         hasStateInit = true,
                     ),
@@ -1515,10 +1517,15 @@ private fun TonDisplayPreview(messageCount: Int) {
                         rawPayload = "te6cckEBAQEADgAAGNUydtsAAAAAAAAABxylUgg=",
                         hasStateInit = false,
                     ),
+                    // A jetton the vault does not hold: no ticker resolved, raw base units.
+                    TON_JETTON_MESSAGE.copy(
+                        recipient = "EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA",
+                        tokenAmount = "250000000000",
+                    ),
                     TonMessageUiModel(
                         operation = TonMessageOperation.NftTransfer,
                         recipient = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        amount = "0.1 TON",
+                        amount = "0.1 GRAM",
                         rawPayload = "te6cckEBAQEAVAAAo1/MPRQ...",
                         hasStateInit = false,
                     ),
@@ -1539,7 +1546,8 @@ private val TON_JETTON_MESSAGE =
     TonMessageUiModel(
         operation = TonMessageOperation.JettonTransfer,
         recipient = "EQDrLq9I7m6lvP6zUGZqJ8r4y0sP3pQ1n2vWk5tXcB9aZ7eF",
-        amount = "0.05 TON",
+        amount = "0.05 GRAM",
+        tokenAmount = "100 USDT",
         rawPayload =
             "te6cckEBAQEAWQAArg+KfqUAAAAAAAAwOUBfXhAIAf//////////////////" +
                 "////////////////////////AAvDfWFG0oYX19jwNDNBBL1rKNT9XfaGP9HyTb5" +
@@ -1551,11 +1559,15 @@ private val TON_JETTON_MESSAGE =
  * Full-screen keysign verify for a TonConnect jetton transfer. [decoded] = true shows the resolved
  * jetton hero (100 USDT) + decoded message rows; false is the pre-decode state (the outer gas value
  * as the hero, opaque transfer rows).
+ *
+ * [heldInVault] = false is the dApp-supplied jetton the vault has never added: the hero resolver
+ * matches vault coins only, so nothing headlines the transfer and the message row is the only place
+ * its quantity can appear.
  */
 @Composable
-private fun VerifyTonJettonPreview(decoded: Boolean) {
+private fun VerifyTonJettonPreview(decoded: Boolean, heldInVault: Boolean = true) {
     VerifySendScreen(
-        state = tonJettonSendState(decoded),
+        state = tonJettonSendState(decoded, heldInVault),
         isConsentsEnabled = false,
         confirmTitle = "Sign",
         onFastSignClick = {},
@@ -1570,7 +1582,10 @@ private fun VerifyTonJettonPreview(decoded: Boolean) {
     )
 }
 
-private fun tonJettonSendState(decoded: Boolean): VerifyTransactionUiModel {
+private fun tonJettonSendState(
+    decoded: Boolean,
+    heldInVault: Boolean = true,
+): VerifyTransactionUiModel {
     val senderJettonWallet = "EQByz1234senderJettonWallet5678abcdEFGHijklMNOpqRsT"
     val recipient = "EQDrLq9I7m6lvP6zUGZqJ8r4y0sP3pQ1n2vWk5tXcB9aZ7eF"
     val tx =
@@ -1581,9 +1596,9 @@ private fun tonJettonSendState(decoded: Boolean): VerifyTransactionUiModel {
             srcVaultName = "Main Vault",
             dstAddress = senderJettonWallet,
             networkFeeFiatValue = "$0.04",
-            networkFeeTokenValue = "0.0066 TON",
+            networkFeeTokenValue = "0.0066 GRAM",
             heroContent =
-                if (decoded) {
+                if (decoded && heldInVault) {
                     HeroContent.Send(
                         title = null,
                         coin =
@@ -1602,7 +1617,8 @@ private fun tonJettonSendState(decoded: Boolean): VerifyTransactionUiModel {
                         TonMessageUiModel(
                             operation = TonMessageOperation.JettonTransfer,
                             recipient = recipient,
-                            amount = "0.05 TON",
+                            amount = "0.05 GRAM",
+                            tokenAmount = if (heldInVault) "100 USDT" else "250000000000",
                             rawPayload = TON_JETTON_MESSAGE.rawPayload,
                             hasStateInit = false,
                         )
@@ -1612,7 +1628,7 @@ private fun tonJettonSendState(decoded: Boolean): VerifyTransactionUiModel {
                         TonMessageUiModel(
                             operation = TonMessageOperation.Transfer,
                             recipient = senderJettonWallet,
-                            amount = "0.32 TON",
+                            amount = "0.32 GRAM",
                             rawPayload = TON_JETTON_MESSAGE.rawPayload,
                             hasStateInit = false,
                         )
