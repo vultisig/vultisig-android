@@ -302,11 +302,14 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         }
     }
 
+    // Carried on the fee as well as folded into the total: a max send is re-fitted to the gas bond
+    // that ends up signed, and that bond is re-priced after this point, so the L1 term has to
+    // survive on its own or the re-fit silently reserves nothing for it.
     private fun Fee.addL1Amount(l1FeesAmount: BigInteger): Fee {
         return if (this is GasFees) {
-            this.copy(amount = this.amount + l1FeesAmount)
+            this.copy(amount = this.amount + l1FeesAmount, l1Amount = this.l1Amount + l1FeesAmount)
         } else if (this is Eip1559) {
-            this.copy(amount = this.amount + l1FeesAmount)
+            this.copy(amount = this.amount + l1FeesAmount, l1Amount = this.l1Amount + l1FeesAmount)
         } else {
             error("Fee Type Not Supported")
         }

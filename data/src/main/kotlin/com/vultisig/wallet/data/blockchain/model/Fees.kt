@@ -8,6 +8,15 @@ import java.math.BigInteger
  */
 sealed interface Fee {
     val amount: BigInteger
+
+    /**
+     * The part of [amount] the chain adds to its own balance check on top of `price × limit` — the
+     * OP-stack L1 data fee today, zero everywhere else. Kept separable from the gas bond because a
+     * balance-derived amount has to reserve both, and the bond can still be re-priced (a second
+     * chain-specific fetch, Advanced Gas Settings) after this fee was calculated.
+     */
+    val l1Amount: BigInteger
+        get() = BigInteger.ZERO
 }
 
 /**
@@ -21,6 +30,7 @@ data class GasFees(
     val price: BigInteger = BigInteger.ZERO,
     val limit: BigInteger = BigInteger.ZERO,
     override val amount: BigInteger = BigInteger.ZERO,
+    override val l1Amount: BigInteger = BigInteger.ZERO,
 ) : Fee
 
 /**
@@ -38,6 +48,7 @@ data class Eip1559(
     val maxFeePerGas: BigInteger, // Max total gas price
     val maxPriorityFeePerGas: BigInteger, // Miner tip
     override val amount: BigInteger,
+    override val l1Amount: BigInteger = BigInteger.ZERO,
 ) : Fee
 
 /**

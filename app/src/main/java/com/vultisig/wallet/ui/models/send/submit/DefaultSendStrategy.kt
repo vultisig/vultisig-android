@@ -244,15 +244,6 @@ internal class DefaultSendStrategy(
                             gasFee = spendableGasFee,
                             isMaxAmount = isMaxAmount,
                         )
-                    // The fields are only rewritten once every validation below has passed — see
-                    // the showAdjustedAmount call before Verify.
-                    val isAmountAdjusted = tokenAmountInt < enteredAmountInt
-                    val fiatAmount =
-                        if (isAmountAdjusted) {
-                            scaleFiat(enteredFiat, tokenAmountInt, enteredAmountInt, selectedToken)
-                        } else {
-                            enteredFiat
-                        }
 
                     if (chain == Chain.Tron) {
                         val isTronStakingOp =
@@ -306,6 +297,32 @@ internal class DefaultSendStrategy(
                             }
                     val specific = applyRippleDestinationTag(specificAfterPlan, destinationTag)
 
+                    // getSpecific() re-prices EVM gas against the live base fee, so the amount
+                    // sized against the earlier estimate can no longer fit under the bond that is
+                    // about to be signed. Re-fit it here, against the specific itself.
+                    val refittedAmountInt =
+                        refitToSignedEvmFee(
+                            amount = tokenAmountInt,
+                            account = selectedAccount,
+                            balance = selectedTokenValue.value,
+                            specific = specific,
+                            isMaxAmount = isMaxAmount,
+                        )
+                    // The fields are only rewritten once every validation below has passed — see
+                    // the showAdjustedAmount call before Verify.
+                    val isAmountAdjusted = refittedAmountInt < enteredAmountInt
+                    val fiatAmount =
+                        if (isAmountAdjusted) {
+                            scaleFiat(
+                                enteredFiat,
+                                refittedAmountInt,
+                                enteredAmountInt,
+                                selectedToken,
+                            )
+                        } else {
+                            enteredFiat
+                        }
+
                     // sendMaxAmount=true tells WalletCore's planner to sweep the real
                     // balance-minus-fee itself, ignoring the requested amount — so for a Max UTXO
                     // send, tokenAmountInt (built from the approximate fee estimate above) can
@@ -315,7 +332,7 @@ internal class DefaultSendStrategy(
                         if (isMaxAmount && btcPlan != null && btcPlan.error == SigningError.OK) {
                             BigInteger.valueOf(btcPlan.amount)
                         } else {
-                            tokenAmountInt
+                            refittedAmountInt
                         }
 
                     if (selectedToken.isNativeToken) {
@@ -525,7 +542,7 @@ internal class DefaultSendStrategy(
                     // Cardano clamp landing under the minimum-send floor, say.
                     if (isAmountAdjusted) {
                         showAdjustedAmount(
-                            adjusted = tokenAmountInt,
+                            adjusted = refittedAmountInt,
                             adjustedFiat = fiatAmount,
                             token = selectedToken,
                             isMaxAmount = isMaxAmount,
@@ -578,6 +595,52 @@ internal class DefaultSendStrategy(
         val available = getAvailableTokenBalance(account, gasFee.value)?.value ?: return entered
         if (available <= BigInteger.ZERO) return entered
         return entered.coerceAtMost(available)
+    }
+
+    /**
+     * Re-fits a native EVM [amount] to the fee that is about to be signed.
+     *
+     * An amount the app derived from the balance sits at exactly `balance − fee`, and that fee came
+     * from `GasFeeOrchestrator`'s cached estimate — one reading of the fee market. `getSpecific()`
+     * then takes a second, live reading to build the payload. The node admits a transaction only
+     * when `value + gasLimit × maxFeePerGas + L1 data fee ≤ balance`, so an upward tick between the
+     * two readings — near-constant on ~2s-block L2s — leaves the derived value no longer
+     * affordable, and the send is refused at broadcast with the MPC ceremony already spent.
+     *
+     * Reduces only: a fee that fell leaves more room than the user was shown, and signing more than
+     * they were shown is never right. An amount that overshoots the balance on its own is left for
+     * the balance checks in `submit` to reject, as in [clampToSpendableBalance] — that is an
+     * over-entry, not a fee edge. A fee that leaves nothing at all raises rather than signing a
+     * transaction the chain will refuse.
+     */
+    private suspend fun refitToSignedEvmFee(
+        amount: BigInteger,
+        account: Account,
+        balance: BigInteger,
+        specific: BlockChainSpecificAndUtxo,
+        isMaxAmount: Boolean,
+    ): BigInteger {
+        if (defiTypeProvider() != null) return amount
+        val token = account.token
+        // An ERC-20 pays its gas from the native sibling, so its amount is never fee-derived.
+        if (!token.isNativeToken) return amount
+        val eth = specific.blockChainSpecific as? BlockChainSpecific.Ethereum ?: return amount
+        if (!isMaxAmount && amount > balance) return amount
+        // Read off the specific rather than recomputed, so Advanced Gas Settings — patched into it
+        // by applyGasSettings — are already accounted for. l1Amount is what op-geth adds to its own
+        // balance check beyond the bond; it is zero off the OP stack.
+        val signedFee = eth.gasLimit * eth.maxFeePerGasWei + specific.l1Amount
+        val affordable = getAvailableTokenBalance(account, signedFee)?.value ?: return amount
+        if (affordable >= amount) return amount
+        if (affordable <= BigInteger.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.FormattedText(
+                    R.string.send_error_insufficient_native_balance_with_fees,
+                    listOf(token.ticker),
+                )
+            )
+        }
+        return affordable
     }
 
     /**
