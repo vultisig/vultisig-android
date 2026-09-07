@@ -3,7 +3,9 @@ package com.vultisig.wallet.data.chains.helpers
 import java.math.BigInteger
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
@@ -92,6 +94,37 @@ class BittensorHelperSs58ParityTest {
             val pubkey = randomEdwardsPubkey(seed)
             val referenceAddress = ReferenceImpl.encode(pubkey)
             assertArrayEquals("seed $seed", pubkey, BittensorHelper.ss58Decode(referenceAddress))
+        }
+    }
+
+    /**
+     * `BURN_ADDRESS` is spelled out as a literal so a recipient check can compare strings without a
+     * JNI call, which is what makes it unit-testable. That only holds while the literal really is
+     * the all-zero AccountId — pinned here, against the codec, rather than trusted.
+     */
+    @Test
+    fun the_burn_address_literal_decodes_to_the_all_zero_account_id() {
+        assertArrayEquals(ByteArray(32), BittensorHelper.ss58Decode(BittensorHelper.BURN_ADDRESS))
+        assertTrue(
+            BittensorHelper.isBurnAccountId(
+                BittensorHelper.ss58Decode(BittensorHelper.BURN_ADDRESS)
+            )
+        )
+    }
+
+    /**
+     * The reason the guard has to exist: WalletCore is perfectly happy with the burn address, so
+     * nothing upstream of the check would have stopped a send to it.
+     */
+    @Test
+    fun the_burn_address_passes_chain_validation() {
+        assertTrue(AnyAddress.isValidSS58(BittensorHelper.BURN_ADDRESS, CoinType.POLKADOT, 42))
+    }
+
+    @Test
+    fun a_spendable_account_is_not_read_as_the_burn_account() {
+        for (seed in 1L..20L) {
+            assertFalse("seed $seed", BittensorHelper.isBurnAccountId(randomEdwardsPubkey(seed)))
         }
     }
 
