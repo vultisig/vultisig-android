@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
+import com.vultisig.wallet.data.blockchain.thorchain.ThorChainInboundVaultSnapshot
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
@@ -45,6 +46,7 @@ class ThorChainApiImplTest {
             thorChainSwapQuoteResponseJsonSerializer =
                 mockk<ThorChainSwapQuoteResponseJsonSerializer>(),
             json = json,
+            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(),
         )
 
     @Test
@@ -279,6 +281,7 @@ class ThorChainApiImplTest {
             thorChainSwapQuoteResponseJsonSerializer =
                 mockk<ThorChainSwapQuoteResponseJsonSerializer>(),
             json = json,
+            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(),
         )
     }
 

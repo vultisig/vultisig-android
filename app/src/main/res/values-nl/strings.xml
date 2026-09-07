@@ -1770,6 +1770,7 @@
     <string name="verify_verb_undelegating">Je trekt de delegatie in</string>
     <string name="verify_verb_redelegating">Je delegeert opnieuw</string>
     <string name="verify_verb_adding_liquidity">Je voegt liquiditeit toe</string>
+    <string name="verify_verb_removing_liquidity">Je verwijdert liquiditeit</string>
     <string name="verify_verb_redeeming">Je wisselt in</string>
     <string name="verify_verb_minting">Je munt</string>
     <string name="verify_verb_merging">Je voegt samen</string>
@@ -1779,4 +1780,5 @@
     <string name="scope_rewards_accrued_so_far">tot nu toe opgebouwde beloningen</string>
     <string name="scope_delegated_amount_after_rent">het gedelegeerde bedrag na de huurreserve</string>
     <string name="withdrawing_share_of_staked_position">%1$s van je gestakete positie</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s van je liquiditeitspositie</string>
 </resources>

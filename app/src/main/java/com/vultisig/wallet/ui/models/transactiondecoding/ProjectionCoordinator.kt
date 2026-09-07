@@ -31,9 +31,16 @@ constructor(@ApplicationContext private val context: Context) {
     fun scope(decoded: DecodedTransaction): String? =
         when (val amount = decoded.amount) {
             is DecodedAmount.Fraction ->
-                // The signed share remains exact even when the projected amount is not.
+                // The signed share remains exact even when the projected amount is not. Which
+                // position it is a share OF follows the operation: a pool withdrawal spends
+                // liquidity, and calling that a staked position would name the wrong holding.
                 context.getString(
-                    R.string.withdrawing_share_of_staked_position,
+                    when (decoded.operation) {
+                        DecodedOperation.AddLiquidity,
+                        DecodedOperation.RemoveLiquidity ->
+                            R.string.withdrawing_share_of_liquidity_position
+                        else -> R.string.withdrawing_share_of_staked_position
+                    },
                     DecodedTransactionPresentation.percentage(amount.basisPoints),
                 )
 

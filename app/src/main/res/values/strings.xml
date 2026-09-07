@@ -1835,6 +1835,7 @@
     <string name="verify_verb_undelegating">You’re undelegating</string>
     <string name="verify_verb_redelegating">You’re redelegating</string>
     <string name="verify_verb_adding_liquidity">You’re adding liquidity</string>
+    <string name="verify_verb_removing_liquidity">You’re removing liquidity</string>
     <string name="verify_verb_redeeming">You’re redeeming</string>
     <string name="verify_verb_minting">You’re minting</string>
     <string name="verify_verb_merging">You’re merging</string>
@@ -1844,4 +1845,5 @@
     <string name="scope_rewards_accrued_so_far">rewards accrued so far</string>
     <string name="scope_delegated_amount_after_rent">the delegated amount after deducting the rent reserve</string>
     <string name="withdrawing_share_of_staked_position">%1$s of your staked position</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s of your liquidity position</string>
 </resources>

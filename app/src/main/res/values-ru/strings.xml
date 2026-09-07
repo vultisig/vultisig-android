@@ -1790,6 +1790,7 @@
     <string name="verify_verb_undelegating">Вы отменяете делегирование</string>
     <string name="verify_verb_redelegating">Вы переделегируете</string>
     <string name="verify_verb_adding_liquidity">Вы добавляете ликвидность</string>
+    <string name="verify_verb_removing_liquidity">Вы удаляете ликвидность</string>
     <string name="verify_verb_redeeming">Вы выкупаете</string>
     <string name="verify_verb_minting">Вы чеканите</string>
     <string name="verify_verb_merging">Вы объединяете</string>
@@ -1799,4 +1800,5 @@
     <string name="scope_rewards_accrued_so_far">накопленные на данный момент награды</string>
     <string name="scope_delegated_amount_after_rent">делегированная сумма за вычетом резерва за аренду</string>
     <string name="withdrawing_share_of_staked_position">%1$s вашей стейкинг-позиции</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s вашей позиции ликвидности</string>
 </resources>

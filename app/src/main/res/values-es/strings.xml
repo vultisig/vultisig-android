@@ -1777,6 +1777,7 @@
     <string name="verify_verb_undelegating">Estás cancelando la delegación</string>
     <string name="verify_verb_redelegating">Estás redelegando</string>
     <string name="verify_verb_adding_liquidity">Estás añadiendo liquidez</string>
+    <string name="verify_verb_removing_liquidity">Estás retirando liquidez</string>
     <string name="verify_verb_redeeming">Estás canjeando</string>
     <string name="verify_verb_minting">Estás acuñando</string>
     <string name="verify_verb_merging">Estás fusionando</string>
@@ -1786,4 +1787,5 @@
     <string name="scope_rewards_accrued_so_far">recompensas acumuladas hasta ahora</string>
     <string name="scope_delegated_amount_after_rent">el importe delegado después de la reserva de alquiler</string>
     <string name="withdrawing_share_of_staked_position">%1$s de tu posición en staking</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s de tu posición de liquidez</string>
 </resources>
