@@ -73,6 +73,27 @@ class SwapTransactionCardPairTest {
     }
 
     @Test
+    fun aRefundedSwapIsStillPairedAndSaysSo() {
+        start(
+            swap.copy(
+                status =
+                    TransactionStatusUiModel.Refunded(
+                        reason = UiText.DynamicString("pool is halted")
+                    )
+            )
+        )
+
+        // A refund is settled, not in progress, so the row owes both assets like any other closed
+        // card — the user needs to know which leg came back.
+        compose.onNodeWithText("+0.0261 BTC").assertIsDisplayed()
+        compose.onNodeWithText("-125.5 RUNE").assertIsDisplayed()
+        compose.onNodeWithText("RUNE → BTC").assertIsDisplayed()
+        compose
+            .onNodeWithText(context.getString(R.string.transaction_status_refunded_label))
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun aLimitOrderRowIsPairedTheSameWayOnceItHasSettled() {
         start(swap.copy(isLimitOrder = true))
 
