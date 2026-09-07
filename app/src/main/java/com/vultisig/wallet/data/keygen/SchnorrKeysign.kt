@@ -199,7 +199,7 @@ class SchnorrKeysign(
     /**
      * Drains all pending outbound messages from [handle] and routes each to the appropriate peers.
      */
-    fun processSchnorrOutboundMessage(handle: Handle) {
+    suspend fun processSchnorrOutboundMessage(handle: Handle, deadlineNanos: Long? = null) {
         while (true) {
             val (result, outboundMessage) = getSchnorrOutboundMessage(handle)
             if (result != LIB_OK) {
@@ -208,23 +208,27 @@ class SchnorrKeysign(
             if (outboundMessage.isEmpty()) {
                 return
             }
+            val encodedOutboundMessage = Base64.encode(outboundMessage)
             val message = outboundMessage.toSchnorrGoSlice()
-            try {
-                val encodedOutboundMessage = Base64.encode(outboundMessage)
-                for (i in keysignCommittee.indices) {
-                    val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
-                    if (receiverArray.isEmpty()) {
-                        break
+            // Collect the receivers and release the native slice before sending: the fan-out
+            // suspends for as long as the relay makes it, and nothing reads the slice by then.
+            val receivers =
+                try {
+                    buildList {
+                        for (i in keysignCommittee.indices) {
+                            val receiverArray =
+                                getOutboundMessageReceiver(handle, message, i.toLong())
+                            if (receiverArray.isEmpty()) {
+                                break
+                            }
+                            add(String(receiverArray, Charsets.UTF_8))
+                        }
                     }
-                    val receiverString = String(receiverArray, Charsets.UTF_8)
-                    Timber.d(
-                        "sending message from $localPartyID to: $receiverString, content length: ${encodedOutboundMessage.length}"
-                    )
-                    messenger?.send(localPartyID, receiverString, encodedOutboundMessage)
+                } finally {
+                    message.free()
                 }
-            } finally {
-                message.free()
-            }
+
+            messenger?.fanOut(localPartyID, receivers, encodedOutboundMessage, deadlineNanos)
         }
     }
 
@@ -269,7 +273,7 @@ class SchnorrKeysign(
             }
             cache[key] = Any()
             deleteMessageFromServer(msg.hash, messageID)
-            processSchnorrOutboundMessage(handle)
+            processSchnorrOutboundMessage(handle, poller.attemptDeadlineNanos)
             if (isFinished[0] != 0) {
                 return true
             }

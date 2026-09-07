@@ -8,6 +8,8 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpCallValidator
+import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -18,6 +20,8 @@ import io.ktor.util.appendIfNameAbsent
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.serialization.json.Json
 
 /**
@@ -27,6 +31,10 @@ import kotlinx.serialization.json.Json
  * These builders install [ContentNegotiation] and [HttpCallValidator] with the same `IOException →
  * NetworkException(httpStatusCode=0)` mapping used in production, ensuring tests validate real
  * behavior.
+ *
+ * The MockEngine handler runs on the engine's own dispatcher rather than the caller's, so a test
+ * that issues requests concurrently serves them on several pool threads at once. Every builder's
+ * per-call state is therefore atomic; a plain `var` there loses calls under that fan-out.
  */
 object MockHttpClient {
 
@@ -79,39 +87,49 @@ object MockHttpClient {
         }
 
     /**
-     * Mutable holder for the outgoing request bodies captured by [capturingRequest] and
+     * Holder for the outgoing request bodies captured by [capturingRequest] and
      * [capturingRequestSequence]. [lastBody] is the most recent one; [bodies] keeps every request
      * in order, which is what a paginated call needs — asserting only the last body cannot show
      * that page two carried the cursor page one returned.
+     *
+     * Synchronised because the MockEngine handler runs on the engine's own dispatcher, not the
+     * caller's: a test that issues requests concurrently records from several pool threads at once,
+     * and an unguarded list drops entries there.
      */
     class RequestCapture {
-        val bodies = mutableListOf<String>()
+        private val lock = Any()
+        private val recorded = mutableListOf<Record>()
+
+        /** Body of every request in order of completion. */
+        val bodies: List<String>
+            get() = snapshot().map(Record::body)
 
         /**
          * Encoded query string of every request in order, for asserting the paging parameters a
          * walk actually sent (e.g. `offset`/`limit` per page).
          */
-        val queries = mutableListOf<String>()
+        val queries: List<String>
+            get() = snapshot().map(Record::query)
 
-        var lastBody: String = ""
-            private set
+        val lastBody: String
+            get() = snapshot().lastOrNull()?.body ?: ""
 
         /** Encoded path of the most recent request, for asserting which node endpoint was hit. */
-        var lastPath: String = ""
-            private set
+        val lastPath: String
+            get() = snapshot().lastOrNull()?.path ?: ""
 
         internal fun record(body: String, path: String, query: String = "") {
-            lastBody = body
-            lastPath = path
-            bodies += body
-            queries += query
+            synchronized(lock) { recorded += Record(body, path, query) }
         }
+
+        private fun snapshot(): List<Record> = synchronized(lock) { recorded.toList() }
+
+        private data class Record(val body: String, val path: String, val query: String)
     }
 
     /**
      * Like [respondingWith], but records each outgoing request body into [capture] so a test can
-     * assert what was sent (e.g. RPC params). The MockEngine block runs sequentially within a
-     * single coroutine, so a plain field is sufficient.
+     * assert what was sent (e.g. RPC params).
      */
     fun capturingRequest(
         status: HttpStatusCode,
@@ -145,7 +163,7 @@ object MockHttpClient {
         require(responses.isNotEmpty()) {
             "capturingRequestSequence requires at least one response"
         }
-        var index = 0
+        val index = AtomicInteger(0)
         return HttpClient(
             MockEngine { request ->
                 capture.record(
@@ -153,7 +171,7 @@ object MockHttpClient {
                     path = request.url.encodedPath,
                     query = request.url.encodedQuery,
                 )
-                val (status, body) = responses[minOf(index++, responses.size - 1)]
+                val (status, body) = responses[minOf(index.getAndIncrement(), responses.size - 1)]
                 respond(content = body, status = status, headers = JSON_HEADERS)
             }
         ) {
@@ -163,8 +181,7 @@ object MockHttpClient {
 
     /**
      * Builds a client that steps through [responses] in order, pinning the last entry once the
-     * sequence is exhausted. Each entry is a [Pair] of (status, body). The MockEngine block runs
-     * sequentially within a single coroutine, so a plain mutable [Int] is sufficient.
+     * sequence is exhausted. Each entry is a [Pair] of (status, body).
      *
      * Pass a custom [jsonFormat] when a response model contains `@Contextual` fields, same as
      * [respondingWith].
@@ -174,10 +191,10 @@ object MockHttpClient {
         jsonFormat: Json = json,
     ): HttpClient {
         require(responses.isNotEmpty()) { "respondingWithSequence requires at least one response" }
-        var index = 0
+        val index = AtomicInteger(0)
         return HttpClient(
             MockEngine {
-                val i = minOf(index++, responses.size - 1)
+                val i = minOf(index.getAndIncrement(), responses.size - 1)
                 val (status, body) = responses[i]
                 respond(content = body, status = status, headers = JSON_HEADERS)
             }
@@ -196,13 +213,61 @@ object MockHttpClient {
         jsonFormat: Json = json,
         body: (Int) -> String,
     ): HttpClient {
-        var index = 0
+        val index = AtomicInteger(0)
         return HttpClient(
-            MockEngine { respond(content = body(index++), status = status, headers = JSON_HEADERS) }
+            MockEngine {
+                respond(
+                    content = body(index.getAndIncrement()),
+                    status = status,
+                    headers = JSON_HEADERS,
+                )
+            }
         ) {
             installDefaults(jsonFormat)
         }
     }
+
+    /**
+     * Builds a client that fails its first [failures] calls with the throwable [failWith] produces,
+     * then answers [status] / [body] for every call after that. Mirrors the relay fault the awaited
+     * TSS send has to survive: a peer's first outbound POSTs are rejected and then let through.
+     *
+     * [onCall] receives the zero-based call index before each call is served, for counting.
+     */
+    fun failingThenResponding(
+        failures: Int,
+        failWith: () -> Throwable,
+        status: HttpStatusCode = HttpStatusCode.OK,
+        body: String = "",
+        onCall: (Int) -> Unit = {},
+    ): HttpClient {
+        val index = AtomicInteger(0)
+        return HttpClient(
+            MockEngine {
+                val call = index.getAndIncrement()
+                onCall(call)
+                if (call < failures) throw failWith()
+                respond(content = body, status = status, headers = JSON_HEADERS)
+            }
+        ) {
+            installDefaults()
+        }
+    }
+
+    /**
+     * Builds a client whose transport never answers, so only a caller-imposed request timeout ends
+     * the call. Used to prove the awaited relay send caps a hung POST instead of letting it eat the
+     * ceremony's stall budget.
+     */
+    fun hanging(onCall: () -> Unit = {}): HttpClient =
+        HttpClient(
+            MockEngine {
+                onCall()
+                awaitCancellation()
+            }
+        ) {
+            installDefaults()
+        }
 
     /**
      * Installs the standard plugins matching production
@@ -223,6 +288,8 @@ object MockHttpClient {
                 }
             }
         }
+        // Inert unless a request opts in with `timeout { … }`, exactly as in production.
+        install(HttpTimeout)
     }
 
     /**
@@ -233,7 +300,8 @@ object MockHttpClient {
      */
     private fun IOException.toNetworkException(): NetworkException =
         when (this) {
-            is SocketTimeoutException ->
+            is SocketTimeoutException,
+            is HttpRequestTimeoutException ->
                 NetworkException(0, "Connection timed out", NetworkErrorKind.Timeout, this)
             is UnknownHostException ->
                 NetworkException(0, "No internet connection", NetworkErrorKind.NoConnectivity, this)

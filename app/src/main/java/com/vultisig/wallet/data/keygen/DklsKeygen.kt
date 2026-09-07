@@ -28,6 +28,7 @@ import com.silencelaboratories.godkls.godkls.tss_buffer_free
 import com.silencelaboratories.godkls.lib_error
 import com.silencelaboratories.godkls.lib_error.LIB_OK
 import com.silencelaboratories.godkls.tss_buffer
+import com.vultisig.wallet.data.api.RelaySendFailedException
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.TssAction
@@ -71,6 +72,7 @@ class DKLSKeygen(
             isEncryptionGCM = true,
         )
     val cache = mutableMapOf<String, Any>()
+    private val stall = CeremonyStallClock()
     var setupMessage: ByteArray = byteArrayOf()
     var keyshare: DKLSKeyshare? = null
     private var activeMessageId: String? = null
@@ -180,7 +182,7 @@ class DKLSKeygen(
     }
 
     @Throws(Exception::class)
-    private fun processDKLSOutboundMessage(handle: Handle) {
+    private suspend fun processDKLSOutboundMessage(handle: Handle) {
         while (true) {
             val (result, outboundMessage) = getDKLSOutboundMessage(handle)
             if (result != LIB_OK) {
@@ -190,22 +192,27 @@ class DKLSKeygen(
                 return
             }
 
+            val encodedOutboundMessage = Base64.encode(outboundMessage)
             val message = outboundMessage.toDklsGoSlice()
-            try {
-                val encodedOutboundMessage = Base64.encode(outboundMessage)
-                for (i in keygenCommittee.indices) {
-                    val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
-                    if (receiverArray.isEmpty()) {
-                        break
+            // Collect the receivers and release the native slice before sending: the fan-out
+            // suspends for as long as the relay makes it, and nothing reads the slice by then.
+            val receivers =
+                try {
+                    buildList {
+                        for (i in keygenCommittee.indices) {
+                            val receiverArray =
+                                getOutboundMessageReceiver(handle, message, i.toLong())
+                            if (receiverArray.isEmpty()) {
+                                break
+                            }
+                            add(receiverArray.toString(Charsets.UTF_8))
+                        }
                     }
-                    val receiverString = receiverArray.toString(Charsets.UTF_8)
-                    Timber.d("sending message from ${this.localPartyId} to: $receiverString")
-
-                    messenger.send(this.localPartyId, receiverString, encodedOutboundMessage)
+                } finally {
+                    message.free()
                 }
-            } finally {
-                message.free()
-            }
+
+            messenger.fanOut(this.localPartyId, receivers, encodedOutboundMessage)
         }
     }
 
@@ -213,7 +220,7 @@ class DKLSKeygen(
     private suspend fun pullInboundMessages(handle: Handle): Boolean {
         Timber.d("start pulling inbound messages")
 
-        val start = System.nanoTime()
+        stall.reset()
         while (true) {
             try {
                 val msgs =
@@ -233,14 +240,22 @@ class DKLSKeygen(
                 }
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: RelaySendFailedException) {
+                // The outbound round an applied message triggered never landed, so no peer will
+                // answer it — and applying that message has already reset the stall clock, so
+                // logging this as a failed read leaves the loop waiting well past the limit for a
+                // reply nobody will send (#5813). The retry wrapper restarts the attempt instead.
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")
                 delay(1000) // backoff delay
             }
 
-            val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
-            if (elapsedTime > 60) {
-                error("timeout: failed to create vault within 60 seconds")
+            if (stall.isStalled()) {
+                error(
+                    "timeout: failed to create vault, no keygen progress for " +
+                        "${stall.limitSeconds} seconds"
+                )
             }
         }
     }
@@ -293,6 +308,7 @@ class DKLSKeygen(
                 error("fail to apply message to dkls, $result")
             }
             cache[key] = Any()
+            stall.markProgress()
             deleteMessageFromServer(msg.hash)
             processDKLSOutboundMessage(handle)
 
