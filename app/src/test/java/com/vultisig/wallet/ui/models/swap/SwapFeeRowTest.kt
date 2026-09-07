@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.models.swap
 
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.ThorChainAffiliateHelper
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOLD_DISCOUNT_BPS
@@ -20,6 +20,9 @@ internal class SwapFeeRowTest {
 
     /** A $200 source notional, so 20 bps prices at $0.40 and 10 bps at $0.20. */
     private val srcFiat = usd("200.00")
+
+    /** What a referral takes off the user's own fee at every tier through Diamond. */
+    private val referralSaving = ThorChainAffiliateHelper.referralSavingBps(GOLD_DISCOUNT_BPS)
 
     /** BigDecimal equality is scale-sensitive, and the row's arithmetic fixes no scale. */
     private infix fun FiatValue?.shouldBeUsd(amount: String?) {
@@ -161,13 +164,15 @@ internal class SwapFeeRowTest {
         val kyber =
             QuoteCandidate(SwapProvider.KYBER, GOLD_DISCOUNT_BPS, referral = "vulti").discountBps()
 
-        thor shouldBe SwapDiscountBps(GOLD_DISCOUNT_BPS, THORChainSwaps.REFERRED_USER_FEE_RATE_BP)
+        // The user's saving, not the referrer's payout: Vultisig gives up 15 to pay the referrer
+        // 10, so 5 reaches the user (#5765).
+        thor shouldBe SwapDiscountBps(GOLD_DISCOUNT_BPS, referralSaving)
         // Every other provider resolves no referral, so the picker row must not price one.
         kyber shouldBe SwapDiscountBps(GOLD_DISCOUNT_BPS, null)
     }
 
     @Test
-    fun `resolves no referral discount at Ultimate, which already pays nothing`() {
+    fun `resolves no referral discount at Ultimate, where the code is not sent`() {
         QuoteCandidate(SwapProvider.THORCHAIN, ULTIMATE_DISCOUNT_BPS, referral = "vulti")
             .discountBps() shouldBe SwapDiscountBps(ULTIMATE_DISCOUNT_BPS, null)
     }
