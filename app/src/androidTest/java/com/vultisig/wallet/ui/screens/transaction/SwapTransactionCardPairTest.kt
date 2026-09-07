@@ -1,0 +1,127 @@
+package com.vultisig.wallet.ui.screens.transaction
+
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.test.platform.app.InstrumentationRegistry
+import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.models.TransactionFailureExplanation
+import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
+import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
+import com.vultisig.wallet.ui.utils.UiText
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import org.junit.Rule
+import org.junit.Test
+
+/**
+ * A settled swap row has to name both assets without being opened — the destination is the half the
+ * card exists to report, and it was the half a collapsed row never showed.
+ */
+@HiltAndroidTest
+class SwapTransactionCardPairTest {
+
+    // The card needs nothing injected, but the test application's Hilt component does have to
+    // exist: anything the system starts against this process mid-run asks for it on creation.
+    @get:Rule(order = 0) val hilt = HiltAndroidRule(this)
+
+    @get:Rule(order = 1) val compose = createComposeRule()
+
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+    @Test
+    fun aSettledSwapNamesBothLegsAndTheRouteItTook() {
+        start(swap)
+
+        compose.onNodeWithText("+0.0261 BTC").assertIsDisplayed()
+        compose.onNodeWithText("-125.5 RUNE").assertIsDisplayed()
+        compose.onNodeWithText("RUNE → BTC").assertIsDisplayed()
+    }
+
+    @Test
+    fun aSettledSwapLeavesTheRouteToThePillAloneAndDropsTheProviderBadge() {
+        start(swap)
+
+        compose
+            .onNodeWithText(
+                "${context.getString(R.string.transaction_history_via_prefix)} THORChain"
+            )
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun aFailedSwapStillNamesBothLegsAndKeepsItsReasonBesideTheStatus() {
+        start(
+            swap.copy(
+                status =
+                    TransactionStatusUiModel.Failed(
+                        reason = UiText.DynamicString("Insufficient output"),
+                        explanation = TransactionFailureExplanation.MIN_OUTPUT_SLIPPAGE,
+                    )
+            )
+        )
+
+        compose.onNodeWithText("+0.0261 BTC").assertIsDisplayed()
+        compose.onNodeWithText("-125.5 RUNE").assertIsDisplayed()
+        compose.onNodeWithText("RUNE → BTC").assertIsDisplayed()
+        compose
+            .onNodeWithText(
+                context.getString(TransactionFailureExplanation.MIN_OUTPUT_SLIPPAGE.labelRes)
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun aLimitOrderRowIsPairedTheSameWayOnceItHasSettled() {
+        start(swap.copy(isLimitOrder = true))
+
+        compose.onNodeWithText("+0.0261 BTC").assertIsDisplayed()
+        compose.onNodeWithText("RUNE → BTC").assertIsDisplayed()
+    }
+
+    @Test
+    fun anInProgressSwapKeepsItsStackedPayoutLayoutAndItsProviderBadge() {
+        start(swap.copy(status = TransactionStatusUiModel.Broadcasted))
+
+        // The two-legged pill belongs to the settled card; an in-progress card already spells the
+        // route out down the column, and still owes the user the provider it is waiting on.
+        compose.onNodeWithText("RUNE → BTC").assertDoesNotExist()
+        compose
+            .onNodeWithText(context.getString(R.string.transaction_history_expected_payout_label))
+            .assertIsDisplayed()
+        compose
+            .onNodeWithText(
+                "${context.getString(R.string.transaction_history_via_prefix)} THORChain"
+            )
+            .assertIsDisplayed()
+    }
+
+    private fun start(item: TransactionHistoryItemUiModel.Swap) {
+        compose.setContent { OnBoardingComposeTheme { SwapTransactionCard(item = item) } }
+    }
+
+    private val swap =
+        TransactionHistoryItemUiModel.Swap(
+            id = "1",
+            txHash = "0xabc123",
+            chain = "THORChain",
+            status = TransactionStatusUiModel.Confirmed,
+            explorerUrl = "",
+            timestamp = 0L,
+            fromToken = "RUNE",
+            fromAmount = "125.5",
+            fromChain = "THORChain",
+            fromTokenLogo = R.drawable.rune,
+            toToken = "BTC",
+            toAmount = "0.0261",
+            toChain = "Bitcoin",
+            toTokenLogo = R.drawable.bitcoin,
+            provider = "THORChain",
+            providerLogo = R.drawable.rune,
+            fiatValue = "$1,204.00",
+            fromAddress = null,
+            toAddress = null,
+            feeEstimate = null,
+        )
+}
