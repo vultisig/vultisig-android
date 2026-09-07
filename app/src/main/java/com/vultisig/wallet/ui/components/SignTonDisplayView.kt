@@ -36,8 +36,9 @@ import com.vultisig.wallet.ui.theme.Theme
  * Displays a collapsible list of decoded TonConnect messages for user review before signing. Each
  * message shows its operation (jetton transfer, NFT transfer, excess-gas refund, or plain
  * transfer), the real recipient, the transferred token's quantity where the message carries one,
- * the forwarded gas amount, and the raw BOC payload (copyable, so the full value stays recoverable
- * behind the middle-ellipsis).
+ * the forwarded gas amount, and the raw BOC payload. Every row whose value has no bound — an
+ * address, an unresolved jetton's base-unit quantity, a payload — is copyable, so the full value
+ * stays recoverable behind the middle-ellipsis.
  *
  * @param messages decoded messages, built by [com.vultisig.wallet.ui.models.keysign.mapTonMessages]
  * @param initiallyExpanded preview-only override for the collapsed/expanded state; defaults to
@@ -141,6 +142,7 @@ private fun TonMessageRow(message: TonMessageUiModel, index: Int) {
             TonDetailRow(
                 label = stringResource(R.string.verify_transaction_amount_title),
                 value = tokenAmount,
+                copyableValue = tokenAmount,
             )
         }
         message.amount?.let { amount ->
