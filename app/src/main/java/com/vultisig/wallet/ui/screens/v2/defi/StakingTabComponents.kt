@@ -27,6 +27,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -112,20 +113,41 @@ internal fun StakingWidget(
                 } else {
                     Text(
                         text =
-                            if (isBalanceVisible) state.stakedAmountDisplay else HIDE_BALANCE_CHARS,
+                            when {
+                                !isBalanceVisible -> HIDE_BALANCE_CHARS
+                                // The read failed, so there is no amount to show — and the zero
+                                // this card holds is the absence of one, not a balance.
+                                state.isUnavailable -> FIAT_VALUE_UNAVAILABLE
+                                else -> state.stakedAmountDisplay
+                            },
                         style = Theme.brockmann.headings.title1,
                         color = Theme.v2.colors.text.primary,
                     )
 
                     Text(
                         text =
-                            if (isBalanceVisible) state.stakedFiatDisplay ?: FIAT_VALUE_UNAVAILABLE
-                            else HIDE_BALANCE_CHARS,
+                            when {
+                                // Shown even with balances hidden: it says nothing about what the
+                                // vault holds, only that the app could not find out.
+                                state.isUnavailable ->
+                                    stringResource(R.string.defi_position_unavailable)
+                                isBalanceVisible ->
+                                    state.stakedFiatDisplay ?: FIAT_VALUE_UNAVAILABLE
+                                else -> HIDE_BALANCE_CHARS
+                            },
                         style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.tertiary,
+                        color =
+                            if (state.isUnavailable) Theme.v2.colors.alerts.warning
+                            else Theme.v2.colors.text.tertiary,
                     )
                 }
             }
+        }
+
+        if (state.isUnavailable) {
+            UiSpacer(16.dp)
+
+            PositionUnavailableNotice()
         }
 
         if (state.apy != null || (state.nextReward != null || state.nextPayout != null)) {
@@ -277,6 +299,40 @@ internal fun StakingWidget(
     }
 }
 
+/**
+ * Says why a staking card carries no figures: the read behind it failed, which is a service outage
+ * rather than anything about the vault. Without it the card is a bare unavailable marker, and the
+ * reasonable reading of that is that the position is gone — which is how #5837 was reported.
+ */
+@Composable
+private fun PositionUnavailableNotice() {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(Theme.v2.radius.md)
+                .background(color = Theme.v2.colors.backgrounds.surface1)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.alerts.warning,
+                    shape = Theme.v2.radius.md,
+                )
+                .padding(all = 12.dp),
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.ic_triangle_alert,
+            tint = Theme.v2.colors.alerts.warning,
+            size = 16.dp,
+        )
+
+        Text(
+            text = stringResource(R.string.defi_position_unavailable_desc),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.alerts.warning,
+        )
+    }
+}
+
 @Composable
 internal fun StakingHeader(title: String, amount: String, icon: Int) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -395,6 +451,31 @@ private fun StakingWidgetCacaoUnstakeLockedPreview() {
                     canUnstake = false,
                     // 5 days, 3 hours
                     unstakeUnlocksInSeconds = (5L * 24L * 3_600L) + (3L * 3_600L),
+                ),
+            onClickStake = {},
+            onClickUnstake = {},
+            onClickWithdraw = {},
+            onClickTransfer = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Staking Widget - Unavailable State")
+@Composable
+private fun StakingWidgetUnavailablePreview() {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
+        StakingWidget(
+            state =
+                StakePositionUiModel(
+                    coin = Coins.ThorChain.RUJI,
+                    stakeAssetHeader = UiText.DynamicString("Staked RUJI"),
+                    // What the view-model leaves behind when a read fails: the placeholder's zero,
+                    // which the card must not present as a balance.
+                    stakeAmount = BigDecimal.ZERO,
+                    stakedAmountDisplay = "0 RUJI",
+                    stakedFiatDisplay = "$0.00",
+                    apy = null,
+                    isUnavailable = true,
                 ),
             onClickStake = {},
             onClickUnstake = {},
