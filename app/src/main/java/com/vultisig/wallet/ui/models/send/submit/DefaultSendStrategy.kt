@@ -464,8 +464,10 @@ internal class DefaultSendStrategy(
                         }
                     }
 
-                    // Outside the balance branches: a destination that rejects untagged payments
-                    // or holds no trust line rejects a token exactly as it does native XRP.
+                    // Outside the balance branches: destination-side guards, where what the
+                    // sender holds is irrelevant. A destination that rejects untagged payments or
+                    // holds no trust line rejects a token exactly as it does native XRP, and a TAO
+                    // transfer too small to create the destination account is dropped on-chain.
                     withContext(Dispatchers.IO) {
                         chainValidationService.validateRippleDestinationReserve(
                             selectedToken = selectedToken,
@@ -485,6 +487,11 @@ internal class DefaultSendStrategy(
                         chainValidationService.validateRippleDestinationTrustLine(
                             selectedToken = selectedToken,
                             dstAddress = dstAddress,
+                        )
+                        chainValidationService.validateBittensorDestinationExistentialDeposit(
+                            selectedToken = selectedToken,
+                            dstAddress = dstAddress,
+                            tokenAmountInt = tokenAmountInt,
                         )
                     }
 

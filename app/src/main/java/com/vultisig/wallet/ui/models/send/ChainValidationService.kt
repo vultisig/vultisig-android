@@ -3,9 +3,11 @@
 package com.vultisig.wallet.ui.models.send
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.matches
 import com.vultisig.wallet.data.api.requiresDestinationTag
+import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.models.Account
@@ -33,7 +35,9 @@ import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
 /** Validates chain-specific transaction constraints for the send form. */
-internal class ChainValidationService @Inject constructor(private val rippleApi: RippleApi) {
+internal class ChainValidationService
+@Inject
+constructor(private val rippleApi: RippleApi, private val bittensorApi: BittensorApi) {
 
     // 1 ADA = 1,000,000 lovelace; kept as a local constant to avoid a WalletCore JNI call
     // (CoinTypeConfiguration.getDecimals) which is unavailable in unit tests.
@@ -159,7 +163,7 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
 
     /**
      * Checks whether the send would leave the source account below the existential deposit on
-     * Polkadot.
+     * Polkadot or Bittensor.
      *
      * XRP is intentionally excluded: [RippleApi.getBalance] already returns the owner-aware,
      * reserve-net balance (base + owner-count increment reserves subtracted live from
@@ -190,6 +194,10 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
                     selectedToken.ticker == Coins.Polkadot.DOT.ticker ->
                     PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
 
+                selectedChain == Chain.Bittensor &&
+                    selectedToken.ticker == Coins.Bittensor.TAO.ticker ->
+                    BittensorHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
+
                 else -> return null
             }
 
@@ -197,8 +205,60 @@ internal class ChainValidationService @Inject constructor(private val rippleApi:
 
         return when (selectedChain) {
             Chain.Polkadot -> UiText.StringResource(R.string.send_form_polka_reaping_warning)
+            Chain.Bittensor -> UiText.StringResource(R.string.send_form_bittensor_reaping_warning)
             else -> null
         }
+    }
+
+    /**
+     * Blocks a TAO transfer that would leave the destination below Bittensor's existential deposit.
+     * The runtime refuses to create an account holding less than the deposit, so such a transfer is
+     * dropped on-chain with the keysign ceremony already run and the fee already paid.
+     *
+     * Only a dust-sized amount can fail this, so the destination lookup stays off the normal send
+     * path: an amount at or above the deposit funds any account, new or existing. Fails closed on a
+     * lookup error, like [validateRippleDestinationReserve] — assuming the destination is funded
+     * would reopen the exact on-chain rejection this guards.
+     *
+     * No-ops for every other chain and for non-native tokens (Bittensor has none today).
+     */
+    suspend fun validateBittensorDestinationExistentialDeposit(
+        selectedToken: Coin,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+    ) {
+        if (selectedToken.chain != Chain.Bittensor || !selectedToken.isNativeToken) return
+
+        val existentialDeposit = BittensorHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
+        if (tokenAmountInt >= existentialDeposit) return
+
+        val destinationBalance =
+            try {
+                bittensorApi.getBalance(dstAddress)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to fetch Bittensor balance for %s", dstAddress)
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.network_connection_lost)
+                )
+            }
+
+        if (destinationBalance + tokenAmountInt >= existentialDeposit) return
+
+        throw InvalidTransactionDataException(
+            UiText.FormattedText(
+                R.string.send_error_tao_destination_below_existential_deposit,
+                listOf(
+                    existentialDeposit
+                        .toBigDecimal()
+                        .movePointLeft(selectedToken.decimal)
+                        .stripTrailingZeros()
+                        .toPlainString(),
+                    selectedToken.ticker,
+                ),
+            )
+        )
     }
 
     /**

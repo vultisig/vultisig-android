@@ -51,7 +51,8 @@ private class FakeRippleApi(
 
 internal class ChainValidationServiceTest {
 
-    private val service = ChainValidationService(rippleApi = FakeRippleApi())
+    private val service =
+        ChainValidationService(rippleApi = FakeRippleApi(), bittensorApi = FakeBittensorApi())
 
     @Test
     fun `validateSlippage - null returns required error`() {
@@ -148,6 +149,45 @@ internal class ChainValidationServiceTest {
             R.string.send_form_polka_reaping_warning,
             (result as UiText.StringResource).resId,
         )
+    }
+
+    // checkIsReapable Bittensor tests
+
+    private val taoCoin =
+        Coin(
+            chain = Chain.Bittensor,
+            ticker = "TAO",
+            logo = "",
+            address = "",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    @Test
+    fun `checkIsReapable - bittensor balance below existential deposit returns warning`() {
+        // 1 TAO balance, sending 0.9998 TAO with a 0.0002 TAO fee → 0 rao left, under the 500 rao
+        // deposit. TAO is signed as transfer_keep_alive, so the runtime would refuse this send.
+        val balance = BigInteger.valueOf(1_000_000_000L) // 1 TAO (9 decimals)
+        val account = Account(taoCoin, TokenValue(balance, "TAO", 9), null, null)
+        val gasFee = TokenValue(BigInteger.valueOf(200_000L), "TAO", 9)
+        val result = service.checkIsReapable(account, taoCoin, "0.9998", gasFee)
+        assertEquals(
+            R.string.send_form_bittensor_reaping_warning,
+            (result as UiText.StringResource).resId,
+        )
+    }
+
+    @Test
+    fun `checkIsReapable - bittensor max send leaving exactly the existential deposit does not warn`() {
+        // What GetAvailableTokenBalanceUseCase hands MAX: balance - fee - 500 rao. The remainder is
+        // the deposit itself, so the send is fine and the warning must stay off.
+        val balance = BigInteger.valueOf(1_000_000_000L) // 1 TAO
+        val account = Account(taoCoin, TokenValue(balance, "TAO", 9), null, null)
+        val gasFee = TokenValue(BigInteger.valueOf(200_000L), "TAO", 9)
+        assertNull(service.checkIsReapable(account, taoCoin, "0.9997995", gasFee))
     }
 
     @Test
@@ -310,7 +350,8 @@ internal class ChainValidationServiceTest {
     @Test
     fun `validateRippleDestinationReserve - funded destination does not throw regardless of amount`() =
         runTest {
-            val fundedService = ChainValidationService(rippleApiWithAccount(exists = true))
+            val fundedService =
+                ChainValidationService(rippleApiWithAccount(exists = true), FakeBittensorApi())
             fundedService.validateRippleDestinationReserve(
                 selectedToken = xrpCoin,
                 dstAddress = "rDestination",
@@ -321,7 +362,8 @@ internal class ChainValidationServiceTest {
 
     @Test
     fun `validateRippleDestinationReserve - unfunded destination below reserve throws`() = runTest {
-        val unfundedService = ChainValidationService(rippleApiWithAccount(exists = false))
+        val unfundedService =
+            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi())
         try {
             unfundedService.validateRippleDestinationReserve(
                 selectedToken = xrpCoin,
@@ -348,7 +390,8 @@ internal class ChainValidationServiceTest {
     @Test
     fun `validateRippleDestinationReserve - unfunded destination at reserve does not throw`() =
         runTest {
-            val unfundedService = ChainValidationService(rippleApiWithAccount(exists = false))
+            val unfundedService =
+                ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi())
             unfundedService.validateRippleDestinationReserve(
                 selectedToken = xrpCoin,
                 dstAddress = "rNewAddress",
@@ -359,7 +402,8 @@ internal class ChainValidationServiceTest {
 
     @Test
     fun `validateRippleDestinationReserve - non-native token does not throw`() = runTest {
-        val unfundedService = ChainValidationService(rippleApiWithAccount(exists = false))
+        val unfundedService =
+            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi())
         val nonNativeXrpToken = xrpCoin.copy(ticker = "USD", isNativeToken = false)
         unfundedService.validateRippleDestinationReserve(
             selectedToken = nonNativeXrpToken,
@@ -371,7 +415,8 @@ internal class ChainValidationServiceTest {
 
     @Test
     fun `validateRippleDestinationReserve - non-Ripple chain does not throw`() = runTest {
-        val unfundedService = ChainValidationService(rippleApiWithAccount(exists = false))
+        val unfundedService =
+            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi())
         val ethCoin = dotCoin.copy(chain = Chain.Ethereum, ticker = "ETH", decimal = 18)
         unfundedService.validateRippleDestinationReserve(
             selectedToken = ethCoin,
@@ -386,7 +431,10 @@ internal class ChainValidationServiceTest {
         runTest {
             val brokenService =
                 ChainValidationService(
-                    FakeRippleApi(fetchAccountsInfoError = IllegalStateException("RPC unreachable"))
+                    FakeRippleApi(
+                        fetchAccountsInfoError = IllegalStateException("RPC unreachable")
+                    ),
+                    FakeBittensorApi(),
                 )
             try {
                 brokenService.validateRippleDestinationReserve(
@@ -401,6 +449,101 @@ internal class ChainValidationServiceTest {
                     (e.text as UiText.StringResource).resId,
                 )
             }
+        }
+
+    // validateBittensorDestinationExistentialDeposit tests
+
+    @Test
+    fun `validateBittensorDestinationExistentialDeposit - amount at the deposit skips the lookup`() =
+        runTest {
+            val api = FakeBittensorApi()
+            val bittensorService = ChainValidationService(FakeRippleApi(), api)
+
+            bittensorService.validateBittensorDestinationExistentialDeposit(
+                selectedToken = taoCoin,
+                dstAddress = "5NewAddress",
+                tokenAmountInt = BigInteger.valueOf(500L), // exactly the existential deposit
+            )
+
+            // Any amount at or above the deposit funds a new account, so the send path must not
+            // pay for an RPC round-trip to find that out.
+            assertEquals(0, api.balanceLookups)
+        }
+
+    @Test
+    fun `validateBittensorDestinationExistentialDeposit - dust to an unfunded destination throws`() =
+        runTest {
+            val bittensorService =
+                ChainValidationService(FakeRippleApi(), FakeBittensorApi(balance = BigInteger.ZERO))
+            try {
+                bittensorService.validateBittensorDestinationExistentialDeposit(
+                    selectedToken = taoCoin,
+                    dstAddress = "5NewAddress",
+                    tokenAmountInt = BigInteger.valueOf(499L), // 1 rao short of the deposit
+                )
+                fail("Expected InvalidTransactionDataException to be thrown")
+            } catch (e: InvalidTransactionDataException) {
+                val text = e.text as UiText.FormattedText
+                assertEquals(
+                    R.string.send_error_tao_destination_below_existential_deposit,
+                    text.resId,
+                )
+                // Plain decimal, never 5E-7: the deposit is rendered from the constant.
+                assertEquals(listOf<Any>("0.0000005", "TAO"), text.formatArgs)
+            }
+        }
+
+    @Test
+    fun `validateBittensorDestinationExistentialDeposit - dust to a funded destination is allowed`() =
+        runTest {
+            // The destination already holds more than the deposit, so topping it up by a single rao
+            // creates nothing and the runtime accepts it.
+            val bittensorService =
+                ChainValidationService(
+                    FakeRippleApi(),
+                    FakeBittensorApi(balance = BigInteger.valueOf(1_000L)),
+                )
+
+            bittensorService.validateBittensorDestinationExistentialDeposit(
+                selectedToken = taoCoin,
+                dstAddress = "5FundedAddress",
+                tokenAmountInt = BigInteger.ONE,
+            )
+            // no exception means success
+        }
+
+    @Test
+    fun `validateBittensorDestinationExistentialDeposit - lookup failure fails closed`() = runTest {
+        val bittensorService =
+            ChainValidationService(
+                FakeRippleApi(),
+                FakeBittensorApi(balanceError = IllegalStateException("RPC unreachable")),
+            )
+        try {
+            bittensorService.validateBittensorDestinationExistentialDeposit(
+                selectedToken = taoCoin,
+                dstAddress = "5NewAddress",
+                tokenAmountInt = BigInteger.ONE,
+            )
+            fail("Expected InvalidTransactionDataException to be thrown")
+        } catch (e: InvalidTransactionDataException) {
+            assertEquals(R.string.network_connection_lost, (e.text as UiText.StringResource).resId)
+        }
+    }
+
+    @Test
+    fun `validateBittensorDestinationExistentialDeposit - non-Bittensor chain skips the lookup`() =
+        runTest {
+            val api = FakeBittensorApi()
+            val bittensorService = ChainValidationService(FakeRippleApi(), api)
+
+            bittensorService.validateBittensorDestinationExistentialDeposit(
+                selectedToken = dotCoin,
+                dstAddress = "1DotAddress",
+                tokenAmountInt = BigInteger.ONE,
+            )
+
+            assertEquals(0, api.balanceLookups)
         }
 
     // validateBtcLikeAmount tests

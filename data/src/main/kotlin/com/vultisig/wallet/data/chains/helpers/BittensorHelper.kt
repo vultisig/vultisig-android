@@ -97,27 +97,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
         return callData + signedExtra + additionalSigned
     }
 
-    /**
-     * Call data for Balances.transfer_allow_death(dest, value) Encoding: [pallet:5, call:0] ++
-     * MultiAddress::Id(0x00) ++ dest(32B) ++ compact(amount)
-     */
-    private fun buildCallData(keysignPayload: KeysignPayload): ByteArray {
-        val destBytes = ss58Decode(keysignPayload.toAddress)
-        require(!isBurnAccountId(destBytes)) {
-            "Refusing to sign a transfer to the all-zero AccountId ($BURN_ADDRESS): " +
-                "no key can produce that account, so the transferred TAO is unrecoverable"
-        }
-        val amount = keysignPayload.toAmount
-        require(amount >= BigInteger.ZERO) { "Transfer amount must be non-negative, got $amount" }
-
-        val out = ByteArrayOutputStream()
-        out.write(BALANCES_PALLET.toInt())
-        out.write(TRANSFER_ALLOW_DEATH.toInt())
-        out.write(MULTI_ADDRESS_ID.toInt()) // MultiAddress::Id
-        out.write(destBytes)
-        out.write(compactEncode(amount))
-        return out.toByteArray()
-    }
+    private fun buildCallData(keysignPayload: KeysignPayload): ByteArray =
+        buildTransferCallData(ss58Decode(keysignPayload.toAddress), keysignPayload.toAmount)
 
     /**
      * Signed extensions (extra) in the extrinsic body. Era | Nonce(compact) | Tip(compact, 0) |
@@ -172,11 +153,20 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
 
     companion object {
         private const val BALANCES_PALLET: Byte = 5
-        private const val TRANSFER_ALLOW_DEATH: Byte = 0
+        private const val TRANSFER_KEEP_ALIVE: Byte = 3
         private const val MULTI_ADDRESS_ID: Byte = 0x00
         private const val MULTI_SIGNATURE_ED25519: Byte = 0x00
         private const val METADATA_HASH_DISABLED: Byte = 0x00
         const val DEFAULT_FEE_RAO = 200_000L
+
+        /**
+         * Bittensor's existential deposit, in rao (0.0000005 TAO). An account whose free balance
+         * falls below it is reaped by the runtime and its remainder destroyed, so the wallet holds
+         * this much back from the selectable balance and never signs a transfer that would cross it
+         * — see [buildTransferCallData].
+         */
+        const val DEFAULT_EXISTENTIAL_DEPOSIT = 500L
+
         private const val SS58_PREFIX = 42
 
         /**
@@ -197,6 +187,45 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
         /** Whether [accountId] is the unspendable all-zero account behind [BURN_ADDRESS]. */
         fun isBurnAccountId(accountId: ByteArray): Boolean =
             accountId.contentEquals(ZERO_ACCOUNT_ID)
+
+        /**
+         * SCALE-encodes `Balances.transfer_keep_alive(dest, value)`: [pallet:5, call:3] ++
+         * MultiAddress::Id(0x00) ++ dest(32B) ++ compact(amount).
+         *
+         * keep_alive, not allow_death: allow_death lets a transfer drop the sender's free balance
+         * under [DEFAULT_EXISTENTIAL_DEPOSIT], at which point the runtime reaps the account and
+         * destroys what is left. keep_alive makes the runtime refuse that transfer instead, so an
+         * ordinary TAO send cannot reap the sender. A MAX send still settles because the deposit is
+         * held back from the selectable balance rather than sent.
+         *
+         * Nothing signs allow_death. Emptying an account is only correct when the user asks for it
+         * explicitly, and `PolkadotSpecific` carries no flag to express that intent: every
+         * co-signer rebuilds this call data from the shared payload, so the initiator cannot make
+         * the choice on its own.
+         *
+         * Takes the decoded 32-byte AccountId rather than the SS58 string so the encoding stays off
+         * the WalletCore JNI and can be unit tested, the same reasoning as [BURN_ADDRESS].
+         */
+        fun buildTransferCallData(destAccountId: ByteArray, amount: BigInteger): ByteArray {
+            require(destAccountId.size == 32) {
+                "Bittensor AccountId must be 32 bytes, got ${destAccountId.size}"
+            }
+            require(!isBurnAccountId(destAccountId)) {
+                "Refusing to sign a transfer to the all-zero AccountId ($BURN_ADDRESS): " +
+                    "no key can produce that account, so the transferred TAO is unrecoverable"
+            }
+            require(amount >= BigInteger.ZERO) {
+                "Transfer amount must be non-negative, got $amount"
+            }
+
+            val out = ByteArrayOutputStream()
+            out.write(BALANCES_PALLET.toInt())
+            out.write(TRANSFER_KEEP_ALIVE.toInt())
+            out.write(MULTI_ADDRESS_ID.toInt()) // MultiAddress::Id
+            out.write(destAccountId)
+            out.write(compactEncode(amount))
+            return out.toByteArray()
+        }
 
         private fun compactEncode(value: BigInteger): ByteArray {
             require(value >= BigInteger.ZERO) {
