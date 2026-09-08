@@ -959,6 +959,8 @@
     <string name="banxa_continue">Doorgaan naar Banxa</string>
     <string name="defi_no_positions_selected">Geen posities geselecteerd</string>
     <string name="defi_no_positions_selected_desc">Je hebt alle posities voor deze keten uitgeschakeld. Schakel ten minste één positie in om saldi te bekijken en acties te beheren.</string>
+    <string name="defi_position_unavailable">Saldo niet beschikbaar</string>
+    <string name="defi_position_unavailable_desc">De stakingdienst reageerde niet, dus deze positie kon niet worden geladen. Je gestakete tegoeden staan veilig on-chain — dit is een tijdelijk serverprobleem, geen wijziging van je saldo.</string>
     <string name="manage_positions">Posities Beheren</string>
     <string name="bond_node_state_whitelisted">Op Whitelist</string>
     <string name="bond_node_state_standby">Stand-by</string>

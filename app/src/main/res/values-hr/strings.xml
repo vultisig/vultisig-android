@@ -966,6 +966,8 @@
     <string name="banxa_continue">Nastavi na Banxu</string>
     <string name="defi_no_positions_selected">Nema odabranih pozicija</string>
     <string name="defi_no_positions_selected_desc">Onemogućili ste sve pozicije za ovaj lanac. Omogućite barem jednu poziciju za pregled stanja i upravljanje akcijama.</string>
+    <string name="defi_position_unavailable">Stanje nije dostupno</string>
+    <string name="defi_position_unavailable_desc">Usluga stakinga nije odgovorila pa se ova pozicija nije mogla učitati. Vaša uložena sredstva sigurna su na lancu — riječ je o privremenom problemu poslužitelja, a ne o promjeni stanja.</string>
     <string name="manage_positions">Upravljanje Pozicijama</string>
     <string name="bond_node_state_whitelisted">Na Bijeloj Listi</string>
     <string name="bond_node_state_standby">U Pripravnosti</string>

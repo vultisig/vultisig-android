@@ -1278,6 +1278,8 @@
     <string name="banxa_continue">Banxa로 이동</string>
     <string name="defi_no_positions_selected">선택된 포지션 없음</string>
     <string name="defi_no_positions_selected_desc">이 체인의 모든 포지션을 비활성화했습니다. 잔액을 확인하고 작업을 관리하려면 최소 하나의 포지션을 활성화하세요.</string>
+    <string name="defi_position_unavailable">잔액을 불러올 수 없음</string>
+    <string name="defi_position_unavailable_desc">스테이킹 서비스가 응답하지 않아 이 포지션을 불러오지 못했습니다. 스테이킹된 자산은 온체인에 안전하게 있습니다. 잔액이 바뀐 것이 아니라 일시적인 서버 문제입니다.</string>
     <string name="manage_positions">포지션 관리</string>
     <string name="bond_node_state_whitelisted">화이트리스트</string>
     <string name="bond_node_state_standby">대기</string>

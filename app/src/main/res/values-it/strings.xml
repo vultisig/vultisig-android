@@ -962,6 +962,8 @@
     <string name="banxa_continue">Continua su Banxa</string>
     <string name="defi_no_positions_selected">Nessuna posizione selezionata</string>
     <string name="defi_no_positions_selected_desc">Hai disabilitato tutte le posizioni per questa catena. Abilita almeno una posizione per visualizzare i saldi e gestire le azioni.</string>
+    <string name="defi_position_unavailable">Saldo non disponibile</string>
+    <string name="defi_position_unavailable_desc">Il servizio di staking non ha risposto, quindi non è stato possibile caricare questa posizione. I tuoi fondi in staking sono al sicuro on-chain: è un problema temporaneo del server, non una variazione del tuo saldo.</string>
     <string name="manage_positions">Gestisci Posizioni</string>
     <string name="bond_node_state_whitelisted">In Lista Bianca</string>
     <string name="bond_node_state_standby">In Attesa</string>
