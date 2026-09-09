@@ -43,7 +43,6 @@ android {
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
     }
-    tasks.withType<Test> { useJUnitPlatform() }
     lint {
         abortOnError = true
         absolutePaths = false
@@ -53,6 +52,8 @@ android {
 }
 
 kotlin { jvmToolchain(21) }
+
+tasks.withType<Test> { useJUnitPlatform() }
 
 protobuf {
     protoc { artifact = "com.google.protobuf:protoc:3.23.4" }
@@ -114,7 +115,6 @@ dependencies {
     implementation(libs.bcprov.jdk18on)
 
     // other
-    implementation(libs.okhttp)
     compileOnly(files("../app/libs/mobile-tss-lib.aar"))
     implementation(libs.timber)
     implementation(libs.spark.core)
@@ -135,11 +135,12 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.androidx.work.testing)
-    testImplementation(kotlin("test"))
+    testImplementation(kotlin("test-junit5"))
+    testRuntimeOnly(libs.junit.platform.launcher)
 
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(kotlin("test"))
+    androidTestImplementation(kotlin("test-junit"))
     androidTestImplementation(libs.wallet.core)
     // `testInstrumentationRunner` above names AndroidJUnitRunner, but nothing put it on the
     // classpath, so every instrumented test in this module failed to start.

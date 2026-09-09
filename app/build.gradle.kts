@@ -49,14 +49,6 @@ android {
         }
         jniLibs { keepDebugSymbols += "**/*.so" }
     }
-    tasks.withType<Test> {
-        useJUnitPlatform()
-        // Amount and APY rendering follows the user's locale, so assertions on formatted strings
-        // are only stable once the JVM the tests run on has one. Tests that care about another
-        // locale set it themselves.
-        systemProperty("user.language", "en")
-        systemProperty("user.country", "US")
-    }
     lint {
         abortOnError = true
         absolutePaths = false
@@ -65,6 +57,15 @@ android {
 }
 
 kotlin { jvmToolchain(21) }
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+    // Amount and APY rendering follows the user's locale, so assertions on formatted strings are
+    // only stable once the JVM the tests run on has one. Tests that care about another locale set
+    // it themselves.
+    systemProperty("user.language", "en")
+    systemProperty("user.country", "US")
+}
 
 dependencies {
     implementation(project(":data"))
@@ -158,6 +159,8 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.work.testing)
+    testImplementation(kotlin("test-junit5"))
+    testRuntimeOnly(libs.junit.platform.launcher)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
@@ -168,5 +171,4 @@ dependencies {
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.wallet.core)
     androidTestImplementation(libs.ktor.client.mock)
-    testImplementation(kotlin("test"))
 }
