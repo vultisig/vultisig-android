@@ -117,9 +117,9 @@ internal data class ThorchainDefiPositionsUiModel(
 /** A complete set of leg values: only built once every leg has reported. */
 internal data class TotalDefiValue(
     val bondAmount: BigInteger = BigInteger.ZERO,
-    val defaultStakeValues: StakeDefaultValues = StakeDefaultValues(),
-    val rujiStakeAmount: BigInteger = BigInteger.ZERO,
-    val tcyStakeAmount: BigInteger = BigInteger.ZERO,
+    val defaultStakeValues: StakeLegTotal<StakeDefaultValues>,
+    val rujiStakeAmount: StakeLegTotal<BigInteger>,
+    val tcyStakeAmount: StakeLegTotal<BigInteger>,
     val lpFiatValue: LpLegTotal,
 )
 
@@ -158,18 +158,19 @@ constructor(
     // whichever leg finished first cleared it for everyone. Every terminal path in a leg — the
     // success collect, each .catch, and every early bail-out — must therefore assign here.
     private val _totalValueBond = MutableStateFlow<BigInteger?>(null)
-    private val _totalValueDefaultStake = MutableStateFlow<StakeDefaultValues?>(null)
-    private val _totalValueRujiStake = MutableStateFlow<BigInteger?>(null)
-    private val _totalValueTCYStake = MutableStateFlow<BigInteger?>(null)
+    private val _totalValueDefaultStake = MutableStateFlow<StakeLegTotal<StakeDefaultValues>?>(null)
+    private val _totalValueRujiStake = MutableStateFlow<StakeLegTotal<BigInteger>?>(null)
+    private val _totalValueTCYStake = MutableStateFlow<StakeLegTotal<BigInteger>?>(null)
     // LP is priced per pool from two different assets, so it joins the total already converted to
     // fiat rather than as a raw chain amount like the other legs — see [LpLegTotal] for why it
     // carries a currency and why a failed pool reports as unavailable rather than as zero.
     private val _totalValueLpFiat = MutableStateFlow<LpLegTotal?>(null)
 
     val totalValueBond: StateFlow<BigInteger?> = _totalValueBond
-    val totalValueDefaultStake: StateFlow<StakeDefaultValues?> = _totalValueDefaultStake
-    val totalValueRujiStake: StateFlow<BigInteger?> = _totalValueRujiStake
-    val totalValueTCYStake: StateFlow<BigInteger?> = _totalValueTCYStake
+    val totalValueDefaultStake: StateFlow<StakeLegTotal<StakeDefaultValues>?> =
+        _totalValueDefaultStake
+    val totalValueRujiStake: StateFlow<StakeLegTotal<BigInteger>?> = _totalValueRujiStake
+    val totalValueTCYStake: StateFlow<StakeLegTotal<BigInteger>?> = _totalValueTCYStake
     val totalValueLpFiat: StateFlow<LpLegTotal?> = _totalValueLpFiat
 
     // Cached "available" pool list shared by the Manage-Positions dialog and the LP tab loader so
@@ -324,9 +325,21 @@ constructor(
      * stop the header spinner, because the other legs may still be in flight.
      */
     private suspend fun handleTotalValueUpdate(totalValue: TotalDefiValue) {
+        // A staking leg whose read failed knows nothing about its positions — its cards render as
+        // unavailable rather than as zero — so folding its zero into the sum here would understate
+        // the header while looking exactly as settled as a correct total. Same rule the LP leg
+        // applies below, and the same reason.
+        val rujiStakeAmount = totalValue.rujiStakeAmount.valueOrNull()
+        val tcyStakeAmount = totalValue.tcyStakeAmount.valueOrNull()
+        val defaultStakeValues = totalValue.defaultStakeValues.valueOrNull()
+        if (rujiStakeAmount == null || tcyStakeAmount == null || defaultStakeValues == null) {
+            state.update { it.copy(totalAmountPrice = null, isTotalAmountLoading = false) }
+            return
+        }
+
         val totalInRune = CoinType.THORCHAIN.toValue(totalValue.bondAmount)
-        val totalInRuji = CoinType.THORCHAIN.toValue(totalValue.rujiStakeAmount)
-        val totalInTCY = CoinType.THORCHAIN.toValue(totalValue.tcyStakeAmount)
+        val totalInRuji = CoinType.THORCHAIN.toValue(rujiStakeAmount)
+        val totalInTCY = CoinType.THORCHAIN.toValue(tcyStakeAmount)
 
         try {
             val currency = appCurrencyRepository.currency.first()
@@ -339,7 +352,7 @@ constructor(
                 fiatValueCalculator.createFiatValue(totalInTCY, Coins.ThorChain.TCY, currency)
 
             val defaultStakingFiatValues =
-                totalValue.defaultStakeValues.stakeElements.map { position ->
+                defaultStakeValues.stakeElements.map { position ->
                     val decimalAmount = CoinType.THORCHAIN.toValue(position.amount)
                     fiatValueCalculator.createFiatValue(decimalAmount, position.coin, currency)
                 }
@@ -393,6 +406,13 @@ constructor(
             state.update { it.copy(isTotalAmountLoading = false) }
         }
     }
+
+    /** The leg's value, or `null` when its read failed and it has nothing to contribute. */
+    private fun <T> StakeLegTotal<T>.valueOrNull(): T? =
+        when (this) {
+            is StakeLegTotal.Loaded -> value
+            StakeLegTotal.Unavailable -> null
+        }
 
     private suspend fun calculateStakingFiatPrice(amount: BigDecimal, coin: Coin): String? {
         return try {
@@ -498,14 +518,26 @@ constructor(
     }
 
     /**
-     * Reports every staking leg as zero. Used where no staking source will run at all — nothing
-     * selected, no RUNE coin, or the whole load threw — so the header total isn't left waiting on
-     * legs that will never arrive.
+     * Reports every staking leg as a settled zero, so the header total isn't left waiting on legs
+     * that will never run. Only for the paths where zero is the *answer* — no staking position
+     * selected, or a vault with no THORChain account. A read that failed has no answer and uses
+     * [markStakingTotalsUnavailable] instead.
      */
     private fun settleStakingTotals() {
-        _totalValueDefaultStake.update { StakeDefaultValues() }
-        _totalValueRujiStake.update { BigInteger.ZERO }
-        _totalValueTCYStake.update { BigInteger.ZERO }
+        _totalValueDefaultStake.update { StakeLegTotal.Loaded(StakeDefaultValues()) }
+        _totalValueRujiStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
+        _totalValueTCYStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
+    }
+
+    /**
+     * Reports every staking leg as unavailable, for a failure that took the whole staking load down
+     * before any individual leg could run. The header then shows its unavailable marker rather than
+     * a total that silently counts all of staking as zero.
+     */
+    private fun markStakingTotalsUnavailable() {
+        _totalValueDefaultStake.update { StakeLegTotal.Unavailable }
+        _totalValueRujiStake.update { StakeLegTotal.Unavailable }
+        _totalValueTCYStake.update { StakeLegTotal.Unavailable }
     }
 
     /**
@@ -526,6 +558,33 @@ constructor(
                                         isLoading = false,
                                         stakedFiatDisplay = position.stakedFiatDisplay ?: zero,
                                     )
+                                } else {
+                                    position
+                                }
+                            }
+                    )
+            )
+        }
+    }
+
+    /**
+     * Marks the cards a failed read left mid-flight as unavailable.
+     *
+     * The alternative — [settleStakingPositions], which stops the spinner and fills a formatted
+     * zero in — makes a card that learned nothing look exactly like a position the vault genuinely
+     * does not hold. That is the whole of #5837: with the staking service down, a funded RUJI
+     * position rendered a settled "0 RUJI / $0.00" and read as lost funds. The amount and fiat are
+     * left for the card to replace with its unavailable marker.
+     */
+    private fun markStakingPositionsUnavailable(matches: (StakePositionUiModel) -> Boolean) {
+        state.update { current ->
+            current.copy(
+                staking =
+                    current.staking.copy(
+                        positions =
+                            current.staking.positions.map { position ->
+                                if (matches(position)) {
+                                    position.copy(isLoading = false, isUnavailable = true)
                                 } else {
                                     position
                                 }
@@ -861,7 +920,10 @@ constructor(
                 // collapse the two into one and render it twice.
                 val settled =
                     state.value.staking.positions
-                        .filterNot { it.isLoading }
+                        // An unavailable card is settled but holds nothing, so reusing it would
+                        // leave the failure copy up through the whole of the next read instead of
+                        // showing that one is in flight.
+                        .filterNot { it.isLoading || it.isUnavailable }
                         .associateBy { it.coin.id }
                 val defaultLoadingPositions =
                     loadDefaultStakingPositions()
@@ -902,20 +964,20 @@ constructor(
                     if (coinsToLoad.contains(Coins.ThorChain.RUJI.id)) {
                         createRujiStakePosition(address, vaultId)
                     } else {
-                        _totalValueRujiStake.update { BigInteger.ZERO }
+                        _totalValueRujiStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
                     }
                     if (coinsToLoad.contains(Coins.ThorChain.TCY.id)) {
                         createTCYStakePosition(address, vaultId)
                     } else {
-                        _totalValueTCYStake.update { BigInteger.ZERO }
+                        _totalValueTCYStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
                     }
 
                     createGenericStakePosition(address, vaultId, coinsToLoad)
                 } catch (t: Throwable) {
                     if (t is CancellationException) throw t
                     Timber.e(t, "Failed to load staking positions")
-                    settleStakingTotals()
-                    settleStakingPositions { true }
+                    markStakingTotalsUnavailable()
+                    markStakingPositionsUnavailable { true }
                 }
             }
     }
@@ -929,11 +991,13 @@ constructor(
                 .getStakingDetails(address, vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions RUJI")
-                    // Report the leg as zero rather than leaving it unset: the header sums it, so
-                    // an unreported failure would keep the total spinning, and a stale prior value
-                    // would survive a refresh whose cards have already fallen back to zero.
-                    _totalValueRujiStake.update { BigInteger.ZERO }
-                    settleStakingPositions { it.coin.id in RUJI_POSITION_COIN_IDS }
+                    // Report the leg rather than leaving it unset: the header waits on every leg,
+                    // so an unreported failure would keep the total spinning, and a stale prior
+                    // value would survive a refresh whose cards no longer stand behind it. It
+                    // reports *unavailable*, not zero — the read failed, so the position is
+                    // unknown, and both the cards and the header say so.
+                    _totalValueRujiStake.update { StakeLegTotal.Unavailable }
+                    markStakingPositionsUnavailable { it.coin.id in RUJI_POSITION_COIN_IDS }
                 }
                 // A source that finishes without ever emitting is done, not pending, and has to
                 // report or the header waits forever. Cancellation is the exception: this load has
@@ -941,7 +1005,10 @@ constructor(
                 // still-pending leg a zero it never reported.
                 .onCompletion { cause ->
                     if (cause !is CancellationException) {
-                        _totalValueRujiStake.compareAndSet(null, BigInteger.ZERO)
+                        _totalValueRujiStake.compareAndSet(
+                            null,
+                            StakeLegTotal.Loaded(BigInteger.ZERO),
+                        )
                     }
                 }
                 .collect { detailsList ->
@@ -951,9 +1018,11 @@ constructor(
 
                     // Both positions are denominated in RUJI, so the tab's RUJI total is their sum.
                     _totalValueRujiStake.update {
-                        detailsList.fold(BigInteger.ZERO) { acc, details ->
-                            acc + details.stakeAmount
-                        }
+                        StakeLegTotal.Loaded(
+                            detailsList.fold(BigInteger.ZERO) { acc, details ->
+                                acc + details.stakeAmount
+                            }
+                        )
                     }
                 }
         }
@@ -1007,12 +1076,15 @@ constructor(
                 .getStakingDetails(address = address, vaultId = vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions TCY Stake")
-                    _totalValueTCYStake.update { BigInteger.ZERO }
-                    settleStakingPositions { it.coin.id == Coins.ThorChain.TCY.id }
+                    _totalValueTCYStake.update { StakeLegTotal.Unavailable }
+                    markStakingPositionsUnavailable { it.coin.id == Coins.ThorChain.TCY.id }
                 }
                 .onCompletion { cause ->
                     if (cause !is CancellationException) {
-                        _totalValueTCYStake.compareAndSet(null, BigInteger.ZERO)
+                        _totalValueTCYStake.compareAndSet(
+                            null,
+                            StakeLegTotal.Loaded(BigInteger.ZERO),
+                        )
                     }
                 }
                 .collect { position ->
@@ -1039,7 +1111,7 @@ constructor(
 
                     updateExistingPosition(stakePosition)
 
-                    _totalValueTCYStake.update { position.stakeAmount }
+                    _totalValueTCYStake.update { StakeLegTotal.Loaded(position.stakeAmount) }
                 }
         }
     }
@@ -1054,8 +1126,8 @@ constructor(
                 .getStakingDetails(address, vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions")
-                    _totalValueDefaultStake.update { StakeDefaultValues() }
-                    settleStakingPositions {
+                    _totalValueDefaultStake.update { StakeLegTotal.Unavailable }
+                    markStakingPositionsUnavailable {
                         it.coin.id == Coins.ThorChain.yRUNE.id ||
                             it.coin.id == Coins.ThorChain.yTCY.id ||
                             it.coin.id == Coins.ThorChain.sTCY.id ||
@@ -1064,7 +1136,10 @@ constructor(
                 }
                 .onCompletion { cause ->
                     if (cause !is CancellationException) {
-                        _totalValueDefaultStake.compareAndSet(null, StakeDefaultValues())
+                        _totalValueDefaultStake.compareAndSet(
+                            null,
+                            StakeLegTotal.Loaded(StakeDefaultValues()),
+                        )
                     }
                 }
                 .collect { defaultPositions ->
@@ -1166,14 +1241,16 @@ constructor(
                         }
 
                     _totalValueDefaultStake.update {
-                        StakeDefaultValues(
-                            stakeElements =
-                                positions.map { position ->
-                                    StakeDefaultValues.StakingElement(
-                                        coin = position.first.coin,
-                                        amount = position.second,
-                                    )
-                                }
+                        StakeLegTotal.Loaded(
+                            StakeDefaultValues(
+                                stakeElements =
+                                    positions.map { position ->
+                                        StakeDefaultValues.StakingElement(
+                                            coin = position.first.coin,
+                                            amount = position.second,
+                                        )
+                                    }
+                            )
                         )
                     }
                 }

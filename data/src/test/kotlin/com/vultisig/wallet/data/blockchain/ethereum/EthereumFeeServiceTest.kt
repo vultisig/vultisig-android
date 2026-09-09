@@ -480,6 +480,30 @@ internal class EthereumFeeServiceTest {
         assertEquals(fee.maxFeePerGas.multiply(fee.limit).add(BigInteger("777")), fee.amount)
     }
 
+    /**
+     * The L1 term has to stay readable on its own, not just folded into the total: a max send is
+     * re-fitted to the gas bond that ends up signed, and that bond is re-priced after this fee is
+     * calculated. Only a separable L1 amount survives that re-fit.
+     */
+    @Test
+    fun `Optimism reports the L1 data fee apart from the gas bond`() = runTest {
+        coEvery {
+            evmApi.getOpStackL1Fee(any(), any(), any(), any(), any(), any(), any(), any())
+        } returns BigInteger("777")
+
+        val fee = service.calculateDefaultFees(transfer(Chain.Optimism)) as Eip1559
+
+        assertEquals(BigInteger("777"), fee.l1Amount)
+        assertEquals(fee.maxFeePerGas.multiply(fee.limit), fee.amount.subtract(fee.l1Amount))
+    }
+
+    @Test
+    fun `Ethereum reports no L1 data fee`() = runTest {
+        val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
+
+        assertEquals(BigInteger.ZERO, fee.l1Amount)
+    }
+
     @Test
     fun `Base prices L1 against the recipient, amount and chain id for a native transfer`() =
         runTest {

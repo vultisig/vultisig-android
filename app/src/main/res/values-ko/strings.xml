@@ -205,6 +205,7 @@
     <string name="send_error_no_address">주소가 유효하지 않습니다</string>
     <string name="send_error_invalid_recipient_address">해당 수신자는 이 체인에 유효한 주소가 아닙니다.</string>
     <string name="error_recipient_not_a_wallet_address">해당 수신자는 지갑이 아니라 토큰 계정 또는 프로그램 주소입니다. 소유자의 지갑 주소를 입력하세요.</string>
+    <string name="error_recipient_burn_address">해당 수신자는 소각 주소입니다. 아무도 이 주소의 키를 가지고 있지 않아 보낸 자산은 영구히 사라집니다. 다른 주소를 입력하세요.</string>
     <string name="send_error_memo_too_long">메모가 너무 깁니다: %1$d바이트 (최대 %2$d바이트).</string>
     <string name="send_error_no_amount">금액은 양수여야 합니다</string>
     <string name="send_error_too_many_decimals">금액은 소수점 이하 최대 %1$d자리까지 입력할 수 있습니다</string>
@@ -1277,6 +1278,8 @@
     <string name="banxa_continue">Banxa로 이동</string>
     <string name="defi_no_positions_selected">선택된 포지션 없음</string>
     <string name="defi_no_positions_selected_desc">이 체인의 모든 포지션을 비활성화했습니다. 잔액을 확인하고 작업을 관리하려면 최소 하나의 포지션을 활성화하세요.</string>
+    <string name="defi_position_unavailable">잔액을 불러올 수 없음</string>
+    <string name="defi_position_unavailable_desc">스테이킹 서비스가 응답하지 않아 이 포지션을 불러오지 못했습니다. 스테이킹된 자산은 온체인에 안전하게 있습니다. 잔액이 바뀐 것이 아니라 일시적인 서버 문제입니다.</string>
     <string name="manage_positions">포지션 관리</string>
     <string name="bond_node_state_whitelisted">화이트리스트</string>
     <string name="bond_node_state_standby">대기</string>

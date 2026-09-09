@@ -11,16 +11,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
@@ -34,7 +43,6 @@ import com.vultisig.wallet.ui.models.TransactionStatusUiModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Broadcasted
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Confirmed
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Pending
-import com.vultisig.wallet.ui.screens.transaction.components.SendAmountText
 import com.vultisig.wallet.ui.screens.transaction.components.ToSeparator
 import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle
 import com.vultisig.wallet.ui.screens.transaction.components.TransactionStatusWidget
@@ -51,6 +59,7 @@ internal fun SwapTransactionCard(
     val isInProgress =
         item.status is TransactionStatusUiModel.Broadcasted ||
             item.status is TransactionStatusUiModel.Pending
+    val failureExplanation = (item.status as? TransactionStatusUiModel.Failed)?.explanation
 
     V2Container(
         modifier = modifier,
@@ -61,14 +70,28 @@ internal fun SwapTransactionCard(
             Column(modifier = Modifier.padding(swapCardPadding)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TypeBadge(
                         iconRes = R.drawable.swap,
                         label = stringResource(R.string.transaction_type_button_swap),
                     )
-                    TransactionStatusWidget(status = item.status, timestamp = item.timestamp)
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        TransactionStatusWidget(status = item.status, timestamp = item.timestamp)
+                        if (failureExplanation != null) {
+                            Text(
+                                text = stringResource(failureExplanation.labelRes),
+                                style = Theme.brockmann.supplementary.caption,
+                                color = Theme.v2.colors.alerts.error,
+                                textAlign = TextAlign.End,
+                            )
+                        }
+                    }
                 }
 
                 if (isInProgress) {
@@ -119,38 +142,44 @@ internal fun SwapTransactionCard(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        TokenCircle(logo = item.fromTokenLogo, ticker = item.fromToken, size = 24)
-                        Column(modifier = Modifier.weight(1f)) {
-                            if (!item.fiatValue.isNullOrEmpty()) {
-                                Text(
-                                    text = item.fiatValue,
-                                    style = Theme.brockmann.supplementary.footnote,
-                                    color = Theme.v2.colors.text.primary,
-                                )
-                            }
-                            SendAmountText(amount = item.fromAmount, token = item.fromToken)
-                        }
-                    }
-
-                    val explanation = (item.status as? TransactionStatusUiModel.Failed)?.explanation
-                    if (explanation != null) {
-                        UiSpacer(size = 8.dp)
-                        Text(
-                            text = stringResource(explanation.labelRes),
-                            style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.alerts.error,
-                            modifier = Modifier.fillMaxWidth(),
+                        SwapPairLogo(
+                            fromLogo = item.fromTokenLogo,
+                            fromToken = item.fromToken,
+                            toLogo = item.toTokenLogo,
+                            toToken = item.toToken,
                         )
-                        // The provider badge is anchored over this corner and overhangs the card's
-                        // own bottom padding, so a last flow child would be printed underneath it.
-                        if (item.provider.isNotEmpty()) {
-                            UiSpacer(size = viaBadgeClearance)
+                        Column(modifier = Modifier.weight(1f)) {
+                            // The destination leg leads: what the swap produced is what the row
+                            // exists to answer, and it is the half the user could not see before.
+                            SwapLegText(
+                                amount = "+${item.toAmount}",
+                                token = item.toToken,
+                                color = Theme.v2.colors.text.primary,
+                            )
+                            SwapLegText(
+                                amount = "-${item.fromAmount}",
+                                token = item.fromToken,
+                                color = Theme.v2.colors.text.tertiary,
+                            )
+                        }
+                        // The pill and the legs each get half of what the logo leaves, so a long
+                        // route can no longer measure itself first and squeeze the amounts down
+                        // to an ellipsis. The box holds the pill against the card's edge whether
+                        // the route needs that half or a fraction of it.
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.CenterEnd,
+                        ) {
+                            SwapPairPill(fromToken = item.fromToken, toToken = item.toToken)
                         }
                     }
                 }
             }
 
-            if (item.provider.isNotEmpty()) {
+            // The pair pill states the route on a settled card, so the badge would be a second
+            // answer to the same question in the corner it already occupies. It stays on an
+            // in-progress card, whose row has no pill.
+            if (isInProgress && item.provider.isNotEmpty()) {
                 ViaBadge(
                     provider = item.provider,
                     providerLogo = item.providerLogo,
@@ -188,6 +217,99 @@ private fun SwapAmountText(amount: String, token: String, modifier: Modifier = M
     )
 }
 
+/**
+ * One leg of a settled swap: `+2.5 ETH` or `-4,210.00 USDC`. Both halves of the line carry the same
+ * colour — the destination leg reads as the outcome, the source leg as the receipt beneath it.
+ */
+@Composable
+private fun SwapLegText(
+    amount: String,
+    token: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = "$amount $token",
+        style = Theme.brockmann.supplementary.footnote,
+        color = color,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier,
+    )
+}
+
+/**
+ * The two assets as one coin: the facing half of each logo, so the pair reads as a single mark at
+ * the same 24dp a one-sided row spends on its single logo.
+ */
+@Composable
+private fun SwapPairLogo(
+    fromLogo: ImageModel,
+    fromToken: String,
+    toLogo: ImageModel,
+    toToken: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.size(swapPairLogoSize)) {
+        SwapPairLogoHalf(logo = fromLogo, ticker = fromToken, half = swapPairLeadingHalf)
+        SwapPairLogoHalf(logo = toLogo, ticker = toToken, half = swapPairTrailingHalf)
+    }
+}
+
+@Composable
+private fun SwapPairLogoHalf(logo: ImageModel, ticker: String, half: Shape) {
+    // The plate is what lets a logo be halved at all. Most of the app's coin artwork is drawn on
+    // transparency, and half of that is a fragment of a glyph rather than half a disc, so without
+    // it the mark closes on one side and frays on the other. The design seats every coin on a
+    // plate of its own for the same reason.
+    TokenCircle(
+        modifier =
+            Modifier.clip(half)
+                .background(color = Theme.v2.colors.neutrals.n900, shape = CircleShape),
+        logo = logo,
+        ticker = ticker,
+        size = SWAP_PAIR_LOGO_SIZE,
+    )
+}
+
+/**
+ * The half of the mark a logo keeps. Both logos are drawn at their full diameter over the same
+ * 24dp, each clipped to the half that faces the other, so the two close into one circle instead of
+ * each being squeezed into a window narrower than itself.
+ */
+private fun swapPairHalfShape(leading: Boolean) = GenericShape { size, layoutDirection ->
+    val left = if (leading == (layoutDirection == LayoutDirection.Ltr)) 0f else size.width / 2f
+    addRect(Rect(left = left, top = 0f, right = left + size.width / 2f, bottom = size.height))
+}
+
+private val swapPairLeadingHalf = swapPairHalfShape(leading = true)
+
+private val swapPairTrailingHalf = swapPairHalfShape(leading = false)
+
+/** `USDC → SOL`, the route the card is about, in the corner the badge used to hold. */
+@Composable
+private fun SwapPairPill(fromToken: String, toToken: String, modifier: Modifier = Modifier) {
+    Text(
+        text = "$fromToken → $toToken",
+        style = Theme.brockmann.supplementary.caption,
+        color = Theme.v2.colors.text.primary,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier =
+            modifier
+                .background(
+                    color = Theme.v2.colors.backgrounds.tertiary_2,
+                    shape = Theme.v2.radius.pill,
+                )
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = Theme.v2.radius.pill,
+                )
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+    )
+}
+
 private val viaBadgeVerticalPadding = 8.dp
 
 /** The provider logo — the tallest thing the badge ever holds, so it sets the badge's height. */
@@ -195,15 +317,10 @@ private const val VIA_BADGE_CONTENT_SIZE = 16
 
 private val swapCardPadding = 16.dp
 
-private val failureLineGap = 8.dp
+/** Diameter of the paired coin logos; each contributes the half of itself that faces the other. */
+private const val SWAP_PAIR_LOGO_SIZE = 24
 
-/**
- * How far the failure line has to be lifted to clear the provider badge. Derived from the badge's
- * own geometry rather than eyeballed, so the two cannot drift apart: the badge is absolutely
- * positioned over the card's bottom-end corner and stands taller than the padding it overhangs.
- */
-private val viaBadgeClearance =
-    viaBadgeVerticalPadding * 2 + VIA_BADGE_CONTENT_SIZE.dp - swapCardPadding + failureLineGap
+private val swapPairLogoSize = SWAP_PAIR_LOGO_SIZE.dp
 
 @Composable
 private fun ViaBadge(provider: String, providerLogo: ImageModel?, modifier: Modifier = Modifier) {

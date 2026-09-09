@@ -22,9 +22,25 @@ class THORChainSwaps(
 ) {
     companion object {
         const val AFFILIATE_FEE_ADDRESS = "va"
-        const val AFFILIATE_FEE_RATE_BP = 50 // 50 BP
-        const val REFERRED_AFFILIATE_FEE_RATE_BP = 35 // 35 BP when there's a referral
-        const val REFERRED_USER_FEE_RATE_BP = 10 // 10 BP for the referrer
+
+        // The three legs of the affiliate fee, all charged to the user. thornode sums the legs of
+        // a multi-affiliate request, so a referred swap costs REFERRER_PAYOUT_BPS +
+        // REFERRED_AFFILIATE_FEE_RATE_BP, not AFFILIATE_FEE_RATE_BP carved into two.
+        // [ThorChainAffiliateHelper] is where they are combined; derive from it rather than
+        // reading a single leg as if it were a total.
+
+        /** Vultisig's whole take when no referral code is sent. */
+        const val AFFILIATE_FEE_RATE_BP = 50
+
+        /** Vultisig's reduced take when a referral code is sent alongside it. */
+        const val REFERRED_AFFILIATE_FEE_RATE_BP = 35
+
+        /**
+         * What the *referrer* is paid, on top of Vultisig's reduced take — not the referred user's
+         * fee and not their saving. The user saves the difference between the two totals, which is
+         * [ThorChainAffiliateHelper.referralSavingBps].
+         */
+        const val REFERRER_PAYOUT_BPS = 10
 
         // Legacy constants for backward compatibility
         const val AFFILIATE_FEE_RATE = "50"

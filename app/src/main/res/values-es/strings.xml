@@ -249,6 +249,7 @@
     <string name="send_error_no_address">La dirección no es válida</string>
     <string name="send_error_invalid_recipient_address">Ese destinatario no es una dirección válida para esta cadena.</string>
     <string name="error_recipient_not_a_wallet_address">Ese destinatario es una cuenta de token o una dirección de programa, no una billetera. Introduce la dirección de billetera del propietario.</string>
+    <string name="error_recipient_burn_address">Ese destinatario es una dirección de quema: nadie tiene su clave, así que todo lo enviado allí se destruye. Introduce una dirección diferente.</string>
     <string name="send_error_memo_too_long">El memo es demasiado largo: %1$d bytes (máximo %2$d).</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="camera_permission_open_settings">Abrir configuración</string>
@@ -961,6 +962,8 @@
     <string name="banxa_continue">Continuar a Banxa</string>
     <string name="defi_no_positions_selected">No hay posiciones seleccionadas</string>
     <string name="defi_no_positions_selected_desc">Has deshabilitado todas las posiciones para esta cadena. Habilita al menos una posición para ver saldos y gestionar acciones.</string>
+    <string name="defi_position_unavailable">Saldo no disponible</string>
+    <string name="defi_position_unavailable_desc">El servicio de staking no respondió, por lo que no se pudo cargar esta posición. Tus fondos en staking están seguros on-chain: es un problema temporal del servidor, no un cambio en tu saldo.</string>
     <string name="manage_positions">Gestionar Posiciones</string>
     <string name="bond_node_state_whitelisted">En Lista Blanca</string>
     <string name="bond_node_state_standby">En Espera</string>

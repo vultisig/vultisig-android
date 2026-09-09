@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.keygen
 
+import com.vultisig.wallet.data.api.RelaySendBudget
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.Message
 
@@ -12,15 +13,21 @@ import com.vultisig.wallet.data.mediator.Message
  *
  * @param onPoll Serves one `getTssMessages` response, given the 1-based poll number.
  * @param onDelete Handles one `deleteTssMessage` call, given the message hash.
+ * @param onSend Handles one `sendTssMessage` call; suspending, so a test can hold a send open and
+ *   observe whether the ceremony's outbound round waits for it.
  */
 internal class FakeRelaySessionApi(
     private val onPoll: (Int) -> List<Message> = { unexpected("getTssMessages") },
     private val onDelete: (String) -> Unit = {},
+    private val onSend: (suspend (Message) -> Unit)? = null,
 ) : SessionApi {
     var polls = 0
         private set
 
     val deletedHashes = mutableListOf<String>()
+
+    /** Every message handed to [sendTssMessage], in completion order. */
+    val sentMessages = java.util.concurrent.CopyOnWriteArrayList<Message>()
 
     override suspend fun getTssMessages(
         serverUrl: String,
@@ -70,8 +77,16 @@ internal class FakeRelaySessionApi(
     override suspend fun getParticipants(serverUrl: String, sessionId: String): List<String> =
         unexpected("getParticipants")
 
-    override suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message) =
-        unexpected("sendTssMessage")
+    override suspend fun sendTssMessage(
+        serverUrl: String,
+        messageId: String?,
+        message: Message,
+        budget: RelaySendBudget?,
+    ) {
+        val handler = onSend ?: unexpected("sendTssMessage")
+        handler(message)
+        sentMessages += message
+    }
 
     override suspend fun markLocalPartyKeysignComplete(
         serverUrl: String,

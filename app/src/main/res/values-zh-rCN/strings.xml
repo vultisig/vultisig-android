@@ -225,6 +225,7 @@
     <string name="send_error_no_address">地址无效</string>
     <string name="send_error_invalid_recipient_address">该收款人不是此链的有效地址。</string>
     <string name="error_recipient_not_a_wallet_address">该收款方是代币账户或程序地址，而非钱包。请输入所有者的钱包地址。</string>
+    <string name="error_recipient_burn_address">该收款方是销毁地址——无人持有其私钥，转入的资产将永久丢失。请输入其他地址。</string>
     <string name="send_error_memo_too_long">备注过长：%1$d 个字节（最多 %2$d 个）。</string>
     <string name="send_error_no_amount">金额必须是正数</string>
     <string name="send_error_too_many_decimals">金额最多可保留 %1$d 位小数</string>
@@ -1293,6 +1294,8 @@
     <string name="banxa_continue">继续到 Banxa</string>
     <string name="defi_no_positions_selected">未选择任何仓位</string>
     <string name="defi_no_positions_selected_desc">您已禁用此链的所有仓位。请至少启用一个仓位以查看余额和管理操作。</string>
+    <string name="defi_position_unavailable">余额不可用</string>
+    <string name="defi_position_unavailable_desc">质押服务未响应，无法加载该仓位。您质押的资产在链上是安全的——这是暂时的服务器问题，并非您的余额发生变化。</string>
     <string name="manage_positions">管理仓位</string>
     <string name="bond_node_state_whitelisted">已列入白名单</string>
     <string name="bond_node_state_standby">待命</string>

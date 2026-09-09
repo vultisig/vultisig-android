@@ -278,7 +278,7 @@ class MldsaKeysign(
         }
 
     /** Drains all pending outbound messages and routes them to committee peers. */
-    private fun drainOutbound(handle: Handle) {
+    private suspend fun drainOutbound(handle: Handle, deadlineNanos: Long? = null) {
         while (true) {
             val (result, payload) = readOutboundMessage(handle)
             if (result != LIB_OK) Timber.d("outbound message error: %s", result)
@@ -286,22 +286,22 @@ class MldsaKeysign(
 
             val encoded = Base64.encode(payload)
             val slice = payload.toMldsaGoSlice()
-            try {
-                for (i in keysignCommittee.indices) {
-                    val receiver = getOutboundReceiver(handle, slice, i.toLong())
-                    if (receiver.isEmpty()) break
-                    val receiverId = String(receiver, Charsets.UTF_8)
-                    Timber.d(
-                        "sending from %s to %s, length=%d",
-                        localPartyID,
-                        receiverId,
-                        encoded.length,
-                    )
-                    messenger?.send(localPartyID, receiverId, encoded)
+            // Collect the receivers and release the native slice before sending: the fan-out
+            // suspends for as long as the relay makes it, and nothing reads the slice by then.
+            val receivers =
+                try {
+                    buildList {
+                        for (i in keysignCommittee.indices) {
+                            val receiver = getOutboundReceiver(handle, slice, i.toLong())
+                            if (receiver.isEmpty()) break
+                            add(String(receiver, Charsets.UTF_8))
+                        }
+                    }
+                } finally {
+                    slice.free()
                 }
-            } finally {
-                slice.free()
-            }
+
+            messenger?.fanOut(localPartyID, receivers, encoded, deadlineNanos)
         }
     }
 
@@ -343,7 +343,7 @@ class MldsaKeysign(
 
             appliedMessages += cacheKey
             deleteMessageFromServer(msg.hash, messageID)
-            drainOutbound(handle)
+            drainOutbound(handle, poller.attemptDeadlineNanos)
 
             if (isFinished[0] != 0) return true
         }

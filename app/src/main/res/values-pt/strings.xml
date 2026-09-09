@@ -252,6 +252,7 @@
     <string name="send_error_no_address">Endereço inválido</string>
     <string name="send_error_invalid_recipient_address">Esse destinatário não é um endereço válido para esta cadeia.</string>
     <string name="error_recipient_not_a_wallet_address">Esse destinatário é uma conta de token ou endereço de programa, não uma carteira. Insira o endereço da carteira do proprietário.</string>
+    <string name="error_recipient_burn_address">Esse destinatário é um endereço de queima: ninguém tem a chave dele, então tudo enviado para lá é destruído. Insira um endereço diferente.</string>
     <string name="send_error_memo_too_long">O memorando é muito longo: %1$d bytes (máximo %2$d).</string>
     <string name="vault_settings_error_backup_file">um erro ocorreu</string>
     <string name="vault_settings_error_backup_failed">O backup falhou. Nenhum ficheiro foi guardado. Tente novamente.</string>
@@ -960,6 +961,8 @@
     <string name="banxa_continue">Continuar para Banxa</string>
     <string name="defi_no_positions_selected">Nenhuma posição selecionada</string>
     <string name="defi_no_positions_selected_desc">Você desativou todas as posições para esta cadeia. Ative pelo menos uma posição para visualizar saldos e gerenciar ações.</string>
+    <string name="defi_position_unavailable">Saldo indisponível</string>
+    <string name="defi_position_unavailable_desc">O serviço de staking não respondeu, então não foi possível carregar esta posição. Seus fundos em staking estão seguros on-chain — é um problema temporário do servidor, não uma mudança no seu saldo.</string>
     <string name="manage_positions">Gerenciar Posições</string>
     <string name="bond_node_state_whitelisted">Na Lista Branca</string>
     <string name="bond_node_state_standby">Em Espera</string>

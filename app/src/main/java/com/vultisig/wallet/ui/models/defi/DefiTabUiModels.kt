@@ -39,6 +39,23 @@ internal sealed interface LpLegTotal {
     data object Unavailable : LpLegTotal
 }
 
+/**
+ * What one staking leg contributes to the header total.
+ *
+ * [Unavailable] is a *reported* state, not a pending one, and carries the same meaning it does for
+ * [LpLegTotal]: the read that would have valued this leg failed, so its cards hold nothing, and
+ * folding it in as a zero would understate the header while looking exactly as settled as a correct
+ * total. `null` — the absence of either — still means "this leg has not reported yet".
+ *
+ * A leg the user has deselected, or one belonging to a vault with no THORChain account, is [Loaded]
+ * with a zero: those are answers, not failures.
+ */
+internal sealed interface StakeLegTotal<out T> {
+    data class Loaded<T>(val value: T) : StakeLegTotal<T>
+
+    data object Unavailable : StakeLegTotal<Nothing>
+}
+
 internal data class BondedTabUiModel(
     val isLoading: Boolean = false,
     val totalBondedAmount: String = "0 ${Chain.ThorChain.coinType.symbol}",
@@ -133,6 +150,14 @@ internal data class StakePositionUiModel(
     // Maya CACAO pool only: true when the maturity RPC returned UNKNOWN so the staking tab can
     // surface "Couldn't verify position" instead of an unexplained disabled Unstake button.
     val isUnstakeMaturityUnknown: Boolean = false,
+    /**
+     * True when the read behind this card failed, so nothing here is a figure the app can stand
+     * behind. [stakedAmountDisplay] and [stakedFiatDisplay] are both zero on this path — the card
+     * never learned the position — and a settled "0 RUJI / $0.00" is indistinguishable from a vault
+     * that genuinely holds nothing. The card renders the unavailable marker and says the service is
+     * down instead, which is the one thing that is actually known.
+     */
+    val isUnavailable: Boolean = false,
 )
 
 internal data class BondedNodeUiModel(
