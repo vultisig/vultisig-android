@@ -19,17 +19,23 @@ data class TokenValueEntity(
 ) {
     /**
      * Mirrors [com.vultisig.wallet.data.models.Coin.id] so lookups keyed on Coin.id resolve
-     * correctly. Both coin types Coin.id contract-qualifies must be qualified here too, or a cached
+     * correctly. Every coin type Coin.id contract-qualifies must be qualified here too, or a cached
      * balance row collapses onto the plain `ticker-chain` id and no longer matches its coin (e.g.
      * `BalanceRepository.getCachedTokenBalances` resolving decimals/price by id).
+     *
+     * A native coin carries an empty contractAddress on all of these chains, so the blank check is
+     * what stands in for Coin.id's `!isNativeToken`.
      */
     val tokenId: String
         get() =
-            if (isSecuredAssetLike() || isRippleIssuedTokenLike()) {
+            if (isSecuredAssetLike() || isRippleIssuedTokenLike() || isContractQualifiedLike()) {
                 "$ticker-$chain-$contractAddress"
             } else {
                 "$ticker-$chain"
             }
+
+    private fun isContractQualifiedLike(): Boolean =
+        contractAddress.isNotBlank() && chain in CONTRACT_QUALIFIED_CHAIN_IDS
 
     private fun isSecuredAssetLike(): Boolean {
         if (chain != Chain.ThorChain.id) return false
@@ -42,4 +48,9 @@ data class TokenValueEntity(
     // ("<currency>.<issuer>") qualify — matching Coin.isRippleIssuedToken.
     private fun isRippleIssuedTokenLike(): Boolean =
         chain == Chain.Ripple.id && parseRippleTokenIdentity(contractAddress) != null
+
+    private companion object {
+        // Kept in step with Coin.isContractQualifiedCustomToken.
+        val CONTRACT_QUALIFIED_CHAIN_IDS = setOf(Chain.Ton.id, Chain.Tron.id, Chain.Cardano.id)
+    }
 }

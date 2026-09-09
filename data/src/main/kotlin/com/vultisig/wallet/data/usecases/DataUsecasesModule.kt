@@ -198,6 +198,8 @@ internal interface DataUsecasesModule {
 
     @Binds @Singleton fun bindRippleTokenFinder(impl: RippleTokenFinderImpl): RippleTokenFinder
 
+    @Binds @Singleton fun bindCardanoTokenFinder(impl: CardanoTokenFinderImpl): CardanoTokenFinder
+
     @Binds @Singleton fun bindRippleTrustLines(impl: RippleTrustLinesImpl): RippleTrustLines
 
     @Binds @Singleton fun bindSuiTokenFinder(impl: SuiTokenFinderImpl): SuiTokenFinder
