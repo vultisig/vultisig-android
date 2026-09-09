@@ -1753,6 +1753,7 @@
     <string name="done_verb_undelegated">Delegation beendet</string>
     <string name="done_verb_redelegated">Neu delegiert</string>
     <string name="done_verb_claimed_rewards">Belohnungen beansprucht</string>
+    <string name="done_verb_claimed">Beansprucht</string>
     <string name="done_verb_minted">Geprägt</string>
     <string name="done_verb_redeemed">Eingelöst</string>
     <string name="done_verb_withdrew">Ausgezahlt</string>

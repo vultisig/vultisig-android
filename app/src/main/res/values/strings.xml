@@ -1810,6 +1810,7 @@
     <string name="done_verb_undelegated">Undelegated</string>
     <string name="done_verb_redelegated">Redelegated</string>
     <string name="done_verb_claimed_rewards">Claimed rewards</string>
+    <string name="done_verb_claimed">Claimed</string>
     <string name="done_verb_minted">Minted</string>
     <string name="done_verb_redeemed">Redeemed</string>
     <string name="done_verb_withdrew">Withdrew</string>

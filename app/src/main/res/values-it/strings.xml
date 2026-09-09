@@ -1755,6 +1755,7 @@
     <string name="done_verb_undelegated">Delega annullata</string>
     <string name="done_verb_redelegated">Ridelegato</string>
     <string name="done_verb_claimed_rewards">Ricompense reclamate</string>
+    <string name="done_verb_claimed">Reclamato</string>
     <string name="done_verb_minted">Coniato</string>
     <string name="done_verb_redeemed">Riscattato</string>
     <string name="done_verb_withdrew">Prelevato</string>

@@ -2075,6 +2075,7 @@
     <string name="done_verb_undelegated">已解除委托</string>
     <string name="done_verb_redelegated">已重新委托</string>
     <string name="done_verb_claimed_rewards">已领取奖励</string>
+    <string name="done_verb_claimed">已领取</string>
     <string name="done_verb_minted">已铸造</string>
     <string name="done_verb_redeemed">已赎回</string>
     <string name="done_verb_withdrew">已提取</string>

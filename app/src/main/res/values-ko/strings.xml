@@ -1768,6 +1768,7 @@
     <string name="done_verb_undelegated">위임 해제됨</string>
     <string name="done_verb_redelegated">재위임됨</string>
     <string name="done_verb_claimed_rewards">보상 수령됨</string>
+    <string name="done_verb_claimed">수령됨</string>
     <string name="done_verb_minted">발행됨</string>
     <string name="done_verb_redeemed">상환됨</string>
     <string name="done_verb_withdrew">출금됨</string>

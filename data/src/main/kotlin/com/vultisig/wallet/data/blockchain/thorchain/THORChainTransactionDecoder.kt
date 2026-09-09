@@ -46,10 +46,11 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
             Provenance.Unrelated -> null
 
             Provenance.Native -> {
-                content.wasmPayload?.let { wasm ->
-                    decodeWasm(wasm)?.let {
-                        return it
-                    }
+                // A wasm payload is the whole reading: a memo beside a contract call is decoration
+                // the contract never parses, so an unrecognised execute stops at "contract call"
+                // rather than falling through to the memo grammar behind it.
+                content.wasmPayload?.let {
+                    return decodeWasm(it)
                 }
                 content.memo(MEMO_PRECEDENCE)?.let { memo ->
                     decodeMemo(memo, content)?.let {
@@ -98,16 +99,30 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
 
     // MARK: - Contract calls
 
-    private fun decodeWasm(wasm: WasmExecuteContractPayload): DecodedTransaction? {
+    /**
+     * Reads a wasm execute, but only the ones addressed to a contract that means these verbs.
+     *
+     * `bond`, `withdraw`, `deposit` and `claim` are ordinary CosmWasm message keys, not a namespace
+     * Rujira owns: any contract on THORChain can spell them, and being on THORChain is all the
+     * provenance the transaction itself carries. Without the allowlist an unrelated contract's
+     * `{"withdraw":{"slippage":…}}` would be titled "You're redeeming" over its attached funds. So
+     * the contract has to be one this app transacts with — see
+     * [ThorchainStakingContracts.WASM_CONTRACTS] — before its message is read as anything but a
+     * contract call.
+     */
+    private fun decodeWasm(wasm: WasmExecuteContractPayload): DecodedTransaction {
         val counterparty = DecodedCounterparty.Contract(wasm.contractAddress)
-        val operation =
-            operation(wasm.executeMsg)
-                ?: return DecodedTransaction(
-                    operation = DecodedOperation.ContractCall,
-                    amount = DecodedAmount.Unstated,
-                    counterparty = counterparty,
-                    evidence = DecodedEvidence.WasmExecuteMsg,
-                )
+        val opaque =
+            DecodedTransaction(
+                operation = DecodedOperation.ContractCall,
+                amount = DecodedAmount.Unstated,
+                counterparty = counterparty,
+                evidence = DecodedEvidence.WasmExecuteMsg,
+            )
+
+        if (wasm.contractAddress !in ThorchainStakingContracts.WASM_CONTRACTS) return opaque
+
+        val operation = operation(wasm.executeMsg) ?: return opaque
 
         return DecodedTransaction(
             operation = operation,
@@ -204,9 +219,14 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
     // MARK: - Memo grammar
 
     /**
-     * Memo heads are case-folded the way THORNode folds them. Verbs THORChain and Rujira spell the
-     * same are told apart by shape: a Rujira memo names a `thor1…` contract and a raw amount where
-     * a node memo names a node address.
+     * Memo heads are case-folded the way THORNode folds them, and every documented spelling of a
+     * head this reads is accepted: THORNode treats `ADD`, `+` and `a` as one verb, and `WITHDRAW`,
+     * `-` and `wd` as another, so a memo the network executes as a pool withdrawal has to read as
+     * one here whichever alias built it. Recognising only the symbol forms left the long forms —
+     * the ones the docs lead with, and the ones other wallets and manual memos use — unread.
+     *
+     * Verbs THORChain and Rujira spell the same are told apart by shape: a Rujira memo names a
+     * `thor1…` contract and a raw amount where a node memo names a node address.
      */
     private fun decodeMemo(memo: String, content: CorroboratedContent): DecodedTransaction? {
         val fields = memo.split(":")
@@ -242,7 +262,11 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
                 if (isRujiraForm) rujira(DecodedOperation.Stake, fields)
                 else node(DecodedOperation.Bond, fields, carried(content.amount))
 
-            "withdraw" -> if (isRujiraForm) rujira(DecodedOperation.Unstake, fields) else null
+            // Rujira's `withdraw` shares its spelling with the pool-withdrawal alias. A pool is
+            // named `CHAIN.ASSET`, never `thor1…`, so the Rujira shape can never be a pool memo.
+            "withdraw" ->
+                if (isRujiraForm) rujira(DecodedOperation.Unstake, fields)
+                else removeLiquidity(fields)
 
             "claim" -> if (isRujiraForm) rujira(DecodedOperation.ClaimRewards, fields) else null
 
@@ -301,7 +325,21 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
                 else null
             }
 
-            "+" ->
+            // `TCY[:<l1 address>]` claims a TCY allocation. What it claims is settled from chain
+            // state, and the transaction itself carries only the dust that delivers the memo, so
+            // there is no amount to state.
+            "tcy" ->
+                if (fields.size <= TCY_CLAIM_MAX_FIELDS && fields.drop(1).none { it.isEmpty() })
+                    DecodedTransaction(
+                        operation = DecodedOperation.Claim,
+                        amount = DecodedAmount.Unstated,
+                        evidence = DecodedEvidence.Memo,
+                    )
+                else null
+
+            "+",
+            "add",
+            "a" ->
                 fields
                     .getOrNull(1)
                     ?.takeIf { it.isNotEmpty() }
@@ -314,22 +352,27 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
                         )
                     }
 
-            // `-:<pool>:<bps>`; a single-sided withdrawal appends its asset after the basis points.
-            "-" -> {
-                val pool = fields.getOrNull(1)?.takeIf { it.isNotEmpty() }
-                val fraction = fraction(fields.getOrNull(2))
-                if (pool != null && fraction != null)
-                    DecodedTransaction(
-                        operation = DecodedOperation.RemoveLiquidity,
-                        amount = fraction,
-                        counterparty = DecodedCounterparty.Pool(pool),
-                        evidence = DecodedEvidence.Memo,
-                    )
-                else null
-            }
+            "-",
+            "wd" -> removeLiquidity(fields)
 
             else -> null
         }
+    }
+
+    /**
+     * `-:<pool>:<bps>`, under any of its three heads; a single-sided withdrawal appends the asset
+     * it wants back after the basis points.
+     */
+    private fun removeLiquidity(fields: List<String>): DecodedTransaction? {
+        val pool = fields.getOrNull(1)?.takeIf { it.isNotEmpty() } ?: return null
+        val fraction = fraction(fields.getOrNull(2)) ?: return null
+
+        return DecodedTransaction(
+            operation = DecodedOperation.RemoveLiquidity,
+            amount = fraction,
+            counterparty = DecodedCounterparty.Pool(pool),
+            evidence = DecodedEvidence.Memo,
+        )
     }
 
     /** A node memo: the verb, the node it names, and whatever figure the transaction carries. */
@@ -424,6 +467,9 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
         const val RUJIRA_CONTRACT_FIELD = 1
         const val RUJIRA_AMOUNT_FIELD = 2
         const val MAX_BASIS_POINTS = 10_000
+
+        /** `TCY`, optionally naming the L1 address the allocation is claimed from. */
+        const val TCY_CLAIM_MAX_FIELDS = 2
 
         const val KEY_EXECUTE = "execute"
         const val KEY_MSG = "msg"

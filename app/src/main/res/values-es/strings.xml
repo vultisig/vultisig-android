@@ -1752,6 +1752,7 @@
     <string name="done_verb_undelegated">Delegación cancelada</string>
     <string name="done_verb_redelegated">Redelegado</string>
     <string name="done_verb_claimed_rewards">Recompensas reclamadas</string>
+    <string name="done_verb_claimed">Reclamado</string>
     <string name="done_verb_minted">Acuñado</string>
     <string name="done_verb_redeemed">Canjeado</string>
     <string name="done_verb_withdrew">Retirado</string>

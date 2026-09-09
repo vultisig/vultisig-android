@@ -1745,6 +1745,7 @@
     <string name="done_verb_undelegated">Delegatie ingetrokken</string>
     <string name="done_verb_redelegated">Opnieuw gedelegeerd</string>
     <string name="done_verb_claimed_rewards">Beloningen geclaimd</string>
+    <string name="done_verb_claimed">Geclaimd</string>
     <string name="done_verb_minted">Gemunt</string>
     <string name="done_verb_redeemed">Ingewisseld</string>
     <string name="done_verb_withdrew">Opgenomen</string>

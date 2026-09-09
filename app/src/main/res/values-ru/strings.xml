@@ -1765,6 +1765,7 @@
     <string name="done_verb_undelegated">Делегирование отменено</string>
     <string name="done_verb_redelegated">Переделегировано</string>
     <string name="done_verb_claimed_rewards">Награды получены</string>
+    <string name="done_verb_claimed">Получено</string>
     <string name="done_verb_minted">Отчеканено</string>
     <string name="done_verb_redeemed">Выкуплено</string>
     <string name="done_verb_withdrew">Выведено</string>

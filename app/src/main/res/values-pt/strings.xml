@@ -1750,6 +1750,7 @@
     <string name="done_verb_undelegated">Delegação cancelada</string>
     <string name="done_verb_redelegated">Redelegado</string>
     <string name="done_verb_claimed_rewards">Recompensas reivindicadas</string>
+    <string name="done_verb_claimed">Reivindicado</string>
     <string name="done_verb_minted">Cunhado</string>
     <string name="done_verb_redeemed">Resgatado</string>
     <string name="done_verb_withdrew">Sacado</string>

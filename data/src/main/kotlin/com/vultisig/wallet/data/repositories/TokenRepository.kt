@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.DenomMetadata
+import com.vultisig.wallet.data.blockchain.thorchain.ThorchainStakingContracts
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
@@ -272,10 +273,8 @@ constructor(
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
 
-        private const val YRUNE_CONTRACT =
-            "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt"
-        private const val YTCY_CONTRACT =
-            "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
+        private const val YRUNE_CONTRACT = ThorchainStakingContracts.YRUNE
+        private const val YTCY_CONTRACT = ThorchainStakingContracts.YTCY
     }
 }
 

@@ -1762,6 +1762,7 @@
     <string name="done_verb_undelegated">Delegacija poništena</string>
     <string name="done_verb_redelegated">Ponovno delegirano</string>
     <string name="done_verb_claimed_rewards">Nagrade preuzete</string>
+    <string name="done_verb_claimed">Preuzeto</string>
     <string name="done_verb_minted">Iskovano</string>
     <string name="done_verb_redeemed">Otkupljeno</string>
     <string name="done_verb_withdrew">Podignuto</string>

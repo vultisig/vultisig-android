@@ -214,6 +214,7 @@ constructor(
                 DecodedOperation.Undelegate -> R.string.done_verb_undelegated
                 DecodedOperation.Redelegate -> R.string.done_verb_redelegated
                 DecodedOperation.ClaimRewards -> R.string.done_verb_claimed_rewards
+                DecodedOperation.Claim -> R.string.done_verb_claimed
                 DecodedOperation.Mint -> R.string.done_verb_minted
                 DecodedOperation.Redeem -> R.string.done_verb_redeemed
                 DecodedOperation.SecuredAssetWithdraw,
@@ -255,7 +256,8 @@ constructor(
                 // user reaches the same operation through.
                 DecodedOperation.Stake -> R.string.cosmos_staking_youre_staking
                 DecodedOperation.Unstake -> R.string.cosmos_staking_youre_unstaking
-                DecodedOperation.ClaimRewards -> R.string.cosmos_staking_youre_claiming
+                DecodedOperation.ClaimRewards,
+                DecodedOperation.Claim -> R.string.cosmos_staking_youre_claiming
 
                 DecodedOperation.Bond -> R.string.verify_verb_bonding
                 DecodedOperation.Unbond -> R.string.verify_verb_unbonding
