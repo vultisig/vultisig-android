@@ -120,7 +120,9 @@ dependencies {
     api(libs.bcprov.jdk18on)
 
     // other
-    api(files("../app/libs/mobile-tss-lib.aar"))
+    // compileOnly because AGP rejects a direct local .aar dependency in a module that
+    // builds its own AAR. :app provides it at runtime; see #5793 for the real fix.
+    compileOnly(files("../app/libs/mobile-tss-lib.aar"))
     api(libs.timber)
     implementation(libs.spark.core)
     implementation(libs.apache.compress)
@@ -129,6 +131,11 @@ dependencies {
     implementation(libs.androidx.security)
 
     // test
+    // Not compileOnly: TssMessenger implements the gomobile `tss.Messenger` interface, so JUnit
+    // cannot even resolve a test class that names it unless the AAR's classes are on the test
+    // runtime classpath too. Only the interface is loaded — instantiating a native tss type still
+    // needs the gojni library and stays out of unit tests.
+    testImplementation(files("../app/libs/mobile-tss-lib.aar"))
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)

@@ -70,6 +70,7 @@ tasks.withType<Test> {
 dependencies {
     implementation(project(":data"))
 
+    implementation(files("libs/mobile-tss-lib.aar"))
     implementation(files("libs/dkls-release.aar"))
     implementation(files("libs/goschnorr-release.aar"))
     implementation(files("libs/dilithium-release.aar"))
