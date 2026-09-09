@@ -70,7 +70,6 @@ tasks.withType<Test> {
 dependencies {
     implementation(project(":data"))
 
-    implementation(files("libs/mobile-tss-lib.aar"))
     implementation(files("libs/dkls-release.aar"))
     implementation(files("libs/goschnorr-release.aar"))
     implementation(files("libs/dilithium-release.aar"))
@@ -106,8 +105,6 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core.ktx)
 
     // room
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
     // camera
@@ -124,11 +121,8 @@ dependencies {
     kspAndroidTest(libs.hilt.android.compiler)
 
     // ktor
-    implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.client.negotiation)
-    implementation(libs.ktor.client.serialization.kotlinx)
 
     // other
     implementation(libs.accompanist.permissions)
@@ -137,9 +131,6 @@ dependencies {
     implementation(libs.mlkit.barcode)
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
-    implementation(libs.timber)
-    implementation(libs.spark.core)
-    implementation(libs.wallet.core)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil)
     implementation(libs.coil.network.okhttp)
@@ -147,7 +138,6 @@ dependencies {
     implementation(libs.play.update)
     implementation(libs.play.review)
     implementation(libs.androidx.work.ktx)
-    implementation(libs.bcprov.jdk18on)
 
     // animation
     implementation(libs.lottie.compose)

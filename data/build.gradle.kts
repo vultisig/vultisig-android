@@ -89,34 +89,39 @@ dependencies {
 
     // hilt di
     implementation(libs.hilt.android)
-    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.common)
     ksp(libs.hilt.android.compiler)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.work)
 
+    // compose: @Immutable on two data models, and Color/toArgb in GenerateQrBitmap. No
+    // composables here, so the Compose compiler plugin is deliberately not applied.
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.ui.graphics)
+
     // room
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
+    api(libs.androidx.room.runtime)
+    api(libs.androidx.room.ktx)
 
     // ktor
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.negotiation)
-    implementation(libs.ktor.client.serialization.kotlinx)
+    api(libs.ktor.client.core)
+    api(libs.ktor.client.negotiation)
+    api(libs.ktor.client.serialization.kotlinx)
 
     // serialization
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.protobuf)
 
     // crypto
-    implementation(libs.wallet.core)
+    api(libs.wallet.core)
 
     // encryption
-    implementation(libs.bcprov.jdk18on)
+    api(libs.bcprov.jdk18on)
 
     // other
-    compileOnly(files("../app/libs/mobile-tss-lib.aar"))
-    implementation(libs.timber)
+    api(files("../app/libs/mobile-tss-lib.aar"))
+    api(libs.timber)
     implementation(libs.spark.core)
     implementation(libs.apache.compress)
     implementation(libs.apache.compress.xz)
@@ -124,11 +129,6 @@ dependencies {
     implementation(libs.androidx.security)
 
     // test
-    // Not compileOnly: TssMessenger implements the gomobile `tss.Messenger` interface, so JUnit
-    // cannot even resolve a test class that names it unless the AAR's classes are on the test
-    // runtime classpath too. Only the interface is loaded — instantiating a native tss type still
-    // needs the gojni library and stays out of unit tests.
-    testImplementation(files("../app/libs/mobile-tss-lib.aar"))
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
@@ -142,8 +142,8 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(kotlin("test-junit"))
     androidTestImplementation(libs.wallet.core)
-    // `testInstrumentationRunner` above names AndroidJUnitRunner, but nothing put it on the
-    // classpath, so every instrumented test in this module failed to start.
+    // The runner named by `testInstrumentationRunner` has to be on the androidTest classpath
+    // itself; nothing else puts it there.
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.kotlinx.coroutines.test)
 }
