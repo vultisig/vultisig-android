@@ -49,14 +49,6 @@ android {
         }
         jniLibs { keepDebugSymbols += "**/*.so" }
     }
-    tasks.withType<Test> {
-        useJUnitPlatform()
-        // Amount and APY rendering follows the user's locale, so assertions on formatted strings
-        // are only stable once the JVM the tests run on has one. Tests that care about another
-        // locale set it themselves.
-        systemProperty("user.language", "en")
-        systemProperty("user.country", "US")
-    }
     lint {
         abortOnError = true
         absolutePaths = false
@@ -65,6 +57,15 @@ android {
 }
 
 kotlin { jvmToolchain(21) }
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+    // Amount and APY rendering follows the user's locale, so assertions on formatted strings are
+    // only stable once the JVM the tests run on has one. Tests that care about another locale set
+    // it themselves.
+    systemProperty("user.language", "en")
+    systemProperty("user.country", "US")
+}
 
 dependencies {
     implementation(project(":data"))
@@ -105,8 +106,6 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core.ktx)
 
     // room
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
     // camera
@@ -123,11 +122,8 @@ dependencies {
     kspAndroidTest(libs.hilt.android.compiler)
 
     // ktor
-    implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.client.negotiation)
-    implementation(libs.ktor.client.serialization.kotlinx)
 
     // other
     implementation(libs.accompanist.permissions)
@@ -136,9 +132,6 @@ dependencies {
     implementation(libs.mlkit.barcode)
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
-    implementation(libs.timber)
-    implementation(libs.spark.core)
-    implementation(libs.wallet.core)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil)
     implementation(libs.coil.network.okhttp)
@@ -146,7 +139,6 @@ dependencies {
     implementation(libs.play.update)
     implementation(libs.play.review)
     implementation(libs.androidx.work.ktx)
-    implementation(libs.bcprov.jdk18on)
 
     // animation
     implementation(libs.lottie.compose)
@@ -158,6 +150,8 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.work.testing)
+    testImplementation(kotlin("test-junit5"))
+    testRuntimeOnly(libs.junit.platform.launcher)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
@@ -168,5 +162,4 @@ dependencies {
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.wallet.core)
     androidTestImplementation(libs.ktor.client.mock)
-    testImplementation(kotlin("test"))
 }
