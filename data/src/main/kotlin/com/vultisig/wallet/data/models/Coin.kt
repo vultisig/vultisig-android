@@ -28,7 +28,11 @@ data class Coin(
      * reason: a currency code is only unique per issuer, so several independent issuers each mint
      * their own `USD` trust line. TON jettons and TRON TRC-20 tokens are also contract-qualified:
      * their symbols are user-controlled metadata, so two unrelated contracts can both report the
-     * same ticker. Every other coin type keeps the plain `ticker-chainId` form unchanged.
+     * same ticker. Cardano native tokens qualify for the same reason and more sharply: a ticker is
+     * derived from the asset name the minter chose, and nothing stops anyone minting an asset named
+     * `USDM` — without qualification it would take the curated Mehen USDM's key, and Room's
+     * REPLACE-on-conflict insert would let whichever arrived last silently overwrite the other.
+     * Every other coin type keeps the plain `ticker-chainId` form unchanged.
      */
     val id: TokenId
         get() =
@@ -58,7 +62,9 @@ data class Coin(
 }
 
 private fun Coin.isContractQualifiedCustomToken(): Boolean =
-    !isNativeToken && contractAddress.isNotBlank() && (chain == Chain.Ton || chain == Chain.Tron)
+    !isNativeToken &&
+        contractAddress.isNotBlank() &&
+        (chain == Chain.Ton || chain == Chain.Tron || chain == Chain.Cardano)
 
 /**
  * True when this coin has a CoinGecko price-provider id, or a contract address on a chain

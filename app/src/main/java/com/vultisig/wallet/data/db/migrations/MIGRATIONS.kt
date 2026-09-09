@@ -1168,3 +1168,95 @@ internal val MIGRATION_42_43 =
             )
         }
     }
+
+// Cardano native tokens were first saved with Coin.id = "$ticker-$chain", but a CNT ticker is
+// derived from the asset name its minter chose: anyone can mint an asset that decodes to "USDM"
+// and land on the curated Mehen USDM's key. Runtime Coin.id is now contract-qualified for them, so
+// rewrite existing rows and dependent id references to the same key before repository operations
+// read them back. Mirrors MIGRATION_42_43, which did this for TON and TRON.
+internal val MIGRATION_43_44 =
+    object : Migration(43, 44) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            INSERT OR IGNORE INTO tokenPrice(tokenId, currency, price)
+            SELECT coin.ticker || '-' || coin.chain || '-' || coin.contractAddress,
+                tokenPrice.currency,
+                tokenPrice.price
+            FROM coin
+            INNER JOIN tokenPrice
+                ON tokenPrice.tokenId = coin.ticker || '-' || coin.chain
+            WHERE coin.chain = 'Cardano'
+            AND coin.contractAddress != ''
+            AND coin.id = coin.ticker || '-' || coin.chain
+            """
+                    .trimIndent()
+            )
+
+            db.execSQL(
+                """
+            DELETE FROM tokenPrice
+            WHERE tokenId IN (
+                SELECT ticker || '-' || chain
+                FROM coin
+                WHERE chain = 'Cardano'
+                AND contractAddress != ''
+                AND id = ticker || '-' || chain
+            )
+            """
+                    .trimIndent()
+            )
+
+            db.execSQL(
+                """
+            UPDATE disabledCoin
+            SET coinId = (
+                SELECT coin.ticker || '-' || coin.chain || '-' || coin.contractAddress
+                FROM coin
+                WHERE coin.vaultId = disabledCoin.vaultId
+                AND coin.chain = disabledCoin.chain
+                AND coin.id = disabledCoin.coinId
+                AND coin.contractAddress != ''
+                LIMIT 1
+            )
+            WHERE chain = 'Cardano'
+            AND coinId IN (
+                SELECT ticker || '-' || chain
+                FROM coin
+                WHERE coin.vaultId = disabledCoin.vaultId
+                AND coin.chain = disabledCoin.chain
+                AND coin.contractAddress != ''
+                AND coin.id = disabledCoin.coinId
+            )
+            """
+                    .trimIndent()
+            )
+
+            db.execSQL(
+                """
+            DELETE FROM coin
+            WHERE chain = 'Cardano'
+            AND contractAddress != ''
+            AND id = ticker || '-' || chain
+            AND EXISTS (
+                SELECT 1
+                FROM coin AS corrected
+                WHERE corrected.vaultId = coin.vaultId
+                AND corrected.id = coin.ticker || '-' || coin.chain || '-' || coin.contractAddress
+            )
+            """
+                    .trimIndent()
+            )
+
+            db.execSQL(
+                """
+            UPDATE coin
+            SET id = ticker || '-' || chain || '-' || contractAddress
+            WHERE chain = 'Cardano'
+            AND contractAddress != ''
+            AND id = ticker || '-' || chain
+            """
+                    .trimIndent()
+            )
+        }
+    }
