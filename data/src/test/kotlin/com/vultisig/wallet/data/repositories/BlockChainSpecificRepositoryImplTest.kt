@@ -174,11 +174,7 @@ internal class BlockChainSpecificRepositoryImplTest {
     @Test
     fun `Zcash UTXO specific carries the live branch id fetched from ZcashApi`() = runTest {
         val coin = zcashCoin()
-        val zcashApi =
-            mockk<ZcashApi> {
-                coEvery { getConsensusBranchIdHex() } returns "30f33754"
-                coEvery { getAddressUtxos(SOURCE_ADDRESS) } returns emptyList()
-            }
+        val zcashApi = mockk<ZcashApi> { coEvery { getConsensusBranchIdHex() } returns "30f33754" }
         val result =
             repository(zcashApi = zcashApi)
                 .getSpecific(
@@ -194,83 +190,6 @@ internal class BlockChainSpecificRepositoryImplTest {
         val specific = result.blockChainSpecific
         assertTrue(specific is BlockChainSpecific.UTXO)
         assertEquals("30f33754", (specific as BlockChainSpecific.UTXO).zcashBranchId)
-    }
-
-    @Test
-    fun `Zcash UTXO selection prefers the node's address index over Blockchair`() = runTest {
-        val blockChairApi = mockk<BlockChairApi>(relaxed = true)
-
-        val utxos =
-            zcashUtxos(
-                blockChairApi = blockChairApi,
-                nodeUtxos = {
-                    listOf(
-                        UtxoInfo(hash = "node-tx", amount = 40_000, index = 1u),
-                        UtxoInfo(hash = "node-dust", amount = 500, index = 0u),
-                    )
-                },
-            )
-
-        assertEquals(listOf(UtxoInfo(hash = "node-tx", amount = 40_000, index = 1u)), utxos)
-        coVerify(exactly = 0) { blockChairApi.getAllUtxos(any(), any()) }
-    }
-
-    @Test
-    fun `Zcash UTXO selection falls back to Blockchair when the node RPC fails`() = runTest {
-        val utxos = zcashUtxos(nodeUtxos = { throw IllegalStateException("no address index") })
-
-        assertEquals(listOf(BLOCKCHAIR_ZEC_UTXO), utxos)
-    }
-
-    /**
-     * An empty answer is not proof of an empty address here: a node without the address index, or
-     * one answering in a shape this client does not read, would otherwise look identical to a
-     * wallet with nothing to spend and fail the send just as quietly.
-     */
-    @Test
-    fun `Zcash UTXO selection falls back to Blockchair when the node returns no outputs`() =
-        runTest {
-            val utxos = zcashUtxos(nodeUtxos = { emptyList() })
-
-            assertEquals(listOf(BLOCKCHAIR_ZEC_UTXO), utxos)
-        }
-
-    private suspend fun zcashUtxos(
-        blockChairApi: BlockChairApi = zcashBlockChairApi(),
-        nodeUtxos: () -> List<UtxoInfo>,
-    ): List<UtxoInfo> {
-        val coin = zcashCoin()
-        val zcashApi =
-            mockk<ZcashApi> {
-                coEvery { getConsensusBranchIdHex() } returns "30f33754"
-                coEvery { getAddressUtxos(SOURCE_ADDRESS) } answers { nodeUtxos() }
-            }
-
-        return repository(blockChairApi = blockChairApi, zcashApi = zcashApi)
-            .getSpecific(
-                chain = Chain.Zcash,
-                address = SOURCE_ADDRESS,
-                token = coin,
-                gasFee = TokenValue(BigInteger.ONE, coin),
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = false,
-            )
-            .utxos
-    }
-
-    private fun zcashBlockChairApi(): BlockChairApi = mockk {
-        coEvery { getAllUtxos(Chain.Zcash, SOURCE_ADDRESS) } returns
-            blockChairInfo(
-                listOf(
-                    BlockChairUtxoInfo(
-                        transactionHash = BLOCKCHAIR_ZEC_UTXO.hash,
-                        index = BLOCKCHAIR_ZEC_UTXO.index.toInt(),
-                        value = BLOCKCHAIR_ZEC_UTXO.amount,
-                        blockId = 3_000_000,
-                    )
-                )
-            )
     }
 
     @Test
@@ -1313,7 +1232,6 @@ internal class BlockChainSpecificRepositoryImplTest {
 
     private companion object {
         val NONCE: BigInteger = BigInteger("7")
-        val BLOCKCHAIR_ZEC_UTXO = UtxoInfo(hash = "blockchair-tx", amount = 60_000, index = 0u)
         const val SOURCE_ADDRESS = "0xsource"
         // One STON.fi v2 router account in its three spellings: bounceable, non-bounceable,
         // and raw (which declares no bounceability at all).

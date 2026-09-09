@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
-import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.models.ResourceUsage
@@ -169,7 +168,6 @@ constructor(
     private val rippleApi: RippleApi,
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
-    private val zcashApi: ZcashApi,
     private val tokenValueDao: TokenValueDao,
     private val thorchainDeFiBalanceService: ThorchainDeFiBalanceService,
     private val circleDeFiBalanceService: CircleDeFiBalanceService,
@@ -502,27 +500,14 @@ constructor(
                             BitcoinCash,
                             Litecoin,
                             Dogecoin,
-                            Dash -> {
+                            Dash,
+                            Zcash -> {
                                 val balance =
                                     blockchairApi
                                         .getAddressInfo(coin.chain, address)
                                         ?.address
                                         ?.balance
                                 balance?.toBigInteger() ?: BigInteger.ZERO
-                            }
-
-                            // Blockchair's Zcash index reports a transparent balance that does not
-                            // agree with the chain (#5853), which both misstated the wallet total
-                            // and made sends and swaps look unfundable. Ask the Zcash node's own
-                            // address index first; Blockchair stays as the fallback for when that
-                            // node cannot answer, so a ZEC balance never degrades below today's.
-                            Zcash -> {
-                                zcashApi.getAddressBalance(address)
-                                    ?: (blockchairApi
-                                        .getAddressInfo(coin.chain, address)
-                                        ?.address
-                                        ?.balance
-                                        ?.toBigInteger() ?: BigInteger.ZERO)
                             }
 
                             Ethereum,
