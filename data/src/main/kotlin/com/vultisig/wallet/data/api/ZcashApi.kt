@@ -1,12 +1,18 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.ZcashAddressBalanceResponse
+import com.vultisig.wallet.data.api.models.ZcashAddressParam
+import com.vultisig.wallet.data.api.models.ZcashAddressRpcRequest
+import com.vultisig.wallet.data.api.models.ZcashAddressUtxosResponse
 import com.vultisig.wallet.data.api.models.ZcashBlockchainInfoResponse
 import com.vultisig.wallet.data.api.models.ZcashRpcRequest
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -28,6 +34,25 @@ interface ZcashApi {
      * signing time agrees, keeping MPC co-signers in sync.
      */
     suspend fun getConsensusBranchIdHex(): String?
+
+    /**
+     * The transparent balance of [address] in zatoshi, read from the Zcash node's own address index
+     * (`getaddressbalance`) rather than a third-party indexer.
+     *
+     * Returns `null` when the node cannot answer — RPC error, unreachable, or a malformed response
+     * — so the caller can fall back to another source instead of showing a wrong or zero balance.
+     */
+    suspend fun getAddressBalance(address: String): BigInteger?
+
+    /**
+     * The unspent transparent outputs of [address] (`getaddressutxos`), in the same [UtxoInfo]
+     * shape the Blockchair path produces.
+     *
+     * Throws when the RPC reports an error or is unreachable, so a failed read is distinguishable
+     * from an address with no outputs and the caller can fall back rather than build a send against
+     * an empty UTXO set.
+     */
+    suspend fun getAddressUtxos(address: String): List<UtxoInfo>
 }
 
 internal class ZcashApiImpl @Inject constructor(private val httpClient: HttpClient) : ZcashApi {
@@ -56,6 +81,51 @@ internal class ZcashApiImpl @Inject constructor(private val httpClient: HttpClie
             fetched
         }
     }
+
+    override suspend fun getAddressBalance(address: String): BigInteger? {
+        return try {
+            val response =
+                httpClient
+                    .post(BASE_URL) {
+                        header("Content-Type", "application/json")
+                        setBody(addressRequest("getaddressbalance", address))
+                    }
+                    .bodyOrThrow<ZcashAddressBalanceResponse>()
+            if (response.error != null) {
+                Timber.w("Zcash getaddressbalance error: %s", response.error.message)
+                return null
+            }
+            response.result?.balance?.toBigInteger()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e(e, "Failed to read Zcash balance from the node")
+            null
+        }
+    }
+
+    override suspend fun getAddressUtxos(address: String): List<UtxoInfo> {
+        val response =
+            httpClient
+                .post(BASE_URL) {
+                    header("Content-Type", "application/json")
+                    setBody(addressRequest("getaddressutxos", address))
+                }
+                .bodyOrThrow<ZcashAddressUtxosResponse>()
+
+        if (response.error != null) {
+            error("Zcash RPC error: ${response.error.message}")
+        }
+
+        return response.result.orEmpty().map { utxo ->
+            UtxoInfo(hash = utxo.txid, amount = utxo.satoshis, index = utxo.outputIndex.toUInt())
+        }
+    }
+
+    private fun addressRequest(method: String, address: String) =
+        ZcashAddressRpcRequest(
+            method = method,
+            params = listOf(ZcashAddressParam(addresses = listOf(address))),
+        )
 
     private fun freshCachedBranchId(): String? =
         cachedBranchId?.takeIf { System.currentTimeMillis() - cachedAtMs < CACHE_TTL_MS }

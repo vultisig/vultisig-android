@@ -11,8 +11,11 @@ import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
+import com.vultisig.wallet.data.api.models.BlockChairAddress
+import com.vultisig.wallet.data.api.models.BlockChairInfo
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
@@ -50,6 +53,7 @@ class BalanceRepositoryBalanceOrNullTest {
     private val blockchairApi = mockk<BlockChairApi>(relaxed = true)
     private val cardanoApi = mockk<CardanoApi>(relaxed = true)
     private val polkadotApi = mockk<PolkadotApi>(relaxed = true)
+    private val zcashApi = mockk<ZcashApi>(relaxed = true)
     private val tokenValueDao = mockk<TokenValueDao>(relaxed = true)
 
     private val repository =
@@ -71,6 +75,7 @@ class BalanceRepositoryBalanceOrNullTest {
             rippleApi = mockk<RippleApi>(relaxed = true),
             tronApi = mockk<TronApi>(relaxed = true),
             cardanoApi = cardanoApi,
+            zcashApi = zcashApi,
             tokenValueDao = tokenValueDao,
             thorchainDeFiBalanceService = mockk<ThorchainDeFiBalanceService>(relaxed = true),
             circleDeFiBalanceService = mockk<CircleDeFiBalanceService>(relaxed = true),
@@ -172,6 +177,41 @@ class BalanceRepositoryBalanceOrNullTest {
 
         assertThrows<IllegalStateException> {
             repository.getTokenValue(ADDRESS, Coins.Polkadot.DOT).first()
+        }
+
+        coVerify(exactly = 0) { tokenValueDao.insertTokenValue(any<TokenValueEntity>()) }
+    }
+
+    @Test
+    fun `a ZEC balance comes from the Zcash node, not Blockchair`() = runTest {
+        coEvery { zcashApi.getAddressBalance(ADDRESS) } returns BigInteger("123456789")
+
+        repository.getTokenValue(ADDRESS, Coins.Zcash.ZEC).first().value shouldBe
+            BigInteger("123456789")
+
+        coVerify(exactly = 0) { blockchairApi.getAddressInfo(any(), any()) }
+    }
+
+    @Test
+    fun `a ZEC balance the node cannot answer falls back to Blockchair`() = runTest {
+        coEvery { zcashApi.getAddressBalance(ADDRESS) } returns null
+        coEvery { blockchairApi.getAddressInfo(Coins.Zcash.ZEC.chain, ADDRESS) } returns
+            BlockChairInfo(
+                address = BlockChairAddress(balance = 777L, unspentOutputCount = 1),
+                utxos = emptyList(),
+            )
+
+        repository.getTokenValue(ADDRESS, Coins.Zcash.ZEC).first().value shouldBe BigInteger("777")
+    }
+
+    @Test
+    fun `a ZEC read neither source can answer propagates and is not persisted as zero`() = runTest {
+        coEvery { zcashApi.getAddressBalance(ADDRESS) } returns null
+        coEvery { blockchairApi.getAddressInfo(Coins.Zcash.ZEC.chain, ADDRESS) } throws
+            IllegalStateException("blockchair down")
+
+        assertThrows<IllegalStateException> {
+            repository.getTokenValue(ADDRESS, Coins.Zcash.ZEC).first()
         }
 
         coVerify(exactly = 0) { tokenValueDao.insertTokenValue(any<TokenValueEntity>()) }

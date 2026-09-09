@@ -337,6 +337,38 @@ constructor(
                                     .utxos
                                     .toSpendableUtxos(chain),
                     )
+                } else if (chain == Chain.Zcash) {
+                    // Blockchair's Zcash index disagrees with the chain (#5853), which left sends
+                    // and swaps priced against inputs the wallet does not have. Take the inputs
+                    // from the Zcash node's own address index instead, and treat an empty answer
+                    // as no answer — a shape the node reports differently would otherwise read as
+                    // "this address is empty" and fail the send just as quietly.
+                    val zcashUtxos =
+                        try {
+                            zcashApi.getAddressUtxos(address).takeIf { it.isNotEmpty() }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Timber.e(e, "Zcash RPC failed, falling back to Blockchair")
+                            null
+                        }
+
+                    BlockChainSpecificAndUtxo(
+                        blockChainSpecific =
+                            BlockChainSpecific.UTXO(
+                                byteFee = gasFee.value,
+                                sendMaxAmount = isMaxAmountEnabled,
+                                // Resolve the live ZIP-243 branch id at build time so it travels
+                                // with the payload to the signing helpers.
+                                zcashBranchId = zcashApi.getConsensusBranchIdHex(),
+                            ),
+                        utxos =
+                            zcashUtxos?.excludingDust(chain)
+                                ?: blockChairApi
+                                    .getAllUtxos(chain = chain, address = address)
+                                    .utxos
+                                    .toSpendableUtxos(chain),
+                    )
                 } else {
                     val utxos =
                         blockChairApi
@@ -349,12 +381,6 @@ constructor(
                             BlockChainSpecific.UTXO(
                                 byteFee = gasFee.value,
                                 sendMaxAmount = isMaxAmountEnabled,
-                                // Resolve the live ZIP-243 branch id for ZEC at build time so it
-                                // travels with the payload to the signing helpers; null (constant
-                                // fallback) for the other UTXO chains and when the RPC is down.
-                                zcashBranchId =
-                                    if (chain == Chain.Zcash) zcashApi.getConsensusBranchIdHex()
-                                    else null,
                             ),
                         utxos = utxos,
                     )
