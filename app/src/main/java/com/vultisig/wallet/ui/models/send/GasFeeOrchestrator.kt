@@ -401,12 +401,14 @@ internal class GasFeeOrchestrator(
                 ) { token, gasFeeValue, dstAddress, tokenAmount, memo ->
                     val chain = token.chain
                     // Cardano forces the initiator's size-derived fee, so getSpecific needs the
-                    // amount to plan it, and a TRC20 fee_limit is simulated against the exact
-                    // amount transferred. For every other chain the amount is irrelevant here, so
+                    // amount to plan it. For every other chain the amount is irrelevant here, so
                     // we drop it: combined with distinctUntilChanged below this keeps those chains
-                    // from refetching specifics (nonce/gas) on every amount keystroke.
-                    val amountForSpecific =
-                        if (chain == Chain.Cardano || isTrc20Token(token)) {
+                    // from refetching specifics (nonce/gas) on every amount keystroke. A TRC20
+                    // token is no exception: nothing signs this specific, and dropping the amount
+                    // is what keeps the repository from simulating a fee_limit for it — the one
+                    // that reaches the wire is rebuilt at Continue, over the amount actually sent.
+                    val cardanoAmount =
+                        if (chain == Chain.Cardano) {
                             tokenAmount
                                 .toString()
                                 .toBigDecimalOrNull()
@@ -420,14 +422,14 @@ internal class GasFeeOrchestrator(
                         if (chain == Chain.Cardano) memo.toString().takeIf { it.isNotEmpty() }
                         else null
 
-                    SpecificInput(token, gasFeeValue, dstAddress, amountForSpecific, cardanoMemo)
+                    SpecificInput(token, gasFeeValue, dstAddress, cardanoAmount, cardanoMemo)
                 }
                 // Include the recompute nonce so pull-to-refresh re-runs getSpecific. Without this
                 // a failed first-load getSpecific leaves specific (and therefore planFee) null with
                 // no way to recover, since refresh alone doesn't change the specific inputs.
                 .combine(recalculateGasFee) { input, nonce -> input.copy(nonce = nonce) }
                 .distinctUntilChanged()
-                .collect { (token, gasFeeValue, dstAddress, amountForSpecific, cardanoMemo) ->
+                .collect { (token, gasFeeValue, dstAddress, cardanoAmount, cardanoMemo) ->
                     val chain = token.chain
                     val srcAddress = token.address
                     advanceGasUiRepository.updateTokenStandard(token.chain.standard)
@@ -454,7 +456,7 @@ internal class GasFeeOrchestrator(
                                     isMaxAmountEnabled = isMaxAmountFlow.value,
                                     isDeposit = false,
                                     dstAddress = validDstAddress,
-                                    tokenAmountValue = amountForSpecific,
+                                    tokenAmountValue = cardanoAmount,
                                     memo = cardanoMemo,
                                 )
                             }
@@ -508,13 +510,10 @@ private data class SpecificInput(
     val token: Coin,
     val gasFee: TokenValue,
     val dstAddress: String,
-    val amount: BigInteger?,
+    val cardanoAmount: BigInteger?,
     val cardanoMemo: String?,
     val nonce: Long = 0,
 )
-
-/** A TRC20 transfer is the one Tron shape whose signed `fee_limit` is simulated per amount. */
-private fun isTrc20Token(token: Coin): Boolean = token.chain == Chain.Tron && !token.isNativeToken
 
 private data class PlanFeeInput(
     val token: Coin,

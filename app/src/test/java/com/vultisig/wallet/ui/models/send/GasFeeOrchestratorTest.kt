@@ -328,10 +328,10 @@ internal class GasFeeOrchestratorTest {
         }
 
     @Test
-    fun `collectSpecific hands a TRC20 amount to getSpecific so the signed fee_limit prices it`() =
+    fun `collectSpecific drops a TRC20 amount so the form never simulates a fee_limit nobody signs`() =
         runTest(mainDispatcher) {
-            // #5479: the signed fee_limit is simulated from the amount being transferred, so a
-            // Tron token specific that arrived without one would price a different transaction.
+            // The displayed fee already simulates each settled amount; carrying it here would fire
+            // a second, identical simulation per edit for a specific that is rebuilt at Continue.
             val amountSlot = captureSpecificAmount()
             // combine() needs a first value from every source before it emits, so the field is set
             // before start() rather than racing the first emission against an empty one.
@@ -342,25 +342,6 @@ internal class GasFeeOrchestratorTest {
                 orchestrator.start()
                 selectedToken.value = trc20Coin()
                 gasFee.value = tokenValue(100, trc20Coin())
-                advanceTimeBy(400)
-                advanceUntilIdle()
-            }
-
-            assertEquals(BigInteger("2500000"), amountSlot.captured)
-        }
-
-    @Test
-    fun `collectSpecific still drops the amount for chains whose specific does not depend on it`() =
-        runTest(mainDispatcher) {
-            // Carrying it would refetch nonce/gas on every keystroke for no gain.
-            val amountSlot = captureSpecificAmount()
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("2.5")
-            val orchestrator = build(backgroundScope)
-
-            runWithIoOnTestScheduler {
-                orchestrator.start()
-                selectedToken.value = ethCoin(isNativeToken = false)
-                gasFee.value = tokenValue(100, ethCoin(isNativeToken = false))
                 advanceTimeBy(400)
                 advanceUntilIdle()
             }

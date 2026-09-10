@@ -705,25 +705,46 @@ constructor(
                         // is no estimate here to reconcile with the displayed fee.
                         TRON_DEFAULT_ESTIMATION_FEE.toBigInteger()
                     } else {
-                        // The signed ceiling comes out of the same TronFeeService computation that
-                        // produces the fee shown to the user and gates the balance check, so both
-                        // simulate the transaction being sent and read energy_penalty the same
-                        // way. It is still its own simulation: this specific is rebuilt at
-                        // Continue, and the ceiling should track the chain as it stands then, not
-                        // at the keystroke that priced the form. Deliberately not routed through
-                        // FeeServiceComposite: it swallows a failure into calculateDefaultFees,
-                        // and a reverted simulation has to fail the send rather than reach the
-                        // wire behind a fabricated fee_limit.
                         val fees =
-                            tronFeeService.calculateFees(
-                                Transfer(
-                                    coin = token,
-                                    vault = VaultData("", ""),
-                                    amount = tokenAmountValue ?: BigInteger.ZERO,
-                                    to = dstAddress ?: address,
-                                    memo = memo,
+                            if (dstAddress != null && tokenAmountValue != null) {
+                                // The signed ceiling comes out of the same TronFeeService
+                                // computation that produces the fee shown to the user and gates
+                                // the balance check, so both simulate the transaction being sent
+                                // and read energy_penalty the same way. It is still its own
+                                // simulation: this specific is rebuilt at Continue, and the
+                                // ceiling should track the chain as it stands then, not at the
+                                // keystroke that priced the form. Deliberately not routed through
+                                // FeeServiceComposite: it swallows a failure into
+                                // calculateDefaultFees, and a reverted simulation has to fail the
+                                // send rather than reach the wire behind a fabricated fee_limit.
+                                tronFeeService.calculateFees(
+                                    Transfer(
+                                        coin = token,
+                                        vault = VaultData("", ""),
+                                        amount = tokenAmountValue,
+                                        to = dstAddress,
+                                        memo = memo,
+                                    )
                                 )
-                            )
+                            } else {
+                                // Without a destination and an amount there is no transaction to
+                                // simulate — a swap deposit whose builder supplies neither, or a
+                                // send form whose specific nothing signs. Probing the sender's own
+                                // balance or a zero transfer prices a different transaction (a
+                                // zero amount skips the recipient's zero-to-nonzero storage write
+                                // and under-states a first-time recipient by ~15,000 energy), so
+                                // take the flat token ceiling the displayed swap fee already
+                                // reports, as iOS's TronService does when it has no recipient.
+                                tronFeeService.calculateDefaultFees(
+                                    Transfer(
+                                        coin = token,
+                                        vault = VaultData("", ""),
+                                        amount = BigInteger.ZERO,
+                                        to = dstAddress ?: address,
+                                        memo = memo,
+                                    )
+                                )
+                            }
                         require(fees is TronFees) {
                             "Unsupported fee type ${fees::class.simpleName} for chain=$chain"
                         }

@@ -140,6 +140,57 @@ internal class TronFeeReconciliationTest {
     }
 
     @Test
+    fun `without a destination and an amount the ceiling is the flat token default, not a probe`() =
+        runTest {
+            stubSimulation(energyUsed = 65_000L, energyPenalty = 50_000L)
+
+            // A swap builder supplies neither; the send form's own specific carries no amount.
+            // Neither is a transaction to simulate — a zero transfer to the sender skips the
+            // recipient's zero-to-nonzero storage write and under-prices a first-time recipient.
+            assertEquals(
+                FLAT_TOKEN_FEE_LIMIT,
+                feeLimitOf(trc20Coin(), dstAddress = null, amount = null),
+            )
+            assertEquals(
+                FLAT_TOKEN_FEE_LIMIT,
+                feeLimitOf(trc20Coin(), dstAddress = RECIPIENT, amount = null),
+            )
+            assertEquals(
+                FLAT_TOKEN_FEE_LIMIT,
+                feeLimitOf(trc20Coin(), dstAddress = null, amount = AMOUNT),
+            )
+            coVerify(exactly = 0) {
+                tronApi.getTriggerConstantContractFee(any(), any(), any(), any(), any())
+            }
+        }
+
+    @Test
+    fun `a node that omits or zeroes the energy price falls back to the default instead of pricing zero`() =
+        runTest {
+            for (parameters in
+                listOf(chainParameters(energyFee = null), chainParameters(energyFee = 0L))) {
+                stubSimulation(energyUsed = 65_000L, energyPenalty = 50_000L)
+                coEvery { tronApi.getChainParameters() } returns parameters
+                val service = TronFeeService(tronApi)
+
+                // 65,000 x 1.3 x the 100 sun default — never 0, which would sign a fee_limit of 0
+                // and have the transfer revert OUT_OF_ENERGY after the signing ceremony.
+                assertEquals(
+                    BigInteger.valueOf(8_450_000L),
+                    service.calculateFees(trc20Transfer()).feeLimit,
+                )
+                assertEquals(
+                    BigInteger.valueOf(6_500_000L + CONTRACT_BANDWIDTH_FEE),
+                    service.calculateFees(trc20Transfer()).amount,
+                )
+                assertEquals(
+                    "8450000",
+                    feeLimitOf(trc20Coin(), dstAddress = RECIPIENT, feeService = service),
+                )
+            }
+        }
+
+    @Test
     fun `native TRX keeps its flat ceiling without simulating anything`() = runTest {
         stubSimulation(energyUsed = 65_000L, energyPenalty = 50_000L)
 
@@ -167,9 +218,14 @@ internal class TronFeeReconciliationTest {
     private suspend fun trc20FeeLimit(dstAddress: String = RECIPIENT): String =
         feeLimitOf(trc20Coin(), dstAddress)
 
-    private suspend fun feeLimitOf(token: Coin, dstAddress: String): String {
+    private suspend fun feeLimitOf(
+        token: Coin,
+        dstAddress: String?,
+        amount: BigInteger? = AMOUNT,
+        feeService: TronFeeService = this.feeService,
+    ): String {
         val specific =
-            repository()
+            repository(feeService)
                 .getSpecific(
                     chain = Chain.Tron,
                     address = SENDER,
@@ -179,7 +235,7 @@ internal class TronFeeReconciliationTest {
                     isMaxAmountEnabled = false,
                     isDeposit = false,
                     dstAddress = dstAddress,
-                    tokenAmountValue = AMOUNT,
+                    tokenAmountValue = amount,
                 )
                 .blockChainSpecific
         return (specific as BlockChainSpecific.Tron).gasFeeEstimation.toString()
@@ -199,7 +255,7 @@ internal class TronFeeReconciliationTest {
             )
     }
 
-    private fun repository() =
+    private fun repository(feeService: TronFeeService = this.feeService) =
         BlockChainSpecificRepositoryImpl(
             thorChainApi = mockk<ThorChainApi>(relaxed = true),
             mayaChainApi = mockk<MayaChainApi>(relaxed = true),
@@ -254,14 +310,14 @@ internal class TronFeeReconciliationTest {
             isNativeToken = true,
         )
 
-    private fun chainParameters() =
+    private fun chainParameters(energyFee: Long? = 420L) =
         TronChainParametersJson(
-            listOf(
+            listOfNotNull(
                 TronChainParameterJson("getTransactionFee", 1000L),
                 TronChainParameterJson("getCreateAccountFee", 100_000L),
                 TronChainParameterJson("getCreateNewAccountFeeInSystemContract", 1_000_000L),
                 TronChainParameterJson("getMemoFee", 1_000_000L),
-                TronChainParameterJson("getEnergyFee", 420L),
+                energyFee?.let { TronChainParameterJson("getEnergyFee", it) },
                 TronChainParameterJson("getDynamicEnergyMaxFactor", 1200L),
             )
         )
@@ -290,6 +346,12 @@ internal class TronFeeReconciliationTest {
 
         /** 345 bytes at the test chain's 1,000 sun/byte — a contract call always pays it. */
         const val CONTRACT_BANDWIDTH_FEE = 345_000L
+
+        /**
+         * TronFeeService.DEFAULT_TOKEN_TRANSFER_FEE: the 30 TRX a token call is capped at
+         * unsimulated.
+         */
+        const val FLAT_TOKEN_FEE_LIMIT = "30000000"
 
         val AMOUNT: BigInteger = BigInteger.valueOf(25_000_000L)
     }
