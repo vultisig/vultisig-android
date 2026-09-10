@@ -42,11 +42,17 @@ internal class SearchSuiTokenUseCaseImplTest {
     fun `uncatalogued coin type falls back to on-chain metadata with zero price`() = runTest {
         val coinType = "0xabc::widget::WIDGET"
         coEvery { suiApi.getCoinMetadata(coinType) } returns
-            SuiCoinMetadata(decimals = 9, symbol = "WIDGET", iconUrl = "https://example.com/w.png")
+            SuiCoinMetadata(
+                decimals = 9,
+                symbol = "WIDGET",
+                iconUrl = "https://example.com/w.png",
+                name = " Widget Coin ",
+            )
 
         val result = useCase(coinType)
 
         assertEquals("WIDGET", result?.coin?.ticker)
+        assertEquals("Widget Coin", result?.coin?.name)
         assertEquals("https://example.com/w.png", result?.coin?.logo)
         assertEquals(BigDecimal.ZERO, result?.price)
     }

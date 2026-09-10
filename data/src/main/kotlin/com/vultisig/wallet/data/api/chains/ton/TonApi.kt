@@ -15,7 +15,12 @@ import kotlinx.serialization.Serializable
 import wallet.core.jni.TONAddressConverter
 
 /** Display metadata for a jetton, resolved from its master contract. */
-data class TonJettonMetadata(val ticker: String, val decimals: Int, val logo: String?)
+data class TonJettonMetadata(
+    val ticker: String,
+    val decimals: Int,
+    val logo: String?,
+    val name: String? = null,
+)
 
 /**
  * An incoming jetton transfer, with addresses canonicalized to their user-friendly (`EQ…`) form so
@@ -196,6 +201,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             ticker = ticker,
             decimals = content.decimals?.trim()?.toIntOrNull() ?: 9,
             logo = content.image?.takeIf { it.isNotBlank() },
+            name = content.name?.trim()?.takeIf { it.isNotBlank() },
         )
     }
 

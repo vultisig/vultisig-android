@@ -5,6 +5,8 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.swapAssetName
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.sync.Mutex
@@ -94,11 +96,18 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainSecuredAssetRepos
                 securedAssetCoin(chainCode = chainCode, ticker = ticker, denomTail = ticker)
             }
 
-        /** Builds a secured-asset [Coin] with denom `<chainCode>-<denomTail>`, both lowercased. */
+        /**
+         * Builds a secured-asset [Coin] with denom `<chainCode>-<denomTail>`, both lowercased.
+         *
+         * The name is the underlying L1 asset's, taken from the catalogue so a search for "bitcoin"
+         * on THORChain lands on `BTC.BTC` the way it lands on BTC itself; a pool for a token the
+         * catalogue does not carry stays nameless rather than guessing one.
+         */
         fun securedAssetCoin(chainCode: String, ticker: String, denomTail: String): Coin =
             Coin(
                 chain = Chain.ThorChain,
                 ticker = ticker,
+                name = underlyingCuratedName(chainCode, ticker, denomTail),
                 logo = ticker.lowercase(),
                 address = "",
                 // Every THORChain secured asset uses RUNE's 8-decimal precision, not the
@@ -109,5 +118,19 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainSecuredAssetRepos
                 contractAddress = "${chainCode.lowercase()}-${denomTail.lowercase()}",
                 isNativeToken = false,
             )
+
+        private fun underlyingCuratedName(
+            chainCode: String,
+            ticker: String,
+            denomTail: String,
+        ): String {
+            val chain =
+                Chain.entries.firstOrNull {
+                    it.swapAssetName().equals(chainCode, ignoreCase = true)
+                } ?: return ""
+            // `usdc-0xa0b8…` carries the contract after the ticker; a bare `btc` carries none.
+            val contractAddress = denomTail.substringAfter('-', missingDelimiterValue = "")
+            return Coins.findCurated(chain, ticker, contractAddress)?.name.orEmpty()
+        }
     }
 }

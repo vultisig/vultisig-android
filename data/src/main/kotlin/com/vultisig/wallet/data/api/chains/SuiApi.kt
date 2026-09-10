@@ -186,7 +186,12 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
         // than shown at a guessed magnitude or under a placeholder ticker.
         val decimals = metadata.decimals ?: return null
         val symbol = metadata.symbol ?: return null
-        return SuiCoinMetadata(decimals = decimals, symbol = symbol, iconUrl = metadata.iconUrl)
+        return SuiCoinMetadata(
+            decimals = decimals,
+            symbol = symbol,
+            iconUrl = metadata.iconUrl,
+            name = metadata.name,
+        )
     }
 
     override suspend fun executeTransactionBlock(
@@ -346,7 +351,7 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
         val COIN_METADATA_QUERY =
             """
             query getCoinMetadata(${'$'}coinType: String!) {
-              coinMetadata(coinType: ${'$'}coinType) { decimals symbol iconUrl }
+              coinMetadata(coinType: ${'$'}coinType) { decimals symbol iconUrl name }
             }
             """
                 .trimIndent()
@@ -454,6 +459,7 @@ private data class CoinMetadataFields(
     val decimals: Int? = null,
     val symbol: String? = null,
     val iconUrl: String? = null,
+    val name: String? = null,
 )
 
 @Serializable
@@ -568,6 +574,7 @@ data class SuiCoinMetadata(
     @SerialName("decimals") val decimals: Int,
     @SerialName("symbol") val symbol: String,
     @SerialName("iconUrl") val iconUrl: String? = null,
+    @SerialName("name") val name: String? = null,
 )
 
 @Serializable

@@ -99,6 +99,7 @@ internal class VaultRepositoryImplTest {
             contractAddress = "",
             address = "0xabc",
             hexPublicKey = "pub",
+            name = "",
         )
 
     /** Returns a [Coin] representing native ETH on Ethereum. */
@@ -279,6 +280,7 @@ internal class VaultRepositoryImplTest {
                 contractAddress = "",
                 address = "0x0",
                 hexPublicKey = "",
+                name = "",
             )
         coEvery { vaultDao.loadAll() } returns
             listOf(makeVaultWithTokens(coins = listOf(makeEthCoin(), unknownChainCoin)))

@@ -1260,3 +1260,19 @@ internal val MIGRATION_43_44 =
             )
         }
     }
+
+// Coins gain a display name so the pickers can be searched by it. Rows written before this
+// column existed carry an empty name; VaultRepository fills those from the curated catalogue on
+// read, the same way it already fills an empty logo, so nothing has to be backfilled here — and a
+// backfill from the catalogue would tie the migration to definitions that are free to change.
+internal val MIGRATION_44_45 =
+    object : Migration(44, 45) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            ALTER TABLE `coin` ADD COLUMN `name` TEXT NOT NULL DEFAULT ""
+            """
+                    .trimIndent()
+            )
+        }
+    }

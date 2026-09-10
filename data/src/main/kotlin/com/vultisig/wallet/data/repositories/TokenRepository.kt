@@ -176,6 +176,7 @@ constructor(
                             contractAddress = contractAddress,
                             chain = chain,
                             ticker = symbol,
+                            name = metadata?.name?.trim().orEmpty(),
                             logo = symbol,
                             decimal = decimal,
                             isNativeToken = false,
@@ -258,7 +259,10 @@ constructor(
         return (getTokensWithBalance(chain, address, enabledDenoms) +
                 enabledByDefaultTokens.getOrDefault(chain, emptyList()))
             .filterNot { it.isNativeToken }
-            .map { token -> token.copy(address = address, hexPublicKey = derivedPublicKey) }
+            .map { token ->
+                Coins.withCuratedName(token)
+                    .copy(address = address, hexPublicKey = derivedPublicKey)
+            }
     }
 
     override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.coins.flatMap { it.value })

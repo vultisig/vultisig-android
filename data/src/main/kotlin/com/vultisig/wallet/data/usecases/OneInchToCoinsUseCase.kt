@@ -30,6 +30,7 @@ internal class OneInchToCoinsUseCaseImpl @Inject constructor() : OneInchToCoinsU
                     contractAddress = it.address,
                     chain = chain,
                     ticker = ticker,
+                    name = it.name.decodeBytes32HexOrSelf(),
                     logo = it.logoURI ?: "",
                     decimal = it.decimals,
                     isNativeToken = supportedCoin?.isNativeToken == true,

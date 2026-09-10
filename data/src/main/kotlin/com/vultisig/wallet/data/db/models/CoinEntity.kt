@@ -31,4 +31,5 @@ data class CoinEntity(
     @ColumnInfo("contractAddress") val contractAddress: String,
     @ColumnInfo("address") val address: String,
     @ColumnInfo("hexPublicKey") val hexPublicKey: String,
+    @ColumnInfo("name") val name: String,
 )

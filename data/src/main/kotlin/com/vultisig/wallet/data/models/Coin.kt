@@ -16,6 +16,13 @@ data class Coin(
     val contractAddress: String,
     val isNativeToken: Boolean,
     val usdPrice: BigDecimal? = null,
+    /**
+     * The asset's display name ("Ethereum", "USD Coin"), as opposed to its [ticker]. Empty when the
+     * source that produced the coin had none — a custom token looked up by contract, or a row
+     * persisted before names were stored — so consumers must treat blank as "unknown", not as a
+     * name. Never part of a coin's identity; see [id].
+     */
+    val name: String = "",
 ) {
     /**
      * Identity used for persistence (the [com.vultisig.wallet.data.db.models.CoinEntity] primary
@@ -65,6 +72,24 @@ private fun Coin.isContractQualifiedCustomToken(): Boolean =
     !isNativeToken &&
         contractAddress.isNotBlank() &&
         (chain == Chain.Ton || chain == Chain.Tron || chain == Chain.Cardano)
+
+/**
+ * Whether [query] should surface this coin in a search: a case-insensitive substring of the
+ * [Coin.ticker], the [Coin.name] or the [Coin.contractAddress]. Blank matches everything, so a
+ * search field can be piped through unconditionally.
+ *
+ * Name is what makes the native asset findable on the chains that call it something else — "eth" is
+ * the only ticker on Base, Arbitrum, Optimism and zkSync, but a user looking for it types
+ * "ethereum". The contract address is matched so an address pasted into the search box lands on the
+ * token it identifies, the same way the extension's token picker resolves one.
+ */
+fun Coin.matchesSearch(query: String): Boolean {
+    val needle = query.trim()
+    if (needle.isEmpty()) return true
+    return ticker.contains(needle, ignoreCase = true) ||
+        name.contains(needle, ignoreCase = true) ||
+        contractAddress.contains(needle, ignoreCase = true)
+}
 
 /**
  * True when this coin has a CoinGecko price-provider id, or a contract address on a chain

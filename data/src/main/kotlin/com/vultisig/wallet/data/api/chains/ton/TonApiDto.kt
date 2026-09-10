@@ -136,6 +136,7 @@ data class JettonMasterJson(
 @Serializable
 data class JettonContentJson(
     @SerialName("symbol") val symbol: String? = null,
+    @SerialName("name") val name: String? = null,
     // toncenter encodes decimals as a string (e.g. "6").
     @SerialName("decimals") val decimals: String? = null,
     @SerialName("image") val image: String? = null,

@@ -168,6 +168,7 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
             chain = chain,
             // Decode legacy bytes32-as-hex symbols (e.g. MKR) back to text (issue #4873).
             ticker = token.symbol.decodeBytes32HexOrSelf(),
+            name = token.name.decodeBytes32HexOrSelf(),
             logo = logo,
             address = "",
             decimal = token.decimals,

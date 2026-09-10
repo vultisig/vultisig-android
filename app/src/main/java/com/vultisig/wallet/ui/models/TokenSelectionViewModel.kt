@@ -10,6 +10,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.canAddCustomToken
+import com.vultisig.wallet.data.models.matchesSearch
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
@@ -156,17 +157,10 @@ constructor(
                 searchTextFieldState.textAsFlow().map { it.toString() },
             ) { tempSelections, enabledTokenIds, enabledTokens, disabledTokens, query ->
                 val selectedUiTokens =
-                    enabledTokens
-                        .filter { it.ticker.contains(query, ignoreCase = true) }
-                        .asUiTokens(enabledTokenIds)
+                    enabledTokens.filter { it.matchesSearch(query) }.asUiTokens(enabledTokenIds)
 
                 val otherUiTokens =
-                    if (query.isNotBlank()) {
-                            disabledTokens.filter { it.ticker.contains(query, ignoreCase = true) }
-                        } else {
-                            disabledTokens
-                        }
-                        .asUiTokens(enabledTokenIds)
+                    disabledTokens.filter { it.matchesSearch(query) }.asUiTokens(enabledTokenIds)
 
                 val tokens =
                     (selectedUiTokens + otherUiTokens + tempSelections)

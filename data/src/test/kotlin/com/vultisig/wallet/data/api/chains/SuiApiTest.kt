@@ -357,7 +357,7 @@ class SuiApiTest {
     fun `getCoinMetadata returns the parsed metadata on success`() = runTest {
         val api =
             api(
-                """{"data":{"coinMetadata":{"decimals":6,"symbol":"GOLD","iconUrl":"https://example.test/gold.png"}}}"""
+                """{"data":{"coinMetadata":{"decimals":6,"symbol":"GOLD","iconUrl":"https://example.test/gold.png","name":"Gold Coin"}}}"""
             )
 
         val metadata = api.getCoinMetadata(COIN_TYPE)
@@ -365,13 +365,17 @@ class SuiApiTest {
         assertEquals(6, metadata?.decimals)
         assertEquals("GOLD", metadata?.symbol)
         assertEquals("https://example.test/gold.png", metadata?.iconUrl)
+        assertEquals("Gold Coin", metadata?.name)
     }
 
     @Test
-    fun `getCoinMetadata leaves an absent iconUrl null`() = runTest {
+    fun `getCoinMetadata leaves an absent iconUrl and name null`() = runTest {
         val api = api("""{"data":{"coinMetadata":{"decimals":9,"symbol":"SILVER"}}}""")
 
-        assertNull(api.getCoinMetadata(COIN_TYPE)?.iconUrl)
+        val metadata = api.getCoinMetadata(COIN_TYPE)
+
+        assertNull(metadata?.iconUrl)
+        assertNull(metadata?.name)
     }
 
     // A coin the node cannot fully describe must be dropped rather than rendered at a guessed
@@ -401,6 +405,7 @@ class SuiApiTest {
 
         assertTrue(capture.lastBody.contains("coinMetadata"), capture.lastBody)
         assertTrue(capture.lastBody.contains(COIN_TYPE), capture.lastBody)
+        assertTrue(capture.lastBody.contains("decimals symbol iconUrl name"), capture.lastBody)
     }
 
     @Test
