@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.transaction_decoding.DecodedEvidence
 import com.vultisig.wallet.data.models.transaction_decoding.DecodedOperation
 import com.vultisig.wallet.data.models.transaction_decoding.DecodedTransaction
 import com.vultisig.wallet.data.models.transaction_decoding.MemoPrecedence
+import com.vultisig.wallet.data.models.transaction_decoding.OpaqueSignedContent
 import com.vultisig.wallet.data.models.transaction_decoding.SignedAmount
 import com.vultisig.wallet.data.models.transaction_decoding.SignedTransactionContent
 import com.vultisig.wallet.data.models.transaction_decoding.TransactionContentDecoder
@@ -30,6 +31,12 @@ import vultisig.keysign.v1.WasmExecuteContractPayload
  * Mirrors the iOS `THORChainTransactionDecoder`. It declares no chain scope: an inbound deposit
  * leaves Bitcoin or Ethereum, so nothing about the chain a transaction is on says THORChain, and
  * the reader has to establish provenance from the transaction itself.
+ *
+ * ⚠️ **One departure from iOS: a signed THORChain body is read, not withheld.** A dApp-built
+ * `/types.MsgDeposit` keeps its memo inside the message the co-signer is sent, where the Cosmos
+ * family reader — by design — refuses to name it. iOS leaves such a body unread; here
+ * [THORChainSignDocReader] reads it, and the memo grammar below runs over it at the strongest
+ * evidence there is.
  */
 class THORChainTransactionDecoder
 @Inject
@@ -39,8 +46,9 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
     override val handles: Set<Chain>? = null
 
     override fun decode(tx: SignedTransactionContent): DecodedTransaction? {
-        // Flat fields beside an opaque signed artifact are untrusted sidecars.
-        val content = tx.corroborated ?: return null
+        // Flat fields beside an opaque signed artifact are untrusted sidecars. The artifact itself
+        // is not: for a dApp-built THORChain deposit it is the only place the memo lives at all.
+        val content = tx.corroborated ?: return decodeSignedBody(tx)
 
         return when (provenance(tx, content)) {
             Provenance.Unrelated -> null
@@ -53,7 +61,7 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
                     return decodeWasm(it)
                 }
                 content.memo(MEMO_PRECEDENCE)?.let { memo ->
-                    decodeMemo(memo, content)?.let {
+                    decodeMemo(memo, carried(content.amount))?.let {
                         return it
                     }
                 }
@@ -61,8 +69,28 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
             }
 
             // Foreign-chain wasm payloads cannot be THORChain contract calls.
-            Provenance.Inbound -> content.memo(MEMO_PRECEDENCE)?.let { decodeMemo(it, content) }
+            Provenance.Inbound ->
+                content.memo(MEMO_PRECEDENCE)?.let { decodeMemo(it, carried(content.amount)) }
         }
+    }
+
+    /**
+     * Reads the memo out of a signed THORChain body rather than from beside it.
+     *
+     * A dApp asks the wallet to sign a `/types.MsgDeposit` it built itself; the memo the chain will
+     * execute is inside that message, and the flat fields the payload carries alongside describe
+     * nothing the signer reads. The same grammar applies — it is the same memo — but at the
+     * strongest evidence there is, and with the figure the deposit itself commits to. Only the
+     * native chain has these bodies: an inbound route leaves a chain with no SignDoc to read.
+     */
+    private fun decodeSignedBody(tx: SignedTransactionContent): DecodedTransaction? {
+        if (tx.chain !in NATIVE_CHAINS) return null
+        if (!tx.signedDataBodyIsActive) return null
+        val direct = tx.signedData as? OpaqueSignedContent.CosmosSignDirect ?: return null
+        val deposit = THORChainSignDocReader.read(direct.bodyBytes) ?: return null
+
+        return decodeMemo(deposit.memo, deposit.carried)
+            ?.copy(evidence = DecodedEvidence.SignedData)
     }
 
     private enum class Provenance {
@@ -239,7 +267,7 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
      * Verbs THORChain and Rujira spell the same are told apart by shape: a Rujira memo names a
      * `thor1…` contract and a raw amount where a node memo names a node address.
      */
-    private fun decodeMemo(memo: String, content: CorroboratedContent): DecodedTransaction? {
+    private fun decodeMemo(memo: String, carried: DecodedAmount): DecodedTransaction? {
         val fields = memo.split(":")
         val head = fields.firstOrNull() ?: return null
 
@@ -264,14 +292,14 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
                 if (fields.size > 2)
                     DecodedTransaction(
                         operation = DecodedOperation.LimitOrderPlacement,
-                        amount = carried(content.amount),
+                        amount = carried,
                         evidence = DecodedEvidence.Memo,
                     )
                 else null
 
             "bond" ->
                 if (isRujiraForm) rujira(DecodedOperation.Stake, fields)
-                else node(DecodedOperation.Bond, fields, carried(content.amount))
+                else node(DecodedOperation.Bond, fields, carried)
 
             // Rujira's `withdraw` shares its spelling with the pool-withdrawal alias. A pool is
             // named `CHAIN.ASSET`, never `thor1…`, so the Rujira shape can never be a pool memo.
@@ -302,7 +330,7 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
             "tcy+" ->
                 DecodedTransaction(
                     operation = DecodedOperation.Stake,
-                    amount = carried(content.amount),
+                    amount = carried,
                     evidence = DecodedEvidence.Memo,
                 )
 
@@ -317,11 +345,11 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
                     )
                 }
 
-            "secure+" -> named(DecodedOperation.SecuredAssetDeposit, fields, content)
+            "secure+" -> named(DecodedOperation.SecuredAssetDeposit, fields, carried)
 
-            "secure-" -> named(DecodedOperation.SecuredAssetWithdraw, fields, content)
+            "secure-" -> named(DecodedOperation.SecuredAssetWithdraw, fields, carried)
 
-            "merge" -> named(DecodedOperation.Merge, fields, content)
+            "merge" -> named(DecodedOperation.Merge, fields, carried)
 
             // `unmerge:<token>:<shares>` states its own share count, in the shares' own units.
             "unmerge" -> {
@@ -357,7 +385,7 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
                     ?.let { pool ->
                         DecodedTransaction(
                             operation = DecodedOperation.AddLiquidity,
-                            amount = carried(content.amount),
+                            amount = carried,
                             counterparty = DecodedCounterparty.Pool(pool),
                             evidence = DecodedEvidence.Memo,
                         )
@@ -408,12 +436,12 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
     private fun named(
         operation: DecodedOperation,
         fields: List<String>,
-        content: CorroboratedContent,
+        carried: DecodedAmount,
     ): DecodedTransaction? {
         if (fields.getOrNull(1).isNullOrEmpty()) return null
         return DecodedTransaction(
             operation = operation,
-            amount = carried(content.amount),
+            amount = carried,
             evidence = DecodedEvidence.Memo,
         )
     }

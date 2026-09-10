@@ -34,14 +34,16 @@ internal object TransactionDecodingModule {
     ): SignedTransactionDecoder =
         SignedTransactionDecoder().apply {
             register(solana)
+            // THORChain is asked before the Cosmos family: its messages are its own, not the
+            // SDK's, and only its grammar names them. A signed `/types.MsgDeposit` body is read
+            // here and nowhere else, so the family's SignDoc reader can never claim a THORChain
+            // body first — not because it happens to refuse the type today, but because the order
+            // says so. The reader establishes its own provenance and declines everything it cannot
+            // prove, so being asked on every chain costs the readers behind it nothing.
+            register(thorChain)
             // The signed body outranks the sidecars that travel beside it, so the SignDoc reader
             // is asked before the memo and wire-type grammar on the same chains.
             register(cosmosSignDoc)
-            // THORChain shares the Cosmos standard, so it has to be asked first: its own grammar
-            // reads memos the family reader would either miss or read as a plain transfer. It
-            // establishes its own provenance and declines everything it cannot prove, so being
-            // asked on every chain costs the readers behind it nothing.
-            register(thorChain)
             register(cosmos)
             register(maya)
         }

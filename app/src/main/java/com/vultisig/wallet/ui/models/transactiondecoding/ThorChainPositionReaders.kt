@@ -38,7 +38,8 @@ constructor(
         coin.chain == Chain.ThorChain &&
             coin.ticker.equals(TCY_TICKER, ignoreCase = true) &&
             decoded.operation == DecodedOperation.Unstake &&
-            decoded.evidence == DecodedEvidence.Memo &&
+            // The sidecar memo or the same memo signed inside a THORChain body.
+            decoded.evidence.isNoWeaker(than = DecodedEvidence.Memo) &&
             (decoded.amount as? DecodedAmount.Fraction)?.asset == DecodedAsset.TransactionCoin
 
     override suspend fun amount(decoded: DecodedTransaction, coin: Coin): HeroCoinAmount? {
