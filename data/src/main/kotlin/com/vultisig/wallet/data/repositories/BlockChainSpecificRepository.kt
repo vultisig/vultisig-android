@@ -705,13 +705,15 @@ constructor(
                         // is no estimate here to reconcile with the displayed fee.
                         TRON_DEFAULT_ESTIMATION_FEE.toBigInteger()
                     } else {
-                        // The signed ceiling comes out of the same TronFeeService pass that
+                        // The signed ceiling comes out of the same TronFeeService computation that
                         // produces the fee shown to the user and gates the balance check, so both
-                        // read one simulation of one transaction instead of disagreeing about the
-                        // amount transferred and about what energy_penalty means. Deliberately not
-                        // routed through FeeServiceComposite: it swallows a failure into
-                        // calculateDefaultFees, and a reverted simulation has to fail the send
-                        // rather than reach the wire behind a fabricated fee_limit.
+                        // simulate the transaction being sent and read energy_penalty the same
+                        // way. It is still its own simulation: this specific is rebuilt at
+                        // Continue, and the ceiling should track the chain as it stands then, not
+                        // at the keystroke that priced the form. Deliberately not routed through
+                        // FeeServiceComposite: it swallows a failure into calculateDefaultFees,
+                        // and a reverted simulation has to fail the send rather than reach the
+                        // wire behind a fabricated fee_limit.
                         val fees =
                             tronFeeService.calculateFees(
                                 Transfer(

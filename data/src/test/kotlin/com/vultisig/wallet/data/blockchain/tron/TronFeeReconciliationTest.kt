@@ -45,9 +45,12 @@ import org.junit.jupiter.api.Test
  * produce the fee shown to the user and checked against their balance, while
  * [BlockChainSpecificRepositoryImpl] ran a second simulation — against the sender's whole balance,
  * with `energy_penalty` added on top of `energy_used` rather than read as the share inside it — for
- * the `fee_limit` that actually reached the wire. Both numbers now come out of one pass, and they
- * stay deliberately different in one respect only: staked energy discounts what the sender is
- * expected to burn, never the ceiling the chain enforces.
+ * the `fee_limit` that actually reached the wire. Both numbers now come out of the same
+ * [TronFeeService] computation over the amount being sent. Each caller still runs it against the
+ * chain as it stands — the specific is rebuilt at Continue — so they can drift as the chain moves,
+ * but they no longer disagree about what is simulated or what the response means. They stay
+ * deliberately different in one respect only: staked energy discounts what the sender is expected
+ * to burn, never the ceiling the chain enforces.
  */
 internal class TronFeeReconciliationTest {
 
@@ -55,7 +58,7 @@ internal class TronFeeReconciliationTest {
     private val feeService = TronFeeService(tronApi)
 
     @Test
-    fun `the signed fee_limit and the displayed fee come out of one simulation of the amount sent`() =
+    fun `the signed fee_limit and the displayed fee come out of the same pass over the amount sent`() =
         runTest {
             stubSimulation(energyUsed = 65_000L, energyPenalty = 50_000L)
 
@@ -67,6 +70,8 @@ internal class TronFeeReconciliationTest {
             // TronServiceFeeLimitTests.testGetBlockInfo_trc20Transfer_usesSimulationResult.
             assertEquals("35490000", signed)
             assertEquals(BigInteger.valueOf(27_300_000L + CONTRACT_BANDWIDTH_FEE), displayed.amount)
+            // One simulation per caller. What this pins is that both of them simulate the amount
+            // being sent — not that a single RPC feeds both.
             coVerify(exactly = 2) {
                 tronApi.getTriggerConstantContractFee(
                     ownerAddressBase58 = SENDER,
