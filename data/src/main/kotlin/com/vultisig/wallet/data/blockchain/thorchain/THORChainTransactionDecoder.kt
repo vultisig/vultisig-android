@@ -104,11 +104,10 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
      *
      * `bond`, `withdraw`, `deposit` and `claim` are ordinary CosmWasm message keys, not a namespace
      * Rujira owns: any contract on THORChain can spell them, and being on THORChain is all the
-     * provenance the transaction itself carries. Without the allowlist an unrelated contract's
+     * provenance the transaction itself carries. Without an allowlist an unrelated contract's
      * `{"withdraw":{"slippage":…}}` would be titled "You're redeeming" over its attached funds. So
-     * the contract has to be one this app transacts with — see
-     * [ThorchainStakingContracts.WASM_CONTRACTS] — before its message is read as anything but a
-     * contract call.
+     * [operation] reads each shape only at the contracts that mean it, and anything else stops here
+     * as a contract call that states no amount.
      */
     private fun decodeWasm(wasm: WasmExecuteContractPayload): DecodedTransaction {
         val counterparty = DecodedCounterparty.Contract(wasm.contractAddress)
@@ -120,9 +119,7 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
                 evidence = DecodedEvidence.WasmExecuteMsg,
             )
 
-        if (wasm.contractAddress !in ThorchainStakingContracts.WASM_CONTRACTS) return opaque
-
-        val operation = operation(wasm.executeMsg) ?: return opaque
+        val operation = operation(wasm) ?: return opaque
 
         return DecodedTransaction(
             operation = operation,
@@ -158,30 +155,44 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
     }
 
     /**
-     * Parses direct Rujira JSON and base64-wrapped yVault JSON. Ambiguous action sets are refused
-     * rather than resolved by whichever key happened to come first.
+     * Parses direct Rujira JSON and base64-wrapped yVault JSON, each only at the contracts where
+     * its keys mean what they say. Ambiguous action sets are refused rather than resolved by
+     * whichever key happened to come first.
+     *
+     * The three shapes do not overlap in practice — a mint is fronted by the affiliate router, a
+     * redemption is addressed at the vault token, staking at a staking contract — so each is asked
+     * for only where this app and iOS actually send it.
      */
-    private fun operation(executeMsg: String): DecodedOperation? {
+    private fun operation(wasm: WasmExecuteContractPayload): DecodedOperation? {
         val root =
-            runCatching { Json.parseToJsonElement(executeMsg).jsonObject }.getOrNull()
+            runCatching { Json.parseToJsonElement(wasm.executeMsg).jsonObject }.getOrNull()
                 ?: return null
 
-        vaultEnvelopeOperation(root)?.let {
-            return it
+        return when (wasm.contractAddress) {
+            in ThorchainStakingContracts.VAULT_MINT_ROUTERS -> vaultEnvelopeOperation(root)
+            in ThorchainStakingContracts.VAULT_TOKEN_CONTRACTS -> yVaultRedeemOperation(root)
+            in ThorchainStakingContracts.STAKING_CONTRACTS -> rujiraOperation(root, depth = 0)
+            else -> null
         }
-        yVaultRedeemOperation(root)?.let {
-            return it
-        }
-        return rujiraOperation(root, depth = 0)
     }
 
     /**
      * The yVault envelope: an outer `execute` naming the target contract, with the real instruction
      * base64-encoded inside it.
+     *
+     * The envelope forwards, so allowlisting the contract it is *addressed* to only proves who
+     * carries the call, not what it lands on. `contract_addr` is where the instruction actually
+     * executes, and `deposit`/`withdraw` mean mint and redeem only at a vault token — so the
+     * forwarding target has to be one too, or a call routed through the same affiliate to somewhere
+     * else would be named a yVault mint. Both platforms write the same envelope: iOS wraps its
+     * redeem in it as well, and its target is the same yRUNE/yTCY pair.
      */
     private fun vaultEnvelopeOperation(root: JsonObject): DecodedOperation? {
-        val encoded =
-            (root[KEY_EXECUTE] as? JsonObject)?.get(KEY_MSG)?.asStringOrNull() ?: return null
+        val envelope = (root[KEY_EXECUTE] as? JsonObject) ?: return null
+        val target = envelope[KEY_CONTRACT_ADDR]?.asStringOrNull() ?: return null
+        if (target !in VAULT_TOKEN_CONTRACTS) return null
+
+        val encoded = envelope[KEY_MSG]?.asStringOrNull() ?: return null
         val decoded =
             runCatching { String(Base64.getDecoder().decode(encoded)) }.getOrNull() ?: return null
         val inner =
@@ -195,8 +206,8 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
      * redemption straight to the token contract as a bare `{"withdraw":{"slippage":"…"}}`, where
      * iOS wraps the same instruction in the `execute` envelope above. Read by [RUJIRA_ACTIONS]
      * alone, that bare `withdraw` would name the redemption an unstake — the wrong verb over the
-     * right figure. The slippage is what tells the two apart: a Rujira `account.withdraw` states an
-     * amount and never a slippage, and it is namespaced rather than bare.
+     * right figure. Two things tell them apart: the contract, because only a vault token redeems,
+     * and the slippage, because a Rujira `account.withdraw` states an amount and never a slippage.
      */
     private fun yVaultRedeemOperation(root: JsonObject): DecodedOperation? {
         val withdraw = (root[KEY_WITHDRAW] as? JsonObject) ?: return null
@@ -472,9 +483,13 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
         const val TCY_CLAIM_MAX_FIELDS = 2
 
         const val KEY_EXECUTE = "execute"
+        const val KEY_CONTRACT_ADDR = "contract_addr"
         const val KEY_MSG = "msg"
         const val KEY_WITHDRAW = "withdraw"
         const val KEY_SLIPPAGE = "slippage"
+
+        /** Where a yVault envelope may forward to — see [ThorchainStakingContracts]. */
+        val VAULT_TOKEN_CONTRACTS = ThorchainStakingContracts.VAULT_TOKEN_CONTRACTS
 
         /** Actions the yVault envelope carries, in the vault's own vocabulary. */
         val VAULT_ACTIONS =

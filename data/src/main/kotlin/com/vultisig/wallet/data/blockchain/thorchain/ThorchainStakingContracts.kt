@@ -37,11 +37,20 @@ object ThorchainStakingContracts {
     const val YVAULT_AFFILIATE = "thor1v3f7h384r8hw6r3dtcgfq6d5fq842u6cjzeuu8nr0cp93j7zfxyquyrfl8"
 
     /**
-     * Every address this app may address a wasm execute to, and the allowlist
-     * [THORChainTransactionDecoder] reads Rujira's grammar under. A payload built by a newer
-     * release against a contract missing here reads as a plain contract call — the reading
-     * degrades, rather than a stranger's contract borrowing a staking verb.
+     * Where `account.*` and `liquid.*` mean staking. [THORChainTransactionDecoder] reads those
+     * namespaces only here: elsewhere they are just JSON keys a contract chose.
      */
-    val WASM_CONTRACTS =
-        setOf(STAKING_RUJI, STAKING_TCY_COMPOUND, BRUNE_LIQUID_BOND, YRUNE, YTCY, YVAULT_AFFILIATE)
+    val STAKING_CONTRACTS = setOf(STAKING_RUJI, STAKING_TCY_COMPOUND, BRUNE_LIQUID_BOND)
+
+    /**
+     * The vault tokens themselves. A bare `withdraw` carrying a slippage is a redemption only at
+     * one of these, and they are the only targets a mint envelope may forward to.
+     */
+    val VAULT_TOKEN_CONTRACTS = setOf(YRUNE, YTCY)
+
+    /**
+     * What may front a yVault envelope. The envelope forwards, so this says who carries the call
+     * and [VAULT_TOKEN_CONTRACTS] says where it may land — both have to hold.
+     */
+    val VAULT_MINT_ROUTERS = setOf(YVAULT_AFFILIATE)
 }
