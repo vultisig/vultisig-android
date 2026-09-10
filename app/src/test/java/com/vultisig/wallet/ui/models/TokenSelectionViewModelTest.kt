@@ -16,12 +16,12 @@ import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -79,10 +79,8 @@ internal class TokenSelectionViewModelTest {
             Snapshot.sendApplyNotifications()
             advanceUntilIdle()
 
-            assertEquals(
-                listOf(usdc.id to true, bridgedUsdc.id to false),
-                vm.uiState.value.tokens.map { it.coin.id to it.isEnabled },
-            )
+            vm.uiState.value.tokens.map { it.coin.id to it.isEnabled } shouldBe
+                listOf(usdc.id to true, bridgedUsdc.id to false)
         }
 
     @Test
@@ -95,7 +93,7 @@ internal class TokenSelectionViewModelTest {
             val vm = createViewModel()
             advanceUntilIdle()
 
-            assertEquals(listOf(usdc.id, arb.id), vm.uiState.value.tokens.map { it.coin.id })
+            vm.uiState.value.tokens.map { it.coin.id } shouldBe listOf(usdc.id, arb.id)
         }
 
     private fun createViewModel() =

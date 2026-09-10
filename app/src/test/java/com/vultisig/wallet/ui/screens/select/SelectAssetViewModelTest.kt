@@ -21,15 +21,15 @@ import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_S
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -137,13 +137,13 @@ internal class SelectAssetViewModelTest {
             val vm = createViewModel()
 
             // ThorChain is the preselected chain and supports custom tokens.
-            assertTrue(vm.state.value.canAddCustomToken)
+            vm.state.value.canAddCustomToken.shouldBeTrue()
 
             vm.selectChain(Chain.ZkSync)
-            assertFalse(vm.state.value.canAddCustomToken)
+            vm.state.value.canAddCustomToken.shouldBeFalse()
 
             vm.selectChain(Chain.Ethereum)
-            assertTrue(vm.state.value.canAddCustomToken)
+            vm.state.value.canAddCustomToken.shouldBeTrue()
         }
 
     @Test
@@ -160,7 +160,7 @@ internal class SelectAssetViewModelTest {
             coVerify(exactly = 1) { navigator.route(Route.CustomToken(Chain.Ethereum.raw)) }
             coVerify(exactly = 1) { enableTokenUseCase.invoke(VAULT_ID, customToken) }
             // The query that found nothing would keep hiding the token that was just added.
-            assertEquals(customToken.ticker, vm.searchFieldState.text.toString())
+            vm.searchFieldState.text.toString() shouldBe customToken.ticker
         }
 
     @Test
@@ -201,7 +201,7 @@ internal class SelectAssetViewModelTest {
             val vm = createViewModel(preselectedChain = Chain.Base)
 
             advanceUntilIdle()
-            assertEquals(listOf(eth.id, usdc.id), vm.state.value.assets.map { it.token.id })
+            vm.state.value.assets.map { it.token.id } shouldBe listOf(eth.id, usdc.id)
 
             vm.searchFieldState.setTextAndPlaceCursorAtEnd("ethereum")
             // Nothing composes in a JVM test, so the snapshot the edit lands in has to be
@@ -209,7 +209,7 @@ internal class SelectAssetViewModelTest {
             Snapshot.sendApplyNotifications()
             advanceUntilIdle()
 
-            assertEquals(listOf(eth.id), vm.state.value.assets.map { it.token.id })
+            vm.state.value.assets.map { it.token.id } shouldBe listOf(eth.id)
         }
 
     @Test
@@ -229,8 +229,8 @@ internal class SelectAssetViewModelTest {
             advanceUntilIdle()
 
             val found = vm.state.value.assets.single()
-            assertEquals(usdc.id, found.token.id)
-            assertTrue(found.isDisabled)
+            found.token.id shouldBe usdc.id
+            found.isDisabled.shouldBeTrue()
         }
 
     private fun accountsOf(vararg coins: Coin) =
