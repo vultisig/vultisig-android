@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.models.swap
 
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.ThorChainAffiliateHelper
 import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.ui.screens.settings.TierType
 import javax.inject.Inject
@@ -28,9 +28,9 @@ internal class SwapDiscountChecker @Inject constructor() {
             tierType = vultBPSDiscount?.getTierType(),
         )
 
-    fun checkReferralBpsDiscount(tierType: TierType?, code: String): ReferralDiscountResult {
+    fun checkReferralBpsDiscount(vultBpsDiscount: Int?, code: String): ReferralDiscountResult {
         val referralBpsDiscount =
-            referralBpsFor(tierType)
+            referralBpsFor(vultBpsDiscount)
                 ?: return ReferralDiscountResult(referralBpsDiscount = null, referralCode = null)
         return ReferralDiscountResult(
             referralBpsDiscount = referralBpsDiscount,
@@ -40,8 +40,13 @@ internal class SwapDiscountChecker @Inject constructor() {
 }
 
 /**
- * Referral discount in bps for a swap at [tierType], or null when none applies: Ultimate already
- * pays no affiliate fee, so there is nothing left for a referral to take off.
+ * What a saved referral code saves the user on a THORChain swap at [vultBpsDiscount], or null when
+ * there is nothing to show.
+ *
+ * Taken from the request builder's own arithmetic so the row states the difference the code makes
+ * to the totals actually sent, rather than the referrer's payout — which is a leg the user pays,
+ * not a reduction, and read as a saving it overstated the row twofold (#5765). Null covers both
+ * ends: no code sent means no row, and a code that saves nothing has no saving to itemize.
  */
-internal fun referralBpsFor(tierType: TierType?): Int? =
-    THORChainSwaps.REFERRED_USER_FEE_RATE_BP.takeUnless { tierType == TierType.ULTIMATE }
+internal fun referralBpsFor(vultBpsDiscount: Int?): Int? =
+    ThorChainAffiliateHelper.referralSavingBps(vultBpsDiscount ?: 0).takeIf { it > 0 }

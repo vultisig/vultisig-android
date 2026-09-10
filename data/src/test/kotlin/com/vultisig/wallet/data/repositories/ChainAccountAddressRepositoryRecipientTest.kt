@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.SolanaAccountOwnership
 import com.vultisig.wallet.data.api.SolanaApi
+import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.models.Chain
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -158,6 +159,50 @@ class ChainAccountAddressRepositoryRecipientTest {
         coVerify(exactly = 0) { solanaApi.getAccountOwnership(any()) }
     }
 
+    @Test
+    fun `the bittensor burn address is refused`() = runTest {
+        // The all-zero AccountId: well-formed SS58-42, so chain validation admits it, and no key
+        // derives it, so the TAO would be destroyed rather than merely stranded.
+        every { repository.isValid(Chain.Bittensor, BittensorHelper.BURN_ADDRESS) } returns true
+
+        assertEquals(
+            RecipientValidity.BurnAddress,
+            repository.validateRecipient(Chain.Bittensor, BittensorHelper.BURN_ADDRESS),
+        )
+    }
+
+    @Test
+    fun `an ordinary bittensor address is a valid recipient`() = runTest {
+        every { repository.isValid(Chain.Bittensor, BITTENSOR_WALLET) } returns true
+
+        assertEquals(
+            RecipientValidity.Valid,
+            repository.validateRecipient(Chain.Bittensor, BITTENSOR_WALLET),
+        )
+    }
+
+    @Test
+    fun `the burn rule is scoped to bittensor`() = runTest {
+        // Polkadot encodes the same account under its own prefix, so this spelling cannot be a
+        // Polkadot recipient at all; the rule stays where the address it names can actually arrive.
+        every { repository.isValid(Chain.Polkadot, BittensorHelper.BURN_ADDRESS) } returns true
+
+        assertEquals(
+            RecipientValidity.Valid,
+            repository.validateRecipient(Chain.Polkadot, BittensorHelper.BURN_ADDRESS),
+        )
+    }
+
+    @Test
+    fun `chain validation is still what rejects a malformed bittensor address`() = runTest {
+        every { repository.isValid(Chain.Bittensor, "garbage") } returns false
+
+        assertEquals(
+            RecipientValidity.InvalidForChain,
+            repository.validateRecipient(Chain.Bittensor, "garbage"),
+        )
+    }
+
     private companion object {
         /** The wallet's wrapped-SOL associated token account, pinned in the derivation test. */
         const val TOKEN_ACCOUNT = "GppmkdEmuqNgS7uY5SSN3gXEamJrcPG9197wBdQ37NLc"
@@ -172,5 +217,8 @@ class ChainAccountAddressRepositoryRecipientTest {
         const val TOKEN_2022_PROGRAM = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
 
         const val SYSTEM_PROGRAM = "11111111111111111111111111111111"
+
+        /** A spendable SS58-42 account, to contrast with [BittensorHelper.BURN_ADDRESS]. */
+        const val BITTENSOR_WALLET = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
     }
 }

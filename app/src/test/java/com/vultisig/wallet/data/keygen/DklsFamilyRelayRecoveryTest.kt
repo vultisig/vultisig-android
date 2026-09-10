@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.keygen
 
+import com.vultisig.wallet.data.api.RelaySendBudget
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.mediator.Message
@@ -100,6 +101,7 @@ class DklsFamilyRelayRecoveryTest {
             serverUrl: String,
             messageId: String?,
             message: Message,
+            budget: RelaySendBudget?,
         ) = unexpected("sendTssMessage")
 
         override suspend fun getTssMessages(

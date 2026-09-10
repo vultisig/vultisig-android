@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -127,5 +128,92 @@ internal class TonDappHeroResolverTest {
         val hero = resolver.resolveHero(messages = emptyList(), vaultCoins = emptyList()) { it }
 
         assertNull(hero)
+    }
+
+    @Test
+    fun `resolves a row coin from on-chain metadata for a jetton the vault does not hold`() =
+        runTest {
+            // The case the rows exist for: no vault coin, so no hero — the row still needs the
+            // ticker and scale to state what is leaving.
+            coEvery { tonApi.getJettonMasterAddress("EQwallet") } returns "EQmaster"
+            coEvery { tonApi.getJettonMetadata("EQmaster") } returns
+                TonJettonMetadata(ticker = "USDT", decimals = 6, logo = "usdt")
+
+            val coins =
+                resolver.resolveJettonRowCoins(
+                    messages =
+                        listOf(
+                            TonMessage(
+                                to = "EQwallet",
+                                amount = "50000000",
+                                payload = jettonTransfer,
+                            )
+                        ),
+                    vaultCoins = emptyList(),
+                    toUserFriendly = { it },
+                )
+
+            assertEquals(TonHeroCoin("USDT", 6, "usdt"), coins["EQwallet"])
+        }
+
+    @Test
+    fun `leaves a row coin unresolved when the jetton has no metadata`() = runTest {
+        coEvery { tonApi.getJettonMasterAddress("EQwallet") } returns "EQmaster"
+        coEvery { tonApi.getJettonMetadata("EQmaster") } returns null
+
+        val coins =
+            resolver.resolveJettonRowCoins(
+                messages =
+                    listOf(
+                        TonMessage(to = "EQwallet", amount = "50000000", payload = jettonTransfer)
+                    ),
+                vaultCoins = emptyList(),
+                toUserFriendly = { it },
+            )
+
+        assertEquals(emptyMap(), coins)
+    }
+
+    @Test
+    fun `keeps the other rows' coins when one jetton lookup fails`() = runTest {
+        coEvery { tonApi.getJettonMasterAddress("EQwallet") } throws RuntimeException("offline")
+        coEvery { tonApi.getJettonMasterAddress("EQwallet2") } returns "EQmaster2"
+
+        val coins =
+            resolver.resolveJettonRowCoins(
+                messages =
+                    listOf(
+                        TonMessage(to = "EQwallet", amount = "50000000", payload = jettonTransfer),
+                        TonMessage(to = "EQwallet2", amount = "50000000", payload = jettonTransfer),
+                    ),
+                vaultCoins = listOf(jettonCoin("EQmaster2")),
+                toUserFriendly = { it },
+            )
+
+        assertEquals(mapOf("EQwallet2" to TonHeroCoin("USDT", 6, "usdt")), coins)
+    }
+
+    @Test
+    fun `fetches a jetton master once for both the rows and the hero`() = runTest {
+        coEvery { tonApi.getJettonMasterAddress("EQwallet") } returns "EQmaster"
+        val messages =
+            listOf(TonMessage(to = "EQwallet", amount = "50000000", payload = jettonTransfer))
+
+        resolver.resolveJettonRowCoins(messages, listOf(jettonCoin("EQmaster"))) { it }
+        resolver.resolveHero(messages, listOf(jettonCoin("EQmaster"))) { it }
+
+        coVerify(exactly = 1) { tonApi.getJettonMasterAddress("EQwallet") }
+    }
+
+    @Test
+    fun `ignores messages that are not jetton transfers`() = runTest {
+        val coins =
+            resolver.resolveJettonRowCoins(
+                messages = listOf(TonMessage(to = "EQwallet", amount = "50000000")),
+                vaultCoins = emptyList(),
+                toUserFriendly = { it },
+            )
+
+        assertEquals(emptyMap(), coins)
     }
 }

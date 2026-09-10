@@ -44,6 +44,7 @@ import org.bouncycastle.crypto.digests.Blake2bDigest
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -556,6 +557,26 @@ class ChainHelpersTest {
                 helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
 
             assertEquals(preImageHashes, transaction.expectedImageHash)
+        }
+    }
+
+    /**
+     * The last line of defence for issue #5844: the form refuses the all-zero AccountId, but the
+     * extrinsic builder is what every signing path funnels through, so it refuses it too rather
+     * than trusting that the only caller checked. Reuses a corpus payload with the destination
+     * swapped, so the shared golden vectors stay untouched.
+     */
+    @Test
+    fun bittensorRefusesTheBurnAddress() {
+        val payload =
+            loadTransactionData(BITTENSOR_JSON_FILE)
+                .first()
+                .keysignPayload
+                .toInternalKeySignPayload()
+                .copy(toAddress = BittensorHelper.BURN_ADDRESS)
+
+        assertThrows(IllegalArgumentException::class.java) {
+            BittensorHelper(HEX_PUBLIC_KEY_EDDSA).getPreSignedImageHash(payload)
         }
     }
 

@@ -45,27 +45,52 @@ internal class TonMessageDecodeTest {
 
     @Test
     fun `maps a jetton transfer to a labelled row with the real recipient and forward amount`() {
-        val row =
-            mapTonMessages(
-                    SignTon(
-                        tonMessages =
-                            listOf(
-                                TonMessage(
-                                    to = "EQwallet",
-                                    amount = "50000000",
-                                    payload = jettonTransfer,
-                                )
-                            )
-                    ),
-                    fromAddress = null,
-                    formatAddress = { it },
-                )
-                .single()
+        val row = jettonRow()
         assertEquals(TonMessageOperation.JettonTransfer, row.operation)
         assertEquals(recipient, row.recipient)
-        assertEquals("0.001 TON", row.amount)
+        assertEquals("0.001 GRAM", row.amount)
         assertEquals(jettonTransfer, row.rawPayload)
     }
+
+    @Test
+    fun `states a jetton transfer's own quantity with its ticker once the coin resolves`() {
+        val row = jettonRow(jettonCoins = mapOf("EQwallet" to TonHeroCoin("USDT", 6, "usdt")))
+        // The forwarded gas is not what the user is parting with; the quantity is its own row.
+        assertEquals("100 USDT", row.tokenAmount)
+        assertEquals("0.001 GRAM", row.amount)
+    }
+
+    @Test
+    fun `states a jetton transfer's raw quantity when the jetton is not in the vault`() {
+        // Nothing resolved the jetton wallet — the vault has never held it and no metadata came
+        // back. The magnitude still has to reach the screen, without a guessed ticker.
+        val row = jettonRow(jettonCoins = emptyMap())
+        assertEquals("100000000", row.tokenAmount)
+    }
+
+    @Test
+    fun `keeps a jetton row's quantity raw when a different wallet resolved`() {
+        val row = jettonRow(jettonCoins = mapOf("EQother" to TonHeroCoin("USDT", 6, "usdt")))
+        assertEquals("100000000", row.tokenAmount)
+    }
+
+    private fun jettonRow(jettonCoins: Map<String, TonHeroCoin> = emptyMap()) =
+        mapTonMessages(
+                SignTon(
+                    tonMessages =
+                        listOf(
+                            TonMessage(
+                                to = "EQwallet",
+                                amount = "50000000",
+                                payload = jettonTransfer,
+                            )
+                        )
+                ),
+                fromAddress = null,
+                jettonCoins = jettonCoins,
+                formatAddress = { it },
+            )
+            .single()
 
     @Test
     fun `maps an excesses body to an excess gas refund row with no recipient or amount`() {
@@ -84,6 +109,7 @@ internal class TonMessageDecodeTest {
         assertEquals(TonMessageOperation.ExcessGasRefund, row.operation)
         assertNull(row.recipient)
         assertNull(row.amount)
+        assertNull(row.tokenAmount)
     }
 
     @Test
@@ -97,7 +123,7 @@ internal class TonMessageDecodeTest {
                 .single()
         assertEquals(TonMessageOperation.Transfer, row.operation)
         assertEquals("EQabc", row.recipient)
-        assertEquals("1.5 TON", row.amount)
+        assertEquals("1.5 GRAM", row.amount)
         assertNull(row.rawPayload)
     }
 

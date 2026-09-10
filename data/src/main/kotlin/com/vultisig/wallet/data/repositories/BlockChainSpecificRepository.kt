@@ -65,6 +65,13 @@ import wallet.core.jni.Base58
 data class BlockChainSpecificAndUtxo(
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),
+    /**
+     * What this plan priced on top of `gasLimit × maxFeePerGas` — the OP-stack L1 data fee op-geth
+     * bills against the sender's balance before executing the transaction. Reported separately
+     * because [blockChainSpecific] carries only the gas bond, so an amount re-fitted to the signed
+     * fee would otherwise leave this term unreserved and be refused for insufficient funds.
+     */
+    val l1Amount: BigInteger = BigInteger.ZERO,
 )
 
 interface BlockChainSpecificRepository {
@@ -263,7 +270,8 @@ constructor(
                         priorityFeeWei = priorityFeeWei,
                         nonce = nonce,
                         gasLimit = gasLimitFee,
-                    )
+                    ),
+                    l1Amount = fees.l1Amount,
                 )
             }
 

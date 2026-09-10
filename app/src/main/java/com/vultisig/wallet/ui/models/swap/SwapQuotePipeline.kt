@@ -15,7 +15,6 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
-import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
@@ -421,8 +420,7 @@ internal class SwapQuotePipeline(
         var referralCodeToStore: String? = null
         if (provider == SwapProvider.THORCHAIN) {
             referral?.let { code ->
-                val tierType = vultBPSDiscount?.getTierType()
-                val result = swapDiscountChecker.checkReferralBpsDiscount(tierType, code)
+                val result = swapDiscountChecker.checkReferralBpsDiscount(vultBPSDiscount, code)
                 referralCodeToStore = result.referralCode
                 discountInfo = discountInfo.copy(referralBpsDiscount = result.referralBpsDiscount)
             }

@@ -35,8 +35,10 @@ import com.vultisig.wallet.ui.theme.Theme
 /**
  * Displays a collapsible list of decoded TonConnect messages for user review before signing. Each
  * message shows its operation (jetton transfer, NFT transfer, excess-gas refund, or plain
- * transfer), the real recipient, the forwarded TON amount, and the raw BOC payload (copyable, so
- * the full value stays recoverable behind the middle-ellipsis).
+ * transfer), the real recipient, the transferred token's quantity where the message carries one,
+ * the forwarded gas amount, and the raw BOC payload. Every row whose value has no bound — an
+ * address, an unresolved jetton's base-unit quantity, a payload — is copyable, so the full value
+ * stays recoverable behind the middle-ellipsis.
  *
  * @param messages decoded messages, built by [com.vultisig.wallet.ui.models.keysign.mapTonMessages]
  * @param initiallyExpanded preview-only override for the collapsed/expanded state; defaults to
@@ -134,6 +136,15 @@ private fun TonMessageRow(message: TonMessageUiModel, index: Int) {
                 monospace = true,
             )
         }
+        // The token's own quantity comes first: for a jetton transfer the row below it is only the
+        // forwarded gas, which is not what the user is parting with.
+        message.tokenAmount?.let { tokenAmount ->
+            TonDetailRow(
+                label = stringResource(R.string.verify_transaction_amount_title),
+                value = tokenAmount,
+                copyableValue = tokenAmount,
+            )
+        }
         message.amount?.let { amount ->
             TonDetailRow(label = stringResource(message.operation.amountLabelRes), value = amount)
         }
@@ -228,14 +239,23 @@ private fun PreviewSignTonDisplay() {
                 TonMessageUiModel(
                     operation = TonMessageOperation.JettonTransfer,
                     recipient = "EQDrLq9I7m6lvP6zUGZqJ8r4y0sP3pQ1n2vWk5tXcB9aZ7eF",
-                    amount = "0.001 TON",
+                    amount = "0.001 GRAM",
+                    tokenAmount = "100 USDT",
+                    rawPayload = "te6cckEBAQEAWQAArg+KfqUAAAAAAAAwOUBfXhAIAf...",
+                    hasStateInit = false,
+                ),
+                TonMessageUiModel(
+                    operation = TonMessageOperation.JettonTransfer,
+                    recipient = "EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA",
+                    amount = "0.001 GRAM",
+                    tokenAmount = "250000000000",
                     rawPayload = "te6cckEBAQEAWQAArg+KfqUAAAAAAAAwOUBfXhAIAf...",
                     hasStateInit = false,
                 ),
                 TonMessageUiModel(
                     operation = TonMessageOperation.Transfer,
                     recipient = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                    amount = "0.32 TON",
+                    amount = "0.32 GRAM",
                     rawPayload = null,
                     hasStateInit = true,
                 ),

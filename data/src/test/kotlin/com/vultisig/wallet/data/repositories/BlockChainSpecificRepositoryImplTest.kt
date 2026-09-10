@@ -91,6 +91,42 @@ internal class BlockChainSpecificRepositoryImplTest {
         )
     }
 
+    /**
+     * The gas bond on the specific is only part of what op-geth bills a send for: an OP-stack L1
+     * data fee sits beside it in the same balance check. An amount re-fitted to the bond alone
+     * would leave that term unreserved, so the plan has to report it separately.
+     */
+    @Test
+    fun `native EVM specific reports the L1 data fee the fee service priced`() = runTest {
+        val destination = "0xdestination"
+        val coin = evmCoin(chain = Chain.Base, isNativeToken = true)
+        val result =
+            repository(
+                    evmApi =
+                        evmApi(nativeGasByRecipient = mapOf(destination to BigInteger("40000"))),
+                    evmFeeService =
+                        evmFeeService(
+                            feesByRecipient =
+                                mapOf(destination to (BigInteger("111") to BigInteger("22"))),
+                            l1Amount = BigInteger("777"),
+                        ),
+                )
+                .getSpecific(
+                    chain = Chain.Base,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = true,
+                    isDeposit = false,
+                    dstAddress = destination,
+                    tokenAmountValue = BigInteger.TEN,
+                    memo = null,
+                )
+
+        assertEquals(BigInteger("777"), result.l1Amount)
+    }
+
     @Test
     fun `native EVM specific falls back to default gas limit when gas estimation fails`() =
         runTest {
@@ -1147,7 +1183,8 @@ internal class BlockChainSpecificRepositoryImplTest {
     }
 
     private fun evmFeeService(
-        feesByRecipient: Map<String, Pair<BigInteger, BigInteger>>
+        feesByRecipient: Map<String, Pair<BigInteger, BigInteger>>,
+        l1Amount: BigInteger = BigInteger.ZERO,
     ): FeeService = mockk {
         coEvery { calculateFees(any()) } answers
             {
@@ -1159,7 +1196,8 @@ internal class BlockChainSpecificRepositoryImplTest {
                     networkPrice = BigInteger.ZERO,
                     maxFeePerGas = maxFee,
                     maxPriorityFeePerGas = priorityFee,
-                    amount = maxFee,
+                    amount = maxFee + l1Amount,
+                    l1Amount = l1Amount,
                 )
             }
 
