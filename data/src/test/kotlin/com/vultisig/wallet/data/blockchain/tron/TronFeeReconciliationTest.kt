@@ -203,6 +203,28 @@ internal class TronFeeReconciliationTest {
     }
 
     @Test
+    fun `a ceiling above the chain's own limit is clamped to it`() = runTest {
+        // #5860: TRON rejects a transaction whose fee_limit exceeds getMaxFeeLimit outright, so an
+        // energy figure large enough to breach it must be capped rather than signed.
+        stubSimulation(energyUsed = 400_000_000L, energyPenalty = 0L)
+
+        val displayed = feeService.calculateFees(trc20Transfer())
+
+        // 400,000,000 x 1.3 x 420 would be 218,400,000,000 sun, well past the 15,000 TRX cap.
+        assertEquals(BigInteger.valueOf(MAX_FEE_LIMIT), displayed.feeLimit)
+        assertEquals(MAX_FEE_LIMIT.toString(), trc20FeeLimit())
+    }
+
+    @Test
+    fun `a missing max fee limit leaves the ceiling uncapped rather than zeroing it`() = runTest {
+        // The bandwidth accessors fall back to 0. This one must not: a 0 cap would clamp every
+        // fee_limit to nothing and guarantee OUT_OF_ENERGY on every contract call.
+        stubSimulation(energyUsed = 65_000L, energyPenalty = 50_000L, maxFeeLimit = null)
+
+        assertEquals("35490000", trc20FeeLimit())
+    }
+
+    @Test
     fun `the fee_limit safety multiplier survives truncation`() {
         // 65,001 x 13 / 10 = 84,501.3 truncated to 84,501, x 420 = 35,490,420 — the
         // multiply-before-divide order must hold or this pins a different, smaller value.
@@ -241,9 +263,14 @@ internal class TronFeeReconciliationTest {
         return (specific as BlockChainSpecific.Tron).gasFeeEstimation.toString()
     }
 
-    private fun stubSimulation(energyUsed: Long, energyPenalty: Long, availableEnergy: Long = 0L) {
+    private fun stubSimulation(
+        energyUsed: Long,
+        energyPenalty: Long,
+        availableEnergy: Long = 0L,
+        maxFeeLimit: Long? = MAX_FEE_LIMIT,
+    ) {
         coEvery { tronApi.getSpecific() } returns block()
-        coEvery { tronApi.getChainParameters() } returns chainParameters()
+        coEvery { tronApi.getChainParameters() } returns chainParameters(maxFeeLimit = maxFeeLimit)
         coEvery { tronApi.getAccountResource(any()) } returns
             TronAccountResourceJson(energyLimit = availableEnergy)
         coEvery { tronApi.getAccount(any()) } answers { TronAccountJson(address = firstArg()) }
@@ -310,7 +337,7 @@ internal class TronFeeReconciliationTest {
             isNativeToken = true,
         )
 
-    private fun chainParameters(energyFee: Long? = 420L) =
+    private fun chainParameters(energyFee: Long? = 420L, maxFeeLimit: Long? = MAX_FEE_LIMIT) =
         TronChainParametersJson(
             listOfNotNull(
                 TronChainParameterJson("getTransactionFee", 1000L),
@@ -319,6 +346,7 @@ internal class TronFeeReconciliationTest {
                 TronChainParameterJson("getMemoFee", 1_000_000L),
                 energyFee?.let { TronChainParameterJson("getEnergyFee", it) },
                 TronChainParameterJson("getDynamicEnergyMaxFactor", 1200L),
+                maxFeeLimit?.let { TronChainParameterJson("getMaxFeeLimit", it) },
             )
         )
 
@@ -344,7 +372,7 @@ internal class TronFeeReconciliationTest {
         const val CONTRACT = "TDisDrQngvcMNfYurnQLW4oRnh9PzwDFxh"
         const val MARKET = "TFZ2nmDdmHuF8BxHrtrsX8nPgTX3FfuGzz"
 
-        /** 345 bytes at the test chain's 1,000 sun/byte — a contract call always pays it. */
+        /** 345 bytes at the test chain's 1,000 sun/byte, with no bandwidth to cover it. */
         const val CONTRACT_BANDWIDTH_FEE = 345_000L
 
         /**
@@ -352,6 +380,9 @@ internal class TronFeeReconciliationTest {
          * unsimulated.
          */
         const val FLAT_TOKEN_FEE_LIMIT = "30000000"
+
+        /** TRON's documented ceiling, 15,000 TRX. */
+        const val MAX_FEE_LIMIT = 15_000_000_000L
 
         val AMOUNT: BigInteger = BigInteger.valueOf(25_000_000L)
     }

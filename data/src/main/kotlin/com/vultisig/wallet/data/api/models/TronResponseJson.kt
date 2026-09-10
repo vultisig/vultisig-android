@@ -110,8 +110,18 @@ data class TronChainParametersJson(val chainParameter: List<TronChainParameterJs
     val bandwidthFeePrice: Long
         get() = chainParameterMapped["getTransactionFee"] ?: 0L
 
+    /**
+     * The largest `fee_limit` the chain will accept on a signed transaction. Falls back to TRON's
+     * documented default rather than to `0` like the bandwidth accessors above: this one is a
+     * ceiling, so a missing or zeroed key must leave the limit uncapped, never collapse it to
+     * nothing. https://developers.tron.network/docs/set-feelimit
+     */
+    val maxFeeLimit: Long
+        get() = chainParameterMapped["getMaxFeeLimit"]?.takeIf { it > 0L } ?: DEFAULT_MAX_FEE_LIMIT
+
     companion object {
         const val DEFAULT_ENERGY_FEE = 100L
+        private const val DEFAULT_MAX_FEE_LIMIT = 15_000_000_000L // 15,000 TRX
     }
 }
 

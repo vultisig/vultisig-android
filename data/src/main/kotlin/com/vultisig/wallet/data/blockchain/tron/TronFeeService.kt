@@ -289,7 +289,12 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
             maxEnergyRequired = maxEnergyUnitsRequired,
             energyRequired = energyUnitsRequired,
             energyDiscounted = energyToPay,
-            feeLimit = contractFeeLimit(energyUnitsRequired, energyPrice),
+            // A fee_limit above the chain's own ceiling is rejected outright, and one derived from
+            // a zeroed energy price would guarantee OUT_OF_ENERGY — clamp both ends rather than
+            // sign either.
+            feeLimit =
+                contractFeeLimit(energyUnitsRequired, energyPrice)
+                    .coerceIn(BigInteger.ZERO, chainParameters.maxFeeLimit.toBigInteger()),
             amount = energyToPay * energyPrice,
         )
     }
