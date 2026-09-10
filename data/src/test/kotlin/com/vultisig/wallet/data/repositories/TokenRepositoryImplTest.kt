@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.usecases.CardanoTokenFinder
 import com.vultisig.wallet.data.usecases.CosmosBankCoinFinder
 import com.vultisig.wallet.data.usecases.EvmCoinFinder
 import com.vultisig.wallet.data.usecases.RippleTokenFinder
@@ -249,6 +250,7 @@ internal class TokenRepositoryImplTest {
         evmCoinFinder: EvmCoinFinder = mockk(relaxed = true),
         cosmosBankCoinFinder: CosmosBankCoinFinder = mockk(relaxed = true),
         rippleTokenFinder: RippleTokenFinder = mockk(relaxed = true),
+        cardanoTokenFinder: CardanoTokenFinder = mockk(relaxed = true),
     ): TokenRepositoryImpl =
         TokenRepositoryImpl(
             evmApiFactory = mockk<EvmApiFactory>(relaxed = true),
@@ -257,6 +259,7 @@ internal class TokenRepositoryImplTest {
             evmCoinFinder = evmCoinFinder,
             cosmosBankCoinFinder = cosmosBankCoinFinder,
             rippleTokenFinder = rippleTokenFinder,
+            cardanoTokenFinder = cardanoTokenFinder,
         )
 
     private companion object {

@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.db.models
 
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
@@ -118,5 +120,65 @@ internal class TokenValueEntityTest {
             )
 
         assertEquals("XRP-Ripple", entity.tokenId)
+    }
+
+    // The cache row has to land on the same key Coin.id produces, or getCachedTokenBalances
+    // resolves no coin for it and renders the balance at zero decimals.
+    @Test
+    fun `a Cardano native token is contract-qualified, mirroring Coin id`() {
+        val snek = Coins.Cardano.SNEK.copy(address = CARDANO_ADDRESS)
+        val entity =
+            TokenValueEntity(
+                chain = Chain.Cardano.id,
+                address = CARDANO_ADDRESS,
+                ticker = snek.ticker,
+                tokenValue = "76715880000",
+                contractAddress = snek.contractAddress,
+            )
+
+        assertEquals(snek.id, entity.tokenId)
+    }
+
+    // TON and TRON were contract-qualified in Coin.id without this side following, so a jetton's
+    // cached row was resolving to no coin at all.
+    @Test
+    fun `TON and TRON tokens are contract-qualified, mirroring Coin id`() {
+        val jetton =
+            TokenValueEntity(
+                chain = Chain.Ton.id,
+                address = "UQTonAddress",
+                ticker = "USDJ",
+                tokenValue = "1",
+                contractAddress = "EQFirstJetton",
+            )
+        val trc20 =
+            TokenValueEntity(
+                chain = Chain.Tron.id,
+                address = "TTronAddress",
+                ticker = "USDX",
+                tokenValue = "1",
+                contractAddress = "TFirstTrc20",
+            )
+
+        assertEquals("USDJ-Ton-EQFirstJetton", jetton.tokenId)
+        assertEquals("USDX-Tron-TFirstTrc20", trc20.tokenId)
+    }
+
+    @Test
+    fun `native ADA keeps the plain ticker-chain tokenId`() {
+        val entity =
+            TokenValueEntity(
+                chain = Chain.Cardano.id,
+                address = CARDANO_ADDRESS,
+                ticker = "ADA",
+                tokenValue = "100",
+                contractAddress = "",
+            )
+
+        assertEquals("ADA-Cardano", entity.tokenId)
+    }
+
+    private companion object {
+        const val CARDANO_ADDRESS = "addr1v9g9wnzsutrxt7vcg4efdfwhagwh3x2f6hjwykk7acdpsfgyt4h2j"
     }
 }

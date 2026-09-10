@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.cardanoAssetId
 import com.vultisig.wallet.data.models.parseCardanoAssetId
 import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.utils.TtlCache
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -23,6 +24,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.path
 import java.math.BigInteger
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.json.Json
@@ -44,6 +46,12 @@ interface CardanoApi {
     /** The held quantity of the native asset [coin] names through its `contractAddress`. */
     suspend fun getTokenBalance(coin: Coin): BigInteger
 
+    /**
+     * Every native-asset row Koios reports for [address], one per `(asset, UTxO group)` — the same
+     * asset can appear more than once, so a caller after a per-asset quantity must sum them.
+     */
+    suspend fun getAddressAssets(address: String): List<CardanoAssetResponseJson>
+
     suspend fun getUTXOs(coin: Coin): List<UtxoInfo>
 
     suspend fun getTxStatus(txHash: String): CardanoTxStatusResponseJson?
@@ -60,6 +68,19 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
     private val apiV1Path: String = "api/v1"
     private val ogmiosUrl = "https://api.vultisig.com/ada/"
 
+    /**
+     * One `address_assets` walk shared by every read of the same address.
+     *
+     * `AccountsRepository` fans a non-EVM chain's balances out with one concurrent `async` per
+     * coin, and each [getTokenBalance] walks the address's whole asset list — so once discovery can
+     * add an arbitrary number of native tokens (an NFT is one too), opening the chain screen would
+     * fire that many identical paginated POSTs at Koios at once and be rate-limited into spurious
+     * zeros. The coalescing is what fixes that; the TTL only bridges a straggler whose fetch starts
+     * just after the shared one resolved, and at five seconds it sits far below Cardano's ~20s
+     * block time, so it can never hide a settled balance change from a refresh.
+     */
+    private val addressAssetsCache = TtlCache<String, List<CardanoAssetResponseJson>>()
+
     private companion object {
         // Ogmios "UnknownOutputReference": the tx spends inputs the ledger no longer knows.
         const val OGMIOS_UNKNOWN_OUTPUT_REFERENCE_CODE = 3117
@@ -69,6 +90,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
         const val KOIOS_PAGE_SIZE = 1000
         // Stops the walk if the node ever keeps returning full pages (50k distinct assets).
         const val KOIOS_MAX_PAGES = 50
+        val ADDRESS_ASSETS_TTL_MILLIS = TimeUnit.SECONDS.toMillis(5)
     }
 
     override suspend fun getBalance(coin: Coin): BigInteger {
@@ -94,48 +116,71 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
         val assetId = coin.contractAddress.lowercase()
         require(assetId.isNotBlank()) { "Cardano token ${coin.ticker} has no asset id" }
 
-        val requestBody = mapOf("_addresses" to listOf(coin.address))
         return try {
-            var total = BigInteger.ZERO
-            var walkedToLastPage = false
-            for (page in 0 until KOIOS_MAX_PAGES) {
-                val assets =
-                    httpClient
-                        .post(url) {
-                            url { path(apiV1Path, "address_assets") }
-                            parameter("offset", page * KOIOS_PAGE_SIZE)
-                            parameter("limit", KOIOS_PAGE_SIZE)
-                            setBody(requestBody)
-                        }
-                        .bodyOrThrow<List<CardanoAssetResponseJson>>()
-
-                // An address can hold the same asset across several UTXOs, so Koios may return
-                // more than one row for it; the wallet balance is their sum.
-                total =
-                    assets
-                        .filter { cardanoAssetId(it.policyId ?: "", it.assetName ?: "") == assetId }
-                        .fold(total) { sum, asset ->
-                            sum + (asset.quantity?.toBigIntegerOrNull() ?: BigInteger.ZERO)
-                        }
-
-                // A short page is the last one; a full page means there may be more rows.
-                if (assets.size < KOIOS_PAGE_SIZE) {
-                    walkedToLastPage = true
-                    break
+            // An address can hold the same asset across several UTXOs, so Koios may return
+            // more than one row for it; the wallet balance is their sum.
+            walkAddressAssets(coin.address, subject = coin.ticker)
+                .filter { cardanoAssetId(it.policyId ?: "", it.assetName ?: "") == assetId }
+                .fold(BigInteger.ZERO) { sum, asset ->
+                    sum + (asset.quantity?.toBigIntegerOrNull() ?: BigInteger.ZERO)
                 }
-            }
-            // Every page came back full, so the walk never proved it read the whole holding: the
-            // asset may sit past the ceiling. Fail rather than hand back a zero or an undercount.
-            check(walkedToLastPage) {
-                "Cardano address_assets exceeded ${KOIOS_MAX_PAGES * KOIOS_PAGE_SIZE} rows; " +
-                    "${coin.ticker} balance would be incomplete"
-            }
-            total
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("Error in Cardano getTokenBalance : %s", e.message)
             throw e
         }
+    }
+
+    override suspend fun getAddressAssets(address: String): List<CardanoAssetResponseJson> =
+        try {
+            walkAddressAssets(address, subject = "discovery")
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e("Error in Cardano getAddressAssets : %s", e.message)
+            throw e
+        }
+
+    /**
+     * Reads every `address_assets` row for [address], page by page.
+     *
+     * [subject] only names the caller in the ceiling message. Throwing there rather than returning
+     * a short list is deliberate: a truncated walk understates a balance and hides held assets from
+     * discovery, and neither caller can tell the difference from a genuinely small holding.
+     */
+    private suspend fun walkAddressAssets(
+        address: String,
+        subject: String,
+    ): List<CardanoAssetResponseJson> =
+        addressAssetsCache.getOrPut(address, ADDRESS_ASSETS_TTL_MILLIS) {
+            fetchAddressAssets(address, subject)
+        }
+
+    private suspend fun fetchAddressAssets(
+        address: String,
+        subject: String,
+    ): List<CardanoAssetResponseJson> {
+        val requestBody = mapOf("_addresses" to listOf(address))
+        val rows = mutableListOf<CardanoAssetResponseJson>()
+        for (page in 0 until KOIOS_MAX_PAGES) {
+            val assets =
+                httpClient
+                    .post(url) {
+                        url { path(apiV1Path, "address_assets") }
+                        parameter("offset", page * KOIOS_PAGE_SIZE)
+                        parameter("limit", KOIOS_PAGE_SIZE)
+                        setBody(requestBody)
+                    }
+                    .bodyOrThrow<List<CardanoAssetResponseJson>>()
+            rows += assets
+
+            // A short page is the last one; a full page means there may be more rows.
+            if (assets.size < KOIOS_PAGE_SIZE) return rows
+        }
+        // Every page came back full, so the walk never proved it read the whole holding.
+        error(
+            "Cardano address_assets exceeded ${KOIOS_MAX_PAGES * KOIOS_PAGE_SIZE} rows; " +
+                "$subject would be incomplete"
+        )
     }
 
     override suspend fun getUTXOs(coin: Coin): List<UtxoInfo> {
