@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.matchesSearch
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -351,28 +352,32 @@ constructor(
                         val tokensFromAccounts = accounts.map { it.token }
                         tokens.update { it + tokensFromAccounts }
                         val uiTokens =
-                            accounts.map { account ->
-                                val token = account.token
-                                ChainTokenUiModel(
-                                    id = token.id,
-                                    name = token.ticker,
-                                    balance =
-                                        account.tokenValue?.let(mapTokenValueToStringWithUnitMapper)
-                                            ?: "",
-                                    fiatBalance =
-                                        account.fiatValue?.let { fiatValueToStringMapper(it) },
-                                    tokenLogo = getCoinLogo(token.logo),
-                                    chainLogo = chain.logo,
-                                    monotoneChainLogo = chain.monoToneLogo,
-                                    mergeBalance = mergeBalances.findMergeBalance(token).toString(),
-                                    price =
-                                        account.price?.let {
-                                            fiatValueToStringMapper(it, asPrice = true)
-                                        },
-                                    network = token.chain.raw,
-                                    canActivateTrustLine = token.id in needsTrustLine,
-                                )
-                            }
+                            accounts
+                                .filter { it.token.matchesSearch(searchQuery.toString()) }
+                                .map { account ->
+                                    val token = account.token
+                                    ChainTokenUiModel(
+                                        id = token.id,
+                                        name = token.ticker,
+                                        balance =
+                                            account.tokenValue?.let(
+                                                mapTokenValueToStringWithUnitMapper
+                                            ) ?: "",
+                                        fiatBalance =
+                                            account.fiatValue?.let { fiatValueToStringMapper(it) },
+                                        tokenLogo = getCoinLogo(token.logo),
+                                        chainLogo = chain.logo,
+                                        monotoneChainLogo = chain.monoToneLogo,
+                                        mergeBalance =
+                                            mergeBalances.findMergeBalance(token).toString(),
+                                        price =
+                                            account.price?.let {
+                                                fiatValueToStringMapper(it, asPrice = true)
+                                            },
+                                        network = token.chain.raw,
+                                        canActivateTrustLine = token.id in needsTrustLine,
+                                    )
+                                }
 
                         val accountAddress = address.address
                         val explorerUrl =
@@ -384,11 +389,7 @@ constructor(
                                 chainName = chainRaw,
                                 chainAddress = accountAddress,
                                 chainLogo = chain.logo,
-                                tokens =
-                                    uiTokens.filter { uiToken ->
-                                        searchQuery.isBlank() ||
-                                            uiToken.name.contains(searchQuery, ignoreCase = true)
-                                    },
+                                tokens = uiTokens,
                                 explorerURL = explorerUrl,
                                 totalBalance = totalBalance,
                                 canDeposit = chain.isDepositSupported,

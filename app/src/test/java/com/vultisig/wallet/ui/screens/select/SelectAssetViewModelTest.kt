@@ -2,10 +2,16 @@
 
 package com.vultisig.wallet.ui.screens.select
 
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -29,6 +35,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -175,8 +182,69 @@ internal class SelectAssetViewModelTest {
             coVerify(exactly = 1) { enableTokenUseCase.invoke(VAULT_ID, customToken) }
         }
 
-    private fun createViewModel() =
-        SelectAssetViewModel(
+    /**
+     * The native asset on an L2 is the whole point of name search: the only ticker on Base is
+     * `ETH`, so a user who types the asset's name used to get nothing.
+     */
+    @Test
+    fun `typing an asset's name on an L2 surfaces the native coin the ticker hides`() =
+        runTest(testDispatcher) {
+            val vault = Vault(id = VAULT_ID, name = "Main")
+            val eth = Coins.Base.ETH
+            val usdc = Coins.Base.USDC
+            coEvery { vaultRepository.get(VAULT_ID) } returns vault
+            every { accountRepository.loadAddress(VAULT_ID, Chain.Base) } returns
+                flowOf(
+                    Address(chain = Chain.Base, address = "0xabc", accounts = accountsOf(eth, usdc))
+                )
+            every { getChainTokens(Chain.Base, vault) } returns flowOf(emptyList())
+            val vm = createViewModel(preselectedChain = Chain.Base)
+
+            advanceUntilIdle()
+            assertEquals(listOf(eth.id, usdc.id), vm.state.value.assets.map { it.token.id })
+
+            vm.searchFieldState.setTextAndPlaceCursorAtEnd("ethereum")
+            // Nothing composes in a JVM test, so the snapshot the edit lands in has to be
+            // published by hand before `snapshotFlow` sees it.
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            assertEquals(listOf(eth.id), vm.state.value.assets.map { it.token.id })
+        }
+
+    @Test
+    fun `an unheld token from the chain catalogue is found by name too`() =
+        runTest(testDispatcher) {
+            val vault = Vault(id = VAULT_ID, name = "Main")
+            val eth = Coins.Base.ETH
+            val usdc = Coins.Base.USDC
+            coEvery { vaultRepository.get(VAULT_ID) } returns vault
+            every { accountRepository.loadAddress(VAULT_ID, Chain.Base) } returns
+                flowOf(Address(chain = Chain.Base, address = "0xabc", accounts = accountsOf(eth)))
+            every { getChainTokens(Chain.Base, vault) } returns flowOf(listOf(usdc))
+            val vm = createViewModel(preselectedChain = Chain.Base)
+
+            vm.searchFieldState.setTextAndPlaceCursorAtEnd("usd coin")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            val found = vm.state.value.assets.single()
+            assertEquals(usdc.id, found.token.id)
+            assertTrue(found.isDisabled)
+        }
+
+    private fun accountsOf(vararg coins: Coin) =
+        coins.map { Account(token = it, tokenValue = null, fiatValue = null, price = null) }
+
+    private fun createViewModel(preselectedChain: Chain = Chain.ThorChain): SelectAssetViewModel {
+        every { any<SavedStateHandle>().toRoute<Route.SelectAsset>() } returns
+            Route.SelectAsset(
+                vaultId = VAULT_ID,
+                preselectedNetworkId = preselectedChain.id,
+                networkFilters = Route.SelectNetwork.Filters.SwapAvailable,
+                requestId = REQUEST_ID,
+            )
+        return SelectAssetViewModel(
             savedStateHandle = mockk(relaxed = true),
             navigator = navigator,
             mapTokenValueToDecimalUiString = mockk(relaxed = true),
@@ -187,6 +255,7 @@ internal class SelectAssetViewModelTest {
             vaultRepository = vaultRepository,
             enableTokenUseCase = enableTokenUseCase,
         )
+    }
 
     private fun usdcCoin() =
         Coin(

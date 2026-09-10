@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.models.isRippleIssuedToken
 import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.matchesSearch
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -147,7 +148,7 @@ constructor(
                         val filteredAssets =
                             account.accounts
                                 .asSequence()
-                                .filter { it.token.id.contains(query, ignoreCase = true) }
+                                .filter { it.token.matchesSearch(query) }
                                 .filterNot {
                                     filter == Route.SelectNetwork.Filters.SwapAvailable &&
                                         (it.token.isLpToken || it.token.isRippleIssuedToken)
@@ -176,8 +177,7 @@ constructor(
                         val filteredTokenIds = filteredAssets.map { it.token.id }.toSet()
                         val additionalAssets =
                             allTokens.filter {
-                                it.token.id.contains(query, ignoreCase = true) &&
-                                    it.token.id !in filteredTokenIds
+                                it.token.matchesSearch(query) && it.token.id !in filteredTokenIds
                             }
 
                         filteredAssets + additionalAssets

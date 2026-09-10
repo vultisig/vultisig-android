@@ -11,6 +11,7 @@ data class DenomMetadata(
     val symbol: String?,
     val display: String?,
     @SerialName("denom_units") val denomUnits: List<DenomUnit>?,
+    val name: String? = null,
 )
 
 @Serializable data class MetadataResponse(val metadata: DenomMetadata?)

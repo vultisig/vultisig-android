@@ -10,6 +10,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
 import com.vultisig.wallet.data.db.models.isInFlight
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
@@ -162,9 +164,21 @@ sealed interface TransactionHistoryItemUiModel {
     ) : TransactionHistoryItemUiModel
 }
 
-data class TransactionAssetUiModel(val ticker: String, val chain: String, val logo: ImageModel) {
+data class TransactionAssetUiModel(
+    val ticker: String,
+    val chain: String,
+    val logo: ImageModel,
+    /** The curated asset's name, or empty for a token the catalogue does not carry. */
+    val name: String = "",
+) {
     val tokenId: String
         get() = "$chain:$ticker"
+
+    /** Ticker, name and chain are the three things a user has to identify an asset by here. */
+    fun matchesSearch(query: String): Boolean =
+        ticker.contains(query, ignoreCase = true) ||
+            name.contains(query, ignoreCase = true) ||
+            chain.contains(query, ignoreCase = true)
 }
 
 @Immutable
@@ -588,6 +602,13 @@ constructor(
                 "$fromChain:$fromToken" in assetIds || "$toChain:$toToken" in assetIds
         }
 
+    // History rows store the ticker and chain as text, so the name a search can match is the
+    // catalogue's for that pair; a swap leg in a token the catalogue never carried has none.
+    private fun curatedName(chainRaw: String, ticker: String): String {
+        val chain = Chain.fromRawOrNull(chainRaw) ?: return ""
+        return Coins.findCurated(chain, ticker, contractAddress = "")?.name.orEmpty()
+    }
+
     private fun observeAssetSearchItems() {
         viewModelScope.launch {
             transactionHistoryRepository
@@ -607,6 +628,7 @@ constructor(
                                                 ticker = p.token,
                                                 chain = entity.chain,
                                                 logo = getCoinLogo(p.tokenLogo),
+                                                name = curatedName(entity.chain, p.token),
                                             )
                                         )
 
@@ -616,6 +638,7 @@ constructor(
                                                 ticker = p.fromToken,
                                                 chain = p.fromChain,
                                                 logo = getCoinLogo(p.fromTokenLogo),
+                                                name = curatedName(p.fromChain, p.fromToken),
                                             )
                                         )
                                         add(
@@ -623,6 +646,7 @@ constructor(
                                                 ticker = p.toToken,
                                                 chain = p.toChain,
                                                 logo = getCoinLogo(p.toTokenLogo),
+                                                name = curatedName(p.toChain, p.toToken),
                                             )
                                         )
                                     }
@@ -635,12 +659,7 @@ constructor(
                 }
                 .combine(assetSearchTextFieldState.textAsFlow()) { items, query ->
                     val q = query.toString().trim()
-                    if (q.isBlank()) items
-                    else
-                        items.filter {
-                            it.ticker.contains(q, ignoreCase = true) ||
-                                it.chain.contains(q, ignoreCase = true)
-                        }
+                    if (q.isBlank()) items else items.filter { it.matchesSearch(q) }
                 }
                 .collect { items -> _uiState.update { it.copy(assetSearchItems = items) } }
         }

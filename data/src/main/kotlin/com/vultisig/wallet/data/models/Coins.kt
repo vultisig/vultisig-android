@@ -57,6 +57,7 @@ object Coins {
             Coin(
                 chain = Chain.Akash,
                 ticker = "AKT",
+                name = "Akash Network",
                 logo = "akash",
                 address = "",
                 decimal = 6,
@@ -74,6 +75,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "ARB",
+                name = "Arbitrum",
                 logo = "arbitrum",
                 address = "",
                 decimal = 18,
@@ -87,6 +89,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "DAI",
+                name = "Dai Stablecoin",
                 logo = "dai",
                 address = "",
                 decimal = 18,
@@ -100,6 +103,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "ETH",
+                name = "Ethereum",
                 logo = "eth",
                 address = "",
                 decimal = 18,
@@ -113,6 +117,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "FOX",
+                name = "ShapeShift FOX",
                 logo = "fox",
                 address = "",
                 decimal = 18,
@@ -126,6 +131,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "GRT",
+                name = "The Graph",
                 logo = "grt",
                 address = "",
                 decimal = 18,
@@ -139,6 +145,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "LDO",
+                name = "Lido DAO",
                 logo = "ldo",
                 address = "",
                 decimal = 18,
@@ -152,6 +159,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "LINK",
+                name = "Chainlink",
                 logo = "link",
                 address = "",
                 decimal = 18,
@@ -165,6 +173,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "PEPE",
+                name = "Pepe",
                 logo = "pepe",
                 address = "",
                 decimal = 18,
@@ -178,6 +187,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "PYTH",
+                name = "Pyth Network",
                 logo = "pyth",
                 address = "",
                 decimal = 6,
@@ -191,6 +201,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "TGT",
+                name = "THORWallet",
                 logo = "tgt",
                 address = "",
                 decimal = 18,
@@ -204,6 +215,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "UNI",
+                name = "Uniswap",
                 logo = "uni",
                 address = "",
                 decimal = 18,
@@ -217,6 +229,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -230,6 +243,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "USDC.e",
+                name = "Bridged USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -243,6 +257,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "USDT",
+                name = "Tether USD",
                 logo = "usdt",
                 address = "",
                 decimal = 6,
@@ -256,6 +271,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "WBTC",
+                name = "Wrapped Bitcoin",
                 logo = "wbtc",
                 address = "",
                 decimal = 8,
@@ -269,6 +285,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "ezETH",
+                name = "Renzo Restaked ETH",
                 logo = "ezeth",
                 address = "",
                 decimal = 18,
@@ -282,6 +299,7 @@ object Coins {
             Coin(
                 chain = Chain.Arbitrum,
                 ticker = "USDS",
+                name = "USDS Stablecoin",
                 logo = "usds",
                 address = "",
                 decimal = 18,
@@ -318,6 +336,7 @@ object Coins {
             Coin(
                 chain = Chain.Mantle,
                 ticker = "MNT",
+                name = "Mantle",
                 logo = "mantle",
                 address = "",
                 decimal = 18,
@@ -331,6 +350,7 @@ object Coins {
             Coin(
                 chain = Chain.Mantle,
                 ticker = "USDT",
+                name = "Tether USD",
                 logo = "usdt",
                 address = "",
                 decimal = 6,
@@ -344,6 +364,7 @@ object Coins {
             Coin(
                 chain = Chain.Mantle,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -361,6 +382,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "AVAX",
+                name = "Avalanche",
                 logo = "avax",
                 address = "",
                 decimal = 18,
@@ -374,6 +396,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "BLS",
+                name = "BloodLoop Shard",
                 logo = "bls",
                 address = "",
                 decimal = 18,
@@ -387,6 +410,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "BTC.b",
+                name = "Bitcoin (Avalanche Bridge)",
                 logo = "btc",
                 address = "",
                 decimal = 8,
@@ -400,6 +424,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "COQ",
+                name = "Coq Inu",
                 logo = "coq",
                 address = "",
                 decimal = 18,
@@ -413,6 +438,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "JOE",
+                name = "Trader Joe",
                 logo = "joe",
                 address = "",
                 decimal = 18,
@@ -426,6 +452,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "PNG",
+                name = "Pangolin",
                 logo = "png",
                 address = "",
                 decimal = 18,
@@ -439,6 +466,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -452,6 +480,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "USDT",
+                name = "Tether USD",
                 logo = "usdt",
                 address = "",
                 decimal = 6,
@@ -465,6 +494,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "WAVAX",
+                name = "Wrapped AVAX",
                 logo = "avax",
                 address = "",
                 decimal = 18,
@@ -478,6 +508,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "aAvaUSDC",
+                name = "Aave Avalanche USDC",
                 logo = "aave",
                 address = "",
                 decimal = 6,
@@ -491,6 +522,7 @@ object Coins {
             Coin(
                 chain = Chain.Avalanche,
                 ticker = "sAVAX",
+                name = "BENQI Staked AVAX",
                 logo = "savax",
                 address = "",
                 decimal = 18,
@@ -508,6 +540,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "AERO",
+                name = "Aerodrome",
                 logo = "aero",
                 address = "",
                 decimal = 18,
@@ -521,6 +554,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "DAI",
+                name = "Dai Stablecoin",
                 logo = "dai",
                 address = "",
                 decimal = 18,
@@ -534,6 +568,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "ETH",
+                name = "Ethereum",
                 logo = "eth",
                 address = "",
                 decimal = 18,
@@ -547,6 +582,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "OM",
+                name = "MANTRA",
                 logo = "om",
                 address = "",
                 decimal = 18,
@@ -560,6 +596,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "PYTH",
+                name = "Pyth Network",
                 logo = "pyth",
                 address = "",
                 decimal = 6,
@@ -573,6 +610,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "SNX",
+                name = "Synthetix",
                 logo = "snx",
                 address = "",
                 decimal = 18,
@@ -586,6 +624,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -599,6 +638,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "W",
+                name = "Wormhole",
                 logo = "w",
                 address = "",
                 decimal = 18,
@@ -612,6 +652,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "cbETH",
+                name = "Coinbase Wrapped Staked ETH",
                 logo = "cbeth",
                 address = "",
                 decimal = 18,
@@ -625,6 +666,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "ezETH",
+                name = "Renzo Restaked ETH",
                 logo = "ezeth",
                 address = "",
                 decimal = 18,
@@ -638,6 +680,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "rETH",
+                name = "Rocket Pool ETH",
                 logo = "reth",
                 address = "",
                 decimal = 18,
@@ -651,6 +694,7 @@ object Coins {
             Coin(
                 chain = Chain.Base,
                 ticker = "USDS",
+                name = "USDS Stablecoin",
                 logo = "usds",
                 address = "",
                 decimal = 18,
@@ -668,6 +712,7 @@ object Coins {
             Coin(
                 chain = Chain.Bitcoin,
                 ticker = "BTC",
+                name = "Bitcoin",
                 logo = "btc",
                 address = "",
                 decimal = 8,
@@ -685,6 +730,7 @@ object Coins {
             Coin(
                 chain = Chain.BitcoinCash,
                 ticker = "BCH",
+                name = "Bitcoin Cash",
                 logo = "bch",
                 address = "",
                 decimal = 8,
@@ -702,6 +748,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "AI",
+                name = "Any Inu",
                 logo = "anyinu",
                 address = "",
                 decimal = 18,
@@ -715,6 +762,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "BAG",
+                name = "Bag",
                 logo = "bag",
                 address = "",
                 decimal = 18,
@@ -728,6 +776,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "BLAST",
+                name = "Blast",
                 logo = "blast",
                 address = "",
                 decimal = 18,
@@ -741,6 +790,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "DACKIE",
+                name = "Dackie",
                 logo = "dackie",
                 address = "",
                 decimal = 18,
@@ -754,6 +804,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "ETH",
+                name = "Ethereum",
                 logo = "eth",
                 address = "",
                 decimal = 18,
@@ -767,6 +818,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "JUICE",
+                name = "Juice Finance",
                 logo = "juice",
                 address = "",
                 decimal = 18,
@@ -780,6 +832,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "MIM",
+                name = "Magic Internet Money",
                 logo = "mim",
                 address = "",
                 decimal = 18,
@@ -793,6 +846,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "OMNI",
+                name = "OmniCat",
                 logo = "omni",
                 address = "",
                 decimal = 18,
@@ -806,6 +860,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "USDB",
+                name = "USDB",
                 logo = "usdb",
                 address = "",
                 decimal = 18,
@@ -819,6 +874,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "WBTC",
+                name = "Wrapped Bitcoin",
                 logo = "wbtc",
                 address = "",
                 decimal = 8,
@@ -832,6 +888,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "WETH",
+                name = "Wrapped Ether",
                 logo = "weth",
                 address = "",
                 decimal = 18,
@@ -845,6 +902,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "ZERO",
+                name = "ZeroLend",
                 logo = "zero",
                 address = "",
                 decimal = 18,
@@ -858,6 +916,7 @@ object Coins {
             Coin(
                 chain = Chain.Blast,
                 ticker = "bLOOKS",
+                name = "Blast LooksRare",
                 logo = "blooks",
                 address = "",
                 decimal = 18,
@@ -876,6 +935,7 @@ object Coins {
             Coin(
                 chain = Chain.BscChain,
                 ticker = "AAVE",
+                name = "Aave",
                 logo = "aave",
                 address = "",
                 decimal = 18,
@@ -889,6 +949,7 @@ object Coins {
             Coin(
                 chain = Chain.BscChain,
                 ticker = "BNB",
+                name = "BNB",
                 logo = "bsc",
                 address = "",
                 decimal = 18,
@@ -902,6 +963,7 @@ object Coins {
             Coin(
                 chain = Chain.BscChain,
                 ticker = "COMP",
+                name = "Compound",
                 logo = "comp",
                 address = "",
                 decimal = 18,
@@ -915,6 +977,7 @@ object Coins {
             Coin(
                 chain = Chain.BscChain,
                 ticker = "DAI",
+                name = "Dai Stablecoin",
                 logo = "dai",
                 address = "",
                 decimal = 18,
@@ -928,6 +991,7 @@ object Coins {
             Coin(
                 chain = Chain.BscChain,
                 ticker = "ETH",
+                name = "Ethereum",
                 logo = "eth",
                 address = "",
                 decimal = 18,
@@ -941,6 +1005,7 @@ object Coins {
             Coin(
                 chain = Chain.BscChain,
                 ticker = "KNC",
+                name = "Kyber Network Crystal",
                 logo = "knc",
                 address = "",
                 decimal = 18,
@@ -954,6 +1019,7 @@ object Coins {
             Coin(
                 chain = Chain.BscChain,
                 ticker = "PEPE",
+                name = "Pepe",
                 logo = "pepe",
                 address = "",
                 decimal = 18,
@@ -967,6 +1033,7 @@ object Coins {
             Coin(
                 chain = Chain.BscChain,
                 ticker = "SUSHI",
+                name = "SushiSwap",
                 logo = "sushi",
                 address = "",
                 decimal = 18,
@@ -980,6 +1047,7 @@ object Coins {
             Coin(
                 chain = Chain.BscChain,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 18,
@@ -993,6 +1061,7 @@ object Coins {
             Coin(
                 chain = Chain.BscChain,
                 ticker = "USDT",
+                name = "Tether USD",
                 logo = "usdt",
                 address = "",
                 decimal = 18,
@@ -1010,6 +1079,7 @@ object Coins {
             Coin(
                 chain = Chain.CronosChain,
                 ticker = "CRO",
+                name = "Cronos",
                 logo = "cro",
                 address = "",
                 decimal = 18,
@@ -1027,6 +1097,7 @@ object Coins {
             Coin(
                 chain = Chain.Dash,
                 ticker = "DASH",
+                name = "Dash",
                 logo = "dash",
                 address = "",
                 decimal = 8,
@@ -1044,6 +1115,7 @@ object Coins {
             Coin(
                 chain = Chain.Dogecoin,
                 ticker = "DOGE",
+                name = "Dogecoin",
                 logo = "doge",
                 address = "",
                 decimal = 8,
@@ -1061,6 +1133,7 @@ object Coins {
             Coin(
                 chain = Chain.Dydx,
                 ticker = "DYDX",
+                name = "dYdX",
                 logo = "dydx",
                 address = "",
                 decimal = 18,
@@ -1078,6 +1151,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "AAVE",
+                name = "Aave",
                 logo = "aave",
                 address = "",
                 decimal = 18,
@@ -1091,6 +1165,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "BAL",
+                name = "Balancer",
                 logo = "bal",
                 address = "",
                 decimal = 18,
@@ -1104,6 +1179,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "BAT",
+                name = "Basic Attention Token",
                 logo = "bat",
                 address = "",
                 decimal = 18,
@@ -1117,6 +1193,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "COMP",
+                name = "Compound",
                 logo = "comp",
                 address = "",
                 decimal = 18,
@@ -1130,6 +1207,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "DAI",
+                name = "Dai Stablecoin",
                 logo = "dai",
                 address = "",
                 decimal = 18,
@@ -1143,6 +1221,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "ETH",
+                name = "Ethereum",
                 logo = "eth",
                 address = "",
                 decimal = 18,
@@ -1156,6 +1235,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "FLIP",
+                name = "Chainflip",
                 logo = "flip",
                 address = "",
                 decimal = 18,
@@ -1169,6 +1249,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "FOX",
+                name = "ShapeShift FOX",
                 logo = "fox",
                 address = "",
                 decimal = 18,
@@ -1182,6 +1263,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "GRT",
+                name = "The Graph",
                 logo = "grt",
                 address = "",
                 decimal = 18,
@@ -1195,6 +1277,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "KNC",
+                name = "Kyber Network Crystal",
                 logo = "knc",
                 address = "",
                 decimal = 18,
@@ -1208,6 +1291,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "LINK",
+                name = "Chainlink",
                 logo = "link",
                 address = "",
                 decimal = 18,
@@ -1221,6 +1305,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "MATIC",
+                name = "Polygon (MATIC)",
                 logo = "matic",
                 address = "",
                 decimal = 18,
@@ -1234,6 +1319,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "MKR",
+                name = "Maker",
                 logo = "mkr",
                 address = "",
                 decimal = 18,
@@ -1247,6 +1333,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "PEPE",
+                name = "Pepe",
                 logo = "pepe",
                 address = "",
                 decimal = 18,
@@ -1260,6 +1347,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "POL",
+                name = "Polygon Ecosystem Token",
                 logo = "pol",
                 address = "",
                 decimal = 18,
@@ -1273,6 +1361,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "SNX",
+                name = "Synthetix",
                 logo = "snx",
                 address = "",
                 decimal = 18,
@@ -1286,6 +1375,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "SUSHI",
+                name = "SushiSwap",
                 logo = "sushi",
                 address = "",
                 decimal = 18,
@@ -1299,6 +1389,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "TGT",
+                name = "THORWallet",
                 logo = "tgt",
                 address = "",
                 decimal = 18,
@@ -1312,6 +1403,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "UNI",
+                name = "Uniswap",
                 logo = "uni",
                 address = "",
                 decimal = 18,
@@ -1325,6 +1417,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -1338,6 +1431,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "USDT",
+                name = "Tether USD",
                 logo = "usdt",
                 address = "",
                 decimal = 6,
@@ -1351,6 +1445,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "VULT",
+                name = "Vultisig",
                 logo = "vulti",
                 address = "",
                 decimal = 18,
@@ -1364,6 +1459,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "WBTC",
+                name = "Wrapped Bitcoin",
                 logo = "wbtc",
                 address = "",
                 decimal = 8,
@@ -1377,6 +1473,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "WETH",
+                name = "Wrapped Ether",
                 logo = "weth",
                 address = "",
                 decimal = 18,
@@ -1390,6 +1487,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "YFI",
+                name = "yearn.finance",
                 logo = "yfi",
                 address = "",
                 decimal = 18,
@@ -1403,6 +1501,7 @@ object Coins {
             Coin(
                 chain = Chain.Ethereum,
                 ticker = "USDS",
+                name = "USDS Stablecoin",
                 logo = "usds",
                 address = "",
                 decimal = 18,
@@ -1448,6 +1547,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "ATOM",
+                name = "Cosmos Hub",
                 logo = "atom",
                 address = "",
                 decimal = 6,
@@ -1461,6 +1561,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "FUZN",
+                name = "Fuzion",
                 logo = "fuzn",
                 address = "",
                 decimal = 6,
@@ -1475,6 +1576,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "KUJI",
+                name = "Kujira",
                 logo = "kuji",
                 address = "",
                 decimal = 6,
@@ -1489,6 +1591,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "LVN",
+                name = "Levana",
                 logo = "levana",
                 address = "",
                 decimal = 6,
@@ -1503,6 +1606,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "NAMI",
+                name = "Nami Protocol",
                 logo = "nami",
                 address = "",
                 decimal = 6,
@@ -1517,6 +1621,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "NSTK",
+                name = "Unstake",
                 logo = "nstk",
                 address = "",
                 decimal = 6,
@@ -1531,6 +1636,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -1545,6 +1651,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "USK",
+                name = "USK",
                 logo = "usk",
                 address = "",
                 decimal = 6,
@@ -1559,6 +1666,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "WINK",
+                name = "WINK",
                 logo = "wink",
                 address = "",
                 decimal = 6,
@@ -1573,6 +1681,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "rKUJI",
+                name = "Rujira KUJI",
                 logo = "rkuji",
                 address = "",
                 decimal = 6,
@@ -1591,6 +1700,7 @@ object Coins {
             Coin(
                 chain = Chain.Litecoin,
                 ticker = "LTC",
+                name = "Litecoin",
                 logo = "ltc",
                 address = "",
                 decimal = 8,
@@ -1608,6 +1718,7 @@ object Coins {
             Coin(
                 chain = Chain.MayaChain,
                 ticker = "CACAO",
+                name = "Cacao",
                 logo = "cacao",
                 address = "",
                 decimal = 10,
@@ -1621,6 +1732,7 @@ object Coins {
             Coin(
                 chain = Chain.MayaChain,
                 ticker = "MAYA",
+                name = "Maya",
                 logo = "maya",
                 address = "",
                 decimal = 4,
@@ -1634,6 +1746,7 @@ object Coins {
             Coin(
                 chain = Chain.MayaChain,
                 ticker = "AZTEC",
+                name = "Aztec",
                 logo = "aztec",
                 address = "",
                 decimal = 4,
@@ -1651,6 +1764,7 @@ object Coins {
             Coin(
                 chain = Chain.Noble,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -1668,6 +1782,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "DAI",
+                name = "Dai Stablecoin",
                 logo = "dai",
                 address = "",
                 decimal = 18,
@@ -1681,6 +1796,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "ETH",
+                name = "Ethereum",
                 logo = "eth",
                 address = "",
                 decimal = 18,
@@ -1694,6 +1810,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "FOX",
+                name = "ShapeShift FOX",
                 logo = "fox",
                 address = "",
                 decimal = 18,
@@ -1707,6 +1824,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "LDO",
+                name = "Lido DAO",
                 logo = "ldo",
                 address = "",
                 decimal = 18,
@@ -1720,6 +1838,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "LINK",
+                name = "Chainlink",
                 logo = "link",
                 address = "",
                 decimal = 18,
@@ -1733,6 +1852,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "OP",
+                name = "Optimism",
                 logo = "optimism",
                 address = "",
                 decimal = 18,
@@ -1746,6 +1866,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "PYTH",
+                name = "Pyth Network",
                 logo = "pyth",
                 address = "",
                 decimal = 6,
@@ -1759,6 +1880,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -1772,6 +1894,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "USDC.e",
+                name = "Bridged USD Coin",
                 logo = "USDC.e",
                 address = "",
                 decimal = 6,
@@ -1785,6 +1908,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "USDT",
+                name = "Tether USD",
                 logo = "usdt",
                 address = "",
                 decimal = 6,
@@ -1798,6 +1922,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "WBTC",
+                name = "Wrapped Bitcoin",
                 logo = "wbtc",
                 address = "",
                 decimal = 8,
@@ -1811,6 +1936,7 @@ object Coins {
             Coin(
                 chain = Chain.Optimism,
                 ticker = "ezETH",
+                name = "Renzo Restaked ETH",
                 logo = "ezeth",
                 address = "",
                 decimal = 18,
@@ -1828,6 +1954,7 @@ object Coins {
             Coin(
                 chain = Chain.Osmosis,
                 ticker = "ION",
+                name = "Ion",
                 logo = "ion",
                 address = "",
                 decimal = 6,
@@ -1841,6 +1968,7 @@ object Coins {
             Coin(
                 chain = Chain.Osmosis,
                 ticker = "LVN",
+                name = "Levana",
                 logo = "levana",
                 address = "",
                 decimal = 6,
@@ -1855,6 +1983,7 @@ object Coins {
             Coin(
                 chain = Chain.Osmosis,
                 ticker = "OSMO",
+                name = "Osmosis",
                 logo = "osmo",
                 address = "",
                 decimal = 6,
@@ -1868,6 +1997,7 @@ object Coins {
             Coin(
                 chain = Chain.Osmosis,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -1882,6 +2012,7 @@ object Coins {
             Coin(
                 chain = Chain.Osmosis,
                 ticker = "USDC.eth.axl",
+                name = "Axelar Bridged USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -1896,6 +2027,7 @@ object Coins {
             Coin(
                 chain = Chain.Osmosis,
                 ticker = "allBTC",
+                name = "Alloyed Bitcoin",
                 logo = "btc",
                 address = "",
                 decimal = 8,
@@ -1914,6 +2046,7 @@ object Coins {
             Coin(
                 chain = Chain.Polkadot,
                 ticker = "DOT",
+                name = "Polkadot",
                 logo = "dot",
                 address = "",
                 decimal = 10,
@@ -1931,6 +2064,7 @@ object Coins {
             Coin(
                 chain = Chain.Bittensor,
                 ticker = "TAO",
+                name = "Bittensor",
                 logo = "bittensor",
                 address = "",
                 decimal = 9,
@@ -1948,6 +2082,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "AVAX",
+                name = "Avalanche",
                 logo = "avax",
                 address = "",
                 decimal = 18,
@@ -1961,6 +2096,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "BNB",
+                name = "BNB",
                 logo = "bsc",
                 address = "",
                 decimal = 18,
@@ -1974,6 +2110,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "BUSD",
+                name = "Binance USD",
                 logo = "busd",
                 address = "",
                 decimal = 18,
@@ -1987,6 +2124,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "FOX",
+                name = "ShapeShift FOX",
                 logo = "fox",
                 address = "",
                 decimal = 18,
@@ -2000,6 +2138,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "LINK",
+                name = "Chainlink",
                 logo = "link",
                 address = "",
                 decimal = 18,
@@ -2013,6 +2152,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "POL",
+                name = "Polygon",
                 logo = "matic",
                 address = "",
                 decimal = 18,
@@ -2026,6 +2166,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "SHIB",
+                name = "Shiba Inu",
                 logo = "shib",
                 address = "",
                 decimal = 18,
@@ -2039,6 +2180,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "SOL",
+                name = "Wrapped Solana",
                 logo = "sol",
                 address = "",
                 decimal = 9,
@@ -2052,6 +2194,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -2065,6 +2208,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "USDC.e",
+                name = "Bridged USD Coin",
                 logo = "USDC.e",
                 address = "",
                 decimal = 6,
@@ -2078,6 +2222,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "USDT",
+                name = "Tether USD",
                 logo = "usdt",
                 address = "",
                 decimal = 6,
@@ -2091,6 +2236,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "WBTC",
+                name = "Wrapped Bitcoin",
                 logo = "wbtc",
                 address = "",
                 decimal = 8,
@@ -2104,6 +2250,7 @@ object Coins {
             Coin(
                 chain = Chain.Polygon,
                 ticker = "WETH",
+                name = "Wrapped Ether",
                 logo = "weth",
                 address = "",
                 decimal = 18,
@@ -2121,6 +2268,7 @@ object Coins {
             Coin(
                 chain = Chain.Ripple,
                 ticker = "XRP",
+                name = "XRP",
                 logo = "xrp",
                 address = "",
                 decimal = 6,
@@ -2140,6 +2288,7 @@ object Coins {
             Coin(
                 chain = Chain.Ripple,
                 ticker = "RLUSD",
+                name = "Ripple USD",
                 logo = "rlusd",
                 address = "",
                 decimal = RIPPLE_TOKEN_DECIMALS,
@@ -2161,6 +2310,7 @@ object Coins {
             Coin(
                 chain = Chain.Solana,
                 ticker = "JUP",
+                name = "Jupiter",
                 logo = "jupiter",
                 address = "",
                 decimal = 6,
@@ -2174,6 +2324,7 @@ object Coins {
             Coin(
                 chain = Chain.Solana,
                 ticker = "KWEEN",
+                name = "KWEEN",
                 logo = "kween",
                 address = "",
                 decimal = 6,
@@ -2187,6 +2338,7 @@ object Coins {
             Coin(
                 chain = Chain.Solana,
                 ticker = "PYTH",
+                name = "Pyth Network",
                 logo = "pyth",
                 address = "",
                 decimal = 6,
@@ -2200,6 +2352,7 @@ object Coins {
             Coin(
                 chain = Chain.Solana,
                 ticker = "RAY",
+                name = "Raydium",
                 logo = "raydium-ray-seeklogo-2",
                 address = "",
                 decimal = 6,
@@ -2213,6 +2366,7 @@ object Coins {
             Coin(
                 chain = Chain.Solana,
                 ticker = "SOL",
+                name = "Solana",
                 logo = "solana",
                 address = "",
                 decimal = 9,
@@ -2226,6 +2380,7 @@ object Coins {
             Coin(
                 chain = Chain.Solana,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -2239,6 +2394,7 @@ object Coins {
             Coin(
                 chain = Chain.Solana,
                 ticker = "USDT",
+                name = "Tether USD",
                 logo = "usdt",
                 address = "",
                 decimal = 6,
@@ -2252,6 +2408,7 @@ object Coins {
             Coin(
                 chain = Chain.Solana,
                 ticker = "WIF",
+                name = "dogwifhat",
                 logo = "dogwifhat-wif-logo",
                 address = "",
                 decimal = 6,
@@ -2265,6 +2422,7 @@ object Coins {
             Coin(
                 chain = Chain.Solana,
                 ticker = "USDS",
+                name = "USDS Stablecoin",
                 logo = "usds",
                 address = "",
                 decimal = 6,
@@ -2282,6 +2440,7 @@ object Coins {
             Coin(
                 chain = Chain.Sei,
                 ticker = "SEI",
+                name = "Sei",
                 logo = "sei",
                 address = "",
                 decimal = 18,
@@ -2298,6 +2457,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "ETH",
+                name = "Ethereum",
                 logo = "eth",
                 address = "",
                 decimal = 18,
@@ -2310,6 +2470,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "USDG",
+                name = "Global Dollar",
                 logo = "usdg",
                 address = "",
                 decimal = 6,
@@ -2322,6 +2483,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "USDe",
+                name = "Ethena USDe",
                 logo = "usde",
                 address = "",
                 decimal = 18,
@@ -2334,6 +2496,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "WETH",
+                name = "Wrapped Ether",
                 logo = "weth",
                 address = "",
                 decimal = 18,
@@ -2346,6 +2509,7 @@ object Coins {
             Coin(
                 chain = Chain.Robinhood,
                 ticker = "LINK",
+                name = "Chainlink",
                 logo = "link",
                 address = "",
                 decimal = 18,
@@ -2359,6 +2523,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "AAOI",
+                    name = "Applied Optoelectronics",
                     logo = "https://financialmodelingprep.com/image-stock/AAOI.png",
                     address = "",
                     decimal = 18,
@@ -2370,6 +2535,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "AAPL",
+                    name = "Apple",
                     logo = "https://financialmodelingprep.com/image-stock/AAPL.png",
                     address = "",
                     decimal = 18,
@@ -2381,6 +2547,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "AMAT",
+                    name = "Applied Materials",
                     logo = "https://financialmodelingprep.com/image-stock/AMAT.png",
                     address = "",
                     decimal = 18,
@@ -2392,6 +2559,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "AMD",
+                    name = "Advanced Micro Devices",
                     logo = "https://financialmodelingprep.com/image-stock/AMD.png",
                     address = "",
                     decimal = 18,
@@ -2403,6 +2571,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "AMZN",
+                    name = "Amazon",
                     logo = "https://financialmodelingprep.com/image-stock/AMZN.png",
                     address = "",
                     decimal = 18,
@@ -2414,6 +2583,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "APLD",
+                    name = "Applied Digital",
                     logo = "https://financialmodelingprep.com/image-stock/APLD.png",
                     address = "",
                     decimal = 18,
@@ -2425,6 +2595,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "ASML",
+                    name = "ASML Holding",
                     logo = "https://financialmodelingprep.com/image-stock/ASML.png",
                     address = "",
                     decimal = 18,
@@ -2436,6 +2607,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "ASTS",
+                    name = "AST SpaceMobile",
                     logo = "https://financialmodelingprep.com/image-stock/ASTS.png",
                     address = "",
                     decimal = 18,
@@ -2447,6 +2619,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "AVGO",
+                    name = "Broadcom",
                     logo = "https://financialmodelingprep.com/image-stock/AVGO.png",
                     address = "",
                     decimal = 18,
@@ -2458,6 +2631,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "BA",
+                    name = "Boeing",
                     logo = "https://financialmodelingprep.com/image-stock/BA.png",
                     address = "",
                     decimal = 18,
@@ -2469,6 +2643,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "BABA",
+                    name = "Alibaba",
                     logo = "https://financialmodelingprep.com/image-stock/BABA.png",
                     address = "",
                     decimal = 18,
@@ -2480,6 +2655,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "BE",
+                    name = "Bloom Energy",
                     logo = "https://financialmodelingprep.com/image-stock/BE.png",
                     address = "",
                     decimal = 18,
@@ -2491,6 +2667,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "CBRS",
+                    name = "Cerebras Systems",
                     logo = "https://financialmodelingprep.com/image-stock/CBRS.png",
                     address = "",
                     decimal = 18,
@@ -2502,6 +2679,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "CCL",
+                    name = "Carnival",
                     logo = "https://financialmodelingprep.com/image-stock/CCL.png",
                     address = "",
                     decimal = 18,
@@ -2513,6 +2691,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "CELH",
+                    name = "Celsius Holdings",
                     logo = "https://financialmodelingprep.com/image-stock/CELH.png",
                     address = "",
                     decimal = 18,
@@ -2524,6 +2703,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "CLSK",
+                    name = "CleanSpark",
                     logo = "https://financialmodelingprep.com/image-stock/CLSK.png",
                     address = "",
                     decimal = 18,
@@ -2535,6 +2715,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "COIN",
+                    name = "Coinbase",
                     logo = "https://financialmodelingprep.com/image-stock/COIN.png",
                     address = "",
                     decimal = 18,
@@ -2546,6 +2727,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "COST",
+                    name = "Costco",
                     logo = "https://financialmodelingprep.com/image-stock/COST.png",
                     address = "",
                     decimal = 18,
@@ -2557,6 +2739,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "CRCL",
+                    name = "Circle Internet Group",
                     logo = "https://financialmodelingprep.com/image-stock/CRCL.png",
                     address = "",
                     decimal = 18,
@@ -2568,6 +2751,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "CRWD",
+                    name = "CrowdStrike",
                     logo = "https://financialmodelingprep.com/image-stock/CRWD.png",
                     address = "",
                     decimal = 18,
@@ -2579,6 +2763,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "CRWV",
+                    name = "CoreWeave",
                     logo = "https://financialmodelingprep.com/image-stock/CRWV.png",
                     address = "",
                     decimal = 18,
@@ -2590,6 +2775,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "DDOG",
+                    name = "Datadog",
                     logo = "https://financialmodelingprep.com/image-stock/DDOG.png",
                     address = "",
                     decimal = 18,
@@ -2601,6 +2787,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "DELL",
+                    name = "Dell Technologies",
                     logo = "https://financialmodelingprep.com/image-stock/DELL.png",
                     address = "",
                     decimal = 18,
@@ -2612,6 +2799,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "ELF",
+                    name = "e.l.f. Beauty",
                     logo = "https://financialmodelingprep.com/image-stock/ELF.png",
                     address = "",
                     decimal = 18,
@@ -2623,6 +2811,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "EWY",
+                    name = "iShares MSCI South Korea ETF",
                     logo = "https://financialmodelingprep.com/image-stock/EWY.png",
                     address = "",
                     decimal = 18,
@@ -2634,6 +2823,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "F",
+                    name = "Ford Motor",
                     logo = "https://financialmodelingprep.com/image-stock/F.png",
                     address = "",
                     decimal = 18,
@@ -2645,6 +2835,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "FLNC",
+                    name = "Fluence Energy",
                     logo = "https://financialmodelingprep.com/image-stock/FLNC.png",
                     address = "",
                     decimal = 18,
@@ -2656,6 +2847,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "FUTU",
+                    name = "Futu Holdings",
                     logo = "https://financialmodelingprep.com/image-stock/FUTU.png",
                     address = "",
                     decimal = 18,
@@ -2667,6 +2859,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "GLW",
+                    name = "Corning",
                     logo = "https://financialmodelingprep.com/image-stock/GLW.png",
                     address = "",
                     decimal = 18,
@@ -2678,6 +2871,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "GME",
+                    name = "GameStop",
                     logo = "https://financialmodelingprep.com/image-stock/GME.png",
                     address = "",
                     decimal = 18,
@@ -2689,6 +2883,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "GOOGL",
+                    name = "Alphabet Class A",
                     logo = "https://financialmodelingprep.com/image-stock/GOOGL.png",
                     address = "",
                     decimal = 18,
@@ -2700,6 +2895,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "INOD",
+                    name = "Innodata",
                     logo = "https://financialmodelingprep.com/image-stock/INOD.png",
                     address = "",
                     decimal = 18,
@@ -2711,6 +2907,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "INTC",
+                    name = "Intel",
                     logo = "https://financialmodelingprep.com/image-stock/INTC.png",
                     address = "",
                     decimal = 18,
@@ -2722,6 +2919,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "INTU",
+                    name = "Intuit",
                     logo = "https://financialmodelingprep.com/image-stock/INTU.png",
                     address = "",
                     decimal = 18,
@@ -2733,6 +2931,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "IONQ",
+                    name = "IonQ",
                     logo = "https://financialmodelingprep.com/image-stock/IONQ.png",
                     address = "",
                     decimal = 18,
@@ -2744,6 +2943,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "IREN",
+                    name = "IREN",
                     logo = "https://financialmodelingprep.com/image-stock/IREN.png",
                     address = "",
                     decimal = 18,
@@ -2755,6 +2955,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "LITE",
+                    name = "Lumentum",
                     logo = "https://financialmodelingprep.com/image-stock/LITE.png",
                     address = "",
                     decimal = 18,
@@ -2766,6 +2967,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "LLY",
+                    name = "Eli Lilly",
                     logo = "https://financialmodelingprep.com/image-stock/LLY.png",
                     address = "",
                     decimal = 18,
@@ -2777,6 +2979,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "LULU",
+                    name = "Lululemon",
                     logo = "https://financialmodelingprep.com/image-stock/LULU.png",
                     address = "",
                     decimal = 18,
@@ -2788,6 +2991,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "LUNR",
+                    name = "Intuitive Machines",
                     logo = "https://financialmodelingprep.com/image-stock/LUNR.png",
                     address = "",
                     decimal = 18,
@@ -2799,6 +3003,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "MDB",
+                    name = "MongoDB",
                     logo = "https://financialmodelingprep.com/image-stock/MDB.png",
                     address = "",
                     decimal = 18,
@@ -2810,6 +3015,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "META",
+                    name = "Meta Platforms",
                     logo = "https://financialmodelingprep.com/image-stock/META.png",
                     address = "",
                     decimal = 18,
@@ -2821,6 +3027,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "MRVL",
+                    name = "Marvell Technology",
                     logo = "https://financialmodelingprep.com/image-stock/MRVL.png",
                     address = "",
                     decimal = 18,
@@ -2832,6 +3039,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "MSFT",
+                    name = "Microsoft",
                     logo = "https://financialmodelingprep.com/image-stock/MSFT.png",
                     address = "",
                     decimal = 18,
@@ -2843,6 +3051,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "MSTR",
+                    name = "Strategy (MicroStrategy)",
                     logo = "https://financialmodelingprep.com/image-stock/MSTR.png",
                     address = "",
                     decimal = 18,
@@ -2854,6 +3063,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "MU",
+                    name = "Micron Technology",
                     logo = "https://financialmodelingprep.com/image-stock/MU.png",
                     address = "",
                     decimal = 18,
@@ -2865,6 +3075,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "MXL",
+                    name = "MaxLinear",
                     logo = "https://financialmodelingprep.com/image-stock/MXL.png",
                     address = "",
                     decimal = 18,
@@ -2876,6 +3087,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "NBIS",
+                    name = "Nebius Group",
                     logo = "https://financialmodelingprep.com/image-stock/NBIS.png",
                     address = "",
                     decimal = 18,
@@ -2887,6 +3099,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "NFLX",
+                    name = "Netflix",
                     logo = "https://financialmodelingprep.com/image-stock/NFLX.png",
                     address = "",
                     decimal = 18,
@@ -2898,6 +3111,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "NNE",
+                    name = "Nano Nuclear Energy",
                     logo = "https://financialmodelingprep.com/image-stock/NNE.png",
                     address = "",
                     decimal = 18,
@@ -2909,6 +3123,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "NOW",
+                    name = "ServiceNow",
                     logo = "https://financialmodelingprep.com/image-stock/NOW.png",
                     address = "",
                     decimal = 18,
@@ -2920,6 +3135,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "NU",
+                    name = "Nu Holdings",
                     logo = "https://financialmodelingprep.com/image-stock/NU.png",
                     address = "",
                     decimal = 18,
@@ -2931,6 +3147,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "NVDA",
+                    name = "NVIDIA",
                     logo = "https://financialmodelingprep.com/image-stock/NVDA.png",
                     address = "",
                     decimal = 18,
@@ -2942,6 +3159,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "NVTS",
+                    name = "Navitas Semiconductor",
                     logo = "https://financialmodelingprep.com/image-stock/NVTS.png",
                     address = "",
                     decimal = 18,
@@ -2953,6 +3171,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "ORCL",
+                    name = "Oracle",
                     logo = "https://financialmodelingprep.com/image-stock/ORCL.png",
                     address = "",
                     decimal = 18,
@@ -2964,6 +3183,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "P",
+                    name = "Everpure",
                     logo =
                         "https://cdn.robinhood.com/ncw_assets/logos/0x1cdad396db64bda184d5182a97dd9b3c62100b7d.png",
                     address = "",
@@ -2976,6 +3196,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "PENG",
+                    name = "Penguin Solutions",
                     logo = "https://financialmodelingprep.com/image-stock/PENG.png",
                     address = "",
                     decimal = 18,
@@ -2987,6 +3208,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "PLTR",
+                    name = "Palantir Technologies",
                     logo = "https://financialmodelingprep.com/image-stock/PLTR.png",
                     address = "",
                     decimal = 18,
@@ -2998,6 +3220,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "POET",
+                    name = "POET Technologies",
                     logo = "https://financialmodelingprep.com/image-stock/POET.png",
                     address = "",
                     decimal = 18,
@@ -3009,6 +3232,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "PR",
+                    name = "Permian Resources",
                     logo = "https://financialmodelingprep.com/image-stock/PR.png",
                     address = "",
                     decimal = 18,
@@ -3020,6 +3244,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "QBTS",
+                    name = "D-Wave Quantum",
                     logo = "https://financialmodelingprep.com/image-stock/QBTS.png",
                     address = "",
                     decimal = 18,
@@ -3031,6 +3256,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "QCOM",
+                    name = "Qualcomm",
                     logo = "https://financialmodelingprep.com/image-stock/QCOM.png",
                     address = "",
                     decimal = 18,
@@ -3042,6 +3268,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "QQQ",
+                    name = "Invesco QQQ Trust",
                     logo = "https://financialmodelingprep.com/image-stock/QQQ.png",
                     address = "",
                     decimal = 18,
@@ -3053,6 +3280,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "QUBT",
+                    name = "Quantum Computing Inc.",
                     logo = "https://financialmodelingprep.com/image-stock/QUBT.png",
                     address = "",
                     decimal = 18,
@@ -3064,6 +3292,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "RBLX",
+                    name = "Roblox",
                     logo = "https://financialmodelingprep.com/image-stock/RBLX.png",
                     address = "",
                     decimal = 18,
@@ -3075,6 +3304,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "RDDT",
+                    name = "Reddit",
                     logo = "https://financialmodelingprep.com/image-stock/RDDT.png",
                     address = "",
                     decimal = 18,
@@ -3086,6 +3316,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "RDW",
+                    name = "Redwire",
                     logo = "https://financialmodelingprep.com/image-stock/RDW.png",
                     address = "",
                     decimal = 18,
@@ -3097,6 +3328,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "RGTI",
+                    name = "Rigetti Computing",
                     logo = "https://financialmodelingprep.com/image-stock/RGTI.png",
                     address = "",
                     decimal = 18,
@@ -3108,6 +3340,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "RIVN",
+                    name = "Rivian Automotive",
                     logo = "https://financialmodelingprep.com/image-stock/RIVN.png",
                     address = "",
                     decimal = 18,
@@ -3119,6 +3352,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "RKLB",
+                    name = "Rocket Lab",
                     logo = "https://financialmodelingprep.com/image-stock/RKLB.png",
                     address = "",
                     decimal = 18,
@@ -3130,6 +3364,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SATS",
+                    name = "EchoStar",
                     logo = "https://financialmodelingprep.com/image-stock/SATS.png",
                     address = "",
                     decimal = 18,
@@ -3141,6 +3376,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SGOV",
+                    name = "iShares 0-3 Month Treasury Bond ETF",
                     logo = "https://financialmodelingprep.com/image-stock/SGOV.png",
                     address = "",
                     decimal = 18,
@@ -3152,6 +3388,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SHOP",
+                    name = "Shopify",
                     logo = "https://financialmodelingprep.com/image-stock/SHOP.png",
                     address = "",
                     decimal = 18,
@@ -3163,6 +3400,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SKHY",
+                    name = "SK hynix",
                     logo =
                         "https://cdn.robinhood.com/ncw_assets/logos/0x84cab63bc87912e71ad199ff14a0ba45de68fef8.png",
                     address = "",
@@ -3175,6 +3413,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SLV",
+                    name = "iShares Silver Trust",
                     logo = "https://financialmodelingprep.com/image-stock/SLV.png",
                     address = "",
                     decimal = 18,
@@ -3186,6 +3425,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SMCI",
+                    name = "Super Micro Computer",
                     logo = "https://financialmodelingprep.com/image-stock/SMCI.png",
                     address = "",
                     decimal = 18,
@@ -3197,6 +3437,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SNDK",
+                    name = "Sandisk",
                     logo = "https://financialmodelingprep.com/image-stock/SNDK.png",
                     address = "",
                     decimal = 18,
@@ -3208,6 +3449,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SOFI",
+                    name = "SoFi Technologies",
                     logo = "https://financialmodelingprep.com/image-stock/SOFI.png",
                     address = "",
                     decimal = 18,
@@ -3219,6 +3461,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SOXX",
+                    name = "iShares Semiconductor ETF",
                     logo = "https://financialmodelingprep.com/image-stock/SOXX.png",
                     address = "",
                     decimal = 18,
@@ -3230,6 +3473,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SPCX",
+                    name = "SpaceX",
                     logo = "https://financialmodelingprep.com/image-stock/SPCX.png",
                     address = "",
                     decimal = 18,
@@ -3241,6 +3485,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SPMO",
+                    name = "Invesco S&P 500 Momentum ETF",
                     logo = "https://financialmodelingprep.com/image-stock/SPMO.png",
                     address = "",
                     decimal = 18,
@@ -3252,6 +3497,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "SPY",
+                    name = "SPDR S&P 500 ETF Trust",
                     logo = "https://financialmodelingprep.com/image-stock/SPY.png",
                     address = "",
                     decimal = 18,
@@ -3263,6 +3509,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "TSEM",
+                    name = "Tower Semiconductor",
                     logo =
                         "https://cdn.robinhood.com/ncw_assets/logos/0x89776d4cd68193597a2fc132cfac1fde36ccea8a.png",
                     address = "",
@@ -3275,6 +3522,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "TSLA",
+                    name = "Tesla",
                     logo = "https://financialmodelingprep.com/image-stock/TSLA.png",
                     address = "",
                     decimal = 18,
@@ -3286,6 +3534,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "TSM",
+                    name = "Taiwan Semiconductor Manufacturing",
                     logo = "https://financialmodelingprep.com/image-stock/TSM.png",
                     address = "",
                     decimal = 18,
@@ -3297,6 +3546,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "TTWO",
+                    name = "Take-Two Interactive Software",
                     logo = "https://financialmodelingprep.com/image-stock/TTWO.png",
                     address = "",
                     decimal = 18,
@@ -3308,6 +3558,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "UMC",
+                    name = "United Microelectronics",
                     logo = "https://financialmodelingprep.com/image-stock/UMC.png",
                     address = "",
                     decimal = 18,
@@ -3319,6 +3570,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "UPS",
+                    name = "United Parcel Service",
                     logo = "https://financialmodelingprep.com/image-stock/UPS.png",
                     address = "",
                     decimal = 18,
@@ -3330,6 +3582,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "USAR",
+                    name = "USA Rare Earth",
                     logo = "https://financialmodelingprep.com/image-stock/USAR.png",
                     address = "",
                     decimal = 18,
@@ -3341,6 +3594,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "USO",
+                    name = "United States Oil Fund",
                     logo =
                         "https://cdn.robinhood.com/ncw_assets/logos/0xa30fa36db767ad9ed3f7a60fc79526fb4d56d344.png",
                     address = "",
@@ -3353,6 +3607,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "WDAY",
+                    name = "Workday",
                     logo = "https://financialmodelingprep.com/image-stock/WDAY.png",
                     address = "",
                     decimal = 18,
@@ -3364,6 +3619,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "XLK",
+                    name = "Technology Select Sector SPDR ETF",
                     logo = "https://financialmodelingprep.com/image-stock/XLK.png",
                     address = "",
                     decimal = 18,
@@ -3375,6 +3631,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "XNDU",
+                    name = "Xanadu Quantum",
                     logo =
                         "https://cdn.robinhood.com/ncw_assets/logos/0xa8eb3bccbf2017ee7cbfb652eb51cf2e1b153289.png",
                     address = "",
@@ -3387,6 +3644,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "XOM",
+                    name = "ExxonMobil",
                     logo = "https://financialmodelingprep.com/image-stock/XOM.png",
                     address = "",
                     decimal = 18,
@@ -3398,6 +3656,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "ZM",
+                    name = "Zoom Communications",
                     logo = "https://financialmodelingprep.com/image-stock/ZM.png",
                     address = "",
                     decimal = 18,
@@ -3409,6 +3668,7 @@ object Coins {
                 Coin(
                     chain = Chain.Robinhood,
                     ticker = "ZS",
+                    name = "Zscaler",
                     logo = "https://financialmodelingprep.com/image-stock/ZS.png",
                     address = "",
                     decimal = 18,
@@ -3426,6 +3686,7 @@ object Coins {
             Coin(
                 chain = Chain.Hyperliquid,
                 ticker = "HYPE",
+                name = "Hyperliquid",
                 logo = "hype",
                 address = "",
                 decimal = 18,
@@ -3439,6 +3700,7 @@ object Coins {
             Coin(
                 chain = Chain.Hyperliquid,
                 ticker = "kHYPE",
+                name = "Kinetiq Staked HYPE",
                 logo = "khype",
                 address = "",
                 decimal = 18,
@@ -3452,6 +3714,7 @@ object Coins {
             Coin(
                 chain = Chain.Hyperliquid,
                 ticker = "wstHYPE",
+                name = "Staked HYPE Shares",
                 logo = "wsthype",
                 address = "",
                 decimal = 18,
@@ -3465,6 +3728,7 @@ object Coins {
             Coin(
                 chain = Chain.Hyperliquid,
                 ticker = "WHYPE",
+                name = "Wrapped HYPE",
                 logo = "whype",
                 address = "",
                 decimal = 18,
@@ -3478,6 +3742,7 @@ object Coins {
             Coin(
                 chain = Chain.Hyperliquid,
                 ticker = "UFART",
+                name = "Unit Fartcoin",
                 logo = "ufart",
                 address = "",
                 decimal = 6,
@@ -3491,6 +3756,7 @@ object Coins {
             Coin(
                 chain = Chain.Hyperliquid,
                 ticker = "USDT0",
+                name = "Tether USD (USDT0)",
                 logo = "usdt0",
                 address = "",
                 decimal = 6,
@@ -3504,6 +3770,7 @@ object Coins {
             Coin(
                 chain = Chain.Hyperliquid,
                 ticker = "vkHYPE",
+                name = "Kinetiq Earn Vault",
                 logo = "vkhype",
                 address = "",
                 decimal = 18,
@@ -3517,6 +3784,7 @@ object Coins {
             Coin(
                 chain = Chain.Hyperliquid,
                 ticker = "UBTC",
+                name = "Unit Bitcoin",
                 logo = "ubtc",
                 address = "",
                 decimal = 8,
@@ -3530,6 +3798,7 @@ object Coins {
             Coin(
                 chain = Chain.Hyperliquid,
                 ticker = "vHYPE",
+                name = "Ventuals vHYPE",
                 logo = "vhype",
                 address = "",
                 decimal = 18,
@@ -3543,6 +3812,7 @@ object Coins {
             Coin(
                 chain = Chain.Hyperliquid,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -3560,6 +3830,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "ETH",
+                name = "Ethereum (Sui Bridge)",
                 logo = "eth",
                 address = "",
                 decimal = 8,
@@ -3574,6 +3845,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "SUI",
+                name = "Sui",
                 logo = "sui",
                 address = "",
                 decimal = 9,
@@ -3587,6 +3859,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "DEEP",
+                name = "DeepBook",
                 logo = "https://s2.coinmarketcap.com/static/img/coins/64x64/33391.png",
                 address = "",
                 decimal = 6,
@@ -3601,6 +3874,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "WAL",
+                name = "Walrus",
                 logo = "https://coin-images.coingecko.com/coins/images/54914/large/WAL_logo.png",
                 address = "",
                 decimal = 9,
@@ -3615,6 +3889,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "CETUS",
+                name = "Cetus Protocol",
                 logo =
                     "https://raw.githubusercontent.com/cosmostation/chainlist/main/chain/sui/asset/cetus.png",
                 address = "",
@@ -3630,6 +3905,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "NAVX",
+                name = "NAVI Protocol",
                 logo =
                     "https://raw.githubusercontent.com/cosmostation/chainlist/main/chain/sui/asset/navx.png",
                 address = "",
@@ -3645,6 +3921,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "BLUE",
+                name = "Bluefin",
                 logo =
                     "https://coin-images.coingecko.com/coins/images/30883/large/BLUE_200x200.png",
                 address = "",
@@ -3660,6 +3937,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "SEND",
+                name = "Suilend",
                 logo = "https://coin-images.coingecko.com/coins/images/50989/large/SEND.png",
                 address = "",
                 decimal = 6,
@@ -3674,6 +3952,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -3688,6 +3967,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "AXOL",
+                name = "Axol",
                 logo = "https://coin-images.coingecko.com/coins/images/50412/large/AXOL.png",
                 address = "",
                 decimal = 9,
@@ -3702,6 +3982,7 @@ object Coins {
             Coin(
                 chain = Chain.Sui,
                 ticker = "LOFI",
+                name = "Lofi",
                 logo = "https://s2.coinmarketcap.com/static/img/coins/64x64/34187.png",
                 address = "",
                 decimal = 9,
@@ -3720,6 +4001,7 @@ object Coins {
             Coin(
                 chain = Chain.Terra,
                 ticker = "ASTRO",
+                name = "Astroport",
                 logo = "terra-astroport",
                 address = "",
                 decimal = 6,
@@ -3734,6 +4016,7 @@ object Coins {
             Coin(
                 chain = Chain.Terra,
                 ticker = "ASTRO-IBC",
+                name = "Astroport (IBC)",
                 logo = "terra-astroport",
                 address = "",
                 decimal = 6,
@@ -3748,6 +4031,7 @@ object Coins {
             Coin(
                 chain = Chain.Terra,
                 ticker = "LUNA",
+                name = "Terra",
                 logo = "luna",
                 address = "",
                 decimal = 6,
@@ -3761,6 +4045,7 @@ object Coins {
             Coin(
                 chain = Chain.Terra,
                 ticker = "TPT",
+                name = "Terra Poker Token",
                 logo = "terra-poker-token",
                 address = "",
                 decimal = 6,
@@ -3779,6 +4064,7 @@ object Coins {
             Coin(
                 chain = Chain.TerraClassic,
                 ticker = "ASTROC",
+                name = "Astroport Classic",
                 logo = "terra-astroport",
                 address = "",
                 decimal = 6,
@@ -3792,6 +4078,7 @@ object Coins {
             Coin(
                 chain = Chain.TerraClassic,
                 ticker = "LUNC",
+                name = "Terra Luna Classic",
                 logo = "lunc",
                 address = "",
                 decimal = 6,
@@ -3805,6 +4092,7 @@ object Coins {
             Coin(
                 chain = Chain.TerraClassic,
                 ticker = "USTC",
+                name = "TerraClassicUSD",
                 logo = "ustc",
                 address = "",
                 decimal = 6,
@@ -3822,6 +4110,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "RUNE",
+                name = "THORChain",
                 logo = "rune",
                 address = "",
                 decimal = 8,
@@ -3835,6 +4124,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "TCY",
+                name = "TCY",
                 logo = "tcy",
                 address = "",
                 decimal = 8,
@@ -3848,6 +4138,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "RUJI",
+                name = "Rujira",
                 logo = "ruji",
                 address = "",
                 decimal = 8,
@@ -3863,6 +4154,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "KUJI",
+                name = "Kujira",
                 logo = "kuji",
                 address = "",
                 decimal = 8,
@@ -3876,6 +4168,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "FUZN",
+                name = "Fuzion",
                 logo = "fuzn",
                 address = "",
                 decimal = 8,
@@ -3889,6 +4182,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "NSTK",
+                name = "Unstake",
                 logo = "nstk",
                 address = "",
                 decimal = 8,
@@ -3902,6 +4196,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "WINK",
+                name = "WINK",
                 logo = "wink",
                 address = "",
                 decimal = 8,
@@ -3915,6 +4210,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "LVN",
+                name = "Levana",
                 logo = "levana",
                 address = "",
                 decimal = 8,
@@ -3928,6 +4224,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "RKUJI",
+                name = "Rujira KUJI",
                 logo = "rkuji",
                 address = "",
                 decimal = 8,
@@ -3943,6 +4240,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "sRUJI",
+                name = "Staked Rujira",
                 logo = "ruji",
                 address = "",
                 decimal = 8,
@@ -3956,6 +4254,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "sTCY",
+                name = "Staked TCY",
                 logo = "stcy",
                 address = "",
                 decimal = 8,
@@ -3969,6 +4268,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "yRUNE",
+                name = "Nami Index yRUNE",
                 logo = "yrune",
                 address = "",
                 decimal = 8,
@@ -3983,6 +4283,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "yTCY",
+                name = "Nami Index yTCY",
                 logo = "ytcy",
                 address = "",
                 decimal = 8,
@@ -3997,6 +4298,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "bRUNE",
+                name = "Rujira Liquid Bonded RUNE",
                 logo = "brune",
                 address = "",
                 decimal = 8,
@@ -4012,6 +4314,7 @@ object Coins {
             Coin(
                 chain = Chain.ThorChain,
                 ticker = "ybRUNE",
+                name = "Auto-compounding Bonded RUNE",
                 logo = "ybrune",
                 address = "",
                 decimal = 8,
@@ -4030,6 +4333,7 @@ object Coins {
             Coin(
                 chain = Chain.Ton,
                 ticker = "GRAM",
+                name = "Gram",
                 logo = "gram",
                 address = "",
                 decimal = 9,
@@ -4043,6 +4347,7 @@ object Coins {
             Coin(
                 chain = Chain.Ton,
                 ticker = "USDT",
+                name = "Tether USD",
                 logo = "usdt",
                 address = "",
                 decimal = 6,
@@ -4056,6 +4361,7 @@ object Coins {
             Coin(
                 chain = Chain.Ton,
                 ticker = "NOT",
+                name = "Notcoin",
                 logo = "not",
                 address = "",
                 decimal = 9,
@@ -4069,6 +4375,7 @@ object Coins {
             Coin(
                 chain = Chain.Ton,
                 ticker = "DOGS",
+                name = "Dogs",
                 logo = "dogs",
                 address = "",
                 decimal = 9,
@@ -4082,6 +4389,7 @@ object Coins {
             Coin(
                 chain = Chain.Ton,
                 ticker = "CATI",
+                name = "Catizen",
                 logo = "cati",
                 address = "",
                 decimal = 9,
@@ -4095,6 +4403,7 @@ object Coins {
             Coin(
                 chain = Chain.Ton,
                 ticker = "HMSTR",
+                name = "Hamster Kombat",
                 logo = "hmstr",
                 address = "",
                 decimal = 9,
@@ -4108,6 +4417,7 @@ object Coins {
             Coin(
                 chain = Chain.Ton,
                 ticker = "STON",
+                name = "STON.fi",
                 logo = "ston",
                 address = "",
                 decimal = 9,
@@ -4121,6 +4431,7 @@ object Coins {
             Coin(
                 chain = Chain.Ton,
                 ticker = "stTON",
+                name = "bemo Staked TON",
                 logo = "stton",
                 address = "",
                 decimal = 9,
@@ -4134,6 +4445,7 @@ object Coins {
             Coin(
                 chain = Chain.Ton,
                 ticker = "tsTON",
+                name = "Tonstakers TON",
                 logo = "tston",
                 address = "",
                 decimal = 9,
@@ -4151,6 +4463,7 @@ object Coins {
             Coin(
                 chain = Chain.Tron,
                 ticker = "TRX",
+                name = "TRON",
                 logo = "tron",
                 address = "",
                 decimal = 6,
@@ -4164,6 +4477,7 @@ object Coins {
             Coin(
                 chain = Chain.Tron,
                 ticker = "USDT",
+                name = "Tether USD",
                 logo = "usdt",
                 address = "",
                 decimal = 6,
@@ -4177,6 +4491,7 @@ object Coins {
             Coin(
                 chain = Chain.Tron,
                 ticker = "USDC",
+                name = "USD Coin",
                 logo = "usdc",
                 address = "",
                 decimal = 6,
@@ -4190,6 +4505,7 @@ object Coins {
             Coin(
                 chain = Chain.Tron,
                 ticker = "USDD",
+                name = "USDD",
                 logo = "usdd",
                 address = "",
                 decimal = 18,
@@ -4203,6 +4519,7 @@ object Coins {
             Coin(
                 chain = Chain.Tron,
                 ticker = "stUSDT",
+                name = "Staked USDT",
                 logo = "stusdt",
                 address = "",
                 decimal = 18,
@@ -4220,6 +4537,7 @@ object Coins {
             Coin(
                 chain = Chain.ZkSync,
                 ticker = "ETH",
+                name = "Ethereum",
                 logo = "zsync_era",
                 address = "",
                 decimal = 18,
@@ -4237,6 +4555,7 @@ object Coins {
             Coin(
                 chain = Chain.Zcash,
                 ticker = "ZEC",
+                name = "Zcash",
                 logo = "zec",
                 decimal = 8,
                 address = "",
@@ -4254,6 +4573,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "ADA",
+                name = "Cardano",
                 logo = "ada",
                 address = "",
                 decimal = 6,
@@ -4272,6 +4592,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "USDM",
+                name = "USDM",
                 logo = "usdm",
                 address = "",
                 decimal = 6,
@@ -4290,6 +4611,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "iUSD",
+                name = "Indigo iUSD",
                 logo = "iusd",
                 address = "",
                 decimal = 6,
@@ -4308,6 +4630,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "DJED",
+                name = "Djed",
                 logo = "djed",
                 address = "",
                 decimal = 6,
@@ -4325,6 +4648,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "LQ",
+                name = "Liqwid",
                 logo = "lq",
                 address = "",
                 decimal = 6,
@@ -4342,6 +4666,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "MIN",
+                name = "Minswap",
                 logo = "min",
                 address = "",
                 decimal = 6,
@@ -4359,6 +4684,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "SNEK",
+                name = "Snek",
                 logo = "snek",
                 address = "",
                 decimal = 0,
@@ -4376,6 +4702,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "SUNDAE",
+                name = "SundaeSwap",
                 logo = "sundae",
                 address = "",
                 decimal = 6,
@@ -4393,6 +4720,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "IAG",
+                name = "Iagon",
                 logo = "iag",
                 address = "",
                 decimal = 6,
@@ -4410,6 +4738,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "HOSKY",
+                name = "Hosky",
                 logo = "hosky",
                 address = "",
                 decimal = 0,
@@ -4428,6 +4757,7 @@ object Coins {
             Coin(
                 chain = Chain.Cardano,
                 ticker = "WMTX",
+                name = "World Mobile Token",
                 logo = "wmtx",
                 address = "",
                 decimal = 6,
@@ -4449,6 +4779,7 @@ object Coins {
             Coin(
                 chain = Chain.Qbtc,
                 ticker = "QBTC",
+                name = "Quantum Bitcoin",
                 logo = "qbtc",
                 address = "",
                 decimal = 8,
@@ -4570,6 +4901,20 @@ object Coins {
                 (contractAddress.isEmpty() ||
                     coin.contractAddress.equals(contractAddress, ignoreCase = true))
         }
+
+    /**
+     * [coin] carrying the catalogue's [Coin.name] when its own source supplied none.
+     *
+     * Discovery builds coins from what a node or indexer reports, and most of those report no name
+     * — a THORChain denom, a bank balance, an XRPL trust line. It is the curated coins a user
+     * searches by name, so the lookup lives here rather than in each finder; one the catalogue does
+     * not carry comes back exactly as it went in.
+     */
+    fun withCuratedName(coin: Coin): Coin {
+        if (coin.name.isNotEmpty()) return coin
+        val curated = findCurated(coin.chain, coin.ticker, coin.contractAddress) ?: return coin
+        return if (curated.name.isEmpty()) coin else coin.copy(name = curated.name)
+    }
 
     /**
      * The curated [Coin] for a contract address on [chain], when the caller has no ticker to go

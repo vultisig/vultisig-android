@@ -568,6 +568,7 @@ data class SuiCoinMetadata(
     @SerialName("decimals") val decimals: Int,
     @SerialName("symbol") val symbol: String,
     @SerialName("iconUrl") val iconUrl: String? = null,
+    @SerialName("name") val name: String? = null,
 )
 
 @Serializable

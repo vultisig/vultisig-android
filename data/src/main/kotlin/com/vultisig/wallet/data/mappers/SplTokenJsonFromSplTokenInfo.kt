@@ -18,6 +18,7 @@ internal class SplTokenJsonFromSplTokenInfoImpl @Inject constructor() :
                     logo = from.logoURI,
                     ticker = from.symbol,
                     extensions = from.extensions,
+                    name = from.name,
                 ),
             mint = from.address,
             usdPrice = from.usdPrice,

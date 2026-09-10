@@ -35,6 +35,7 @@ constructor(private val tonApi: TonApi, private val tokenPriceRepository: TokenP
             Coin(
                 chain = Chain.Ton,
                 ticker = metadata.ticker,
+                name = metadata.name.orEmpty(),
                 logo = metadata.logo.orEmpty(),
                 address = "",
                 decimal = metadata.decimals,

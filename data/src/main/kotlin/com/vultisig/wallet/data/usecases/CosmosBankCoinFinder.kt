@@ -121,6 +121,7 @@ constructor(private val cosmosApiFactory: CosmosApiFactory) : CosmosBankCoinFind
         Coin(
             chain = chain,
             ticker = metadata?.symbolOrDisplay() ?: fallbackTicker,
+            name = metadata?.name?.trim().orEmpty(),
             logo = "",
             address = "",
             decimal = metadata?.decimalsFromUnits() ?: COSMOS_DEFAULT_DECIMALS,

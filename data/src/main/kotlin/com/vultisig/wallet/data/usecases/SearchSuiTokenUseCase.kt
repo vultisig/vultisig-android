@@ -32,6 +32,7 @@ constructor(private val suiApi: SuiApi, private val tokenPriceRepository: TokenP
             Coin(
                 chain = Chain.Sui,
                 ticker = metadata.symbol.trim(),
+                name = metadata.name?.trim().orEmpty(),
                 logo = metadata.iconUrl.orEmpty(),
                 address = "",
                 decimal = metadata.decimals,

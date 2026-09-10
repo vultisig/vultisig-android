@@ -121,6 +121,7 @@ internal class SuiTokenFinderImpl @Inject constructor(private val suiApi: SuiApi
         return Coin(
             chain = Chain.Sui,
             ticker = ticker,
+            name = metadata.name?.trim().orEmpty(),
             logo = metadata.iconUrl.orEmpty(),
             address = "",
             decimal = metadata.decimals,
