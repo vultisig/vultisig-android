@@ -10,18 +10,16 @@ import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.TronFees
-import com.vultisig.wallet.data.utils.Numeric
+import com.vultisig.wallet.data.chains.helpers.TronFunctions.tronAddressToHex
+import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import timber.log.Timber
-import wallet.core.jni.Base58
 
 /**
  * TRON uses a resource-based fee model instead of a fixed gas fee like Ethereum. Transactions
@@ -134,7 +132,7 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
             totalFee = totalFee + memoFee
         }
 
-        return bandwidthFee.copy(amount = totalFee)
+        return bandwidthFee.copy(feeLimit = NATIVE_FEE_LIMIT, amount = totalFee)
     }
 
     private fun TronAccountJson?.isNewAccount(): Boolean = this == null || address.isEmpty()
@@ -237,10 +235,13 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
             totalFee = totalFee.add(activationFee)
         }
 
+        // Bandwidth, memo and activation are burnt outside contract execution, so they stay out of
+        // the ceiling TRON enforces against energy.
         return bandwidthFee.copy(
             maxEnergyRequired = energyFee.maxEnergyRequired,
             energyDiscounted = energyFee.energyDiscounted,
             energyRequired = energyFee.energyRequired,
+            feeLimit = energyFee.feeLimit,
             amount = totalFee,
         )
     }
@@ -251,69 +252,52 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
     private suspend fun calculateEnergyFee(
         srcAccount: TronAccountResourceJson?,
         transaction: Transfer,
-    ): TronFees = supervisorScope {
-        val fromAddress = transaction.coin.address
-        val toAddress = Numeric.toHexString(Base58.decode(transaction.to))
-        val contract = transaction.coin.contractAddress
-        val amount = transaction.amount
-
-        val contractMetadata = async { tronApi.getContractMetadata(contract) }
-
+    ): TronFees {
         val simulationResult =
             tronApi.getTriggerConstantContractFee(
-                ownerAddressBase58 = fromAddress,
-                contractAddressBase58 = contract,
-                recipientAddressHex = toAddress,
+                ownerAddressBase58 = transaction.coin.address,
+                contractAddressBase58 = transaction.coin.contractAddress,
+                recipientAddressHex = tronAddressToHex(transaction.to),
                 functionSelector = TRANSFER_FUNCTION_SELECTOR,
-                amount = amount,
+                // The amount being sent, not the whole balance: a TRC20 transfer's energy depends
+                // on it, so simulating anything else prices a transaction nobody is signing.
+                amount = transaction.amount,
             )
 
-        if (!simulationResult.isSuccessfulSimulation()) {
-            Timber.e("Tron Simulation Failed: ${simulationResult.result ?: ""}")
-            throw RuntimeException("Tron Simulated failed")
+        // `energy_used` is already the total energy this call burns; `energy_penalty` is the
+        // Dynamic Energy share inside that total, not a term to add on top of it. Rebuilding the
+        // base from the two keeps that relationship explicit and rejects a response whose reported
+        // share exceeds the total it belongs to.
+        // https://developers.tron.network/docs/set-feelimit#estimating-energy-before-broadcasting
+        val totalEnergy = simulationResult.energyUsed
+        val penalty = simulationResult.energyPenalty
+        check(totalEnergy > 0L && penalty in 0L..totalEnergy) {
+            "Tron simulation returned an unusable energy estimate: " +
+                "used=$totalEnergy penalty=$penalty"
         }
+        val baseEnergy = totalEnergy - penalty
 
-        val contractEnergyFactor =
-            contractMetadata.await().contractState.energyFactor.toBigDecimal()
-        val contractMaxEnergyFactor = getCacheTronChainParameters().maxEnergyFactor.toBigDecimal()
-
-        val energyRequired =
-            if (contractEnergyFactor == BigDecimal.ZERO) {
-                simulationResult.energyUsed
-            } else {
-                simulationResult.energyUsed - simulationResult.energyPenalty
-            }
-
-        if (energyRequired == 0L) {
-            throw RuntimeException("Tron Simulated failed")
-        }
-
-        val energyFactor =
-            (contractEnergyFactor.divide(ENERGY_FACTOR, 10, RoundingMode.DOWN)) + BigDecimal.ONE
+        val chainParameters = getCacheTronChainParameters()
         val maxFactor =
-            (contractMaxEnergyFactor.divide(ENERGY_FACTOR, 10, RoundingMode.DOWN)) + BigDecimal.ONE
+            chainParameters.maxEnergyFactor
+                .toBigDecimal()
+                .divide(ENERGY_FACTOR, 10, RoundingMode.DOWN) + BigDecimal.ONE
+        val energyPrice = chainParameters.energyFee.toBigInteger()
 
-        val energyUnitsRequired =
-            energyRequired.toBigDecimal().multiply(energyFactor).toBigInteger()
-        val maxEnergyUnitsRequired =
-            energyRequired.toBigDecimal().multiply(maxFactor).toBigInteger()
+        val energyUnitsRequired = totalEnergy.toBigInteger()
+        val maxEnergyUnitsRequired = baseEnergy.toBigDecimal().multiply(maxFactor).toBigInteger()
 
-        // Apply Energy discount: If account has staked energy
+        // Staked energy discounts what the sender is expected to burn, never the signed ceiling.
         val availableEnergy =
             srcAccount?.calculateAvailableEnergy()?.toBigInteger() ?: BigInteger.ZERO
-        val energyToPay =
-            if (availableEnergy >= energyUnitsRequired) {
-                BigInteger.ZERO
-            } else {
-                energyUnitsRequired - availableEnergy
-            }
-        val energyPrice = getCacheTronChainParameters().energyFee
+        val energyToPay = (energyUnitsRequired - availableEnergy).coerceAtLeast(BigInteger.ZERO)
 
-        TronFees(
+        return TronFees(
             maxEnergyRequired = maxEnergyUnitsRequired,
             energyRequired = energyUnitsRequired,
             energyDiscounted = energyToPay,
-            amount = energyToPay * energyPrice.toBigInteger(),
+            feeLimit = contractFeeLimit(energyUnitsRequired, energyPrice),
+            amount = energyToPay * energyPrice,
         )
     }
 
@@ -370,7 +354,14 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
             } else {
                 BigInteger.ZERO
             }
-        return TronFees(maxEnergyRequired = maxEnergyUnitsRequired, amount = totalFee)
+        return TronFees(
+            maxEnergyRequired = maxEnergyUnitsRequired,
+            // No simulation to size a ceiling from, so a token call falls back to the same flat
+            // amount it reports as the fee. Being conservative here is the safe direction: the
+            // ceiling is only ever charged for what execution actually consumes.
+            feeLimit = if (isNativeCoin) NATIVE_FEE_LIMIT else totalFee,
+            amount = totalFee,
+        )
     }
 
     companion object {
@@ -387,5 +378,33 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
         private val DEFAULT_MAX_ENERGY_USED = 50000000.toBigInteger()
 
         private val ENERGY_FACTOR = "10000".toBigDecimal()
+
+        /**
+         * A plain TRX transfer never writes `fee_limit` at all, so this flat ceiling only governs
+         * the native-TRX contract calls that share this fee model — staking (freeze/unfreeze/vote)
+         * and dApp `TriggerSmartContract` payloads, neither of which is simulated here.
+         */
+        private val NATIVE_FEE_LIMIT = TRON_DEFAULT_ESTIMATION_FEE.toBigInteger()
+
+        // 30% headroom on top of the simulated energy, covering a contract's per-call dynamic
+        // energy_factor surge between simulation and broadcast. Matches iOS's
+        // TronService.contractFeeLimit (ENERGY_SAFETY_NUMERATOR/DENOMINATOR = 13/10).
+        // https://developers.tron.network/docs/resource-model#dynamic-energy-model
+        private val ENERGY_SAFETY_NUMERATOR = BigInteger.valueOf(13)
+        private val ENERGY_SAFETY_DENOMINATOR = BigInteger.TEN
+
+        /**
+         * Translates simulated energy into the `fee_limit` cap, in SUN. Multiplies before dividing
+         * so the 30% margin survives truncation, and stays in [BigInteger] so an unexpectedly large
+         * estimate or energy price cannot overflow mid-calculation.
+         */
+        internal fun contractFeeLimit(
+            totalEnergyUsed: BigInteger,
+            energyPrice: BigInteger,
+        ): BigInteger =
+            totalEnergyUsed
+                .multiply(ENERGY_SAFETY_NUMERATOR)
+                .divide(ENERGY_SAFETY_DENOMINATOR)
+                .multiply(energyPrice)
     }
 }

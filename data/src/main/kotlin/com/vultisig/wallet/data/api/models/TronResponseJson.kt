@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.api.models
 
 import java.math.BigInteger
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -110,11 +109,6 @@ data class TronChainParametersJson(val chainParameter: List<TronChainParameterJs
 @Serializable internal data class TronAccountRequestJson(val address: String, val visible: Boolean)
 
 @Serializable
-internal data class TronContractRequestJson(val value: String) {
-    @EncodeDefault val visible: Boolean = true
-}
-
-@Serializable
 data class TronAccountResourceJson(
     @SerialName("freeNetUsed") val freeNetUsed: Long = 0L,
     @SerialName("freeNetLimit") val freeNetLimit: Long = 0L,
@@ -169,14 +163,6 @@ data class TronAccountJson(
      */
     val defiLockedTotalSun: Long
         get() = frozenBandwidthSun + frozenEnergySun + unfreezingTotalSun
-}
-
-@Serializable
-data class TronContractInfoJson(
-    @SerialName("contract_state") val contractState: ContractStateJson
-) {
-    @Serializable
-    data class ContractStateJson(@SerialName("energy_factor") val energyFactor: Long = 0L)
 }
 
 @Serializable

@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
 import com.vultisig.wallet.ui.utils.UiText
+import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -326,6 +327,47 @@ internal class GasFeeOrchestratorTest {
             assertTrue(flagSlot.captured)
         }
 
+    @Test
+    fun `collectSpecific hands a TRC20 amount to getSpecific so the signed fee_limit prices it`() =
+        runTest(mainDispatcher) {
+            // #5479: the signed fee_limit is simulated from the amount being transferred, so a
+            // Tron token specific that arrived without one would price a different transaction.
+            val amountSlot = captureSpecificAmount()
+            // combine() needs a first value from every source before it emits, so the field is set
+            // before start() rather than racing the first emission against an empty one.
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("2.5")
+            val orchestrator = build(backgroundScope)
+
+            runWithIoOnTestScheduler {
+                orchestrator.start()
+                selectedToken.value = trc20Coin()
+                gasFee.value = tokenValue(100, trc20Coin())
+                advanceTimeBy(400)
+                advanceUntilIdle()
+            }
+
+            assertEquals(BigInteger("2500000"), amountSlot.captured)
+        }
+
+    @Test
+    fun `collectSpecific still drops the amount for chains whose specific does not depend on it`() =
+        runTest(mainDispatcher) {
+            // Carrying it would refetch nonce/gas on every keystroke for no gain.
+            val amountSlot = captureSpecificAmount()
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("2.5")
+            val orchestrator = build(backgroundScope)
+
+            runWithIoOnTestScheduler {
+                orchestrator.start()
+                selectedToken.value = ethCoin(isNativeToken = false)
+                gasFee.value = tokenValue(100, ethCoin(isNativeToken = false))
+                advanceTimeBy(400)
+                advanceUntilIdle()
+            }
+
+            assertNull(amountSlot.captured)
+        }
+
     // ──────── collectPlanFee ────────
 
     @Test
@@ -440,6 +482,65 @@ internal class GasFeeOrchestratorTest {
             )
         return Account(token = btc, tokenValue = null, fiatValue = null, price = null)
     }
+
+    private fun captureSpecificAmount(): CapturingSlot<BigInteger?> {
+        val amountSlot = slot<BigInteger?>()
+        coEvery {
+            blockChainSpecificRepository.getSpecific(
+                chain = any(),
+                address = any(),
+                token = any(),
+                gasFee = any(),
+                isSwap = any(),
+                isMaxAmountEnabled = any(),
+                isDeposit = any(),
+                gasLimit = any(),
+                dstAddress = any(),
+                tokenAmountValue = captureNullable(amountSlot),
+                memo = any(),
+                transactionType = any(),
+                isThorchainRouterDeposit = any(),
+            )
+        } returns
+            BlockChainSpecificAndUtxo(
+                BlockChainSpecific.Tron(
+                    timestamp = 0uL,
+                    expiration = 0uL,
+                    blockHeaderTimestamp = 0uL,
+                    blockHeaderNumber = 0uL,
+                    blockHeaderVersion = 0uL,
+                    blockHeaderTxTrieRoot = "00",
+                    blockHeaderParentHash = "00",
+                    blockHeaderWitnessAddress = "41",
+                    gasFeeEstimation = 0uL,
+                )
+            )
+        return amountSlot
+    }
+
+    /** collectSpecific hops to Dispatchers.IO; route it back so the scheduler can drive it. */
+    private inline fun runWithIoOnTestScheduler(body: () -> Unit) {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            body()
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    private fun trc20Coin(): Coin =
+        Coin(
+            chain = Chain.Tron,
+            ticker = "USDT",
+            logo = "",
+            address = "TA4Y62o6YC2Zsck9rZVGTvqW1AQ7X9zTnj",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "TDisDrQngvcMNfYurnQLW4oRnh9PzwDFxh",
+            isNativeToken = false,
+        )
 
     private fun tokenValue(value: Long, coin: Coin): TokenValue =
         TokenValue(value = BigInteger.valueOf(value), token = coin)
