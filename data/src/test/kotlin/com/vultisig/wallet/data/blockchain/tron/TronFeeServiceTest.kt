@@ -104,6 +104,43 @@ class TronFeeServiceTest {
         assertEquals(MEMO_FEE, memoed.amount - staking.amount)
     }
 
+    @Test
+    fun `a contract call is free when the sender's own bandwidth covers it`() = runTest {
+        // #5859: a TRC20 send used to be charged 345 bytes unconditionally, so every account with
+        // its daily free quota intact — the common case — was quoted 0.345 TRX over what the chain
+        // takes. Confirmed on mainnet by tx 665a3a23...: net_usage 345 with no net_fee.
+        coEvery { tronApi.getChainParameters() } returns chainParameters()
+
+        val fee = service.calculateBandwidthFee(freeBandwidth(600L), isContract = true)
+
+        assertEquals(BigInteger.ZERO, fee.amount)
+    }
+
+    @Test
+    fun `a contract call burns TRX only once bandwidth runs short`() = runTest {
+        coEvery { tronApi.getChainParameters() } returns chainParameters()
+
+        val fee = service.calculateBandwidthFee(freeBandwidth(0L), isContract = true)
+
+        // 345 bytes x 1,000 sun.
+        assertEquals(BigInteger.valueOf(345_000L), fee.amount)
+    }
+
+    @Test
+    fun `each shape is measured against its own size`() = runTest {
+        // 320 bandwidth covers a 300-byte native transfer but not a 345-byte contract call, so the
+        // shared rule must not collapse the two sizes together.
+        coEvery { tronApi.getChainParameters() } returns chainParameters()
+
+        val nativeFee = service.calculateBandwidthFee(freeBandwidth(320L), isContract = false)
+        val contractFee = service.calculateBandwidthFee(freeBandwidth(320L), isContract = true)
+
+        assertEquals(BigInteger.ZERO, nativeFee.amount)
+        assertEquals(BigInteger.valueOf(345_000L), contractFee.amount)
+    }
+
+    private fun freeBandwidth(available: Long) = TronAccountResourceJson(freeNetLimit = available)
+
     private fun stubHealthyApi() {
         coEvery { tronApi.getChainParameters() } returns chainParameters()
         // Free bandwidth covers the whole transfer and the destination is already activated, so the

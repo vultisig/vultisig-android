@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.tron
 
+import androidx.annotation.VisibleForTesting
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELECTOR
 import com.vultisig.wallet.data.api.models.TronAccountJson
@@ -152,7 +153,8 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
     // TRC-20
     // To consider implementing a tx serializer for swaps. This can be easily achieve by :
     // headers & others(fixed) + signature(fixed) + rawCallDataSize (return by simulation)
-    private suspend fun calculateBandwidthFee(
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal suspend fun calculateBandwidthFee(
         srcAccount: TronAccountResourceJson?,
         isContract: Boolean,
     ): TronFees {
@@ -165,35 +167,26 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
 
         val bandwidthPrice = getCacheTronChainParameters().bandwidthFeePrice
 
-        // For contracts, always pay bandwidth fee
-        if (isContract) {
-            return TronFees(
-                bandwidthDiscounted = BYTES_PER_CONTRACT_TX.toBigInteger(),
-                bandwidthRequired = BYTES_PER_CONTRACT_TX.toBigInteger(),
-                amount = BigInteger.valueOf(bytesRequired * bandwidthPrice),
-            )
-        }
-
-        // For native transfers, check available bandwidth
+        // A contract call draws on the same free and staked bandwidth as a plain transfer — only
+        // the size differs — so it is charged on the same terms. Bandwidth applies all or nothing:
+        // TRX is burned for the whole transaction, or for none of it.
         val availableBandwidth = srcAccount?.calculateAvailableBandwidth() ?: 0L
-
-        // Bandwidth apply all or nothing
-        val trxAmount =
-            if (availableBandwidth >= bytesRequired) {
-                BigInteger.ZERO
-            } else {
-                BigInteger.valueOf(bytesRequired * bandwidthPrice)
-            }
+        val isCovered = availableBandwidth >= bytesRequired
 
         return TronFees(
             bandwidthDiscounted =
-                if (trxAmount == BigInteger.ZERO) {
+                if (isCovered) {
                     BigInteger.ZERO
                 } else {
-                    BYTES_PER_COIN_TX.toBigInteger()
+                    bytesRequired.toBigInteger()
                 },
-            bandwidthRequired = BYTES_PER_COIN_TX.toBigInteger(),
-            amount = trxAmount,
+            bandwidthRequired = bytesRequired.toBigInteger(),
+            amount =
+                if (isCovered) {
+                    BigInteger.ZERO
+                } else {
+                    BigInteger.valueOf(bytesRequired * bandwidthPrice)
+                },
         )
     }
 
