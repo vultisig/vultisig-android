@@ -1765,6 +1765,7 @@
     <string name="done_verb_undelegated">Delegacija poništena</string>
     <string name="done_verb_redelegated">Ponovno delegirano</string>
     <string name="done_verb_claimed_rewards">Nagrade preuzete</string>
+    <string name="done_verb_claimed">Preuzeto</string>
     <string name="done_verb_minted">Iskovano</string>
     <string name="done_verb_redeemed">Otkupljeno</string>
     <string name="done_verb_withdrew">Podignuto</string>
@@ -1790,6 +1791,7 @@
     <string name="verify_verb_undelegating">Poništavate delegaciju</string>
     <string name="verify_verb_redelegating">Ponovno delegirate</string>
     <string name="verify_verb_adding_liquidity">Dodajete likvidnost</string>
+    <string name="verify_verb_removing_liquidity">Uklanjate likvidnost</string>
     <string name="verify_verb_redeeming">Otkupljujete</string>
     <string name="verify_verb_minting">Kujete</string>
     <string name="verify_verb_merging">Spajate</string>
@@ -1799,4 +1801,5 @@
     <string name="scope_rewards_accrued_so_far">do sada stečene nagrade</string>
     <string name="scope_delegated_amount_after_rent">delegirani iznos nakon rezerve za najam</string>
     <string name="withdrawing_share_of_staked_position">%1$s vaše uložene pozicije</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s vaše pozicije likvidnosti</string>
 </resources>

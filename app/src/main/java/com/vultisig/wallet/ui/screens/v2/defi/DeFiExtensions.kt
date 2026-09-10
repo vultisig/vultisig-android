@@ -130,21 +130,18 @@ internal fun BondedNodePosition.toUiModel(): BondedNodeUiModel {
     )
 }
 
-internal const val STAKING_RUJI_CONTRACT =
-    "thor13g83nn5ef4qzqeafp0508dnvkvm0zqr3sj7eefcn5umu65gqluusrml5cr"
+// The Rujira contract addresses are aliased rather than spelled out here: the signed-transaction
+// reader has to recognise the same set the builders spend, so they live in one place — see
+// [ThorchainStakingContracts].
+internal const val STAKING_RUJI_CONTRACT = ThorchainStakingContracts.STAKING_RUJI
 
-internal const val STAKING_TCY_COMPOUND_CONTRACT =
-    "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
+internal const val STAKING_TCY_COMPOUND_CONTRACT = ThorchainStakingContracts.STAKING_TCY_COMPOUND
 
-// Rujira's liquid-bond contract for bRUNE: `liquid.bond` mints the ybRUNE receipt, `liquid.unbond`
-// redeems it. Aliased rather than spelled out, because the pricing repository reads the same
-// address for the contract's NAV — see [ThorchainStakingContracts].
+/** `liquid.bond` mints the ybRUNE receipt, `liquid.unbond` redeems it. */
 internal const val STAKING_BRUNE_CONTRACT = ThorchainStakingContracts.BRUNE_LIQUID_BOND
 
-internal const val YRUNE_CONTRACT =
-    "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt"
+internal const val YRUNE_CONTRACT = ThorchainStakingContracts.YRUNE
 
-internal const val YTCY_CONTRACT = "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
+internal const val YTCY_CONTRACT = ThorchainStakingContracts.YTCY
 
-internal const val YRUNE_YTCY_AFFILIATE_CONTRACT =
-    "thor1v3f7h384r8hw6r3dtcgfq6d5fq842u6cjzeuu8nr0cp93j7zfxyquyrfl8"
+internal const val YRUNE_YTCY_AFFILIATE_CONTRACT = ThorchainStakingContracts.YVAULT_AFFILIATE

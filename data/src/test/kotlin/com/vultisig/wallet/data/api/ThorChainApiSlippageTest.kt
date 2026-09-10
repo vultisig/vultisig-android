@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
+import com.vultisig.wallet.data.blockchain.thorchain.ThorChainInboundVaultSnapshot
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -46,6 +47,7 @@ class ThorChainApiSlippageTest {
             thorChainSwapQuoteResponseJsonSerializer =
                 mockk<ThorChainSwapQuoteResponseJsonSerializer>(),
             json = json,
+            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(),
         )
 
     private suspend fun ThorChainApiImpl.quoteWith(toleranceBps: Int?) =

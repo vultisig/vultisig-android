@@ -214,6 +214,7 @@ constructor(
                 DecodedOperation.Undelegate -> R.string.done_verb_undelegated
                 DecodedOperation.Redelegate -> R.string.done_verb_redelegated
                 DecodedOperation.ClaimRewards -> R.string.done_verb_claimed_rewards
+                DecodedOperation.Claim -> R.string.done_verb_claimed
                 DecodedOperation.Mint -> R.string.done_verb_minted
                 DecodedOperation.Redeem -> R.string.done_verb_redeemed
                 DecodedOperation.SecuredAssetWithdraw,
@@ -239,8 +240,7 @@ constructor(
          * A transfer is what the send screens are; a swap is rendered two-sided by its own verify
          * screen; an approval names its spender and allowance; a vote moves nothing, so the verb
          * would be the whole hero; a contract call of unknown shape and an unreadable transaction
-         * have nothing to add. `RemoveLiquidity` is silent for a different reason: naming it would
-         * displace the carrier amount the transaction actually charges.
+         * have nothing to add.
          */
         fun verifyTitleRes(operation: DecodedOperation): Int? =
             when (operation) {
@@ -249,7 +249,6 @@ constructor(
                 DecodedOperation.Approve,
                 DecodedOperation.Vote,
                 DecodedOperation.ContractCall,
-                DecodedOperation.RemoveLiquidity,
                 DecodedOperation.Unknown -> null
 
                 // The Cosmos staking verify screen already ships this exact wording in all ten
@@ -257,7 +256,8 @@ constructor(
                 // user reaches the same operation through.
                 DecodedOperation.Stake -> R.string.cosmos_staking_youre_staking
                 DecodedOperation.Unstake -> R.string.cosmos_staking_youre_unstaking
-                DecodedOperation.ClaimRewards -> R.string.cosmos_staking_youre_claiming
+                DecodedOperation.ClaimRewards,
+                DecodedOperation.Claim -> R.string.cosmos_staking_youre_claiming
 
                 DecodedOperation.Bond -> R.string.verify_verb_bonding
                 DecodedOperation.Unbond -> R.string.verify_verb_unbonding
@@ -271,6 +271,12 @@ constructor(
                 DecodedOperation.Undelegate -> R.string.verify_verb_undelegating
                 DecodedOperation.Redelegate -> R.string.verify_verb_redelegating
                 DecodedOperation.AddLiquidity -> R.string.verify_verb_adding_liquidity
+
+                // Safe to name only because a withdrawal states a SHARE, and a fractional reading
+                // replaces the surface's own figure rather than retitling it — see [VerifyHero].
+                // Titling it while the carrier charge stood would put donated dust where the payout
+                // belongs.
+                DecodedOperation.RemoveLiquidity -> R.string.verify_verb_removing_liquidity
                 DecodedOperation.Redeem -> R.string.verify_verb_redeeming
                 DecodedOperation.Mint -> R.string.verify_verb_minting
                 DecodedOperation.Merge -> R.string.verify_verb_merging

@@ -1756,6 +1756,7 @@
     <string name="done_verb_undelegated">Delegation beendet</string>
     <string name="done_verb_redelegated">Neu delegiert</string>
     <string name="done_verb_claimed_rewards">Belohnungen beansprucht</string>
+    <string name="done_verb_claimed">Beansprucht</string>
     <string name="done_verb_minted">Geprägt</string>
     <string name="done_verb_redeemed">Eingelöst</string>
     <string name="done_verb_withdrew">Ausgezahlt</string>
@@ -1781,6 +1782,7 @@
     <string name="verify_verb_undelegating">Du beendest die Delegation</string>
     <string name="verify_verb_redelegating">Du delegierst neu</string>
     <string name="verify_verb_adding_liquidity">Du fügst Liquidität hinzu</string>
+    <string name="verify_verb_removing_liquidity">Du entfernst Liquidität</string>
     <string name="verify_verb_redeeming">Du löst ein</string>
     <string name="verify_verb_minting">Du prägst</string>
     <string name="verify_verb_merging">Du führst zusammen</string>
@@ -1790,4 +1792,5 @@
     <string name="scope_rewards_accrued_so_far">bisher angefallene Belohnungen</string>
     <string name="scope_delegated_amount_after_rent">der delegierte Betrag nach Abzug der Mietreserve</string>
     <string name="withdrawing_share_of_staked_position">%1$s deiner Stake-Position</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s deiner Liquiditätsposition</string>
 </resources>

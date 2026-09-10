@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
+import com.vultisig.wallet.data.blockchain.thorchain.ThorChainInboundVaultSnapshot
 import com.vultisig.wallet.data.networkutils.HttpClientConfigurator
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializerImpl
@@ -63,6 +64,7 @@ class ThorChainQuoteRetryTest {
             thorChainSwapQuoteResponseJsonSerializer =
                 ThorChainSwapQuoteResponseJsonSerializerImpl(json),
             json = json,
+            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(),
         )
 
     private fun request() =

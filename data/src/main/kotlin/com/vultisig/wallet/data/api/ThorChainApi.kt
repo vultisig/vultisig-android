@@ -43,6 +43,7 @@ import com.vultisig.wallet.data.api.models.thorchain.ThorOwnerData
 import com.vultisig.wallet.data.api.models.thorchain.ThorchainConstantsResponse
 import com.vultisig.wallet.data.api.models.thorchain.ThorchainLimitSwapQueueResponse
 import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
+import com.vultisig.wallet.data.blockchain.thorchain.ThorChainInboundVaultSnapshot
 import com.vultisig.wallet.data.chains.helpers.ThorChainAffiliateHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.NetworkException
@@ -189,6 +190,7 @@ constructor(
     private val httpClient: HttpClient,
     private val thorChainSwapQuoteResponseJsonSerializer: ThorChainSwapQuoteResponseJsonSerializer,
     private val json: Json,
+    private val inboundVaultSnapshot: ThorChainInboundVaultSnapshot,
 ) : ThorChainApi {
 
     override suspend fun getUnstakableTcyAmount(address: String): String? {
@@ -386,15 +388,22 @@ constructor(
         )
     }
 
-    override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> =
-        httpClient
-            .get("$THORNODE_BASE/thorchain/inbound_addresses") {
-                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
-                // Inbound status drives a fail-closed halt gate, so it must never be served from
-                // the shared HttpCache if upstream ever starts sending cache headers.
-                header(HttpHeaders.CacheControl, "no-cache, no-store")
-            }
-            .bodyOrThrow()
+    override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> {
+        val addresses: List<THORChainInboundAddress> =
+            httpClient
+                .get("$THORNODE_BASE/thorchain/inbound_addresses") {
+                    header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+                    // Inbound status drives a fail-closed halt gate, so it must never be served
+                    // from the shared HttpCache if upstream ever starts sending cache headers.
+                    header(HttpHeaders.CacheControl, "no-cache, no-store")
+                }
+                .bodyOrThrow()
+        // Every caller here warms the snapshot a signing screen reads synchronously. The halt gate
+        // above is unaffected: it keeps reading this live response, and the snapshot is only ever
+        // asked which addresses were vaults — see [ThorChainInboundVaultSnapshot].
+        inboundVaultSnapshot.record(addresses)
+        return addresses
+    }
 
     override suspend fun getLimitSwapQueue(sender: String): ThorchainLimitSwapQueueResponse =
         httpClient

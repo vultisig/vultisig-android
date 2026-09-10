@@ -1771,6 +1771,7 @@
     <string name="done_verb_undelegated">위임 해제됨</string>
     <string name="done_verb_redelegated">재위임됨</string>
     <string name="done_verb_claimed_rewards">보상 수령됨</string>
+    <string name="done_verb_claimed">수령됨</string>
     <string name="done_verb_minted">발행됨</string>
     <string name="done_verb_redeemed">상환됨</string>
     <string name="done_verb_withdrew">출금됨</string>
@@ -1796,6 +1797,7 @@
     <string name="verify_verb_undelegating">위임 해제 중</string>
     <string name="verify_verb_redelegating">재위임 중</string>
     <string name="verify_verb_adding_liquidity">유동성 추가 중</string>
+    <string name="verify_verb_removing_liquidity">유동성 제거 중</string>
     <string name="verify_verb_redeeming">상환 중</string>
     <string name="verify_verb_minting">발행 중</string>
     <string name="verify_verb_merging">병합 중</string>
@@ -1805,4 +1807,5 @@
     <string name="scope_rewards_accrued_so_far">현재까지 누적된 보상</string>
     <string name="scope_delegated_amount_after_rent">임대 예치금을 제외한 위임 금액</string>
     <string name="withdrawing_share_of_staked_position">스테이킹 포지션의 %1$s</string>
+    <string name="withdrawing_share_of_liquidity_position">유동성 포지션의 %1$s</string>
 </resources>
