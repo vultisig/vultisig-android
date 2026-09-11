@@ -194,6 +194,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         streamingQuantity = from.streamingQuantity,
                         expirationTime = from.expirationTime,
                         isAffiliate = from.isAffiliate,
+                        slippageBps = from.slippageBps?.takeIf { it >= 0 }?.toUInt(),
                     )
                 } else null,
             mayachainSwapPayload =
@@ -212,6 +213,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         streamingQuantity = from.streamingQuantity,
                         expirationTime = from.expirationTime,
                         isAffiliate = from.isAffiliate,
+                        slippageBps = from.slippageBps?.takeIf { it >= 0 }?.toUInt(),
                     )
                 } else null,
             oneinchSwapPayload =

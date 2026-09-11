@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
 import com.vultisig.wallet.ui.models.swap.LimitOrderLabels
+import com.vultisig.wallet.ui.models.swap.PriceImpactDisplay
 import com.vultisig.wallet.ui.models.swap.SwapDiscountBps
 import com.vultisig.wallet.ui.models.swap.SwapFeeRow
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
@@ -46,6 +47,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
 import com.vultisig.wallet.ui.models.swap.formatAffiliatePercent
+import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
@@ -447,6 +449,7 @@ constructor(
                             ),
                         feeProvider = SwapProvider.THORCHAIN,
                         vultBps = thorVultBps,
+                        priceImpact = formatPriceImpact(swapPayload.data.priceImpact),
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -529,6 +532,7 @@ constructor(
                             ),
                         feeProvider = SwapProvider.MAYA,
                         vultBps = mayaVultBps,
+                        priceImpact = formatPriceImpact(swapPayload.data.priceImpact),
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -640,6 +644,10 @@ constructor(
         // cost), which leaves the row exactly as it was: the charged fee, claiming no rate.
         feeProvider: SwapProvider? = null,
         vultBps: Int? = null,
+        // Price impact read off the wire, never re-quoted: pools move between initiating and
+        // joining, so a fresh figure would make this the one row the two devices disagree on.
+        // Null hides the row.
+        priceImpact: PriceImpactDisplay? = null,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
 
@@ -724,6 +732,8 @@ constructor(
             isLimitOrder = isLimitOrder,
             limitTargetPriceLabel = limitOrderLabels?.targetPriceLabel,
             limitExpiryLabel = limitOrderLabels?.expiryLabel,
+            priceImpactPercent = priceImpact?.percent,
+            priceImpactLevel = priceImpact?.level,
         )
     }
 

@@ -41,9 +41,6 @@ data class THORChainSwapQuote(
     @SerialName("warning") val warning: String,
     @SerialName("router") val router: String?,
     @SerialName("error") val error: String?,
-    // Price impact of the swap in basis points (100 == 1%), as reported by the node. Drives the
-    // Price Impact row in the fee breakdown (iOS parity). Null when the node omits it.
-    @SerialName("slippage_bps") val slippageBps: Int? = null,
 )
 
 @Serializable
@@ -52,4 +49,8 @@ data class Fees(
     @SerialName("asset") val asset: String,
     @SerialName("outbound") val outbound: String,
     @SerialName("total") val total: String,
+    // Price impact of the swap in basis points (100 == 1%). THORNode and MayaNode report it here,
+    // inside `fees`, never at the top level of the quote. Drives the Price Impact row and rides
+    // the keysign payload to the co-signer. Null when the node omits it.
+    @SerialName("slippage_bps") val slippageBps: Int? = null,
 )

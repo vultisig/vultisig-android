@@ -377,5 +377,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             streamingQuantity = streamingQuantity,
             expirationTime = expirationTime,
             isAffiliate = isAffiliate,
+            slippageBps = slippageBps?.takeIf { it <= Int.MAX_VALUE.toUInt() }?.toInt(),
         )
 }
