@@ -591,6 +591,11 @@ constructor(
         // destinationTag. Mirrors iOS' resolvedDestinationTag.
         val memo =
             if (isXrp) resolveDestinationTag(response, rawTargetAddress)?.toString() else null
+        // The `/v3/swap` reply is the fresher statement of the fee; the `/v3/quote` route is the
+        // fallback for a reply that carries no `fees[]` at all, as for the inbound entry.
+        val providerFee =
+            resolveSwapKitProviderFee(response.fees, srcToken, dstToken, subProvider)
+                ?: resolveSwapKitProviderFee(routeFees, srcToken, dstToken, subProvider)
         val payload =
             SwapKitSwapPayloadJson(
                 fromCoin = srcToken,
@@ -608,6 +613,10 @@ constructor(
                 memo = memo,
                 subProvider = subProvider.orEmpty(),
                 swapId = response.swapId?.takeIf { it.isNotBlank() }.orEmpty(),
+                swapFee = providerFee?.amount?.toString().orEmpty(),
+                swapFeeChain = providerFee?.coin?.chain?.id,
+                swapFeeTokenId = providerFee?.coin?.contractAddress?.takeIf { it.isNotBlank() },
+                swapFeeDecimals = providerFee?.coin?.decimal,
             )
         return SwapQuote.SwapKit(
             expectedDstValue =
@@ -959,27 +968,18 @@ constructor(
         // this is defense-in-depth: throwing NoRoutes (rather than falling back to `coin.ticker`)
         // keeps a future capability change from minting a garbage identifier — e.g. `ETH.ETH` for
         // ZkSync.ETH — and surfacing as `helpers_invalid_asset_identifier` 500s from the proxy.
-        val prefix =
-            SwapKitAssetPrefix.of(coin.chain)
-                ?: throw SwapKitError.NoRoutes(
-                    "SwapKit asset identifier missing chain prefix for ${coin.chain.raw}"
-                )
-        val ticker = swapSymbol(coin)
-        return if (coin.isNativeToken || coin.contractAddress.isBlank()) {
-            "$prefix.$ticker"
-        } else {
-            "$prefix.$ticker-${coin.contractAddress}"
-        }
+        return SwapKitAssetPrefix.identifierOf(coin)
+            ?: throw SwapKitError.NoRoutes(
+                "SwapKit asset identifier missing chain prefix for ${coin.chain.raw}"
+            )
     }
 
     /**
      * SwapKit lists the native TON asset as "TON"; the Toncoin → GRAM rebrand (#4984) renamed only
-     * the display ticker, so a GRAM-ticker'd native must still swap as TON. Mirrors iOS'
-     * `SwapKitService.swapSymbol(chain:ticker:isNativeToken:)`.
+     * the display ticker, so a GRAM-ticker'd native must still swap as TON.
      */
     @VisibleForTesting
-    internal fun swapSymbol(coin: Coin): String =
-        if (coin.chain == Chain.Ton && coin.isNativeToken) "TON" else coin.ticker
+    internal fun swapSymbol(coin: Coin): String = SwapKitAssetPrefix.symbolOf(coin)
 
     /**
      * Parse a SwapKit EVM tx numeric field (gas / gasPrice / value). SwapKit V3 hex-encodes these

@@ -190,6 +190,121 @@ class KeysignPayloadProtoMapperSwapKitTest {
     }
 
     @Test
+    fun `outbound mapper writes the swap-fee group and leaves it unset when the route states none`() {
+        val withFee =
+            SwapKitSwapPayloadJson(
+                fromCoin = tonDomainCoin(),
+                toCoin = ethDomainCoin(),
+                fromAmount = BigInteger.TEN,
+                toAmountDecimal = BigDecimal("0.001"),
+                txType = "TON",
+                txPayload = byteArrayOf(1),
+                targetAddress = "EQAdeposit",
+                swapFee = "13000000",
+                swapFeeChain = "Tron",
+                swapFeeTokenId = null,
+                swapFeeDecimals = 6,
+            )
+        val withoutFee = withFee.copy(swapFee = "", swapFeeChain = null, swapFeeDecimals = null)
+
+        val feeProto =
+            requireNotNull(
+                outboundMapper
+                    .invoke(
+                        mapper
+                            .invoke(basePayload())
+                            .copy(swapPayload = SwapPayload.SwapKit(withFee))
+                    )
+                    ?.swapkitSwapPayload
+            )
+        assertEquals("13000000", feeProto.swapFee)
+        assertEquals("Tron", feeProto.swapFeeChain)
+        assertNull(feeProto.swapFeeTokenId)
+        assertEquals(6, feeProto.swapFeeDecimals)
+
+        val noFeeProto =
+            requireNotNull(
+                outboundMapper
+                    .invoke(
+                        mapper
+                            .invoke(basePayload())
+                            .copy(swapPayload = SwapPayload.SwapKit(withoutFee))
+                    )
+                    ?.swapkitSwapPayload
+            )
+        assertEquals("", noFeeProto.swapFee)
+        assertNull(noFeeProto.swapFeeChain)
+        assertNull(noFeeProto.swapFeeTokenId)
+        assertNull(noFeeProto.swapFeeDecimals)
+    }
+
+    @Test
+    fun `swap-fee group round-trips and a sender that predates it reads back empty`() {
+        val usdc = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        val stated =
+            basePayload(
+                swapkitSwapPayload =
+                    SwapKitSwapPayloadProto(
+                        fromCoin = TON_COIN,
+                        toCoin = ETH_COIN,
+                        fromAmount = "1",
+                        toAmountDecimal = "1",
+                        txType = "PSBT",
+                        txPayload = byteArrayOf(),
+                        targetAddress = "bc1qdeposit",
+                        swapFee = "650000",
+                        swapFeeChain = "Ethereum",
+                        swapFeeTokenId = usdc,
+                        swapFeeDecimals = 6,
+                    )
+            )
+        val domain =
+            assertInstanceOf(SwapPayload.SwapKit::class.java, mapper.invoke(stated).swapPayload)
+        assertEquals("650000", domain.data.swapFee)
+        assertEquals("Ethereum", domain.data.swapFeeChain)
+        assertEquals(usdc, domain.data.swapFeeTokenId)
+        assertEquals(6, domain.data.swapFeeDecimals)
+
+        val roundTripped =
+            requireNotNull(outboundMapper.invoke(mapper.invoke(stated))?.swapkitSwapPayload)
+        assertEquals(stated.swapkitSwapPayload?.swapFee, roundTripped.swapFee)
+        assertEquals(stated.swapkitSwapPayload?.swapFeeChain, roundTripped.swapFeeChain)
+        assertEquals(stated.swapkitSwapPayload?.swapFeeTokenId, roundTripped.swapFeeTokenId)
+        assertEquals(stated.swapkitSwapPayload?.swapFeeDecimals, roundTripped.swapFeeDecimals)
+
+        val legacy =
+            basePayload(
+                swapkitSwapPayload =
+                    SwapKitSwapPayloadProto(
+                        fromCoin = TON_COIN,
+                        toCoin = ETH_COIN,
+                        fromAmount = "1",
+                        toAmountDecimal = "1",
+                        txType = "PSBT",
+                        txPayload = byteArrayOf(),
+                        targetAddress = "bc1qdeposit",
+                    )
+            )
+        val legacyDomain =
+            assertInstanceOf(SwapPayload.SwapKit::class.java, mapper.invoke(legacy).swapPayload)
+        assertEquals("", legacyDomain.data.swapFee)
+        assertNull(legacyDomain.data.swapFeeChain)
+        assertNull(legacyDomain.data.swapFeeTokenId)
+        assertNull(legacyDomain.data.swapFeeDecimals)
+        // Re-encoding a legacy payload must not invent presence for the optional fields.
+        val legacyRoundTripped =
+            requireNotNull(
+                outboundMapper
+                    .invoke(legacyDomain.let { mapper.invoke(legacy) })
+                    ?.swapkitSwapPayload
+            )
+        assertEquals("", legacyRoundTripped.swapFee)
+        assertNull(legacyRoundTripped.swapFeeChain)
+        assertNull(legacyRoundTripped.swapFeeTokenId)
+        assertNull(legacyRoundTripped.swapFeeDecimals)
+    }
+
+    @Test
     fun `SwapPayload SwapKit exposes src and dst token values derived from the inner data`() {
         val data =
             SwapKitSwapPayloadJson(

@@ -985,6 +985,138 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch stamps the provider fee and its coin onto a transfer-route payload`() = runTest {
+        // Trimmed from a live TRX → ETH NEAR route: affiliate 10 + service 3 TRX. The inbound entry
+        // keeps feeding `quote.fees` (the Network Fee surface) and stays off the wire group.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        val btc = btcCoin()
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r-btc", providers = listOf("NEAR"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                swapId = "btc-swap-2",
+                tx = JsonPrimitive(Base64.getEncoder().encodeToString(byteArrayOf(0x70))),
+                meta = SwapKitTxMeta(txType = "PSBT"),
+                targetAddress = "bc1ptarget",
+                expectedBuyAmount = "1",
+                fees =
+                    listOf(
+                        SwapKitFee(
+                            type = "affiliate",
+                            amount = "0.0005",
+                            asset = "BTC.BTC",
+                            chain = "NEAR",
+                        ),
+                        SwapKitFee(
+                            type = "service",
+                            amount = "0.00015",
+                            asset = "BTC.BTC",
+                            chain = "NEAR",
+                        ),
+                        SwapKitFee(
+                            type = "inbound",
+                            amount = "0.000004",
+                            asset = "BTC.BTC",
+                            chain = "BTC",
+                        ),
+                    ),
+                providers = listOf("NEAR"),
+            )
+
+        val result =
+            source().fetch(request(srcToken = btc, dstToken = ethCoin())) as SwapQuoteResult.Native
+        val payload = (result.quote as SwapQuote.SwapKit).data
+
+        // 0.00065 BTC in sats; native coin, so no token id.
+        assertEquals("65000", payload.swapFee)
+        assertEquals("Bitcoin", payload.swapFeeChain)
+        assertNull(payload.swapFeeTokenId)
+        assertEquals(8, payload.swapFeeDecimals)
+        assertEquals(BigInteger("400"), result.quote.fees.value)
+    }
+
+    @Test
+    fun `fetch leaves the wire fee group empty when the route itemizes no provider fee`() =
+        runTest {
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(routeId = "r-btc", providers = listOf("NEAR"), expectedBuy = "1")
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                SwapKitSwapResponseJson(
+                    tx = JsonPrimitive(Base64.getEncoder().encodeToString(byteArrayOf(0x70))),
+                    meta = SwapKitTxMeta(txType = "PSBT"),
+                    targetAddress = "bc1ptarget",
+                    expectedBuyAmount = "1",
+                    fees =
+                        listOf(
+                            SwapKitFee(
+                                type = "inbound",
+                                amount = "0.000004",
+                                asset = "BTC.BTC",
+                                chain = "BTC",
+                            )
+                        ),
+                    providers = listOf("NEAR"),
+                )
+
+            val result =
+                source().fetch(request(srcToken = btcCoin(), dstToken = ethCoin()))
+                    as SwapQuoteResult.Native
+            val payload = (result.quote as SwapQuote.SwapKit).data
+
+            assertEquals("", payload.swapFee)
+            assertNull(payload.swapFeeChain)
+            assertNull(payload.swapFeeTokenId)
+            assertNull(payload.swapFeeDecimals)
+        }
+
+    @Test
+    fun `fetch falls back to the quote route's fees when the swap reply itemizes none`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(
+                        route(
+                            routeId = "r-btc",
+                            providers = listOf("NEAR"),
+                            expectedBuy = "1",
+                            fees =
+                                listOf(
+                                    SwapKitFee(
+                                        type = "affiliate",
+                                        amount = "0.0005",
+                                        asset = "BTC.BTC",
+                                    )
+                                ),
+                        )
+                    )
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive(Base64.getEncoder().encodeToString(byteArrayOf(0x70))),
+                meta = SwapKitTxMeta(txType = "PSBT"),
+                targetAddress = "bc1ptarget",
+                expectedBuyAmount = "1",
+                providers = listOf("NEAR"),
+            )
+
+        val result =
+            source().fetch(request(srcToken = btcCoin(), dstToken = ethCoin()))
+                as SwapQuoteResult.Native
+
+        assertEquals("50000", (result.quote as SwapQuote.SwapKit).data.swapFee)
+    }
+
+    @Test
     fun `fetch decodes a TRON route into a Native SwapQuote SwapKit with the TronWeb object as txPayload`() =
         runTest {
             // TRON's tx is a TronWeb-shaped JSON object (not base64) — the source UTF-8 encodes it

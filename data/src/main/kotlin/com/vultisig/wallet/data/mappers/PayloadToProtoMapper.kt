@@ -266,6 +266,10 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         memo = from.memo,
                         subProvider = from.subProvider,
                         swapId = from.swapId,
+                        swapFee = from.swapFee,
+                        swapFeeChain = from.swapFeeChain?.ifEmpty { null },
+                        swapFeeTokenId = from.swapFeeTokenId?.ifEmpty { null },
+                        swapFeeDecimals = from.swapFeeDecimals,
                     )
                 } else null,
             wasmExecuteContractPayload = keysignPayload.wasmExecuteContractPayload,

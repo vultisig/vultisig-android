@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories.swap
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 
 /**
  * SwapKit's spelling of a chain in an asset identifier — the `CHAIN` half of
@@ -48,4 +49,23 @@ internal object SwapKitAssetPrefix {
             // until an entry can be read off `GET /tokens`.
             else -> null
         }
+
+    /**
+     * SwapKit's spelling of [coin]'s ticker. The Toncoin → GRAM rebrand renamed only the display
+     * ticker, so a GRAM-ticker'd native must still swap as `TON`. Mirrors iOS'
+     * `SwapKitService.swapSymbol(chain:ticker:isNativeToken:)`.
+     */
+    fun symbolOf(coin: Coin): String =
+        if (coin.chain == Chain.Ton && coin.isNativeToken) "TON" else coin.ticker
+
+    /**
+     * Full SwapKit asset identifier for [coin] — `CHAIN.TICKER`, or `CHAIN.TICKER-CONTRACT` for a
+     * token — or null when the chain has no prefix here.
+     */
+    fun identifierOf(coin: Coin): String? {
+        val prefix = of(coin.chain) ?: return null
+        val ticker = symbolOf(coin)
+        return if (coin.isNativeToken || coin.contractAddress.isBlank()) "$prefix.$ticker"
+        else "$prefix.$ticker-${coin.contractAddress}"
+    }
 }
