@@ -35,6 +35,7 @@ constructor(
     solanaDelegatedAmount: SolanaDelegatedAmountReader,
     solanaStakeAccountAmount: SolanaStakeAccountAmountReader,
     tcyStakedPosition: TcyStakedPositionReader,
+    tonStakedPosition: TonStakedPositionReader,
 ) {
 
     /**
@@ -42,7 +43,12 @@ constructor(
      * the first match wins and no reader sees a transaction it did not claim.
      */
     private val readers: List<PositionReading> =
-        listOf(solanaDelegatedAmount, solanaStakeAccountAmount, tcyStakedPosition)
+        listOf(
+            solanaDelegatedAmount,
+            solanaStakeAccountAmount,
+            tcyStakedPosition,
+            tonStakedPosition,
+        )
 
     /**
      * Resolves through the first reader that answers for [coin] — the vault's own coin for this
