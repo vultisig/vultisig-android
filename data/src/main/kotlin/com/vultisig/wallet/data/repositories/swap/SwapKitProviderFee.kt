@@ -51,7 +51,7 @@ fun resolveSwapKitProviderFee(
 
     var resolved: SwapKitProviderFee? = null
     for (fee in fees) {
-        if (!fee.type.isProviderFeeType()) continue
+        if (!fee.isProviderFeeEntry()) continue
         val amountText = fee.amount?.trim().orEmpty()
         if (amountText.isEmpty()) continue
         val decimal = amountText.toBigDecimalOrNull() ?: return null
@@ -72,8 +72,9 @@ fun resolveSwapKitProviderFee(
     return resolved?.takeIf { it.amount.signum() > 0 }
 }
 
-private fun String?.isProviderFeeType(): Boolean =
-    this != null && (equals("affiliate", ignoreCase = true) || equals("service", ignoreCase = true))
+/** True for the entries that make up the provider fee: `affiliate` and `service`. */
+internal fun SwapKitFee.isProviderFeeEntry(): Boolean =
+    type.equals("affiliate", ignoreCase = true) || type.equals("service", ignoreCase = true)
 
 private fun Coin.sameAssetAs(other: Coin): Boolean =
     chain == other.chain && contractAddress.equals(other.contractAddress, ignoreCase = true)

@@ -1079,6 +1079,101 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
+    fun `fetch does not fall back to the route's fee when the swap reply's provider entries cannot be resolved`() =
+        runTest {
+            // The reply states a provider fee, just in a coin this device cannot attribute. The
+            // quote route's older entry is a different statement of the same swap, not a fallback.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r-btc",
+                                providers = listOf("NEAR"),
+                                expectedBuy = "1",
+                                fees =
+                                    listOf(
+                                        SwapKitFee(
+                                            type = "affiliate",
+                                            amount = "0.0005",
+                                            asset = "BTC.BTC",
+                                        )
+                                    ),
+                            )
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                SwapKitSwapResponseJson(
+                    tx = JsonPrimitive(Base64.getEncoder().encodeToString(byteArrayOf(0x70))),
+                    meta = SwapKitTxMeta(txType = "PSBT"),
+                    targetAddress = "bc1ptarget",
+                    expectedBuyAmount = "1",
+                    fees =
+                        listOf(
+                            SwapKitFee(
+                                type = "affiliate",
+                                amount = "0.5",
+                                asset = "SOL.USDC-EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                            ),
+                            SwapKitFee(type = "inbound", amount = "0.000004", asset = "BTC.BTC"),
+                        ),
+                    providers = listOf("NEAR"),
+                )
+
+            val result =
+                source().fetch(request(srcToken = btcCoin(), dstToken = ethCoin()))
+                    as SwapQuoteResult.Native
+            val payload = (result.quote as SwapQuote.SwapKit).data
+
+            assertEquals("", payload.swapFee)
+            assertNull(payload.swapFeeChain)
+        }
+
+    @Test
+    fun `fetch falls back to the quote route's fees when the swap reply carries only an inbound entry`() =
+        runTest {
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r-btc",
+                                providers = listOf("NEAR"),
+                                expectedBuy = "1",
+                                fees =
+                                    listOf(
+                                        SwapKitFee(
+                                            type = "affiliate",
+                                            amount = "0.0005",
+                                            asset = "BTC.BTC",
+                                        )
+                                    ),
+                            )
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                SwapKitSwapResponseJson(
+                    tx = JsonPrimitive(Base64.getEncoder().encodeToString(byteArrayOf(0x70))),
+                    meta = SwapKitTxMeta(txType = "PSBT"),
+                    targetAddress = "bc1ptarget",
+                    expectedBuyAmount = "1",
+                    fees =
+                        listOf(
+                            SwapKitFee(type = "inbound", amount = "0.000004", asset = "BTC.BTC")
+                        ),
+                    providers = listOf("NEAR"),
+                )
+
+            val result =
+                source().fetch(request(srcToken = btcCoin(), dstToken = ethCoin()))
+                    as SwapQuoteResult.Native
+
+            assertEquals("50000", (result.quote as SwapQuote.SwapKit).data.swapFee)
+        }
+
+    @Test
     fun `fetch falls back to the quote route's fees when the swap reply itemizes none`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns

@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.TokenMetadataResolver
 import java.math.BigInteger
 
 /**
@@ -20,7 +21,7 @@ internal sealed interface SwapKitPayloadFee {
 
     /**
      * The sender stated a fee this device cannot render — zero, a non-integer amount, an unknown
-     * chain, missing decimals, or a coin it cannot resolve. No row, no re-fetch.
+     * chain, missing or out-of-range decimals, or a coin it cannot resolve. No row, no re-fetch.
      */
     data object NotRenderable : SwapKitPayloadFee
 
@@ -49,7 +50,11 @@ internal fun swapKitPayloadFee(
             ?: return SwapKitPayloadFee.NotRenderable
     val chain =
         data.swapFeeChain?.let(Chain::fromRawOrNull) ?: return SwapKitPayloadFee.NotRenderable
-    val decimals = data.swapFeeDecimals ?: return SwapKitPayloadFee.NotRenderable
+    // The scale feeds `10 ^ decimals` on every render, so the same ceiling contract metadata is
+    // held to applies here: a negative value throws, an absurd one burns CPU.
+    val decimals =
+        data.swapFeeDecimals?.takeIf { it in 0..TokenMetadataResolver.MAX_DECIMALS }
+            ?: return SwapKitPayloadFee.NotRenderable
     val tokenId = data.swapFeeTokenId.orEmpty()
     val coin =
         listOf(dstToken, srcToken, nativeToken).firstOrNull { it.isFeeCoin(chain, tokenId) }

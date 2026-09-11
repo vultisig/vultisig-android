@@ -592,10 +592,13 @@ constructor(
         val memo =
             if (isXrp) resolveDestinationTag(response, rawTargetAddress)?.toString() else null
         // The `/v3/swap` reply is the fresher statement of the fee; the `/v3/quote` route is the
-        // fallback for a reply that carries no `fees[]` at all, as for the inbound entry.
+        // fallback only for a reply that itemizes no provider fee at all, as for the inbound
+        // entry. A reply whose provider entries cannot be resolved is left empty rather than
+        // overwritten by the route's — the two are different statements of the same swap.
         val providerFee =
-            resolveSwapKitProviderFee(response.fees, srcToken, dstToken, subProvider)
-                ?: resolveSwapKitProviderFee(routeFees, srcToken, dstToken, subProvider)
+            if (response.fees.any { it.isProviderFeeEntry() })
+                resolveSwapKitProviderFee(response.fees, srcToken, dstToken, subProvider)
+            else resolveSwapKitProviderFee(routeFees, srcToken, dstToken, subProvider)
         val payload =
             SwapKitSwapPayloadJson(
                 fromCoin = srcToken,

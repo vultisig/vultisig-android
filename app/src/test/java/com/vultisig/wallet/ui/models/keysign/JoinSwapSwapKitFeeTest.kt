@@ -185,6 +185,21 @@ internal class JoinSwapSwapKitFeeTest {
         tx.swapFeeHidden shouldBe true
     }
 
+    @Test
+    fun `out-of-range decimals render no row instead of throwing on render`() = runTest {
+        stub()
+
+        // A negative scale throws out of `10 ^ decimals`; an absurd one burns CPU on every render.
+        val negative =
+            join(payload(swapFee = "13000000", swapFeeChain = "Tron", swapFeeDecimals = -1))
+        val absurd =
+            join(payload(swapFee = "13000000", swapFeeChain = "Tron", swapFeeDecimals = 255))
+
+        negative.swapFeeHidden shouldBe true
+        absurd.swapFeeHidden shouldBe true
+        coVerify(exactly = 0) { swapQuoteRepository.getSwapKitInboundFee(any()) }
+    }
+
     private suspend fun join(swapKit: SwapKitSwapPayloadJson): SwapTransactionUiModel {
         val result =
             builder().build(keysignPayload(), SwapPayload.SwapKit(swapKit), vault, AppCurrency.USD)
