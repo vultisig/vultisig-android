@@ -403,7 +403,10 @@ internal class GasFeeOrchestrator(
                     // Cardano forces the initiator's size-derived fee, so getSpecific needs the
                     // amount to plan it. For every other chain the amount is irrelevant here, so
                     // we drop it: combined with distinctUntilChanged below this keeps those chains
-                    // from refetching specifics (nonce/gas) on every amount keystroke.
+                    // from refetching specifics (nonce/gas) on every amount keystroke. A TRC20
+                    // token is no exception: nothing signs this specific, and dropping the amount
+                    // is what keeps the repository from simulating a fee_limit for it — the one
+                    // that reaches the wire is rebuilt at Continue, over the amount actually sent.
                     val cardanoAmount =
                         if (chain == Chain.Cardano) {
                             tokenAmount

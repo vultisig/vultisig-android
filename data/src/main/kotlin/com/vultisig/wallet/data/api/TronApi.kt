@@ -6,8 +6,6 @@ import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronBalanceResponseJson
 import com.vultisig.wallet.data.api.models.TronBroadcastTxResponseJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
-import com.vultisig.wallet.data.api.models.TronContractInfoJson
-import com.vultisig.wallet.data.api.models.TronContractRequestJson
 import com.vultisig.wallet.data.api.models.TronSpecificBlockJson
 import com.vultisig.wallet.data.api.models.TronTransactionStatusResponse
 import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
@@ -59,8 +57,6 @@ interface TronApi {
     suspend fun getAccountResource(address: String): TronAccountResourceJson
 
     suspend fun getAccount(address: String): TronAccountJson
-
-    suspend fun getContractMetadata(contract: String): TronContractInfoJson
 
     suspend fun getTsStatus(chain: Chain, txHash: String): TronTransactionStatusResponse?
 
@@ -245,16 +241,6 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
             )
             null
         }
-    }
-
-    override suspend fun getContractMetadata(contract: String): TronContractInfoJson {
-        return httpClient
-            .post(tronGrid) {
-                url { appendPathSegments("/wallet/getcontractinfo") }
-                contentType(ContentType.Application.Json)
-                setBody(TronContractRequestJson(contract))
-            }
-            .bodyOrThrow<TronContractInfoJson>()
     }
 
     override suspend fun getTsStatus(chain: Chain, txHash: String): TronTransactionStatusResponse? {
