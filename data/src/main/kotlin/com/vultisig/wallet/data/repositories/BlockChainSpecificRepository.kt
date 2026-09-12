@@ -114,6 +114,7 @@ constructor(
     private val feeServiceComposite: FeeServiceComposite,
     @TronFee private val tronFeeService: FeeService,
     private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val utxoInFlightRepository: UtxoInFlightRepository,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -332,7 +333,14 @@ constructor(
                                 byteFee = gasFee.value,
                                 sendMaxAmount = isMaxAmountEnabled,
                             ),
-                        utxos = dashUtxos?.excludingDust(chain) ?: spendableUtxos(chain, address),
+                        utxos =
+                            dashUtxos?.excludingDust(chain)?.let {
+                                SpendableUtxos.reconcile(
+                                    candidates = it,
+                                    dustThreshold = chain.getDustThreshold.toLong(),
+                                    inFlight = utxoInFlightRepository.getInFlight(chain, address),
+                                )
+                            } ?: spendableUtxos(chain, address),
                     )
                 } else {
                     val utxos = spendableUtxos(chain, address)
@@ -762,7 +770,10 @@ constructor(
 
     /**
      * Dash's own RPC index only. Blockchair-sourced sets go through [SpendableUtxos], whose dust
-     * boundary is inclusive; this one is left as it was so Dash UTXO sourcing stays untouched.
+     * boundary is inclusive; this one is left as it was so Dash UTXO sourcing stays untouched. The
+     * in-flight ledger is still replayed over it at the call site: that index is built from
+     * connected blocks, so it keeps offering an input a pending send consumed until that send
+     * confirms.
      */
     private fun List<UtxoInfo>.excludingDust(chain: Chain): List<UtxoInfo> {
         val dustThreshold = chain.getDustThreshold.toLong()
@@ -780,6 +791,7 @@ constructor(
             dustThreshold = chain.getDustThreshold.toLong(),
             ownUnconfirmedTxHashes =
                 transactionHistoryRepository.getUnconfirmedTxHashes(chain, address),
+            inFlight = utxoInFlightRepository.getInFlight(chain, address),
         )
 
     private fun isThorchainRouterChain(chain: Chain): Boolean =

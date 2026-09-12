@@ -32,6 +32,7 @@ import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos
+import com.vultisig.wallet.data.blockchain.utxo.UtxoInFlightTx
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.crypto.SuiHelper
@@ -289,6 +290,199 @@ internal class BlockChainSpecificRepositoryImplTest {
                 result.utxos,
             )
         }
+
+    /**
+     * The three-sends-in-a-row failure behind #5867's follow-up: Blockchair served the third send a
+     * 60 s-cached snapshot that still listed the input the second send had consumed and did not yet
+     * list its change, and the third was rejected with `bad-txns-inputs-missingorspent`. The ledger
+     * of this wallet's own broadcasts is replayed over the snapshot: the consumed input is gone,
+     * the change is there to spend, and a chained second send builds on that change.
+     */
+    @Test
+    fun `Bitcoin UTXO selection replays own in-flight sends over a stale provider snapshot`() =
+        runTest {
+            val coin = bitcoinCoin()
+            val blockChairApi =
+                mockk<BlockChairApi> {
+                    coEvery { getAllUtxos(Chain.Bitcoin, SOURCE_ADDRESS) } returns
+                        blockChairInfo(
+                            listOf(
+                                BlockChairUtxoInfo(
+                                    transactionHash = "confirmed-a",
+                                    index = 0,
+                                    value = 100_000,
+                                    blockId = 800_000,
+                                ),
+                                BlockChairUtxoInfo(
+                                    transactionHash = "confirmed-untouched",
+                                    index = 3,
+                                    value = 20_000,
+                                    blockId = 800_000,
+                                ),
+                            )
+                        )
+                }
+            val utxoInFlightRepository =
+                mockk<UtxoInFlightRepository> {
+                    coEvery { getInFlight(Chain.Bitcoin, SOURCE_ADDRESS) } returns
+                        listOf(
+                            // Second send, listed first: replay order comes from broadcastAt.
+                            UtxoInFlightTx(
+                                txHash = "send-c",
+                                broadcastAt = 2_000,
+                                spent =
+                                    listOf(UtxoInfo(hash = "send-b", amount = 60_000, index = 1u)),
+                                created =
+                                    listOf(UtxoInfo(hash = "send-c", amount = 45_000, index = 1u)),
+                            ),
+                            UtxoInFlightTx(
+                                txHash = "send-b",
+                                broadcastAt = 1_000,
+                                spent =
+                                    listOf(
+                                        UtxoInfo(hash = "CONFIRMED-A", amount = 100_000, index = 0u)
+                                    ),
+                                created =
+                                    listOf(UtxoInfo(hash = "send-b", amount = 60_000, index = 1u)),
+                            ),
+                        )
+                }
+
+            val result =
+                repository(
+                        blockChairApi = blockChairApi,
+                        utxoInFlightRepository = utxoInFlightRepository,
+                    )
+                    .getSpecific(
+                        chain = Chain.Bitcoin,
+                        address = SOURCE_ADDRESS,
+                        token = coin,
+                        gasFee = TokenValue(BigInteger.ONE, coin),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                    )
+
+            assertEquals(
+                listOf(
+                    UtxoInfo(hash = "confirmed-untouched", amount = 20_000, index = 3u),
+                    UtxoInfo(hash = "send-c", amount = 45_000, index = 1u),
+                ),
+                result.utxos,
+            )
+        }
+
+    /**
+     * Once the provider has caught up — the consumed input is gone and the change is listed as our
+     * own zero-conf — the ledger changes nothing: an entry none of whose inputs the snapshot still
+     * lists is skipped, so the provider's view of that send's outputs stays authoritative and a
+     * mempool-evicted send can never be rebuilt from the ledger alone.
+     */
+    @Test
+    fun `Bitcoin UTXO selection leaves a caught-up provider snapshot alone`() = runTest {
+        val coin = bitcoinCoin()
+        val blockChairApi =
+            mockk<BlockChairApi> {
+                coEvery { getAllUtxos(Chain.Bitcoin, SOURCE_ADDRESS) } returns
+                    blockChairInfo(
+                        listOf(
+                            BlockChairUtxoInfo(
+                                transactionHash = "send-b",
+                                index = 1,
+                                value = 60_000,
+                                blockId = -1,
+                            )
+                        )
+                    )
+            }
+        val transactionHistoryRepository =
+            mockk<TransactionHistoryRepository> {
+                coEvery { getUnconfirmedTxHashes(Chain.Bitcoin, SOURCE_ADDRESS) } returns
+                    setOf("send-b")
+            }
+        val utxoInFlightRepository =
+            mockk<UtxoInFlightRepository> {
+                coEvery { getInFlight(Chain.Bitcoin, SOURCE_ADDRESS) } returns
+                    listOf(
+                        UtxoInFlightTx(
+                            txHash = "send-b",
+                            broadcastAt = 1_000,
+                            spent =
+                                listOf(
+                                    UtxoInfo(hash = "confirmed-a", amount = 100_000, index = 0u)
+                                ),
+                            // Deliberately disagrees with the provider's 60_000: must not win.
+                            created = listOf(UtxoInfo(hash = "send-b", amount = 1, index = 1u)),
+                        ),
+                        // Evicted from the mempool: its input never comes back in the snapshot,
+                        // so its change is never offered.
+                        UtxoInFlightTx(
+                            txHash = "evicted",
+                            broadcastAt = 500,
+                            spent = listOf(UtxoInfo(hash = "gone", amount = 5_000, index = 0u)),
+                            created = listOf(UtxoInfo(hash = "evicted", amount = 4_000, index = 1u)),
+                        ),
+                    )
+            }
+
+        val result =
+            repository(
+                    blockChairApi = blockChairApi,
+                    transactionHistoryRepository = transactionHistoryRepository,
+                    utxoInFlightRepository = utxoInFlightRepository,
+                )
+                .getSpecific(
+                    chain = Chain.Bitcoin,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                )
+
+        assertEquals(listOf(UtxoInfo(hash = "send-b", amount = 60_000, index = 1u)), result.utxos)
+    }
+
+    /**
+     * Dash's own address index is built from connected blocks, so it keeps listing a pending send's
+     * input until that send confirms and never lists its change — the same replay applies.
+     */
+    @Test
+    fun `Dash RPC path replays own in-flight sends over the mempool-blind index`() = runTest {
+        val dashApi =
+            mockk<DashApi> {
+                coEvery { getAddressUtxos(SOURCE_ADDRESS) } returns
+                    listOf(UtxoInfo(hash = "confirmed-a", amount = 50_000, index = 0u))
+            }
+        val utxoInFlightRepository =
+            mockk<UtxoInFlightRepository> {
+                coEvery { getInFlight(Chain.Dash, SOURCE_ADDRESS) } returns
+                    listOf(
+                        UtxoInFlightTx(
+                            txHash = "send-b",
+                            broadcastAt = 1_000,
+                            spent =
+                                listOf(UtxoInfo(hash = "confirmed-a", amount = 50_000, index = 0u)),
+                            created = listOf(UtxoInfo(hash = "send-b", amount = 30_000, index = 1u)),
+                        )
+                    )
+            }
+
+        val result =
+            repository(dashApi = dashApi, utxoInFlightRepository = utxoInFlightRepository)
+                .getSpecific(
+                    chain = Chain.Dash,
+                    address = SOURCE_ADDRESS,
+                    token = dashCoin(),
+                    gasFee = TokenValue(BigInteger.ONE, dashCoin()),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                )
+
+        assertEquals(listOf(UtxoInfo(hash = "send-b", amount = 30_000, index = 1u)), result.utxos)
+    }
 
     @Test
     fun `Dash-Blockchair-fallback and the generic UTXO branch apply the identical spendable filter`() =
@@ -1152,6 +1346,10 @@ internal class BlockChainSpecificRepositoryImplTest {
             mockk<TransactionHistoryRepository> {
                 coEvery { getUnconfirmedTxHashes(any(), any()) } returns emptySet()
             },
+        utxoInFlightRepository: UtxoInFlightRepository =
+            mockk<UtxoInFlightRepository> {
+                coEvery { getInFlight(any(), any()) } returns emptyList()
+            },
     ): BlockChainSpecificRepositoryImpl {
         val evmApiFactory =
             object : EvmApiFactory {
@@ -1191,6 +1389,7 @@ internal class BlockChainSpecificRepositoryImplTest {
                     utxoFeeService = NoOpFeeService,
                 ),
             transactionHistoryRepository = transactionHistoryRepository,
+            utxoInFlightRepository = utxoInFlightRepository,
         )
     }
 

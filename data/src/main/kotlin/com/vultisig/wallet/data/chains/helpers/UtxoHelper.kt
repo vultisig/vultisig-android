@@ -1,12 +1,14 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.blockchain.utxo.UtxoInFlightTx
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.getDustThreshold
 import java.io.ByteArrayOutputStream
@@ -176,11 +178,17 @@ class UtxoHelper(
         return input.build()
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun getSigningInputData(
         keysignPayload: KeysignPayload,
         signingInput: Bitcoin.SigningInput.Builder,
-    ): ByteArray {
+    ): ByteArray = buildSigningInput(keysignPayload, signingInput).toByteArray()
+
+    /** [signingInput] with the payload's UTXOs, their scripts, and the resulting plan attached. */
+    @OptIn(ExperimentalStdlibApi::class)
+    private fun buildSigningInput(
+        keysignPayload: KeysignPayload,
+        signingInput: Bitcoin.SigningInput.Builder,
+    ): Bitcoin.SigningInput {
         val utxo = keysignPayload.blockChainSpecific as BlockChainSpecific.UTXO
         signingInput
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
@@ -235,7 +243,7 @@ class UtxoHelper(
 
         val plan = planTransaction(signingInput)
         signingInput.setPlan(plan)
-        return signingInput.build().toByteArray()
+        return signingInput.build()
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -497,6 +505,69 @@ class UtxoHelper(
         }
         val signingInput = getBitcoinSigningInput(keysignPayload)
         return planTransaction(signingInput)
+    }
+
+    /**
+     * What broadcasting [keysignPayload] as [txHash] does to the sending address's UTXO set, for
+     * the in-flight ledger [com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos] replays over
+     * the provider's next snapshot — or null for a payload whose inputs never went through the
+     * planner (a SwapKit or dApp PSBT), which the ledger then simply does not cover.
+     *
+     * Re-plans the payload the way signing did, along the same route signing took (a THORChain swap
+     * plans a different input than a send): the plan is a pure function of the payload, so the
+     * inputs it names are exactly the ones the signed transaction spends. Outputs follow
+     * WalletCore's fixed layout, the one [serializeUnsignedTransaction] mirrors — the destination
+     * at index 0, change at index 1 when there is any — so an output is ours when it is the change
+     * or when the destination is the sending address itself (a consolidation / self-send).
+     */
+    fun getSpendEffects(keysignPayload: KeysignPayload, txHash: String): UtxoInFlightTx? {
+        if (keysignPayload.signBitcoin != null) return null
+        val address = keysignPayload.coin.address
+
+        val plan: Bitcoin.TransactionPlan
+        val toAddress: String
+        when (val swapPayload = keysignPayload.swapPayload) {
+            is SwapPayload.ThorChain -> {
+                plan =
+                    buildSigningInput(
+                            keysignPayload,
+                            getSwapPreSigningInputData(keysignPayload).toBuilder(),
+                        )
+                        .plan
+                toAddress = swapPayload.data.vaultAddress
+            }
+            is SwapPayload.SwapKit -> return null
+            else -> {
+                plan = getBitcoinTransactionPlan(keysignPayload)
+                toAddress = keysignPayload.toAddress
+            }
+        }
+
+        val spent =
+            plan.utxosList.map {
+                UtxoInfo(
+                    // The planner carries the outpoint hash in wire (reversed) byte order; the
+                    // ledger and the provider both speak display order.
+                    hash =
+                        Numeric.toHexStringNoPrefix(it.outPoint.hash.toByteArray().reversedArray()),
+                    amount = it.amount,
+                    index = it.outPoint.index.toUInt(),
+                )
+            }
+        val created = buildList {
+            if (toAddress == address) {
+                add(UtxoInfo(hash = txHash, amount = plan.amount, index = 0u))
+            }
+            if (plan.change > 0) {
+                add(UtxoInfo(hash = txHash, amount = plan.change, index = 1u))
+            }
+        }
+        return UtxoInFlightTx(
+            txHash = txHash,
+            broadcastAt = System.currentTimeMillis(),
+            spent = spent,
+            created = created,
+        )
     }
 
     /**

@@ -179,6 +179,7 @@ constructor(
     private val cosmosStakingDeFiBalanceService: CosmosStakingDeFiBalanceService,
     private val solanaDeFiBalanceService: SolanaDeFiBalanceService,
     private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val utxoInFlightRepository: UtxoInFlightRepository,
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
@@ -664,6 +665,7 @@ constructor(
             dustThreshold = chain.getDustThreshold.toLong(),
             ownUnconfirmedTxHashes =
                 transactionHistoryRepository.getUnconfirmedTxHashes(chain, address),
+            inFlight = utxoInFlightRepository.getInFlight(chain, address),
         )
     }
 

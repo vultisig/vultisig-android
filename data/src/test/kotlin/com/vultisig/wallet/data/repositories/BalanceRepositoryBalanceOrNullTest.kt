@@ -81,6 +81,7 @@ class BalanceRepositoryBalanceOrNullTest {
                 mockk<CosmosStakingDeFiBalanceService>(relaxed = true),
             solanaDeFiBalanceService = mockk<SolanaDeFiBalanceService>(relaxed = true),
             transactionHistoryRepository = mockk<TransactionHistoryRepository>(relaxed = true),
+            utxoInFlightRepository = mockk<UtxoInFlightRepository>(relaxed = true),
         )
 
     @Test

@@ -368,6 +368,10 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindUtxoInFlightRepository(impl: UtxoInFlightRepositoryImpl): UtxoInFlightRepository
+
+    @Binds
+    @Singleton
     fun bindPreventScreenshotsRepository(
         impl: PreventScreenshotsRepositoryImpl
     ): PreventScreenshotsRepository

@@ -52,6 +52,8 @@ class BalanceRepositoryUtxoSpendableTest {
         mockk<TransactionHistoryRepository> {
             coEvery { getUnconfirmedTxHashes(any(), any()) } returns emptySet()
         }
+    private val utxoInFlightRepository =
+        mockk<UtxoInFlightRepository> { coEvery { getInFlight(any(), any()) } returns emptyList() }
 
     private val repository =
         BalanceRepositoryImpl(
@@ -82,6 +84,7 @@ class BalanceRepositoryUtxoSpendableTest {
                 mockk<CosmosStakingDeFiBalanceService>(relaxed = true),
             solanaDeFiBalanceService = mockk<SolanaDeFiBalanceService>(relaxed = true),
             transactionHistoryRepository = transactionHistoryRepository,
+            utxoInFlightRepository = utxoInFlightRepository,
         )
 
     @Test

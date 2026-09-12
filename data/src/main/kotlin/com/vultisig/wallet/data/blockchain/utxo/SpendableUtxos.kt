@@ -44,11 +44,16 @@ object SpendableUtxos {
      * log rather than failing the whole set: unlike the policy exclusions above there is no
      * legitimate reason for one to exist, and silently dropping it would understate the balance
      * with nothing anywhere failing.
+     *
+     * [inFlight] is then replayed over the result — see [reconcile] — so a provider snapshot that
+     * predates this wallet's own recent broadcasts cannot offer up an input the wallet already
+     * spent.
      */
     fun select(
         rows: List<BlockChairUtxoInfo>,
         dustThreshold: Long,
         ownUnconfirmedTxHashes: Set<String>,
+        inFlight: List<UtxoInFlightTx> = emptyList(),
     ): List<UtxoInfo> {
         // Blockchair lower-cases transaction hashes, but the stored hash can come back from a
         // broadcast proxy, so neither side's casing is guaranteed.
@@ -74,8 +79,61 @@ object SpendableUtxos {
             .map {
                 UtxoInfo(hash = it.transactionHash, amount = it.value, index = it.index.toUInt())
             }
-            .sortedBy(UtxoInfo::amount)
+            .reconcile(inFlight, dustThreshold)
     }
+
+    /**
+     * Replays this wallet's own recent broadcasts over a provider snapshot, smallest output first
+     * in the result.
+     *
+     * Blockchair serves the address dashboard from a 60–120 s cache and ingests our broadcast into
+     * its mempool view with its own lag, so right after a send the snapshot can still list the
+     * inputs that send consumed and not yet the change it paid back. The wallet knows both
+     * ([UtxoInFlightTx]), and it is the only party that can: nobody else can spend these outputs.
+     *
+     * Each in-flight transaction, oldest first, is applied only when the snapshot still lists at
+     * least one input it spent — the evidence that the snapshot predates it. Then those inputs are
+     * removed and the outputs it paid back are added. A transaction none of whose inputs are listed
+     * is skipped: either the provider has already caught up, in which case its own view of that
+     * transaction's outputs (present as `block_id -1` and admitted through
+     * `ownUnconfirmedTxHashes`, or absent) is authoritative — or the transaction was evicted from
+     * the mempool and its inputs are free again, in which case injecting its outputs would build on
+     * nothing. That gate is what keeps the ledger from ever overriding a provider that already
+     * knows better. Oldest-first ordering is what lets a chain of sends work: the second send's
+     * input is the first send's injected change, present only because the first was replayed.
+     *
+     * Injected outputs go through the same dust threshold as provider rows; a sub-dust change
+     * output is money this wallet will not spend after it confirms either.
+     */
+    private fun List<UtxoInfo>.reconcile(
+        inFlight: List<UtxoInFlightTx>,
+        dustThreshold: Long,
+    ): List<UtxoInfo> {
+        if (inFlight.isEmpty()) return sortedBy(UtxoInfo::amount)
+
+        val candidates = LinkedHashMap<OutPointKey, UtxoInfo>()
+        for (utxo in this) candidates[utxo.outPointKey] = utxo
+
+        for (tx in inFlight.sortedBy(UtxoInFlightTx::broadcastAt)) {
+            val spentKeys = tx.spent.map { it.outPointKey }
+            if (spentKeys.none { it in candidates }) continue
+
+            spentKeys.forEach(candidates::remove)
+            tx.created
+                .filter { it.amount >= dustThreshold }
+                .forEach { candidates.putIfAbsent(it.outPointKey, it) }
+        }
+        return candidates.values.sortedBy(UtxoInfo::amount)
+    }
+
+    /**
+     * Hash casing is normalised for the same reason as in [select]: the stored hash can come from a
+     * broadcast proxy, Blockchair's is lower-case.
+     */
+    private data class OutPointKey(val hash: String, val index: UInt)
+
+    private val UtxoInfo.outPointKey: OutPointKey
+        get() = OutPointKey(hash.lowercase(), index)
 
     /**
      * The balance of exactly the set [select] admits, in the chain's smallest unit. Defined in
@@ -90,18 +148,30 @@ object SpendableUtxos {
         rows: List<BlockChairUtxoInfo>,
         dustThreshold: Long,
         ownUnconfirmedTxHashes: Set<String>,
+        inFlight: List<UtxoInFlightTx> = emptyList(),
     ): BigInteger {
         val unusable = rows.count { !it.isUsable }
         check(unusable == 0) {
             "$unusable of ${rows.size} Blockchair UTXO rows have no usable transaction_hash/index" +
                 " — refusing to persist an understated balance"
         }
-        return select(rows, dustThreshold, ownUnconfirmedTxHashes).fold(BigInteger.ZERO) {
-            total,
-            utxo ->
+        return select(rows, dustThreshold, ownUnconfirmedTxHashes, inFlight).fold(
+            BigInteger.ZERO
+        ) { total, utxo ->
             total + BigInteger.valueOf(utxo.amount)
         }
     }
+
+    /**
+     * [reconcile] for a UTXO set that did not come from Blockchair — Dash's own address index,
+     * which is built from connected blocks and blind to the mempool in both directions, so it keeps
+     * listing a spent input until the spending transaction confirms.
+     */
+    fun reconcile(
+        candidates: List<UtxoInfo>,
+        dustThreshold: Long,
+        inFlight: List<UtxoInFlightTx>,
+    ): List<UtxoInfo> = candidates.reconcile(inFlight, dustThreshold)
 
     private val BlockChairUtxoInfo.isUsable: Boolean
         get() = transactionHash.isNotBlank() && index >= 0

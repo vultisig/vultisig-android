@@ -172,5 +172,6 @@ internal class BroadcastKeysignBatchTest {
             explorerLinkRepository = mockk(relaxed = true),
             evmApiFactory = mockk(relaxed = true),
             balanceRepository = mockk(relaxed = true),
+            utxoInFlightRepository = mockk(relaxed = true),
         )
 }

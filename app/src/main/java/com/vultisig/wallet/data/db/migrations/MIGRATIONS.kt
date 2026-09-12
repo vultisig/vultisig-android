@@ -1276,3 +1276,31 @@ internal val MIGRATION_44_45 =
             )
         }
     }
+
+// Adds utxo_inflight_outpoint: the wallet's own record of what each recent UTXO-chain broadcast
+// consumed and paid back to the sender (#5867). Blockchair serves the address dashboard from a
+// 60–120 s cache, so a send made right after another was funded from a snapshot that still listed
+// the first send's inputs and was rejected with `bad-txns-inputs-missingorspent`. Coin selection
+// and the displayed balance now replay these rows over the provider snapshot. One row per outpoint
+// so the table needs no converter; rows expire on age, so nothing here is ever migrated forward.
+internal val MIGRATION_45_46 =
+    object : Migration(45, 46) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS `utxo_inflight_outpoint` (
+                `chain` TEXT NOT NULL,
+                `address` TEXT NOT NULL,
+                `tx_hash` TEXT NOT NULL,
+                `broadcast_at` INTEGER NOT NULL,
+                `kind` TEXT NOT NULL,
+                `hash` TEXT NOT NULL,
+                `idx` INTEGER NOT NULL,
+                `amount` INTEGER NOT NULL,
+                PRIMARY KEY(`chain`, `tx_hash`, `kind`, `hash`, `idx`)
+            )
+            """
+                    .trimIndent()
+            )
+        }
+    }
