@@ -75,7 +75,8 @@ internal class RippleTokenSendValidationTest {
     // an exchange is credited to nobody exactly as an untagged XRP one is.
     @Test
     fun `an untagged token send to a tag-requiring destination is blocked`() = runTest {
-        val service = ChainValidationService(FakeRippleApi(flags = requireDestTagFlags))
+        val service =
+            ChainValidationService(FakeRippleApi(flags = requireDestTagFlags), FakeBittensorApi())
 
         val error =
             shouldThrow<InvalidTransactionDataException> {
@@ -91,14 +92,19 @@ internal class RippleTokenSendValidationTest {
     fun `a tagged token send is allowed without asking the ledger`() = runTest {
         val api = FakeRippleApi(flags = requireDestTagFlags)
 
-        ChainValidationService(api).validateRippleDestinationTag(rlusd, DESTINATION, 42u)
+        ChainValidationService(api, FakeBittensorApi())
+            .validateRippleDestinationTag(rlusd, DESTINATION, 42u)
 
         api.accountsInfoCalls shouldBe 0
     }
 
     @Test
     fun `a token send to a destination holding the trust line is allowed`() = runTest {
-        val service = ChainValidationService(FakeRippleApi(lines = listOf(line(RLUSD_HEX, ISSUER))))
+        val service =
+            ChainValidationService(
+                FakeRippleApi(lines = listOf(line(RLUSD_HEX, ISSUER))),
+                FakeBittensorApi(),
+            )
 
         service.validateRippleDestinationTrustLine(rlusd, DESTINATION)
     }
@@ -108,7 +114,10 @@ internal class RippleTokenSendValidationTest {
     @Test
     fun `a line for the same currency from another issuer does not count`() = runTest {
         val service =
-            ChainValidationService(FakeRippleApi(lines = listOf(line(RLUSD_HEX, OTHER_ISSUER))))
+            ChainValidationService(
+                FakeRippleApi(lines = listOf(line(RLUSD_HEX, OTHER_ISSUER))),
+                FakeBittensorApi(),
+            )
 
         val error =
             shouldThrow<InvalidTransactionDataException> {
@@ -122,7 +131,7 @@ internal class RippleTokenSendValidationTest {
     // An unfunded account answers actNotFound with no lines, which is evidence of absence.
     @Test
     fun `a destination holding no lines at all is blocked`() = runTest {
-        val service = ChainValidationService(FakeRippleApi(lines = emptyList()))
+        val service = ChainValidationService(FakeRippleApi(lines = emptyList()), FakeBittensorApi())
 
         shouldThrow<InvalidTransactionDataException> {
             service.validateRippleDestinationTrustLine(rlusd, DESTINATION)
@@ -135,7 +144,8 @@ internal class RippleTokenSendValidationTest {
     fun `sending back to the issuer needs no trust line and no lookup`() = runTest {
         val api = FakeRippleApi(lines = emptyList())
 
-        ChainValidationService(api).validateRippleDestinationTrustLine(rlusd, ISSUER)
+        ChainValidationService(api, FakeBittensorApi())
+            .validateRippleDestinationTrustLine(rlusd, ISSUER)
 
         api.accountLinesCalls shouldBe 0
     }
@@ -153,7 +163,8 @@ internal class RippleTokenSendValidationTest {
                             message = "no route to host",
                             kind = NetworkErrorKind.NoConnectivity,
                         )
-                )
+                ),
+                FakeBittensorApi(),
             )
 
         service.validateRippleDestinationTrustLine(rlusd, DESTINATION)
@@ -163,7 +174,8 @@ internal class RippleTokenSendValidationTest {
     fun `native XRP holds no trust line and is not looked up`() = runTest {
         val api = FakeRippleApi(lines = emptyList())
 
-        ChainValidationService(api).validateRippleDestinationTrustLine(xrp, DESTINATION)
+        ChainValidationService(api, FakeBittensorApi())
+            .validateRippleDestinationTrustLine(xrp, DESTINATION)
 
         api.accountLinesCalls shouldBe 0
     }

@@ -2815,7 +2815,8 @@ internal class DefaultSendStrategyTest {
             bitcoinPlanService = bitcoinPlanService,
             getAvailableTokenBalance = getAvailableTokenBalance,
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            chainValidationService = ChainValidationService(rippleApi = rippleApi),
+            chainValidationService =
+                ChainValidationService(rippleApi = rippleApi, bittensorApi = mockk(relaxed = true)),
             addressManager = addressManager,
             amountManager = amountManager,
             gasSettings = gasSettings,
