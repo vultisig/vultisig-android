@@ -84,6 +84,24 @@ abstract class TransactionHistoryDao {
     abstract suspend fun getAllPendingTransactions(): List<TransactionHistoryEntity>
 
     /**
+     * In-flight rows for one chain across every vault on this device; the caller narrows to the
+     * sending address (see
+     * [com.vultisig.wallet.data.repositories.TransactionHistoryRepository.getUnconfirmedTxHashes]).
+     * [chain] is the source chain in [com.vultisig.wallet.data.models.Chain.raw] form, as the
+     * keysign flow records it.
+     */
+    @Query(
+        """
+        SELECT * FROM transaction_history
+        WHERE chain = :chain
+        AND status IN ('BROADCASTED', 'PENDING', 'NotFound')
+    """
+    )
+    abstract suspend fun getPendingTransactionsByChain(
+        chain: String
+    ): List<TransactionHistoryEntity>
+
+    /**
      * CONFIRMED, FAILED, and REFUNDED are terminal — the WHERE guard prevents stale writers from
      * downgrading a finalised row. retryCount resets on every successful API response (including
      * NotFound) so backoff only accumulates on network errors. All mutating queries key on the

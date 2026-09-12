@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
+import com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.crypto.SuiHelper
@@ -217,6 +218,72 @@ internal class BlockChainSpecificRepositoryImplTest {
             assertEquals(
                 listOf(
                     UtxoInfo(hash = "tx-confirmed-small", amount = 10_000, index = 0u),
+                    UtxoInfo(hash = "tx-confirmed-large", amount = 50_000, index = 0u),
+                ),
+                result.utxos,
+            )
+        }
+
+    /**
+     * The change of a send this wallet broadcast leaves the parent's inputs the moment it reaches
+     * the mempool; withholding it until it confirms would blank the wallet for a block after every
+     * send. A stranger's zero-conf stays out — only the hash the pending history vouches for is
+     * rescued.
+     */
+    @Test
+    fun `Bitcoin UTXO selection admits own unconfirmed change but not a stranger's zero-conf`() =
+        runTest {
+            val coin = bitcoinCoin()
+            val blockChairApi =
+                mockk<BlockChairApi> {
+                    coEvery { getAllUtxos(Chain.Bitcoin, SOURCE_ADDRESS) } returns
+                        blockChairInfo(
+                            listOf(
+                                BlockChairUtxoInfo(
+                                    transactionHash = "own-send",
+                                    index = 1,
+                                    value = 40_000,
+                                    blockId = -1,
+                                ),
+                                BlockChairUtxoInfo(
+                                    transactionHash = "inbound-from-stranger",
+                                    index = 0,
+                                    value = 30_000,
+                                    blockId = -1,
+                                ),
+                                BlockChairUtxoInfo(
+                                    transactionHash = "tx-confirmed-large",
+                                    index = 0,
+                                    value = 50_000,
+                                    blockId = 800_000,
+                                ),
+                            )
+                        )
+                }
+            val transactionHistoryRepository =
+                mockk<TransactionHistoryRepository> {
+                    coEvery { getUnconfirmedTxHashes(Chain.Bitcoin, SOURCE_ADDRESS) } returns
+                        setOf("OWN-SEND")
+                }
+
+            val result =
+                repository(
+                        blockChairApi = blockChairApi,
+                        transactionHistoryRepository = transactionHistoryRepository,
+                    )
+                    .getSpecific(
+                        chain = Chain.Bitcoin,
+                        address = SOURCE_ADDRESS,
+                        token = coin,
+                        gasFee = TokenValue(BigInteger.ONE, coin),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                    )
+
+            assertEquals(
+                listOf(
+                    UtxoInfo(hash = "own-send", amount = 40_000, index = 1u),
                     UtxoInfo(hash = "tx-confirmed-large", amount = 50_000, index = 0u),
                 ),
                 result.utxos,
@@ -941,8 +1008,8 @@ internal class BlockChainSpecificRepositoryImplTest {
 
     /**
      * A dust entry, an unconfirmed entry, and an explicitly non-spendable entry — all excluded by
-     * [toSpendableUtxos] — alongside two valid entries whose values (10_000 / 50_000 sats) clear
-     * every UTXO chain's dust threshold, so the fixture is safe to reuse across chains.
+     * [SpendableUtxos.select] — alongside two valid entries whose values (10_000 / 50_000 sats)
+     * clear every UTXO chain's dust threshold, so the fixture is safe to reuse across chains.
      */
     private fun rawUtxoFixture(): List<BlockChairUtxoInfo> =
         listOf(
@@ -1081,6 +1148,10 @@ internal class BlockChainSpecificRepositoryImplTest {
         zcashApi: ZcashApi = mockk<ZcashApi>(relaxed = true),
         solanaApi: SolanaApi = mockk<SolanaApi>(relaxed = true),
         tonApi: TonApi = mockk<TonApi>(relaxed = true),
+        transactionHistoryRepository: TransactionHistoryRepository =
+            mockk<TransactionHistoryRepository> {
+                coEvery { getUnconfirmedTxHashes(any(), any()) } returns emptySet()
+            },
     ): BlockChainSpecificRepositoryImpl {
         val evmApiFactory =
             object : EvmApiFactory {
@@ -1119,6 +1190,7 @@ internal class BlockChainSpecificRepositoryImplTest {
                     cosmosFeeService = NoOpFeeService,
                     utxoFeeService = NoOpFeeService,
                 ),
+            transactionHistoryRepository = transactionHistoryRepository,
         )
     }
 
