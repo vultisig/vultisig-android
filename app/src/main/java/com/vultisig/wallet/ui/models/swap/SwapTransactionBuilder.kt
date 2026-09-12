@@ -146,6 +146,7 @@ constructor(
                                         .inWholeSeconds
                                         .toULong(),
                                 isAffiliate = isAffiliate,
+                                slippageBps = quote.data.fees.slippageBps,
                             )
                         ),
                 )
@@ -229,6 +230,7 @@ constructor(
                                         .inWholeSeconds
                                         .toULong(),
                                 isAffiliate = isAffiliate,
+                                slippageBps = quote.data.fees.slippageBps,
                             )
                         ),
                 )

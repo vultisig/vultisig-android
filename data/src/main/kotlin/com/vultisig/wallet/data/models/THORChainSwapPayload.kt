@@ -17,9 +17,22 @@ data class THORChainSwapPayload(
     val streamingQuantity: String,
     val expirationTime: ULong,
     val isAffiliate: Boolean,
+    /**
+     * Price impact the quote reported (`fees.slippage_bps`), carried so a co-signer shows the
+     * figure the initiator approved rather than re-pricing a pool that has since moved. Null when
+     * the sender predates the field or the route had no quote (limit orders); the row then hides.
+     */
+    val slippageBps: Int? = null,
 ) {
     val toAddress: String
         get() = toCoin.address
+
+    /**
+     * Fractional price impact (`0.0133` == 1.33%) of [slippageBps], the same shape
+     * [SwapQuote.priceImpact] exposes.
+     */
+    val priceImpact: BigDecimal?
+        get() = slippageBps.toPriceImpactFraction()
 
     val fromAsset: Asset
         get() = swapAsset(fromCoin, true)

@@ -48,7 +48,7 @@ sealed class SwapQuote {
         val data: THORChainSwapQuote,
     ) : SwapQuote() {
         override val priceImpact: BigDecimal?
-            get() = data.slippageBps.toPriceImpactFraction()
+            get() = data.fees.slippageBps.toPriceImpactFraction()
     }
 
     data class MayaChain(
@@ -59,7 +59,7 @@ sealed class SwapQuote {
         val data: THORChainSwapQuote,
     ) : SwapQuote() {
         override val priceImpact: BigDecimal?
-            get() = data.slippageBps.toPriceImpactFraction()
+            get() = data.fees.slippageBps.toPriceImpactFraction()
     }
 
     /**
@@ -82,5 +82,4 @@ sealed class SwapQuote {
 }
 
 /** Converts a basis-point slippage value (100 == 1%) into the fractional price impact (0.01). */
-private fun Int?.toPriceImpactFraction(): BigDecimal? =
-    this?.let { BigDecimal(it).movePointLeft(4) }
+fun Int?.toPriceImpactFraction(): BigDecimal? = this?.let { BigDecimal(it).movePointLeft(4) }
