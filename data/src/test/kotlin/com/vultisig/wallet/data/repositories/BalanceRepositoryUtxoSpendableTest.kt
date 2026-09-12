@@ -173,6 +173,26 @@ class BalanceRepositoryUtxoSpendableTest {
         coVerify(exactly = 0) { tokenValueDao.insertTokenValue(any<TokenValueEntity>()) }
     }
 
+    /**
+     * A row with no usable outpoint is a decode defect, not a policy exclusion; summing around it
+     * would persist an understated balance over the cached one.
+     */
+    @Test
+    fun `a row that cannot name an outpoint is a failed read, not a partial sum`() = runTest {
+        givenUtxos(
+            Chain.Bitcoin,
+            reportedBalance = 90_000,
+            confirmed("a", 50_000),
+            confirmed("malformed", 40_000).copy(index = -1),
+        )
+
+        assertThrows<IllegalStateException> {
+            repository.getTokenValue(ADDRESS, Coins.Bitcoin.BTC).first()
+        }
+
+        coVerify(exactly = 0) { tokenValueDao.insertTokenValue(any<TokenValueEntity>()) }
+    }
+
     @Test
     fun `outputs that are all present and all filtered out are a genuine zero`() = runTest {
         givenUtxos(

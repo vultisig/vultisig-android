@@ -80,15 +80,28 @@ object SpendableUtxos {
     /**
      * The balance of exactly the set [select] admits, in the chain's smallest unit. Defined in
      * terms of [select] rather than alongside it so the two cannot drift.
+     *
+     * Unlike [select], a row that cannot name an outpoint fails the read rather than being dropped:
+     * this number gets persisted over the cached balance, and an understated balance written to the
+     * cache is worse than a stale one kept. Coin selection can afford to drop the row — fewer
+     * inputs can only under-fund a send, never overspend.
      */
     fun balance(
         rows: List<BlockChairUtxoInfo>,
         dustThreshold: Long,
         ownUnconfirmedTxHashes: Set<String>,
-    ): BigInteger =
-        select(rows, dustThreshold, ownUnconfirmedTxHashes).fold(BigInteger.ZERO) { total, utxo ->
+    ): BigInteger {
+        val unusable = rows.count { !it.isUsable }
+        check(unusable == 0) {
+            "$unusable of ${rows.size} Blockchair UTXO rows have no usable transaction_hash/index" +
+                " — refusing to persist an understated balance"
+        }
+        return select(rows, dustThreshold, ownUnconfirmedTxHashes).fold(BigInteger.ZERO) {
+            total,
+            utxo ->
             total + BigInteger.valueOf(utxo.amount)
         }
+    }
 
     private val BlockChairUtxoInfo.isUsable: Boolean
         get() = transactionHash.isNotBlank() && index >= 0
