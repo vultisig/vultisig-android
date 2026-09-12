@@ -132,6 +132,34 @@ internal class TronFeeReconciliationTest {
     }
 
     @Test
+    fun `a TRC20 send to an address with no TRON account pays no activation fee`() = runTest {
+        // java-tron's contractCreateNewAccount is false for TriggerSmartContract: the recipient's
+        // balance lands in the contract's storage and no account is created for them, so the chain
+        // burns no activation fee. Their first storage write is already in the simulated energy.
+        stubSimulation(energyUsed = 65_000L, energyPenalty = 50_000L)
+        coEvery { tronApi.getAccount(RECIPIENT) } returns TronAccountJson(address = "")
+
+        val displayed = feeService.calculateFees(trc20Transfer())
+
+        assertEquals(BigInteger.valueOf(27_300_000L + CONTRACT_BANDWIDTH_FEE), displayed.amount)
+    }
+
+    @Test
+    fun `a TRC20 memo is priced like a native one and stays out of the energy ceiling`() = runTest {
+        stubSimulation(energyUsed = 65_000L, energyPenalty = 50_000L)
+
+        val displayed = feeService.calculateFees(trc20Transfer(memo = "thanks for lunch"))
+
+        // TronHelper writes the memo into raw_data.data of the contract call, and the chain bills
+        // any non-empty data the same flat fee whatever the contract type.
+        assertEquals(
+            BigInteger.valueOf(27_300_000L + CONTRACT_BANDWIDTH_FEE + MEMO_FEE),
+            displayed.amount,
+        )
+        assertEquals("35490000", displayed.feeLimit.toString())
+    }
+
+    @Test
     fun `a simulation whose penalty exceeds its own total is refused`() = runTest {
         stubSimulation(energyUsed = 65_000L, energyPenalty = 70_000L)
 
@@ -303,12 +331,13 @@ internal class TronFeeReconciliationTest {
             tronFeeService = feeService,
         )
 
-    private fun trc20Transfer(to: String = RECIPIENT) =
+    private fun trc20Transfer(to: String = RECIPIENT, memo: String? = null) =
         Transfer(
             coin = trc20Coin(),
             vault = VaultData(vaultHexPublicKey = "pub", vaultHexChainCode = "chain"),
             amount = AMOUNT,
             to = to,
+            memo = memo,
         )
 
     private fun trc20Coin() =
@@ -383,6 +412,8 @@ internal class TronFeeReconciliationTest {
 
         /** TRON's documented ceiling, 15,000 TRX. */
         const val MAX_FEE_LIMIT = 15_000_000_000L
+
+        const val MEMO_FEE = 1_000_000L
 
         val AMOUNT: BigInteger = BigInteger.valueOf(25_000_000L)
     }

@@ -139,6 +139,34 @@ class TronFeeServiceTest {
         assertEquals(BigInteger.valueOf(345_000L), contractFee.amount)
     }
 
+    @Test
+    fun `staked and free bandwidth each have to cover the call on their own`() = runTest {
+        // java-tron's BandwidthProcessor tries the staked pool, then the free pool, and checks each
+        // against the whole transaction — it never adds the two. A sender left with 200 in each is
+        // burned for all 345 bytes, while 345 in either one alone is free.
+        coEvery { tronApi.getChainParameters() } returns chainParameters()
+
+        val split =
+            TronAccountResourceJson(
+                netLimit = 1_000L,
+                netUsed = 800L,
+                freeNetLimit = 600L,
+                freeNetUsed = 400L,
+            )
+        val staked = TronAccountResourceJson(netLimit = 345L)
+        val free = TronAccountResourceJson(freeNetLimit = 345L)
+
+        assertEquals(
+            BigInteger.valueOf(345_000L),
+            service.calculateBandwidthFee(split, isContract = true).amount,
+        )
+        assertEquals(
+            BigInteger.ZERO,
+            service.calculateBandwidthFee(staked, isContract = true).amount,
+        )
+        assertEquals(BigInteger.ZERO, service.calculateBandwidthFee(free, isContract = true).amount)
+    }
+
     private fun freeBandwidth(available: Long) = TronAccountResourceJson(freeNetLimit = available)
 
     private fun stubHealthyApi() {
