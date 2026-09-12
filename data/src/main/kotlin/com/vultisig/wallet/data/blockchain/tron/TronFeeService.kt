@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.tron
 
+import androidx.annotation.VisibleForTesting
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELECTOR
 import com.vultisig.wallet.data.api.models.TronAccountJson
@@ -31,7 +32,8 @@ import kotlinx.coroutines.sync.withLock
  *     - Every transaction consumes bandwidth (measured in bytes).
  *     - Native TRX transfers typically cost ~300 bytes.
  *     - TRC20 transfers (smart contract interactions) cost slightly more (~345 bytes).
- *     - If the sender has enough free or staked bandwidth, no TRX is burned.
+ *     - If the sender's staked bandwidth covers the whole transaction, or failing that their free
+ *       bandwidth does, no TRX is burned. The two pools are never combined.
  *     - Otherwise, the cost is: bytes * bandwidthPrice (≈1000 SUN per byte).
  *
  *   How Users Earn Bandwidth:
@@ -57,6 +59,8 @@ import kotlinx.coroutines.sync.withLock
  *     - Sending TRX to a new account requires paying an activation fee.
  *     - Covers creation and system cost, typically ~1.1 TRX total.
  *     - When this applies, the bandwidth fee is waived (since activation includes it).
+ *     - A TRC20 transfer never pays it: the recipient's balance lives in the contract's storage and
+ *       the chain creates no account for them.
  *
  * Notes:
  * - Resource availability is checked first (bandwidth/energy from free quota or staking).
@@ -86,21 +90,19 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
             val toAddress = transaction.to
 
             val srcAccountDeferred = async { tronApi.getAccountResource(fromAddress) }
-            val dstAccountDeferred = async { tronApi.getAccount(toAddress) }
-
-            val srcAccount = srcAccountDeferred.await()
-            val dstAccount = dstAccountDeferred.await()
 
             if (coin.isNativeToken) {
+                // Only a plain transfer can activate its destination, so only it needs to know
+                // whether the account exists.
+                val dstAccountDeferred = async { tronApi.getAccount(toAddress) }
                 calculateNativeTrxFee(
-                    srcAccount = srcAccount,
-                    dstAccount = dstAccount,
+                    srcAccount = srcAccountDeferred.await(),
+                    dstAccount = dstAccountDeferred.await(),
                     hasMemo = transaction.paysMemoFee(),
                 )
             } else {
                 calculateTrc20Fee(
-                    srcAccount = srcAccount,
-                    dstAccount = dstAccount,
+                    srcAccount = srcAccountDeferred.await(),
                     transaction = transaction,
                 )
             }
@@ -152,7 +154,8 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
     // TRC-20
     // To consider implementing a tx serializer for swaps. This can be easily achieve by :
     // headers & others(fixed) + signature(fixed) + rawCallDataSize (return by simulation)
-    private suspend fun calculateBandwidthFee(
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal suspend fun calculateBandwidthFee(
         srcAccount: TronAccountResourceJson?,
         isContract: Boolean,
     ): TronFees {
@@ -165,35 +168,25 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
 
         val bandwidthPrice = getCacheTronChainParameters().bandwidthFeePrice
 
-        // For contracts, always pay bandwidth fee
-        if (isContract) {
-            return TronFees(
-                bandwidthDiscounted = BYTES_PER_CONTRACT_TX.toBigInteger(),
-                bandwidthRequired = BYTES_PER_CONTRACT_TX.toBigInteger(),
-                amount = BigInteger.valueOf(bytesRequired * bandwidthPrice),
-            )
-        }
-
-        // For native transfers, check available bandwidth
-        val availableBandwidth = srcAccount?.calculateAvailableBandwidth() ?: 0L
-
-        // Bandwidth apply all or nothing
-        val trxAmount =
-            if (availableBandwidth >= bytesRequired) {
-                BigInteger.ZERO
-            } else {
-                BigInteger.valueOf(bytesRequired * bandwidthPrice)
-            }
+        // A contract call draws on the same free and staked bandwidth as a plain transfer — only
+        // the size differs — so it is charged on the same terms. Bandwidth applies all or nothing:
+        // TRX is burned for the whole transaction, or for none of it.
+        val isCovered = srcAccount?.coversBandwidth(bytesRequired) == true
 
         return TronFees(
             bandwidthDiscounted =
-                if (trxAmount == BigInteger.ZERO) {
+                if (isCovered) {
                     BigInteger.ZERO
                 } else {
-                    BYTES_PER_COIN_TX.toBigInteger()
+                    bytesRequired.toBigInteger()
                 },
-            bandwidthRequired = BYTES_PER_COIN_TX.toBigInteger(),
-            amount = trxAmount,
+            bandwidthRequired = bytesRequired.toBigInteger(),
+            amount =
+                if (isCovered) {
+                    BigInteger.ZERO
+                } else {
+                    BigInteger.valueOf(bytesRequired * bandwidthPrice)
+                },
         )
     }
 
@@ -204,39 +197,43 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
         return BigInteger.valueOf(createAccountFee + systemFee)
     }
 
-    // https://developers.tron.network/docs/resource-model#account-bandwidth-balance-query
-    private fun TronAccountResourceJson.calculateAvailableBandwidth(): Long {
-        val freeBandwidth = freeNetLimit - freeNetUsed
-        val stakingBandwidth = netLimit - netUsed
-
-        return freeBandwidth + stakingBandwidth
-    }
+    /**
+     * The chain spends staked bandwidth first and free bandwidth second, and whichever pool it
+     * lands on has to cover the whole transaction by itself — java-tron's `BandwidthProcessor`
+     * tries `useAccountNet` then `useFreeNet` and never combines the two. Summing them would quote
+     * a sender with 200 of each as covered for a 345-byte call the chain burns TRX for.
+     * https://developers.tron.network/docs/resource-model#account-bandwidth-balance-query
+     */
+    private fun TronAccountResourceJson.coversBandwidth(bytes: Long): Boolean =
+        netLimit - netUsed >= bytes || freeNetLimit - freeNetUsed >= bytes
 
     private suspend fun calculateTrc20Fee(
         srcAccount: TronAccountResourceJson?,
-        dstAccount: TronAccountJson?,
         transaction: Transfer,
     ): TronFees {
-        var totalFee = BigInteger.ZERO
-
-        // 1. Bandwidth fee (always paid for TRC20)
+        // 1. Bandwidth fee
         val bandwidthFee = calculateBandwidthFee(srcAccount = srcAccount, isContract = true)
-
-        totalFee = totalFee.add(bandwidthFee.amount)
 
         // 2. Energy fee
         val energyFee = calculateEnergyFee(srcAccount = srcAccount, transaction = transaction)
 
-        totalFee = totalFee.add(energyFee.amount)
+        // 3. Memo fee — TronHelper writes the memo into `raw_data.data` of a contract call exactly
+        //    as it does for a plain transfer, and the chain bills it the same way.
+        val memoFee =
+            if (transaction.paysMemoFee()) {
+                getCacheTronChainParameters().memoFeeEstimate.toBigInteger()
+            } else {
+                BigInteger.ZERO
+            }
 
-        // 3. Account activation fee (if destination is new)
-        if (dstAccount.isNewAccount()) {
-            val activationFee = calculateActivationFee()
-            totalFee = totalFee.add(activationFee)
-        }
+        // No activation fee: a TRC20 transfer writes the recipient's balance into the contract's
+        // storage and never creates a TRON account for them (java-tron's contractCreateNewAccount
+        // is false for TriggerSmartContract), so the chain charges nothing for a fresh recipient
+        // beyond the extra energy the simulation already prices for their first storage write.
+        val totalFee = bandwidthFee.amount + energyFee.amount + memoFee
 
-        // Bandwidth, memo and activation are burnt outside contract execution, so they stay out of
-        // the ceiling TRON enforces against energy.
+        // Bandwidth and memo are burnt outside contract execution, so they stay out of the ceiling
+        // TRON enforces against energy.
         return bandwidthFee.copy(
             maxEnergyRequired = energyFee.maxEnergyRequired,
             energyDiscounted = energyFee.energyDiscounted,
@@ -296,7 +293,12 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
             maxEnergyRequired = maxEnergyUnitsRequired,
             energyRequired = energyUnitsRequired,
             energyDiscounted = energyToPay,
-            feeLimit = contractFeeLimit(energyUnitsRequired, energyPrice),
+            // A fee_limit above the chain's own ceiling is rejected outright, and one derived from
+            // a zeroed energy price would guarantee OUT_OF_ENERGY — clamp both ends rather than
+            // sign either.
+            feeLimit =
+                contractFeeLimit(energyUnitsRequired, energyPrice)
+                    .coerceIn(BigInteger.ZERO, chainParameters.maxFeeLimit.toBigInteger()),
             amount = energyToPay * energyPrice,
         )
     }
@@ -323,8 +325,10 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
         val hasMemo = transaction.paysMemoFee()
         val isTokenTransfer = !transaction.coin.isNativeToken
 
+        // Only a plain transfer activates its destination; a token call never does.
         val isNewAccount =
-            runCatching { tronApi.getAccount(toAddress).isNewAccount() }.getOrDefault(true)
+            isNativeCoin &&
+                runCatching { tronApi.getAccount(toAddress).isNewAccount() }.getOrDefault(true)
 
         val baseFee =
             when {
