@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.swap.FormatLimitOrderLabelsUseCase
 import com.vultisig.wallet.ui.models.swap.LimitOrderLabels
+import com.vultisig.wallet.ui.models.swap.PriceImpactDisplay
 import com.vultisig.wallet.ui.models.swap.SwapDiscountBps
 import com.vultisig.wallet.ui.models.swap.SwapFeeRow
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
@@ -46,6 +47,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
 import com.vultisig.wallet.ui.models.swap.formatAffiliatePercent
+import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
@@ -447,6 +449,7 @@ constructor(
                             ),
                         feeProvider = SwapProvider.THORCHAIN,
                         vultBps = thorVultBps,
+                        priceImpact = formatPriceImpact(swapPayload.data.priceImpact),
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -529,6 +532,7 @@ constructor(
                             ),
                         feeProvider = SwapProvider.MAYA,
                         vultBps = mayaVultBps,
+                        priceImpact = formatPriceImpact(swapPayload.data.priceImpact),
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -541,45 +545,61 @@ constructor(
             }
 
             is SwapPayload.SwapKit -> {
+                // The provider fee the initiator saw, when its payload carries one. Read off the
+                // wire rather than re-quoted: a fresh quote can disagree with what the initiator
+                // approved, and a failed fetch would show a confident zero on the one screen whose
+                // purpose is to state the cost.
+                val payloadFee =
+                    swapKitPayloadFee(swapPayload.data, srcToken, dstToken, nativeToken)
                 // BTC/Cardano SwapKit deposits report the deposit cost as their inbound fee,
                 // already shown as the Network Fee — hide the Swap Fee row so it isn't
-                // double-counted, matching the initiator and the form (#5358, #5321).
-                val swapFeeHidden = srcToken.chain.standard == TokenStandard.UTXO
-                // Re-fetch only the SwapKit inbound fee at join time so the co-signer sees the same
-                // non-zero swap fee as the initiator (mirrors the Thor/Maya branches). Uses the
-                // quote-only `getSwapKitInboundFee` (`POST /v3/quote`) rather than the full
-                // `getQuote`, which would also fire `POST /v3/swap` and mint a throwaway swap route
-                // — a fresh `swapId` and deposit address — per cosigner just to read the fee.
-                // Display-only: the signing bytes come from the payload and are never touched. The
-                // quote may reprice slightly between fetches (approximate parity, the same
-                // trade-off Thor/Maya accept); a fetch failure degrades to a zero fee rather than
-                // stalling the verify screen. The initiator's `affiliateBps` / `srcAddress` are
-                // intentionally omitted — the inbound fee doesn't depend on the affiliate fee and
-                // the join device can't know the initiator's `vultBPSDiscount`, so approximate
-                // parity holds. Skipped entirely when the row is hidden (UTXO): the fetched fee
-                // would be neither displayed nor added to the total, so the round-trip is waste
-                // (#5358 review).
+                // double-counted, matching the initiator and the form (#5358, #5321). A provider
+                // fee stated on the wire is a separate charge and shows on every source chain.
+                val swapFeeHidden =
+                    when (payloadFee) {
+                        is SwapKitPayloadFee.Stated -> false
+                        SwapKitPayloadFee.NotRenderable -> true
+                        SwapKitPayloadFee.Absent -> srcToken.chain.standard == TokenStandard.UTXO
+                    }
+                // For a sender that predates the field, re-fetch only the SwapKit inbound fee at
+                // join time so the co-signer sees the same non-zero swap fee as the initiator
+                // (mirrors the Thor/Maya branches). Uses the quote-only `getSwapKitInboundFee`
+                // (`POST /v3/quote`) rather than the full `getQuote`, which would also fire
+                // `POST /v3/swap` and mint a throwaway swap route — a fresh `swapId` and deposit
+                // address — per cosigner just to read the fee. Display-only: the signing bytes
+                // come from the payload and are never touched. The quote may reprice slightly
+                // between fetches (approximate parity, the same trade-off Thor/Maya accept); a
+                // fetch failure degrades to a zero fee rather than stalling the verify screen. The
+                // initiator's `affiliateBps` / `srcAddress` are intentionally omitted — the inbound
+                // fee doesn't depend on the affiliate fee and the join device can't know the
+                // initiator's `vultBPSDiscount`, so approximate parity holds. Skipped entirely
+                // when the row is hidden (UTXO): the fetched fee would be neither displayed nor
+                // added to the total, so the round-trip is waste (#5358 review).
+                val swapKitProviderFeeToken =
+                    (payloadFee as? SwapKitPayloadFee.Stated)?.coin ?: srcToken
                 val swapKitProviderFee =
-                    if (swapFeeHidden) {
-                        TokenValue(value = BigInteger.ZERO, token = srcToken)
-                    } else {
-                        try {
-                            swapQuoteRepository.getSwapKitInboundFee(
-                                SwapQuoteRequest(
-                                    srcToken = srcToken,
-                                    dstToken = dstToken,
-                                    tokenValue = srcTokenValue,
-                                    dstAddress = dstToken.address,
+                    when {
+                        payloadFee is SwapKitPayloadFee.Stated -> payloadFee.fee
+                        swapFeeHidden -> TokenValue(value = BigInteger.ZERO, token = srcToken)
+                        else ->
+                            try {
+                                swapQuoteRepository.getSwapKitInboundFee(
+                                    SwapQuoteRequest(
+                                        srcToken = srcToken,
+                                        dstToken = dstToken,
+                                        tokenValue = srcTokenValue,
+                                        dstAddress = dstToken.address,
+                                    )
                                 )
-                            )
-                        } catch (e: SwapKitError) {
-                            // The SwapKit API layer wraps network/timeout/decoding failures into
-                            // SwapKitError and rethrows CancellationException un-wrapped, so this
-                            // narrow catch degrades quote failures to a zero fee while letting
-                            // cancellation (and any genuinely unexpected exception) propagate.
-                            Timber.w(e, "SwapKit join fee re-fetch failed; showing zero fee")
-                            TokenValue(value = BigInteger.ZERO, token = srcToken)
-                        }
+                            } catch (e: SwapKitError) {
+                                // The SwapKit API layer wraps network/timeout/decoding failures
+                                // into SwapKitError and rethrows CancellationException un-wrapped,
+                                // so this narrow catch degrades quote failures to a zero fee while
+                                // letting cancellation (and any genuinely unexpected exception)
+                                // propagate.
+                                Timber.w(e, "SwapKit join fee re-fetch failed; showing zero fee")
+                                TokenValue(value = BigInteger.ZERO, token = srcToken)
+                            }
                     }
                 val swapTransactionUiModel =
                     buildSwapUiModel(
@@ -590,7 +610,7 @@ constructor(
                         estimatedNetworkGasFee = estimatedNetworkGasFee,
                         provider = provider,
                         providerFee = swapKitProviderFee,
-                        providerFeeToken = srcToken,
+                        providerFeeToken = swapKitProviderFeeToken,
                         currency = currency,
                         providerLabel = providerLabel,
                         swapFeeHidden = swapFeeHidden,
@@ -640,6 +660,10 @@ constructor(
         // cost), which leaves the row exactly as it was: the charged fee, claiming no rate.
         feeProvider: SwapProvider? = null,
         vultBps: Int? = null,
+        // Price impact read off the wire, never re-quoted: pools move between initiating and
+        // joining, so a fresh figure would make this the one row the two devices disagree on.
+        // Null hides the row.
+        priceImpact: PriceImpactDisplay? = null,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
 
@@ -724,6 +748,8 @@ constructor(
             isLimitOrder = isLimitOrder,
             limitTargetPriceLabel = limitOrderLabels?.targetPriceLabel,
             limitExpiryLabel = limitOrderLabels?.expiryLabel,
+            priceImpactPercent = priceImpact?.percent,
+            priceImpactLevel = priceImpact?.level,
         )
     }
 

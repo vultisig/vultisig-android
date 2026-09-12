@@ -18,13 +18,14 @@ class GetAvailableTokenBalanceUseCaseTest {
         ticker: String,
         contractAddress: String,
         isNativeToken: Boolean,
+        decimal: Int = 6,
     ) =
         Coin(
             chain = chain,
             ticker = ticker,
             logo = "",
             address = "",
-            decimal = 6,
+            decimal = decimal,
             hexPublicKey = "",
             priceProviderID = "",
             contractAddress = contractAddress,
@@ -121,6 +122,43 @@ class GetAvailableTokenBalanceUseCaseTest {
                     BigInteger.valueOf(100_000_000L),
                 )
             val result = useCase(acc, BigInteger.valueOf(50_000_000L))
+            assertEquals(BigInteger.ZERO, result?.value)
+        }
+
+    @Test
+    fun `bittensor native token reserves the existential deposit in addition to gas`() = runTest {
+        // 1 TAO balance, 0.0002 TAO gas → available also excludes the 500 rao deposit, which the
+        // runtime requires the account to keep for `transfer_keep_alive` to succeed.
+        val acc =
+            account(
+                coin(Chain.Bittensor, "TAO", "", isNativeToken = true, decimal = 9),
+                BigInteger.valueOf(1_000_000_000L),
+            )
+        val result = useCase(acc, BigInteger.valueOf(200_000L))
+        assertEquals(BigInteger.valueOf(999_799_500L), result?.value)
+    }
+
+    @Test
+    fun `bittensor max send leaves at least the existential deposit behind`() = runTest {
+        val balance = BigInteger.valueOf(1_000_000_000L)
+        val gas = BigInteger.valueOf(200_000L)
+        val acc =
+            account(coin(Chain.Bittensor, "TAO", "", isNativeToken = true, decimal = 9), balance)
+
+        val maxAmount = useCase(acc, gas)?.value ?: BigInteger.ZERO
+
+        assert(balance - gas - maxAmount >= BigInteger.valueOf(500L))
+    }
+
+    @Test
+    fun `bittensor available balance is floored at zero when gas plus the deposit exceed balance`() =
+        runTest {
+            val acc =
+                account(
+                    coin(Chain.Bittensor, "TAO", "", isNativeToken = true, decimal = 9),
+                    BigInteger.valueOf(100_000L),
+                )
+            val result = useCase(acc, BigInteger.valueOf(200_000L))
             assertEquals(BigInteger.ZERO, result?.value)
         }
 

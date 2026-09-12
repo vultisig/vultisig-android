@@ -441,6 +441,7 @@
     <string name="join_keysign_qbtc_claim_missing_account">Deze kluis mist het Bitcoin- of QBTC-account dat nodig is om de claim mede te ondertekenen</string>
     <string name="network_connection_lost">Netwerkverbinding verbroken. Controleer uw internetverbinding.</string>
     <string name="send_form_polka_reaping_warning">Zorg ervoor dat u voldoende geld achterlaat om de kosten te dekken. Als een rekeningsaldo onder 0,01 DOT (Existential Deposit) zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende fondsen verloren. U kunt het adres op elk gewenst moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Dit zal echter niet de verloren fondsen terugkrijgen.</string>
+    <string name="send_form_bittensor_reaping_warning">Zorg ervoor dat u voldoende geld achterlaat om de kosten te dekken. Als een rekeningsaldo onder 0,0000005 TAO (Existential Deposit) zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende fondsen verloren, dus een overboeking die minder overlaat wordt geweigerd.</string>
     <string name="edit_address_title">Adres bewerken</string>
     <!-- Push Notifications -->
     <string name="notifications">Meldingen</string>
@@ -1022,6 +1023,7 @@
         <item quantity="other">Label moet tussen 1 en %d tekens zijn</item>
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Het minimumbedrag om dit adres te activeren is %1$s %2$s.</string>
+    <string name="send_error_tao_destination_below_existential_deposit">Het minimumbedrag om dit adres te activeren is %1$s %2$s (Existential Deposit).</string>
     <string name="send_error_xrp_destination_tag_required">Dit adres vereist een bestemmingstag. Voeg er een toe om door te gaan.</string>
     <string name="send_error_xrp_destination_no_trust_line">Dit adres kan geen %1$s ontvangen. De ontvanger moet daarvoor eerst een trustline openen.</string>
     <string name="ripple_trust_line_title">Trustline activeren</string>

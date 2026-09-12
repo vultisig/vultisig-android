@@ -49,7 +49,11 @@ internal class AmountManagerTest {
     private val gasFee = MutableStateFlow<TokenValue?>(null)
     private val appCurrency = MutableStateFlow(AppCurrency.USD)
     private var account: Account? = null
-    private val chainValidationService = ChainValidationService(rippleApi = mockk(relaxed = true))
+    private val chainValidationService =
+        ChainValidationService(
+            rippleApi = mockk(relaxed = true),
+            bittensorApi = mockk(relaxed = true),
+        )
     private val tokenPriceRepository: TokenPriceRepository = mockk(relaxed = true)
 
     @BeforeEach

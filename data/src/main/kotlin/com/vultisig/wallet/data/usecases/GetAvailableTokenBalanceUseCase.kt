@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
+import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
@@ -26,16 +27,23 @@ internal class GetAvailableTokenBalanceUseCaseImpl @Inject constructor() :
                     TerraClassicTax.isBankDenom(token.contractAddress, token.isNativeToken))
         if (!feePaidInThisToken) return tokenValue
 
-        // Polkadot reaps (deactivates) an account whose free balance drops below the existential
-        // deposit, so that reserve must be excluded from the selectable balance the same way gas
-        // is. Ripple needs no equivalent term here: RippleApi.getBalance() already nets the live
-        // account reserve out of tokenValue before it reaches this use case, so subtracting it
-        // again would double-reserve and under-fill MAX/percentage sends.
+        // Polkadot and Bittensor reap (deactivate) an account whose free balance drops below the
+        // existential deposit, so that reserve must be excluded from the selectable balance the
+        // same way gas is. Both chains are signed as `transfer_keep_alive`, which the runtime
+        // rejects outright when the send would cross the deposit, so without this term a MAX send
+        // fails on-chain with the fee already burned. Ripple needs no equivalent term here:
+        // RippleApi.getBalance() already nets the live account reserve out of tokenValue before it
+        // reaches this use case, so subtracting it again would double-reserve and under-fill
+        // MAX/percentage sends.
         val reserve =
-            if (token.chain == Chain.Polkadot && token.isNativeToken) {
-                PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-            } else {
-                BigInteger.ZERO
+            when {
+                token.chain == Chain.Polkadot && token.isNativeToken ->
+                    PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
+
+                token.chain == Chain.Bittensor && token.isNativeToken ->
+                    BittensorHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
+
+                else -> BigInteger.ZERO
             }
 
         return tokenValue?.copy(
