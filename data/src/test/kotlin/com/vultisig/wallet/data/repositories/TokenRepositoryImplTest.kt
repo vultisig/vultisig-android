@@ -9,6 +9,8 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.usecases.CardanoTokenFinder
 import com.vultisig.wallet.data.usecases.CosmosBankCoinFinder
 import com.vultisig.wallet.data.usecases.EvmCoinFinder
 import com.vultisig.wallet.data.usecases.RippleTokenFinder
@@ -244,19 +246,67 @@ internal class TokenRepositoryImplTest {
         coVerify(exactly = 0) { cosmosBankCoinFinder.find(any(), any()) }
     }
 
+    /**
+     * A THORChain balance is described by its denom and whatever the LCD says about it — never a
+     * display name — so the coin the picker searches has to borrow the curated one's.
+     */
+    @Test
+    fun `getRefreshTokens names a discovered curated denom from the catalogue`() = runTest {
+        val thorApi: ThorChainApi = mockk(relaxed = true)
+        coEvery { thorApi.getBalance(ADDRESS) } returns
+            listOf(CosmosBalance(denom = "x/ruji", amount = "200"))
+        coEvery { thorApi.getDenomMetaFromLCD(any()) } returns null
+        val addresses: ChainAccountAddressRepository = mockk()
+        coEvery { addresses.getAddress(Chain.ThorChain, any()) } returns (ADDRESS to "pub")
+
+        val coins =
+            newRepository(thorApi, chainAccountAddressRepository = addresses)
+                .getRefreshTokens(Chain.ThorChain, Vault(id = "vault-1", name = "Main"))
+
+        val ruji = coins.single { it.contractAddress == "x/ruji" }
+        assertEquals(Coins.ThorChain.RUJI.name, ruji.name)
+        assertEquals(ADDRESS, ruji.address)
+    }
+
+    @Test
+    fun `getRefreshTokens keeps the name the node reported over the catalogue's`() = runTest {
+        val thorApi: ThorChainApi = mockk(relaxed = true)
+        coEvery { thorApi.getBalance(ADDRESS) } returns
+            listOf(CosmosBalance(denom = "x/ruji", amount = "200"))
+        coEvery { thorApi.getDenomMetaFromLCD("x/ruji") } returns
+            DenomMetadata(
+                base = "x/ruji",
+                symbol = "RUJI",
+                display = "ruji",
+                denomUnits = null,
+                name = "Rujira Token",
+            )
+        val addresses: ChainAccountAddressRepository = mockk()
+        coEvery { addresses.getAddress(Chain.ThorChain, any()) } returns (ADDRESS to "pub")
+
+        val coins =
+            newRepository(thorApi, chainAccountAddressRepository = addresses)
+                .getRefreshTokens(Chain.ThorChain, Vault(id = "vault-1", name = "Main"))
+
+        assertEquals("Rujira Token", coins.single { it.contractAddress == "x/ruji" }.name)
+    }
+
     private fun newRepository(
         thorApi: ThorChainApi = mockk(relaxed = true),
         evmCoinFinder: EvmCoinFinder = mockk(relaxed = true),
         cosmosBankCoinFinder: CosmosBankCoinFinder = mockk(relaxed = true),
         rippleTokenFinder: RippleTokenFinder = mockk(relaxed = true),
+        cardanoTokenFinder: CardanoTokenFinder = mockk(relaxed = true),
+        chainAccountAddressRepository: ChainAccountAddressRepository = mockk(relaxed = true),
     ): TokenRepositoryImpl =
         TokenRepositoryImpl(
             evmApiFactory = mockk<EvmApiFactory>(relaxed = true),
             thorApi = thorApi,
-            chainAccountAddressRepository = mockk<ChainAccountAddressRepository>(relaxed = true),
+            chainAccountAddressRepository = chainAccountAddressRepository,
             evmCoinFinder = evmCoinFinder,
             cosmosBankCoinFinder = cosmosBankCoinFinder,
             rippleTokenFinder = rippleTokenFinder,
+            cardanoTokenFinder = cardanoTokenFinder,
         )
 
     private companion object {

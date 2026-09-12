@@ -79,4 +79,29 @@ internal class CoinIdTest {
         assertEquals("TON-Ton", coin(Chain.Ton, "TON", "", isNativeToken = true).id)
         assertEquals("TRX-Tron", coin(Chain.Tron, "TRX", "", isNativeToken = true).id)
     }
+
+    // A Cardano ticker is derived from the asset name its minter chose, so an asset decoding to
+    // "SNEK" under any policy would otherwise take the curated SNEK's key — and Room's
+    // REPLACE-on-conflict insert would let whichever arrived last overwrite the other.
+    @Test
+    fun `an imposter Cardano asset cannot take a curated token's id`() {
+        val curated = Coins.Cardano.SNEK
+        val imposter =
+            coin(
+                Chain.Cardano,
+                curated.ticker,
+                cardanoAssetId(
+                    policyId = "6ac8ef33b510ec004fe11585f7c5a9f0c07f0c23428ab4f29c1d7d10",
+                    assetNameHex = "534e454b",
+                ),
+            )
+
+        assertNotEquals(curated.id, imposter.id)
+        assertEquals("SNEK-Cardano-${curated.contractAddress}", curated.id)
+    }
+
+    @Test
+    fun `native ADA keeps the plain ticker-chainId id`() {
+        assertEquals("ADA-Cardano", Coins.Cardano.ADA.id)
+    }
 }

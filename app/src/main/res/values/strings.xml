@@ -1310,6 +1310,8 @@
     <string name="banxa_continue">Continue to Banxa</string>
     <string name="defi_no_positions_selected">No positions selected</string>
     <string name="defi_no_positions_selected_desc">You\'ve disabled all positions for this chain. Enable at least one position to view balances and manage actions.</string>
+    <string name="defi_position_unavailable">Balance unavailable</string>
+    <string name="defi_position_unavailable_desc">The staking service didn\'t respond, so this position couldn\'t be loaded. Your staked funds are safe on-chain — this is a temporary server problem, not a change to your balance.</string>
     <string name="manage_positions">Manage Positions</string>
     <string name="bond_node_state_whitelisted">Whitelisted</string>
     <string name="bond_node_state_standby">Standby</string>
@@ -1813,6 +1815,7 @@
     <string name="done_verb_undelegated">Undelegated</string>
     <string name="done_verb_redelegated">Redelegated</string>
     <string name="done_verb_claimed_rewards">Claimed rewards</string>
+    <string name="done_verb_claimed">Claimed</string>
     <string name="done_verb_minted">Minted</string>
     <string name="done_verb_redeemed">Redeemed</string>
     <string name="done_verb_withdrew">Withdrew</string>
@@ -1838,6 +1841,7 @@
     <string name="verify_verb_undelegating">You’re undelegating</string>
     <string name="verify_verb_redelegating">You’re redelegating</string>
     <string name="verify_verb_adding_liquidity">You’re adding liquidity</string>
+    <string name="verify_verb_removing_liquidity">You’re removing liquidity</string>
     <string name="verify_verb_redeeming">You’re redeeming</string>
     <string name="verify_verb_minting">You’re minting</string>
     <string name="verify_verb_merging">You’re merging</string>
@@ -1847,4 +1851,5 @@
     <string name="scope_rewards_accrued_so_far">rewards accrued so far</string>
     <string name="scope_delegated_amount_after_rent">the delegated amount after deducting the rent reserve</string>
     <string name="withdrawing_share_of_staked_position">%1$s of your staked position</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s of your liquidity position</string>
 </resources>

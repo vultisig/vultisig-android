@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.transactiondecoding
 import android.content.Context
 import androidx.compose.runtime.Immutable
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.transaction_decoding.DecodedAmount
 import com.vultisig.wallet.data.models.transaction_decoding.SignedTransactionContent
 import com.vultisig.wallet.data.models.transaction_decoding.SignedTransactionDecoder
 import com.vultisig.wallet.ui.components.hero.HeroContent
@@ -16,22 +17,37 @@ import javax.inject.Singleton
  * against whatever hero it already resolved.
  *
  * Mirrors the ordering the iOS `TransactionHeroResolver` registers: a chain-state projection
- * outranks a simulation because it states a scope no figure can ("your whole stake"); a simulation
- * outranks the plain decoder because it prices a balance change the signed bytes never state, and
- * only borrows the decoded verb; the signed-amount reading is the last claimant.
+ * outranks a simulation because it states a scope no figure can ("your whole stake"); a reading
+ * whose signed share disowns the carried figure outranks it next, for the same reason iOS registers
+ * its quoted-withdrawal provider ahead of the simulated one; a simulation outranks the plain
+ * decoder because it prices a balance change the signed bytes never state, and only borrows the
+ * decoded verb; the signed-amount reading is the last claimant.
  */
 @Immutable
 internal data class VerifyHero(
     /** The verb alone, for a surface that already holds richer figures. */
     val verb: String,
-    /** A chain-state projection, when a reader resolved one. Null until chain readers land. */
+    /** A chain-state projection, when a reader resolved one. */
     val projected: HeroContent?,
     /** The hero built from the signed amount alone. */
     val decoded: HeroContent,
+    /**
+     * Whether the signed reading contradicts whatever figure the surface resolved on its own.
+     *
+     * True for a signed share: `TCY-:5000` and `-:BTC.BTC:5000` commit to a FRACTION of a position,
+     * so what the transaction carries is a carrier charge — a literal zero, or dust donated to the
+     * pool — and never the payout. Letting that figure stand under a "You're removing liquidity"
+     * title would put the charge exactly where the payout belongs, which is why the reading
+     * replaces the surface's hero here instead of only retitling it.
+     */
+    val carriedAmountIsNotTheOperations: Boolean,
 ) {
     /** Places this reading over the hero [existing] the surface resolved on its own. */
     fun applyTo(existing: HeroContent?): HeroContent =
-        projected ?: existing?.retitled(verb) ?: decoded
+        projected
+            ?: decoded.takeIf { carriedAmountIsNotTheOperations }
+            ?: existing?.retitled(verb)
+            ?: decoded
 }
 
 /**
@@ -82,6 +98,7 @@ constructor(
             verb = title,
             projected = trusted?.let { resolvedTransactionHero.resolve(content, it, title) },
             decoded = presentation.hero(decoded, trusted ?: coin, title),
+            carriedAmountIsNotTheOperations = decoded.amount is DecodedAmount.Fraction,
         )
     }
 }

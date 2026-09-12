@@ -243,7 +243,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertEquals("20.00%", position.apy)
         assertTrue(position.canWithdraw)
         assertTrue(position.canUnstake)
-        assertEquals(BigInteger("500000000"), vm.totalValueRujiStake.value)
+        assertEquals(StakeLegTotal.Loaded(BigInteger("500000000")), vm.totalValueRujiStake.value)
     }
 
     @Test
@@ -281,7 +281,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertFalse(compounded.canWithdraw)
         assertEquals(null, compounded.apy)
         // Both are RUJI-denominated, so the tab's RUJI total is their sum.
-        assertEquals(BigInteger("800000000"), vm.totalValueRujiStake.value)
+        assertEquals(StakeLegTotal.Loaded(BigInteger("800000000")), vm.totalValueRujiStake.value)
     }
 
     @Test
@@ -345,7 +345,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertFalse(tcy.canWithdraw)
         assertTrue(tcy.canUnstake)
         assertEquals("3 TCY", tcy.stakedAmountDisplay)
-        assertEquals(BigInteger("300000000"), vm.totalValueTCYStake.value)
+        assertEquals(StakeLegTotal.Loaded(BigInteger("300000000")), vm.totalValueTCYStake.value)
     }
 
     @Test
@@ -600,22 +600,100 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
-    fun `a failed staking load leaves the card priced at zero rather than blank`() = runTest {
-        // Cards used to be seeded with a bare ticker and no fiat, so a failed load rendered as a
-        // lone "RUJI" with the dollar line hidden entirely.
+    fun `a failed staking load marks the card unavailable rather than pricing it at zero`() =
+        runTest {
+            // #5837: with the staking service down, the card settled on "0 RUJI / $0.00" — which is
+            // exactly what a vault holding nothing renders — and was reported as vanished funds.
+            // The services emit their cache on failure and only throw when there is none, so
+            // reaching the .catch means nothing is known about the position, not that it is empty.
+            selectPositions("RUJI")
+            coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
+                flow { throw RuntimeException("thornode down") }
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            val positions = vm.state.value.staking.positions
+            positions.isNotEmpty() shouldBe true
+            positions.forEach { position ->
+                position.isLoading shouldBe false
+                position.isUnavailable shouldBe true
+            }
+        }
+
+    @Test
+    fun `a failed staking leg leaves the header unavailable instead of summing it as zero`() =
+        runTest {
+            // The card saying "unavailable" while the header states a confident total that counts
+            // the position as zero contradicts itself, and the total is the figure people read
+            // first. Same rule the LP leg already applies to a pool it could not price.
+            selectPositions("TCY")
+            coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns
+                flow { throw RuntimeException("thornode down") }
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            vm.totalValueTCYStake.value shouldBe StakeLegTotal.Unavailable
+            vm.state.value.isTotalAmountLoading shouldBe false
+            vm.state.value.totalAmountPrice shouldBe null
+        }
+
+    @Test
+    fun `a deselected staking leg reports a zero the header can still price`() = runTest {
+        // Unavailable is for a read that failed. A leg the user switched off in Manage Positions
+        // has been answered — it holds nothing — so it must stay summable, or turning a position
+        // off would blank the header.
+        selectPositions("TCY")
+        coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns
+            flowOf(stakingDetails(Coins.ThorChain.TCY, BigInteger("100000000")))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.totalValueRujiStake.value shouldBe StakeLegTotal.Loaded(BigInteger.ZERO)
+        vm.state.value.isTotalAmountLoading shouldBe false
+        vm.state.value.totalAmountPrice shouldBe "$2.00"
+    }
+
+    @Test
+    fun `an unavailable card shimmers again on the next load rather than keeping the failure`() =
+        runTest {
+            // Cards that are settled are reused across loads so the tab does not blank on re-entry.
+            // An unavailable one is settled but holds nothing, so reusing it would leave the
+            // failure notice up for the whole of a read that is genuinely in flight again.
+            selectPositions("RUJI")
+            coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
+                flow { throw RuntimeException("thornode down") }
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            vm.state.value.staking.positions.forEach { it.isUnavailable shouldBe true }
+
+            coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
+                flow { awaitCancellation() }
+            vm.setData(VAULT_ID)
+
+            vm.state.value.staking.positions.forEach { position ->
+                position.isUnavailable shouldBe false
+                position.isLoading shouldBe true
+            }
+        }
+
+    @Test
+    fun `a read that succeeds after a failure clears the unavailable state`() = runTest {
         selectPositions("RUJI")
         coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
             flow { throw RuntimeException("thornode down") }
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.state.value.staking.positions.single { it.coin.id == RUJI_ID }.isUnavailable shouldBe
+            true
 
-        val positions = vm.state.value.staking.positions
-        positions.isNotEmpty() shouldBe true
-        positions.forEach { position ->
-            position.isLoading shouldBe false
-            position.stakedAmountDisplay shouldBe "0 ${position.coin.ticker}"
-            position.stakedFiatDisplay shouldBe "$0.00"
-        }
+        coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
+            flowOf(listOf(stakingDetails(Coins.ThorChain.RUJI, BigInteger("500000000"))))
+        vm.setData(VAULT_ID)
+
+        val ruji = vm.state.value.staking.positions.single { it.coin.id == RUJI_ID }
+        ruji.isUnavailable shouldBe false
+        ruji.stakedAmountDisplay shouldBe "5 RUJI"
+        vm.state.value.totalAmountPrice shouldBe "$10.00"
     }
 
     @Test
@@ -636,15 +714,18 @@ internal class ThorchainDefiPositionsViewModelTest {
         val germanFormat = NumberFormat.getCurrencyInstance(Locale.GERMANY)
         coEvery { appCurrencyRepository.getCurrencyFormat() } returns germanFormat
         selectPositions("RUJI")
+        // A genuinely empty position, not a failed read: a failure has nothing to format and
+        // renders the unavailable marker instead.
         coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
-            flow { throw RuntimeException("thornode down") }
+            flowOf(listOf(stakingDetails(Coins.ThorChain.RUJI, BigInteger.ZERO)))
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         // Compare against the locale's own zero rather than merely asserting the absence of "$":
         // the unavailable dash would pass that weaker check while meaning the opposite.
-        vm.state.value.staking.positions.first().stakedFiatDisplay shouldBe
-            germanFormat.format(BigDecimal.ZERO)
+        val ruji = vm.state.value.staking.positions.single { it.coin.id == RUJI_ID }
+        ruji.isUnavailable shouldBe false
+        ruji.stakedFiatDisplay shouldBe germanFormat.format(BigDecimal.ZERO)
     }
 
     @Test
@@ -695,7 +776,9 @@ internal class ThorchainDefiPositionsViewModelTest {
     @Test
     fun `a failed RUJI load resets its leg instead of keeping the previous total`() = runTest {
         // The .catch settled the cards but left the RUJI raw total untouched, so a refresh that
-        // failed kept pricing the header off the amount from the run before it.
+        // failed kept pricing the header off the amount from the run before it. It now reports
+        // unavailable rather than zero: the read told us nothing, so the header says so instead of
+        // publishing a total that quietly drops the position.
         selectPositions("RUJI")
         coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
             flowOf(listOf(stakingDetails(Coins.ThorChain.RUJI, BigInteger("100000000"))))
@@ -707,9 +790,9 @@ internal class ThorchainDefiPositionsViewModelTest {
             flow { throw RuntimeException("thornode down") }
         vm.setData(VAULT_ID)
 
-        vm.totalValueRujiStake.value shouldBe BigInteger.ZERO
+        vm.totalValueRujiStake.value shouldBe StakeLegTotal.Unavailable
         vm.state.value.isTotalAmountLoading shouldBe false
-        vm.state.value.totalAmountPrice shouldBe "$0.00"
+        vm.state.value.totalAmountPrice shouldBe null
     }
 
     @Test
@@ -867,13 +950,13 @@ internal class ThorchainDefiPositionsViewModelTest {
             NumberFormat.getCurrencyInstance(Locale.GERMANY)
         currency.value = AppCurrency.EUR
 
-        vm.totalValueTCYStake.value shouldBe BigInteger("200000000")
+        vm.totalValueTCYStake.value shouldBe StakeLegTotal.Loaded(BigInteger("200000000"))
         vm.state.value.totalAmountPrice shouldBe germanFormat.format(BigDecimal("6.00"))
 
         // The first load's fetch lands at last, carrying the amount it read before the switch.
         supersededLoad.value = stakingDetails(Coins.ThorChain.TCY, BigInteger("100000000"))
 
-        vm.totalValueTCYStake.value shouldBe BigInteger("200000000")
+        vm.totalValueTCYStake.value shouldBe StakeLegTotal.Loaded(BigInteger("200000000"))
         vm.state.value.totalAmountPrice shouldBe germanFormat.format(BigDecimal("6.00"))
     }
 
@@ -909,7 +992,7 @@ internal class ThorchainDefiPositionsViewModelTest {
 
         replacementLoad.value = stakingDetails(Coins.ThorChain.TCY, BigInteger("100000000"))
 
-        vm.totalValueTCYStake.value shouldBe BigInteger("100000000")
+        vm.totalValueTCYStake.value shouldBe StakeLegTotal.Loaded(BigInteger("100000000"))
         vm.state.value.isTotalAmountLoading shouldBe false
     }
 

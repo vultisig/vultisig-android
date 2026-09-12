@@ -272,21 +272,28 @@ constructor(
                             return@mapNotNull null
                         }
 
-                    val logo =
-                        try {
-                            coinEntity.logo.takeIf { it.isNotBlank() }
-                                ?: tokenRepository.getToken(coinEntity.id)?.logo
-                                ?: ""
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: Exception) {
-                            Timber.w(e, "Failed to resolve logo for coin %s", coinEntity.id)
-                            ""
+                    // A row written before the logo or name column existed carries a blank
+                    // there; the curated catalogue fills it in on read.
+                    val curated =
+                        if (coinEntity.logo.isBlank() || coinEntity.name.isBlank()) {
+                            try {
+                                tokenRepository.getToken(coinEntity.id)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                Timber.w(e, "Failed to resolve coin %s", coinEntity.id)
+                                null
+                            }
+                        } else {
+                            null
                         }
+                    val logo = coinEntity.logo.takeIf { it.isNotBlank() } ?: curated?.logo ?: ""
+                    val name = coinEntity.name.takeIf { it.isNotBlank() } ?: curated?.name ?: ""
 
                     Coin(
                         chain = chain,
                         ticker = coinEntity.ticker,
+                        name = name,
                         logo = logo,
                         address = coinEntity.address,
                         decimal = coinEntity.decimals,
@@ -367,5 +374,6 @@ constructor(
             priceProviderID = this.priceProviderID,
             contractAddress = this.contractAddress,
             logo = this.logo,
+            name = this.name,
         )
 }

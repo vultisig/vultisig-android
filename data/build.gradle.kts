@@ -43,7 +43,6 @@ android {
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
     }
-    tasks.withType<Test> { useJUnitPlatform() }
     lint {
         abortOnError = true
         absolutePaths = false
@@ -53,6 +52,8 @@ android {
 }
 
 kotlin { jvmToolchain(21) }
+
+tasks.withType<Test> { useJUnitPlatform() }
 
 protobuf {
     protoc { artifact = "com.google.protobuf:protoc:3.23.4" }
@@ -88,35 +89,41 @@ dependencies {
 
     // hilt di
     implementation(libs.hilt.android)
-    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.common)
     ksp(libs.hilt.android.compiler)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.work)
 
+    // compose: @Immutable on two data models, and Color/toArgb in GenerateQrBitmap. No
+    // composables here, so the Compose compiler plugin is deliberately not applied.
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.ui.graphics)
+
     // room
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
+    api(libs.androidx.room.runtime)
+    api(libs.androidx.room.ktx)
 
     // ktor
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.negotiation)
-    implementation(libs.ktor.client.serialization.kotlinx)
+    api(libs.ktor.client.core)
+    api(libs.ktor.client.negotiation)
+    api(libs.ktor.client.serialization.kotlinx)
 
     // serialization
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.protobuf)
 
     // crypto
-    implementation(libs.wallet.core)
+    api(libs.wallet.core)
 
     // encryption
-    implementation(libs.bcprov.jdk18on)
+    api(libs.bcprov.jdk18on)
 
     // other
-    implementation(libs.okhttp)
+    // compileOnly because AGP rejects a direct local .aar dependency in a module that
+    // builds its own AAR. :app provides it at runtime; see #5793 for the real fix.
     compileOnly(files("../app/libs/mobile-tss-lib.aar"))
-    implementation(libs.timber)
+    api(libs.timber)
     implementation(libs.spark.core)
     implementation(libs.apache.compress)
     implementation(libs.apache.compress.xz)
@@ -135,14 +142,15 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.androidx.work.testing)
-    testImplementation(kotlin("test"))
+    testImplementation(kotlin("test-junit5"))
+    testRuntimeOnly(libs.junit.platform.launcher)
 
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(kotlin("test"))
+    androidTestImplementation(kotlin("test-junit"))
     androidTestImplementation(libs.wallet.core)
-    // `testInstrumentationRunner` above names AndroidJUnitRunner, but nothing put it on the
-    // classpath, so every instrumented test in this module failed to start.
+    // The runner named by `testInstrumentationRunner` has to be on the androidTest classpath
+    // itself; nothing else puts it there.
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.kotlinx.coroutines.test)
 }

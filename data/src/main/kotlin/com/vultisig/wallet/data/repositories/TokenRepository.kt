@@ -3,11 +3,13 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.DenomMetadata
+import com.vultisig.wallet.data.blockchain.thorchain.ThorchainStakingContracts
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.usecases.CardanoTokenFinder
 import com.vultisig.wallet.data.usecases.CosmosBankCoinFinder
 import com.vultisig.wallet.data.usecases.EvmCoinFinder
 import com.vultisig.wallet.data.usecases.RippleTokenFinder
@@ -49,6 +51,7 @@ constructor(
     private val evmCoinFinder: EvmCoinFinder,
     private val cosmosBankCoinFinder: CosmosBankCoinFinder,
     private val rippleTokenFinder: RippleTokenFinder,
+    private val cardanoTokenFinder: CardanoTokenFinder,
 ) : TokenRepository {
 
     override suspend fun getToken(tokenId: String): Coin? =
@@ -173,6 +176,7 @@ constructor(
                             contractAddress = contractAddress,
                             chain = chain,
                             ticker = symbol,
+                            name = metadata?.name?.trim().orEmpty(),
                             logo = symbol,
                             decimal = decimal,
                             isNativeToken = false,
@@ -186,6 +190,7 @@ constructor(
             Chain.Terra,
             Chain.TerraClassic -> cosmosBankCoinFinder.find(chain, address)
             Chain.Ripple -> rippleTokenFinder.find(address)
+            Chain.Cardano -> cardanoTokenFinder.find(address)
             else -> {
                 if (chain.standard != TokenStandard.EVM) emptyList()
                 else evmCoinFinder.find(chain, address)
@@ -254,7 +259,10 @@ constructor(
         return (getTokensWithBalance(chain, address, enabledDenoms) +
                 enabledByDefaultTokens.getOrDefault(chain, emptyList()))
             .filterNot { it.isNativeToken }
-            .map { token -> token.copy(address = address, hexPublicKey = derivedPublicKey) }
+            .map { token ->
+                Coins.withCuratedName(token)
+                    .copy(address = address, hexPublicKey = derivedPublicKey)
+            }
     }
 
     override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.coins.flatMap { it.value })
@@ -272,10 +280,8 @@ constructor(
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
 
-        private const val YRUNE_CONTRACT =
-            "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt"
-        private const val YTCY_CONTRACT =
-            "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
+        private const val YRUNE_CONTRACT = ThorchainStakingContracts.YRUNE
+        private const val YTCY_CONTRACT = ThorchainStakingContracts.YTCY
     }
 }
 

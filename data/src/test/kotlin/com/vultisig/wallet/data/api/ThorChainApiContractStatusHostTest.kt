@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.blockchain.thorchain.ThorChainInboundVaultSnapshot
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -69,6 +70,7 @@ internal class ThorChainApiContractStatusHostTest {
             thorChainSwapQuoteResponseJsonSerializer =
                 mockk<ThorChainSwapQuoteResponseJsonSerializer>(),
             json = jsonFormat,
+            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(),
         )
     }
 

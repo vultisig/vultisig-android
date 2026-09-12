@@ -61,6 +61,12 @@ data class Eip1559(
  * @param energyDiscounted Discounted energy cost (if user has staked energy or incentives).
  * @param bandwidthRequired Required bandwidth units for the transaction.
  * @param bandwidthDiscounted Discounted bandwidth usage (if applicable).
+ * @param feeLimit Ceiling in SUN written as the signed transaction's `fee_limit`. Deliberately not
+ *   [amount]: the two answer different questions. [amount] is what the transfer is expected to burn
+ *   once the sender's currently available staked energy is applied, while `fee_limit` is the cap
+ *   the chain enforces at execution and has to stay gross — energy consumed by another transaction
+ *   during a 10-60s signing ceremony would otherwise shrink the cap below the real cost and fail
+ *   the send with OUT_OF_ENERGY.
  * @param amount Final fee in SUN after discounts applied.
  */
 data class TronFees(
@@ -69,6 +75,7 @@ data class TronFees(
     val energyDiscounted: BigInteger = BigInteger.ZERO,
     val bandwidthRequired: BigInteger = BigInteger.ZERO,
     val bandwidthDiscounted: BigInteger = BigInteger.ZERO,
+    val feeLimit: BigInteger = BigInteger.ZERO,
     override val amount: BigInteger,
 ) : Fee
 

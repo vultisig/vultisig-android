@@ -202,6 +202,7 @@ internal class EvmCoinFinderTest {
                     oneInchToken(
                         address = GOOD_CONTRACT,
                         symbol = "GOOD",
+                        name = "Good Token",
                         logoURI = "https://tokens.example.com/good.png",
                         providers = listOf("1inch", "CoinGecko"),
                     ),
@@ -227,6 +228,7 @@ internal class EvmCoinFinderTest {
         val coin = coins.single()
         assertEquals(GOOD_CONTRACT, coin.contractAddress)
         assertEquals("GOOD", coin.ticker)
+        assertEquals("Good Token", coin.name)
         assertEquals("https://tokens.example.com/good.png", coin.logo)
         assertEquals(Chain.BscChain, coin.chain)
     }
@@ -393,12 +395,13 @@ internal class EvmCoinFinderTest {
         symbol: String,
         logoURI: String?,
         providers: List<String>?,
+        name: String = symbol,
     ): OneInchTokenJson =
         OneInchTokenJson(
             address = address,
             symbol = symbol,
             decimals = 18,
-            name = symbol,
+            name = name,
             logoURI = logoURI,
             providers = providers,
         )

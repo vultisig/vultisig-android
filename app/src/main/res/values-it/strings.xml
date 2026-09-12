@@ -963,6 +963,8 @@
     <string name="banxa_continue">Continua su Banxa</string>
     <string name="defi_no_positions_selected">Nessuna posizione selezionata</string>
     <string name="defi_no_positions_selected_desc">Hai disabilitato tutte le posizioni per questa catena. Abilita almeno una posizione per visualizzare i saldi e gestire le azioni.</string>
+    <string name="defi_position_unavailable">Saldo non disponibile</string>
+    <string name="defi_position_unavailable_desc">Il servizio di staking non ha risposto, quindi non è stato possibile caricare questa posizione. I tuoi fondi in staking sono al sicuro on-chain: è un problema temporaneo del server, non una variazione del tuo saldo.</string>
     <string name="manage_positions">Gestisci Posizioni</string>
     <string name="bond_node_state_whitelisted">In Lista Bianca</string>
     <string name="bond_node_state_standby">In Attesa</string>
@@ -1758,6 +1760,7 @@
     <string name="done_verb_undelegated">Delega annullata</string>
     <string name="done_verb_redelegated">Ridelegato</string>
     <string name="done_verb_claimed_rewards">Ricompense reclamate</string>
+    <string name="done_verb_claimed">Reclamato</string>
     <string name="done_verb_minted">Coniato</string>
     <string name="done_verb_redeemed">Riscattato</string>
     <string name="done_verb_withdrew">Prelevato</string>
@@ -1783,6 +1786,7 @@
     <string name="verify_verb_undelegating">Stai annullando la delega</string>
     <string name="verify_verb_redelegating">Stai ridelegando</string>
     <string name="verify_verb_adding_liquidity">Stai aggiungendo liquidità</string>
+    <string name="verify_verb_removing_liquidity">Stai rimuovendo liquidità</string>
     <string name="verify_verb_redeeming">Stai riscattando</string>
     <string name="verify_verb_minting">Stai coniando</string>
     <string name="verify_verb_merging">Stai unendo</string>
@@ -1792,4 +1796,5 @@
     <string name="scope_rewards_accrued_so_far">ricompense maturate finora</string>
     <string name="scope_delegated_amount_after_rent">l’importo delegato dopo la riserva di affitto</string>
     <string name="withdrawing_share_of_staked_position">%1$s della tua posizione in stake</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s della tua posizione di liquidità</string>
 </resources>

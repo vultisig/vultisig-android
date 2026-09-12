@@ -962,6 +962,8 @@
     <string name="banxa_continue">Continuar para Banxa</string>
     <string name="defi_no_positions_selected">Nenhuma posição selecionada</string>
     <string name="defi_no_positions_selected_desc">Você desativou todas as posições para esta cadeia. Ative pelo menos uma posição para visualizar saldos e gerenciar ações.</string>
+    <string name="defi_position_unavailable">Saldo indisponível</string>
+    <string name="defi_position_unavailable_desc">O serviço de staking não respondeu, então não foi possível carregar esta posição. Seus fundos em staking estão seguros on-chain — é um problema temporário do servidor, não uma mudança no seu saldo.</string>
     <string name="manage_positions">Gerenciar Posições</string>
     <string name="bond_node_state_whitelisted">Na Lista Branca</string>
     <string name="bond_node_state_standby">Em Espera</string>
@@ -1753,6 +1755,7 @@
     <string name="done_verb_undelegated">Delegação cancelada</string>
     <string name="done_verb_redelegated">Redelegado</string>
     <string name="done_verb_claimed_rewards">Recompensas reivindicadas</string>
+    <string name="done_verb_claimed">Reivindicado</string>
     <string name="done_verb_minted">Cunhado</string>
     <string name="done_verb_redeemed">Resgatado</string>
     <string name="done_verb_withdrew">Sacado</string>
@@ -1778,6 +1781,7 @@
     <string name="verify_verb_undelegating">Você está cancelando a delegação</string>
     <string name="verify_verb_redelegating">Você está redelegando</string>
     <string name="verify_verb_adding_liquidity">Você está adicionando liquidez</string>
+    <string name="verify_verb_removing_liquidity">Você está removendo liquidez</string>
     <string name="verify_verb_redeeming">Você está resgatando</string>
     <string name="verify_verb_minting">Você está cunhando</string>
     <string name="verify_verb_merging">Você está mesclando</string>
@@ -1787,4 +1791,5 @@
     <string name="scope_rewards_accrued_so_far">recompensas acumuladas até agora</string>
     <string name="scope_delegated_amount_after_rent">o valor delegado após a reserva de aluguel</string>
     <string name="withdrawing_share_of_staked_position">%1$s da sua posição em stake</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s da sua posição de liquidez</string>
 </resources>

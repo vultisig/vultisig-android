@@ -25,4 +25,10 @@ data class THORChainInboundAddress(
      * rather than guessing.
      */
     @SerialName("dust_threshold") val dustThreshold: String? = null,
+    /**
+     * The router contract inbound tokens are sent to, on the chains that have one (the EVM family).
+     * A native deposit goes to [address] instead, so which of the two a destination has to match is
+     * decided by whether the asset is the chain's native coin.
+     */
+    @SerialName("router") val router: String? = null,
 )

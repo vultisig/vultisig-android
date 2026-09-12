@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.blockchain.cosmos.CosmosSignDocDecoder
 import com.vultisig.wallet.data.blockchain.cosmos.CosmosTransactionDecoder
 import com.vultisig.wallet.data.blockchain.maya.MayaChainTransactionDecoder
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaTransactionDecoder
+import com.vultisig.wallet.data.blockchain.thorchain.THORChainTransactionDecoder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,11 +28,19 @@ internal object TransactionDecodingModule {
     fun provideSignedTransactionDecoder(
         solana: SolanaTransactionDecoder,
         cosmosSignDoc: CosmosSignDocDecoder,
+        thorChain: THORChainTransactionDecoder,
         cosmos: CosmosTransactionDecoder,
         maya: MayaChainTransactionDecoder,
     ): SignedTransactionDecoder =
         SignedTransactionDecoder().apply {
             register(solana)
+            // THORChain is asked before the Cosmos family: its messages are its own, not the
+            // SDK's, and only its grammar names them. A signed `/types.MsgDeposit` body is read
+            // here and nowhere else, so the family's SignDoc reader can never claim a THORChain
+            // body first — not because it happens to refuse the type today, but because the order
+            // says so. The reader establishes its own provenance and declines everything it cannot
+            // prove, so being asked on every chain costs the readers behind it nothing.
+            register(thorChain)
             // The signed body outranks the sidecars that travel beside it, so the SignDoc reader
             // is asked before the memo and wire-type grammar on the same chains.
             register(cosmosSignDoc)

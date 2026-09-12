@@ -130,6 +130,10 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                     memo = it.memo,
                                     subProvider = it.subProvider,
                                     swapId = it.swapId,
+                                    swapFee = it.swapFee,
+                                    swapFeeChain = it.swapFeeChain?.ifEmpty { null },
+                                    swapFeeTokenId = it.swapFeeTokenId?.ifEmpty { null },
+                                    swapFeeDecimals = it.swapFeeDecimals,
                                 )
                             )
                         }
@@ -377,5 +381,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             streamingQuantity = streamingQuantity,
             expirationTime = expirationTime,
             isAffiliate = isAffiliate,
+            slippageBps = slippageBps?.takeIf { it <= Int.MAX_VALUE.toUInt() }?.toInt(),
         )
 }

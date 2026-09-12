@@ -9,6 +9,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.ThorChainPoolCoin
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.matchesSearch
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainPoolAssetsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -88,7 +89,7 @@ constructor(
 
     private fun filterAssets(query: String): List<PayoutAssetUiModel> =
         assets
-            .filter { query.isBlank() || it.coin.ticker.contains(query.trim(), ignoreCase = true) }
+            .filter { it.coin.matchesSearch(query) }
             .map {
                 PayoutAssetUiModel(
                     asset = it.asset,

@@ -849,8 +849,7 @@ constructor(
         private val YBRUNE_DENOM = Coins.ThorChain.ybRUNE.contractAddress
         private val STAKING_TCY_DENOM = Coins.ThorChain.sTCY.contractAddress
         private const val BRUNE_STAKING_CONTRACT = ThorchainStakingContracts.BRUNE_LIQUID_BOND
-        private const val STAKING_TCY_CONTRACT =
-            "thor1z7ejlk5wk2pxh9nfwjzkkdnrq4p2f5rjcpudltv0gh282dwfz6nq9g2cr0"
+        private const val STAKING_TCY_CONTRACT = ThorchainStakingContracts.STAKING_TCY_COMPOUND
     }
 
     private fun mapThorPoolAsset(contractAddress: String): String {

@@ -48,6 +48,13 @@ enum class DecodedOperation {
     Undelegate,
     Redelegate,
     ClaimRewards,
+
+    /**
+     * Claiming an allocation the chain already holds for the signer, as a THORChain `TCY` memo
+     * does. Distinct from [ClaimRewards]: nothing was staked to earn it, so calling it a reward
+     * would describe a position the signer never had.
+     */
+    Claim,
     Mint,
     Redeem,
 

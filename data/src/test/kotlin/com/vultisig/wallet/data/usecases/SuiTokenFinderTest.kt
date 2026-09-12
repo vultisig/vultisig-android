@@ -34,12 +34,13 @@ internal class SuiTokenFinderTest {
     fun `discovers a held coin type the curated catalog does not list`() = runTest {
         stubHeld(heldObject(GOLD_TYPE))
         coEvery { suiApi.getCoinMetadata(GOLD_TYPE) } returns
-            SuiCoinMetadata(decimals = 6, symbol = "GOLD", iconUrl = GOLD_ICON)
+            SuiCoinMetadata(decimals = 6, symbol = "GOLD", iconUrl = GOLD_ICON, name = "Gold Coin")
 
         val discovered = finder.find(ADDRESS).single()
 
         assertEquals(Chain.Sui, discovered.chain)
         assertEquals("GOLD", discovered.ticker)
+        assertEquals("Gold Coin", discovered.name)
         assertEquals(6, discovered.decimal)
         assertEquals(GOLD_TYPE, discovered.contractAddress)
         assertEquals(GOLD_ICON, discovered.logo)

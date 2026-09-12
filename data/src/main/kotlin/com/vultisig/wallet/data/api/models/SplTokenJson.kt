@@ -57,6 +57,7 @@ data class SplTokenListJson(
     @SerialName("symbol") val ticker: String,
     @SerialName("image") val logo: String?,
     @SerialName("extensions") val extensions: SplExtensionsJson?,
+    @SerialName("name") val name: String? = null,
 )
 
 @Serializable data class SplExtensionsJson(@SerialName("coingeckoId") val coingeckoId: String?)
@@ -97,6 +98,7 @@ data class SplAmountRpcResponseResultJson(@SerialName("value") val value: List<S
 data class JupiterTokenResponseJson(
     @SerialName("id") val contractAddress: String,
     @SerialName("symbol") val ticker: String,
+    @SerialName("name") val name: String? = null,
     @SerialName("decimals") val decimals: Int,
     @SerialName("icon") val logo: String?,
     @SerialName("extensions") val extensions: JupiterTokenCoinGeckoIdJson?,

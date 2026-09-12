@@ -135,6 +135,7 @@ constructor(
         Coin(
             chain = Chain.Solana,
             ticker = tokenResponse.tokenList.ticker,
+            name = tokenResponse.tokenList.name?.trim().orEmpty(),
             logo = tokenResponse.tokenList.logo ?: "",
             decimal = tokenResponse.decimals,
             priceProviderID = tokenResponse.tokenList.extensions?.coingeckoId ?: "",
@@ -152,6 +153,7 @@ constructor(
                     contractAddress = it.contractAddress,
                     chain = Chain.Solana,
                     ticker = it.ticker,
+                    name = it.name?.trim().orEmpty(),
                     address = "",
                     logo = it.logo ?: "",
                     decimal = it.decimals,

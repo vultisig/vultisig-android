@@ -43,6 +43,7 @@ constructor(private val cosmosApiFactory: CosmosApiFactory) : SearchTerraTokenUs
                 ?: Coin(
                     chain = chain,
                     ticker = symbol,
+                    name = tokenInfo.name?.trim().orEmpty(),
                     logo = "",
                     address = "",
                     hexPublicKey = "",

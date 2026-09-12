@@ -12,13 +12,14 @@ import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
-import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELECTOR
 import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.chains.ton.tonUserFriendlyAddress
 import com.vultisig.wallet.data.api.models.BlockChairUtxoInfo
+import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.TronFee
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
@@ -27,6 +28,7 @@ import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.TronFees
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.CardanoHelper
@@ -44,7 +46,6 @@ import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.NetworkException
-import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.max
 import com.vultisig.wallet.data.utils.increaseByPercent
 import com.vultisig.wallet.data.utils.plus
@@ -60,7 +61,6 @@ import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 import vultisig.keysign.v1.CosmosIbcDenomTrace
 import vultisig.keysign.v1.TransactionType
-import wallet.core.jni.Base58
 
 data class BlockChainSpecificAndUtxo(
     val blockChainSpecific: BlockChainSpecific,
@@ -112,6 +112,7 @@ constructor(
     private val tronApi: TronApi,
     private val cardanoApi: CardanoApi,
     private val feeServiceComposite: FeeServiceComposite,
+    @TronFee private val tronFeeService: FeeService,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -692,34 +693,63 @@ constructor(
 
             TokenStandard.TRC20 -> {
                 val specific = tronApi.getSpecific()
-                val energyPrice =
-                    try {
-                        tronApi.getChainParameters().energyFee.takeIf { it > 0L }
-                    } catch (_: Exception) {
-                        null
-                    } ?: ENERGY_TO_SUN_FACTOR.toLong()
                 val now = Instant.now()
                 val expiration = now + 1.hours
                 val rawData = specific.blockHeader.rawData
 
-                val recipientAddressHex = Numeric.toHexString(Base58.decode(dstAddress ?: address))
-
                 val estimation =
-                    TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }
-                        ?: run {
-                            val rawBalance = tronApi.getBalance(token)
-                            val triggerResult =
-                                tronApi.getTriggerConstantContractFee(
-                                    ownerAddressBase58 = token.address,
-                                    contractAddressBase58 = token.contractAddress,
-                                    recipientAddressHex = recipientAddressHex,
-                                    functionSelector = TRANSFER_FUNCTION_SELECTOR,
-                                    amount = rawBalance,
+                    if (token.isNativeToken) {
+                        // A plain TRX transfer never writes fee_limit (see
+                        // TronHelper.buildCoinTransfer); the staking and dApp contract calls that
+                        // do are capped by this flat ceiling rather than by a simulation, so there
+                        // is no estimate here to reconcile with the displayed fee.
+                        TRON_DEFAULT_ESTIMATION_FEE.toBigInteger()
+                    } else {
+                        val fees =
+                            if (dstAddress != null && tokenAmountValue != null) {
+                                // The signed ceiling comes out of the same TronFeeService
+                                // computation that produces the fee shown to the user and gates
+                                // the balance check, so both simulate the transaction being sent
+                                // and read energy_penalty the same way. It is still its own
+                                // simulation: this specific is rebuilt at Continue, and the
+                                // ceiling should track the chain as it stands then, not at the
+                                // keystroke that priced the form. Deliberately not routed through
+                                // FeeServiceComposite: it swallows a failure into
+                                // calculateDefaultFees, and a reverted simulation has to fail the
+                                // send rather than reach the wire behind a fabricated fee_limit.
+                                tronFeeService.calculateFees(
+                                    Transfer(
+                                        coin = token,
+                                        vault = VaultData("", ""),
+                                        amount = tokenAmountValue,
+                                        to = dstAddress,
+                                        memo = memo,
+                                    )
                                 )
-
-                            val totalEnergy = triggerResult.energyUsed + triggerResult.energyPenalty
-                            contractFeeLimit(totalEnergy, energyPrice)
+                            } else {
+                                // Without a destination and an amount there is no transaction to
+                                // simulate — a swap deposit whose builder supplies neither, or a
+                                // send form whose specific nothing signs. Probing the sender's own
+                                // balance or a zero transfer prices a different transaction (a
+                                // zero amount skips the recipient's zero-to-nonzero storage write
+                                // and under-states a first-time recipient by ~15,000 energy), so
+                                // take the flat token ceiling the displayed swap fee already
+                                // reports, as iOS's TronService does when it has no recipient.
+                                tronFeeService.calculateDefaultFees(
+                                    Transfer(
+                                        coin = token,
+                                        vault = VaultData("", ""),
+                                        amount = BigInteger.ZERO,
+                                        to = dstAddress ?: address,
+                                        memo = memo,
+                                    )
+                                )
+                            }
+                        require(fees is TronFees) {
+                            "Unsupported fee type ${fees::class.simpleName} for chain=$chain"
                         }
+                        fees.feeLimit
+                    }
 
                 BlockChainSpecificAndUtxo(
                     blockChainSpecific =
@@ -766,18 +796,6 @@ constructor(
     companion object {
         private const val TON_WALLET_STATE_UNINITIALIZED = "uninit"
 
-        private const val ENERGY_TO_SUN_FACTOR = 280
-
         private val THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT = BigInteger.valueOf(200_000)
-
-        // 30% headroom on top of simulated energy, covering a contract's per-call dynamic
-        // energy_factor surge between simulation and broadcast. Matches iOS's
-        // TronService.contractFeeLimit (ENERGY_SAFETY_NUMERATOR/DENOMINATOR = 13/10).
-        // https://developers.tron.network/docs/resource-model#dynamic-energy-model
-        private const val ENERGY_SAFETY_NUMERATOR = 13L
-        private const val ENERGY_SAFETY_DENOMINATOR = 10L
-
-        internal fun contractFeeLimit(totalEnergyUsed: Long, energyPrice: Long): Long =
-            (totalEnergyUsed * ENERGY_SAFETY_NUMERATOR / ENERGY_SAFETY_DENOMINATOR) * energyPrice
     }
 }

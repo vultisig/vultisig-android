@@ -28,6 +28,20 @@ data class SwapKitSwapPayloadJson(
     val subProvider: String = "",
     /** Persisted for analytics; not accepted by `/track` (keys off broadcast hash + chain id). */
     val swapId: String = "",
+    /**
+     * Provider fee (affiliate + service) in base units of the coin the three fields below identify,
+     * or empty when the route states none. A cosigning peer holds no quote, so a fee omitted here
+     * is one it can neither recover nor display. Never the `inbound` entry — that is a deposit cost
+     * the Network Fee already covers, and every platform labels this value "Swap Fee".
+     */
+    val swapFee: String = "",
+    /**
+     * Coin context for [swapFee]: [Chain.id], contract address (null for a native coin) and
+     * decimals. All null when [swapFee] is empty, and on payloads from senders that predate them.
+     */
+    val swapFeeChain: String? = null,
+    val swapFeeTokenId: String? = null,
+    val swapFeeDecimals: Int? = null,
 ) {
     // Override equals/hashCode so the ByteArray field compares by content (default is reference).
     override fun equals(other: Any?): Boolean {
@@ -44,7 +58,11 @@ data class SwapKitSwapPayloadJson(
             inboundAddress == other.inboundAddress &&
             memo == other.memo &&
             subProvider == other.subProvider &&
-            swapId == other.swapId
+            swapId == other.swapId &&
+            swapFee == other.swapFee &&
+            swapFeeChain == other.swapFeeChain &&
+            swapFeeTokenId == other.swapFeeTokenId &&
+            swapFeeDecimals == other.swapFeeDecimals
     }
 
     override fun hashCode(): Int {
@@ -59,6 +77,10 @@ data class SwapKitSwapPayloadJson(
         result = 31 * result + (memo?.hashCode() ?: 0)
         result = 31 * result + subProvider.hashCode()
         result = 31 * result + swapId.hashCode()
+        result = 31 * result + swapFee.hashCode()
+        result = 31 * result + (swapFeeChain?.hashCode() ?: 0)
+        result = 31 * result + (swapFeeTokenId?.hashCode() ?: 0)
+        result = 31 * result + (swapFeeDecimals ?: 0)
         return result
     }
 

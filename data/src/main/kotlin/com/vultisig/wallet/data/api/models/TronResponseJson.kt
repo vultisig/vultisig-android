@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.api.models
 
 import java.math.BigInteger
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -94,8 +93,15 @@ data class TronChainParametersJson(val chainParameter: List<TronChainParameterJs
     val createNewAccountFeeEstimateContract: Long
         get() = chainParameterMapped["getCreateNewAccountFeeInSystemContract"] ?: 0L
 
+    /**
+     * Sun per unit of energy. Every TRC20 fee and the signed `fee_limit` are this price times an
+     * energy count, so a node that omits or zeroes `getEnergyFee` cannot be allowed to price them
+     * at nothing: the ceiling would go out as 0 and the send would revert `OUT_OF_ENERGY` after the
+     * signing ceremony. Falls back to the current mainnet price, as iOS's
+     * `TronChainParametersResponse.energyFeePrice` does.
+     */
     val energyFee: Long
-        get() = chainParameterMapped["getEnergyFee"] ?: 0L
+        get() = chainParameterMapped["getEnergyFee"]?.takeIf { it > 0L } ?: DEFAULT_ENERGY_FEE
 
     val maxEnergyFactor: Long
         get() = chainParameterMapped["getDynamicEnergyMaxFactor"] ?: 0L
@@ -103,16 +109,15 @@ data class TronChainParametersJson(val chainParameter: List<TronChainParameterJs
     // Atm according to network: 1 bandwidth -> 1000 SUN
     val bandwidthFeePrice: Long
         get() = chainParameterMapped["getTransactionFee"] ?: 0L
+
+    companion object {
+        const val DEFAULT_ENERGY_FEE = 100L
+    }
 }
 
 @Serializable data class TronChainParameterJson(val key: String, val value: Long = 0L)
 
 @Serializable internal data class TronAccountRequestJson(val address: String, val visible: Boolean)
-
-@Serializable
-internal data class TronContractRequestJson(val value: String) {
-    @EncodeDefault val visible: Boolean = true
-}
 
 @Serializable
 data class TronAccountResourceJson(
@@ -169,14 +174,6 @@ data class TronAccountJson(
      */
     val defiLockedTotalSun: Long
         get() = frozenBandwidthSun + frozenEnergySun + unfreezingTotalSun
-}
-
-@Serializable
-data class TronContractInfoJson(
-    @SerialName("contract_state") val contractState: ContractStateJson
-) {
-    @Serializable
-    data class ContractStateJson(@SerialName("energy_factor") val energyFactor: Long = 0L)
 }
 
 @Serializable

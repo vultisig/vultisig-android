@@ -966,6 +966,8 @@
     <string name="banxa_continue">Продолжить в Banxa</string>
     <string name="defi_no_positions_selected">Позиции не выбраны</string>
     <string name="defi_no_positions_selected_desc">Вы отключили все позиции для этой сети. Включите хотя бы одну позицию для просмотра балансов и управления действиями.</string>
+    <string name="defi_position_unavailable">Баланс недоступен</string>
+    <string name="defi_position_unavailable_desc">Сервис стейкинга не ответил, поэтому эту позицию не удалось загрузить. Ваши средства в стейкинге в безопасности в сети — это временная проблема сервера, а не изменение баланса.</string>
     <string name="manage_positions">Управление Позициями</string>
     <string name="bond_node_state_whitelisted">В Белом Списке</string>
     <string name="bond_node_state_standby">В Ожидании</string>
@@ -1768,6 +1770,7 @@
     <string name="done_verb_undelegated">Делегирование отменено</string>
     <string name="done_verb_redelegated">Переделегировано</string>
     <string name="done_verb_claimed_rewards">Награды получены</string>
+    <string name="done_verb_claimed">Получено</string>
     <string name="done_verb_minted">Отчеканено</string>
     <string name="done_verb_redeemed">Выкуплено</string>
     <string name="done_verb_withdrew">Выведено</string>
@@ -1793,6 +1796,7 @@
     <string name="verify_verb_undelegating">Вы отменяете делегирование</string>
     <string name="verify_verb_redelegating">Вы переделегируете</string>
     <string name="verify_verb_adding_liquidity">Вы добавляете ликвидность</string>
+    <string name="verify_verb_removing_liquidity">Вы удаляете ликвидность</string>
     <string name="verify_verb_redeeming">Вы выкупаете</string>
     <string name="verify_verb_minting">Вы чеканите</string>
     <string name="verify_verb_merging">Вы объединяете</string>
@@ -1802,4 +1806,5 @@
     <string name="scope_rewards_accrued_so_far">накопленные на данный момент награды</string>
     <string name="scope_delegated_amount_after_rent">делегированная сумма за вычетом резерва за аренду</string>
     <string name="withdrawing_share_of_staked_position">%1$s вашей стейкинг-позиции</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s вашей позиции ликвидности</string>
 </resources>

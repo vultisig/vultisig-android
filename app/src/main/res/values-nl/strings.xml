@@ -960,6 +960,8 @@
     <string name="banxa_continue">Doorgaan naar Banxa</string>
     <string name="defi_no_positions_selected">Geen posities geselecteerd</string>
     <string name="defi_no_positions_selected_desc">Je hebt alle posities voor deze keten uitgeschakeld. Schakel ten minste één positie in om saldi te bekijken en acties te beheren.</string>
+    <string name="defi_position_unavailable">Saldo niet beschikbaar</string>
+    <string name="defi_position_unavailable_desc">De stakingdienst reageerde niet, dus deze positie kon niet worden geladen. Je gestakete tegoeden staan veilig on-chain — dit is een tijdelijk serverprobleem, geen wijziging van je saldo.</string>
     <string name="manage_positions">Posities Beheren</string>
     <string name="bond_node_state_whitelisted">Op Whitelist</string>
     <string name="bond_node_state_standby">Stand-by</string>
@@ -1748,6 +1750,7 @@
     <string name="done_verb_undelegated">Delegatie ingetrokken</string>
     <string name="done_verb_redelegated">Opnieuw gedelegeerd</string>
     <string name="done_verb_claimed_rewards">Beloningen geclaimd</string>
+    <string name="done_verb_claimed">Geclaimd</string>
     <string name="done_verb_minted">Gemunt</string>
     <string name="done_verb_redeemed">Ingewisseld</string>
     <string name="done_verb_withdrew">Opgenomen</string>
@@ -1773,6 +1776,7 @@
     <string name="verify_verb_undelegating">Je trekt de delegatie in</string>
     <string name="verify_verb_redelegating">Je delegeert opnieuw</string>
     <string name="verify_verb_adding_liquidity">Je voegt liquiditeit toe</string>
+    <string name="verify_verb_removing_liquidity">Je verwijdert liquiditeit</string>
     <string name="verify_verb_redeeming">Je wisselt in</string>
     <string name="verify_verb_minting">Je munt</string>
     <string name="verify_verb_merging">Je voegt samen</string>
@@ -1782,4 +1786,5 @@
     <string name="scope_rewards_accrued_so_far">tot nu toe opgebouwde beloningen</string>
     <string name="scope_delegated_amount_after_rent">het gedelegeerde bedrag na de huurreserve</string>
     <string name="withdrawing_share_of_staked_position">%1$s van je gestakete positie</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s van je liquiditeitspositie</string>
 </resources>

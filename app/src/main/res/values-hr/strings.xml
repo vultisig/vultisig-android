@@ -967,6 +967,8 @@
     <string name="banxa_continue">Nastavi na Banxu</string>
     <string name="defi_no_positions_selected">Nema odabranih pozicija</string>
     <string name="defi_no_positions_selected_desc">Onemogućili ste sve pozicije za ovaj lanac. Omogućite barem jednu poziciju za pregled stanja i upravljanje akcijama.</string>
+    <string name="defi_position_unavailable">Stanje nije dostupno</string>
+    <string name="defi_position_unavailable_desc">Usluga stakinga nije odgovorila pa se ova pozicija nije mogla učitati. Vaša uložena sredstva sigurna su na lancu — riječ je o privremenom problemu poslužitelja, a ne o promjeni stanja.</string>
     <string name="manage_positions">Upravljanje Pozicijama</string>
     <string name="bond_node_state_whitelisted">Na Bijeloj Listi</string>
     <string name="bond_node_state_standby">U Pripravnosti</string>
@@ -1765,6 +1767,7 @@
     <string name="done_verb_undelegated">Delegacija poništena</string>
     <string name="done_verb_redelegated">Ponovno delegirano</string>
     <string name="done_verb_claimed_rewards">Nagrade preuzete</string>
+    <string name="done_verb_claimed">Preuzeto</string>
     <string name="done_verb_minted">Iskovano</string>
     <string name="done_verb_redeemed">Otkupljeno</string>
     <string name="done_verb_withdrew">Podignuto</string>
@@ -1790,6 +1793,7 @@
     <string name="verify_verb_undelegating">Poništavate delegaciju</string>
     <string name="verify_verb_redelegating">Ponovno delegirate</string>
     <string name="verify_verb_adding_liquidity">Dodajete likvidnost</string>
+    <string name="verify_verb_removing_liquidity">Uklanjate likvidnost</string>
     <string name="verify_verb_redeeming">Otkupljujete</string>
     <string name="verify_verb_minting">Kujete</string>
     <string name="verify_verb_merging">Spajate</string>
@@ -1799,4 +1803,5 @@
     <string name="scope_rewards_accrued_so_far">do sada stečene nagrade</string>
     <string name="scope_delegated_amount_after_rent">delegirani iznos nakon rezerve za najam</string>
     <string name="withdrawing_share_of_staked_position">%1$s vaše uložene pozicije</string>
+    <string name="withdrawing_share_of_liquidity_position">%1$s vaše pozicije likvidnosti</string>
 </resources>
