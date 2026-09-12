@@ -49,15 +49,21 @@ class TonTransactionDecoder @Inject constructor() : TransactionContentDecoder {
                     evidence = DecodedEvidence.Memo,
                 )
 
-            // The transfer carries only the withdraw signal fee; the pool returns the whole
-            // position later, and only chain state can say how much that is.
-            in TonNominatorPool.WITHDRAW_COMMENTS ->
+            // A withdrawal request is the comment AND the fixed 0.2 TON signal fee it rides on:
+            // that is what both apps build, and what the pool accepts. A transfer commented `w`
+            // that carries any other amount is not a request this app made, and naming it an
+            // unstake would present its real figure as a fee and then hide it behind "your whole
+            // stake" — so it stays a send, with its amount and its memo in plain view.
+            in TonNominatorPool.WITHDRAW_COMMENTS -> {
+                if (content.amount != WITHDRAW_SIGNAL) return null
+                // The pool returns the whole position later; only chain state can say how much.
                 DecodedTransaction(
                     operation = DecodedOperation.Unstake,
                     amount = DecodedAmount.Unstated,
                     counterparty = DecodedCounterparty.Pool(content.toAddress),
                     evidence = DecodedEvidence.Memo,
                 )
+            }
 
             else -> null
         }
@@ -66,6 +72,9 @@ class TonTransactionDecoder @Inject constructor() : TransactionContentDecoder {
     private companion object {
         /** An earlier approve or swap route makes the sidecar comment inert. */
         val MEMO_PRECEDENCE = MemoPrecedence.MemoIsInertWhenRoutedEarlier
+
+        /** The carrier a withdrawal request is sent with, on this app and on iOS alike. */
+        val WITHDRAW_SIGNAL: SignedAmount = SignedAmount.Committed(TonNominatorPool.WITHDRAW_FEE)
 
         /** A positive committed deposit moves chain-native TON; anything else states no figure. */
         fun deposited(signed: SignedAmount): DecodedAmount =
