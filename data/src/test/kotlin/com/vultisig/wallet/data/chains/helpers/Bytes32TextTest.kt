@@ -25,6 +25,12 @@ internal class Bytes32TextTest {
     }
 
     @Test
+    fun `rejects a word with non-zero bytes after the terminator`() {
+        // "MKR" followed by a zero byte then a non-zero byte is not genuinely zero-padded.
+        assertNull(("4d4b52" + "00" + "58" + "0".repeat(54)).hexToBytes().bytes32TextOrNull())
+    }
+
+    @Test
     fun `rejects a word whose bytes are not printable ASCII`() {
         assertNull("ff".repeat(32).hexToBytes().bytes32TextOrNull())
         // A control character before the terminator disqualifies the whole word.

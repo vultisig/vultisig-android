@@ -133,12 +133,14 @@ object EthereumFunction {
 
 /**
  * Reads a 32-byte ABI word as the zero-padded ASCII text a `bytes32` name/symbol holds. Returns
- * null when it is not one: any other size, all zeros, or a byte outside printable ASCII before the
- * first zero.
+ * null when it is not one: any other size, all zeros, a byte outside printable ASCII before the
+ * first zero, or a non-zero byte after the first zero (not actually zero-padded).
  */
 internal fun ByteArray.bytes32TextOrNull(): String? {
     if (size != 32) return null
-    val text = takeWhile { it.toInt() != 0 }
+    val terminatorIndex = indexOf(0)
+    val text = if (terminatorIndex >= 0) take(terminatorIndex) else asList()
+    if (terminatorIndex >= 0 && drop(terminatorIndex + 1).any { it.toInt() != 0 }) return null
     if (text.isEmpty() || text.any { it.toInt() !in 0x20..0x7E }) return null
     return String(text.toByteArray(), Charsets.US_ASCII)
 }
