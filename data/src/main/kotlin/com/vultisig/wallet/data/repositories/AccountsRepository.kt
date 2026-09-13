@@ -284,22 +284,34 @@ constructor(
         }
     }
 
+    /**
+     * Discovers the SPL tokens a vault that only carries SOL holds, persisting and returning each.
+     *
+     * A Solana [Coin.id] is `ticker-chain`, and a mint's symbol is whatever its minter chose, so a
+     * counterfeit airdropped next to the real token reports the same ticker and collapses to the
+     * same id. Each id is claimed once: the coin table keys on it (a second insert would REPLACE
+     * the first row) and so does every list that renders these accounts (a repeated key crashes the
+     * list on scroll). When two mints contend for one id, the one the curated catalogue knows wins
+     * — that is the token the user actually meant to hold.
+     */
     private suspend fun getSPLCoins(solanaCoins: List<Coin>, vault: Vault): List<Coin> {
         if (solanaCoins.any { !it.isNativeToken }) return emptyList()
-        val solanaAddress = solanaCoins.firstOrNull()?.address
+        val solanaAddress = solanaCoins.firstOrNull()?.address ?: return emptyList()
+        val splTokens = splTokenRepository.getTokens(solanaAddress, vault)
+        val disabledCoinIds = vaultRepository.getDisabledCoinIds(vaultId = vault.id)
+        val claimedIds = (solanaCoins.map { it.id } + disabledCoinIds).toMutableSet()
+        val (curated, unknown) = splTokens.partition { it.isCurated() }
         val newSPLTokens = mutableListOf<Coin>()
-        solanaAddress?.let {
-            val splTokens = splTokenRepository.getTokens(solanaAddress, vault)
-            val disabledCoinIds = vaultRepository.getDisabledCoinIds(vaultId = vault.id)
-            splTokens.forEach { spl ->
-                if (!solanaCoins.any { it.id == spl.id } && disabledCoinIds.none { it == spl.id }) {
-                    vaultRepository.addTokenToVault(vault.id, spl)
-                    newSPLTokens += spl
-                }
-            }
+        for (spl in curated + unknown) {
+            if (!claimedIds.add(spl.id)) continue
+            vaultRepository.addTokenToVault(vault.id, spl)
+            newSPLTokens += spl
         }
         return newSPLTokens
     }
+
+    private fun Coin.isCurated(): Boolean =
+        Coins.findCuratedByContract(chain, contractAddress) != null
 
     override fun loadAddress(vaultId: String, chain: Chain): Flow<Address> =
         flow {
@@ -347,7 +359,7 @@ constructor(
                     emitCachedAddress(account)
                 }
             }
-            .map { it.distinctByChainAndContractAddress() }
+            .map { it.distinctAccounts() }
 
     override fun loadCachedAddress(vaultId: String, chain: Chain): Flow<Address> =
         flow {
@@ -358,7 +370,7 @@ constructor(
                     chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins)) ?: return@flow
                 emitCachedAddress(account)
             }
-            .map { it.distinctByChainAndContractAddress() }
+            .map { it.distinctAccounts() }
 
     private suspend fun FlowCollector<Address>.emitRefreshAddress(address: Address) {
         val tokenAddress = address.address
@@ -678,12 +690,18 @@ constructor(
             defiPositionsCount = balance.defiPositionsCount,
         )
 
-    private fun Address.distinctByChainAndContractAddress() =
+    // Two passes because the two identities disagree: the contract pass collapses one contract
+    // reported under two ticker spellings, and the id pass collapses two contracts that share a
+    // ticker on a chain whose Coin.id is not contract-qualified. The id is what the coin table and
+    // every list rendering these accounts key on, so it is the one that must be unique.
+    private fun Address.distinctAccounts() =
         copy(
             accounts =
-                accounts.distinctBy { account ->
-                    account.token.chain.id to account.token.contractAddress.lowercase()
-                }
+                accounts
+                    .distinctBy { account ->
+                        account.token.chain.id to account.token.contractAddress.lowercase()
+                    }
+                    .distinctBy { account -> account.token.id }
         )
 
     /**
