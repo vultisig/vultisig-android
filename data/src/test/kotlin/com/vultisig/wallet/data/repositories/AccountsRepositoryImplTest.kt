@@ -379,6 +379,89 @@ internal class AccountsRepositoryImplTest {
     }
 
     @Test
+    fun `SPL discovery claims each coin id once, the curated mint over a counterfeit`() = runTest {
+        val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+        val counterfeit = unknownMint(ticker = "USDC", mint = "FakeUsdcMint1111111111111111111111")
+        val usdc = Coins.Solana.USDC.copy(address = SOL_ADDRESS)
+        // The counterfeit is listed first: whichever mint the RPC happens to enumerate first must
+        // not decide which one takes the id.
+        stubSplDiscovery(sol, discovered = listOf(counterfeit, usdc))
+
+        val emissions = mutableListOf<Address>()
+        repository.loadAddress(VAULT_ID, Chain.Solana).collect(emissions::add)
+
+        emissions.forEach { address ->
+            val ids = address.accounts.map { it.token.id }
+            assertEquals(ids.distinct(), ids, "every emission must carry each coin id once")
+        }
+        val discovered = emissions.last().accounts.filterNot { it.token.isNativeToken }
+        assertEquals(listOf(usdc.contractAddress), discovered.map { it.token.contractAddress })
+        coVerify(exactly = 1) { vaultRepository.addTokenToVault(VAULT_ID, usdc) }
+        coVerify(exactly = 0) { vaultRepository.addTokenToVault(VAULT_ID, counterfeit) }
+    }
+
+    @Test
+    fun `SPL discovery keeps the first of two unknown mints sharing a ticker`() = runTest {
+        val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+        val first = unknownMint(ticker = "MEME", mint = "MintFirst111")
+        val second = unknownMint(ticker = "MEME", mint = "MintSecond222")
+        stubSplDiscovery(sol, discovered = listOf(first, second))
+
+        val emissions = mutableListOf<Address>()
+        repository.loadAddress(VAULT_ID, Chain.Solana).collect(emissions::add)
+
+        val discovered = emissions.last().accounts.filterNot { it.token.isNativeToken }
+        assertEquals(listOf(first.contractAddress), discovered.map { it.token.contractAddress })
+        coVerify(exactly = 1) { vaultRepository.addTokenToVault(VAULT_ID, first) }
+        coVerify(exactly = 0) { vaultRepository.addTokenToVault(VAULT_ID, second) }
+    }
+
+    @Test
+    fun `SPL discovery does not claim an id the vault already holds or has disabled`() = runTest {
+        val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+        // Wrapped SOL is an SPL token whose symbol is the native coin's, so it lands on SOL's id.
+        val wrappedSol =
+            unknownMint(ticker = "SOL", mint = "So11111111111111111111111111111111111111112")
+        val usdt = Coins.Solana.USDT.copy(address = SOL_ADDRESS)
+        stubSplDiscovery(sol, discovered = listOf(wrappedSol, usdt), disabledIds = listOf(usdt.id))
+
+        val emissions = mutableListOf<Address>()
+        repository.loadAddress(VAULT_ID, Chain.Solana).collect(emissions::add)
+
+        assertEquals(listOf(sol.id), emissions.last().accounts.map { it.token.id })
+        coVerify(exactly = 0) { vaultRepository.addTokenToVault(any(), any()) }
+    }
+
+    @Test
+    fun `loadAddress never emits two accounts under one coin id`() = runTest {
+        // Whatever upstream produced them — a stale row, a discovery path — two coins that share
+        // an id are one coin to the coin table and to every keyed list, so at most one may reach
+        // the screen.
+        val eth = Coins.Ethereum.ETH.copy(address = ETH_ADDRESS)
+        val usdc = Coins.Ethereum.USDC.copy(address = ETH_ADDRESS)
+        val impostor = usdc.copy(contractAddress = "0xImpostorUsdc")
+        val vault = Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(eth, usdc, impostor))
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault
+        coJustRun { tokenPriceRepository.refresh(any()) }
+        every { balanceRepository.getTokenBalanceAndPrice(ETH_ADDRESS, any()) } answers
+            {
+                flowOf(balance(amount = NETWORK, coin = secondArg()))
+            }
+
+        val emissions = mutableListOf<Address>()
+        repository.loadAddress(VAULT_ID, Chain.Ethereum).collect(emissions::add)
+
+        assertTrue(emissions.isNotEmpty())
+        emissions.forEach { address ->
+            assertEquals(
+                listOf(eth.id, usdc.id),
+                address.accounts.map { it.token.id },
+                "the first coin under a repeated id stays, the later one is dropped",
+            )
+        }
+    }
+
+    @Test
     fun `cached DeFi addresses carry the auto-compounding RUJI position`() = runTest {
         val rune = Coins.ThorChain.RUNE.copy(address = THOR_ADDRESS)
         val ruji = Coins.ThorChain.RUJI.copy(address = THOR_ADDRESS)
@@ -762,6 +845,41 @@ internal class AccountsRepositoryImplTest {
         val vault = Vault(id = VAULT_ID, name = "Test Vault", coins = coins.toList())
         every { vaultRepository.getAsFlow(VAULT_ID) } returns flowOf(vault)
     }
+
+    /**
+     * A vault holding only [sol], whose Solana address the SPL discovery reports [discovered] for.
+     * Balances resolve to a fixed amount for every coin so the emissions carry whatever survived.
+     */
+    private fun stubSplDiscovery(
+        sol: Coin,
+        discovered: List<Coin>,
+        disabledIds: List<String> = emptyList(),
+    ) {
+        val vault = Vault(id = VAULT_ID, name = "Test Vault", coins = listOf(sol))
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault
+        coEvery { vaultRepository.getDisabledCoinIds(VAULT_ID) } returns disabledIds
+        coJustRun { vaultRepository.addTokenToVault(any(), any()) }
+        coEvery { splTokenRepository.getTokens(SOL_ADDRESS, vault) } returns discovered
+        coJustRun { tokenPriceRepository.refresh(any()) }
+        every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, any()) } answers
+            {
+                flowOf(balance(amount = NETWORK, coin = secondArg()))
+            }
+    }
+
+    /** An SPL token the catalogue does not know, reporting whatever symbol its minter chose. */
+    private fun unknownMint(ticker: String, mint: String) =
+        Coin(
+            chain = Chain.Solana,
+            ticker = ticker,
+            logo = "",
+            address = SOL_ADDRESS,
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = mint,
+            isNativeToken = false,
+        )
 
     private fun wrapped(amount: Long, coin: Coin) =
         TokenBalanceWrapped(
