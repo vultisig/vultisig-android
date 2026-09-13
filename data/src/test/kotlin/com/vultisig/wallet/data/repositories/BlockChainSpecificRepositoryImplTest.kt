@@ -297,6 +297,10 @@ internal class BlockChainSpecificRepositoryImplTest {
      * list its change, and the third was rejected with `bad-txns-inputs-missingorspent`. The ledger
      * of this wallet's own broadcasts is replayed over the snapshot: the consumed input is gone,
      * the change is there to spend, and a chained second send builds on that change.
+     *
+     * The child is recorded with an *earlier* timestamp than its parent — a clock adjustment
+     * between the two sends — so this also pins that replay order comes from the dependency, not
+     * the timestamp: skipped while its input is absent, applied once the parent injects it.
      */
     @Test
     fun `Bitcoin UTXO selection replays own in-flight sends over a stale provider snapshot`() =
@@ -326,10 +330,9 @@ internal class BlockChainSpecificRepositoryImplTest {
                 mockk<UtxoInFlightRepository> {
                     coEvery { getInFlight(Chain.Bitcoin, SOURCE_ADDRESS) } returns
                         listOf(
-                            // Second send, listed first: replay order comes from broadcastAt.
                             UtxoInFlightTx(
                                 txHash = "send-c",
-                                broadcastAt = 2_000,
+                                broadcastAt = 500,
                                 spent =
                                     listOf(UtxoInfo(hash = "send-b", amount = 60_000, index = 1u)),
                                 created =

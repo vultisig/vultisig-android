@@ -416,6 +416,11 @@ class UtxoHelper(
         )
     }
 
+    private fun isSameLockScript(a: String, b: String): Boolean =
+        BitcoinScript.lockScriptForAddress(a, coinType)
+            .data()
+            .contentEquals(BitcoinScript.lockScriptForAddress(b, coinType).data())
+
     private fun requireLockScript(address: String): ByteArray =
         BitcoinScript.lockScriptForAddress(address, coinType).data().also {
             require(it.isNotEmpty()) {
@@ -518,7 +523,9 @@ class UtxoHelper(
      * inputs it names are exactly the ones the signed transaction spends. Outputs follow
      * WalletCore's fixed layout, the one [serializeUnsignedTransaction] mirrors — the destination
      * at index 0, change at index 1 when there is any — so an output is ours when it is the change
-     * or when the destination is the sending address itself (a consolidation / self-send).
+     * or when the destination is the sending address itself (a consolidation / self-send). "Itself"
+     * is decided on the locking script, not the string: a Bech32 address is valid in either case
+     * and WalletCore locks both spellings to the same script.
      */
     fun getSpendEffects(keysignPayload: KeysignPayload, txHash: String): UtxoInFlightTx? {
         if (keysignPayload.signBitcoin != null) return null
@@ -555,7 +562,7 @@ class UtxoHelper(
                 )
             }
         val created = buildList {
-            if (toAddress == address) {
+            if (isSameLockScript(toAddress, address)) {
                 add(UtxoInfo(hash = txHash, amount = plan.amount, index = 0u))
             }
             if (plan.change > 0) {

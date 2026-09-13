@@ -91,16 +91,29 @@ object SpendableUtxos {
      * inputs that send consumed and not yet the change it paid back. The wallet knows both
      * ([UtxoInFlightTx]), and it is the only party that can: nobody else can spend these outputs.
      *
-     * Each in-flight transaction, oldest first, is applied only when the snapshot still lists at
-     * least one input it spent — the evidence that the snapshot predates it. Then those inputs are
-     * removed and the outputs it paid back are added. A transaction none of whose inputs are listed
-     * is skipped: either the provider has already caught up, in which case its own view of that
-     * transaction's outputs (present as `block_id -1` and admitted through
-     * `ownUnconfirmedTxHashes`, or absent) is authoritative — or the transaction was evicted from
-     * the mempool and its inputs are free again, in which case injecting its outputs would build on
-     * nothing. That gate is what keeps the ledger from ever overriding a provider that already
-     * knows better. Oldest-first ordering is what lets a chain of sends work: the second send's
-     * input is the first send's injected change, present only because the first was replayed.
+     * An in-flight transaction is applied only when the snapshot still lists at least one input it
+     * spent — the evidence that the snapshot predates it. Then those inputs are removed and the
+     * outputs it paid back are added. A transaction none of whose inputs are listed is left alone:
+     * the provider has already caught up, and its own view of that transaction's outputs (present
+     * as `block_id -1` and admitted through `ownUnconfirmedTxHashes`, or absent) is authoritative.
+     * That gate is what keeps the ledger from overriding a provider that already knows better.
+     *
+     * Replay runs to a fixpoint rather than in recorded order: a pass applies every transaction
+     * whose inputs are present, and passes repeat until one applies nothing. A chain of sends
+     * therefore works regardless of how its entries are ordered — the second send's input is the
+     * first send's change, absent from the snapshot until the first is applied, so the second is
+     * skipped in that pass and applied in the next. Ordering by recorded time alone would let a
+     * clock adjustment between two sends put the child first, skip it for good, and then have the
+     * parent re-offer the very output the child spent. Within a pass, entries go in recorded order
+     * so the result is deterministic.
+     *
+     * The gate has one blind spot, accepted and bounded rather than closed: a transaction the
+     * mempool evicted frees its inputs, and a snapshot listing them again is indistinguishable from
+     * a stale one. Until its entry expires, replay would then re-spend outputs that no longer
+     * exist, and the child is rejected at broadcast — one failed broadcast, no money, the same
+     * outcome iOS accepts for a child built on an evicted parent. Nothing local can tell the two
+     * apart (no UTXO status ever becomes `FAILED` on eviction), so the exposure is bounded by how
+     * long an entry is replayed at all: see `UtxoInFlightRepositoryImpl.REPLAY_WINDOW_MS`.
      *
      * Injected outputs go through the same dust threshold as provider rows; a sub-dust change
      * output is money this wallet will not spend after it confirms either.
@@ -114,15 +127,24 @@ object SpendableUtxos {
         val candidates = LinkedHashMap<OutPointKey, UtxoInfo>()
         for (utxo in this) candidates[utxo.outPointKey] = utxo
 
-        for (tx in inFlight.sortedBy(UtxoInFlightTx::broadcastAt)) {
-            val spentKeys = tx.spent.map { it.outPointKey }
-            if (spentKeys.none { it in candidates }) continue
+        val pending = inFlight.sortedBy(UtxoInFlightTx::broadcastAt).toMutableList()
+        do {
+            var applied = false
+            val iterator = pending.iterator()
+            while (iterator.hasNext()) {
+                val tx = iterator.next()
+                val spentKeys = tx.spent.map { it.outPointKey }
+                if (spentKeys.none { it in candidates }) continue
 
-            spentKeys.forEach(candidates::remove)
-            tx.created
-                .filter { it.amount >= dustThreshold }
-                .forEach { candidates.putIfAbsent(it.outPointKey, it) }
-        }
+                spentKeys.forEach(candidates::remove)
+                tx.created
+                    .filter { it.amount >= dustThreshold }
+                    .forEach { candidates.putIfAbsent(it.outPointKey, it) }
+                iterator.remove()
+                applied = true
+            }
+        } while (applied && pending.isNotEmpty())
+
         return candidates.values.sortedBy(UtxoInfo::amount)
     }
 

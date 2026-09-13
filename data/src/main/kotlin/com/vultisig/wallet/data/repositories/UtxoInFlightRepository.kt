@@ -14,14 +14,16 @@ import javax.inject.Inject
  * [UtxoInFlightTx] ledger that [com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos] replays
  * over the provider's snapshot.
  *
- * Entries expire on age alone, [TTL_MS] after broadcast. The ledger only ever matters while the
- * provider's snapshot predates the broadcast (see `SpendableUtxos.reconcile`), and Blockchair's
- * cache plus mempool ingest lag is measured in minutes, so an hour is generous cover. It is also
- * the bound on the one way the ledger can be wrong: a transaction evicted from the mempool frees
- * its inputs, and until its entry expires a snapshot listing those inputs again would be
- * "corrected" by re-spending outputs that no longer exist. That costs one rejected broadcast and no
- * money — the same outcome iOS accepts for a child built on an evicted parent — and is far rarer
- * than the provider lag the ledger exists for.
+ * Entries are replayed for [UtxoInFlightRepositoryImpl.REPLAY_WINDOW_MS] after broadcast and then
+ * dropped. The ledger only matters while the provider's snapshot predates the broadcast (see
+ * [com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos]), and Blockchair's cache plus mempool
+ * ingest lag is measured in minutes, so ten of them is generous cover. The window is also the bound
+ * on the one way the ledger can be wrong — a transaction the mempool evicted frees its inputs, and
+ * until its entry expires a snapshot listing them again would be "corrected" by re-spending outputs
+ * that no longer exist. Nothing local can distinguish that from a stale snapshot (a UTXO history
+ * row never becomes `FAILED` on eviction), so the window is kept as short as the lag it exists to
+ * cover: an eviction inside it costs one rejected broadcast and no money, the outcome iOS accepts
+ * for a child built on an evicted parent.
  */
 interface UtxoInFlightRepository {
 
@@ -37,7 +39,7 @@ interface UtxoInFlightRepository {
         created: List<UtxoInfo>,
     )
 
-    /** Unexpired entries for [address] on [chain], oldest broadcast first. */
+    /** Entries for [address] on [chain] still inside the replay window, oldest broadcast first. */
     suspend fun getInFlight(chain: Chain, address: String): List<UtxoInFlightTx>
 }
 
@@ -53,7 +55,7 @@ constructor(private val dao: UtxoInFlightOutpointDao) : UtxoInFlightRepository {
         created: List<UtxoInfo>,
     ) {
         val now = System.currentTimeMillis()
-        dao.deleteBroadcastBefore(now - TTL_MS)
+        dao.deleteBroadcastBefore(now - REPLAY_WINDOW_MS)
 
         fun rows(kind: String, utxos: List<UtxoInfo>) =
             utxos.map {
@@ -72,7 +74,7 @@ constructor(private val dao: UtxoInFlightOutpointDao) : UtxoInFlightRepository {
     }
 
     override suspend fun getInFlight(chain: Chain, address: String): List<UtxoInFlightTx> =
-        dao.getSince(chain.raw, address, since = System.currentTimeMillis() - TTL_MS)
+        dao.getSince(chain.raw, address, since = System.currentTimeMillis() - REPLAY_WINDOW_MS)
             .groupBy { it.txHash }
             .map { (txHash, rows) ->
                 UtxoInFlightTx(
@@ -87,7 +89,7 @@ constructor(private val dao: UtxoInFlightOutpointDao) : UtxoInFlightRepository {
     private fun UtxoInFlightOutpointEntity.toUtxoInfo() =
         UtxoInfo(hash = hash, amount = amount, index = index.toUInt())
 
-    private companion object {
-        const val TTL_MS = 60L * 60 * 1000
+    companion object {
+        const val REPLAY_WINDOW_MS = 10L * 60 * 1000
     }
 }
