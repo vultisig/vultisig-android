@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -402,7 +403,8 @@ constructor(
                         )
                     )
                     .encodeBase64()
-        val bitmap = generateQrBitmap(deepLink, Color.White, Color.Transparent, null)
+        val bitmap =
+            generateQrBitmap(deepLink, Color.White.toArgb(), Color.Transparent.toArgb(), null)
         return BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
     }
 

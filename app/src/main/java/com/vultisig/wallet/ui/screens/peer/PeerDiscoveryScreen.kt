@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -864,7 +865,8 @@ private fun Error(state: ErrorUiModel, onTryAgainClick: () -> Unit) {
 @Composable
 private fun rememberPreviewQr(content: String): BitmapPainter =
     remember(content) {
-        val bitmap = GenerateQrBitmapImpl()(content, Color.White, Color.Transparent, null)
+        val bitmap =
+            GenerateQrBitmapImpl()(content, Color.White.toArgb(), Color.Transparent.toArgb(), null)
         BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
     }
 

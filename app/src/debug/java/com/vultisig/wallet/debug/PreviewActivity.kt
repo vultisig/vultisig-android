@@ -3115,8 +3115,8 @@ private fun ShareQrPreview(info: QrShareInfo) {
                     .generateQrBitmap()
                     .invoke(
                         "vultisig://preview/${info.title.replace(" ", "_")}",
-                        Color.White,
-                        Color.Transparent,
+                        Color.White.toArgb(),
+                        Color.Transparent.toArgb(),
                         null,
                     )
             val logo = BitmapFactory.decodeResource(context.resources, R.drawable.logo)
@@ -3318,7 +3318,10 @@ private fun QbtcClaimPairingPreview() {
                 "biTu5r2X-fMnsK7vIIPe9Q5KZIxnPGM5zxjnGUtZyhJWZJxJkQqRZpKkUmRS" +
                 "ZHLPF_kRbEpyqLclNtyV-7LQ3ko9-Wxqo7VqTpX5-pSXatbdatu1b16VI_qW" +
                 "T2rV_WuPtSn-lJf62v9rb_1r_42IIAdwAEcwRm8wAd8wQ_8AQ"
-        val bitmap = entry.generateQrBitmap().invoke(deepLink, Color.White, Color.Transparent, null)
+        val bitmap =
+            entry
+                .generateQrBitmap()
+                .invoke(deepLink, Color.White.toArgb(), Color.Transparent.toArgb(), null)
         BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
     }
     QbtcClaimScreen(

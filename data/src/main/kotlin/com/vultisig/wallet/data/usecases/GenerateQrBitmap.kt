@@ -1,8 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import android.graphics.Bitmap
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.annotation.ColorInt
 import androidx.core.graphics.scale
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -19,13 +18,13 @@ private const val QR_CODE_VS_LOGO_SCALE_FACTOR = 4
 // clear of the finder patterns. The QR spec recommends 4 modules.
 private const val QR_CODE_QUIET_ZONE = 4
 
-interface GenerateQrBitmap : (String, Color, Color, Bitmap?) -> Bitmap
+interface GenerateQrBitmap : (String, Int, Int, Bitmap?) -> Bitmap
 
 class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
     override fun invoke(
         qrCodeContent: String,
-        mainColor: Color,
-        backgroundColor: Color,
+        @ColorInt mainColor: Int,
+        @ColorInt backgroundColor: Int,
         logo: Bitmap?,
     ): Bitmap {
         // Logos overwrite modules in the center, so bump error correction well past the ZXing
@@ -54,8 +53,7 @@ class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         for (x in 0 until matrixWidth) {
             for (y in 0 until matrixHeight) {
                 val shouldColorPixel = bitmapMatrix.get(x, y)
-                val pixelColor =
-                    if (shouldColorPixel) mainColor.toArgb() else backgroundColor.toArgb()
+                val pixelColor = if (shouldColorPixel) mainColor else backgroundColor
 
                 bitmap.setPixel(x, y, pixelColor)
             }

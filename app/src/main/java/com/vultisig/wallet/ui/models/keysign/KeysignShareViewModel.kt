@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
@@ -224,7 +225,13 @@ constructor(
     fun loadQrPainter(address: String) =
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val qrBitmap = generateQrBitmap(address, Color.White, Color.Transparent, null)
+                val qrBitmap =
+                    generateQrBitmap(
+                        address,
+                        Color.White.toArgb(),
+                        Color.Transparent.toArgb(),
+                        null,
+                    )
                 this@KeysignShareViewModel.qrBitmap = qrBitmap
                 val bitmapPainter =
                     BitmapPainter(qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None)

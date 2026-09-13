@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -707,7 +708,12 @@ constructor(
     private suspend fun loadQr(data: String) {
         val qrBitmap =
             withContext(Dispatchers.IO) {
-                generateQrBitmap(data, colors.neutrals.n50, Color.Transparent, null)
+                generateQrBitmap(
+                    data,
+                    colors.neutrals.n50.toArgb(),
+                    Color.Transparent.toArgb(),
+                    null,
+                )
             }
         this@KeygenPeerDiscoveryViewModel.qrBitmap.value = qrBitmap
         val bitmapPainter =
