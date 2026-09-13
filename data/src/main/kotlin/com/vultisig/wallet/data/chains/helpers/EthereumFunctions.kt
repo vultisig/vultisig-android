@@ -104,26 +104,6 @@ object EthereumFunction {
         return text.decodeBytes32HexOrSelf().takeIf { it.isNotBlank() }
     }
 
-    /**
-     * Decodes the result of an ERC-20 `decimals()` `eth_call` into the declared decimal count.
-     *
-     * Returns null when the result carries no decodable `uint8`: `0x` from a contract that does not
-     * implement `decimals()` (or an address that is not a token at all), a word shorter than 32
-     * bytes, or non-hex. Decoding through the ABI decoder also narrows the value to `uint8`, so a
-     * full-width response reads as 255 instead of wrapping to -1 the way `BigInteger(hex,
-     * 16).toInt()` does.
-     */
-    fun decimalsErc20Decoder(hexDecimals: String): Int? {
-        val encoded = hexDecimals.remove0x().hexToByteArrayOrNull() ?: return null
-        // Answered before the decoder so the `0x` case — the one that used to throw — is reachable
-        // without the JNI library, and so unit-testable off-device.
-        if (encoded.isEmpty()) return null
-        val fn = EthereumAbiFunction("decimals")
-        fn.addParamUInt8(0, true)
-        if (!EthereumAbi.decodeOutput(fn, encoded)) return null
-        return fn.getParamUInt8(0, true).toInt() and 0xFF
-    }
-
     fun withdrawCircleMSCA(vaultAddress: String, tokenAddress: String, amount: BigInteger): String {
         require(amount >= BigInteger.ZERO) { "Amount must be non-negative" }
         require(vaultAddress.isNotBlank()) { "Vault address cannot be blank" }
