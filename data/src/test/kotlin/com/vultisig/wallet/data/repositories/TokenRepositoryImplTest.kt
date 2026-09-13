@@ -296,22 +296,44 @@ internal class TokenRepositoryImplTest {
     }
 
     @Test
+    fun `getEVMTokenByContract decodes the token's symbol and decimals`() = runTest {
+        val repository = newRepository(evmApiFactory = evmApiFactoryAnswering(decimals = "0x12"))
+
+        val coin = repository.getEVMTokenByContract(Chain.Ethereum.id, CONTRACT)
+
+        assertEquals("USDC", coin?.ticker)
+        assertEquals(18, coin?.decimal)
+    }
+
+    @Test
     fun `getEVMTokenByContract returns null when the contract has no decimals`() = runTest {
         // A contract that implements symbol() but not decimals() answers `0x` for the second call.
         // Decoding that with BigInteger threw NumberFormatException out of the repository, and
         // CustomTokenViewModel launches the lookup without a try, so it crashed the screen.
+        val repository = newRepository(evmApiFactory = evmApiFactoryAnswering(decimals = "0x"))
+
+        assertNull(repository.getEVMTokenByContract(Chain.Ethereum.id, CONTRACT))
+    }
+
+    @Test
+    fun `getEVMTokenByContract returns null when decimals is a full-width word`() = runTest {
+        // 2^256-1 wraps to -1 in toInt(); it used to pass the `!= 0` check and reach the Coin.
+        val repository =
+            newRepository(evmApiFactory = evmApiFactoryAnswering(decimals = "0x" + "f".repeat(64)))
+
+        assertNull(repository.getEVMTokenByContract(Chain.Ethereum.id, CONTRACT))
+    }
+
+    private fun evmApiFactoryAnswering(decimals: String): EvmApiFactory {
         val evmApi = mockk<EvmApi>(relaxed = true)
         coEvery { evmApi.findCustomToken(CONTRACT) } returns
             listOf(
                 CustomTokenResponse(id = 2, result = USDC_SYMBOL_RESULT),
-                CustomTokenResponse(id = 3, result = "0x"),
+                CustomTokenResponse(id = 3, result = decimals),
             )
-        val evmApiFactory = mockk<EvmApiFactory>(relaxed = true)
-        every { evmApiFactory.createEvmApi(Chain.Ethereum) } returns evmApi
-
-        val repository = newRepository(evmApiFactory = evmApiFactory)
-
-        assertNull(repository.getEVMTokenByContract(Chain.Ethereum.id, CONTRACT))
+        return mockk<EvmApiFactory>(relaxed = true).also {
+            every { it.createEvmApi(Chain.Ethereum) } returns evmApi
+        }
     }
 
     private fun newRepository(
