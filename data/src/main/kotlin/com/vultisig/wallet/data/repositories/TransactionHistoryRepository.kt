@@ -3,8 +3,12 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.db.dao.TransactionHistoryDao
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CommonTransactionHistoryData
+import com.vultisig.wallet.data.models.SendTransactionHistoryData
+import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TransactionHistoryData
+import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.buildTransactionHistoryId
 import com.vultisig.wallet.data.models.toEntity
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
@@ -33,6 +37,20 @@ interface TransactionHistoryRepository {
     suspend fun getPendingTransactions(vaultId: String): List<TransactionHistoryEntity>
 
     suspend fun getAllPendingTransactions(): List<TransactionHistoryEntity>
+
+    /**
+     * Hashes of the transactions this wallet broadcast from [address] on [chain] that have not
+     * reached a terminal state — the parents whose unconfirmed change
+     * [com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos] may admit.
+     *
+     * Scoped by sending address rather than vault id because on a UTXO chain the two name the same
+     * wallet — the address is derived from the vault's key — and the balance and coin-selection
+     * readers only hold the address. A pending transaction only vouches for the outputs of the
+     * wallet that signed it: another vault's zero-conf payment into this one is still someone
+     * else's, even when both vaults live on this device, and a row recorded without a sending
+     * address (legacy swaps) vouches for nothing.
+     */
+    suspend fun getUnconfirmedTxHashes(chain: Chain, address: String): Set<String>
 
     /** Merge backfill data with existing rows without wiping local metadata. */
     suspend fun upsertFromBackfill(entity: TransactionHistoryEntity)
@@ -106,6 +124,19 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
 
     override suspend fun getAllPendingTransactions(): List<TransactionHistoryEntity> =
         dao.getAllPendingTransactions()
+
+    override suspend fun getUnconfirmedTxHashes(chain: Chain, address: String): Set<String> =
+        dao.getPendingTransactionsByChain(chain.raw)
+            .filter { it.payload.fromAddressOrNull == address }
+            .mapTo(HashSet()) { it.txHash }
+
+    private val TransactionHistoryData.fromAddressOrNull: String?
+        get() =
+            when (this) {
+                is SendTransactionHistoryData -> fromAddress
+                is SwapTransactionHistoryData -> fromAddress.takeIf { it.isNotEmpty() }
+                is UnknownTransactionHistoryData -> null
+            }
 
     override suspend fun upsertFromBackfill(entity: TransactionHistoryEntity) =
         dao.upsertFromBackfill(entity)

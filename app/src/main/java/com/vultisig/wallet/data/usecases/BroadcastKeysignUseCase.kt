@@ -3,13 +3,16 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.UtxoInFlightRepository
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -78,6 +81,7 @@ constructor(
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val evmApiFactory: EvmApiFactory,
     private val balanceRepository: BalanceRepository,
+    private val utxoInFlightRepository: UtxoInFlightRepository,
 ) {
 
     /**
@@ -178,6 +182,10 @@ constructor(
             txLink = explorerLinkRepository.getTransactionLink(chain, txHash)
             swapProgressLink =
                 explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
+            // Before the balance is invalidated: the refresh that follows reads the provider,
+            // whose snapshot may not reflect this broadcast for minutes, and reconciles against
+            // this record.
+            recordUtxoSpend(vault, payload, txHash)
             runCatching { balanceRepository.invalidateBalance(payload.coin.address, payload.coin) }
                 .onFailure { Timber.e(it, "Failed to invalidate balance cache after broadcast") }
             runCatching {
@@ -204,5 +212,33 @@ constructor(
                 else "",
             additionalTxHashes = txHashes.drop(1).filterNotNull(),
         )
+    }
+
+    /**
+     * Writes what a UTXO-chain broadcast consumed and paid back to the sender, so the next coin
+     * selection and balance read do not trust a provider snapshot that predates it (#5867). A
+     * joined co-signer records it too: its broadcast races the initiator's and either may win, and
+     * its own next send is funded from the same address. Best-effort — a failed write costs the
+     * ledger, never the keysign.
+     */
+    private suspend fun recordUtxoSpend(vault: Vault, payload: KeysignPayload, txHash: String) {
+        val coin = payload.coin
+        if (coin.chain.standard != TokenStandard.UTXO || coin.chain == Chain.Cardano) return
+        try {
+            val effects =
+                UtxoHelper.getHelper(vault, coin.coinType).getSpendEffects(payload, txHash)
+                    ?: return
+            utxoInFlightRepository.record(
+                chain = coin.chain,
+                address = coin.address,
+                txHash = txHash,
+                spent = effects.spent,
+                created = effects.created,
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to record the outputs spent by %s", txHash)
+        }
     }
 }

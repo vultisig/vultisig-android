@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.db.dao.StakingDetailsDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.dao.TransactionHistoryDao
+import com.vultisig.wallet.data.db.dao.UtxoInFlightOutpointDao
 import com.vultisig.wallet.data.db.dao.VaultDao
 import com.vultisig.wallet.data.db.dao.VaultMetadataDao
 import com.vultisig.wallet.data.db.dao.VaultNotificationSettingsDao
@@ -54,6 +55,7 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_41_42
 import com.vultisig.wallet.data.db.migrations.MIGRATION_42_43
 import com.vultisig.wallet.data.db.migrations.MIGRATION_43_44
 import com.vultisig.wallet.data.db.migrations.MIGRATION_44_45
+import com.vultisig.wallet.data.db.migrations.MIGRATION_45_46
 import com.vultisig.wallet.data.db.migrations.MIGRATION_4_5
 import com.vultisig.wallet.data.db.migrations.MIGRATION_5_6
 import com.vultisig.wallet.data.db.migrations.MIGRATION_6_7
@@ -127,6 +129,7 @@ internal interface DatabaseModule {
                     MIGRATION_42_43,
                     MIGRATION_43_44,
                     MIGRATION_44_45,
+                    MIGRATION_45_46,
                 )
                 .build()
 
@@ -200,5 +203,10 @@ internal interface DatabaseModule {
         @Singleton
         fun providePendingLimitOrderDao(appDatabase: AppDatabase): PendingLimitOrderDao =
             appDatabase.pendingLimitOrderDao()
+
+        @Provides
+        @Singleton
+        fun provideUtxoInFlightOutpointDao(appDatabase: AppDatabase): UtxoInFlightOutpointDao =
+            appDatabase.utxoInFlightOutpointDao()
     }
 }

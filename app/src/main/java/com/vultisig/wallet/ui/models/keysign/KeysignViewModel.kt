@@ -42,6 +42,7 @@ import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.InAppReviewRepository
 import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
+import com.vultisig.wallet.data.repositories.UtxoInFlightRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.services.KeysignTxStatusPoller
 import com.vultisig.wallet.data.services.TxStatusPollOutcome
@@ -352,6 +353,7 @@ constructor(
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val inAppReviewRepository: InAppReviewRepository,
     private val pendingLimitOrderRepository: PendingLimitOrderRepository,
+    private val utxoInFlightRepository: UtxoInFlightRepository,
     private val doneTransactionPresentation: DoneTransactionPresentation,
     /**
      * Injected so the two reads this view model starts at construction stay on the caller's
@@ -428,6 +430,7 @@ constructor(
             explorerLinkRepository = explorerLinkRepository,
             evmApiFactory = evmApiFactory,
             balanceRepository = balanceRepository,
+            utxoInFlightRepository = utxoInFlightRepository,
         )
 
     init {

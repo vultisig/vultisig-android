@@ -80,6 +80,8 @@ class BalanceRepositoryBalanceOrNullTest {
             cosmosStakingDeFiBalanceService =
                 mockk<CosmosStakingDeFiBalanceService>(relaxed = true),
             solanaDeFiBalanceService = mockk<SolanaDeFiBalanceService>(relaxed = true),
+            transactionHistoryRepository = mockk<TransactionHistoryRepository>(relaxed = true),
+            utxoInFlightRepository = mockk<UtxoInFlightRepository>(relaxed = true),
         )
 
     @Test
@@ -119,7 +121,7 @@ class BalanceRepositoryBalanceOrNullTest {
 
     @Test
     fun `a Blockchair balance failure propagates and is not persisted as zero`() = runTest {
-        coEvery { blockchairApi.getAddressInfo(Coins.Bitcoin.BTC.chain, ADDRESS) } throws
+        coEvery { blockchairApi.getAllUtxos(Coins.Bitcoin.BTC.chain, ADDRESS) } throws
             IllegalStateException("blockchair down")
 
         assertThrows<IllegalStateException> {
@@ -129,11 +131,12 @@ class BalanceRepositoryBalanceOrNullTest {
         coVerify(exactly = 0) { tokenValueDao.insertTokenValue(any<TokenValueEntity>()) }
     }
 
+    /** Dash still reads the unpaged aggregate, where an absent address decodes to null. */
     @Test
     fun `a Blockchair absent address response persists a genuine zero`() = runTest {
-        coEvery { blockchairApi.getAddressInfo(Coins.Bitcoin.BTC.chain, ADDRESS) } returns null
+        coEvery { blockchairApi.getAddressInfo(Coins.Dash.DASH.chain, ADDRESS) } returns null
 
-        repository.getTokenValue(ADDRESS, Coins.Bitcoin.BTC).first().value shouldBe BigInteger.ZERO
+        repository.getTokenValue(ADDRESS, Coins.Dash.DASH).first().value shouldBe BigInteger.ZERO
 
         coVerify(exactly = 1) {
             tokenValueDao.insertTokenValue(

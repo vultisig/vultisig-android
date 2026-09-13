@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.db.dao.StakingDetailsDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.dao.TransactionHistoryDao
+import com.vultisig.wallet.data.db.dao.UtxoInFlightOutpointDao
 import com.vultisig.wallet.data.db.dao.VaultDao
 import com.vultisig.wallet.data.db.dao.VaultMetadataDao
 import com.vultisig.wallet.data.db.dao.VaultNotificationSettingsDao
@@ -36,6 +37,7 @@ import com.vultisig.wallet.data.db.models.StakingDetailsEntity
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
+import com.vultisig.wallet.data.db.models.UtxoInFlightOutpointEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultMetadataEntity
 import com.vultisig.wallet.data.db.models.VaultNotificationSettingsEntity
@@ -63,8 +65,9 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
             VaultNotificationSettingsEntity::class,
             TransactionHistoryEntity::class,
             PendingLimitOrderEntity::class,
+            UtxoInFlightOutpointEntity::class,
         ],
-    version = 45,
+    version = 46,
     exportSchema = false,
 )
 @TypeConverters(
@@ -102,4 +105,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionHistoryDao(): TransactionHistoryDao
 
     abstract fun pendingLimitOrderDao(): PendingLimitOrderDao
+
+    abstract fun utxoInFlightOutpointDao(): UtxoInFlightOutpointDao
 }

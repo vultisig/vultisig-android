@@ -164,6 +164,7 @@ internal class KeysignViewModelInAppReviewTest {
             inAppReviewRepository = inAppReviewRepository,
             gasFeeToEstimatedFee = mockk(relaxed = true),
             pendingLimitOrderRepository = mockk(relaxed = true),
+            utxoInFlightRepository = mockk(relaxed = true),
             doneTransactionPresentation = mockk(relaxed = true),
             ioDispatcher = testDispatcher,
             awaitApprovalConfirmation = mockk(relaxed = true),
