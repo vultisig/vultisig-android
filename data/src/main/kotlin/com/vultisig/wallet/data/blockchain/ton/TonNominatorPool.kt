@@ -61,14 +61,23 @@ object TonNominatorPool {
     /** Minimum deposit (in nanotons) for a pool whose `min_stake` is [minStakeNano]. */
     fun minimumDeposit(minStakeNano: BigInteger): BigInteger = minStakeNano + DEPOSIT_COMMISSION
 
+    /** The implementations whose comments this app writes, and therefore the ones it can read. */
+    private val NOMINATOR_IMPLEMENTATIONS: List<String> =
+        listOf(IMPLEMENTATION_WHALES, IMPLEMENTATION_TF)
+
+    /**
+     * Every deposit comment across supported implementations. Derived from the writer table above
+     * so the reader in the signed-transaction decoder cannot drift from what the builder sends.
+     */
+    val DEPOSIT_COMMENTS: Set<String> =
+        NOMINATOR_IMPLEMENTATIONS.mapNotNull(::depositComment).toSet()
+
+    /** Every withdraw comment across supported implementations; derived like [DEPOSIT_COMMENTS]. */
+    val WITHDRAW_COMMENTS: Set<String> =
+        NOMINATOR_IMPLEMENTATIONS.mapNotNull(::withdrawComment).toSet()
+
     /** Every deposit/withdraw comment across supported implementations. */
-    private val TRANSFER_COMMENTS: Set<String> =
-        setOfNotNull(
-            depositComment(IMPLEMENTATION_WHALES),
-            withdrawComment(IMPLEMENTATION_WHALES),
-            depositComment(IMPLEMENTATION_TF),
-            withdrawComment(IMPLEMENTATION_TF),
-        )
+    private val TRANSFER_COMMENTS: Set<String> = DEPOSIT_COMMENTS + WITHDRAW_COMMENTS
 
     /**
      * Whether [memo] is a nominator-pool deposit/withdraw comment. Such messages MUST be sent

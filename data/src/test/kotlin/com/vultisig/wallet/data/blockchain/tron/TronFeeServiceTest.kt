@@ -104,6 +104,71 @@ class TronFeeServiceTest {
         assertEquals(MEMO_FEE, memoed.amount - staking.amount)
     }
 
+    @Test
+    fun `a contract call is free when the sender's own bandwidth covers it`() = runTest {
+        // #5859: a TRC20 send used to be charged 345 bytes unconditionally, so every account with
+        // its daily free quota intact — the common case — was quoted 0.345 TRX over what the chain
+        // takes. Confirmed on mainnet by tx 665a3a23...: net_usage 345 with no net_fee.
+        coEvery { tronApi.getChainParameters() } returns chainParameters()
+
+        val fee = service.calculateBandwidthFee(freeBandwidth(600L), isContract = true)
+
+        assertEquals(BigInteger.ZERO, fee.amount)
+    }
+
+    @Test
+    fun `a contract call burns TRX only once bandwidth runs short`() = runTest {
+        coEvery { tronApi.getChainParameters() } returns chainParameters()
+
+        val fee = service.calculateBandwidthFee(freeBandwidth(0L), isContract = true)
+
+        // 345 bytes x 1,000 sun.
+        assertEquals(BigInteger.valueOf(345_000L), fee.amount)
+    }
+
+    @Test
+    fun `each shape is measured against its own size`() = runTest {
+        // 320 bandwidth covers a 300-byte native transfer but not a 345-byte contract call, so the
+        // shared rule must not collapse the two sizes together.
+        coEvery { tronApi.getChainParameters() } returns chainParameters()
+
+        val nativeFee = service.calculateBandwidthFee(freeBandwidth(320L), isContract = false)
+        val contractFee = service.calculateBandwidthFee(freeBandwidth(320L), isContract = true)
+
+        assertEquals(BigInteger.ZERO, nativeFee.amount)
+        assertEquals(BigInteger.valueOf(345_000L), contractFee.amount)
+    }
+
+    @Test
+    fun `staked and free bandwidth each have to cover the call on their own`() = runTest {
+        // java-tron's BandwidthProcessor tries the staked pool, then the free pool, and checks each
+        // against the whole transaction — it never adds the two. A sender left with 200 in each is
+        // burned for all 345 bytes, while 345 in either one alone is free.
+        coEvery { tronApi.getChainParameters() } returns chainParameters()
+
+        val split =
+            TronAccountResourceJson(
+                netLimit = 1_000L,
+                netUsed = 800L,
+                freeNetLimit = 600L,
+                freeNetUsed = 400L,
+            )
+        val staked = TronAccountResourceJson(netLimit = 345L)
+        val free = TronAccountResourceJson(freeNetLimit = 345L)
+
+        assertEquals(
+            BigInteger.valueOf(345_000L),
+            service.calculateBandwidthFee(split, isContract = true).amount,
+        )
+        assertEquals(
+            BigInteger.ZERO,
+            service.calculateBandwidthFee(staked, isContract = true).amount,
+        )
+        assertEquals(BigInteger.ZERO, service.calculateBandwidthFee(free, isContract = true).amount)
+    }
+
+    private fun freeBandwidth(available: Long) = TronAccountResourceJson(freeNetLimit = available)
+
     private fun stubHealthyApi() {
         coEvery { tronApi.getChainParameters() } returns chainParameters()
         // Free bandwidth covers the whole transfer and the destination is already activated, so the

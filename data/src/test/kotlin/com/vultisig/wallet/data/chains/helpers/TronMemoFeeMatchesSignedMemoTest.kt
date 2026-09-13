@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.models.TronAccountJson
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronChainParameterJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
+import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.tron.TRON_WITHDRAW_EXPIRE_UNFREEZE_MEMO
@@ -93,6 +94,42 @@ class TronMemoFeeMatchesSignedMemoTest {
     }
 
     @Test
+    fun `a TRC20 memo is priced exactly when the signed contract call carries it`() = runTest {
+        // The token builder writes the memo into raw_data.data just as the coin builder does, and
+        // the chain bills any non-empty data the same flat fee whatever the contract type — so the
+        // token fee has to move by the memo fee exactly when the signed call carries one.
+        coEvery { tronApi.getTriggerConstantContractFee(any(), any(), any(), any(), any()) } returns
+            TronTriggerConstantContractJson(
+                energyUsed = 65_000L,
+                energyPenalty = 0L,
+                transaction = TronTriggerConstantContractJson.Transaction(),
+            )
+        val baseline =
+            feeService.calculateFees(transfer(Case("no memo", TRC20_RECIPIENT, null), usdt)).amount
+
+        listOf(
+                Case("empty memo", to = TRC20_RECIPIENT, memo = ""),
+                Case("user memo", to = TRC20_RECIPIENT, memo = "thanks for lunch"),
+                // The routing signal only means staking on a native self-transfer; on a token it
+                // is an ordinary memo the builder writes and the chain charges for.
+                Case("staking lookalike", to = TRC20_RECIPIENT, memo = "FREEZE:BANDWIDTH"),
+            )
+            .forEach { case ->
+                val signed =
+                    Tron.SigningInput.parseFrom(helper.getPreSignedInputData(payload(case, usdt)))
+                        .transaction
+                        .memo
+                val fee = feeService.calculateFees(transfer(case, usdt)).amount
+
+                assertEquals(
+                    if (signed.isNotEmpty()) MEMO_FEE else BigInteger.ZERO,
+                    fee - baseline,
+                    "${case.name}: signed memo=\"$signed\" but fee=$fee against $baseline",
+                )
+            }
+    }
+
+    @Test
     fun `a staking memo aimed at another address is rejected before it can be signed`() {
         // The one input the table above cannot cover: no transaction exists to compare a fee
         // against, which is why the shared predicate keeps the self-address clause.
@@ -103,9 +140,9 @@ class TronMemoFeeMatchesSignedMemoTest {
         }
     }
 
-    private fun payload(case: Case) =
+    private fun payload(case: Case, coin: Coin = trx) =
         KeysignPayload(
-            coin = trx,
+            coin = coin,
             toAddress = case.to,
             toAmount = AMOUNT,
             memo = case.memo,
@@ -127,9 +164,9 @@ class TronMemoFeeMatchesSignedMemoTest {
             wasmExecuteContractPayload = null,
         )
 
-    private fun transfer(case: Case) =
+    private fun transfer(case: Case, coin: Coin = trx) =
         Transfer(
-            coin = trx,
+            coin = coin,
             vault = VaultData(vaultHexPublicKey = "pub", vaultHexChainCode = "chain"),
             amount = AMOUNT,
             to = case.to,
@@ -151,9 +188,22 @@ class TronMemoFeeMatchesSignedMemoTest {
             isNativeToken = true,
         )
 
+    private val usdt =
+        trx.copy(
+            ticker = "USDT",
+            priceProviderID = "tether",
+            contractAddress = "TDisDrQngvcMNfYurnQLW4oRnh9PzwDFxh",
+            isNativeToken = false,
+        )
+
     private companion object {
         const val SENDER = "TSenderAddressBase58"
         const val RECIPIENT = "TRecipientAddressBase58"
+
+        /** A checksummed address: the token fee path decodes its recipient before simulating. */
+        const val TRC20_RECIPIENT = "TBthewbwcZKTd99XrfwoUzpTtvmkoFqt9q"
+
         val AMOUNT: BigInteger = BigInteger.valueOf(1_000_000L)
+        val MEMO_FEE: BigInteger = BigInteger.valueOf(1_000_000L)
     }
 }
