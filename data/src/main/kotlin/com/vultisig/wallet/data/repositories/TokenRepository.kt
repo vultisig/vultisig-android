@@ -72,7 +72,7 @@ constructor(
             val result = it.result ?: return null
             if (it.id == CUSTOM_TOKEN_RESPONSE_TICKER_ID)
                 ticker = decodeErc20MetadataString(result) ?: return null
-            else decimal = result.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
+            else decimal = result.decodeContractDecimal()?.takeIf { dec -> dec > 0 } ?: return null
         }
         val coin =
             Coin(
@@ -271,9 +271,10 @@ constructor(
 
     private fun Iterable<Coin>.filterNatives() = filter { it.isNativeToken }
 
-    private fun String.decodeContractDecimal(): Int {
-        return BigInteger(removePrefix("0x"), 16).toInt()
-    }
+    // Null for the `0x` a contract without decimals() answers; a full-width word wraps to -1 in
+    // toInt() and is dropped by the caller's positive check.
+    private fun String.decodeContractDecimal(): Int? =
+        removePrefix("0x").toBigIntegerOrNull(16)?.toInt()
 
     private val enabledByDefaultTokens = listOf(Coins.ThorChain.TCY).groupBy { it.chain }
 
