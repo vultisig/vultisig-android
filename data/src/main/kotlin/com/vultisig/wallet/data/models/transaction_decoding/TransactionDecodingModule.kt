@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.blockchain.maya.MayaChainTransactionDecoder
 import com.vultisig.wallet.data.blockchain.solana.staking.SolanaTransactionDecoder
 import com.vultisig.wallet.data.blockchain.thorchain.THORChainTransactionDecoder
 import com.vultisig.wallet.data.blockchain.ton.TonTransactionDecoder
+import com.vultisig.wallet.data.blockchain.tron.TronTransactionDecoder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,6 +34,7 @@ internal object TransactionDecodingModule {
         cosmos: CosmosTransactionDecoder,
         maya: MayaChainTransactionDecoder,
         ton: TonTransactionDecoder,
+        tron: TronTransactionDecoder,
     ): SignedTransactionDecoder =
         SignedTransactionDecoder().apply {
             register(solana)
@@ -49,5 +51,6 @@ internal object TransactionDecodingModule {
             register(cosmos)
             register(maya)
             register(ton)
+            register(tron)
         }
 }
