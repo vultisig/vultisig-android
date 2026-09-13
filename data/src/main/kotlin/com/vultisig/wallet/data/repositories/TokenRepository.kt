@@ -14,7 +14,6 @@ import com.vultisig.wallet.data.usecases.CardanoTokenFinder
 import com.vultisig.wallet.data.usecases.CosmosBankCoinFinder
 import com.vultisig.wallet.data.usecases.EvmCoinFinder
 import com.vultisig.wallet.data.usecases.RippleTokenFinder
-import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -73,7 +72,10 @@ constructor(
             val result = it.result ?: return null
             if (it.id == CUSTOM_TOKEN_RESPONSE_TICKER_ID)
                 ticker = EthereumFunction.symbolErc20Decoder(result) ?: return null
-            else decimal = result.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
+            else
+                decimal =
+                    EthereumFunction.decimalsErc20Decoder(result)?.takeIf { dec -> dec != 0 }
+                        ?: return null
         }
         val coin =
             Coin(
@@ -271,10 +273,6 @@ constructor(
     override val nativeTokens: Flow<List<Coin>> = builtInTokens.map { it.filterNatives() }
 
     private fun Iterable<Coin>.filterNatives() = filter { it.isNativeToken }
-
-    private fun String.decodeContractDecimal(): Int {
-        return BigInteger(removePrefix("0x"), 16).toInt()
-    }
 
     private val enabledByDefaultTokens = listOf(Coins.ThorChain.TCY).groupBy { it.chain }
 
