@@ -887,6 +887,9 @@ class EvmApiImp(
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
         private const val CUSTOM_TOKEN_RESPONSE_DECIMAL_ID_ = 3
+        // keccak("symbol()") and keccak("decimals()"), 4 bytes each. Left literal rather than
+        // derived through EthereumAbi.encode: building a request would then need wallet-core's
+        // native library, which does not load in the JVM tests that construct EvmApiImp directly.
         private const val CUSTOM_TOKEN_REQUEST_TICKER_DATA = "0x95d89b41"
         private const val CUSTOM_TOKEN_REQUEST_DECIMAL_DATA = "0x313ce567"
         private const val FETCH_RESOLVER_PREFIX = "0x0178b8bf"
