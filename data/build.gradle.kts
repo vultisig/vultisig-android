@@ -94,11 +94,11 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.work)
 
-    // compose: @Immutable on two data models, and Color/toArgb in GenerateQrBitmap. No
-    // composables here, so the Compose compiler plugin is deliberately not applied.
+    // compose: only @Immutable on two data models. runtime-annotation carries the stability
+    // annotations without the Compose runtime, and no composables live here, so the Compose
+    // compiler plugin is deliberately not applied.
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.compose.runtime.annotation)
 
     // room
     api(libs.androidx.room.runtime)

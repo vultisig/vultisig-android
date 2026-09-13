@@ -66,7 +66,12 @@ constructor(
     private suspend fun generateQr(address: String, logo: Bitmap?): QrBitmapData {
         val qrBitmap =
             withContext(Dispatchers.IO) {
-                generateQrBitmap(address, colors.neutrals.n50, Color.Transparent, logo)
+                generateQrBitmap(
+                    address,
+                    colors.neutrals.n50.toArgb(),
+                    Color.Transparent.toArgb(),
+                    logo,
+                )
             }
 
         val bitmapPainter =
