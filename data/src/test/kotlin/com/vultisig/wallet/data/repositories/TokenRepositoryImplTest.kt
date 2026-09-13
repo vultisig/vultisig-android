@@ -2,8 +2,10 @@
 
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.CustomTokenResponse
 import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.models.Chain
@@ -16,8 +18,10 @@ import com.vultisig.wallet.data.usecases.EvmCoinFinder
 import com.vultisig.wallet.data.usecases.RippleTokenFinder
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -291,6 +295,53 @@ internal class TokenRepositoryImplTest {
         assertEquals("Rujira Token", coins.single { it.contractAddress == "x/ruji" }.name)
     }
 
+    @Test
+    fun `getEVMTokenByContract returns null when the contract has no decimals`() = runTest {
+        // A contract that implements symbol() but not decimals() answers `0x` for the second call.
+        // Decoding that with BigInteger threw NumberFormatException out of the repository, and
+        // CustomTokenViewModel launches the lookup without a try, so it crashed the screen.
+        val repository = newRepository(evmApiFactory = evmApiFactoryAnswering(decimals = "0x"))
+
+        assertNull(repository.getEVMTokenByContract(Chain.Ethereum.id, CONTRACT))
+    }
+
+    @Test
+    fun `getEVMTokenByContract returns null when decimals is a full-width word`() = runTest {
+        // 2^256-1 wraps to -1 in toInt(); it used to pass the `!= 0` check and reach the Coin.
+        val repository =
+            newRepository(evmApiFactory = evmApiFactoryAnswering(decimals = "0x" + "f".repeat(64)))
+
+        assertNull(repository.getEVMTokenByContract(Chain.Ethereum.id, CONTRACT))
+    }
+
+    @Test
+    fun `getEVMTokenByContract returns null when decimals is wider than uint8`() = runTest {
+        // 2^32 + 6: toInt() keeps the low 32 bits, so without the width check this read as a
+        // plausible 6 and built the Coin.
+        val repository =
+            newRepository(
+                evmApiFactory =
+                    evmApiFactoryAnswering(decimals = "0x" + "100000006".padStart(64, '0'))
+            )
+
+        assertNull(repository.getEVMTokenByContract(Chain.Ethereum.id, CONTRACT))
+    }
+
+    // The batch is answered decimals-first (JSON-RPC allows any order) so a rejected decimals()
+    // result returns before the symbol() arm, which decodes through wallet-core's native library
+    // and cannot run on the JVM.
+    private fun evmApiFactoryAnswering(decimals: String): EvmApiFactory {
+        val evmApi = mockk<EvmApi>(relaxed = true)
+        coEvery { evmApi.findCustomToken(CONTRACT) } returns
+            listOf(
+                CustomTokenResponse(id = 3, result = decimals),
+                CustomTokenResponse(id = 2, result = USDC_SYMBOL_RESULT),
+            )
+        return mockk<EvmApiFactory>(relaxed = true).also {
+            every { it.createEvmApi(Chain.Ethereum) } returns evmApi
+        }
+    }
+
     private fun newRepository(
         thorApi: ThorChainApi = mockk(relaxed = true),
         evmCoinFinder: EvmCoinFinder = mockk(relaxed = true),
@@ -298,9 +349,10 @@ internal class TokenRepositoryImplTest {
         rippleTokenFinder: RippleTokenFinder = mockk(relaxed = true),
         cardanoTokenFinder: CardanoTokenFinder = mockk(relaxed = true),
         chainAccountAddressRepository: ChainAccountAddressRepository = mockk(relaxed = true),
+        evmApiFactory: EvmApiFactory = mockk(relaxed = true),
     ): TokenRepositoryImpl =
         TokenRepositoryImpl(
-            evmApiFactory = mockk<EvmApiFactory>(relaxed = true),
+            evmApiFactory = evmApiFactory,
             thorApi = thorApi,
             chainAccountAddressRepository = chainAccountAddressRepository,
             evmCoinFinder = evmCoinFinder,
@@ -310,6 +362,14 @@ internal class TokenRepositoryImplTest {
         )
 
     private companion object {
+        const val CONTRACT = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+
+        // Standard ABI `string` return: offset word, length word, then "USDC" right-padded.
+        const val USDC_SYMBOL_RESULT =
+            "0x0000000000000000000000000000000000000000000000000000000000000020" +
+                "0000000000000000000000000000000000000000000000000000000000000004" +
+                "5553444300000000000000000000000000000000000000000000000000000000"
+
         const val ADDRESS = "thor1mtqtupwgjwn397w3dx9fqmqgzrjcal5yxz8q7v"
         const val TERRA_ADDRESS = "terra1abc"
         const val TERRA_CLASSIC_ADDRESS = "terra1classic"

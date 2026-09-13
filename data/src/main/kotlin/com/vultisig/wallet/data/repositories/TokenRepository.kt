@@ -14,7 +14,6 @@ import com.vultisig.wallet.data.usecases.CardanoTokenFinder
 import com.vultisig.wallet.data.usecases.CosmosBankCoinFinder
 import com.vultisig.wallet.data.usecases.EvmCoinFinder
 import com.vultisig.wallet.data.usecases.RippleTokenFinder
-import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -73,7 +72,7 @@ constructor(
             val result = it.result ?: return null
             if (it.id == CUSTOM_TOKEN_RESPONSE_TICKER_ID)
                 ticker = EthereumFunction.symbolErc20Decoder(result) ?: return null
-            else decimal = result.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
+            else decimal = result.decodeContractDecimal()?.takeIf { dec -> dec > 0 } ?: return null
         }
         val coin =
             Coin(
@@ -272,9 +271,14 @@ constructor(
 
     private fun Iterable<Coin>.filterNatives() = filter { it.isNativeToken }
 
-    private fun String.decodeContractDecimal(): Int {
-        return BigInteger(removePrefix("0x"), 16).toInt()
-    }
+    // Null for the `0x` a contract without decimals() answers, and for any word wider than the
+    // uint8 decimals() declares: toInt() would keep its low 32 bits, so a full-width word read as
+    // -1 and 2^32 + 6 as a plausible 6.
+    private fun String.decodeContractDecimal(): Int? =
+        removePrefix("0x")
+            .toBigIntegerOrNull(16)
+            ?.takeIf { it.bitLength() <= UByte.SIZE_BITS }
+            ?.toInt()
 
     private val enabledByDefaultTokens = listOf(Coins.ThorChain.TCY).groupBy { it.chain }
 
