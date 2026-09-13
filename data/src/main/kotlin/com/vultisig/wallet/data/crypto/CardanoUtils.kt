@@ -107,6 +107,11 @@ object CardanoUtils {
         }
     }
 
+    /**
+     * Local txid: blake2b-256 over the body element of the signed envelope. WalletCore's
+     * `TransactionUtil.calcTxHash` cannot replace this — Cardano is not in its registry, so it
+     * returns null (an NPE at the Kotlin boundary) for every input.
+     */
     fun calculateCardanoTransactionHash(transactionData: ByteArray): String {
         return try {
             val transactionBodyData = extractCardanoTransactionBody(transactionData)
