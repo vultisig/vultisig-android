@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.chains.ton.tonUserFriendlyAddress
-import com.vultisig.wallet.data.api.models.BlockChairUtxoInfo
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.TronFee
@@ -31,6 +30,7 @@ import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.TronFees
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
+import com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos
 import com.vultisig.wallet.data.chains.helpers.CardanoHelper
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
@@ -113,6 +113,8 @@ constructor(
     private val cardanoApi: CardanoApi,
     private val feeServiceComposite: FeeServiceComposite,
     @TronFee private val tronFeeService: FeeService,
+    private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val utxoInFlightRepository: UtxoInFlightRepository,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -332,18 +334,16 @@ constructor(
                                 sendMaxAmount = isMaxAmountEnabled,
                             ),
                         utxos =
-                            dashUtxos?.excludingDust(chain)
-                                ?: blockChairApi
-                                    .getAllUtxos(chain = chain, address = address)
-                                    .utxos
-                                    .toSpendableUtxos(chain),
+                            dashUtxos?.excludingDust(chain)?.let {
+                                SpendableUtxos.reconcile(
+                                    candidates = it,
+                                    dustThreshold = chain.getDustThreshold.toLong(),
+                                    inFlight = utxoInFlightRepository.getInFlight(chain, address),
+                                )
+                            } ?: spendableUtxos(chain, address),
                     )
                 } else {
-                    val utxos =
-                        blockChairApi
-                            .getAllUtxos(chain = chain, address = address)
-                            .utxos
-                            .toSpendableUtxos(chain)
+                    val utxos = spendableUtxos(chain, address)
 
                     BlockChainSpecificAndUtxo(
                         blockChainSpecific =
@@ -768,22 +768,31 @@ constructor(
             }
         }
 
-    /** Shared by every UTXO-chain data source, Blockchair or Dash's own RPC. */
+    /**
+     * Dash's own RPC index only. Blockchair-sourced sets go through [SpendableUtxos], whose dust
+     * boundary is inclusive; this one is left as it was so Dash UTXO sourcing stays untouched. The
+     * in-flight ledger is still replayed over it at the call site: that index is built from
+     * connected blocks, so it keeps offering an input a pending send consumed until that send
+     * confirms.
+     */
     private fun List<UtxoInfo>.excludingDust(chain: Chain): List<UtxoInfo> {
         val dustThreshold = chain.getDustThreshold.toLong()
         return filter { it.amount > dustThreshold }.sortedBy(UtxoInfo::amount)
     }
 
     /**
-     * Matches the SDK's spendable-UTXO filter (parity with iOS/Windows) so coin selection can't
-     * pick an input that looks present in Blockchair's list but isn't actually usable yet.
+     * The same predicate [BalanceRepository] sums for the displayed balance, so coin selection
+     * can't pick an input that looks present in Blockchair's list but isn't usable yet — and,
+     * conversely, can fund every amount the screen said was there (#5867).
      */
-    private fun List<BlockChairUtxoInfo>.toSpendableUtxos(chain: Chain): List<UtxoInfo> =
-        filter { it.isSpendable != false && it.blockId > 0 && it.index >= 0 }
-            .map {
-                UtxoInfo(hash = it.transactionHash, amount = it.value, index = it.index.toUInt())
-            }
-            .excludingDust(chain)
+    private suspend fun spendableUtxos(chain: Chain, address: String): List<UtxoInfo> =
+        SpendableUtxos.select(
+            rows = blockChairApi.getAllUtxos(chain = chain, address = address).utxos,
+            dustThreshold = chain.getDustThreshold.toLong(),
+            ownUnconfirmedTxHashes =
+                transactionHistoryRepository.getUnconfirmedTxHashes(chain, address),
+            inFlight = utxoInFlightRepository.getInFlight(chain, address),
+        )
 
     private fun isThorchainRouterChain(chain: Chain): Boolean =
         chain == Chain.Ethereum ||

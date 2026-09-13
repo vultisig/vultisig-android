@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.blockchain.solana.SolanaDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ton.TonDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.tron.TronDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.models.Chain
@@ -68,6 +69,7 @@ import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.utils.SimpleCache
 import com.vultisig.wallet.data.utils.runCatchingCancellable
 import com.vultisig.wallet.data.utils.scaledFor
@@ -176,6 +178,8 @@ constructor(
     private val tonDeFiBalanceService: TonDeFiBalanceService,
     private val cosmosStakingDeFiBalanceService: CosmosStakingDeFiBalanceService,
     private val solanaDeFiBalanceService: SolanaDeFiBalanceService,
+    private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val utxoInFlightRepository: UtxoInFlightRepository,
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
@@ -500,8 +504,16 @@ constructor(
                             BitcoinCash,
                             Litecoin,
                             Dogecoin,
-                            Dash,
-                            Zcash -> {
+                            Zcash -> spendableUtxoBalance(coin.chain, address)
+
+                            // Dash is the one UTXO chain whose spendable set does not come from
+                            // Blockchair: coin selection reads a node's address index
+                            // (`getaddressutxos`), which is built from connected blocks and
+                            // blind to the mempool in both directions, so summing it here would
+                            // keep showing an input a pending send had already consumed.
+                            // Blockchair's aggregate is mempool-aware and stays the better number
+                            // to display.
+                            Dash -> {
                                 val balance =
                                     blockchairApi
                                         .getAddressInfo(coin.chain, address)
@@ -629,6 +641,33 @@ constructor(
                     )
                 )
             }
+
+    /**
+     * The sum of exactly the outputs coin selection will fund a send from, so the number on the
+     * screen is one a send can actually spend (#5867). Reads the paginated UTXO set rather than
+     * `getAddressInfo`, which is capped near 100 entries and would understate a wallet holding
+     * more.
+     *
+     * An address the provider says holds a balance but returns no unspent outputs for is
+     * contradicting itself: throw, and the failed-read path keeps the cached value rather than
+     * persisting a zero (#5788 / #5831). An address whose outputs are all present and all filtered
+     * out is a different case entirely and legitimately reads zero.
+     */
+    private suspend fun spendableUtxoBalance(chain: Chain, address: String): BigInteger {
+        val info = blockchairApi.getAllUtxos(chain, address)
+        val reportedBalance = info.address.balance
+        check(info.utxos.isNotEmpty() || reportedBalance <= 0) {
+            "Blockchair reported a balance of $reportedBalance for $chain with no unspent " +
+                "outputs — refusing to zero the balance"
+        }
+        return SpendableUtxos.balance(
+            rows = info.utxos,
+            dustThreshold = chain.getDustThreshold.toLong(),
+            ownUnconfirmedTxHashes =
+                transactionHistoryRepository.getUnconfirmedTxHashes(chain, address),
+            inFlight = utxoInFlightRepository.getInFlight(chain, address),
+        )
+    }
 
     override suspend fun getBalanceOrNull(address: String, coin: Coin): BigInteger? =
         // Solana native is the only read that reports failure as a value rather than as a throw

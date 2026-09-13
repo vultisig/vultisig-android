@@ -31,6 +31,8 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepositoryImpl
+import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
+import com.vultisig.wallet.data.repositories.UtxoInFlightRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -329,6 +331,8 @@ internal class TronFeeReconciliationTest {
             cardanoApi = mockk<CardanoApi>(relaxed = true),
             feeServiceComposite = mockk<FeeServiceComposite>(relaxed = true),
             tronFeeService = feeService,
+            transactionHistoryRepository = mockk<TransactionHistoryRepository>(relaxed = true),
+            utxoInFlightRepository = mockk<UtxoInFlightRepository>(relaxed = true),
         )
 
     private fun trc20Transfer(to: String = RECIPIENT, memo: String? = null) =
