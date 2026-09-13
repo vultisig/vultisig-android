@@ -314,6 +314,19 @@ internal class TokenRepositoryImplTest {
         assertNull(repository.getEVMTokenByContract(Chain.Ethereum.id, CONTRACT))
     }
 
+    @Test
+    fun `getEVMTokenByContract returns null when decimals is wider than uint8`() = runTest {
+        // 2^32 + 6: toInt() keeps the low 32 bits, so without the width check this read as a
+        // plausible 6 and built the Coin.
+        val repository =
+            newRepository(
+                evmApiFactory =
+                    evmApiFactoryAnswering(decimals = "0x" + "100000006".padStart(64, '0'))
+            )
+
+        assertNull(repository.getEVMTokenByContract(Chain.Ethereum.id, CONTRACT))
+    }
+
     // The batch is answered decimals-first (JSON-RPC allows any order) so a rejected decimals()
     // result returns before the symbol() arm, which decodes through wallet-core's native library
     // and cannot run on the JVM.

@@ -271,10 +271,14 @@ constructor(
 
     private fun Iterable<Coin>.filterNatives() = filter { it.isNativeToken }
 
-    // Null for the `0x` a contract without decimals() answers; a full-width word wraps to -1 in
-    // toInt() and is dropped by the caller's positive check.
+    // Null for the `0x` a contract without decimals() answers, and for any word wider than the
+    // uint8 decimals() declares: toInt() would keep its low 32 bits, so a full-width word read as
+    // -1 and 2^32 + 6 as a plausible 6.
     private fun String.decodeContractDecimal(): Int? =
-        removePrefix("0x").toBigIntegerOrNull(16)?.toInt()
+        removePrefix("0x")
+            .toBigIntegerOrNull(16)
+            ?.takeIf { it.bitLength() <= UByte.SIZE_BITS }
+            ?.toInt()
 
     private val enabledByDefaultTokens = listOf(Coins.ThorChain.TCY).groupBy { it.chain }
 
