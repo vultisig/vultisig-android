@@ -363,6 +363,9 @@ When deleting a screen, go through this checklist:
 - Follow OWASP Mobile security best practices
 - Biometric authentication for sensitive operations
 
+### Wallet Core
+- `wallet.core.jni.TransactionUtil.calcTxHash` returns null for coins outside Wallet Core's Rust registry (Cardano, Tron, THORChain/Maya, Ripple, Zcash) and its JNI type is a bare `String` — read it into a `String?` and see [docs/wallet-core-calc-tx-hash.md](docs/wallet-core-calc-tx-hash.md) before using it
+
 ### Performance
 - Use lazy loading for large lists
 - Optimize Compose recompositions

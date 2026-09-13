@@ -12,6 +12,11 @@ data class CosmoSignature(
     @SerialName("tx_bytes") val txBytes: String,
 )
 
+/**
+ * SHA-256 over the broadcast bytes. Kept local rather than delegating to WalletCore's
+ * `TransactionUtil.calcTxHash`: that returns null for `CoinType.THORCHAIN`, which the THORChain and
+ * MayaChain helpers reach this through.
+ */
 fun CosmoSignature.transactionHash(): String {
     val decodedBytes = txBytes.decodeBase64Bytes()
     val digest = MessageDigest.getInstance("SHA-256").digest(decodedBytes)
