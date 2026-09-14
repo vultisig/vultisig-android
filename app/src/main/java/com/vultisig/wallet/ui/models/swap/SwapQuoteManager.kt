@@ -299,6 +299,12 @@ constructor(
     // from free typing so a paste also fetches immediately (#4712).
     private var lastSrcAmountLength = 0
 
+    // Set true right before a fiat-mode conversion rewrites the source amount, so the
+    // multi-character jump it makes reads as typing rather than a paste: every fiat keystroke
+    // replaces the whole token string, and firing immediately on each would bypass the typing
+    // debounce (#5888). Reset as soon as it is consumed, like [fetchQuoteImmediately].
+    private var nextAmountChangeIsConverted = false
+
     /**
      * Marks the next non-empty source-amount change to bypass the typing debounce, so an explicit
      * percentage / Max tap fetches a quote immediately instead of waiting it out (#4712). Call on
@@ -307,6 +313,15 @@ constructor(
      */
     fun markImmediateFetch() {
         fetchQuoteImmediately = true
+    }
+
+    /**
+     * Marks the next source-amount change as a fiat→token conversion, so its multi-character jump
+     * keeps the typing debounce instead of being read as a paste (#5888). Call on the main thread,
+     * before mutating the amount text.
+     */
+    fun markConvertedAmount() {
+        nextAmountChangeIsConverted = true
     }
 
     /**
@@ -320,7 +335,8 @@ constructor(
         textFlow
             .map { it.toString() }
             .map { text ->
-                val isPaste = text.length - lastSrcAmountLength > 1
+                val isPaste = text.length - lastSrcAmountLength > 1 && !nextAmountChangeIsConverted
+                nextAmountChangeIsConverted = false
                 lastSrcAmountLength = text.length
                 text to isPaste
             }

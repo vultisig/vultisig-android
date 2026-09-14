@@ -32,6 +32,7 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -54,6 +55,10 @@ internal fun loadingPlaceholder() {
 /**
  * Source-token (top) input card with a bottom cutout that hosts the flip button.
  *
+ * @param secondaryText the line under the amount: its fiat value, or the token amount while the
+ *   field takes fiat input.
+ * @param onSecondaryClick tapping that line flips the field between token and fiat input; null
+ *   leaves it inert.
  * @param space spacing used to offset the cutout so it lines up with the flip button.
  * @param onCircleBoundsChanged reports the cutout circle bounds, used to position the flip button.
  */
@@ -62,11 +67,12 @@ internal fun SrcTokenInput(
     isLoading: Boolean,
     title: String,
     selectedToken: TokenBalanceUiModel?,
-    fiatValue: String,
+    secondaryText: String,
     space: Dp,
     onSelectNetworkClick: () -> Unit,
     onSelectTokenClick: () -> Unit,
     onCircleBoundsChanged: (Offset) -> Unit,
+    onSecondaryClick: (() -> Unit)? = null,
     @SuppressLint("ComposableLambdaParameterNaming") onDragStart: (Offset) -> Unit = {},
     onDrag: (Offset) -> Unit = {},
     onDragEnd: () -> Unit = {},
@@ -78,11 +84,12 @@ internal fun SrcTokenInput(
         isLoading = isLoading,
         title = title,
         selectedToken = selectedToken,
-        fiatValue = fiatValue,
+        secondaryText = secondaryText,
         onSelectNetworkClick = onSelectNetworkClick,
         onSelectTokenClick = onSelectTokenClick,
         chainTestTag = "SwapFormScreen.fromChain",
         tokenTestTag = "SwapFormScreen.fromToken",
+        onSecondaryClick = onSecondaryClick,
         shape =
             RoundedWithCutoutShape(
                 cutoutPosition = CutoutPosition.Bottom,
@@ -111,7 +118,7 @@ internal fun DstTokenInput(
     isLoading: Boolean,
     title: String,
     selectedToken: TokenBalanceUiModel?,
-    fiatValue: String,
+    secondaryText: String,
     space: Dp,
     onSelectNetworkClick: () -> Unit,
     onSelectTokenClick: () -> Unit,
@@ -127,7 +134,7 @@ internal fun DstTokenInput(
         title = title,
         isLoading = isLoading,
         selectedToken = selectedToken,
-        fiatValue = fiatValue,
+        secondaryText = secondaryText,
         onSelectNetworkClick = onSelectNetworkClick,
         onSelectTokenClick = onSelectTokenClick,
         chainTestTag = "SwapFormScreen.toChain",
@@ -154,7 +161,7 @@ internal fun TokenInput(
     isLoading: Boolean,
     title: String,
     selectedToken: TokenBalanceUiModel?,
-    fiatValue: String,
+    secondaryText: String,
     onSelectNetworkClick: () -> Unit,
     onSelectTokenClick: () -> Unit,
     shape: Shape,
@@ -162,6 +169,7 @@ internal fun TokenInput(
     modifier: Modifier = Modifier,
     chainTestTag: String? = null,
     tokenTestTag: String? = null,
+    onSecondaryClick: (() -> Unit)? = null,
     @SuppressLint("ComposableLambdaParameterNaming") onDragStart: (Offset) -> Unit = {},
     onDrag: (Offset) -> Unit = {},
     onDragEnd: () -> Unit = {},
@@ -242,10 +250,26 @@ internal fun TokenInput(
                     UiPlaceholderLoader(modifier = Modifier.height(16.dp).width(80.dp))
                 } else {
                     Text(
-                        text = fiatValue,
+                        text = secondaryText,
                         style = Theme.brockmann.supplementary.caption,
                         color = Theme.v2.colors.text.tertiary,
                         textAlign = TextAlign.End,
+                        // The token line can carry a long ticker; keep it to the one line the
+                        // fiat value takes.
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier =
+                            if (onSecondaryClick != null) {
+                                // No ripple: a 12sp caption has no surface for one to read on.
+                                Modifier.clickable(
+                                        interactionSource = null,
+                                        indication = null,
+                                        onClick = onSecondaryClick,
+                                    )
+                                    .testTag("SwapFormScreen.fromSecondaryValue")
+                            } else {
+                                Modifier
+                            },
                     )
                 }
             }

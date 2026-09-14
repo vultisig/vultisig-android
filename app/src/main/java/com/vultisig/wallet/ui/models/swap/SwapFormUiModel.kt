@@ -82,6 +82,15 @@ internal data class SwapFormUiModel(
     val selectedSrcToken: TokenBalanceUiModel? = null,
     val selectedDstToken: TokenBalanceUiModel? = null,
     val srcFiatValue: String = "0",
+    // Whether the From amount is typed in the app currency instead of the token (#5888). Display
+    // only: the quote and the signed amount always come from the token amount, which fiat input
+    // is converted into.
+    val isSrcFiatInput: Boolean = false,
+    // Whether the From fiat line can be tapped into fiat input. False while the source token has
+    // no price, so fiat mode can never be entered with nothing to convert by.
+    val isSrcFiatInputAvailable: Boolean = false,
+    // Symbol shown ahead of the fiat amount in fiat input, e.g. "$".
+    val fiatSymbol: String = "",
     val quoteDisplay: QuoteDisplay = QuoteDisplay(),
     val feeBreakdown: FeeBreakdown = FeeBreakdown(),
     val discountInfo: DiscountInfo = DiscountInfo(),

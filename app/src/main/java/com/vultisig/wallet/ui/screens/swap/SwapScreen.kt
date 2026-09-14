@@ -15,8 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.insert
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +32,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -101,6 +106,7 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
         SwapScreen(
             state = state,
             srcAmountTextFieldState = model.srcAmountState,
+            srcFiatAmountTextFieldState = model.srcFiatAmountState,
             onBackClick = model::back,
             onSwap = model::swap,
             onSelectSrcNetworkClick = model::selectSrcNetwork,
@@ -117,6 +123,7 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
             onDstLongPressStarted = model::selectDstNetworkPopup,
             onSrcLongPressStarted = model::selectSrcNetworkPopup,
             onValidateAmount = model::validateAmount,
+            onToggleSrcFiatInput = model::toggleSrcFiatInput,
             onSlippageSelected = model::setSlippageBps,
             onGasLimitSelected = model::setGasLimit,
             onExternalRecipientSelected = model::setExternalRecipient,
@@ -138,6 +145,7 @@ internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
 internal fun SwapScreen(
     state: SwapFormUiModel,
     srcAmountTextFieldState: TextFieldState,
+    srcFiatAmountTextFieldState: TextFieldState = rememberTextFieldState(),
     onBackClick: () -> Unit = {},
     onSelectSrcNetworkClick: () -> Unit = {},
     onSelectSrcToken: () -> Unit = {},
@@ -154,6 +162,7 @@ internal fun SwapScreen(
     onDstLongPressStarted: (Offset) -> Unit = {},
     onSrcLongPressStarted: (Offset) -> Unit = {},
     onValidateAmount: () -> Unit = {},
+    onToggleSrcFiatInput: () -> Unit = {},
     onSlippageSelected: (Int?) -> Unit = {},
     onGasLimitSelected: (Long?) -> Unit = {},
     onExternalRecipientSelected: (String?) -> Unit = {},
@@ -189,6 +198,18 @@ internal fun SwapScreen(
             hasSrcAmountBeenFocused = true
         } else if (hasSrcAmountBeenFocused) {
             onValidateAmount()
+        }
+    }
+
+    // A tap on the From card's secondary line swaps which field is typed (#5888). The field the
+    // tap asked for only enters composition on the next frame, so focus is requested from an
+    // effect keyed on the mode rather than from the tap itself.
+    val srcAmountFocusRequester = remember { FocusRequester() }
+    var focusSrcAmountOnModeChange by remember { mutableStateOf(false) }
+    LaunchedEffect(state.isSrcFiatInput) {
+        if (focusSrcAmountOnModeChange) {
+            focusSrcAmountOnModeChange = false
+            srcAmountFocusRequester.requestFocus()
         }
     }
 
@@ -289,40 +310,97 @@ internal fun SwapScreen(
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(space)) {
                                 Box {
+                                    // In fiat input the two lines swap roles (#5888): the fiat
+                                    // field is typed and the token amount it converts to reads
+                                    // under it. The token field stays the amount that is quoted
+                                    // and signed either way.
+                                    val isFiatInput = state.isSrcFiatInput
                                     SrcTokenInput(
                                         isLoading = state.isLoading,
                                         title = stringResource(R.string.swap_form_from_title),
                                         selectedToken = state.selectedSrcToken,
-                                        fiatValue = state.srcFiatValue,
+                                        secondaryText =
+                                            if (isFiatInput) {
+                                                val amount =
+                                                    srcAmountTextFieldState.text.ifEmpty { "0" }
+                                                "$amount ${state.selectedSrcToken?.title.orEmpty()}"
+                                            } else {
+                                                state.srcFiatValue
+                                            },
                                         space = space,
                                         onSelectNetworkClick = onSelectSrcNetworkClick,
                                         onSelectTokenClick = onSelectSrcToken,
                                         onCircleBoundsChanged = { topCenter = it },
+                                        // Inert without a price: fiat mode can't be entered when
+                                        // there is nothing to convert by.
+                                        onSecondaryClick =
+                                            if (isFiatInput || state.isSrcFiatInputAvailable) {
+                                                {
+                                                    focusSrcAmountOnModeChange = true
+                                                    onToggleSrcFiatInput()
+                                                }
+                                            } else {
+                                                null
+                                            },
                                         onDrag = onDrag,
                                         onDragEnd = onDragEnd,
                                         onDragCancel = onDragCancel,
                                         onDragStart = onDragStart,
                                         onLongPressStarted = onSrcLongPressStarted,
                                         textFieldContent = {
-                                            VsBasicTextField(
-                                                textFieldState = srcAmountTextFieldState,
-                                                style = Theme.brockmann.headings.title2,
-                                                color = Theme.v2.colors.text.secondary,
-                                                textAlign = TextAlign.End,
-                                                hint = "0",
-                                                hintColor = Theme.v2.colors.text.tertiary,
-                                                hintStyle = Theme.brockmann.headings.title2,
-                                                lineLimits = TextFieldLineLimits.SingleLine,
-                                                interactionSource = interactionSource,
-                                                keyboardOptions =
-                                                    KeyboardOptions(
-                                                        keyboardType = KeyboardType.Number,
-                                                        imeAction = ImeAction.Done,
-                                                    ),
-                                                modifier =
-                                                    Modifier.fillMaxWidth()
-                                                        .testTag("SwapFormScreen.fromAmount"),
-                                            )
+                                            if (isFiatInput) {
+                                                // The symbol is drawn into the field's output
+                                                // rather than typed, so it leads the digits as one
+                                                // right-aligned run and can't be deleted.
+                                                val fiatSymbol = state.fiatSymbol
+                                                val symbolPrefix =
+                                                    remember(fiatSymbol) {
+                                                        OutputTransformation {
+                                                            insert(0, fiatSymbol)
+                                                        }
+                                                    }
+                                                VsBasicTextField(
+                                                    textFieldState = srcFiatAmountTextFieldState,
+                                                    style = Theme.brockmann.headings.title2,
+                                                    color = Theme.v2.colors.text.secondary,
+                                                    textAlign = TextAlign.End,
+                                                    lineLimits = TextFieldLineLimits.SingleLine,
+                                                    interactionSource = interactionSource,
+                                                    keyboardOptions =
+                                                        KeyboardOptions(
+                                                            keyboardType = KeyboardType.Number,
+                                                            imeAction = ImeAction.Done,
+                                                        ),
+                                                    outputTransformation = symbolPrefix,
+                                                    modifier =
+                                                        Modifier.fillMaxWidth()
+                                                            .focusRequester(srcAmountFocusRequester)
+                                                            .testTag(
+                                                                "SwapFormScreen.fromFiatAmount"
+                                                            ),
+                                                )
+                                            } else {
+                                                VsBasicTextField(
+                                                    textFieldState = srcAmountTextFieldState,
+                                                    style = Theme.brockmann.headings.title2,
+                                                    color = Theme.v2.colors.text.secondary,
+                                                    textAlign = TextAlign.End,
+                                                    hint = "0",
+                                                    hintColor = Theme.v2.colors.text.tertiary,
+                                                    hintStyle = Theme.brockmann.headings.title2,
+                                                    lineLimits = TextFieldLineLimits.SingleLine,
+                                                    interactionSource = interactionSource,
+                                                    keyboardOptions =
+                                                        KeyboardOptions(
+                                                            keyboardType = KeyboardType.Number,
+                                                            imeAction = ImeAction.Done,
+                                                        ),
+                                                    modifier =
+                                                        Modifier.fillMaxWidth()
+                                                            .focusRequester(srcAmountFocusRequester)
+                                                            .testTag("SwapFormScreen.fromAmount"),
+                                                )
+                                            }
                                         },
                                     )
                                     SwapTokenFlipButton(
@@ -348,7 +426,7 @@ internal fun SwapScreen(
                                     title = stringResource(R.string.swap_form_dst_token_title),
                                     isLoading = state.isLoading && !dstHasValue,
                                     selectedToken = state.selectedDstToken,
-                                    fiatValue = state.quoteDisplay.estimatedDstFiatValue,
+                                    secondaryText = state.quoteDisplay.estimatedDstFiatValue,
                                     space = space,
                                     onSelectNetworkClick = onSelectDstNetworkClick,
                                     onSelectTokenClick = onSelectDstToken,
