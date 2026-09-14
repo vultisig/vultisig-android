@@ -381,7 +381,7 @@ internal class AccountsRepositoryImplTest {
     @Test
     fun `SPL discovery claims each coin id once, the curated mint over a counterfeit`() = runTest {
         val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
-        val counterfeit = unknownMint(ticker = "USDC", mint = "FakeUsdcMint1111111111111111111111")
+        val counterfeit = unknownMint(ticker = "USDC", mint = COUNTERFEIT_USDC_MINT)
         val usdc = Coins.Solana.USDC.copy(address = SOL_ADDRESS)
         // The counterfeit is listed first: whichever mint the RPC happens to enumerate first must
         // not decide which one takes the id.
@@ -431,6 +431,113 @@ internal class AccountsRepositoryImplTest {
         assertEquals(listOf(sol.id), emissions.last().accounts.map { it.token.id })
         coVerify(exactly = 0) { vaultRepository.addTokenToVault(any(), any()) }
     }
+
+    @Test
+    fun `SPL discovery does not list an unknown mint under a curated id the vault does not hold`() =
+        runTest {
+            val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+            // Held without the real USDC, the counterfeit has no curated mint to lose the id to;
+            // it must still not be persisted, or the vault would show it as USDC.
+            val counterfeit = unknownMint(ticker = "USDC", mint = COUNTERFEIT_USDC_MINT)
+            val meme = unknownMint(ticker = "MEME", mint = "MintFirst111")
+            stubSplDiscovery(sol, discovered = listOf(counterfeit, meme))
+
+            val emissions = mutableListOf<Address>()
+            repository.loadAddress(VAULT_ID, Chain.Solana).collect(emissions::add)
+
+            assertEquals(listOf(sol.id, meme.id), emissions.last().accounts.map { it.token.id })
+            coVerify(exactly = 1) { vaultRepository.addTokenToVault(VAULT_ID, meme) }
+            coVerify(exactly = 0) { vaultRepository.addTokenToVault(VAULT_ID, counterfeit) }
+        }
+
+    @Test
+    fun `loadAddress swaps a curated id's row carrying another mint for the curated coin`() =
+        runTest {
+            val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+            // What a vault that lost the pre-#5883 race still holds: the USDC id, the
+            // counterfeit's mint, and the derived key every Solana row of the vault shares.
+            val drifted =
+                unknownMint(ticker = "USDC", mint = COUNTERFEIT_USDC_MINT)
+                    .copy(hexPublicKey = SOL_PUBLIC_KEY)
+            val corrected =
+                Coins.Solana.USDC.copy(address = SOL_ADDRESS, hexPublicKey = SOL_PUBLIC_KEY)
+            stubSolanaVault(sol, drifted)
+
+            val emissions = mutableListOf<Address>()
+            repository.loadAddress(VAULT_ID, Chain.Solana).collect(emissions::add)
+
+            coVerify(exactly = 1) {
+                vaultRepository.replaceTokenInVault(VAULT_ID, drifted, corrected)
+            }
+            assertTrue(emissions.isNotEmpty())
+            emissions.forEach { address ->
+                assertEquals(
+                    listOf(sol.contractAddress, corrected.contractAddress),
+                    address.accounts.map { it.token.contractAddress },
+                    "no emission may still read the counterfeit's mint",
+                )
+            }
+            // The vault holds an SPL token, so discovery must not have re-run on the repaired
+            // list.
+            coVerify(exactly = 0) { splTokenRepository.getTokens(any(), any()) }
+        }
+
+    @Test
+    fun `loadAddress leaves Solana rows the catalogue cannot correct untouched`() = runTest {
+        val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+        val usdc = Coins.Solana.USDC.copy(address = SOL_ADDRESS)
+        // Two custom tokens sharing a ticker, distinct only by case: no curated entry owns
+        // either id, so there is no ground truth to arbitrate between them.
+        val meme = unknownMint(ticker = "MEME", mint = "MintFirst111")
+        val memeLower = unknownMint(ticker = "meme", mint = "MintSecond222")
+        stubSolanaVault(sol, usdc, meme, memeLower)
+
+        repository.loadAddress(VAULT_ID, Chain.Solana).collect {}
+
+        coVerify(exactly = 0) { vaultRepository.replaceTokenInVault(any(), any(), any()) }
+    }
+
+    @Test
+    fun `loadAddressBalances settles a drifted Solana row before the vault is observed`() =
+        runTest {
+            val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+            val drifted = unknownMint(ticker = "USDC", mint = COUNTERFEIT_USDC_MINT)
+            val corrected = Coins.Solana.USDC.copy(address = SOL_ADDRESS)
+            // Stand in for the coin table, read when collected as Room does: the swap lands
+            // before the observed flow starts, so the home screen's first snapshot already
+            // reads the curated row.
+            var coins = listOf(sol, drifted)
+            coEvery { vaultRepository.get(VAULT_ID) } answers { vault(coins) }
+            every { vaultRepository.getAsFlow(VAULT_ID) } returns flow { emit(vault(coins)) }
+            coEvery { vaultRepository.replaceTokenInVault(VAULT_ID, drifted, corrected) } answers
+                {
+                    coins = listOf(sol, corrected)
+                }
+            coJustRun { tokenPriceRepository.refresh(any()) }
+            coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns emptyList()
+            every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, any()) } answers
+                {
+                    flowOf(balance(amount = NETWORK, coin = secondArg()))
+                }
+
+            val emissions = mutableListOf<AddressBalancesUpdate>()
+            val job = launch { repository.loadAddressBalances(VAULT_ID).collect(emissions::add) }
+            advanceUntilIdle()
+
+            assertTrue(emissions.isNotEmpty())
+            emissions.forEach { update ->
+                val solana = update.addresses.first { it.chain == Chain.Solana }
+                assertEquals(
+                    listOf(sol.contractAddress, corrected.contractAddress),
+                    solana.accounts.map { it.token.contractAddress },
+                    "even the cached snapshot must read the curated row",
+                )
+            }
+            coVerify(exactly = 1) {
+                vaultRepository.replaceTokenInVault(VAULT_ID, drifted, corrected)
+            }
+            job.cancel()
+        }
 
     @Test
     fun `loadAddress never emits two accounts under one coin id`() = runTest {
@@ -842,8 +949,25 @@ internal class AccountsRepositoryImplTest {
             ?.toLong()
 
     private fun stubVault(vararg coins: Coin) {
-        val vault = Vault(id = VAULT_ID, name = "Test Vault", coins = coins.toList())
+        val vault = vault(coins.toList())
         every { vaultRepository.getAsFlow(VAULT_ID) } returns flowOf(vault)
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault
+    }
+
+    private fun vault(coins: List<Coin>) = Vault(id = VAULT_ID, name = "Test Vault", coins = coins)
+
+    /**
+     * A vault already holding [coins] on Solana, so discovery does not run; balances resolve to a
+     * fixed amount for every coin and a repair swap is accepted.
+     */
+    private fun stubSolanaVault(vararg coins: Coin) {
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault(coins.toList())
+        coJustRun { vaultRepository.replaceTokenInVault(any(), any(), any()) }
+        coJustRun { tokenPriceRepository.refresh(any()) }
+        every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, any()) } answers
+            {
+                flowOf(balance(amount = NETWORK, coin = secondArg()))
+            }
     }
 
     /**
@@ -943,6 +1067,8 @@ internal class AccountsRepositoryImplTest {
         const val EUR = "EUR"
         const val ETH_ADDRESS = "0xeth"
         const val SOL_ADDRESS = "sol-addr"
+        const val SOL_PUBLIC_KEY = "sol-pubkey"
+        const val COUNTERFEIT_USDC_MINT = "FakeUsdcMint1111111111111111111111"
         const val THOR_ADDRESS = "thor-addr"
         const val THOR_PUBLIC_KEY = "thor-pubkey"
         const val STAKED = 12_000_000_000L
