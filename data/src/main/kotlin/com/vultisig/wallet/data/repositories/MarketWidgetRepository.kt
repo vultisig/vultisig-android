@@ -2,12 +2,15 @@ package com.vultisig.wallet.data.repositories
 
 import android.content.Context
 import com.vultisig.wallet.data.api.MarketWidgetApi
+import com.vultisig.wallet.data.api.MarketWidgetEmptyResponseException
 import com.vultisig.wallet.data.models.MarketWidgetAsset
 import com.vultisig.wallet.data.models.MarketWidgetAssetIdentity
 import com.vultisig.wallet.data.models.MarketWidgetQuery
 import com.vultisig.wallet.data.models.MarketWidgetResult
+import com.vultisig.wallet.data.utils.NetworkException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.io.IOException
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -97,13 +100,17 @@ constructor(
         withContext(Dispatchers.IO) {
             val key = cacheKey(query, currency)
             val previous = mutex.withLock { loadEntries()[key] }
+            // Only the failures a later poll can plausibly recover from fall back to the cached
+            // snapshot: transport errors, a bad status or body, an empty list. Anything else is a
+            // bug and propagates, so the worker records a failed run instead of a stale success.
             val assets =
                 try {
                     api.markets(query, currency)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Timber.w(e, "Market widget refresh failed for %s", key)
+                } catch (e: NetworkException) {
+                    return@withContext fallback(key, previous, e)
+                } catch (e: IOException) {
+                    return@withContext fallback(key, previous, e)
+                } catch (e: MarketWidgetEmptyResponseException) {
                     return@withContext fallback(key, previous, e)
                 }
 
@@ -125,11 +132,12 @@ constructor(
         previous: CacheEntry?,
         cause: Exception,
     ): MarketWidgetResult {
+        Timber.w(cause, "Market widget refresh failed for %s", key)
         val current = mutex.withLock { loadEntries()[key] } ?: previous ?: throw cause
         if (current.updatedAt == previous?.updatedAt && !current.isStale) {
-            // Failing to flag staleness is not worth failing the caller over; the data is intact.
-            runCatching { store(key, current.copy(isStale = true)) }
-                .onFailure { Timber.w(it, "Could not mark market widget cache stale") }
+            // Not swallowed: if the stale marker can't be written, readers would keep seeing a
+            // fresh-looking entry, so let the worker treat this run as failed and retry.
+            store(key, current.copy(isStale = true))
         }
         return MarketWidgetResult(
             assets = current.assets,
