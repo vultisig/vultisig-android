@@ -1794,4 +1794,29 @@
     <string name="scope_delegated_amount_after_rent">el importe delegado después de la reserva de alquiler</string>
     <string name="withdrawing_share_of_staked_position">%1$s de tu posición en staking</string>
     <string name="withdrawing_share_of_liquidity_position">%1$s de tu posición de liquidez</string>
+
+    <!-- Market Widgets -->
+    <string name="market_widget_crypto_ticker_title">Ticker cripto</string>
+    <string name="market_widget_crypto_ticker_description">Sigue el precio y la tendencia de siete días de una criptomoneda.</string>
+    <string name="market_widget_top_cryptos_title">Principales criptos</string>
+    <string name="market_widget_top_cryptos_description">Sigue las principales criptomonedas por capitalización de mercado.</string>
+    <string name="market_widget_seven_day">7D</string>
+    <string name="market_widget_change_24h">%1$s 24H</string>
+    <string name="market_widget_change_unavailable">— 24H</string>
+    <string name="market_widget_value_unavailable">—</string>
+    <string name="market_widget_asset">Activo</string>
+    <string name="market_widget_price">Precio</string>
+    <string name="market_widget_market_data">Datos de mercado</string>
+    <string name="market_widget_loading">Cargando datos de mercado…</string>
+    <string name="market_widget_cached">En caché</string>
+    <string name="market_widget_updated_at">Actualizado %1$s</string>
+    <string name="market_widget_up">subió</string>
+    <string name="market_widget_down">bajó</string>
+    <string name="market_widget_change_unavailable_spoken">variación no disponible</string>
+    <string name="market_widget_accessibility_asset">%1$s, %2$s, precio %3$s, %4$s</string>
+    <string name="market_widget_configure_title">Elige una criptomoneda</string>
+    <string name="market_widget_configure_suggestions">Sugerencias</string>
+    <string name="market_widget_configure_results">Resultados</string>
+    <string name="market_widget_configure_no_results">No se encontraron criptomonedas</string>
+    <string name="market_widget_configure_search_failed">La búsqueda falló. Comprueba tu conexión e inténtalo de nuevo.</string>
 </resources>

@@ -1797,4 +1797,29 @@
     <string name="scope_delegated_amount_after_rent">l’importo delegato dopo la riserva di affitto</string>
     <string name="withdrawing_share_of_staked_position">%1$s della tua posizione in stake</string>
     <string name="withdrawing_share_of_liquidity_position">%1$s della tua posizione di liquidità</string>
+
+    <!-- Market Widgets -->
+    <string name="market_widget_crypto_ticker_title">Ticker cripto</string>
+    <string name="market_widget_crypto_ticker_description">Segui il prezzo e l\'andamento di sette giorni di una criptovaluta.</string>
+    <string name="market_widget_top_cryptos_title">Cripto principali</string>
+    <string name="market_widget_top_cryptos_description">Segui le principali criptovalute per capitalizzazione di mercato.</string>
+    <string name="market_widget_seven_day">7G</string>
+    <string name="market_widget_change_24h">%1$s 24H</string>
+    <string name="market_widget_change_unavailable">— 24H</string>
+    <string name="market_widget_value_unavailable">—</string>
+    <string name="market_widget_asset">Asset</string>
+    <string name="market_widget_price">Prezzo</string>
+    <string name="market_widget_market_data">Dati di mercato</string>
+    <string name="market_widget_loading">Caricamento dei dati di mercato…</string>
+    <string name="market_widget_cached">In cache</string>
+    <string name="market_widget_updated_at">Aggiornato %1$s</string>
+    <string name="market_widget_up">in rialzo</string>
+    <string name="market_widget_down">in calo</string>
+    <string name="market_widget_change_unavailable_spoken">variazione non disponibile</string>
+    <string name="market_widget_accessibility_asset">%1$s, %2$s, prezzo %3$s, %4$s</string>
+    <string name="market_widget_configure_title">Scegli una criptovaluta</string>
+    <string name="market_widget_configure_suggestions">Suggerimenti</string>
+    <string name="market_widget_configure_results">Risultati</string>
+    <string name="market_widget_configure_no_results">Nessuna criptovaluta trovata</string>
+    <string name="market_widget_configure_search_failed">Ricerca non riuscita. Controlla la connessione e riprova.</string>
 </resources>

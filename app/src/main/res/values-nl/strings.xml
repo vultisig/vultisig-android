@@ -1787,4 +1787,29 @@
     <string name="scope_delegated_amount_after_rent">het gedelegeerde bedrag na de huurreserve</string>
     <string name="withdrawing_share_of_staked_position">%1$s van je gestakete positie</string>
     <string name="withdrawing_share_of_liquidity_position">%1$s van je liquiditeitspositie</string>
+
+    <!-- Market Widgets -->
+    <string name="market_widget_crypto_ticker_title">Crypto-ticker</string>
+    <string name="market_widget_crypto_ticker_description">Volg de prijs en de zevendaagse trend van een cryptovaluta.</string>
+    <string name="market_widget_top_cryptos_title">Top crypto\'s</string>
+    <string name="market_widget_top_cryptos_description">Volg de belangrijkste cryptovaluta\'s op marktkapitalisatie.</string>
+    <string name="market_widget_seven_day">7D</string>
+    <string name="market_widget_change_24h">%1$s 24U</string>
+    <string name="market_widget_change_unavailable">— 24U</string>
+    <string name="market_widget_value_unavailable">—</string>
+    <string name="market_widget_asset">Asset</string>
+    <string name="market_widget_price">Prijs</string>
+    <string name="market_widget_market_data">Marktgegevens</string>
+    <string name="market_widget_loading">Marktgegevens laden…</string>
+    <string name="market_widget_cached">In cache</string>
+    <string name="market_widget_updated_at">Bijgewerkt %1$s</string>
+    <string name="market_widget_up">gestegen</string>
+    <string name="market_widget_down">gedaald</string>
+    <string name="market_widget_change_unavailable_spoken">verandering niet beschikbaar</string>
+    <string name="market_widget_accessibility_asset">%1$s, %2$s, prijs %3$s, %4$s</string>
+    <string name="market_widget_configure_title">Kies een cryptovaluta</string>
+    <string name="market_widget_configure_suggestions">Suggesties</string>
+    <string name="market_widget_configure_results">Resultaten</string>
+    <string name="market_widget_configure_no_results">Geen cryptovaluta\'s gevonden</string>
+    <string name="market_widget_configure_search_failed">Zoeken mislukt. Controleer je verbinding en probeer het opnieuw.</string>
 </resources>
