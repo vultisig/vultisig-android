@@ -46,6 +46,8 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindCoinGeckoApi(impl: CoinGeckoApiImpl): CoinGeckoApi
 
+    @Binds @Singleton fun bindMarketWidgetApi(impl: MarketWidgetApiImpl): MarketWidgetApi
+
     @Binds @Singleton fun bindThorChainApi(impl: ThorChainApiImpl): ThorChainApi
 
     @Binds @Singleton fun bindMayaChainApi(impl: MayaChainApiImp): MayaChainApi

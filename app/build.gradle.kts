@@ -117,6 +117,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.work)
+    ksp(libs.hilt.compiler)
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.android.compiler)
 
@@ -138,6 +139,7 @@ dependencies {
     implementation(libs.play.update)
     implementation(libs.play.review)
     implementation(libs.androidx.work.ktx)
+    implementation(libs.androidx.glance.appwidget)
 
     // animation
     implementation(libs.lottie.compose)

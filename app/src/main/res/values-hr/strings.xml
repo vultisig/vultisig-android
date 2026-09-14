@@ -1804,4 +1804,29 @@
     <string name="scope_delegated_amount_after_rent">delegirani iznos nakon rezerve za najam</string>
     <string name="withdrawing_share_of_staked_position">%1$s vaše uložene pozicije</string>
     <string name="withdrawing_share_of_liquidity_position">%1$s vaše pozicije likvidnosti</string>
+
+    <!-- Market Widgets -->
+    <string name="market_widget_crypto_ticker_title">Kripto ticker</string>
+    <string name="market_widget_crypto_ticker_description">Pratite cijenu i sedmodnevni trend kriptovalute.</string>
+    <string name="market_widget_top_cryptos_title">Vodeće kriptovalute</string>
+    <string name="market_widget_top_cryptos_description">Pratite vodeće kriptovalute prema tržišnoj kapitalizaciji.</string>
+    <string name="market_widget_seven_day">7D</string>
+    <string name="market_widget_change_24h">%1$s 24H</string>
+    <string name="market_widget_change_unavailable">— 24H</string>
+    <string name="market_widget_value_unavailable">—</string>
+    <string name="market_widget_asset">Imovina</string>
+    <string name="market_widget_price">Cijena</string>
+    <string name="market_widget_market_data">Tržišni podaci</string>
+    <string name="market_widget_loading">Učitavanje tržišnih podataka…</string>
+    <string name="market_widget_cached">Predmemorirano</string>
+    <string name="market_widget_updated_at">Ažurirano %1$s</string>
+    <string name="market_widget_up">poraslo</string>
+    <string name="market_widget_down">palo</string>
+    <string name="market_widget_change_unavailable_spoken">promjena nedostupna</string>
+    <string name="market_widget_accessibility_asset">%1$s, %2$s, cijena %3$s, %4$s</string>
+    <string name="market_widget_configure_title">Odaberite kriptovalutu</string>
+    <string name="market_widget_configure_suggestions">Prijedlozi</string>
+    <string name="market_widget_configure_results">Rezultati</string>
+    <string name="market_widget_configure_no_results">Nije pronađena nijedna kriptovaluta</string>
+    <string name="market_widget_configure_search_failed">Pretraživanje nije uspjelo. Provjerite vezu i pokušajte ponovno.</string>
 </resources>

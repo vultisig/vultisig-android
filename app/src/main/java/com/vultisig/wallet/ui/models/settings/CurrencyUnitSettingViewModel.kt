@@ -1,10 +1,13 @@
 package com.vultisig.wallet.ui.models.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.ui.widgets.market.MarketWidgetRefreshWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,7 +21,10 @@ internal data class CurrencyUnitSettingUiModel(
 @HiltViewModel
 internal class CurrencyUnitSettingViewModel
 @Inject
-constructor(private val appCurrencyRepository: AppCurrencyRepository) : ViewModel() {
+constructor(
+    @ApplicationContext private val context: Context,
+    private val appCurrencyRepository: AppCurrencyRepository,
+) : ViewModel() {
 
     val state =
         MutableStateFlow(
@@ -46,6 +52,9 @@ constructor(private val appCurrencyRepository: AppCurrencyRepository) : ViewMode
         viewModelScope.launch {
             val currency = AppCurrency.fromTicker(currencyUnit.name) ?: return@launch
             appCurrencyRepository.setCurrency(currency)
+            // Home-screen market widgets price in the app currency; re-pull so they don't show
+            // the old one until their next scheduled poll.
+            MarketWidgetRefreshWorker.refreshNow(context, replaceQueued = true)
         }
     }
 }

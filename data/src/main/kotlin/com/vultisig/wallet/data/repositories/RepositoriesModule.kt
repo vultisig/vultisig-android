@@ -92,6 +92,10 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindMarketWidgetRepository(impl: MarketWidgetRepositoryImpl): MarketWidgetRepository
+
+    @Binds
+    @Singleton
     fun bindTokenPriceRepository(impl: TokenPriceRepositoryImpl): TokenPriceRepository
 
     @Binds

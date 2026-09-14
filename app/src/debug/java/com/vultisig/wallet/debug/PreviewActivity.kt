@@ -43,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
@@ -62,6 +63,7 @@ import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.passcode.AutoLockTimeout
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
@@ -252,6 +254,10 @@ import com.vultisig.wallet.ui.screens.v3.onboarding.ReviewVaultDevicesScreen
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.widgets.market.CryptoTickerWidgetReceiver
+import com.vultisig.wallet.ui.widgets.market.MarketWidgetEntryPoint
+import com.vultisig.wallet.ui.widgets.market.MarketWidgetRefreshWorker
+import com.vultisig.wallet.ui.widgets.market.TopCryptosWidgetReceiver
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -261,6 +267,7 @@ import java.math.BigInteger
 import kotlin.math.sin
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -274,9 +281,46 @@ class PreviewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val screen = intent.getStringExtra("screen") ?: "swap_confirm"
+        // `adb shell am start -n com.vultisig.wallet/.debug.PreviewActivity --es pin_widget
+        // ticker|top`
+        // asks the launcher to place a market widget, for checking real home-screen rendering.
+        intent.getStringExtra("pin_widget")?.let { kind ->
+            if (kind == "refresh") {
+                MarketWidgetRefreshWorker.refreshNow(this, replaceQueued = true)
+                finish()
+                return
+            }
+            if (kind.startsWith("currency:")) {
+                // Same path as CurrencyUnitSettingViewModel.changeCurrencyUnit.
+                val currency = AppCurrency.fromTicker(kind.removePrefix("currency:"))
+                lifecycleScope.launch {
+                    if (currency != null) {
+                        MarketWidgetEntryPoint.resolve(this@PreviewActivity)
+                            .appCurrencyRepository()
+                            .setCurrency(currency)
+                        MarketWidgetRefreshWorker.refreshNow(
+                            this@PreviewActivity,
+                            replaceQueued = true,
+                        )
+                    }
+                    finish()
+                }
+                return
+            }
+            val receiver =
+                when (kind) {
+                    "ticker" -> CryptoTickerWidgetReceiver::class.java
+                    else -> TopCryptosWidgetReceiver::class.java
+                }
+            android.appwidget.AppWidgetManager.getInstance(this)
+                .requestPinAppWidget(android.content.ComponentName(this, receiver), null, null)
+            finish()
+            return
+        }
         setContent {
             OnBoardingComposeTheme {
                 when (screen) {
+                    "market_widgets" -> MarketWidgetsPreview()
                     "auto_lock_setting" ->
                         AutoLockSettingScreen(
                             state = AutoLockSettingUiModel(selected = AutoLockTimeout.FiveMinutes),

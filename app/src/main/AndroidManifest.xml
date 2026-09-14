@@ -165,6 +165,40 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="@string/keysign_notification_channel_id" />
 
+        <!-- Home-screen market widgets (Glance). -->
+        <receiver
+            android:name=".ui.widgets.market.CryptoTickerWidgetReceiver"
+            android:exported="true"
+            android:label="@string/market_widget_crypto_ticker_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_crypto_ticker_info" />
+        </receiver>
+
+        <receiver
+            android:name=".ui.widgets.market.TopCryptosWidgetReceiver"
+            android:exported="true"
+            android:label="@string/market_widget_top_cryptos_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_top_cryptos_info" />
+        </receiver>
+
+        <activity
+            android:name=".ui.widgets.market.CryptoTickerConfigureActivity"
+            android:exported="true"
+            android:theme="@style/Theme.App">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>
