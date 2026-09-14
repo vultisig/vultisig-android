@@ -30,7 +30,7 @@ constructor(private val tronApi: TronApi, private val tokenPriceRepository: Toke
             tronApi.readContractConstant(contractAddress, "symbol()")?.let(::decodeAbiString)
                 ?: return null
         val decimals =
-            tronApi.readContractConstant(contractAddress, "decimals()")?.let(::decodeUint)?.toInt()
+            tronApi.readContractConstant(contractAddress, "decimals()")?.let(::decodeUint8)
                 ?: return null
 
         val coin =
@@ -62,8 +62,14 @@ constructor(private val tronApi: TronApi, private val tokenPriceRepository: Toke
             ?.takeIf { it.isNotBlank() }
     }
 
-    private fun decodeUint(hex: String): BigInteger? =
-        hex.stripHexPrefix().takeIf { it.length >= 64 }?.let { BigInteger(it, 16) }
+    // Null for any word wider than the uint8 decimals() declares: toInt() would keep its low 32
+    // bits, so a full-width word read as -1 and 2^32 + 6 as a plausible 6.
+    private fun decodeUint8(hex: String): Int? =
+        hex.stripHexPrefix()
+            .takeIf { it.length >= 64 }
+            ?.toBigIntegerOrNull(16)
+            ?.takeIf { it.bitLength() <= UByte.SIZE_BITS }
+            ?.toInt()
 
     private fun curatedCoin(contractAddress: String): Coin? =
         Coins.coins[Chain.Tron]?.firstOrNull {
