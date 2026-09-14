@@ -1,9 +1,9 @@
+import com.android.build.api.dsl.LibraryExtension
 import com.google.protobuf.gradle.id
 import com.google.protobuf.gradle.proto
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.daggerHiltAndroid)
     alias(libs.plugins.serialization)
     alias(libs.plugins.ksp)
@@ -33,7 +33,11 @@ android {
             )
         }
     }
-    sourceSets.getByName("main") {
+    // AGP 9 still types LibraryExtensionImpl.sourceSets with the legacy
+    // com.android.build.gradle.api.AndroidLibrarySourceSet, which the runtime source sets no longer
+    // implement, so binding the lambda through the `android` accessor throws ClassCastException.
+    // Going through the public DSL interface types the elements as the new AndroidSourceSet instead.
+    (this as LibraryExtension).sourceSets.getByName("main") {
         proto { srcDir("${project.rootProject.rootDir}/commondata/proto") }
     }
     packaging {

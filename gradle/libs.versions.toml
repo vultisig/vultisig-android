@@ -6,7 +6,7 @@ lottieCompose = "6.7.1"
 minSdk = "30"
 
 accompanistPermissions = "0.37.0"
-agp = "8.12.2"
+agp = "9.2.1"
 apache-compress = "1.28.0"
 apache-compress-xz = "1.10"
 barcodeScanning = "17.3.0"
@@ -27,14 +27,14 @@ kotest = "5.9.1"
 mockk = "1.13.16"
 junit = "4.13.2"
 junitVersion = "1.2.1"
-kotlin = "2.1.20"
+kotlin = "2.4.20"
 kotlinxCoroutinesCore = "1.10.1"
 kotlinxProtobufGen = "0.1.0"
 ktor = "3.0.3"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
 composeBom = "2026.05.01"
-dagger = "2.56.1"
+dagger = "2.60.1"
 hilt = "1.2.0"
 lifecycleViewmodelComposeVersion = "2.8.7"
 navigationCompose = "2.8.9"
@@ -44,7 +44,7 @@ sparkCore = "2.9.4"
 annotation = "1.9.1"
 walletCore = "4.8.0"
 timber = "5.0.1"
-ksp = "2.1.20-2.0.1"
+ksp = "2.3.12"
 appcompat = "1.7.0"
 serialization = "1.8.0"
 protobuf = "0.10.0"
@@ -148,10 +148,10 @@ lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", 
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 daggerHiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "dagger" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 protobuf = { id = "com.google.protobuf", version.ref = "protobuf" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }

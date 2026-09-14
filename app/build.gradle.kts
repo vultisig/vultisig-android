@@ -1,11 +1,10 @@
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.daggerHiltAndroid)
-    id("org.jetbrains.kotlin.plugin.parcelize")
+    alias(libs.plugins.parcelize)
+    alias(libs.plugins.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.serialization)
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.ktfmt)
 }
