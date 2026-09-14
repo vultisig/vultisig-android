@@ -1670,6 +1670,34 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
+    fun `markConvertedAmount keeps a multi-character conversion write on the typing debounce`() =
+        runTest {
+            val manager = createManager()
+            manager.markConvertedAmount()
+
+            // "0.04470234" replaces "" in one write (a fiat keystroke's conversion): the length
+            // jump would read as a paste, but the mark makes it typing. The mark is one-shot, so
+            // the following real paste ("1" -> "1000") is still immediate.
+            val result = manager.amountChanges(flowOf("0.04470234", "1", "1000")).toList()
+
+            result shouldBe listOf(false, false, true)
+        }
+
+    @Test
+    fun `markConvertedAmount does not suppress a pending immediate fetch`() = runTest {
+        val manager = createManager()
+        // A percentage tap in fiat mode: the chip marks the fetch immediate, and the conversion
+        // that mirrors its token write back to fiat marks nothing on the token flow — but even
+        // when both marks are set on the same write, the explicit immediate one wins.
+        manager.markImmediateFetch()
+        manager.markConvertedAmount()
+
+        val result = manager.amountChanges(flowOf("0.5")).toList()
+
+        result shouldBe listOf(true)
+    }
+
+    @Test
     fun `quoteDebounceMillis bypasses the debounce only for immediate changes`() {
         val manager = createManager()
 

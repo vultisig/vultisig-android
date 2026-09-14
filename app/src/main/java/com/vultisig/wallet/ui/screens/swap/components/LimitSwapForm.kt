@@ -408,7 +408,7 @@ private fun AssetEditorCard(
                     isLoading = false,
                     title = stringResource(R.string.limit_swap_sell),
                     selectedToken = srcToken,
-                    fiatValue = srcFiatValue,
+                    secondaryText = srcFiatValue,
                     space = space,
                     onSelectNetworkClick = onSelectSrcNetworkClick,
                     onSelectTokenClick = onSelectSrcTokenClick,
@@ -450,7 +450,7 @@ private fun AssetEditorCard(
                 selectedToken = dstToken,
                 // The buy leg is priced by the target, not by a live quote, so it mirrors the sell
                 // leg's fiat value: at the limit price both legs are worth the same.
-                fiatValue = srcFiatValue,
+                secondaryText = srcFiatValue,
                 space = space,
                 onSelectNetworkClick = onSelectDstNetworkClick,
                 onSelectTokenClick = onSelectDstTokenClick,

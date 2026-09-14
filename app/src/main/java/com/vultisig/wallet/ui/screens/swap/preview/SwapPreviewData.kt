@@ -201,6 +201,43 @@ internal fun SwapFormProviderPreview() {
     )
 }
 
+// The From card taking fiat input (#5888): the app-currency amount is the typed line with its
+// symbol leading the digits, and the token amount it converts to reads under it. [longTicker]
+// swaps in a source whose ticker overflows that line, to check it ellipsizes instead of wrapping.
+@Preview
+@Composable
+internal fun SwapFormFiatInputPreview(longTicker: Boolean = false) {
+    SwapScreen(
+        state =
+            SwapFormUiModel(
+                selectedSrcToken = if (longTicker) longTokenInput else tokenInput,
+                selectedDstToken = if (longTicker) tokenInput else longTokenInput,
+                srcFiatValue = "$5.25",
+                isSrcFiatInput = true,
+                isSrcFiatInputAvailable = true,
+                fiatSymbol = "$",
+                quoteDisplay =
+                    QuoteDisplay(
+                        provider = UiText.DynamicString("THORChain"),
+                        estimatedDstTokenValue = "12.80",
+                        estimatedDstFiatValue = "$5.24",
+                        hasQuote = true,
+                        expiredAt = Instant.now().plus(36.seconds),
+                    ),
+                feeBreakdown =
+                    FeeBreakdown(
+                        networkFee = "0.02 RUNE",
+                        networkFeeFiat = "$0.004",
+                        totalFee = "$0.024",
+                        fee = "0.02 RUNE",
+                    ),
+                isSwapDisabled = false,
+            ),
+        srcAmountTextFieldState = TextFieldState("2.5"),
+        srcFiatAmountTextFieldState = TextFieldState("5.25"),
+    )
+}
+
 // Full Swap screen with the quote countdown running, used to verify the top toolbar (back / title /
 // advanced-settings sliders button / timer) and the bottom CTA together (#4858).
 @Preview

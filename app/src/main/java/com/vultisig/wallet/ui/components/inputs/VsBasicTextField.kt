@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
@@ -30,6 +31,7 @@ internal fun VsBasicTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     onKeyboardAction: KeyboardActionHandler? = null,
     interactionSource: MutableInteractionSource? = null,
+    outputTransformation: OutputTransformation? = null,
 ) {
     BasicTextField(
         state = textFieldState,
@@ -38,6 +40,7 @@ internal fun VsBasicTextField(
         lineLimits = lineLimits,
         keyboardOptions = keyboardOptions,
         onKeyboardAction = onKeyboardAction,
+        outputTransformation = outputTransformation,
         decorator = { textField ->
             if (textFieldState.text.isEmpty() && hint != null) {
                 Text(

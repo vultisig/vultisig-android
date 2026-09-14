@@ -219,6 +219,7 @@ import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuConfiguredPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedMenuPreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSelectRoutePreview
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedSlippagePreview
+import com.vultisig.wallet.ui.screens.swap.preview.SwapFormFiatInputPreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormProviderPreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapFormQuoteLoadingPreview
 import com.vultisig.wallet.ui.screens.swap.preview.SwapToolbarPreview
@@ -467,6 +468,8 @@ class PreviewActivity : ComponentActivity() {
                     "swap_error" -> SwapErrorPreview()
                     "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
                     "provider_swap_form" -> SwapFormProviderPreview()
+                    "swap_form_fiat_input" -> SwapFormFiatInputPreview()
+                    "swap_form_fiat_input_long" -> SwapFormFiatInputPreview(longTicker = true)
                     "provider_tx_done" -> SwapProviderTxDonePreview()
                     "provider_detail_sheet" -> SwapProviderDetailSheetPreview()
                     "provider_verify" -> SwapProviderVerifyPreview()

@@ -55,6 +55,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -93,6 +94,10 @@ constructor(
     val uiState: StateFlow<SwapFormUiModel> = _uiState
 
     val srcAmountState = TextFieldState()
+
+    // Fiat-mode mirror of [srcAmountState] (#5888). Only ever an input conversion: the quote and
+    // the signed amount read the token field, which typing here rewrites.
+    val srcFiatAmountState = TextFieldState()
 
     private var vaultId: String? = null
     private val chain = MutableStateFlow<Chain?>(null)
@@ -172,6 +177,20 @@ constructor(
     private val quoteState
         get() = quotePipeline.quoteState
 
+    private val fiatAmountInput =
+        SwapFiatAmountInput(
+            scope = viewModelScope,
+            tokenAmountState = srcAmountState,
+            fiatAmountState = srcFiatAmountState,
+            selectedSrcToken = selectedSrc.map { it?.account?.token },
+            appCurrencyRepository = appCurrencyRepository,
+            tokenPriceRepository = tokenPriceRepository,
+            uiState = _uiState,
+            // A fiat keystroke rewrites the whole token string; without this the pipeline reads
+            // the jump as a paste and skips the typing debounce on every key.
+            onTokenAmountConverted = swapQuoteManager::markConvertedAmount,
+        )
+
     private val addresses = MutableStateFlow<List<Address>>(emptyList())
 
     private var selectTokensJob: Job? = null
@@ -204,6 +223,7 @@ constructor(
         observeLimitForm()
 
         quotePipeline.start()
+        fiatAmountInput.start()
     }
 
     /**
@@ -1060,6 +1080,11 @@ constructor(
     fun validateAmount() {
         val errorMessage = swapValidator.validateSrcAmount(srcAmountState.text.toString())
         _uiState.update { it.copy(error = errorMessage) }
+    }
+
+    /** Flips the From amount between token and fiat input (#5888). */
+    fun toggleSrcFiatInput() {
+        fiatAmountInput.toggle()
     }
 
     private fun collectSelectedTokens() {
