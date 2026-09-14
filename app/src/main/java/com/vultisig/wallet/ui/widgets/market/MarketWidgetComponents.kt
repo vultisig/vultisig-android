@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.widgets.market
 
 import android.content.Context
+import android.content.Intent
 import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
@@ -12,8 +13,8 @@ import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
-import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
@@ -51,16 +52,28 @@ internal const val MARKET_WIDGET_STALE_AFTER_MS = 2L * 60 * 60 * 1000
 /** Everything a widget needs to draw one asset, resolved outside composition. */
 internal data class MarketWidgetAssetUi(val asset: MarketWidgetAsset, val iconBytes: ByteArray?)
 
+/**
+ * Set on the launch intent of every market widget tap. Glance stamps a synthetic `glance-action:`
+ * data URI onto that intent to keep each widget's PendingIntent distinct, and the app treats any
+ * intent carrying a data URI as a deep link or vault-file import — which is how a widget tap ended
+ * up on the Import screen showing "Unsupported file type". [MainActivity]'s deep-link check skips
+ * intents that carry this extra.
+ */
+const val EXTRA_LAUNCHED_FROM_MARKET_WIDGET = "launched_from_market_widget"
+
 /** Rounded navy container that fills the widget and opens the app on tap. */
 @Composable
 internal fun MarketWidgetSurface(contentDescription: String, content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val openApp =
+        Intent(context, MainActivity::class.java).putExtra(EXTRA_LAUNCHED_FROM_MARKET_WIDGET, true)
     Box(
         modifier =
             GlanceModifier.fillMaxSize()
                 .background(ImageProvider(R.drawable.bg_market_widget))
                 .appWidgetBackground()
                 .cornerRadius(16.dp)
-                .clickable(actionStartActivity<MainActivity>())
+                .clickable(actionStartActivity(openApp))
                 .padding(MarketWidgetContentPadding)
                 .semantics { this.contentDescription = contentDescription }
     ) {
