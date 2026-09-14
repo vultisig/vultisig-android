@@ -1810,4 +1810,29 @@
     <string name="scope_delegated_amount_after_rent">임대 예치금을 제외한 위임 금액</string>
     <string name="withdrawing_share_of_staked_position">스테이킹 포지션의 %1$s</string>
     <string name="withdrawing_share_of_liquidity_position">유동성 포지션의 %1$s</string>
+
+    <!-- Market Widgets -->
+    <string name="market_widget_crypto_ticker_title">암호화폐 티커</string>
+    <string name="market_widget_crypto_ticker_description">암호화폐의 가격과 7일 추세를 확인하세요.</string>
+    <string name="market_widget_top_cryptos_title">주요 암호화폐</string>
+    <string name="market_widget_top_cryptos_description">시가총액 기준 주요 암호화폐를 확인하세요.</string>
+    <string name="market_widget_seven_day">7일</string>
+    <string name="market_widget_change_24h">%1$s 24H</string>
+    <string name="market_widget_change_unavailable">— 24H</string>
+    <string name="market_widget_value_unavailable">—</string>
+    <string name="market_widget_asset">자산</string>
+    <string name="market_widget_price">가격</string>
+    <string name="market_widget_market_data">시장 데이터</string>
+    <string name="market_widget_loading">시장 데이터 불러오는 중…</string>
+    <string name="market_widget_cached">캐시됨</string>
+    <string name="market_widget_updated_at">%1$s 업데이트됨</string>
+    <string name="market_widget_up">상승</string>
+    <string name="market_widget_down">하락</string>
+    <string name="market_widget_change_unavailable_spoken">변동 정보 없음</string>
+    <string name="market_widget_accessibility_asset">%1$s, %2$s, 가격 %3$s, %4$s</string>
+    <string name="market_widget_configure_title">암호화폐 선택</string>
+    <string name="market_widget_configure_suggestions">추천</string>
+    <string name="market_widget_configure_results">검색 결과</string>
+    <string name="market_widget_configure_no_results">암호화폐를 찾을 수 없습니다</string>
+    <string name="market_widget_configure_search_failed">검색에 실패했습니다. 연결을 확인하고 다시 시도하세요.</string>
 </resources>

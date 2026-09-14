@@ -1807,4 +1807,29 @@
     <string name="scope_delegated_amount_after_rent">делегированная сумма за вычетом резерва за аренду</string>
     <string name="withdrawing_share_of_staked_position">%1$s вашей стейкинг-позиции</string>
     <string name="withdrawing_share_of_liquidity_position">%1$s вашей позиции ликвидности</string>
+
+    <!-- Market Widgets -->
+    <string name="market_widget_crypto_ticker_title">Крипто-тикер</string>
+    <string name="market_widget_crypto_ticker_description">Следите за ценой и семидневным трендом криптовалюты.</string>
+    <string name="market_widget_top_cryptos_title">Топ криптовалют</string>
+    <string name="market_widget_top_cryptos_description">Следите за ведущими криптовалютами по рыночной капитализации.</string>
+    <string name="market_widget_seven_day">7Д</string>
+    <string name="market_widget_change_24h">%1$s 24Ч</string>
+    <string name="market_widget_change_unavailable">— 24Ч</string>
+    <string name="market_widget_value_unavailable">—</string>
+    <string name="market_widget_asset">Актив</string>
+    <string name="market_widget_price">Цена</string>
+    <string name="market_widget_market_data">Рыночные данные</string>
+    <string name="market_widget_loading">Загрузка рыночных данных…</string>
+    <string name="market_widget_cached">Из кэша</string>
+    <string name="market_widget_updated_at">Обновлено %1$s</string>
+    <string name="market_widget_up">выросла на</string>
+    <string name="market_widget_down">упала на</string>
+    <string name="market_widget_change_unavailable_spoken">изменение недоступно</string>
+    <string name="market_widget_accessibility_asset">%1$s, %2$s, цена %3$s, %4$s</string>
+    <string name="market_widget_configure_title">Выберите криптовалюту</string>
+    <string name="market_widget_configure_suggestions">Рекомендации</string>
+    <string name="market_widget_configure_results">Результаты</string>
+    <string name="market_widget_configure_no_results">Криптовалюты не найдены</string>
+    <string name="market_widget_configure_search_failed">Поиск не удался. Проверьте подключение и попробуйте еще раз.</string>
 </resources>

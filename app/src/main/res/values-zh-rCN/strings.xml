@@ -2117,4 +2117,29 @@
     <string name="scope_delegated_amount_after_rent">扣除租金储备后的委托金额</string>
     <string name="withdrawing_share_of_staked_position">您质押仓位的 %1$s</string>
     <string name="withdrawing_share_of_liquidity_position">您流动性仓位的 %1$s</string>
+
+    <!-- Market Widgets -->
+    <string name="market_widget_crypto_ticker_title">加密货币行情</string>
+    <string name="market_widget_crypto_ticker_description">跟踪一种加密货币的价格和七日趋势。</string>
+    <string name="market_widget_top_cryptos_title">热门加密货币</string>
+    <string name="market_widget_top_cryptos_description">按市值关注领先的加密货币。</string>
+    <string name="market_widget_seven_day">7日</string>
+    <string name="market_widget_change_24h">%1$s 24小时</string>
+    <string name="market_widget_change_unavailable">— 24小时</string>
+    <string name="market_widget_value_unavailable">—</string>
+    <string name="market_widget_asset">资产</string>
+    <string name="market_widget_price">价格</string>
+    <string name="market_widget_market_data">市场数据</string>
+    <string name="market_widget_loading">正在加载市场数据…</string>
+    <string name="market_widget_cached">缓存数据</string>
+    <string name="market_widget_updated_at">更新于 %1$s</string>
+    <string name="market_widget_up">上涨</string>
+    <string name="market_widget_down">下跌</string>
+    <string name="market_widget_change_unavailable_spoken">变化不可用</string>
+    <string name="market_widget_accessibility_asset">%1$s，%2$s，价格 %3$s，%4$s</string>
+    <string name="market_widget_configure_title">选择加密货币</string>
+    <string name="market_widget_configure_suggestions">推荐</string>
+    <string name="market_widget_configure_results">搜索结果</string>
+    <string name="market_widget_configure_no_results">未找到加密货币</string>
+    <string name="market_widget_configure_search_failed">搜索失败。请检查网络连接后重试。</string>
 </resources>
