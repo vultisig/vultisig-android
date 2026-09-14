@@ -53,4 +53,28 @@ internal class SearchTronTokenUseCaseImplTest {
 
         assertNull(useCase(contract))
     }
+
+    @Test
+    fun `decimals word wider than uint8 fails closed instead of truncating`() = runTest {
+        coEvery { tronApi.readContractConstant(contract, "symbol()") } returns
+            "0000000000000000000000000000000000000000000000000000000000000020" +
+                "0000000000000000000000000000000000000000000000000000000000000003" +
+                "4142430000000000000000000000000000000000000000000000000000000000"
+        // 2^32 + 6: toInt() keeps the low 32 bits and would read this as a plausible 6.
+        coEvery { tronApi.readContractConstant(contract, "decimals()") } returns
+            "0000000000000000000000000000000000000000000000000000000100000006"
+
+        assertNull(useCase(contract))
+    }
+
+    @Test
+    fun `full-width decimals word fails closed`() = runTest {
+        coEvery { tronApi.readContractConstant(contract, "symbol()") } returns
+            "0000000000000000000000000000000000000000000000000000000000000020" +
+                "0000000000000000000000000000000000000000000000000000000000000003" +
+                "4142430000000000000000000000000000000000000000000000000000000000"
+        coEvery { tronApi.readContractConstant(contract, "decimals()") } returns "f".repeat(64)
+
+        assertNull(useCase(contract))
+    }
 }
