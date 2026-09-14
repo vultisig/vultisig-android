@@ -1680,7 +1680,7 @@ internal class SwapQuoteManagerTest {
             // the following real paste ("1" -> "1000") is still immediate.
             val result = manager.amountChanges(flowOf("0.04470234", "1", "1000")).toList()
 
-            assertEquals(listOf(false, false, true), result)
+            result shouldBe listOf(false, false, true)
         }
 
     @Test
@@ -1694,7 +1694,7 @@ internal class SwapQuoteManagerTest {
 
         val result = manager.amountChanges(flowOf("0.5")).toList()
 
-        assertEquals(listOf(true), result)
+        result shouldBe listOf(true)
     }
 
     @Test

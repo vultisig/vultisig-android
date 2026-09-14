@@ -10,6 +10,9 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -17,9 +20,6 @@ import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,8 +46,8 @@ internal class SwapFiatAmountInputTest {
     private val selectedSrcToken = MutableStateFlow<Coin?>(null)
     private val currency = MutableStateFlow(AppCurrency.USD)
     private val uiState = MutableStateFlow(SwapFormUiModel())
-    // One price flow per token id, so a token switch is priced by the new token.
-    private val prices = mutableMapOf<String, MutableStateFlow<BigDecimal>>()
+    // One price flow per token id and currency, so a token or currency switch is priced anew.
+    private val prices = mutableMapOf<Pair<String, AppCurrency>, MutableStateFlow<BigDecimal>>()
     private var conversions = 0
 
     private val appCurrencyRepository: AppCurrencyRepository =
@@ -62,7 +62,10 @@ internal class SwapFiatAmountInputTest {
         }
     private val tokenPriceRepository: TokenPriceRepository =
         mockk(relaxed = true) {
-            every { getPrice(any(), any()) } answers { priceOf(firstArg<Coin>().id) }
+            every { getPrice(any(), any()) } answers
+                {
+                    priceOf(firstArg<Coin>().id, secondArg<AppCurrency>())
+                }
         }
 
     @BeforeEach
@@ -82,9 +85,9 @@ internal class SwapFiatAmountInputTest {
 
             type(fiatAmountState, "1000")
 
-            assertEquals("0.5", tokenAmountState.text.toString())
+            tokenAmountState.text.toString() shouldBe "0.5"
             // Marked as a conversion so the quote pipeline keeps its typing debounce.
-            assertEquals(1, conversions)
+            conversions shouldBe 1
         }
 
     @Test
@@ -96,8 +99,8 @@ internal class SwapFiatAmountInputTest {
 
             type(fiatAmountState, "1")
 
-            assertEquals("0.33333333", tokenAmountState.text.toString())
-            assertEquals("1", fiatAmountState.text.toString())
+            tokenAmountState.text.toString() shouldBe "0.33333333"
+            fiatAmountState.text.toString() shouldBe "1"
         }
 
     @Test
@@ -105,13 +108,13 @@ internal class SwapFiatAmountInputTest {
         runTest(mainDispatcher) {
             start(backgroundScope, btc, price = "100000")
             type(tokenAmountState, "1")
-            assertEquals("100000", fiatAmountState.text.toString())
+            fiatAmountState.text.toString() shouldBe "100000"
 
             // 0.0001 / 100000 = 1e-9 BTC, under the 8-decimal display floor. Empty, not "0": an
             // empty field clears the quote silently where "0" reaches the pipeline as an error.
             type(fiatAmountState, "0.0001")
 
-            assertEquals("", tokenAmountState.text.toString())
+            tokenAmountState.text.toString() shouldBe ""
         }
 
     @Test
@@ -124,8 +127,8 @@ internal class SwapFiatAmountInputTest {
 
             // 246.915 rounds like the fiat line under the token amount does, so the field opens
             // on the same figure the user tapped.
-            assertEquals("246.92", fiatAmountState.text.toString())
-            assertEquals(0, conversions)
+            fiatAmountState.text.toString() shouldBe "246.92"
+            conversions shouldBe 0
         }
 
     @Test
@@ -133,11 +136,11 @@ internal class SwapFiatAmountInputTest {
         runTest(mainDispatcher) {
             start(backgroundScope, eth, price = "2000")
             type(tokenAmountState, "1")
-            assertEquals("2000", fiatAmountState.text.toString())
+            fiatAmountState.text.toString() shouldBe "2000"
 
             type(tokenAmountState, "")
 
-            assertEquals("", fiatAmountState.text.toString())
+            fiatAmountState.text.toString() shouldBe ""
         }
 
     @Test
@@ -145,40 +148,78 @@ internal class SwapFiatAmountInputTest {
         runTest(mainDispatcher) {
             start(backgroundScope, eth, price = "2000")
             type(tokenAmountState, "1")
-            assertEquals("2000", fiatAmountState.text.toString())
+            fiatAmountState.text.toString() shouldBe "2000"
 
             // The token amount is what survives a token switch today; the fiat line follows it.
             priceOf(btc.id).value = BigDecimal("100000")
             selectedSrcToken.value = btc
             advanceUntilIdle()
 
-            assertEquals("1", tokenAmountState.text.toString())
-            assertEquals("100000", fiatAmountState.text.toString())
+            tokenAmountState.text.toString() shouldBe "1"
+            fiatAmountState.text.toString() shouldBe "100000"
+        }
+
+    @Test
+    fun `entering fiat mode re-seeds the mirror at the current price`() =
+        runTest(mainDispatcher) {
+            val input = start(backgroundScope, eth, price = "2000")
+            type(tokenAmountState, "1")
+            fiatAmountState.text.toString() shouldBe "2000"
+
+            // The mirror is off screen in token mode, so a price move is not chased there…
+            priceOf(eth.id).value = BigDecimal("2500")
+            advanceUntilIdle()
+            fiatAmountState.text.toString() shouldBe "2000"
+
+            // …but the field must open on what the token is worth now, not what it was worth
+            // when the amount was typed.
+            input.toggle()
+            advanceUntilIdle()
+
+            fiatAmountState.text.toString() shouldBe "2500"
+            tokenAmountState.text.toString() shouldBe "1"
+        }
+
+    @Test
+    fun `a currency change re-derives the fiat mirror in the new currency`() =
+        runTest(mainDispatcher) {
+            start(backgroundScope, eth, price = "2000")
+            type(tokenAmountState, "1")
+            fiatAmountState.text.toString() shouldBe "2000"
+
+            // The symbol follows the currency, so the amount beside it must too — or a EUR
+            // symbol would lead a USD figure.
+            priceOf(eth.id, AppCurrency.EUR).value = BigDecimal("1800")
+            currency.value = AppCurrency.EUR
+            advanceUntilIdle()
+
+            fiatAmountState.text.toString() shouldBe "1800"
+            uiState.value.fiatSymbol shouldBe "€"
         }
 
     @Test
     fun `fiat mode is offered only while the source token has a price`() =
         runTest(mainDispatcher) {
             val input = start(backgroundScope, eth, price = "0")
-            assertFalse(uiState.value.isSrcFiatInputAvailable)
+            uiState.value.isSrcFiatInputAvailable.shouldBeFalse()
 
             // Nothing to convert by: the tap is ignored.
             input.toggle()
-            assertFalse(uiState.value.isSrcFiatInput)
+            uiState.value.isSrcFiatInput.shouldBeFalse()
 
             priceOf(eth.id).value = BigDecimal("2000")
             advanceUntilIdle()
-            assertTrue(uiState.value.isSrcFiatInputAvailable)
+            uiState.value.isSrcFiatInputAvailable.shouldBeTrue()
 
             input.toggle()
-            assertTrue(uiState.value.isSrcFiatInput)
+            uiState.value.isSrcFiatInput.shouldBeTrue()
 
             // The price going away leaves fiat mode rather than stranding a field whose
             // conversion can't run.
             priceOf(eth.id).value = BigDecimal.ZERO
             advanceUntilIdle()
-            assertFalse(uiState.value.isSrcFiatInputAvailable)
-            assertFalse(uiState.value.isSrcFiatInput)
+            uiState.value.isSrcFiatInputAvailable.shouldBeFalse()
+            uiState.value.isSrcFiatInput.shouldBeFalse()
         }
 
     @Test
@@ -187,21 +228,21 @@ internal class SwapFiatAmountInputTest {
             val input = start(backgroundScope, eth, price = "2000")
 
             input.toggle()
-            assertTrue(uiState.value.isSrcFiatInput)
+            uiState.value.isSrcFiatInput.shouldBeTrue()
             input.toggle()
-            assertFalse(uiState.value.isSrcFiatInput)
+            uiState.value.isSrcFiatInput.shouldBeFalse()
         }
 
     @Test
     fun `the fiat symbol follows the app currency`() =
         runTest(mainDispatcher) {
             start(backgroundScope, eth, price = "2000")
-            assertEquals("$", uiState.value.fiatSymbol)
+            uiState.value.fiatSymbol shouldBe "$"
 
             currency.value = AppCurrency.EUR
             advanceUntilIdle()
 
-            assertEquals("€", uiState.value.fiatSymbol)
+            uiState.value.fiatSymbol shouldBe "€"
         }
 
     @Test
@@ -213,8 +254,8 @@ internal class SwapFiatAmountInputTest {
 
             type(fiatAmountState, "1000")
 
-            assertEquals("", tokenAmountState.text.toString())
-            assertFalse(uiState.value.isSrcFiatInputAvailable)
+            tokenAmountState.text.toString() shouldBe ""
+            uiState.value.isSrcFiatInputAvailable.shouldBeFalse()
         }
 
     private fun TestScope.start(
@@ -246,8 +287,11 @@ internal class SwapFiatAmountInputTest {
         advanceUntilIdle()
     }
 
-    private fun priceOf(tokenId: String): MutableStateFlow<BigDecimal> =
-        prices.getOrPut(tokenId) { MutableStateFlow(BigDecimal.ZERO) }
+    private fun priceOf(
+        tokenId: String,
+        currency: AppCurrency = AppCurrency.USD,
+    ): MutableStateFlow<BigDecimal> =
+        prices.getOrPut(tokenId to currency) { MutableStateFlow(BigDecimal.ZERO) }
 
     private val eth =
         Coin(

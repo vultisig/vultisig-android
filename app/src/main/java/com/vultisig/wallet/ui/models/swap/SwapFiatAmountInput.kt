@@ -56,6 +56,8 @@ internal class SwapFiatAmountInput(
     private var lastTokenText = ""
     private var lastFiatText = ""
     private var lastTokenId: String? = null
+    private var lastCurrency: AppCurrency? = null
+    private var wasFiatInput = false
 
     fun start() {
         scope.launch { observePriceAvailability() }
@@ -124,16 +126,28 @@ internal class SwapFiatAmountInput(
                 appCurrencyRepository.currency,
                 // Both fields in one snapshotFlow so each change is observed against the other
                 // field's current text, never a half-updated pair (see AmountManager).
-                snapshotFlow { tokenAmountState.text.toString() to fiatAmountState.text.toString() },
-            ) { token, currency, (tokenText, fiatText) ->
+                snapshotFlow {
+                    tokenAmountState.text.toString() to fiatAmountState.text.toString()
+                },
+                uiState.map { it.isSrcFiatInput }.distinctUntilChanged(),
+            ) { token, currency, (tokenText, fiatText), isFiatInput ->
+                val isEnteringFiatInput = isFiatInput && !wasFiatInput
+                wasFiatInput = isFiatInput
                 when {
-                    // A new source token is priced differently, so the fiat mirror is re-derived
-                    // from the token amount it carries over — the token amount is what the user
-                    // keeps across a token switch today.
-                    token.id != lastTokenId -> {
+                    // A new source token or currency prices differently, so the fiat mirror is
+                    // re-derived from the token amount it carries over — the token amount is
+                    // what the user keeps across a token switch today.
+                    token.id != lastTokenId || currency != lastCurrency -> {
                         lastTokenId = token.id
+                        lastCurrency = currency
                         mirrorTokenToFiat(token, currency, tokenText)
                     }
+                    // The mirror is off screen in token mode, so it is re-seeded at the current
+                    // price the moment it comes on — a price that moved since the token amount
+                    // was last written would otherwise open a fiat field that disagrees with the
+                    // line just tapped. Live ticks are not chased while the field is in use: that
+                    // would rewrite a typed amount under the user.
+                    isEnteringFiatInput -> mirrorTokenToFiat(token, currency, tokenText)
                     tokenText != lastTokenText -> mirrorTokenToFiat(token, currency, tokenText)
                     fiatText != lastFiatText -> convertFiatToToken(token, currency, fiatText)
                 }
