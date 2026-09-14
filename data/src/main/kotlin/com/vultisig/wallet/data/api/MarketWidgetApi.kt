@@ -8,10 +8,14 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
-import io.ktor.client.statement.bodyAsBytes
+import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.Url
+import io.ktor.http.contentLength
 import io.ktor.http.isSuccess
+import io.ktor.utils.io.readRemaining
 import javax.inject.Inject
+import kotlinx.io.readByteArray
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -99,12 +103,23 @@ internal class MarketWidgetApiImpl @Inject constructor(private val http: HttpCli
 
     override suspend fun icon(url: String): ByteArray? {
         val validated = validatedIconUrl(url) ?: return null
-        val response = http.get(validated) { timeout { requestTimeoutMillis = SEARCH_TIMEOUT_MS } }
-        if (!response.status.isSuccess()) return null
-        val declaredLength = response.headers["Content-Length"]?.toLongOrNull()
-        if (declaredLength != null && declaredLength > MarketWidgetApi.MAX_ICON_BYTES) return null
-        val bytes = response.bodyAsBytes()
-        return bytes.takeIf { it.isNotEmpty() && it.size <= MarketWidgetApi.MAX_ICON_BYTES }
+        // Streamed rather than `bodyAsBytes()`: Content-Length is only a hint (it can be absent
+        // on a chunked response), and the cap must hold before the body is ever buffered whole.
+        return http
+            .prepareGet(validated) { timeout { requestTimeoutMillis = SEARCH_TIMEOUT_MS } }
+            .execute { response ->
+                if (!response.status.isSuccess()) return@execute null
+                val declaredLength = response.contentLength()
+                if (declaredLength != null && declaredLength > MarketWidgetApi.MAX_ICON_BYTES) {
+                    return@execute null
+                }
+                val bytes =
+                    response
+                        .bodyAsChannel()
+                        .readRemaining(MarketWidgetApi.MAX_ICON_BYTES + 1L)
+                        .readByteArray()
+                bytes.takeIf { it.isNotEmpty() && it.size <= MarketWidgetApi.MAX_ICON_BYTES }
+            }
     }
 
     private fun RemoteMarketAssetJson.toAsset(): MarketWidgetAsset? {

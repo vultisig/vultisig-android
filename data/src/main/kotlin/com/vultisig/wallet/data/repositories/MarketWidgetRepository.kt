@@ -97,25 +97,46 @@ constructor(
         withContext(Dispatchers.IO) {
             val key = cacheKey(query, currency)
             val previous = mutex.withLock { loadEntries()[key] }
-            try {
-                val assets = api.markets(query, currency)
-                downloadMissingIcons(assets)
-                val updatedAt = System.currentTimeMillis()
-                store(key, CacheEntry(assets = assets, updatedAt = updatedAt))
-                MarketWidgetResult(assets = assets, updatedAt = updatedAt, isStale = false)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.w(e, "Market widget refresh failed for %s", key)
-                if (previous == null) throw e
-                store(key, previous.copy(isStale = true))
-                MarketWidgetResult(
-                    assets = previous.assets,
-                    updatedAt = previous.updatedAt,
-                    isStale = true,
-                )
-            }
+            val assets =
+                try {
+                    api.markets(query, currency)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.w(e, "Market widget refresh failed for %s", key)
+                    return@withContext fallback(key, previous, e)
+                }
+
+            // Outside the API catch on purpose: a cache write failure must surface to the worker
+            // (so it retries) rather than be reported back as a stale-but-successful result.
+            downloadMissingIcons(assets)
+            val updatedAt = System.currentTimeMillis()
+            store(key, CacheEntry(assets = assets, updatedAt = updatedAt))
+            MarketWidgetResult(assets = assets, updatedAt = updatedAt, isStale = false)
         }
+
+    /**
+     * Last-good result for a failed refresh. Refreshes for one key can overlap (the worker and the
+     * configure screen share this instance), so the entry captured before the request is only
+     * marked stale if it is still what the cache holds; a newer snapshot written meanwhile wins.
+     */
+    private suspend fun fallback(
+        key: String,
+        previous: CacheEntry?,
+        cause: Exception,
+    ): MarketWidgetResult {
+        val current = mutex.withLock { loadEntries()[key] } ?: previous ?: throw cause
+        if (current.updatedAt == previous?.updatedAt && !current.isStale) {
+            // Failing to flag staleness is not worth failing the caller over; the data is intact.
+            runCatching { store(key, current.copy(isStale = true)) }
+                .onFailure { Timber.w(it, "Could not mark market widget cache stale") }
+        }
+        return MarketWidgetResult(
+            assets = current.assets,
+            updatedAt = current.updatedAt,
+            isStale = current.updatedAt == previous?.updatedAt || current.isStale,
+        )
+    }
 
     override suspend fun search(query: String): List<MarketWidgetAssetIdentity> = api.search(query)
 
@@ -162,16 +183,15 @@ constructor(
                 entries.remove(oldest)
             }
             pruneIcons(entries.values)
-            runCatching {
-                    cacheDir.mkdirs()
-                    val tmp = File(cacheDir, "$CACHE_FILE.tmp")
-                    tmp.writeText(json.encodeToString(entries))
-                    if (!tmp.renameTo(cacheFile)) {
-                        cacheFile.writeText(json.encodeToString(entries))
-                        tmp.delete()
-                    }
-                }
-                .onFailure { Timber.w(it, "Market widget cache write failed") }
+            cacheDir.mkdirs()
+            val tmp = File(cacheDir, "$CACHE_FILE.tmp")
+            tmp.writeText(json.encodeToString(entries))
+            if (!tmp.renameTo(cacheFile)) {
+                cacheFile.writeText(json.encodeToString(entries))
+                tmp.delete()
+            }
+            // Only after the file is on disk: readers re-read the file on this signal, so bumping
+            // it for a write that never landed would just have them re-render the old snapshot.
             _version.update { it + 1 }
         }
 

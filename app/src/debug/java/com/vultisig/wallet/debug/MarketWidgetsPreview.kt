@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -24,6 +26,7 @@ import androidx.glance.ExperimentalGlanceApi
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.compose
 import com.vultisig.wallet.ui.widgets.market.CryptoTickerWidget
+import com.vultisig.wallet.ui.widgets.market.MarketWidgetEntryPoint
 import com.vultisig.wallet.ui.widgets.market.TopCryptosWidget
 
 /**
@@ -56,8 +59,13 @@ internal fun MarketWidgetsPreview() {
 @Composable
 private fun WidgetSlot(widget: GlanceAppWidget, size: DpSize, state: Any?) {
     val context = LocalContext.current
+    // `compose` is a one-shot snapshot, so re-run it whenever the cache or currency moves —
+    // otherwise a preview opened on an empty cache stays on its loading state.
+    val entryPoint = remember(context) { MarketWidgetEntryPoint.resolve(context) }
+    val version by entryPoint.marketWidgetRepository().version.collectAsState()
+    val currency by entryPoint.appCurrencyRepository().currency.collectAsState(initial = null)
     val remoteViews by
-        produceState<RemoteViews?>(initialValue = null) {
+        produceState<RemoteViews?>(initialValue = null, version, currency) {
             value = widget.compose(context = context, size = size, state = state)
         }
     AndroidView(

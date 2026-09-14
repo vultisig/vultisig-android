@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.MarketWidgetAssetIdentity
 import com.vultisig.wallet.data.models.MarketWidgetQuery
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.MarketWidgetRepository
+import com.vultisig.wallet.data.utils.safeLaunch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -26,7 +27,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
@@ -67,10 +67,9 @@ constructor(
 
     /** Reflect the asset a re-configured widget already shows, so the tick lands on it. */
     fun loadCurrentSelection(appWidgetId: Int) {
-        viewModelScope.launch {
-            val glanceId =
-                runCatching { GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId) }
-                    .getOrNull() ?: return@launch
+        // A widget that can't be resolved simply keeps the default tick; nothing to surface.
+        viewModelScope.safeLaunch(onError = { Timber.d(it, "No stored widget selection") }) {
+            val glanceId = GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId)
             val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId)
             _state.update { it.copy(selectedId = CryptoTickerWidget.selectedAssetId(prefs)) }
         }
@@ -78,7 +77,7 @@ constructor(
 
     @OptIn(FlowPreview::class)
     private fun observeSearch() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             snapshotFlow { searchFieldState.text.toString().trim() }
                 .debounce(SEARCH_DEBOUNCE_MS)
                 .distinctUntilChanged()
@@ -123,7 +122,13 @@ constructor(
     fun select(appWidgetId: Int, asset: MarketWidgetAssetIdentity) {
         if (_state.value.isSaving) return
         _state.update { it.copy(isSaving = true, selectedId = asset.id) }
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                // The selection was not persisted; release the guard so the user can retry.
+                Timber.e(e, "Could not store the widget asset selection")
+                _state.update { it.copy(isSaving = false) }
+            }
+        ) {
             val manager = GlanceAppWidgetManager(context)
             val glanceId = manager.getGlanceIdBy(appWidgetId)
             updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
@@ -134,23 +139,33 @@ constructor(
                 }
             }
 
-            // Best effort so the widget lands on the home screen already populated. If this
-            // doesn't make it in time the widget renders its loading state and the refresh
-            // worker fills it in.
+            // Everything from here is best effort: the choice is stored, so the widget lands on
+            // the home screen correctly even if the first render or prefetch doesn't happen now.
+            // If this doesn't make it in time the widget renders its loading state and the
+            // refresh worker fills it in.
             withTimeoutOrNull(PREFETCH_TIMEOUT_MS) {
-                try {
+                bestEffort("Widget prefetch failed; deferring to the refresh worker") {
                     val currency = appCurrencyRepository.currency.first().ticker
                     repository.refresh(MarketWidgetQuery.Ids(listOf(asset.id)), currency)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Timber.d(e, "Widget prefetch failed; deferring to the refresh worker")
                 }
             }
-
-            CryptoTickerWidget().update(context, glanceId)
-            MarketWidgetRefreshWorker.schedulePeriodic(context)
+            bestEffort("Widget render after configuration failed") {
+                CryptoTickerWidget().update(context, glanceId)
+            }
+            bestEffort("Could not schedule the widget refresh") {
+                MarketWidgetRefreshWorker.schedulePeriodic(context)
+            }
             _saved.value = appWidgetId
+        }
+    }
+
+    private inline fun bestEffort(message: String, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.d(e, message)
         }
     }
 
