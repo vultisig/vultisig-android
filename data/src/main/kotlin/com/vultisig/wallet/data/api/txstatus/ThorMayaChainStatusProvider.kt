@@ -13,6 +13,10 @@ import io.ktor.http.HttpStatusCode
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import timber.log.Timber
@@ -51,10 +55,9 @@ import timber.log.Timber
  * repeated empty action responses, giving Midgard's action index time to surface refunds.
  */
 class ThorMayaChainStatusProvider
-internal constructor(private val httpClient: HttpClient, private val nowMillis: () -> Long) :
+@Inject
+constructor(private val httpClient: HttpClient, private val timeSource: TimeSource) :
     TransactionStatusProvider {
-
-    @Inject constructor(httpClient: HttpClient) : this(httpClient, System::currentTimeMillis)
 
     private val midgardUrls =
         mapOf(
@@ -113,21 +116,16 @@ internal constructor(private val httpClient: HttpClient, private val nowMillis: 
 
         val streak =
             emptyActionStreaks.compute(key) { _, current ->
-                val now = nowMillis()
+                val now = timeSource.markNow()
                 val fresh =
-                    current?.takeIf { now - it.lastObservedAtMillis <= EMPTY_ACTION_STREAK_TTL_MS }
-                fresh?.copy(count = fresh.count + 1, lastObservedAtMillis = now)
-                    ?: EmptyActionStreak(
-                        count = 1,
-                        firstObservedAtMillis = now,
-                        lastObservedAtMillis = now,
-                    )
+                    current?.takeIf { it.lastObservedAt.elapsedNow() <= EMPTY_ACTION_STREAK_TTL }
+                fresh?.copy(count = fresh.count + 1, lastObservedAt = now)
+                    ?: EmptyActionStreak(count = 1, firstObservedAt = now, lastObservedAt = now)
             }!!
 
         return if (
             streak.count >= MIN_INDEXABLE_EMPTY_ACTION_POLLS &&
-                streak.lastObservedAtMillis - streak.firstObservedAtMillis >=
-                    MIN_INDEXABLE_EMPTY_ACTION_AGE_MS
+                streak.firstObservedAt.elapsedNow() >= MIN_INDEXABLE_EMPTY_ACTION_AGE
         ) {
             emptyActionStreaks.remove(key)
             TransactionResult.Confirmed
@@ -216,8 +214,8 @@ internal constructor(private val httpClient: HttpClient, private val nowMillis: 
         const val DEFAULT_REFUND_REASON = "Transaction refunded"
         const val DEFAULT_FAILED_REASON = "Transaction failed"
         const val MIN_INDEXABLE_EMPTY_ACTION_POLLS = 2
-        const val MIN_INDEXABLE_EMPTY_ACTION_AGE_MS = 15_000L
-        const val EMPTY_ACTION_STREAK_TTL_MS = 5 * 60_000L
+        val MIN_INDEXABLE_EMPTY_ACTION_AGE = 15.seconds
+        val EMPTY_ACTION_STREAK_TTL = 5.minutes
         const val THOR_MSG_DEPOSIT_TYPE = "/types.MsgDeposit"
         val MIDGARD_INDEXED_MEMO_OPS =
             setOf(
@@ -249,8 +247,8 @@ private data class EmptyActionKey(val chain: Chain, val txHash: String)
 
 private data class EmptyActionStreak(
     val count: Int,
-    val firstObservedAtMillis: Long,
-    val lastObservedAtMillis: Long,
+    val firstObservedAt: TimeMark,
+    val lastObservedAt: TimeMark,
 )
 
 private data class NativeStatusResult(

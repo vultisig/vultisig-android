@@ -13,6 +13,7 @@ import java.math.BigInteger
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -21,7 +22,8 @@ class PolkadotStatusProviderTest {
 
     private val polkadotApi = mockk<PolkadotApi>()
     private val transactionHistoryRepository = mockk<TransactionHistoryRepository>()
-    private val provider = PolkadotStatusProvider(polkadotApi, transactionHistoryRepository)
+    private val provider =
+        PolkadotStatusProvider(polkadotApi, transactionHistoryRepository, Clock.System)
 
     @Test
     fun `extrinsic found in a recent block maps to Confirmed`() = runTest {

@@ -1,9 +1,9 @@
 package com.vultisig.wallet.data.repositories
 
-import androidx.annotation.VisibleForTesting
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.vultisig.wallet.data.sources.AppDataStore
 import javax.inject.Inject
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.flow.Flow
@@ -78,18 +78,8 @@ interface PromoBannerDismissalRepository {
 
 internal class PromoBannerDismissalRepositoryImpl
 @Inject
-constructor(private val appDataStore: AppDataStore) : PromoBannerDismissalRepository {
-
-    /** Minimal clock seam so tests can advance time without sleeping. */
-    fun interface Clock {
-        fun nowMillis(): Long
-    }
-
-    /**
-     * Overridable clock so tests can drive TTL expiry deterministically; production uses
-     * `System.currentTimeMillis`. Not [Inject]ed to keep Hilt wiring trivial.
-     */
-    @VisibleForTesting internal var clock: Clock = Clock { System.currentTimeMillis() }
+constructor(private val appDataStore: AppDataStore, private val clock: Clock) :
+    PromoBannerDismissalRepository {
 
     /**
      * Banners closed since this process started. Held here rather than in a ViewModel because the
@@ -114,7 +104,7 @@ constructor(private val appDataStore: AppDataStore) : PromoBannerDismissalReposi
                     dismissedAt != null &&
                         when (policy) {
                             is DismissPolicy.Ttl ->
-                                clock.nowMillis() - dismissedAt <
+                                clock.now().toEpochMilliseconds() - dismissedAt <
                                     policy.duration.inWholeMilliseconds
                             DismissPolicy.Permanent -> true
                             DismissPolicy.Session -> false
@@ -124,7 +114,7 @@ constructor(private val appDataStore: AppDataStore) : PromoBannerDismissalReposi
 
     override suspend fun dismiss(banner: PromoBanner) {
         sessionDismissals.update { it + banner }
-        appDataStore.set(dismissedAtKey(banner), clock.nowMillis())
+        appDataStore.set(dismissedAtKey(banner), clock.now().toEpochMilliseconds())
     }
 
     private companion object {

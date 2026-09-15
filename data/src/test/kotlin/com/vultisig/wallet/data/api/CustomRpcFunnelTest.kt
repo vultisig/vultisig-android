@@ -16,6 +16,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
 import io.mockk.every
 import io.mockk.mockk
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -93,6 +94,7 @@ internal class CustomRpcFunnelTest {
                 json,
                 CosmosThorChainResponseSerializerImpl(json),
                 repoReturning("https://my-cosmos.example"),
+                TestTimeSource(),
             )
 
         factory.createCosmosApi(Chain.GaiaChain).getBalance("cosmos1abc")
@@ -113,6 +115,7 @@ internal class CustomRpcFunnelTest {
                 json,
                 CosmosThorChainResponseSerializerImpl(json),
                 repoReturning(null),
+                TestTimeSource(),
             )
 
         factory.createCosmosApi(Chain.GaiaChain).getBalance("cosmos1abc")

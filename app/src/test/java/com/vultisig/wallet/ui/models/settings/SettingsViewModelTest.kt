@@ -25,6 +25,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -89,6 +90,7 @@ internal class SettingsViewModelTest {
             passcodeRepository = passcodeRepository,
             passcodeConfig = passcodeConfig,
             savedStateHandle = SavedStateHandle(),
+            timeSource = TestTimeSource(),
         )
 
     /** Verifies clicking AddressBook navigates to AddressBookScreen. */

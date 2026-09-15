@@ -18,6 +18,9 @@ import com.vultisig.wallet.ui.screens.settings.TierType
 import java.math.BigInteger
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -43,6 +46,7 @@ constructor(
     private val balanceRepository: BalanceRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tiersNFTRepository: TiersNFTRepository,
+    private val timeSource: TimeSource,
 ) : GetDiscountBpsUseCase {
 
     // A quote fetch asks for the discount once per swap provider candidate, all at the same time,
@@ -58,7 +62,7 @@ constructor(
 
     private fun lockFor(vaultId: String) = liveVultBalanceLocks.computeIfAbsent(vaultId) { Mutex() }
 
-    private class LiveVultBalance(val value: BigInteger?, val expiresAt: Long)
+    private class LiveVultBalance(val value: BigInteger?, val expiresAt: TimeMark)
 
     override suspend fun invoke(vaultId: String, swapProvider: SwapProvider): Int {
         if (!supportedProviders.contains(swapProvider)) {
@@ -122,14 +126,14 @@ constructor(
 
     private suspend fun getLiveBalance(vaultId: String, address: String, coin: Coin): BigInteger? =
         lockFor(vaultId).withLock {
-            val now = System.currentTimeMillis()
             val cached = liveVultBalanceCache[vaultId]
-            if (cached != null && now < cached.expiresAt) {
+            if (cached != null && cached.expiresAt.hasNotPassedNow()) {
                 return@withLock cached.value
             }
 
             val balance = balanceRepository.getBalanceOrNull(address, coin)
-            liveVultBalanceCache[vaultId] = LiveVultBalance(balance, now + LIVE_BALANCE_TTL_MS)
+            liveVultBalanceCache[vaultId] =
+                LiveVultBalance(balance, timeSource.markNow() + LIVE_BALANCE_TTL)
             balance
         }
 
@@ -161,7 +165,7 @@ constructor(
         // often a re-quoting swap screen goes back to the chain, short enough that a refresh —
         // or the swap that follows the VULT purchase which earned the tier — still sees a fresh
         // balance.
-        private const val LIVE_BALANCE_TTL_MS = 12 * 1000L
+        private val LIVE_BALANCE_TTL = 12.seconds
 
         // Discount amounts in basis points
         const val NO_DISCOUNT_BPS = 0

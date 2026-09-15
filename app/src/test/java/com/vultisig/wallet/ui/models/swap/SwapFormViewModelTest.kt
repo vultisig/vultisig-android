@@ -39,7 +39,6 @@ import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
-import com.vultisig.wallet.data.utils.plus
 import com.vultisig.wallet.ui.models.findCurrentSrc
 import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -62,12 +61,12 @@ import io.mockk.unmockkStatic
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -260,6 +259,7 @@ internal class SwapFormViewModelTest {
                     fiatValueToString = fiatValueToString,
                     searchToken = mockk(relaxed = true),
                     convertTokenToTokenUseCase = mockk(relaxed = true),
+                    clock = Clock.System,
                 )
             )
     }
@@ -285,7 +285,7 @@ internal class SwapFormViewModelTest {
                 swapQuoteManager = swapQuoteManager,
                 swapQuoteRepository = swapQuoteRepository,
                 swapTransactionBuilder =
-                    SwapTransactionBuilder(swapGasCalculator, allowanceRepository),
+                    SwapTransactionBuilder(swapGasCalculator, allowanceRepository, Clock.System),
                 swapInputCollector =
                     SwapInputCollector(convertTokenAndValueToTokenValue, swapValidator),
                 swapQuotePipelineControllerFactory =
@@ -334,6 +334,7 @@ internal class SwapFormViewModelTest {
                     swapDiscountChecker = swapDiscountChecker,
                     swapValidator = swapValidator,
                     ioDispatcher = ioDispatcher,
+                    clock = Clock.System,
                     scope = scope,
                     swapQuoteManager = swapQuoteManager,
                     uiState = uiState,
@@ -4480,7 +4481,7 @@ internal class SwapFormViewModelTest {
         SwapQuote.ThorChain(
             expectedDstValue = expectedDstValue,
             fees = TokenValue(value = BigInteger("5000000"), token = USDC_COIN),
-            expiredAt = Instant.now() + 1.minutes,
+            expiredAt = Clock.System.now() + 1.minutes,
             recommendedMinTokenValue = TokenValue(value = BigInteger("1000"), token = ETH_COIN),
             data = mockk(relaxed = true),
         )
@@ -4491,7 +4492,7 @@ internal class SwapFormViewModelTest {
         SwapQuote.MayaChain(
             expectedDstValue = expectedDstValue,
             fees = TokenValue(value = BigInteger("5000000"), token = USDC_COIN),
-            expiredAt = Instant.now() + 1.minutes,
+            expiredAt = Clock.System.now() + 1.minutes,
             recommendedMinTokenValue = TokenValue(value = BigInteger("1000"), token = ETH_COIN),
             data = mockk(relaxed = true),
         )
@@ -4502,7 +4503,7 @@ internal class SwapFormViewModelTest {
         SwapQuote.SwapKit(
             expectedDstValue = expectedDstValue,
             fees = TokenValue(value = BigInteger("400"), token = BTC_COIN),
-            expiredAt = Instant.now() + 1.minutes,
+            expiredAt = Clock.System.now() + 1.minutes,
             data = mockk(relaxed = true),
             subProvider = "NEAR",
         )
@@ -4515,7 +4516,7 @@ internal class SwapFormViewModelTest {
         SwapQuote.OneInch(
             expectedDstValue = expectedDstValue,
             fees = fees,
-            expiredAt = Instant.now() + 1.minutes,
+            expiredAt = Clock.System.now() + 1.minutes,
             data = mockk(relaxed = true),
             provider = SwapProvider.LIFI.getSwapProviderId(),
         )

@@ -37,6 +37,7 @@ import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -153,6 +154,7 @@ internal class CosmosStakingPositionsViewModelTest {
                 cosmosStakingDeFiBalanceService = cosmosStakingDeFiBalanceService,
                 navigator = navigator,
                 ioDispatcher = testDispatcher,
+                clock = Clock.System,
             )
             .also { it.setData(vaultId = "v1", chainId = "Terra") }
 
@@ -435,6 +437,7 @@ internal class CosmosStakingPositionsViewModelTest {
                 cosmosStakingDeFiBalanceService = cosmosStakingDeFiBalanceService,
                 navigator = navigator,
                 ioDispatcher = testDispatcher,
+                clock = Clock.System,
             )
         model.onScreenResumed()
         coVerify(exactly = 0) { cosmosStakingService.fetchDelegations(any(), any()) }

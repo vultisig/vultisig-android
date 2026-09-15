@@ -1,8 +1,9 @@
 package com.vultisig.wallet.data.keygen
 
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 /**
  * Bounds how long a keygen ceremony may go without making progress.
@@ -22,9 +23,9 @@ import kotlin.time.Duration.Companion.seconds
  */
 internal class CeremonyStallClock(
     private val limit: Duration = DEFAULT_LIMIT,
-    private val nanoTime: () -> Long = System::nanoTime,
+    private val timeSource: TimeSource = TimeSource.Monotonic,
 ) {
-    @Volatile private var lastProgressAt: Long = nanoTime()
+    @Volatile private var lastProgressAt: TimeMark = timeSource.markNow()
 
     /** Seconds of silence this clock tolerates, for the caller's failure message. */
     val limitSeconds: Long
@@ -32,16 +33,16 @@ internal class CeremonyStallClock(
 
     /** Restarts the clock. Call when an attempt begins waiting on its peers. */
     fun reset() {
-        lastProgressAt = nanoTime()
+        lastProgressAt = timeSource.markNow()
     }
 
     /** Records that this device applied inbound protocol input from a peer. */
     fun markProgress() {
-        lastProgressAt = nanoTime()
+        lastProgressAt = timeSource.markNow()
     }
 
     /** Time since the last applied message, or since [reset] if none has been applied. */
-    fun sinceProgress(): Duration = (nanoTime() - lastProgressAt).nanoseconds
+    fun sinceProgress(): Duration = lastProgressAt.elapsedNow()
 
     fun isStalled(): Boolean = sinceProgress() > limit
 

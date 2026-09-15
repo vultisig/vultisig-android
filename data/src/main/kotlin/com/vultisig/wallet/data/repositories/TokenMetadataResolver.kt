@@ -8,6 +8,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -43,21 +45,18 @@ class TokenMetadataResolver
 constructor(
     private val tokenRepository: TokenRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val timeSource: TimeSource,
 ) {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal constructor(
         tokenRepository: TokenRepository,
         ioDispatcher: CoroutineDispatcher,
-        clock: () -> Long,
+        timeSource: TimeSource,
         ttl: Duration,
-    ) : this(tokenRepository, ioDispatcher) {
-        this.clock = clock
+    ) : this(tokenRepository, ioDispatcher, timeSource) {
         this.ttl = ttl
     }
-
-    private var clock: () -> Long = { System.currentTimeMillis() }
-        private set
 
     private var ttl: Duration = DEFAULT_TTL
         private set
@@ -81,7 +80,7 @@ constructor(
         val slot =
             mutex.withLock {
                 cache[key]?.let { cached ->
-                    if (clock() - cached.fetchedAt < ttl.inWholeMilliseconds) {
+                    if (cached.fetchedAt.elapsedNow() < ttl) {
                         return cached.metadata
                     }
                 }
@@ -112,7 +111,7 @@ constructor(
             mutex.withLock {
                 inFlight.remove(key)
                 if (metadata != null) {
-                    cache[key] = CacheEntry(metadata = metadata, fetchedAt = clock())
+                    cache[key] = CacheEntry(metadata = metadata, fetchedAt = timeSource.markNow())
                 }
             }
             owned.complete(metadata)
@@ -150,7 +149,7 @@ constructor(
         return "${chain.raw}|${trimmed.lowercase()}"
     }
 
-    private data class CacheEntry(val metadata: TokenMetadata, val fetchedAt: Long)
+    private data class CacheEntry(val metadata: TokenMetadata, val fetchedAt: TimeMark)
 
     private sealed interface Slot {
         val deferred: CompletableDeferred<TokenMetadata?>

@@ -11,6 +11,7 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -158,6 +159,7 @@ class ZcashApiTest {
         ZcashApiImpl(
             HttpClient(engine) {
                 install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
-            }
+            },
+            TestTimeSource(),
         )
 }

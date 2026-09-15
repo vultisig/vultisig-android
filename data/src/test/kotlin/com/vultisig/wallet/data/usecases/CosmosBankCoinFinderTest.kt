@@ -16,6 +16,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -24,7 +25,7 @@ internal class CosmosBankCoinFinderTest {
 
     private val cosmosApi: CosmosApi = mockk()
     private val cosmosApiFactory: CosmosApiFactory = mockk()
-    private val finder = CosmosBankCoinFinderImpl(cosmosApiFactory)
+    private val finder = CosmosBankCoinFinderImpl(cosmosApiFactory, TestTimeSource())
 
     init {
         every { cosmosApiFactory.createCosmosApi(any()) } returns cosmosApi

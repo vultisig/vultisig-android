@@ -20,11 +20,11 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -212,7 +212,7 @@ internal class SwapQuotePipelineNetworkFeeTest {
         SwapQuote.OneInch(
             expectedDstValue = TokenValue(BigInteger.valueOf(400), srcToken),
             fees = inboundFee,
-            expiredAt = Instant.now(),
+            expiredAt = Clock.System.now(),
             data =
                 EVMSwapQuoteJson(
                     dstAmount = "400",
@@ -236,7 +236,7 @@ internal class SwapQuotePipelineNetworkFeeTest {
         SwapQuote.ThorChain(
             expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
             fees = TokenValue(BigInteger.valueOf(9), dstToken),
-            expiredAt = Instant.now(),
+            expiredAt = Clock.System.now(),
             recommendedMinTokenValue = TokenValue(BigInteger.ONE, dstToken),
             data = mockk(relaxed = true),
         )
@@ -245,7 +245,7 @@ internal class SwapQuotePipelineNetworkFeeTest {
         SwapQuote.OneInch(
             expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
             fees = TokenValue(BigInteger.valueOf(9), dstToken),
-            expiredAt = Instant.now(),
+            expiredAt = Clock.System.now(),
             data =
                 EVMSwapQuoteJson(
                     dstAmount = "400",
@@ -273,7 +273,7 @@ internal class SwapQuotePipelineNetworkFeeTest {
             providerUiText = UiText.DynamicString(""),
             estimatedDstTokenValue = "0",
             estimatedDstFiatValue = "0",
-            expiredAt = Instant.now(),
+            expiredAt = Clock.System.now(),
             feeText = "0",
             outboundFeeText = null,
             swapFeePercent = null,

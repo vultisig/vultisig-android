@@ -15,6 +15,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import java.math.BigInteger
+import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -24,7 +25,7 @@ internal class ThorChainQuoteSourceTest {
 
     private val thorChainApi: ThorChainApi = mockk()
 
-    private fun source() = ThorChainQuoteSource(thorChainApi)
+    private fun source() = ThorChainQuoteSource(thorChainApi, Clock.System)
 
     private fun coin(
         chain: Chain,

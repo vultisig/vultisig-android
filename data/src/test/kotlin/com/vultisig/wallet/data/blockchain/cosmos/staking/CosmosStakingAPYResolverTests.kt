@@ -9,6 +9,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TestTimeSource
+import kotlin.time.TimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -22,8 +25,8 @@ class CosmosStakingAPYResolverTests {
 
     private fun resolver(
         svc: CosmosStakingService,
-        now: () -> Long = { 0L },
-    ): CosmosStakingAPYResolverImpl = CosmosStakingAPYResolverImpl(svc).also { it.clock = now }
+        timeSource: TimeSource = TestTimeSource(),
+    ): CosmosStakingAPYResolverImpl = CosmosStakingAPYResolverImpl(svc, timeSource)
 
     // MARK: - computeValidatorAPY
 
@@ -157,10 +160,10 @@ class CosmosStakingAPYResolverTests {
                 CosmosDistributionParamsResponse.Params(communityTax = "0.02")
             )
 
-        var fakeNow = 0L
-        val r = resolver(svc) { fakeNow }
+        val timeSource = TestTimeSource()
+        val r = resolver(svc, timeSource)
         r.chainApy(Chain.Terra, "uluna")
-        fakeNow = 60_000L // 1 minute < 5 minute TTL
+        timeSource += 1.minutes // < 5 minute TTL
         r.chainApy(Chain.Terra, "uluna")
 
         // Each endpoint hit exactly once — second call served from cache.
@@ -182,10 +185,10 @@ class CosmosStakingAPYResolverTests {
                 CosmosDistributionParamsResponse.Params(communityTax = "0.02")
             )
 
-        var fakeNow = 0L
-        val r = resolver(svc) { fakeNow }
+        val timeSource = TestTimeSource()
+        val r = resolver(svc, timeSource)
         r.chainApy(Chain.Terra, "uluna")
-        fakeNow = 6L * 60_000L // 6 minutes > 5 minute TTL
+        timeSource += 6.minutes // > 5 minute TTL
         r.chainApy(Chain.Terra, "uluna")
 
         coVerify(exactly = 2) { svc.fetchMintInflation(Chain.Terra) }

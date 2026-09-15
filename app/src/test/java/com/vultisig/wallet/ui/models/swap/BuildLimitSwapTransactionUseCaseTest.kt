@@ -20,7 +20,9 @@ import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Instant
+import kotlin.time.Instant
+import kotlin.time.TestTimeSource
+import kotlin.time.asClock
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -42,6 +44,7 @@ internal class BuildLimitSwapTransactionUseCaseTest {
             swapGasCalculator = swapGasCalculator,
             allowanceRepository = allowanceRepository,
             swapQuoteRepository = swapQuoteRepository,
+            clock = TestTimeSource().asClock(origin = Instant.fromEpochMilliseconds(0L)),
         )
 
     private val btcInbound = "bc1qasgardinboundvaultxxxxxxxxxxxxxxxxxx0wlh"
@@ -65,7 +68,6 @@ internal class BuildLimitSwapTransactionUseCaseTest {
             gasFeeFiatValue = FiatValue(BigDecimal.ZERO, "USD"),
             estimatedNetworkFeeTokenValue = null,
             estimatedNetworkFeeFiatValue = null,
-            now = 0L,
         )
 
     @Test
@@ -301,7 +303,7 @@ internal class BuildLimitSwapTransactionUseCaseTest {
                 expectedDstValue = TokenValue(BigInteger.ZERO, eth),
                 fees = TokenValue(BigInteger.ZERO, eth),
                 recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
-                expiredAt = Instant.MAX,
+                expiredAt = Instant.DISTANT_FUTURE,
                 data =
                     mockk<THORChainSwapQuote>(relaxed = true) {
                         every { this@mockk.router } returns router

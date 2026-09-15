@@ -45,6 +45,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import java.math.BigInteger
+import kotlin.time.Clock
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -60,7 +61,7 @@ class SwapQuoteRepositoryProvidersTest {
     private val liFiChainApi: LiFiChainApi = mockk()
 
     private val oneInchSource = OneInchQuoteSource(oneInchApi)
-    private val mayaSource = MayaQuoteSource(mayaChainApi)
+    private val mayaSource = MayaQuoteSource(mayaChainApi, Clock.System)
     private val jupiterSource = JupiterQuoteSource(jupiterApi)
     private val kyberSource = KyberQuoteSource(kyberApi)
     private val liFiSource = LiFiQuoteSource(liFiChainApi)

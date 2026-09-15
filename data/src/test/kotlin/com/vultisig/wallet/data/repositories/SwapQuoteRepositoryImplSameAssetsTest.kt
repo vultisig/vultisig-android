@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.repositories.swap.ThorChainQuoteSource
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
@@ -16,8 +17,8 @@ import org.junit.jupiter.api.assertThrows
 
 internal class SwapQuoteRepositoryImplSameAssetsTest {
 
-    private val thorChain = ThorChainQuoteSource(mockk())
-    private val maya = MayaQuoteSource(mockk())
+    private val thorChain = ThorChainQuoteSource(mockk(), Clock.System)
+    private val maya = MayaQuoteSource(mockk(), Clock.System)
 
     private fun evmToken(contractAddress: String) =
         Coin(

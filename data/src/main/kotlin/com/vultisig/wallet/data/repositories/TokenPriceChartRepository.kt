@@ -16,6 +16,8 @@ import com.vultisig.wallet.data.utils.decodeMarketChartPoints
 import com.vultisig.wallet.data.utils.downsampleChartPoints
 import java.time.Instant
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -52,10 +54,11 @@ private class NoMarketStatsException(coinId: String) : Exception("No market stat
 
 internal class TokenPriceChartRepositoryImpl
 @Inject
-constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository {
+constructor(private val coinGeckoApi: CoinGeckoApi, timeSource: TimeSource) :
+    TokenPriceChartRepository {
 
-    private val chartCache = TtlCache<ChartCacheKey, MarketChart>()
-    private val statsCache = TtlCache<StatsCacheKey, CoinMarketStats>()
+    private val chartCache = TtlCache<ChartCacheKey, MarketChart>(timeSource)
+    private val statsCache = TtlCache<StatsCacheKey, CoinMarketStats>(timeSource)
 
     override suspend fun getChart(
         coin: Coin,
@@ -66,7 +69,7 @@ constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository 
         val key = ChartCacheKey(coin.id, range, currency.ticker)
         val result =
             try {
-                chartCache.getOrPut(key, range.cacheTtlMillis) { fetchChart(coin, range, currency) }
+                chartCache.getOrPut(key, range.cacheTtl) { fetchChart(coin, range, currency) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: NetworkException) {
@@ -114,7 +117,7 @@ constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository 
         if (coin.priceProviderID.isEmpty()) return null
         val key = StatsCacheKey(coin.id, currency.ticker)
         return try {
-            statsCache.getOrPut(key, STATS_CACHE_TTL_MILLIS) { fetchStats(coin, currency) }
+            statsCache.getOrPut(key, STATS_CACHE_TTL) { fetchStats(coin, currency) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: NetworkException) {
@@ -136,7 +139,7 @@ constructor(private val coinGeckoApi: CoinGeckoApi) : TokenPriceChartRepository 
     }
 
     private companion object {
-        private const val STATS_CACHE_TTL_MILLIS = 60_000L
+        private val STATS_CACHE_TTL = 1.minutes
     }
 }
 

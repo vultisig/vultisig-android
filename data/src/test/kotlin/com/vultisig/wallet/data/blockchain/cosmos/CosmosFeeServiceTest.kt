@@ -13,6 +13,7 @@ import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -23,7 +24,7 @@ class CosmosFeeServiceTest {
         every { createCosmosApi(any()) } returns cosmosApi
     }
 
-    private val feeService = CosmosFeeService(cosmosApiFactory)
+    private val feeService = CosmosFeeService(cosmosApiFactory, TestTimeSource())
 
     init {
         // Default live burn-tax rate (0.5%) for Terra Classic taxable sends.

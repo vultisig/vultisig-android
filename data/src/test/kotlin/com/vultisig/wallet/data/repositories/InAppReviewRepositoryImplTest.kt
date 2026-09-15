@@ -7,6 +7,10 @@ import com.vultisig.wallet.data.repositories.InAppReviewRepositoryImpl.Companion
 import com.vultisig.wallet.data.sources.AppDataStore
 import io.kotest.matchers.shouldBe
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
+import kotlin.time.TestTimeSource
+import kotlin.time.asClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -22,14 +26,13 @@ internal class InAppReviewRepositoryImplTest {
 
     private val store = FakeAppDataStore()
 
-    private val repo = InAppReviewRepositoryImpl(store)
+    private val timeSource = TestTimeSource()
 
-    /** Far enough from zero that a test only opts into the cooldown by moving [now] back to it. */
-    private var now = 365.days.inWholeMilliseconds
+    /** Far enough from zero that a test only opts into the cooldown by moving time back to it. */
+    private val clock =
+        timeSource.asClock(origin = Instant.fromEpochMilliseconds(365.days.inWholeMilliseconds))
 
-    init {
-        repo.clock = InAppReviewRepositoryImpl.Clock { now }
-    }
+    private val repo = InAppReviewRepositoryImpl(store, clock)
 
     @Test
     fun `nothing is pending until a moment is reached`() = runTest {
@@ -63,7 +66,7 @@ internal class InAppReviewRepositoryImplTest {
     fun `a second moment inside the cooldown is not asked again`() = runTest {
         promptOnce()
 
-        now += PROMPT_COOLDOWN.inWholeMilliseconds - 1
+        timeSource += PROMPT_COOLDOWN - 1.milliseconds
         repo.onTransactionSucceeded()
 
         repo.isPromptPending.first() shouldBe false
@@ -73,7 +76,7 @@ internal class InAppReviewRepositoryImplTest {
     fun `a moment asks again once the cooldown elapses`() = runTest {
         promptOnce()
 
-        now += PROMPT_COOLDOWN.inWholeMilliseconds
+        timeSource += PROMPT_COOLDOWN
         repo.onTransactionSucceeded()
 
         repo.isPromptPending.first() shouldBe true
@@ -95,10 +98,10 @@ internal class InAppReviewRepositoryImplTest {
     fun `a prompt that was never requested survives a restart`() = runTest {
         repo.onVaultCreated()
 
-        InAppReviewRepositoryImpl(store).isPromptPending.first() shouldBe true
+        InAppReviewRepositoryImpl(store, clock).isPromptPending.first() shouldBe true
     }
 
-    /** Reaches a moment and spends the ask it earns, starting the cooldown at [now]. */
+    /** Reaches a moment and spends the ask it earns, starting the cooldown now. */
     private suspend fun promptOnce() {
         repo.onVaultCreated()
         repo.isPromptPending.first() shouldBe true

@@ -2,6 +2,9 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.ThorChainApi
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -42,12 +45,14 @@ interface ThorMimirRepository {
     suspend fun isAdvancedSwapQueueEnabled(forceRefresh: Boolean = false): Boolean
 }
 
-internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChainApi: ThorChainApi) :
+internal class ThorMimirRepositoryImpl
+@Inject
+constructor(private val thorChainApi: ThorChainApi, private val timeSource: TimeSource) :
     ThorMimirRepository {
 
     private val mutex = Mutex()
     private var cached: Map<String, Long>? = null
-    private var cachedAtMillis: Long = 0L
+    private var cachedAt: TimeMark? = null
 
     override suspend fun isLpPaused(pool: String): Boolean {
         val mimir = mimir()
@@ -75,19 +80,18 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
 
     private suspend fun mimir(forceRefresh: Boolean = false): Map<String, Long> =
         mutex.withLock {
-            val now = nowMillis()
             val current = cached
-            if (!forceRefresh && current != null && now - cachedAtMillis < TTL_MILLIS) {
+            if (
+                !forceRefresh && current != null && cachedAt?.let { it.elapsedNow() < TTL } == true
+            ) {
                 current
             } else {
                 val fresh = thorChainApi.getMimir().mapKeys { it.key.uppercase() }
                 cached = fresh
-                cachedAtMillis = now
+                cachedAt = timeSource.markNow()
                 fresh
             }
         }
-
-    private fun nowMillis(): Long = System.currentTimeMillis()
 
     private fun Map<String, Long>.isOn(key: String): Boolean = (this[key.uppercase()] ?: 0L) > 0L
 
@@ -99,7 +103,7 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
     private fun String.toMimirAssetSuffix(): String = replace('.', '-').uppercase()
 
     private companion object {
-        const val TTL_MILLIS = 30_000L
+        val TTL = 30.seconds
         const val KEY_GLOBAL_LP_PAUSE = "PAUSELP"
         const val KEY_PER_POOL_LP_DEPOSIT_PAUSE = "PAUSELPDEPOSIT"
         const val KEY_ADVANCED_SWAP_QUEUE = "EnableAdvSwapQueue"

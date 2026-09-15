@@ -9,6 +9,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -26,7 +27,8 @@ internal class SwapPoolEligibilityRepositoryImplTest {
     private val thorChainApi: ThorChainApi = mockk()
     private val mayaChainApi: MayaChainApi = mockk()
 
-    private fun repo() = SwapPoolEligibilityRepositoryImpl(thorChainApi, mayaChainApi)
+    private fun repo() =
+        SwapPoolEligibilityRepositoryImpl(thorChainApi, mayaChainApi, TestTimeSource())
 
     private fun thorPool(asset: String, status: String = "Available") =
         ThorChainPoolJson(asset = asset, assetTorPrice = BigInteger.ONE, status = status)

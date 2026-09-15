@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.keygen
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TestTimeSource
 import org.junit.jupiter.api.Test
 
 /**
@@ -15,41 +16,32 @@ import org.junit.jupiter.api.Test
  */
 class CeremonyStallClockTest {
 
-    /** Test clock in nanoseconds, advanced explicitly so no test waits on wall time. */
-    private class FakeClock {
-        var nanos: Long = 1_000_000_000L
-
-        fun advance(seconds: Long) {
-            nanos += seconds * 1_000_000_000L
-        }
-    }
-
-    private fun clockOf(fake: FakeClock, limit: kotlin.time.Duration = 60.seconds) =
-        CeremonyStallClock(limit = limit) { fake.nanos }
+    private fun clockOf(fake: TestTimeSource, limit: kotlin.time.Duration = 60.seconds) =
+        CeremonyStallClock(limit = limit, timeSource = fake)
 
     @Test
     fun `a fresh clock is not stalled`() {
-        val fake = FakeClock()
+        val fake = TestTimeSource()
 
         clockOf(fake).isStalled() shouldBe false
     }
 
     @Test
     fun `silence short of the limit is not a stall`() {
-        val fake = FakeClock()
+        val fake = TestTimeSource()
         val stall = clockOf(fake)
 
-        fake.advance(59)
+        fake += 59.seconds
 
         stall.isStalled() shouldBe false
     }
 
     @Test
     fun `silence past the limit is a stall`() {
-        val fake = FakeClock()
+        val fake = TestTimeSource()
         val stall = clockOf(fake)
 
-        fake.advance(61)
+        fake += 61.seconds
 
         stall.isStalled() shouldBe true
     }
@@ -60,11 +52,11 @@ class CeremonyStallClockTest {
      */
     @Test
     fun `applied messages keep a slow but healthy ceremony alive`() {
-        val fake = FakeClock()
+        val fake = TestTimeSource()
         val stall = clockOf(fake)
 
         repeat(10) {
-            fake.advance(30)
+            fake += 30.seconds
             withClue("30 s between messages must not trip the stall") {
                 stall.isStalled() shouldBe false
             }
@@ -77,12 +69,12 @@ class CeremonyStallClockTest {
 
     @Test
     fun `the clock still fires once progress actually stops`() {
-        val fake = FakeClock()
+        val fake = TestTimeSource()
         val stall = clockOf(fake)
 
-        fake.advance(30)
+        fake += 30.seconds
         stall.markProgress()
-        fake.advance(61)
+        fake += 61.seconds
 
         withClue("a real stall must still fail inside the limit") {
             stall.isStalled() shouldBe true
@@ -91,10 +83,10 @@ class CeremonyStallClockTest {
 
     @Test
     fun `reset restarts the window for a new attempt`() {
-        val fake = FakeClock()
+        val fake = TestTimeSource()
         val stall = clockOf(fake)
 
-        fake.advance(61)
+        fake += 61.seconds
         stall.isStalled() shouldBe true
 
         stall.reset()
@@ -104,17 +96,17 @@ class CeremonyStallClockTest {
 
     @Test
     fun `sinceProgress reports the gap the failure message quotes`() {
-        val fake = FakeClock()
+        val fake = TestTimeSource()
         val stall = clockOf(fake)
 
-        fake.advance(45)
+        fake += 45.seconds
 
         stall.sinceProgress() shouldBe 45.seconds
     }
 
     @Test
     fun `limitSeconds exposes the configured limit`() {
-        clockOf(FakeClock()).limitSeconds shouldBe 60L
-        clockOf(FakeClock(), limit = 90.seconds).limitSeconds shouldBe 90L
+        clockOf(TestTimeSource()).limitSeconds shouldBe 60L
+        clockOf(TestTimeSource(), limit = 90.seconds).limitSeconds shouldBe 90L
     }
 }

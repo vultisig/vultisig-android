@@ -8,6 +8,9 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -18,7 +21,7 @@ interface ZcashApi {
      * string WalletCore expects on the transaction plan (e.g. `30f33754`). The Zcash node reports
      * it big-endian (`consensus.nextblock`, e.g. `5437f330`); this reverses the four bytes.
      *
-     * The value is cached in memory for [CACHE_TTL_MS] (one hour): the branch id only changes at a
+     * The value is cached in memory for [CACHE_TTL] (one hour): the branch id only changes at a
      * network upgrade, so a single keysign's preimage-hash and final-compile passes (and repeated
      * sends) all read the same cached value, keeping the digest stable across them.
      *
@@ -30,11 +33,13 @@ interface ZcashApi {
     suspend fun getConsensusBranchIdHex(): String?
 }
 
-internal class ZcashApiImpl @Inject constructor(private val httpClient: HttpClient) : ZcashApi {
+internal class ZcashApiImpl
+@Inject
+constructor(private val httpClient: HttpClient, private val timeSource: TimeSource) : ZcashApi {
 
     private val cacheMutex = Mutex()
     @Volatile private var cachedBranchId: String? = null
-    @Volatile private var cachedAtMs: Long = 0L
+    @Volatile private var cachedAt: TimeMark? = null
 
     override suspend fun getConsensusBranchIdHex(): String? {
         freshCachedBranchId()?.let {
@@ -51,14 +56,14 @@ internal class ZcashApiImpl @Inject constructor(private val httpClient: HttpClie
             // the caller refuse to sign) doesn't pin the wallet to that failure for a whole hour.
             if (fetched != null) {
                 cachedBranchId = fetched
-                cachedAtMs = System.currentTimeMillis()
+                cachedAt = timeSource.markNow()
             }
             fetched
         }
     }
 
     private fun freshCachedBranchId(): String? =
-        cachedBranchId?.takeIf { System.currentTimeMillis() - cachedAtMs < CACHE_TTL_MS }
+        cachedBranchId?.takeIf { cachedAt?.let { it.elapsedNow() < CACHE_TTL } == true }
 
     private suspend fun fetchBranchId(): String? {
         return try {
@@ -97,6 +102,6 @@ internal class ZcashApiImpl @Inject constructor(private val httpClient: HttpClie
 
     companion object {
         private const val BASE_URL = "https://api.vultisig.com/zcash/"
-        private const val CACHE_TTL_MS = 60L * 60L * 1000L
+        private val CACHE_TTL = 1.hours
     }
 }

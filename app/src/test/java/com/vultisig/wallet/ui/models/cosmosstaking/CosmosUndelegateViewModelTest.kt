@@ -23,6 +23,7 @@ import io.mockk.mockk
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -119,6 +120,7 @@ internal class CosmosUndelegateViewModelTest {
             context = mockk(relaxed = true),
             navigator = navigator,
             ioDispatcher = testDispatcher,
+            clock = Clock.System,
         )
 
     @Test

@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.db.models.UtxoInFlightOutpointEntity.Companion.K
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import javax.inject.Inject
+import kotlin.time.Clock
 
 /**
  * The wallet's own record of what its recent UTXO-chain broadcasts did to the sending address — the
@@ -45,7 +46,8 @@ interface UtxoInFlightRepository {
 
 internal class UtxoInFlightRepositoryImpl
 @Inject
-constructor(private val dao: UtxoInFlightOutpointDao) : UtxoInFlightRepository {
+constructor(private val dao: UtxoInFlightOutpointDao, private val clock: Clock) :
+    UtxoInFlightRepository {
 
     override suspend fun record(
         chain: Chain,
@@ -54,7 +56,7 @@ constructor(private val dao: UtxoInFlightOutpointDao) : UtxoInFlightRepository {
         spent: List<UtxoInfo>,
         created: List<UtxoInfo>,
     ) {
-        val now = System.currentTimeMillis()
+        val now = clock.now().toEpochMilliseconds()
         dao.deleteBroadcastBefore(now - REPLAY_WINDOW_MS)
 
         fun rows(kind: String, utxos: List<UtxoInfo>) =
@@ -74,7 +76,11 @@ constructor(private val dao: UtxoInFlightOutpointDao) : UtxoInFlightRepository {
     }
 
     override suspend fun getInFlight(chain: Chain, address: String): List<UtxoInFlightTx> =
-        dao.getSince(chain.raw, address, since = System.currentTimeMillis() - REPLAY_WINDOW_MS)
+        dao.getSince(
+                chain.raw,
+                address,
+                since = clock.now().toEpochMilliseconds() - REPLAY_WINDOW_MS,
+            )
             .groupBy { it.txHash }
             .map { (txHash, rows) ->
                 UtxoInFlightTx(

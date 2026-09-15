@@ -5,6 +5,9 @@ package com.vultisig.wallet.data.utils
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -19,16 +22,18 @@ internal class TtlCacheTest {
 
     @Test
     fun `caches a fresh value without re-invoking the loader`() = runTest {
-        val cache = TtlCache<String, Int>()
+        val timeSource = TestTimeSource()
+        val cache = TtlCache<String, Int>(timeSource)
         val loadCount = AtomicInteger(0)
 
         val first =
-            cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 0L }) {
+            cache.getOrPut("k", ttl = 1.seconds) {
                 loadCount.incrementAndGet()
                 42
             }
+        timeSource += 500.milliseconds
         val second =
-            cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 500L }) {
+            cache.getOrPut("k", ttl = 1.seconds) {
                 loadCount.incrementAndGet()
                 99
             }
@@ -40,15 +45,17 @@ internal class TtlCacheTest {
 
     @Test
     fun `re-invokes the loader once the entry has expired`() = runTest {
-        val cache = TtlCache<String, Int>()
+        val timeSource = TestTimeSource()
+        val cache = TtlCache<String, Int>(timeSource)
         val loadCount = AtomicInteger(0)
 
-        cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 0L }) {
+        cache.getOrPut("k", ttl = 1.seconds) {
             loadCount.incrementAndGet()
             42
         }
+        timeSource += 1_001.milliseconds
         val afterExpiry =
-            cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 1_001L }) {
+            cache.getOrPut("k", ttl = 1.seconds) {
                 loadCount.incrementAndGet()
                 99
             }
@@ -64,14 +71,14 @@ internal class TtlCacheTest {
 
         val result = coroutineScope {
             val a = async {
-                cache.getOrPut("k", ttlMillis = 1_000) {
+                cache.getOrPut("k", ttl = 1.seconds) {
                     loadCount.incrementAndGet()
                     delay(100)
                     7
                 }
             }
             val b = async {
-                cache.getOrPut("k", ttlMillis = 1_000) {
+                cache.getOrPut("k", ttl = 1.seconds) {
                     loadCount.incrementAndGet()
                     delay(100)
                     8
@@ -88,7 +95,7 @@ internal class TtlCacheTest {
     fun `peekStale returns the last cached value even after expiry`() = runTest {
         val cache = TtlCache<String, Int>()
 
-        cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 0L }) { 42 }
+        cache.getOrPut("k", ttl = 1.seconds) { 42 }
 
         assertEquals(42, cache.peekStale("k"))
     }
@@ -105,25 +112,27 @@ internal class TtlCacheTest {
         val cache = TtlCache<String, Int>()
 
         assertFailsWith<IllegalStateException> {
-            cache.getOrPut("k", ttlMillis = 1_000) { error("boom") }
+            cache.getOrPut("k", ttl = 1.seconds) { error("boom") }
         }
 
         // A subsequent call retries the loader rather than replaying the failure.
-        val value = cache.getOrPut("k", ttlMillis = 1_000) { 42 }
+        val value = cache.getOrPut("k", ttl = 1.seconds) { 42 }
         assertEquals(42, value)
     }
 
     @Test
     fun `treats now equal to expiresAt as already expired`() = runTest {
-        val cache = TtlCache<String, Int>()
+        val timeSource = TestTimeSource()
+        val cache = TtlCache<String, Int>(timeSource)
         val loadCount = AtomicInteger(0)
 
-        cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 0L }) {
+        cache.getOrPut("k", ttl = 1.seconds) {
             loadCount.incrementAndGet()
             42
         }
+        timeSource += 1.seconds
         val atExactExpiry =
-            cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 1_000L }) {
+            cache.getOrPut("k", ttl = 1.seconds) {
                 loadCount.incrementAndGet()
                 99
             }
@@ -135,21 +144,21 @@ internal class TtlCacheTest {
     @Test
     fun `bases the entry's expiry on a clock reading taken after the loader completes, not before`() =
         runTest {
-            val cache = TtlCache<String, Int>()
-            var currentTime = 0L
+            val timeSource = TestTimeSource()
+            val cache = TtlCache<String, Int>(timeSource)
 
-            cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { currentTime }) {
-                currentTime = 500L // the loader itself takes 500ms of (real/wall) time to resolve
+            cache.getOrPut("k", ttl = 1.seconds) {
+                timeSource += 500.milliseconds // the loader itself takes 500ms to resolve
                 42
             }
 
-            // A stale (call-start) reading would have set expiresAt to 0 + 1_000 = 1_000, making
-            // this lookup at now=1_200 see the entry as already expired. Reading the clock again
-            // after the loader completes sets expiresAt to 500 + 1_000 = 1_500, so it's still
-            // fresh.
+            // A call-start mark would have set expiresAt to 0 + 1_000 = 1_000, making this lookup
+            // at now=1_200 see the entry as already expired. Marking again after the loader
+            // completes sets expiresAt to 500 + 1_000 = 1_500, so it's still fresh.
+            timeSource += 700.milliseconds
             val loadCount = AtomicInteger(0)
             val cachedValue =
-                cache.getOrPut("k", ttlMillis = 1_000, nowMillis = { 1_200L }) {
+                cache.getOrPut("k", ttl = 1.seconds) {
                     loadCount.incrementAndGet()
                     99
                 }
@@ -165,7 +174,7 @@ internal class TtlCacheTest {
             val leaderStarted = CompletableDeferred<Unit>()
 
             val leaderJob = launch {
-                cache.getOrPut("k", ttlMillis = 1_000) {
+                cache.getOrPut("k", ttl = 1.seconds) {
                     leaderStarted.complete(Unit)
                     delay(10_000)
                     1
@@ -174,7 +183,7 @@ internal class TtlCacheTest {
 
             leaderStarted.await()
 
-            val followerResult = async { cache.getOrPut("k", ttlMillis = 1_000) { 2 } }
+            val followerResult = async { cache.getOrPut("k", ttl = 1.seconds) { 2 } }
             runCurrent() // let the follower reach Lookup.Await before the leader is cancelled
 
             leaderJob.cancel()

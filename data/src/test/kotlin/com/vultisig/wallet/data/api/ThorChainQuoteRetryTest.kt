@@ -18,6 +18,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import java.io.IOException
 import kotlin.test.assertFailsWith
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -64,7 +65,7 @@ class ThorChainQuoteRetryTest {
             thorChainSwapQuoteResponseJsonSerializer =
                 ThorChainSwapQuoteResponseJsonSerializerImpl(json),
             json = json,
-            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(),
+            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(TestTimeSource()),
         )
 
     private fun request() =

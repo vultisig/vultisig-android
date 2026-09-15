@@ -11,6 +11,10 @@ import dagger.hilt.components.SingletonComponent
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 /** Whether a signed destination is somewhere THORChain actually receives. */
 interface InboundVaultCorroborating {
@@ -38,28 +42,27 @@ interface InboundVaultCorroborating {
  * ever asked whether an address was a vault, which a halt does not change.
  */
 @Singleton
-class ThorChainInboundVaultSnapshot @Inject constructor() {
+class ThorChainInboundVaultSnapshot @Inject constructor(private val timeSource: TimeSource) {
 
-    private data class Held(val addresses: List<THORChainInboundAddress>, val recordedAt: Long)
+    private data class Held(val addresses: List<THORChainInboundAddress>, val recordedAt: TimeMark)
 
     private val held = AtomicReference<Held?>(null)
 
     /** Records the addresses a live fetch returned. An empty answer is not worth holding. */
     fun record(addresses: List<THORChainInboundAddress>) {
         if (addresses.isEmpty()) return
-        held.set(Held(addresses, System.currentTimeMillis()))
+        held.set(Held(addresses, timeSource.markNow()))
     }
 
-    /** The recorded addresses when they are younger than [maxAgeMillis], else null. */
-    fun current(maxAgeMillis: Long = MAX_AGE_MILLIS): List<THORChainInboundAddress>? {
+    /** The recorded addresses when they are younger than [maxAge], else null. */
+    fun current(maxAge: Duration = MAX_AGE): List<THORChainInboundAddress>? {
         val snapshot = held.get() ?: return null
-        val age = System.currentTimeMillis() - snapshot.recordedAt
-        return snapshot.addresses.takeIf { age in 0..maxAgeMillis }
+        return snapshot.addresses.takeIf { snapshot.recordedAt.elapsedNow() <= maxAge }
     }
 
     private companion object {
         /** Matches the iOS `cachedInboundAddresses` window. */
-        const val MAX_AGE_MILLIS = 5 * 60 * 1000L
+        val MAX_AGE = 5.minutes
     }
 }
 

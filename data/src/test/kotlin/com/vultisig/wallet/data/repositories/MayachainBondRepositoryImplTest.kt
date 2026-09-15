@@ -15,6 +15,7 @@ import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -27,7 +28,7 @@ internal class MayachainBondRepositoryImplTest {
     @BeforeEach
     fun setUp() {
         api = mockk()
-        repository = MayachainBondRepositoryImpl(api)
+        repository = MayachainBondRepositoryImpl(api, TestTimeSource())
     }
 
     @Test

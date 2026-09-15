@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import io.ktor.http.HttpStatusCode
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -27,7 +28,7 @@ import org.junit.jupiter.api.assertThrows
 class RippleApiBodyReadTest {
 
     private fun newApi(status: HttpStatusCode, body: String): RippleApi =
-        RippleApiImp(http = MockHttpClient.respondingWith(status, body))
+        RippleApiImp(http = MockHttpClient.respondingWith(status, body), TestTimeSource())
 
     // ── broadcastTransaction ────────────────────────────────────────────────
 
