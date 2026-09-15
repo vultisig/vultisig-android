@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.models.thorchain.NodeDetailsResponse
 import com.vultisig.wallet.data.utils.SimpleCache
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.TimeSource
 import timber.log.Timber
 
 interface ThorchainBondRepository {
@@ -28,7 +29,9 @@ interface ThorchainBondRepository {
 }
 
 @Singleton
-class ThorchainBondRepositoryImpl @Inject constructor(private val thorChainApi: ThorChainApi) :
+class ThorchainBondRepositoryImpl
+@Inject
+constructor(private val thorChainApi: ThorChainApi, timeSource: TimeSource) :
     ThorchainBondRepository {
 
     companion object {
@@ -40,10 +43,11 @@ class ThorchainBondRepositoryImpl @Inject constructor(private val thorChainApi: 
     }
 
     // Caches for different data types
-    private val midgardNetworkCache = SimpleCache<String, MidgardNetworkData>()
-    private val midgardHealthCache = SimpleCache<String, MidgardHealth>()
-    private val churnIntervalCache = SimpleCache<String, Long>()
-    private val churnsCache = SimpleCache<String, List<ChurnEntry>>()
+    private val midgardNetworkCache =
+        SimpleCache<String, MidgardNetworkData>(timeSource = timeSource)
+    private val midgardHealthCache = SimpleCache<String, MidgardHealth>(timeSource = timeSource)
+    private val churnIntervalCache = SimpleCache<String, Long>(timeSource = timeSource)
+    private val churnsCache = SimpleCache<String, List<ChurnEntry>>(timeSource = timeSource)
 
     override suspend fun getBondedNodes(address: String): BondedNodesResponse {
         return try {

@@ -77,6 +77,8 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -180,9 +182,10 @@ constructor(
     private val solanaDeFiBalanceService: SolanaDeFiBalanceService,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val utxoInFlightRepository: UtxoInFlightRepository,
+    timeSource: TimeSource,
 ) : BalanceRepository {
 
-    private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
+    private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12.seconds, timeSource)
 
     private val defiLocks = ConcurrentHashMap<String, Mutex>()
 

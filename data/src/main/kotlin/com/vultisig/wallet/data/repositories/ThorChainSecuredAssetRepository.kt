@@ -9,6 +9,9 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.swapAssetName
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -26,13 +29,14 @@ internal interface ThorChainSecuredAssetRepository {
 @Singleton
 internal class ThorChainSecuredAssetRepositoryImpl
 @Inject
-constructor(private val thorChainApi: ThorChainApi) : ThorChainSecuredAssetRepository {
+constructor(private val thorChainApi: ThorChainApi, private val timeSource: TimeSource) :
+    ThorChainSecuredAssetRepository {
 
     // Seeded with the static fallback so a cold start (or a live fetch that never once
     // succeeds) still surfaces the well-known secured assets instead of none at all. Once a
     // live fetch succeeds, failures keep that last-good snapshot rather than reverting here.
     @Volatile private var cache: List<Coin> = STATIC_FALLBACK
-    @Volatile private var lastRefreshMs: Long = 0L
+    @Volatile private var lastRefresh: TimeMark? = null
     private val mutex = Mutex()
 
     override suspend fun getSecuredAssetCoins(): List<Coin> {
@@ -48,14 +52,14 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainSecuredAssetRepos
         runCatching { fetch() }
             .onSuccess {
                 cache = it
-                lastRefreshMs = System.currentTimeMillis()
+                lastRefresh = timeSource.markNow()
             }
             .onFailure {
                 Timber.w(it, "THORChain secured-asset pools refresh failed; keeping last-good")
             }
     }
 
-    private fun isStale(): Boolean = System.currentTimeMillis() - lastRefreshMs >= CACHE_TTL_MS
+    private fun isStale(): Boolean = lastRefresh?.let { it.elapsedNow() < CACHE_TTL } != true
 
     private suspend fun fetch(): List<Coin> =
         thorChainApi
@@ -84,7 +88,7 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainSecuredAssetRepos
     private companion object {
         const val STATUS_AVAILABLE = "available"
         const val SECURED_ASSET_DECIMALS = 8
-        const val CACHE_TTL_MS = 5 * 60 * 1000L
+        val CACHE_TTL = 5.minutes
 
         /**
          * Offline fallback for the SECURE_ASSETS_TICKERS chains: used only until a live pool fetch

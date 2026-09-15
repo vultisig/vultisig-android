@@ -1,18 +1,24 @@
 package com.vultisig.wallet.data.utils
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
+
 // Simple Cache Implementation
 // Up to the caller to implement mutex or thread safety when required
 class SimpleCache<K, V>(
-    private val defaultExpirationMs: Long = 5 * 60 * 1000 // 5 minutes default
+    private val defaultExpiration: Duration = 5.minutes,
+    private val timeSource: TimeSource = TimeSource.Monotonic,
 ) {
-    private data class CacheEntry<V>(val value: V, val expiresAt: Long)
+    private data class CacheEntry<V>(val value: V, val expiresAt: TimeMark)
 
     private val cache = mutableMapOf<K, CacheEntry<V>>()
 
     fun get(key: K): V? {
         val entry = cache[key] ?: return null
 
-        return if (System.currentTimeMillis() < entry.expiresAt) {
+        return if (entry.expiresAt.hasNotPassedNow()) {
             entry.value
         } else {
             cache.remove(key)
@@ -20,9 +26,9 @@ class SimpleCache<K, V>(
         }
     }
 
-    fun put(key: K, value: V, customExpirationMs: Long? = null) {
-        val expiration = customExpirationMs ?: defaultExpirationMs
-        cache[key] = CacheEntry(value = value, expiresAt = System.currentTimeMillis() + expiration)
+    fun put(key: K, value: V, customExpiration: Duration? = null) {
+        val expiration = customExpiration ?: defaultExpiration
+        cache[key] = CacheEntry(value = value, expiresAt = timeSource.markNow() + expiration)
     }
 
     suspend fun getOrPut(key: K, compute: suspend () -> V): V {
@@ -44,8 +50,7 @@ class SimpleCache<K, V>(
     }
 
     fun cleanUp() {
-        val currentTime = System.currentTimeMillis()
-        cache.entries.removeIf { it.value.expiresAt <= currentTime }
+        cache.entries.removeIf { it.value.expiresAt.hasPassedNow() }
     }
 
     fun size(): Int = cache.size
@@ -54,6 +59,6 @@ class SimpleCache<K, V>(
 
     fun hasValidEntry(key: K): Boolean {
         val entry = cache[key] ?: return false
-        return System.currentTimeMillis() < entry.expiresAt
+        return entry.expiresAt.hasNotPassedNow()
     }
 }

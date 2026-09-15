@@ -16,10 +16,16 @@ import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 
-class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeService {
+class CosmosFeeService(
+    private val cosmosApiFactory: CosmosApiFactory,
+    private val timeSource: TimeSource,
+) : FeeService {
 
     /**
      * Terra Classic burn rate only changes via governance, but [calculateFees] runs on every
@@ -29,7 +35,7 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
      */
     @Volatile private var cachedBurnTaxRate: CachedBurnTaxRate? = null
 
-    private data class CachedBurnTaxRate(val rate: BigDecimal, val fetchedAtMs: Long)
+    private data class CachedBurnTaxRate(val rate: BigDecimal, val fetchedAt: TimeMark)
 
     /**
      * Simulated `gas_used` for a native bank send is effectively constant per chain (it doesn't
@@ -43,15 +49,15 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
     private data class CachedSimulatedGas(
         val chain: Chain,
         val gasUsed: Long,
-        val fetchedAtMs: Long,
+        val fetchedAt: TimeMark,
     )
 
     companion object {
         internal const val OSMOSIS_MIN_FEE_UOSMO = 25_000L
 
-        private const val BURN_TAX_RATE_TTL_MS = 5 * 60 * 1000L
+        private val BURN_TAX_RATE_TTL = 5.minutes
 
-        private const val SIMULATED_GAS_TTL_MS = 60 * 1000L
+        private val SIMULATED_GAS_TTL = 1.minutes
 
         // `gasLimit * gasPrice` lands below what Akash's validators accept: the
         // chain-registry price (0.025 uakt/gas) on a ~300k-gas delegation yields
@@ -181,9 +187,9 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
         val chain = coin.chain
         if (chain !in SIMULATION_SUPPORTED_CHAINS) return null
         if (transaction !is Transfer) return null
-        val now = System.currentTimeMillis()
         cachedSimulatedGas?.let {
-            if (it.chain == chain && now - it.fetchedAtMs < SIMULATED_GAS_TTL_MS) return it.gasUsed
+            if (it.chain == chain && it.fetchedAt.elapsedNow() < SIMULATED_GAS_TTL)
+                return it.gasUsed
         }
         return try {
             val staticLimit = CosmosHelper.getChainGasLimit(chain)
@@ -205,7 +211,9 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
                             sequence = BigInteger(account.sequence ?: "0"),
                         )
                     )
-            api.simulate(txBytes)?.also { cachedSimulatedGas = CachedSimulatedGas(chain, it, now) }
+            api.simulate(txBytes)?.also {
+                cachedSimulatedGas = CachedSimulatedGas(chain, it, timeSource.markNow())
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -269,12 +277,11 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
     }
 
     private suspend fun burnTaxRate(): BigDecimal {
-        val now = System.currentTimeMillis()
-        cachedBurnTaxRate?.let { if (now - it.fetchedAtMs < BURN_TAX_RATE_TTL_MS) return it.rate }
+        cachedBurnTaxRate?.let { if (it.fetchedAt.elapsedNow() < BURN_TAX_RATE_TTL) return it.rate }
         val rawRate =
             cosmosApiFactory.createCosmosApi(Chain.TerraClassic).getTerraClassicBurnTaxRate()
         val rate = TerraClassicTax.parseRate(rawRate)
-        cachedBurnTaxRate = CachedBurnTaxRate(rate, now)
+        cachedBurnTaxRate = CachedBurnTaxRate(rate, timeSource.markNow())
         return rate
     }
 }

@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -57,6 +58,7 @@ class CardanoApiUtxoAssetsTest {
                         jsonFormat = json,
                     ),
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         api.getUTXOs(ada)
@@ -85,6 +87,7 @@ class CardanoApiUtxoAssetsTest {
                         jsonFormat = json,
                     ),
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         val asset = api.getUTXOs(ada).single().cardanoTokens.single()
@@ -116,6 +119,7 @@ class CardanoApiUtxoAssetsTest {
                         jsonFormat = json,
                     ),
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         val asset = api.getUTXOs(ada).single().cardanoTokens.single()
@@ -143,6 +147,7 @@ class CardanoApiUtxoAssetsTest {
                         jsonFormat = json,
                     ),
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         assertEquals(
@@ -174,6 +179,7 @@ class CardanoApiUtxoAssetsTest {
                         jsonFormat = json,
                     ),
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         // Koios does not promise an order; the proto has to serialise the same way regardless.
@@ -209,6 +215,7 @@ class CardanoApiUtxoAssetsTest {
                         jsonFormat = json,
                     ),
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         // Spending a UTxO whose bundle was only half read would build a body that silently drops
@@ -227,6 +234,7 @@ class CardanoApiUtxoAssetsTest {
                         jsonFormat = json,
                     ),
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         assertEquals(emptyList<CardanoTokenAsset>(), api.getUTXOs(ada).single().cardanoTokens)

@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.MayaNodePool
 import com.vultisig.wallet.data.utils.SimpleCache
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.TimeSource
 import timber.log.Timber
 
 data class LpBondablePool(
@@ -53,7 +54,9 @@ interface MayachainBondRepository {
 }
 
 @Singleton
-class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: MayaChainApi) :
+class MayachainBondRepositoryImpl
+@Inject
+constructor(private val mayaChainApi: MayaChainApi, timeSource: TimeSource) :
     MayachainBondRepository {
 
     companion object {
@@ -61,8 +64,9 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
         private const val MIDGARD_HEALTH_KEY = "maya_midgard_health"
     }
 
-    private val midgardNetworkCache = SimpleCache<String, MayaMidgardNetworkData>()
-    private val midgardHealthCache = SimpleCache<String, MayaMidgardHealth>()
+    private val midgardNetworkCache =
+        SimpleCache<String, MayaMidgardNetworkData>(timeSource = timeSource)
+    private val midgardHealthCache = SimpleCache<String, MayaMidgardHealth>(timeSource = timeSource)
 
     override suspend fun getAllNodes(): List<MayaNodeInfo> {
         return try {

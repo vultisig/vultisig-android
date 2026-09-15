@@ -6,6 +6,10 @@ import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
@@ -36,17 +40,18 @@ interface KeybaseAvatarService {
 }
 
 @Singleton
-internal class KeybaseAvatarServiceImpl @Inject constructor(private val httpClient: HttpClient) :
+internal class KeybaseAvatarServiceImpl
+@Inject
+constructor(private val httpClient: HttpClient, private val timeSource: TimeSource) :
     KeybaseAvatarService {
 
     /**
-     * Clock + TTL are `internal var` so tests can pin them; not in the `@Inject` constructor
-     * because Dagger ignores Kotlin default-valued params.
+     * TTL is an `internal var` so tests can pin it; not in the `@Inject` constructor because Dagger
+     * ignores Kotlin default-valued params.
      */
-    internal var clock: () -> Long = { System.currentTimeMillis() }
-    internal var ttlMillis: Long = 60L * 60L * 1000L
+    internal var ttl: Duration = 1.hours
 
-    private data class CachedEntry(val url: String?, val fetchedAt: Long)
+    private data class CachedEntry(val url: String?, val fetchedAt: TimeMark)
 
     private val mutex = Mutex()
     private val cache = mutableMapOf<String, CachedEntry>()
@@ -67,7 +72,7 @@ internal class KeybaseAvatarServiceImpl @Inject constructor(private val httpClie
         val deferred: CompletableDeferred<String?> =
             mutex.withLock {
                 cache[trimmed]?.let { entry ->
-                    if (clock() - entry.fetchedAt < ttlMillis) {
+                    if (entry.fetchedAt.elapsedNow() < ttl) {
                         return entry.url
                     }
                 }
@@ -96,7 +101,7 @@ internal class KeybaseAvatarServiceImpl @Inject constructor(private val httpClie
                 }
             mutex.withLock {
                 inFlight.remove(trimmed)
-                cache[trimmed] = CachedEntry(result, clock())
+                cache[trimmed] = CachedEntry(result, timeSource.markNow())
             }
             deferred.complete(result)
         }

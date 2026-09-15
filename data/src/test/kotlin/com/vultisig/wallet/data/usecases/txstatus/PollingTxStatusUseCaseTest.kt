@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.usecases.txstatus
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.NetworkException
+import kotlin.time.TimeSource
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -87,6 +88,7 @@ class PollingTxStatusUseCaseTest {
                         TxStatusConfiguration(pollIntervalSeconds = 1, maxWaitSeconds = 2)
                     ),
                 transactionStatusRepository = repository,
+                timeSource = TimeSource.Monotonic,
             )
 
         // Bounds the test itself: if this ever regressed back to polling forever on NotFound, this
@@ -114,6 +116,7 @@ class PollingTxStatusUseCaseTest {
                             TxStatusConfiguration(pollIntervalSeconds = 1, maxWaitSeconds = 7)
                         ),
                     transactionStatusRepository = repository,
+                    timeSource = TimeSource.Monotonic,
                 )
 
             val results = withTimeout(20_000) { useCase(Chain.Bittensor, "deadbeef").toList() }
@@ -140,6 +143,7 @@ class PollingTxStatusUseCaseTest {
                             TxStatusConfiguration(pollIntervalSeconds = 1, maxWaitSeconds = 4)
                         ),
                     transactionStatusRepository = repository,
+                    timeSource = TimeSource.Monotonic,
                 )
 
             val results = withTimeout(20_000) { useCase(Chain.Solana, "deadbeef").toList() }
@@ -165,6 +169,7 @@ class PollingTxStatusUseCaseTest {
                         TxStatusConfiguration(pollIntervalSeconds = 30, maxWaitSeconds = 2)
                     ),
                 transactionStatusRepository = repository,
+                timeSource = TimeSource.Monotonic,
             )
 
         val start = System.currentTimeMillis()
@@ -188,6 +193,7 @@ class PollingTxStatusUseCaseTest {
                         TxStatusConfiguration(pollIntervalSeconds = 30, maxWaitSeconds = 60)
                     ),
                 transactionStatusRepository = repository,
+                timeSource = TimeSource.Monotonic,
             )
 
         val results = withTimeout(5_000) { useCase(Chain.ThorChain, "deadbeef").toList() }

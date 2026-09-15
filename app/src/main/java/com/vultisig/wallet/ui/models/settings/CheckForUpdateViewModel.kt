@@ -13,6 +13,7 @@ import com.vultisig.wallet.ui.utils.MultipleClicksDetector
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlin.time.TimeSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -27,8 +28,9 @@ internal class CheckForUpdateViewModel
 constructor(
     private val navigator: Navigator<Destination>,
     @ApplicationContext private val context: Context,
+    timeSource: TimeSource,
 ) : ViewModel() {
-    private val multipleClicksDetector = MultipleClicksDetector()
+    private val multipleClicksDetector = MultipleClicksDetector(timeSource)
 
     val state =
         MutableStateFlow(

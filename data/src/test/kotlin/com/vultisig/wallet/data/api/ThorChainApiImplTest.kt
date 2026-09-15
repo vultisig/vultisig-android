@@ -17,6 +17,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -46,7 +47,7 @@ class ThorChainApiImplTest {
             thorChainSwapQuoteResponseJsonSerializer =
                 mockk<ThorChainSwapQuoteResponseJsonSerializer>(),
             json = json,
-            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(),
+            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(TestTimeSource()),
         )
 
     @Test
@@ -281,7 +282,7 @@ class ThorChainApiImplTest {
             thorChainSwapQuoteResponseJsonSerializer =
                 mockk<ThorChainSwapQuoteResponseJsonSerializer>(),
             json = json,
-            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(),
+            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(TestTimeSource()),
         )
     }
 

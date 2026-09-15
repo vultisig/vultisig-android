@@ -12,6 +12,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -47,6 +48,7 @@ internal class KeysignTxStatusPollerTest {
                 swapKitTrackingService = swapKitTrackingService,
                 txStatusConfigurationProvider = configurationProvider,
                 transactionHistoryRepository = transactionHistoryRepository,
+                timeSource = TestTimeSource(),
             )
     }
 

@@ -1,5 +1,8 @@
 package com.vultisig.wallet.data.utils
 
+import kotlin.time.Duration
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
@@ -12,8 +15,8 @@ import kotlinx.coroutines.withContext
  * same key while a fetch is already running all await that same fetch instead of firing duplicate
  * loads (e.g. a double-tap on a chart range).
  */
-class TtlCache<K : Any, V> {
-    private class Entry<V>(val value: V, val expiresAt: Long)
+class TtlCache<K : Any, V>(private val timeSource: TimeSource = TimeSource.Monotonic) {
+    private class Entry<V>(val value: V, val expiresAt: TimeMark)
 
     /**
      * A coalesced follower must never see the initiating caller's own [CancellationException] as if
@@ -39,22 +42,17 @@ class TtlCache<K : Any, V> {
 
     /**
      * Returns the cached value for [key] if it hasn't expired, otherwise runs [loader] (coalescing
-     * concurrent callers for the same key) and caches the result for [ttlMillis].
+     * concurrent callers for the same key) and caches the result for [ttl].
      *
-     * [nowMillis] defaults to a monotonic clock (immune to wall-clock/NTP adjustments) rather than
-     * [System.currentTimeMillis], so TTL expiry tracks elapsed time, not wall-clock time. Taken as
-     * a function (read again after [loader] completes) rather than a single snapshot, so a slow
-     * fetch doesn't shrink the entry's freshness window by its own latency.
+     * Expiry is measured on [timeSource] — monotonic in production, immune to wall-clock/NTP
+     * adjustments — so TTL expiry tracks elapsed time, not wall-clock time. The mark is taken after
+     * [loader] completes rather than before, so a slow fetch doesn't shrink the entry's freshness
+     * window by its own latency.
      */
-    suspend fun getOrPut(
-        key: K,
-        ttlMillis: Long,
-        nowMillis: () -> Long = { System.nanoTime() / 1_000_000 },
-        loader: suspend () -> V,
-    ): V {
+    suspend fun getOrPut(key: K, ttl: Duration, loader: suspend () -> V): V {
         val lookup =
             mutex.withLock {
-                val fresh = entries[key]?.takeIf { it.expiresAt > nowMillis() }
+                val fresh = entries[key]?.takeIf { it.expiresAt.hasNotPassedNow() }
                 when {
                     fresh != null -> Lookup.Hit(fresh.value)
                     inFlight[key] != null -> Lookup.Await(inFlight.getValue(key))
@@ -76,13 +74,13 @@ class TtlCache<K : Any, V> {
                     // by us — that isn't a real outcome to fail open on, so retry as a fresh
                     // attempt instead of silently defeating the fail-open-to-stale contract for
                     // every follower coalesced on it.
-                    getOrPut(key, ttlMillis, nowMillis, loader)
+                    getOrPut(key, ttl, loader)
                 }
             is Lookup.Start -> {
                 try {
                     val value = loader()
                     mutex.withLock {
-                        entries[key] = Entry(value, nowMillis() + ttlMillis)
+                        entries[key] = Entry(value, timeSource.markNow() + ttl)
                         inFlight.remove(key)
                     }
                     lookup.deferred.complete(value)

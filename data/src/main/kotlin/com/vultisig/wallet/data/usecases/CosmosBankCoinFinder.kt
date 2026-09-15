@@ -11,9 +11,11 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.utils.NetworkException
 import java.net.SocketTimeoutException
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -47,7 +49,8 @@ interface CosmosBankCoinFinder {
 
 internal class CosmosBankCoinFinderImpl
 @Inject
-constructor(private val cosmosApiFactory: CosmosApiFactory) : CosmosBankCoinFinder {
+constructor(private val cosmosApiFactory: CosmosApiFactory, private val timeSource: TimeSource) :
+    CosmosBankCoinFinder {
 
     private val metadataCache = ConcurrentHashMap<DenomKey, CacheEntry<DenomMetadata>>()
     private val traceCache =
@@ -160,16 +163,15 @@ constructor(private val cosmosApiFactory: CosmosApiFactory) : CosmosBankCoinFind
         fetch: suspend () -> V?,
     ): V? {
         val key = DenomKey(chain.id, denom)
-        val now = System.currentTimeMillis()
         cache[key]
-            ?.takeIf { it.expiresAt > now }
+            ?.takeIf { it.expiresAt.hasNotPassedNow() }
             ?.let {
                 return it.value
             }
         // Cache only successful lookups. A `null` here is indistinguishable between a true 404 and
         // a transient LCD failure the API method swallowed — pinning either for 24h would freeze
         // the outage into the session, so retry on the next refresh instead.
-        return fetch()?.also { cache[key] = CacheEntry(it, now + CACHE_TTL_MILLIS) }
+        return fetch()?.also { cache[key] = CacheEntry(it, timeSource.markNow() + CACHE_TTL) }
     }
 
     private fun DenomMetadata.symbolOrDisplay(): String? =
@@ -210,7 +212,7 @@ constructor(private val cosmosApiFactory: CosmosApiFactory) : CosmosBankCoinFind
 
     private data class DenomKey(val chainId: String, val denom: String)
 
-    private data class CacheEntry<T : Any>(val value: T, val expiresAt: Long)
+    private data class CacheEntry<T : Any>(val value: T, val expiresAt: TimeMark)
 
     companion object {
         /** Chains the bank auto-discovery is enabled for; matches the ticket scope. */
@@ -222,6 +224,6 @@ constructor(private val cosmosApiFactory: CosmosApiFactory) : CosmosBankCoinFind
         private const val IBC_HASH_PREVIEW_LENGTH = 6
         private const val COSMOS_DEFAULT_DECIMALS = 6
         private val DENOM_UNIT_PREFIXES = setOf('u', 'a')
-        private val CACHE_TTL_MILLIS = TimeUnit.HOURS.toMillis(24)
+        private val CACHE_TTL = 24.hours
     }
 }

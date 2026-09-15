@@ -19,6 +19,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -39,6 +40,7 @@ class GetDiscountBpsUseCaseTest {
             balanceRepository = balanceRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
             tiersNFTRepository = tiersNFTRepository,
+            timeSource = TestTimeSource(),
         )
 
     private val vaultId = "vault-id"

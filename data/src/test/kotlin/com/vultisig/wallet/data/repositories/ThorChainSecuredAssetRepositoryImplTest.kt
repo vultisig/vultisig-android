@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -17,7 +18,7 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
 
     private val thorChainApi: ThorChainApi = mockk()
 
-    private fun repo() = ThorChainSecuredAssetRepositoryImpl(thorChainApi)
+    private fun repo() = ThorChainSecuredAssetRepositoryImpl(thorChainApi, TestTimeSource())
 
     private fun pool(asset: String, status: String = "Available") =
         ThorChainPoolJson(asset = asset, assetTorPrice = BigInteger.ONE, status = status)

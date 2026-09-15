@@ -10,6 +10,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -149,20 +151,20 @@ internal class TokenMetadataResolverTest {
 
     @Test
     fun `entries past the TTL trigger a refetch`() = runTest {
-        val now = AtomicInteger(0)
+        val timeSource = TestTimeSource()
         val repo = FakeTokenRepository(usdcOnEthereum())
         val resolver =
             TokenMetadataResolver(
                 tokenRepository = repo,
                 ioDispatcher = testDispatcher(),
-                clock = { now.get().toLong() },
+                timeSource = timeSource,
                 ttl = 1.hours,
             )
 
         resolver.resolve(Chain.Ethereum, USDC)
         assertEquals(1, repo.calls.get())
 
-        now.set((1.hours.inWholeMilliseconds + 1L).toInt())
+        timeSource += 1.hours + 1.milliseconds
         resolver.resolve(Chain.Ethereum, USDC)
         assertEquals(2, repo.calls.get())
     }
@@ -188,7 +190,7 @@ internal class TokenMetadataResolverTest {
         TokenMetadataResolver(
             tokenRepository = repo,
             ioDispatcher = testDispatcher(),
-            clock = { 0L },
+            timeSource = TestTimeSource(),
             ttl = 24.hours,
         )
 

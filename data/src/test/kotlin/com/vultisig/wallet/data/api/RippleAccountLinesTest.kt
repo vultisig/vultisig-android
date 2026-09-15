@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.RIPPLE_TOKEN_DECIMALS
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -41,7 +42,8 @@ class RippleAccountLinesTest {
     @Test
     fun `fetchAccountLines parses currency issuer and balance`() = runBlocking {
         val body = linesBody(line("USD", issuer, "125.5"), line("EUR", OTHER_ISSUER, "0.25"))
-        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
+        val api =
+            RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body), TestTimeSource())
 
         val lines = api.fetchAccountLines(ACCOUNT)
 
@@ -57,7 +59,8 @@ class RippleAccountLinesTest {
     @Test
     fun `fetchAccountLines returns empty for an account with no trust lines`() = runBlocking {
         val body = """{"result": {"account": "$ACCOUNT", "error": "actNotFound"}}"""
-        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
+        val api =
+            RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body), TestTimeSource())
 
         assertTrue(api.fetchAccountLines(ACCOUNT).isEmpty())
     }
@@ -67,7 +70,8 @@ class RippleAccountLinesTest {
     @Test
     fun `fetchAccountLines throws on an RPC error other than actNotFound`() = runBlocking {
         val body = """{"result": {"error": "slowDown", "status": "error"}}"""
-        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
+        val api =
+            RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body), TestTimeSource())
 
         val error =
             assertThrows(RippleRpcException::class.java) {
@@ -86,7 +90,8 @@ class RippleAccountLinesTest {
                 MockHttpClient.respondingWithSequence(
                     HttpStatusCode.OK to """{"result": {"error": "slowDown"}}""",
                     HttpStatusCode.OK to linesBody(line("USD", issuer, "7")),
-                )
+                ),
+                TestTimeSource(),
             )
 
         assertThrows(RippleRpcException::class.java) {
@@ -103,7 +108,8 @@ class RippleAccountLinesTest {
                 MockHttpClient.respondingWithSequence(
                     HttpStatusCode.OK to linesBody(line("USD", issuer, "1"), marker = "page-2"),
                     HttpStatusCode.OK to linesBody(line("EUR", OTHER_ISSUER, "2")),
-                )
+                ),
+                TestTimeSource(),
             )
 
         val lines = api.fetchAccountLines(ACCOUNT)
@@ -116,7 +122,11 @@ class RippleAccountLinesTest {
     @Test
     fun `fetchAccountLines stops when a node repeats the same marker`() = runBlocking {
         val repeating = linesBody(line("USD", issuer, "1"), marker = "stuck")
-        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, repeating))
+        val api =
+            RippleApiImp(
+                MockHttpClient.respondingWith(HttpStatusCode.OK, repeating),
+                TestTimeSource(),
+            )
 
         val lines = api.fetchAccountLines(ACCOUNT)
 
@@ -126,7 +136,8 @@ class RippleAccountLinesTest {
     @Test
     fun `getTokenBalance scales the matching line to token units`() = runBlocking {
         val body = linesBody(line("EUR", issuer, "5"), line("USD", issuer, "125.5"))
-        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
+        val api =
+            RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body), TestTimeSource())
 
         // 125.5 at 15 decimals
         assertEquals(BigInteger("125500000000000000"), api.getTokenBalance(tokenCoin()))
@@ -137,7 +148,8 @@ class RippleAccountLinesTest {
     @Test
     fun `getTokenBalance ignores a same-currency line from a different issuer`() = runBlocking {
         val body = linesBody(line("USD", OTHER_ISSUER, "999"))
-        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
+        val api =
+            RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body), TestTimeSource())
 
         assertEquals(BigInteger.ZERO, api.getTokenBalance(tokenCoin()))
     }
@@ -146,14 +158,19 @@ class RippleAccountLinesTest {
     @Test
     fun `getTokenBalance clamps an owed line to zero`() = runBlocking {
         val body = linesBody(line("USD", issuer, "-42.5"))
-        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
+        val api =
+            RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body), TestTimeSource())
 
         assertEquals(BigInteger.ZERO, api.getTokenBalance(tokenCoin()))
     }
 
     @Test
     fun `getTokenBalance returns zero when the account holds no such line`() = runBlocking {
-        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, linesBody()))
+        val api =
+            RippleApiImp(
+                MockHttpClient.respondingWith(HttpStatusCode.OK, linesBody()),
+                TestTimeSource(),
+            )
 
         assertEquals(BigInteger.ZERO, api.getTokenBalance(tokenCoin()))
     }
@@ -164,7 +181,11 @@ class RippleAccountLinesTest {
     fun `getTokenBalance returns zero for a coin with no issuer in its contract address`() =
         runBlocking {
             val body = linesBody(line("USD", issuer, "10"))
-            val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
+            val api =
+                RippleApiImp(
+                    MockHttpClient.respondingWith(HttpStatusCode.OK, body),
+                    TestTimeSource(),
+                )
             val malformed = tokenCoin().copy(contractAddress = "USD")
 
             assertEquals(BigInteger.ZERO, api.getTokenBalance(malformed))
@@ -180,7 +201,8 @@ class RippleAccountLinesTest {
                 MockHttpClient.respondingWithSequence(
                     HttpStatusCode.OK to linesBody(line("USD", issuer, "10")),
                     HttpStatusCode.OK to linesBody(line("USD", issuer, "99")),
-                )
+                ),
+                TestTimeSource(),
             )
 
         val first = api.getTokenBalance(tokenCoin())
@@ -199,7 +221,8 @@ class RippleAccountLinesTest {
                     HttpStatusCode.OK,
                     linesBody(line("USD", issuer, "1"), marker = "page-2"),
                     capture,
-                )
+                ),
+                TestTimeSource(),
             )
 
         api.fetchAccountLines(ACCOUNT)
@@ -221,7 +244,10 @@ class RippleAccountLinesTest {
         val firstPage =
             """{"result": {"lines": [${line("USD", issuer, "1")}], "ledger_index": 90000000, "marker": "page-2"}}"""
         val api =
-            RippleApiImp(MockHttpClient.capturingRequest(HttpStatusCode.OK, firstPage, capture))
+            RippleApiImp(
+                MockHttpClient.capturingRequest(HttpStatusCode.OK, firstPage, capture),
+                TestTimeSource(),
+            )
 
         api.fetchAccountLines(ACCOUNT)
 

@@ -9,6 +9,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -21,9 +23,9 @@ import org.junit.jupiter.api.Test
 
 internal class ContractAbiRepositoryTest {
 
-    // Drives the repository's injected clock so TTL expiry is deterministic; defaults to 0 so every
-    // other test stays comfortably within the TTL window.
-    private var now = 0L
+    // Drives the repository's injected time source so TTL expiry is deterministic; never advanced
+    // by the other tests, which therefore stay comfortably within the TTL window.
+    private val timeSource = TestTimeSource()
 
     private val addTraitSignature = "addTrait(uint256,uint256,(string,string,bytes,bool,uint256))"
 
@@ -132,15 +134,14 @@ internal class ContractAbiRepositoryTest {
         val ttl = 1.hours
         val repo = newRepo(api, ttl = ttl)
 
-        now = 0L
         repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature)
         // Still inside the TTL window — served from cache, no second fetch.
-        now = ttl.inWholeMilliseconds - 1
+        timeSource += ttl - 1.milliseconds
         repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature)
         assertEquals(1, api.calls.get())
 
         // At/after the TTL the entry is stale and must be refetched.
-        now = ttl.inWholeMilliseconds
+        timeSource += 1.milliseconds
         val params = repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature)
         assertEquals(listOf("tokenId", "traitId", "trait"), params?.map { it.name })
         assertEquals(2, api.calls.get())
@@ -210,7 +211,7 @@ internal class ContractAbiRepositoryTest {
         ContractAbiRepositoryImpl(
             sourcifyApi = api,
             ioDispatcher = UnconfinedTestDispatcher(),
-            clock = { now },
+            timeSource = timeSource,
             ttl = ttl,
         )
 

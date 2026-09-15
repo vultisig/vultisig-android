@@ -1,23 +1,22 @@
 package com.vultisig.wallet.ui.utils
 
-import com.vultisig.wallet.data.utils.minus
-import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 internal class MultipleClicksDetector(
+    private val timeSource: TimeSource,
     private val requiredClicks: Int = DEFAULT_REQUIRED_CLICKS,
     private val timeout: Duration = DEFAULT_TIMEOUT_MS.milliseconds,
 ) {
 
-    private val clickTimestamps = mutableListOf<Instant>()
+    private val clickTimestamps = mutableListOf<TimeMark>()
 
     fun clickAndCheckIfDetected(): Boolean {
-        val currentTime = Instant.now()
+        clickTimestamps.removeAll { timestamp -> timestamp.elapsedNow() > timeout }
 
-        clickTimestamps.removeAll { timestamp -> currentTime - timestamp > timeout }
-
-        clickTimestamps.add(currentTime)
+        clickTimestamps.add(timeSource.markNow())
 
         if (clickTimestamps.size >= requiredClicks) {
             clickTimestamps.clear()

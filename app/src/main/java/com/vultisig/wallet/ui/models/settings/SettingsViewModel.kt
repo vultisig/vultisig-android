@@ -44,6 +44,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.time.TimeSource
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -272,6 +273,7 @@ constructor(
     private val passcodeRepository: PasscodeRepository,
     private val passcodeConfig: PasscodeConfig,
     savedStateHandle: SavedStateHandle,
+    timeSource: TimeSource,
 ) : ViewModel() {
     private val _uiEvents = Channel<SettingsUiEvent>()
     val uiEvent = _uiEvents.receiveAsFlow()
@@ -319,7 +321,7 @@ constructor(
     val state = MutableStateFlow(settingsMenu)
     val vaultId = savedStateHandle.toRoute<Route.Settings>().vaultId
     private var hasUsedReferral = false
-    private val multipleClicksDetector = MultipleClicksDetector()
+    private val multipleClicksDetector = MultipleClicksDetector(timeSource)
 
     /**
      * Opens the hidden secret settings screen once a rapid multi-tap on the version text is

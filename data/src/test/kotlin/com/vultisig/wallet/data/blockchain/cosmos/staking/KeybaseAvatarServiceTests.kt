@@ -10,6 +10,8 @@ import io.ktor.http.headersOf
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -27,21 +29,30 @@ class KeybaseAvatarServiceTests {
     @Test
     fun `resolves the primary picture url`() = runTest {
         val service =
-            KeybaseAvatarServiceImpl(MockHttpClient.respondingWith(HttpStatusCode.OK, avatarJson))
+            KeybaseAvatarServiceImpl(
+                MockHttpClient.respondingWith(HttpStatusCode.OK, avatarJson),
+                TestTimeSource(),
+            )
         assertEquals("https://keybase.io/avatar.jpg", service.avatarUrl("1234567890ABCDEF"))
     }
 
     @Test
     fun `returns null when identity is empty`() = runTest {
         val service =
-            KeybaseAvatarServiceImpl(MockHttpClient.respondingWith(HttpStatusCode.OK, avatarJson))
+            KeybaseAvatarServiceImpl(
+                MockHttpClient.respondingWith(HttpStatusCode.OK, avatarJson),
+                TestTimeSource(),
+            )
         assertNull(service.avatarUrl("   "))
     }
 
     @Test
     fun `returns null when them is null`() = runTest {
         val service =
-            KeybaseAvatarServiceImpl(MockHttpClient.respondingWith(HttpStatusCode.OK, noAvatarJson))
+            KeybaseAvatarServiceImpl(
+                MockHttpClient.respondingWith(HttpStatusCode.OK, noAvatarJson),
+                TestTimeSource(),
+            )
         assertNull(service.avatarUrl("1234567890ABCDEF"))
     }
 
@@ -58,10 +69,10 @@ class KeybaseAvatarServiceTests {
                     respond(content = avatarJson, status = HttpStatusCode.OK, headers = jsonHeaders)
                 }
             )
-        var fakeNow = 0L
-        val service = KeybaseAvatarServiceImpl(client).also { it.clock = { fakeNow } }
+        val timeSource = TestTimeSource()
+        val service = KeybaseAvatarServiceImpl(client, timeSource)
         service.avatarUrl("ID1")
-        fakeNow = 30L * 60L * 1000L // 30 min < 1h TTL
+        timeSource += 30.minutes // < 1h TTL
         service.avatarUrl("ID1")
         assertEquals(1, calls.get())
     }
@@ -82,7 +93,7 @@ class KeybaseAvatarServiceTests {
                     )
                 }
             )
-        val service = KeybaseAvatarServiceImpl(client).also { it.clock = { 0L } }
+        val service = KeybaseAvatarServiceImpl(client, TestTimeSource())
         assertNull(service.avatarUrl("ID1"))
         assertNull(service.avatarUrl("ID1"))
         assertEquals(1, calls.get())

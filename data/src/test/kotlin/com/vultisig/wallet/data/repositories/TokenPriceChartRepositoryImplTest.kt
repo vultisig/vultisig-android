@@ -15,6 +15,7 @@ import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -27,7 +28,7 @@ internal class TokenPriceChartRepositoryImplTest {
     @BeforeEach
     fun setUp() {
         coinGeckoApi = mockk()
-        repository = TokenPriceChartRepositoryImpl(coinGeckoApi)
+        repository = TokenPriceChartRepositoryImpl(coinGeckoApi, TestTimeSource())
     }
 
     private fun coin(priceProviderId: String = "", contractAddress: String = "") =

@@ -33,6 +33,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -85,6 +86,7 @@ class BalanceRepositoryUtxoSpendableTest {
             solanaDeFiBalanceService = mockk<SolanaDeFiBalanceService>(relaxed = true),
             transactionHistoryRepository = transactionHistoryRepository,
             utxoInFlightRepository = utxoInFlightRepository,
+            timeSource = TestTimeSource(),
         )
 
     @Test

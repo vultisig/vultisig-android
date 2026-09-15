@@ -29,6 +29,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -82,6 +83,7 @@ class BalanceRepositoryBalanceOrNullTest {
             solanaDeFiBalanceService = mockk<SolanaDeFiBalanceService>(relaxed = true),
             transactionHistoryRepository = mockk<TransactionHistoryRepository>(relaxed = true),
             utxoInFlightRepository = mockk<UtxoInFlightRepository>(relaxed = true),
+            timeSource = TestTimeSource(),
         )
 
     @Test

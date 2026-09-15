@@ -12,6 +12,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.mockk.mockk
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -47,7 +48,7 @@ class ThorChainApiSlippageTest {
             thorChainSwapQuoteResponseJsonSerializer =
                 mockk<ThorChainSwapQuoteResponseJsonSerializer>(),
             json = json,
-            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(),
+            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(TestTimeSource()),
         )
 
     private suspend fun ThorChainApiImpl.quoteWith(toleranceBps: Int?) =

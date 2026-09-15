@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.testutils.MockHttpClient
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -57,6 +58,7 @@ class CardanoApiTokenBalanceTest {
                         jsonFormat = json,
                     ),
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         assertEquals(BigInteger("12"), api.getTokenBalance(snek))
@@ -76,6 +78,7 @@ class CardanoApiTokenBalanceTest {
                             fullPage
                         },
                     json = json,
+                    timeSource = TestTimeSource(),
                 )
 
             val failure = runCatching { api.getTokenBalance(snek) }.exceptionOrNull()
@@ -98,6 +101,7 @@ class CardanoApiTokenBalanceTest {
                         page(size = 2, withSnek = true, snekQuantity = "9")
                     },
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         assertEquals(BigInteger("9"), api.getTokenBalance(snek))
