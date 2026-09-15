@@ -129,8 +129,6 @@ dependencies {
     compileOnly(files("../app/libs/mobile-tss-lib.aar"))
     api(libs.timber)
     implementation(libs.spark.core)
-    implementation(libs.apache.compress)
-    implementation(libs.apache.compress.xz)
     implementation(libs.core.zxing)
     implementation(libs.androidx.security)
 
