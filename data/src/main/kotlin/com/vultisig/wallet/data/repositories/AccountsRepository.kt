@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 
@@ -223,19 +224,23 @@ constructor(
             }
         }
 
-    private fun buildCacheAddresses(vaultId: String): Flow<CachedAddresses> {
-        return getVaultAsFlow(vaultId).map { vault ->
-            val vaultCoins = vault.coins
+    private fun buildCacheAddresses(vaultId: String): Flow<CachedAddresses> =
+        getVaultAsFlow(vaultId)
+            // Settle a drifted Solana row before the vault is observed: no snapshot then reads a
+            // counterfeit's balance under a curated ticker, and the write cannot re-trigger the
+            // observation it precedes.
+            .onStart { vaultRepository.get(vaultId)?.let { repairCuratedSplCoins(it) } }
+            .map { vault ->
+                val vaultCoins = vault.coins
 
-            val coins = vaultCoins.groupBy { it.chain }
-            val addresses =
-                coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
-                    chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
-                }
+                val coins = vaultCoins.groupBy { it.chain }
+                val addresses =
+                    coins.mapNotNullTo(mutableListOf()) { (chain, tokens) ->
+                        chainAndTokensToAddressMapper.map(ChainAndTokens(chain, tokens))
+                    }
 
-            CachedAddresses(vaultCoins = vaultCoins, addresses = addresses)
-        }
-    }
+                CachedAddresses(vaultCoins = vaultCoins, addresses = addresses)
+            }
 
     private suspend fun MutableList<Address>.fetchAccountFromDb() {
         val balances =
@@ -291,8 +296,9 @@ constructor(
      * counterfeit airdropped next to the real token reports the same ticker and collapses to the
      * same id. Each id is claimed once: the coin table keys on it (a second insert would REPLACE
      * the first row) and so does every list that renders these accounts (a repeated key crashes the
-     * list on scroll). When two mints contend for one id, the one the curated catalogue knows wins
-     * — that is the token the user actually meant to hold.
+     * list on scroll). A mint the catalogue does not know may not take an id the catalogue owns:
+     * held alone, it would be persisted and shown as the curated token it names, so it is not
+     * listed at all — the same line the extension draws by discovering only verified mints.
      */
     private suspend fun getSPLCoins(solanaCoins: List<Coin>, vault: Vault): List<Coin> {
         if (solanaCoins.any { !it.isNativeToken }) return emptyList()
@@ -300,9 +306,9 @@ constructor(
         val splTokens = splTokenRepository.getTokens(solanaAddress, vault)
         val disabledCoinIds = vaultRepository.getDisabledCoinIds(vaultId = vault.id)
         val claimedIds = (solanaCoins.map { it.id } + disabledCoinIds).toMutableSet()
-        val (curated, unknown) = splTokens.partition { it.isCurated() }
         val newSPLTokens = mutableListOf<Coin>()
-        for (spl in curated + unknown) {
+        for (spl in splTokens) {
+            if (!spl.isCurated() && spl.id in curatedSolanaById) continue
             if (!claimedIds.add(spl.id)) continue
             vaultRepository.addTokenToVault(vault.id, spl)
             newSPLTokens += spl
@@ -313,10 +319,47 @@ constructor(
     private fun Coin.isCurated(): Boolean =
         Coins.findCuratedByContract(chain, contractAddress) != null
 
+    private val curatedSolanaById: Map<String, Coin> = Coins.Solana.all.associateBy { it.id }
+
+    /**
+     * Swaps each Solana row of [vault] persisted under a curated id but with another mint's
+     * contract for the curated coin, returning the vault's Solana coins as they now stand.
+     *
+     * Before [getSPLCoins] claimed each id once, a counterfeit discovered alongside the real token
+     * could win its id: both were inserted in one pass and the coin table kept whichever the RPC
+     * listed last. The row reads as the curated token everywhere — ticker, logo, id — while its
+     * balance and any send target are the counterfeit's mint, and discovery never revisits a vault
+     * that already holds an SPL token, so nothing else would ever correct it. The catalogue is
+     * ground truth for the ids it owns, so the row is swapped atomically for the curated coin; a
+     * row under an id the catalogue does not own has no ground truth and is left as it is.
+     *
+     * A vault without drift performs no writes, so this runs ahead of every load instead of being
+     * tracked as a one-shot.
+     */
+    private suspend fun repairCuratedSplCoins(vault: Vault): List<Coin> =
+        vault.coins
+            .filter { it.chain == Chain.Solana }
+            .map { coin ->
+                val curated = curatedSolanaById[coin.id]
+                if (
+                    coin.isNativeToken ||
+                        curated == null ||
+                        curated.contractAddress == coin.contractAddress
+                ) {
+                    return@map coin
+                }
+                val corrected =
+                    curated.copy(address = coin.address, hexPublicKey = coin.hexPublicKey)
+                vaultRepository.replaceTokenInVault(vault.id, coin, corrected)
+                corrected
+            }
+
     override fun loadAddress(vaultId: String, chain: Chain): Flow<Address> =
         flow {
                 val vault = getVault(vaultId)
-                val coins = vault.coins.filter { it.chain == chain }
+                val coins =
+                    if (chain == Chain.Solana) repairCuratedSplCoins(vault)
+                    else vault.coins.filter { it.chain == chain }
 
                 var account =
                     chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins)) ?: return@flow
