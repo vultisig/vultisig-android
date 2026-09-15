@@ -7,6 +7,10 @@ import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
+import kotlin.time.TestTimeSource
+import kotlin.time.asClock
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test
@@ -134,6 +138,51 @@ internal class QuoteCacheTest {
                 BigInteger.TEN,
                 SwapProvider.THORCHAIN,
                 slippageBps = 300,
+            )
+        )
+    }
+
+    @Test
+    fun `get serves a quote until its expiry and drops it after`() {
+        val timeSource = TestTimeSource()
+        val clock = timeSource.asClock(origin = Instant.fromEpochMilliseconds(0L))
+        val cache = QuoteCache(clock)
+        val quote = mockk<SwapQuote> { every { expiredAt } returns clock.now() + 1.minutes }
+        cache.put(
+            "ETH.ETH",
+            "SOL.SOL",
+            "0xA",
+            "0xB",
+            BigInteger.TEN,
+            SwapProvider.SWAPKIT,
+            null,
+            quote,
+        )
+
+        timeSource += 59.seconds
+        assertSame(
+            quote,
+            cache.get(
+                "ETH.ETH",
+                "SOL.SOL",
+                "0xA",
+                "0xB",
+                BigInteger.TEN,
+                SwapProvider.SWAPKIT,
+                null,
+            ),
+        )
+
+        timeSource += 1.seconds
+        assertNull(
+            cache.get(
+                "ETH.ETH",
+                "SOL.SOL",
+                "0xA",
+                "0xB",
+                BigInteger.TEN,
+                SwapProvider.SWAPKIT,
+                null,
             )
         )
     }

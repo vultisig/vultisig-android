@@ -2,20 +2,23 @@ package com.vultisig.wallet.data.usecases.txstatus
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.NetworkException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TestTimeSource
 import kotlin.time.TimeSource
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * Regression test for issue #5043's "joined device polls a never-committed tx forever" concern.
- * [PollingTxStatusUseCaseImpl] reads the wall clock directly (no injectable time source), so this
- * test drives real (short) delays via a tiny [TxStatusConfiguration] instead of `runTest` virtual
- * time — a `TestDispatcher`'s `delay()` skip wouldn't advance the `System.currentTimeMillis()` the
- * use case actually checks the elapsed time against.
+ * Regression test for issue #5043's "joined device polls a never-committed tx forever" concern. The
+ * cadence tests drive real (short) delays via a tiny [TxStatusConfiguration] on the monotonic
+ * source; the deadline itself is pinned exactly with a [TestTimeSource] the fake repository
+ * advances, so `runTest` can skip the `delay()`s.
  */
 class PollingTxStatusUseCaseTest {
 
@@ -68,6 +71,24 @@ class PollingTxStatusUseCaseTest {
         ): TransactionResult {
             callCount++
             return TransactionResult.Refunded("refunded")
+        }
+    }
+
+    /** Reports Pending and moves [timeSource] forward by one poll interval per check. */
+    private class TickingPendingStatusRepository(
+        private val timeSource: TestTimeSource,
+        private val pollInterval: Duration,
+    ) : TransactionStatusRepository {
+        var callCount = 0
+            private set
+
+        override suspend fun checkTransactionStatus(
+            txHash: String,
+            chain: Chain,
+        ): TransactionResult {
+            callCount++
+            timeSource += pollInterval
+            return TransactionResult.Pending
         }
     }
 
@@ -200,5 +221,28 @@ class PollingTxStatusUseCaseTest {
 
         assertEquals(listOf(TransactionResult.Refunded("refunded")), results)
         assertEquals(1, repository.callCount)
+    }
+
+    @Test
+    fun `invoke emits TimedOut once the deadline on the injected time source passes`() = runTest {
+        val timeSource = TestTimeSource()
+        val repository = TickingPendingStatusRepository(timeSource, pollInterval = 1.seconds)
+        val useCase =
+            PollingTxStatusUseCaseImpl(
+                txStatusConfigurationProvider =
+                    FakeTxStatusConfigurationProvider(
+                        TxStatusConfiguration(pollIntervalSeconds = 1, maxWaitSeconds = 60)
+                    ),
+                transactionStatusRepository = repository,
+                timeSource = timeSource,
+            )
+
+        val results = useCase(Chain.Ethereum, "deadbeef").toList()
+
+        // Exactly maxWait / pollInterval checks fit before the deadline; the next loop iteration
+        // sees it passed and emits TimedOut without another network call.
+        assertEquals(60, repository.callCount)
+        assertEquals(TransactionResult.TimedOut, results.last())
+        assertTrue(results.dropLast(1).all { it == TransactionResult.Pending })
     }
 }
