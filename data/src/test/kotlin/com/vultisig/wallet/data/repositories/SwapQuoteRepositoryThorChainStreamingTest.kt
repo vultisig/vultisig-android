@@ -17,6 +17,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -26,7 +27,7 @@ class SwapQuoteRepositoryThorChainStreamingTest {
 
     private val thorChainApi: ThorChainApi = mockk()
 
-    private val source = ThorChainQuoteSource(thorChainApi)
+    private val source = ThorChainQuoteSource(thorChainApi, Clock.System)
 
     private val btc =
         Coin(

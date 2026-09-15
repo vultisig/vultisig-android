@@ -44,6 +44,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -223,6 +224,7 @@ constructor(
     private val featureFlagRepository: FeatureFlagRepository,
     private val limitSwapConfig: LimitSwapConfig,
     private val navigator: Navigator<Destination>,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val route: Route.TransactionHistory = savedStateHandle.toRoute()
@@ -467,7 +469,7 @@ constructor(
     /** `now`, re-emitted often enough that a minute-granularity countdown never reads stale. */
     private fun expiryTicks(): Flow<Long> = flow {
         while (true) {
-            emit(System.currentTimeMillis())
+            emit(clock.now().toEpochMilliseconds())
             delay(EXPIRY_TICK)
         }
     }
@@ -552,7 +554,7 @@ constructor(
                     } ?: flowOf(emptyList())
                 }
                 .map { entities ->
-                    val now = System.currentTimeMillis()
+                    val now = clock.now().toEpochMilliseconds()
                     entities.mapNotNull { it.toUiModel() }.groupByDate(now)
                 }
                 .combine(_uiState.map { it.selectedAssetIds }.distinctUntilChanged()) { groups, ids

@@ -25,7 +25,6 @@ import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
-import com.vultisig.wallet.data.utils.plus
 import com.vultisig.wallet.data.utils.thorswapMultiplier
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
@@ -35,10 +34,10 @@ import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.time.Instant
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Clock
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -285,9 +284,10 @@ constructor(
     private val fiatValueToString: FiatValueToStringMapper,
     private val searchToken: SearchTokenUseCase,
     private val convertTokenToTokenUseCase: ConvertTokenToToken,
+    private val clock: Clock,
 ) {
 
-    private val quoteCache = QuoteCache()
+    private val quoteCache = QuoteCache(clock)
 
     // Set true right before a programmatic amount change (percentage / Max) so the next non-empty
     // amount emission skips the typing debounce and fetches a quote immediately (#4712). Reset as
@@ -1163,7 +1163,7 @@ constructor(
                     expectedDstValue = expectedDstValue,
                     fees = tokenFees,
                     data = apiQuote.copy(tx = updatedTx),
-                    expiredAt = Instant.now() + expiredAfter,
+                    expiredAt = clock.now() + expiredAfter,
                     provider = provider.getSwapProviderId(),
                 )
             }
@@ -1220,7 +1220,7 @@ constructor(
                     expectedDstValue = expectedDstValue,
                     fees = tokenFees,
                     data = apiQuote,
-                    expiredAt = Instant.now() + expiredAfter,
+                    expiredAt = clock.now() + expiredAfter,
                     provider = provider.getSwapProviderId(),
                 )
             }
@@ -1308,7 +1308,7 @@ constructor(
                     expectedDstValue = expectedDstValue,
                     fees = tokenFees,
                     data = apiQuote.copy(tx = updatedTx),
-                    expiredAt = Instant.now() + expiredAfter,
+                    expiredAt = clock.now() + expiredAfter,
                     provider = provider.getSwapProviderId(),
                 )
             }
@@ -1448,7 +1448,7 @@ constructor(
                     expectedDstValue = expectedDstValue,
                     fees = tokenFees,
                     data = apiQuote,
-                    expiredAt = Instant.now() + expiredAfter,
+                    expiredAt = clock.now() + expiredAfter,
                     // `provider` is the proto-serialized discriminator used by
                     // SwapTransactionToUiModelMapper to map back onto SwapProvider.SWAPKIT —
                     // keep it as the canonical id. The sub-provider drives the UI label below.
@@ -1742,7 +1742,7 @@ constructor(
     }
 }
 
-internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
+internal class QuoteCache(private val clock: Clock, private val maxSize: Int = MAX_SIZE) {
 
     private data class Key(
         val srcTokenId: String,
@@ -1784,7 +1784,7 @@ internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
                     slippageBps,
                 )
             val quote = entries[key] ?: return null
-            if (Instant.now() < quote.expiredAt) {
+            if (clock.now() < quote.expiredAt) {
                 quote
             } else {
                 entries.remove(key)
@@ -1817,7 +1817,7 @@ internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
         }
 
     private fun evict() {
-        val now = Instant.now()
+        val now = clock.now()
         entries.entries.removeAll { now >= it.value.expiredAt }
         val iter = entries.entries.iterator()
         while (entries.size > maxSize && iter.hasNext()) {

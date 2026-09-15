@@ -20,14 +20,13 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.utils.plus
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Instant
 import java.util.Base64
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -79,6 +78,7 @@ constructor(
     private val config: SwapKitConfig,
     private val providerCache: SwapKitProviderCache,
     private val json: Json,
+    private val clock: Clock,
 ) : SwapQuoteSource {
 
     override suspend fun fetch(request: SwapQuoteRequest): SwapQuoteResult {
@@ -630,7 +630,7 @@ constructor(
             // Source-chain native deposit fee (BTC 8dp), same surface as the EVM/Solana inbound
             // fee.
             fees = TokenValue(inboundFeeRawUnits(srcToken, response.fees, routeFees), srcToken),
-            expiredAt = Instant.now() + expiredAfter,
+            expiredAt = clock.now() + expiredAfter,
             data = payload,
             subProvider = subProvider,
             priceImpact = priceImpact,

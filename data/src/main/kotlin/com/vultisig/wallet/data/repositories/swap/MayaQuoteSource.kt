@@ -7,12 +7,12 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.models.swapAssetName
-import com.vultisig.wallet.data.utils.plus
-import java.time.Instant
 import javax.inject.Inject
+import kotlin.time.Clock
 
-internal class MayaQuoteSource @Inject constructor(private val mayaChainApi: MayaChainApi) :
-    SwapQuoteSource {
+internal class MayaQuoteSource
+@Inject
+constructor(private val mayaChainApi: MayaChainApi, private val clock: Clock) : SwapQuoteSource {
 
     override suspend fun fetch(request: SwapQuoteRequest): SwapQuoteResult {
         val srcToken = request.srcToken
@@ -48,7 +48,7 @@ internal class MayaQuoteSource @Inject constructor(private val mayaChainApi: May
                 fees = dstToken.convertToTokenValue(data.fees.total),
                 recommendedMinTokenValue = recommendedMin,
                 data = data,
-                expiredAt = Instant.now() + expiredAfter,
+                expiredAt = clock.now() + expiredAfter,
             )
         )
     }

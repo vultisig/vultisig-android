@@ -21,7 +21,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
 /**
@@ -53,6 +53,7 @@ internal class SwapTransactionBuilder
 constructor(
     private val swapGasCalculator: SwapGasCalculator,
     private val allowanceRepository: AllowanceRepository,
+    private val clock: Clock,
 ) {
 
     suspend fun build(
@@ -141,10 +142,7 @@ constructor(
                                 toAmountLimit = "0",
                                 streamingInterval = "1",
                                 streamingQuantity = "0",
-                                expirationTime =
-                                    (System.currentTimeMillis().milliseconds + 15.minutes)
-                                        .inWholeSeconds
-                                        .toULong(),
+                                expirationTime = (clock.now() + 15.minutes).epochSeconds.toULong(),
                                 isAffiliate = isAffiliate,
                                 slippageBps = quote.data.fees.slippageBps,
                             )
@@ -225,10 +223,7 @@ constructor(
                                 toAmountLimit = "0",
                                 streamingInterval = "3",
                                 streamingQuantity = "0",
-                                expirationTime =
-                                    (System.currentTimeMillis().milliseconds + 15.minutes)
-                                        .inWholeSeconds
-                                        .toULong(),
+                                expirationTime = (clock.now() + 15.minutes).epochSeconds.toULong(),
                                 isAffiliate = isAffiliate,
                                 slippageBps = quote.data.fees.slippageBps,
                             )

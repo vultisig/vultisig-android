@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
-import com.vultisig.wallet.data.utils.minus
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
@@ -30,7 +29,8 @@ import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
-import java.time.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -76,6 +76,7 @@ constructor(
     private val swapDiscountChecker: SwapDiscountChecker,
     private val swapValidator: SwapValidator,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val clock: Clock,
     @Assisted private val scope: CoroutineScope,
     @Assisted private val swapQuoteManager: SwapQuoteManager,
     @Assisted private val uiState: MutableStateFlow<SwapFormUiModel>,
@@ -656,7 +657,7 @@ constructor(
         // A row that lapsed while the sheet was open can no longer be signed at its quoted rate:
         // don't apply it (Swap would stay enabled against an expired quote) — refresh instead, so
         // a fresh candidate set replaces the whole list.
-        if (Instant.now() >= candidate.result.quote.expiredAt) {
+        if (clock.now() >= candidate.result.quote.expiredAt) {
             refreshQuoteState.value++
             return
         }
@@ -819,7 +820,7 @@ constructor(
         }
         refreshQuoteJob =
             scope.launch(ioDispatcher) {
-                delay(expiredAt - Instant.now())
+                delay(expiredAt - clock.now())
                 refreshQuoteState.value++
             }
     }

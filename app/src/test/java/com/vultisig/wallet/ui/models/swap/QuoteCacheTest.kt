@@ -2,11 +2,10 @@ package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
-import com.vultisig.wallet.data.utils.plus
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
-import java.time.Instant
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
@@ -24,11 +23,11 @@ internal class QuoteCacheTest {
     // QuoteCache only reads `quote.expiredAt`; a relaxed mock with a future expiry avoids building
     // the full SwapQuote object graph.
     private fun freshQuote(): SwapQuote =
-        mockk<SwapQuote> { every { expiredAt } returns Instant.now() + 5.minutes }
+        mockk<SwapQuote> { every { expiredAt } returns Clock.System.now() + 5.minutes }
 
     @Test
     fun `get returns the cached quote for an identical key`() {
-        val cache = QuoteCache()
+        val cache = QuoteCache(Clock.System)
         val quote = freshQuote()
         cache.put(
             "ETH.ETH",
@@ -57,7 +56,7 @@ internal class QuoteCacheTest {
 
     @Test
     fun `get misses when the source address differs (no cross-vault bleed)`() {
-        val cache = QuoteCache()
+        val cache = QuoteCache(Clock.System)
         cache.put(
             "ETH.ETH",
             "SOL.SOL",
@@ -85,7 +84,7 @@ internal class QuoteCacheTest {
 
     @Test
     fun `get misses when the destination address differs`() {
-        val cache = QuoteCache()
+        val cache = QuoteCache(Clock.System)
         cache.put(
             "ETH.ETH",
             "SOL.SOL",
@@ -112,7 +111,7 @@ internal class QuoteCacheTest {
 
     @Test
     fun `get misses when the slippage differs (re-fetch after slippage change)`() {
-        val cache = QuoteCache()
+        val cache = QuoteCache(Clock.System)
         cache.put(
             "ETH.ETH",
             "SOL.SOL",

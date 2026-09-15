@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.repositories
 
-import androidx.annotation.VisibleForTesting
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.vultisig.wallet.data.sources.AppDataStore
 import javax.inject.Inject
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
@@ -35,14 +35,8 @@ interface InAppReviewRepository {
 
 internal class InAppReviewRepositoryImpl
 @Inject
-constructor(private val appDataStore: AppDataStore) : InAppReviewRepository {
-
-    /** Minimal clock seam so tests can drive the cooldown without sleeping. */
-    fun interface Clock {
-        fun nowMillis(): Long
-    }
-
-    @VisibleForTesting internal var clock: Clock = Clock { System.currentTimeMillis() }
+constructor(private val appDataStore: AppDataStore, private val clock: Clock) :
+    InAppReviewRepository {
 
     override val isPromptPending: Flow<Boolean> = appDataStore.readData(PROMPT_PENDING_KEY, false)
 
@@ -53,7 +47,7 @@ constructor(private val appDataStore: AppDataStore) : InAppReviewRepository {
     override suspend fun onPromptRequested() {
         appDataStore.editData { preferences ->
             preferences[PROMPT_PENDING_KEY] = false
-            preferences[LAST_PROMPTED_AT_KEY] = clock.nowMillis()
+            preferences[LAST_PROMPTED_AT_KEY] = clock.now().toEpochMilliseconds()
         }
         Timber.i("In-app review: prompt requested")
     }
@@ -65,7 +59,8 @@ constructor(private val appDataStore: AppDataStore) : InAppReviewRepository {
             val lastPromptedAt = preferences[LAST_PROMPTED_AT_KEY]
             isPending =
                 lastPromptedAt == null ||
-                    clock.nowMillis() - lastPromptedAt >= PROMPT_COOLDOWN.inWholeMilliseconds
+                    clock.now().toEpochMilliseconds() - lastPromptedAt >=
+                        PROMPT_COOLDOWN.inWholeMilliseconds
             if (isPending) {
                 preferences[PROMPT_PENDING_KEY] = true
             }

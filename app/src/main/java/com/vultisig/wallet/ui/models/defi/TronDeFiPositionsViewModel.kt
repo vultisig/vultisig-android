@@ -49,6 +49,7 @@ import java.math.RoundingMode
 import java.text.NumberFormat
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -147,6 +148,7 @@ constructor(
     private val feeServiceComposite: FeeServiceComposite,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val navigator: Navigator<Destination>,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<TronDeFiUiState>(TronDeFiUiState.Loading)
@@ -371,7 +373,7 @@ constructor(
 
         val claimableSun =
             current.tronData.pendingWithdrawals
-                .filter { it.expiryEpochMs <= System.currentTimeMillis() }
+                .filter { it.expiryEpochMs <= clock.now().toEpochMilliseconds() }
                 .sumOf { it.amountSun }
         if (claimableSun <= 0L) return
 

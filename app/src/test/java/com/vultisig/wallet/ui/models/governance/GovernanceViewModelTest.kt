@@ -25,6 +25,7 @@ import io.mockk.slot
 import java.math.BigInteger
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -90,6 +91,7 @@ internal class GovernanceViewModelTest {
             depositTransactionRepository = depositTransactionRepository,
             navigator = navigator,
             ioDispatcher = testDispatcher,
+            clock = Clock.System,
         )
 
     private fun proposal(

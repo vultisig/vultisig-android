@@ -29,6 +29,7 @@ import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -188,6 +189,7 @@ internal class TronDeFiPositionsViewModelTest {
             feeServiceComposite = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),
             navigator = navigator,
+            clock = Clock.System,
         )
 
     private companion object {

@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Clock
 import timber.log.Timber
 
 class PolkadotStatusProvider
@@ -14,6 +15,7 @@ class PolkadotStatusProvider
 constructor(
     private val polkadotApi: PolkadotApi,
     private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val clock: Clock,
 ) : TransactionStatusProvider {
 
     // Substrate has no "get transaction by hash" RPC and Subscan now blocks unauthenticated
@@ -91,7 +93,7 @@ constructor(
                 }
                 .getOrNull() ?: return MIN_SCAN_DEPTH
         val elapsedBlocks =
-            (System.currentTimeMillis() - broadcastAt).coerceAtLeast(0L) / BLOCK_TIME_MS
+            (clock.now().toEpochMilliseconds() - broadcastAt).coerceAtLeast(0L) / BLOCK_TIME_MS
         return (elapsedBlocks + SCAN_MARGIN_BLOCKS)
             .coerceIn(MIN_SCAN_DEPTH.toLong(), MAX_SCAN_DEPTH.toLong())
             .toInt()

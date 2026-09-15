@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -35,7 +36,13 @@ internal class RefreshLimitOrdersUseCaseTest {
     private val transactionStatusRepository = mockk<TransactionStatusRepository>(relaxed = true)
 
     private fun useCase() =
-        RefreshLimitOrdersUseCase(repository, thorChainApi, outcomes, transactionStatusRepository)
+        RefreshLimitOrdersUseCase(
+            repository,
+            thorChainApi,
+            outcomes,
+            transactionStatusRepository,
+            Clock.System,
+        )
 
     private val order =
         PendingLimitOrderEntity(

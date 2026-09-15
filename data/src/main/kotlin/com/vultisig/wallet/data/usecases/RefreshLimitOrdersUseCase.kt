@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Clock
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -44,6 +45,7 @@ constructor(
     private val thorChainApi: ThorChainApi,
     private val outcomes: MidgardLimitOutcomeResolver,
     private val transactionStatusRepository: TransactionStatusRepository,
+    private val clock: Clock,
 ) {
 
     /**
@@ -189,7 +191,7 @@ constructor(
                 // is dropped rather than defaulted: zero would render "expired" on an order that is
                 // resting fine.
                 timeToExpiryBlocks = entry.timeToExpiryBlocks?.trim()?.toIntOrNull(),
-                observedAt = System.currentTimeMillis(),
+                observedAt = clock.now().toEpochMilliseconds(),
             )
         } catch (e: CancellationException) {
             throw e
@@ -265,7 +267,7 @@ constructor(
         if (order.cancelBroadcastHash == null || !order.cancelConfirmed) {
             return LimitOrderStatus.Refunded
         }
-        val elapsedMs = System.currentTimeMillis() - order.createdAt
+        val elapsedMs = clock.now().toEpochMilliseconds() - order.createdAt
         val ttlMs = order.expiryBlocks.toLong() * THORCHAIN_BLOCK_MS
         return if (elapsedMs < ttlMs) LimitOrderStatus.Cancelled else LimitOrderStatus.Refunded
     }

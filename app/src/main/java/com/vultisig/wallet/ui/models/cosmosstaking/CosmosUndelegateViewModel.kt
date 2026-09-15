@@ -31,11 +31,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Clock
+import kotlin.time.toJavaInstant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -115,6 +116,7 @@ constructor(
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private val route: Route.CosmosStakingUndelegate = savedStateHandle.toRoute()
@@ -378,7 +380,7 @@ constructor(
         validatorAddress: String,
     ): Int =
         try {
-            val now = Instant.now()
+            val now = clock.now().toJavaInstant()
             cosmosStakingService
                 .fetchUnbondingDelegations(chain, delegatorAddress)
                 .filter { it.validatorAddress == validatorAddress }
@@ -407,7 +409,7 @@ constructor(
 
     private fun buildUnbondingLockMessage(chain: Chain): String {
         val days = CosmosStakingConfig.unbondingDaysFor(chain)
-        val unlockDate = Instant.now().plusSeconds(days * 86_400L)
+        val unlockDate = clock.now().toJavaInstant().plusSeconds(days * 86_400L)
         val formatted =
             DateTimeFormatter.ofPattern("MMM d, yyyy")
                 .withZone(ZoneId.systemDefault())

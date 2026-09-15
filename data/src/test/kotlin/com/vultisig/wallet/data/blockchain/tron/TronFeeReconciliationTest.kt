@@ -39,6 +39,7 @@ import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -333,6 +334,7 @@ internal class TronFeeReconciliationTest {
             tronFeeService = feeService,
             transactionHistoryRepository = mockk<TransactionHistoryRepository>(relaxed = true),
             utxoInFlightRepository = mockk<UtxoInFlightRepository>(relaxed = true),
+            clock = Clock.System,
         )
 
     private fun trc20Transfer(to: String = RECIPIENT, memo: String? = null) =

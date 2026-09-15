@@ -51,6 +51,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -1393,6 +1394,7 @@ internal class BlockChainSpecificRepositoryImplTest {
                 ),
             transactionHistoryRepository = transactionHistoryRepository,
             utxoInFlightRepository = utxoInFlightRepository,
+            clock = Clock.System,
         )
     }
 

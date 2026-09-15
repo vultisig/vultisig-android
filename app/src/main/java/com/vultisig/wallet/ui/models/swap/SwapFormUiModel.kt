@@ -6,7 +6,7 @@ import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.swap.SwapMode
 import com.vultisig.wallet.ui.utils.UiText
-import java.time.Instant
+import kotlin.time.Instant
 
 /**
  * Destination-side quote display values, shown while a quote loads and after it resolves.
