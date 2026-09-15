@@ -2,36 +2,25 @@ package com.vultisig.wallet.data.usecases
 
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
-import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.apache.commons.compress.compressors.CompressorStreamProvider
-
-private const val COMPRESSION_ALGO = CompressorStreamFactory.XZ
+import org.tukaani.xz.LZMA2Options
+import org.tukaani.xz.SingleXZInputStream
+import org.tukaani.xz.XZOutputStream
 
 internal interface CompressQrUseCase : (ByteArray) -> ByteArray
 
-internal class CompressQrUseCaseImpl
-@Inject
-constructor(private val compressorStreamProvider: CompressorStreamProvider) : CompressQrUseCase {
+internal class CompressQrUseCaseImpl @Inject constructor() : CompressQrUseCase {
 
     override fun invoke(input: ByteArray): ByteArray =
         ByteArrayOutputStream().use { outputStream ->
-            compressorStreamProvider
-                .createCompressorOutputStream(COMPRESSION_ALGO, outputStream)
-                .use { it.write(input) }
+            XZOutputStream(outputStream, LZMA2Options()).use { it.write(input) }
             outputStream.toByteArray()
         }
 }
 
 internal interface DecompressQrUseCase : (ByteArray) -> ByteArray
 
-internal class DecompressQrUseCaseImpl
-@Inject
-constructor(private val compressorStreamProvider: CompressorStreamProvider) : DecompressQrUseCase {
+internal class DecompressQrUseCaseImpl @Inject constructor() : DecompressQrUseCase {
 
     override fun invoke(input: ByteArray): ByteArray =
-        input.inputStream().use { inputStream ->
-            compressorStreamProvider
-                .createCompressorInputStream(COMPRESSION_ALGO, inputStream, false)
-                .use { it.readBytes() }
-        }
+        SingleXZInputStream(input.inputStream()).use { it.readBytes() }
 }

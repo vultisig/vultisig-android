@@ -36,8 +36,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.apache.commons.compress.compressors.CompressorStreamProvider
 import timber.log.Timber
 
 /** Hilt module that wires application-scoped data-layer dependencies. */
@@ -121,11 +119,6 @@ internal interface MainDataModule {
         @Provides
         @DefaultDispatcher
         fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
-
-        /** Provides the singleton [CompressorStreamProvider] for compression/decompression. */
-        @Provides
-        @Singleton
-        fun provideCompressorStreamProvider(): CompressorStreamProvider = CompressorStreamFactory()
 
         /**
          * Provides the singleton [SharedPreferences] backed by AndroidKeyStore AES-256-GCM
