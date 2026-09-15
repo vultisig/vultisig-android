@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -22,7 +24,8 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -137,7 +140,7 @@ internal class WithdrawUsdcCircleStrategy(
 
                     val depositTx =
                         DepositTransaction(
-                            id = UUID.randomUUID().toString(),
+                            id = Uuid.random().toString(),
                             vaultId = vaultId,
                             srcToken = nativeCoin,
                             srcAddress = srcAddress,

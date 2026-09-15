@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.keysign
 
 import android.content.Context
@@ -46,9 +48,10 @@ import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -103,7 +106,7 @@ constructor(
     private val updateSolanaKeysignPayload: UpdateSolanaKeysignPayloadUseCase,
     private val buildKeysignTransactionUiModel: BuildKeysignTransactionUiModelUseCase,
 ) : ViewModel() {
-    private val _sessionID: String = UUID.randomUUID().toString()
+    private val _sessionID: String = Uuid.random().toString()
     private val _serviceName: String = generateServiceName()
     private var _serverAddress: String = LOCAL_MEDIATOR_SERVER_URL
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex

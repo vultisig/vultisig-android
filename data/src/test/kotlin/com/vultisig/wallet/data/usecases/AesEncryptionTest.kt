@@ -54,7 +54,6 @@ class AesEncryptionTest {
         }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun `decrypts iOS ciphertext`() {
         val encryptionKey = "99bbc7c0941645762a688cb22efb1677865646c2c5b9706e940caf529c41ab19"

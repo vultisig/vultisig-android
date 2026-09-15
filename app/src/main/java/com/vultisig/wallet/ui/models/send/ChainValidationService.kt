@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.ui.models.send
 
 import com.vultisig.wallet.R

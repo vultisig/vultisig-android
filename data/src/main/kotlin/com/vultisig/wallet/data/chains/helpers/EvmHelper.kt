@@ -23,7 +23,6 @@ import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum
 
-@OptIn(ExperimentalStdlibApi::class)
 class EvmHelper(
     private val coinType: CoinType,
     private val vaultHexPublicKey: String,

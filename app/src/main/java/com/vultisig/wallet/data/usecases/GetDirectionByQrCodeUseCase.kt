@@ -7,7 +7,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import timber.log.Timber
 
 internal interface GetDirectionByQrCodeUseCase : suspend (String, String?) -> Any
@@ -15,7 +14,6 @@ internal interface GetDirectionByQrCodeUseCase : suspend (String, String?) -> An
 internal class GetDirectionByQrCodeUseCaseImpl
 @Inject
 constructor(private val getFlowType: GetFlowTypeUseCase) : GetDirectionByQrCodeUseCase {
-    @OptIn(ExperimentalEncodingApi::class)
     override suspend fun invoke(qr: String, vaultId: String?): Any {
         Timber.d("joinOrSend(qr = $qr)")
         val flowType = getFlowType(qr)

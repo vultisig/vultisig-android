@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.deposit
 
 import androidx.compose.foundation.text.input.clearText
@@ -47,8 +49,9 @@ import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.util.UUID
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -521,7 +524,7 @@ constructor(
 
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
-            val requestId = UUID.randomUUID().toString()
+            val requestId = Uuid.random().toString()
 
             navigator.route(
                 Route.SelectAsset(

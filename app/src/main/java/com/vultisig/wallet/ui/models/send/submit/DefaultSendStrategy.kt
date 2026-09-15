@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -48,7 +50,8 @@ import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -515,7 +518,7 @@ internal class DefaultSendStrategy(
 
                     val transaction =
                         Transaction(
-                            id = UUID.randomUUID().toString(),
+                            id = Uuid.random().toString(),
                             vaultId = vaultId,
                             chainId = chain.raw,
                             token = selectedToken,

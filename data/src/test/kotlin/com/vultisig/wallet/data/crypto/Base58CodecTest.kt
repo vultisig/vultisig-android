@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.data.crypto
 
 import org.junit.jupiter.api.Assertions.assertArrayEquals

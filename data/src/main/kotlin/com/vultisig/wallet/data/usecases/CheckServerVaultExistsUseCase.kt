@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.repositories.VultiSignerRepository

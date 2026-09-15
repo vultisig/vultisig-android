@@ -184,7 +184,6 @@ class UtxoHelper(
     ): ByteArray = buildSigningInput(keysignPayload, signingInput).toByteArray()
 
     /** [signingInput] with the payload's UTXOs, their scripts, and the resulting plan attached. */
-    @OptIn(ExperimentalStdlibApi::class)
     private fun buildSigningInput(
         keysignPayload: KeysignPayload,
         signingInput: Bitcoin.SigningInput.Builder,
@@ -246,7 +245,6 @@ class UtxoHelper(
         return signingInput.build()
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun getBitcoinSigningInput(keysignPayload: KeysignPayload): Bitcoin.SigningInput.Builder {
         val utxo = keysignPayload.blockChainSpecific as BlockChainSpecific.UTXO
         val input =
@@ -343,7 +341,6 @@ class UtxoHelper(
         return getSignedTransaction(inputData, signatures)
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun getSignedTransaction(
         inputData: ByteArray,
         signatures: Map<String, KeysignResponse>,

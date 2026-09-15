@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.SolanaAccountOwnership

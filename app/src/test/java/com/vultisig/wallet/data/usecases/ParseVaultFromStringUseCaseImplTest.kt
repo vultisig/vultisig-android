@@ -13,7 +13,6 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -25,7 +24,6 @@ import org.junit.jupiter.api.Test
 import vultisig.keygen.v1.LibType
 import vultisig.vault.v1.Vault as VaultProto
 
-@OptIn(ExperimentalEncodingApi::class)
 internal class ParseVaultFromStringUseCaseImplTest {
 
     private val protoBuf = ProtoBuf

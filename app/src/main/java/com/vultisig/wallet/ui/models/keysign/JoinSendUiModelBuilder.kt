@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.blockchain.model.Transfer
@@ -27,8 +29,9 @@ import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import java.math.BigInteger
-import java.util.UUID
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -178,7 +181,7 @@ constructor(
         val signRipple = payload.signRipple?.rawJson?.takeIf { it.isNotBlank() }
         val transaction =
             Transaction(
-                id = UUID.randomUUID().toString(),
+                id = Uuid.random().toString(),
                 vaultId = payload.vaultPublicKeyECDSA,
                 chainId = chain.id,
                 token = payloadToken,

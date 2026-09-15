@@ -6,11 +6,9 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.decodeHex
 
-@OptIn(ExperimentalEncodingApi::class)
 fun String.encrypt(key: String): String {
     val decodeKey = key.decodeHex()
     val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")

@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalSerializationApi::class, ExperimentalStdlibApi::class)
+@file:OptIn(ExperimentalSerializationApi::class, ExperimentalUuidApi::class)
 
 package com.vultisig.wallet.ui.models.keysign
 
@@ -70,14 +70,14 @@ import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Locale
-import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -299,7 +299,7 @@ constructor(
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
     private val vaultId: String = args.vaultId
     private val qrBase64: String = args.qr
-    private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
+    private var _currentVault: Vault = Vault(id = Uuid.random().toString(), "temp vault")
     private val _currentState =
         MutableStateFlow<JoinKeysignState>(JoinKeysignState.DiscoveringSessionID)
     /** Read-only view of the join-keysign flow state the screen observes. */
@@ -388,7 +388,6 @@ constructor(
         setScanResult(qrBase64)
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     fun setScanResult(qrBase64: String) {
         viewModelScope.launch {
             transactionHistoryData = null

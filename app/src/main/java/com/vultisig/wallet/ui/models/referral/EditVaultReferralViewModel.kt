@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.referral
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -41,8 +43,9 @@ import java.math.BigInteger
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.UUID
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -187,7 +190,7 @@ constructor(
 
     fun onSelectPayoutAsset() {
         viewModelScope.launch {
-            val requestId = UUID.randomUUID().toString()
+            val requestId = Uuid.random().toString()
             navigator.route(
                 Route.ReferralPayoutAsset(
                     requestId = requestId,
@@ -303,7 +306,7 @@ constructor(
 
                 val tx =
                     DepositTransaction(
-                        id = UUID.randomUUID().toString(),
+                        id = Uuid.random().toString(),
                         vaultId = vaultId,
                         srcToken = account.token,
                         srcAddress = address,

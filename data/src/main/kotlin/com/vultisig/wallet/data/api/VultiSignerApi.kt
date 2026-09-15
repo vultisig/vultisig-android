@@ -18,7 +18,6 @@ import io.ktor.client.request.setBody
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 internal interface VultiSignerApi {
 
@@ -82,7 +81,6 @@ internal class VultiSignerApiImpl @Inject constructor(private val http: HttpClie
         http.post("$URL/batch/reshare") { setBody(request) }.throwIfUnsuccessful()
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     override suspend fun get(publicKeyEcdsa: String, password: String) {
         http
             .get("$URL/get/$publicKeyEcdsa") {

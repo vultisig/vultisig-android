@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.api.ThorChainApi
@@ -24,10 +26,11 @@ import com.vultisig.wallet.data.swap.limit.thorchainMemoAssetChainPrefix
 import com.vultisig.wallet.data.swap.limit.toThorchainFixedPoint
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
@@ -209,7 +212,7 @@ constructor(
         return RegularSwapTransaction(
             limitOrderTargetPrice = params.targetPrice,
             limitOrderExpiryHours = params.expiryHours,
-            id = UUID.randomUUID().toString(),
+            id = Uuid.random().toString(),
             vaultId = params.vaultId,
             srcToken = srcToken,
             srcTokenValue = params.srcTokenValue,

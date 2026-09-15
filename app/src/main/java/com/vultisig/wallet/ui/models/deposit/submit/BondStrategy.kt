@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -20,7 +22,8 @@ import com.vultisig.wallet.ui.models.deposit.bondLpUnitsCeiling
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigInteger
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /** Builds a Bond [DepositTransaction] for THORChain or MayaChain. */
 internal class BondStrategy(
@@ -183,7 +186,7 @@ internal class BondStrategy(
         val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
 
         return DepositTransaction(
-            id = UUID.randomUUID().toString(),
+            id = Uuid.random().toString(),
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,

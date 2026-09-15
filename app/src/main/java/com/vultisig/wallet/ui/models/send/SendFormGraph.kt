@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -78,7 +76,6 @@ import wallet.core.jni.proto.Bitcoin
  * methods (`setAddressFromQrCode`, `onAutoCompound`, `openAddressBook`) live in the delegates that
  * already own the collaborators they call, not here.
  */
-@ExperimentalStdlibApi
 internal class SendFormGraph(
     private val scope: CoroutineScope,
     private val navigator: Navigator<Destination>,

@@ -187,7 +187,6 @@ class SecurityScannerTransactionFactory(
         )
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     private suspend fun createSOLSecurityScannerTransaction(
         transaction: Transaction
     ): SecurityScannerTransaction = coroutineScope {

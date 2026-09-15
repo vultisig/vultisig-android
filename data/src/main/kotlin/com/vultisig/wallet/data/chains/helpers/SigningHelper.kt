@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
@@ -34,11 +32,9 @@ import wallet.core.jni.EthereumAbi
 object SigningHelper {
     private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun getKeysignMessages(messagePayload: CustomMessagePayload): List<String> =
         getKeysignMessages(messagePayload, typedDataHasher = EthereumAbi::encodeTyped)
 
-    @OptIn(ExperimentalStdlibApi::class)
     internal fun getKeysignMessages(
         messagePayload: CustomMessagePayload,
         typedDataHasher: (String) -> ByteArray?,
@@ -87,7 +83,6 @@ object SigningHelper {
         return listOf(bytes.toHexString())
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     private fun getKeysignMessagesForTypedData(
         message: String,
         hashFn: (String) -> ByteArray?,

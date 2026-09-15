@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.governance
 
 import androidx.annotation.StringRes
@@ -30,9 +32,10 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.math.roundToInt
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -294,7 +297,7 @@ constructor(
 
             val tx =
                 DepositTransaction(
-                    id = UUID.randomUUID().toString(),
+                    id = Uuid.random().toString(),
                     vaultId = vaultId,
                     srcToken = coin,
                     srcAddress = coin.address,

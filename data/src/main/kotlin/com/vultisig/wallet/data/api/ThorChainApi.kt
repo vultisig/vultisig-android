@@ -68,7 +68,6 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -464,7 +463,6 @@ constructor(
         return response.bodyOrThrow<ThorchainConstantsResponse>()
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     override suspend fun getRujiMergeBalances(address: String): List<MergeAccount> {
         val accountBase64 = Base64.encode("$RUJI_ACCOUNT_PREFIX$address".toByteArray())
         val query = RUJI_MERGE_QUERY.format(accountBase64)
@@ -484,7 +482,6 @@ constructor(
         return response.data?.node?.merge?.accounts ?: emptyList()
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     override suspend fun getRujiStakeBalance(address: String): RujiStakeBalances {
         val accountBase64 = Base64.encode("$RUJI_ACCOUNT_PREFIX$address".toByteArray())
         val query = RUJI_STAKE_QUERY.format(accountBase64)

@@ -17,7 +17,6 @@ import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.proto.Cosmos
 
-@OptIn(ExperimentalStdlibApi::class)
 class ThorchainSwapHelper {
     private fun getTicker(coin: Coin): String {
         return if (coin.ticker.startsWith("x/", true)) {

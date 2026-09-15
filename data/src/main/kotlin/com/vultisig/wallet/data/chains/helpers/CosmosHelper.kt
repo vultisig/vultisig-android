@@ -32,7 +32,6 @@ import wallet.core.jni.proto.Cosmos
 import wallet.core.jni.proto.Cosmos.Amount
 import wallet.core.jni.proto.TransactionCompiler
 
-@OptIn(ExperimentalStdlibApi::class)
 class CosmosHelper(
     private val coinType: CoinType,
     private val denom: String,

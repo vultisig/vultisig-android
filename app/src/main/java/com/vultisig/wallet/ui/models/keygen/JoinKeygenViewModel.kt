@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalEncodingApi::class, ExperimentalSerializationApi::class)
+@file:OptIn(ExperimentalSerializationApi::class)
 
 package com.vultisig.wallet.ui.models.keygen
 
@@ -46,7 +46,6 @@ import java.net.Inet4Address
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

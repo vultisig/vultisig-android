@@ -965,7 +965,6 @@ constructor(
         }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     private fun calculateCustomMessageSignature(keysignResp: KeysignResponse) {
         if (customMessagePayload == null) return
         val signature =
