@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.data.qbtc
 
 import com.vultisig.wallet.data.api.SessionApi
@@ -14,9 +16,10 @@ import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
 import wallet.core.jni.CoinType
@@ -83,7 +86,7 @@ constructor(
 
     override suspend fun run(input: QbtcClaimBtcRoundInput): QbtcClaimBtcRoundResult {
         val serverUrl = Endpoints.VULTISIG_RELAY_URL
-        val sessionId = UUID.randomUUID().toString()
+        val sessionId = Uuid.random().toString()
         val encryptionKeyHex = Utils.encryptionKeyHex
         val localPartyId = input.vault.localPartyID
 

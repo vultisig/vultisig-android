@@ -1,10 +1,13 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.OldJsonVault
 import com.vultisig.wallet.data.models.Vault
-import java.util.UUID
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -15,7 +18,7 @@ internal class VaultFromOldJsonMapperImpl @Inject constructor(private val json: 
     VaultFromOldJsonMapper {
     override fun invoke(vault: OldJsonVault): Vault {
         return Vault(
-            id = vault.id ?: UUID.randomUUID().toString(),
+            id = vault.id ?: Uuid.random().toString(),
             name = vault.name,
             pubKeyECDSA = vault.pubKeyECDSA,
             pubKeyEDDSA = vault.pubKeyEdDSA,

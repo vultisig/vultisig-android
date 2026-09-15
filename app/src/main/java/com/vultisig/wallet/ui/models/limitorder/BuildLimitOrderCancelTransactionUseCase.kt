@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.limitorder
 
 import com.vultisig.wallet.data.api.ThorChainApi
@@ -19,9 +21,10 @@ import com.vultisig.wallet.data.swap.limit.limitOrderCancelLocalDustFloor
 import com.vultisig.wallet.data.swap.limit.thorchainMemoAssetChainPrefix
 import com.vultisig.wallet.ui.models.deposit.DepositGasFeeHelper
 import java.math.BigInteger
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import wallet.core.jni.proto.Common.SigningError
@@ -164,7 +167,7 @@ constructor(
             depositGasFeeHelper.getFeesFiatValue(sourceChain, specific, gasFee, signingCoin)
 
         return DepositTransaction(
-            id = UUID.randomUUID().toString(),
+            id = Uuid.random().toString(),
             vaultId = vaultId,
             srcToken = signingCoin,
             srcAddress = signingCoin.address,

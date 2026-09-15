@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.solanastaking
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -30,8 +32,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.util.UUID
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -275,7 +278,7 @@ constructor(
 
             val depositTx =
                 DepositTransaction(
-                    id = UUID.randomUUID().toString(),
+                    id = Uuid.random().toString(),
                     vaultId = route.vaultId,
                     srcToken = solCoin,
                     srcAddress = solCoin.address,

@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalSerializationApi::class)
+@file:OptIn(ExperimentalSerializationApi::class, ExperimentalUuidApi::class)
 
 package com.vultisig.wallet.data.usecases
 
@@ -13,8 +13,9 @@ import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
 import com.vultisig.wallet.data.models.proto.v1.toSigningLibType
 import com.vultisig.wallet.data.utils.runCatchingCancellable
 import io.ktor.util.decodeBase64Bytes
-import java.util.UUID
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.json.Json
@@ -138,7 +139,7 @@ constructor(
 
     private fun VaultProto.toDomain(): Vault =
         Vault(
-            id = UUID.randomUUID().toString(),
+            id = Uuid.random().toString(),
             name = name,
             pubKeyECDSA = publicKeyEcdsa,
             pubKeyEDDSA = publicKeyEddsa,

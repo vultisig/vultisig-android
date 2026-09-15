@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -14,7 +16,8 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.first
 
 /** Builds an Add-Cacao-Pool [DepositTransaction] depositing CACAO into the Maya pool. */
@@ -81,7 +84,7 @@ internal class AddCacaoPoolStrategy(
         val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
 
         return DepositTransaction(
-            id = UUID.randomUUID().toString(),
+            id = Uuid.random().toString(),
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,
