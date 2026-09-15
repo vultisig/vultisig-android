@@ -1,8 +1,4 @@
-@file:OptIn(
-    ExperimentalCoroutinesApi::class,
-    ExperimentalStdlibApi::class,
-    kotlinx.coroutines.FlowPreview::class,
-)
+@file:OptIn(ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
 
 package com.vultisig.wallet.ui.models.send
 

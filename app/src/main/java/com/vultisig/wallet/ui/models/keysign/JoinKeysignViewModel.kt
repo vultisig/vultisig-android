@@ -1,8 +1,4 @@
-@file:OptIn(
-    ExperimentalSerializationApi::class,
-    ExperimentalStdlibApi::class,
-    ExperimentalUuidApi::class,
-)
+@file:OptIn(ExperimentalSerializationApi::class, ExperimentalUuidApi::class)
 
 package com.vultisig.wallet.ui.models.keysign
 
@@ -77,7 +73,6 @@ import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -393,7 +388,6 @@ constructor(
         setScanResult(qrBase64)
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     fun setScanResult(qrBase64: String) {
         viewModelScope.launch {
             transactionHistoryData = null

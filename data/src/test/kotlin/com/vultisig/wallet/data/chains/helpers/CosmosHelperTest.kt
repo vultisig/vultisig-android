@@ -18,7 +18,6 @@ import wallet.core.jni.proto.Cosmos
  * matches neither prefix) fell through to the chain's fee denom `uosmo` and signed a transfer of
  * OSMO instead of ION.
  */
-@OptIn(ExperimentalStdlibApi::class)
 class CosmosHelperTest {
 
     private val helper = CosmosHelper(coinType = CoinType.OSMOSIS, denom = "uosmo")

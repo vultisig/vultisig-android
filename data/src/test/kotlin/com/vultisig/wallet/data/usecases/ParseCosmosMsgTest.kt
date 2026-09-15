@@ -1,10 +1,9 @@
-@file:OptIn(ExperimentalEncodingApi::class, ExperimentalSerializationApi::class)
+@file:OptIn(ExperimentalSerializationApi::class)
 
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

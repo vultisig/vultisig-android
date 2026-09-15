@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class, ExperimentalEncodingApi::class)
-
 package com.vultisig.wallet.data.qbtc
 
 import com.vultisig.wallet.data.api.SessionApi
@@ -10,7 +8,6 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException

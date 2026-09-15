@@ -92,7 +92,6 @@ class ERC20Helper(
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun getSignedTransaction(
         keysignPayload: KeysignPayload,
         signatures: Map<String, tss.KeysignResponse>,

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalEncodingApi::class, ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.data.keygen
 
 import com.silencelaboratories.goschnorr.BufferUtilJNI
@@ -37,7 +35,6 @@ import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

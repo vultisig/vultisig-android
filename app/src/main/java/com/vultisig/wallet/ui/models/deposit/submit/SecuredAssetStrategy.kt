@@ -221,7 +221,6 @@ internal class SecuredAssetStrategy(
      * Replaces the UTXOs in [specific] with those selected by the cached Bitcoin transaction plan
      * for UTXO chains, leaving non-UTXO chains and missing plans untouched.
      */
-    @OptIn(kotlin.ExperimentalStdlibApi::class)
     private fun selectUtxosIfNeeded(
         chain: Chain,
         specific: BlockChainSpecificAndUtxo,

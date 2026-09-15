@@ -1,11 +1,8 @@
-@file:OptIn(ExperimentalEncodingApi::class)
-
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException

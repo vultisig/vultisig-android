@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalStdlibApi::class)
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.vultisig.wallet.ui.screens.send
 

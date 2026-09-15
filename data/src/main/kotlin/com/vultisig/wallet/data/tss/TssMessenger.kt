@@ -10,13 +10,11 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-@OptIn(ExperimentalEncodingApi::class)
 class TssMessenger(
     serverAddress: String,
     private val sessionID: String,

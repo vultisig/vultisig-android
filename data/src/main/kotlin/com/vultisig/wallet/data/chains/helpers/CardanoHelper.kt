@@ -27,7 +27,6 @@ import wallet.core.jni.proto.Cardano
 import wallet.core.jni.proto.Cardano.TransactionPlan
 import wallet.core.jni.proto.Common.SigningError
 
-@OptIn(ExperimentalStdlibApi::class)
 object CardanoHelper {
 
     /**

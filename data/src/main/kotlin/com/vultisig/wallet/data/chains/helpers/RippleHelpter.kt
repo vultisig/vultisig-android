@@ -32,7 +32,6 @@ import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ripple
 
-@OptIn(ExperimentalStdlibApi::class)
 object RippleHelper {
 
     const val DEFAULT_EXISTENTIAL_DEPOSIT = 1000000

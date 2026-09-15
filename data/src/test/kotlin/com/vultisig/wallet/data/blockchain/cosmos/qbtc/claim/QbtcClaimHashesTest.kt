@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
 import org.junit.jupiter.api.Assertions.assertEquals
