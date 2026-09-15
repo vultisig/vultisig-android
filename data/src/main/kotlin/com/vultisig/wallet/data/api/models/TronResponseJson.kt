@@ -197,13 +197,13 @@ data class TronTransactionStatusRet(@SerialName("contractRet") val contractRet: 
 
 fun TronAccountResourceJson.calculateResourceStats(): ResourceUsage {
     // TRON never combines the pools: a transfer must fit in the staked pool or the free pool
-    // alone (see TronFeeService.coversBandwidth), so available/total must reflect the single
-    // pool with the most headroom, not the sum of both.
+    // alone (see TronFeeService.coversBandwidth), so available bandwidth is whichever pool has
+    // the most headroom, not the sum of both. The total stays the sum of both pools' limits so
+    // the denominator doesn't flip identity (and hide the other pool) as headroom shifts.
     val freeRemaining = (freeNetLimit - freeNetUsed).coerceAtLeast(0L)
     val stakedRemaining = (netLimit - netUsed).coerceAtLeast(0L)
-    val usesFreePool = freeRemaining >= stakedRemaining
-    val availableBandwidth = if (usesFreePool) freeRemaining else stakedRemaining
-    val totalBandwidth = if (usesFreePool) freeNetLimit else netLimit
+    val availableBandwidth = maxOf(freeRemaining, stakedRemaining)
+    val totalBandwidth = freeNetLimit + netLimit
 
     val totalEnergy = energyLimit
     val usedEnergy = energyUsed

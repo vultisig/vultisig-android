@@ -18,6 +18,7 @@ internal class TronResponseJsonTest {
         val stats = resource.calculateResourceStats()
 
         assertEquals(200, stats.availableBandwidth)
+        assertEquals(1000, stats.totalBandwidth)
     }
 
     @Test
@@ -27,7 +28,10 @@ internal class TronResponseJsonTest {
             netLimit = 0, netUsed = 0,
         )
 
-        assertEquals(600, resource.calculateResourceStats().availableBandwidth)
+        val stats = resource.calculateResourceStats()
+
+        assertEquals(600, stats.availableBandwidth)
+        assertEquals(600, stats.totalBandwidth)
     }
 
     @Test
@@ -37,6 +41,9 @@ internal class TronResponseJsonTest {
             netLimit = 600, netUsed = 0,
         )
 
-        assertEquals(600, resource.calculateResourceStats().availableBandwidth)
+        val stats = resource.calculateResourceStats()
+
+        assertEquals(600, stats.availableBandwidth)
+        assertEquals(600, stats.totalBandwidth)
     }
 }
