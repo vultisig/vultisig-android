@@ -261,7 +261,7 @@
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA ključ:</string>
     <string name="vault_settings_delete_vault_id">ID uređaja:</string>
     <string name="verify_transaction_memo_title">dopis</string>
-    <string name="verify_transaction_allow_death_warning">Ovaj prijenos smije isprazniti račun pošiljatelja. Ako preostalo stanje padne ispod egzistencijalnog depozita, račun će biti deaktiviran (požnjet) i svi preostali %1$s bit će izgubljeni.</string>
+    <string name="verify_transaction_allow_death_warning">Ovaj prijenos može isprazniti račun pošiljatelja. Ako preostalo stanje padne ispod egzistencijalnog depozita, račun će biti deaktiviran (požnjet) i svi preostali %1$s bit će izgubljeni.</string>
     <string name="vault_settings_delete_vault_value">Vault Vrijednost:</string>
     <string name="join_keysign_wrong_reshare">Pogrešan ReShare</string>
     <string name="swap_screen_provider_title">Davatelj</string>
