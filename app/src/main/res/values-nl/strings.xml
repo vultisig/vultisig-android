@@ -261,6 +261,7 @@
     <string name="insufficient_utxos_error">Onvoldoende beschikbare UTXO\'s om het geselecteerde bedrag te dekken. Voeg meer fondsen toe of verlaag het bedrag dat u verzendt</string>
     <string name="swap_screen_invalid_vault">De transactie zal waarschijnlijk mislukken, de kluis kon niet worden geladen.</string>
     <string name="verify_transaction_memo_title">Memo</string>
+    <string name="verify_transaction_allow_death_warning">Deze overboeking mag de rekening van de afzender leegmaken. Als het resterende saldo onder de Existential Deposit zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende %1$s verloren.</string>
     <string name="join_keysign_wrong_reshare">Verkeerde ReShare</string>
     <string name="swap_screen_provider_title">Leverancier</string>
     <string name="swap_form_minimum_amount">Wisselbedrag te klein. Aanbevolen bedrag: %1$s %2$s</string>

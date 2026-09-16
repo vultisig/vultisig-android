@@ -254,6 +254,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                 transactionVersion = it.transactionVersion,
                                 genesisHash = it.genesisHash,
                                 gas = it.gas,
+                                allowDeath = it.allowDeath,
                             )
                         }
 

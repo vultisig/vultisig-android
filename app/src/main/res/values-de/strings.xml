@@ -261,6 +261,7 @@
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA Schlüssel:</string>
     <string name="vault_settings_delete_vault_id">Geräte-ID:</string>
     <string name="verify_transaction_memo_title">Memo</string>
+    <string name="verify_transaction_allow_death_warning">Diese Überweisung darf das Konto des Absenders leeren. Fällt der verbleibende Kontostand unter das Existential Deposit, wird das Konto deaktiviert (geerntet) und alle verbleibenden %1$s gehen verloren.</string>
     <string name="vault_settings_delete_vault_value">Vault Wert:</string>
     <string name="join_keysign_wrong_reshare">Falsches ReShare</string>
     <string name="swap_screen_provider_title">Anbieter</string>

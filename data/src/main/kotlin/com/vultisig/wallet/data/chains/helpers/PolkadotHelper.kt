@@ -31,7 +31,11 @@ class PolkadotHelper(private val vaultHexPublicKey: String) {
         // After Asset Hub update, even native DOT transfers use assetTransfer
         // with assetID 0 and feeAssetID 0 for native DOT
         // WalletCore respects custom callIndices when provided, so we pin them explicitly.
-        // For Asset Hub, Balances pallet is module 10, method 3 (transfer_keep_alive)
+        // For Asset Hub, Balances pallet is module 10; method 3 is transfer_keep_alive and
+        // method 0 is transfer_allow_death. Only the payload's allow_death intent selects the
+        // latter, so every signer of the payload encodes the same call.
+        val methodIndex =
+            if (polkadotSpecific.allowDeath) TRANSFER_ALLOW_DEATH else TRANSFER_KEEP_ALIVE
         val assetTransfer =
             Polkadot.Balance.AssetTransfer.newBuilder()
                 .setAssetId(0)
@@ -42,11 +46,10 @@ class PolkadotHelper(private val vaultHexPublicKey: String) {
                     Polkadot.CallIndices.newBuilder()
                         .setCustom(
                             Polkadot.CustomCallIndices.newBuilder()
-                                // Module 10 (Balances), Method 3 (transfer_keep_alive)
-                                // Aligns with SDK (sdk#548) - avoids account reaping on existential
-                                // deposit edge cases
-                                .setMethodIndex(3)
-                                .setModuleIndex(10)
+                                // keep_alive by default aligns with SDK (sdk#548) - avoids account
+                                // reaping on existential deposit edge cases
+                                .setMethodIndex(methodIndex)
+                                .setModuleIndex(BALANCES_PALLET)
                                 .build()
                         )
                         .build()
@@ -143,6 +146,9 @@ class PolkadotHelper(private val vaultHexPublicKey: String) {
     }
 
     companion object {
+        private const val BALANCES_PALLET = 10
+        private const val TRANSFER_ALLOW_DEATH = 0
+        private const val TRANSFER_KEEP_ALIVE = 3
         const val DEFAULT_FEE_PLANCKS = 250_000_000L
         // Native DOT transfers move through Asset Hub (see getPreSignedInputData), whose
         // existential deposit for the native asset is 0.01 DOT, not the Relay Chain's legacy 1 DOT.

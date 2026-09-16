@@ -261,6 +261,7 @@
     <string name="vault_settings_delete_vault_eddsa_key">Chiave EdDSA:</string>
     <string name="vault_settings_delete_vault_id">ID del dispositivo:</string>
     <string name="verify_transaction_memo_title">Promemoria</string>
+    <string name="verify_transaction_allow_death_warning">Questo trasferimento può svuotare l\'account del mittente. Se il saldo rimanente scende sotto il deposito esistenziale, l\'account verrà disattivato (raccolto) e tutti i %1$s rimanenti andranno persi.</string>
     <string name="vault_settings_delete_vault_value">Vault Valore:</string>
     <string name="join_keysign_wrong_reshare">Condivisione errata</string>
     <string name="swap_screen_provider_title">Fornitrice</string>

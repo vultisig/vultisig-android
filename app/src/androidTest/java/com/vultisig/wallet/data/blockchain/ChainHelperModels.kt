@@ -182,6 +182,7 @@ data class PolkadotSpecific(
     @SerialName("transaction_version") val transactionVersion: Int,
     @SerialName("genesis_hash") val genesisHash: String,
     @SerialName("gas") val gas: Long,
+    @SerialName("allow_death") val allowDeath: Boolean = false,
 )
 
 @Serializable

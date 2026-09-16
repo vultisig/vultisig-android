@@ -60,7 +60,7 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
                 ?: throw IllegalArgumentException("Invalid blockChainSpecific")
 
-        val callData = buildCallData(keysignPayload)
+        val callData = buildCallData(keysignPayload, polkadotSpecific)
         val signedExtra = buildSignedExtra(polkadotSpecific)
         val signerPubkey = publicKey.data()
 
@@ -76,7 +76,7 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
                 ?: throw IllegalArgumentException("Invalid blockChainSpecific")
 
-        val callData = buildCallData(keysignPayload)
+        val callData = buildCallData(keysignPayload, polkadotSpecific)
         val signedExtra = buildSignedExtra(polkadotSpecific)
         val dummySigner = ByteArray(32)
         val dummySignature = ByteArray(64)
@@ -90,15 +90,22 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
                 ?: throw IllegalArgumentException("Invalid blockChainSpecific")
 
-        val callData = buildCallData(keysignPayload)
+        val callData = buildCallData(keysignPayload, polkadotSpecific)
         val signedExtra = buildSignedExtra(polkadotSpecific)
         val additionalSigned = buildAdditionalSigned(polkadotSpecific)
 
         return callData + signedExtra + additionalSigned
     }
 
-    private fun buildCallData(keysignPayload: KeysignPayload): ByteArray =
-        buildTransferCallData(ss58Decode(keysignPayload.toAddress), keysignPayload.toAmount)
+    private fun buildCallData(
+        keysignPayload: KeysignPayload,
+        specific: BlockChainSpecific.Polkadot,
+    ): ByteArray =
+        buildTransferCallData(
+            destAccountId = ss58Decode(keysignPayload.toAddress),
+            amount = keysignPayload.toAmount,
+            allowDeath = specific.allowDeath,
+        )
 
     /**
      * Signed extensions (extra) in the extrinsic body. Era | Nonce(compact) | Tip(compact, 0) |
@@ -153,6 +160,7 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
 
     companion object {
         private const val BALANCES_PALLET: Byte = 5
+        private const val TRANSFER_ALLOW_DEATH: Byte = 0
         private const val TRANSFER_KEEP_ALIVE: Byte = 3
         private const val MULTI_ADDRESS_ID: Byte = 0x00
         private const val MULTI_SIGNATURE_ED25519: Byte = 0x00
@@ -189,24 +197,29 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
             accountId.contentEquals(ZERO_ACCOUNT_ID)
 
         /**
-         * SCALE-encodes `Balances.transfer_keep_alive(dest, value)`: [pallet:5, call:3] ++
-         * MultiAddress::Id(0x00) ++ dest(32B) ++ compact(amount).
+         * SCALE-encodes `Balances.transfer_keep_alive(dest, value)`, or `transfer_allow_death` when
+         * [allowDeath] is set: [pallet:5, call:3|0] ++ MultiAddress::Id(0x00) ++ dest(32B) ++
+         * compact(amount).
          *
-         * keep_alive, not allow_death: allow_death lets a transfer drop the sender's free balance
-         * under [DEFAULT_EXISTENTIAL_DEPOSIT], at which point the runtime reaps the account and
-         * destroys what is left. keep_alive makes the runtime refuse that transfer instead, so an
-         * ordinary TAO send cannot reap the sender. A MAX send still settles because the deposit is
-         * held back from the selectable balance rather than sent.
+         * keep_alive by default: allow_death lets a transfer drop the sender's free balance under
+         * [DEFAULT_EXISTENTIAL_DEPOSIT], at which point the runtime reaps the account and destroys
+         * what is left. keep_alive makes the runtime refuse that transfer instead, so an ordinary
+         * TAO send cannot reap the sender. A MAX send still settles because the deposit is held
+         * back from the selectable balance rather than sent.
          *
-         * Nothing signs allow_death. Emptying an account is only correct when the user asks for it
-         * explicitly, and `PolkadotSpecific` carries no flag to express that intent: every
-         * co-signer rebuilds this call data from the shared payload, so the initiator cannot make
-         * the choice on its own.
+         * Emptying an account is only correct when the user asks for it explicitly, and every
+         * co-signer rebuilds this call data from the shared payload, so that intent travels as
+         * `PolkadotSpecific.allow_death`: only the payload field selects the call, never the amount
+         * or the balance, and an unset field keeps the keep-alive bytes.
          *
          * Takes the decoded 32-byte AccountId rather than the SS58 string so the encoding stays off
          * the WalletCore JNI and can be unit tested, the same reasoning as [BURN_ADDRESS].
          */
-        fun buildTransferCallData(destAccountId: ByteArray, amount: BigInteger): ByteArray {
+        fun buildTransferCallData(
+            destAccountId: ByteArray,
+            amount: BigInteger,
+            allowDeath: Boolean = false,
+        ): ByteArray {
             require(destAccountId.size == 32) {
                 "Bittensor AccountId must be 32 bytes, got ${destAccountId.size}"
             }
@@ -220,7 +233,7 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
 
             val out = ByteArrayOutputStream()
             out.write(BALANCES_PALLET.toInt())
-            out.write(TRANSFER_KEEP_ALIVE.toInt())
+            out.write((if (allowDeath) TRANSFER_ALLOW_DEATH else TRANSFER_KEEP_ALIVE).toInt())
             out.write(MULTI_ADDRESS_ID.toInt()) // MultiAddress::Id
             out.write(destAccountId)
             out.write(compactEncode(amount))

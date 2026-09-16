@@ -62,6 +62,10 @@ constructor(
             (from.blockChainSpecific as? BlockChainSpecific.Ripple)?.transactionType ==
                 TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET
 
+        // Only the payload field says so — the amount and the balance are never consulted.
+        val emptiesSenderAccount =
+            (from.blockChainSpecific as? BlockChainSpecific.Polkadot)?.allowDeath == true
+
         val memo =
             when {
                 from.token.chain == Chain.Ripple && from.memo == destinationTag -> null
@@ -93,6 +97,7 @@ constructor(
             memo = memo,
             headerTitleRes = headerTitleRes,
             isRippleTrustSet = isRippleTrustSet,
+            emptiesSenderAccount = emptiesSenderAccount,
             rippleTrustSet =
                 if (isRippleTrustSet) rippleTrustSetDisplay(from.token, from.tokenValue.value)
                 else null,

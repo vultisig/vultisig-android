@@ -1189,7 +1189,9 @@ class ChainHelpersTest {
         // preserving the cross-signer agreement required by #5421 and vultisig-sdk#1585.
         // -3: kujira.json, dropped with the chain — the other corpora still carry it, so the sync
         // check reports it as missing here rather than as a hash disagreement.
-        private const val EXPECTED_CASE_COUNT = 86
+        // +2: "Send TAO (allow_death)" / "Send DOT (allow_death)" — the keep-alive vectors with
+        // only the Balances call index changed, pinned alongside vultisig-sdk's copies.
+        private const val EXPECTED_CASE_COUNT = 88
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"
