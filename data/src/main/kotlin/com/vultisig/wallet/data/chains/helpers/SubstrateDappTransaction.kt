@@ -43,6 +43,12 @@ data class SubstrateDappTransfer(val recipient: String, val amount: BigInteger)
 data class SubstrateDappTx(
     val callIndex: String?,
     val transfer: SubstrateDappTransfer?,
+    /**
+     * True when the call is a Balances transfer by its indices but its recipient / value could not
+     * be read (an address form other than `MultiAddress::Id`, a non-canonical compact, trailing
+     * bytes). The card then warns and leaves the raw call data as the only reading.
+     */
+    val isTransferUnreadable: Boolean,
     val fields: List<SubstrateDappTxField>,
     val rawJson: String,
 )
@@ -64,8 +70,9 @@ object SubstrateDappTransactionDecoder {
         ss58Encode: (ByteArray, Chain) -> String = ::walletCoreSs58,
     ): SubstrateDappTx {
         val call = payload.methodBytes()
+        val reading = SubstrateTransferCallReader.readForDisplay(call)
         val transfer =
-            SubstrateTransferCallReader.read(call)?.let {
+            (reading as? SubstrateCallReading.Transfer)?.call?.let {
                 SubstrateDappTransfer(
                     recipient = ss58Encode(it.destination, chain),
                     amount = it.amount,
@@ -97,6 +104,7 @@ object SubstrateDappTransactionDecoder {
         return SubstrateDappTx(
             callIndex = payload.callIndexHex(),
             transfer = transfer,
+            isTransferUnreadable = reading is SubstrateCallReading.Unreadable,
             fields = fields,
             rawJson = payload.rawJson,
         )

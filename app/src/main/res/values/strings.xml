@@ -1411,6 +1411,7 @@
     <string name="substrate_field_transaction_version">Transaction version</string>
     <string name="substrate_field_genesis_hash">Genesis hash</string>
     <string name="substrate_field_block_hash">Block hash</string>
+    <string name="substrate_transfer_unreadable">This Balances call could not be decoded. Review the call data before signing.</string>
     <string name="sui_sender">From</string>
     <string name="sui_gas_budget">Gas Budget: %1$s SUI</string>
     <string name="sui_gas_price">Gas Price: %1$s MIST</string>

@@ -1679,6 +1679,7 @@
     <string name="substrate_field_transaction_version">交易版本</string>
     <string name="substrate_field_genesis_hash">创世哈希</string>
     <string name="substrate_field_block_hash">区块哈希</string>
+    <string name="substrate_transfer_unreadable">无法解码此 Balances 调用。签名前请检查调用数据。</string>
     <string name="sui_sender">从</string>
     <string name="sui_gas_budget">Gas 预算：%1$s SUI</string>
     <string name="sui_gas_price">Gas 价格：%1$s MIST</string>

@@ -42,7 +42,20 @@ class SubstrateDappTransactionDecoderTest {
         val tx = decode("0x0700" + ALICE)
 
         tx.transfer.shouldBeNull()
+        tx.isTransferUnreadable shouldBe false
         tx.callIndex shouldBe "0x0700"
+    }
+
+    @Test
+    fun `a transfer the reader cannot follow is flagged instead of thrown`() {
+        // MultiAddress::Address32 recipient — a legitimate transfer, just not one this reader
+        // decodes.
+        val tx = decode("0x050302" + ALICE + "0700e40b5402")
+
+        tx.transfer.shouldBeNull()
+        tx.isTransferUnreadable shouldBe true
+        tx.callIndex shouldBe "0x0503"
+        tx.rawJson.isNotEmpty() shouldBe true
     }
 
     @Test

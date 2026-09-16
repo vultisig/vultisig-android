@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.SubstrateDappTransactionDecoder
-import com.vultisig.wallet.data.chains.helpers.SubstrateTransferCallReader
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.GasFeeParams
@@ -96,21 +95,25 @@ constructor(
         // wire `toAddress` / `toAmount` are the initiator's display copy and are never trusted.
         val substrateDapp = payload.substrateDappPayload
         val substrateTransfer =
-            substrateDapp?.let { dapp ->
-                SubstrateTransferCallReader.read(dapp.methodBytes())?.let {
-                    SubstrateDappTransactionDecoder.walletCoreSs58(it.destination, chain) to
-                        it.amount
+            substrateDapp
+                ?.let {
+                    SubstrateDappTransactionDecoder.decode(
+                        payload = it,
+                        chain = chain,
+                        decimals = payloadToken.decimal,
+                        ticker = payloadToken.ticker,
+                    )
                 }
-            }
+                ?.transfer
         val dstAddress =
             when {
                 substrateDapp == null -> payload.toAddress
-                else -> substrateTransfer?.first.orEmpty()
+                else -> substrateTransfer?.recipient.orEmpty()
             }
         val amount =
             when {
                 substrateDapp == null -> payload.toAmount
-                else -> substrateTransfer?.second ?: BigInteger.ZERO
+                else -> substrateTransfer?.amount ?: BigInteger.ZERO
             }
 
         val tokenValue =

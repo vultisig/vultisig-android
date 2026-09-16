@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import java.math.BigInteger
 import org.junit.jupiter.api.Test
 
@@ -113,6 +114,24 @@ class SubstrateTransferCallReaderTest {
             )
         }
         shouldThrow<IllegalStateException> { SubstrateTransferCallReader.read(byteArrayOf(5)) }
+    }
+
+    // Verify and the done screen read through this: what the strict reader refuses is shown raw
+    // under a warning instead of failing the join, while signing never decodes the call at all.
+    @Test
+    fun `readForDisplay turns a refusal into Unreadable and keeps the other two readings`() {
+        SubstrateTransferCallReader.readForDisplay(transferCall(3, BigInteger.TEN))
+            .shouldBeInstanceOf<SubstrateCallReading.Transfer>()
+            .call
+            .amount shouldBe BigInteger.TEN
+        SubstrateTransferCallReader.readForDisplay(byteArrayOf(7, 2) + ALICE) shouldBe
+            SubstrateCallReading.NotATransfer
+        // A transfer to a MultiAddress::Address32 recipient: a real call this reader cannot follow.
+        SubstrateTransferCallReader.readForDisplay(
+            byteArrayOf(BALANCES_PALLET, 3, 0x02) + ALICE
+        ) shouldBe SubstrateCallReading.Unreadable
+        SubstrateTransferCallReader.readForDisplay(byteArrayOf(5)) shouldBe
+            SubstrateCallReading.Unreadable
     }
 
     private companion object {

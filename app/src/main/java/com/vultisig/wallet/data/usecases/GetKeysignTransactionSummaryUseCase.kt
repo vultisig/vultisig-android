@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
+import com.vultisig.wallet.data.chains.helpers.SubstrateCallReading
 import com.vultisig.wallet.data.chains.helpers.SubstrateTransferCallReader
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
@@ -76,10 +77,11 @@ constructor(
                     // transfer has an amount the banner can name, read from those bytes rather than
                     // the wire toAmount; any other call falls back to the chain's label.
                     substrateDapp != null -> {
-                        val transfer = SubstrateTransferCallReader.read(substrateDapp.methodBytes())
-                        if (transfer != null) {
+                        val reading =
+                            SubstrateTransferCallReader.readForDisplay(substrateDapp.methodBytes())
+                        if (reading is SubstrateCallReading.Transfer) {
                             KeysignTransactionSummary.Send(
-                                tokenValue = TokenValue(transfer.amount, payload.coin)
+                                tokenValue = TokenValue(reading.call.amount, payload.coin)
                             )
                         } else {
                             KeysignTransactionSummary.DappTransaction(

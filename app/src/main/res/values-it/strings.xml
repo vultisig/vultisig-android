@@ -1350,6 +1350,7 @@
     <string name="substrate_field_transaction_version">Versione transazione</string>
     <string name="substrate_field_genesis_hash">Hash genesis</string>
     <string name="substrate_field_block_hash">Hash del blocco</string>
+    <string name="substrate_transfer_unreadable">Impossibile decodificare questa chiamata Balances. Controlla i dati della chiamata prima di firmare.</string>
     <string name="sui_sender">Da</string>
     <string name="sui_gas_budget">Budget gas: %1$s SUI</string>
     <string name="sui_gas_price">Prezzo del gas: %1$s MIST</string>

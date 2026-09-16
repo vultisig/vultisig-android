@@ -1377,6 +1377,7 @@
     <string name="substrate_field_transaction_version">거래 버전</string>
     <string name="substrate_field_genesis_hash">제네시스 해시</string>
     <string name="substrate_field_block_hash">블록 해시</string>
+    <string name="substrate_transfer_unreadable">이 Balances 호출을 디코딩할 수 없습니다. 서명하기 전에 호출 데이터를 확인하세요.</string>
     <string name="sui_sender">보내는 주소</string>
     <string name="sui_gas_budget">가스 예산: %1$s SUI</string>
     <string name="sui_gas_price">가스 가격: %1$s MIST</string>

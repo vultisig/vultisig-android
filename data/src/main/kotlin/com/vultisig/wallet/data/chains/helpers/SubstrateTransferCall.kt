@@ -1,9 +1,24 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import java.math.BigInteger
+import timber.log.Timber
 
 /** The recipient and value of a Balances transfer read out of a dApp's SCALE call bytes. */
 data class SubstrateTransferCall(val destination: ByteArray, val amount: BigInteger)
+
+/**
+ * What a display surface learned about a dApp's call bytes — see
+ * [SubstrateTransferCallReader.readForDisplay].
+ */
+sealed interface SubstrateCallReading {
+    data class Transfer(val call: SubstrateTransferCall) : SubstrateCallReading
+
+    /** A call outside the two Balances transfers; there is no amount to show. */
+    data object NotATransfer : SubstrateCallReading
+
+    /** Balances-transfer-shaped bytes the strict reader refused — shown raw, under a warning. */
+    data object Unreadable : SubstrateCallReading
+}
 
 /**
  * Reads the recipient and value of a `Balances.transfer_allow_death` / `transfer_keep_alive` out of
@@ -36,6 +51,22 @@ object SubstrateTransferCallReader {
 
     /** Balance is `u128` on both runtimes; a wider compact is not a balance either side decodes. */
     private const val MAX_BIG_INTEGER_COMPACT_BYTES = 16
+
+    /**
+     * [read] for Verify and the done screen: the strict reader's refusal becomes
+     * [SubstrateCallReading.Unreadable] instead of an exception, so a payload whose transfer cannot
+     * be read (a `MultiAddress::Address32` recipient, say, or a malformed compact) still shows its
+     * raw signer payload and call data under a warning rather than failing the whole join. Signing
+     * never goes through here — it signs the call bytes as given and decodes nothing.
+     */
+    fun readForDisplay(method: ByteArray): SubstrateCallReading =
+        try {
+            read(method)?.let { SubstrateCallReading.Transfer(it) }
+                ?: SubstrateCallReading.NotATransfer
+        } catch (e: IllegalStateException) {
+            Timber.w(e, "Substrate call could not be read as a transfer; showing it raw")
+            SubstrateCallReading.Unreadable
+        }
 
     fun read(method: ByteArray): SubstrateTransferCall? {
         val reader = ByteReader(method)

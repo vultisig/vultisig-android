@@ -72,6 +72,28 @@ fun SignSubstrateDisplayView(
             }
         }
 
+        // Outside the collapsible section on purpose: a Balances call whose recipient and value
+        // could not be read has no amount hero, so the warning has to reach a co-signer who never
+        // expands the card.
+        if (tx.isTransferUnreadable) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.ic_triangle_alert,
+                    tint = Theme.v2.colors.alerts.warning,
+                    size = 16.dp,
+                )
+                Text(
+                    text = stringResource(R.string.substrate_transfer_unreadable),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.alerts.warning,
+                )
+            }
+        }
+
         AnimatedVisibility(visible = isExpanded) {
             Column(
                 modifier =
