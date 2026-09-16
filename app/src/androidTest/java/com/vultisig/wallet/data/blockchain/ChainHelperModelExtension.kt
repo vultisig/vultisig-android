@@ -265,22 +265,21 @@ fun BlockchainSpecific.toBlockChainSpecific(
             error("Specific empty $this")
         }
 
+        TokenStandard.UTXO if coin.chain == Chain.Cardano -> {
+            val cardanoSpecific = this.cardanoSpecific ?: error("CardanoSpecific empty $this")
+            BlockChainSpecific.Cardano(
+                byteFee = cardanoSpecific.byteFee,
+                sendMaxAmount = cardanoSpecific.sendMaxAmount,
+                ttl = cardanoSpecific.ttl.toULong(),
+            )
+        }
         TokenStandard.UTXO -> {
-            if (coin.chain == Chain.Cardano) {
-                val cardanoSpecific = this.cardanoSpecific ?: error("CardanoSpecific empty $this")
-                BlockChainSpecific.Cardano(
-                    byteFee = cardanoSpecific.byteFee,
-                    sendMaxAmount = cardanoSpecific.sendMaxAmount,
-                    ttl = cardanoSpecific.ttl.toULong(),
-                )
-            } else {
-                val utxoSpecific = this.utxoSpecific ?: error("Specific empty $this")
-                BlockChainSpecific.UTXO(
-                    byteFee = utxoSpecific.byteFee.toBigInteger(),
-                    sendMaxAmount = utxoSpecific.sendMaxAmount,
-                    zcashBranchId = utxoSpecific.zcashBranchId,
-                )
-            }
+            val utxoSpecific = this.utxoSpecific ?: error("Specific empty $this")
+            BlockChainSpecific.UTXO(
+                byteFee = utxoSpecific.byteFee.toBigInteger(),
+                sendMaxAmount = utxoSpecific.sendMaxAmount,
+                zcashBranchId = utxoSpecific.zcashBranchId,
+            )
         }
 
         TokenStandard.SUI -> {

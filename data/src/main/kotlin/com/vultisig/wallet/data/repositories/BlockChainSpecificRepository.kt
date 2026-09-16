@@ -278,88 +278,90 @@ constructor(
                 )
             }
 
-            TokenStandard.UTXO -> {
-                if (chain == Chain.Cardano) {
-                    val utxos = cardanoApi.getUTXOs(token)
-                    val ttl = cardanoApi.calculateDynamicTTL()
-                    val flatFee = gasFee.value.toLong()
-                    // The initiator derives the size-based fee once and transmits it as byteFee;
-                    // every co-signer then forces this exact value so the MPC sighash matches
-                    // regardless of WalletCore version. Falls back to the flat fee when the
-                    // transaction details aren't known yet (e.g. before an amount is entered) or
-                    // when planning fails.
-                    val byteFee =
-                        if (dstAddress != null && tokenAmountValue != null) {
-                            try {
-                                CardanoHelper.estimateFee(
-                                    coin = token,
-                                    toAmount = tokenAmountValue,
-                                    toAddress = dstAddress,
-                                    sendMaxAmount = isMaxAmountEnabled,
-                                    ttl = ttl.toLong(),
-                                    utxos = utxos,
-                                    memo = memo,
-                                )
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                Timber.e(e, "Cardano fee derivation failed, using flat fee")
-                                flatFee
-                            }
-                        } else {
+            TokenStandard.UTXO if chain == Chain.Cardano -> {
+                val utxos = cardanoApi.getUTXOs(token)
+                val ttl = cardanoApi.calculateDynamicTTL()
+                val flatFee = gasFee.value.toLong()
+                // The initiator derives the size-based fee once and transmits it as byteFee;
+                // every co-signer then forces this exact value so the MPC sighash matches
+                // regardless of WalletCore version. Falls back to the flat fee when the
+                // transaction details aren't known yet (e.g. before an amount is entered) or
+                // when planning fails.
+                val byteFee =
+                    if (dstAddress != null && tokenAmountValue != null) {
+                        try {
+                            CardanoHelper.estimateFee(
+                                coin = token,
+                                toAmount = tokenAmountValue,
+                                toAddress = dstAddress,
+                                sendMaxAmount = isMaxAmountEnabled,
+                                ttl = ttl.toLong(),
+                                utxos = utxos,
+                                memo = memo,
+                            )
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Timber.e(e, "Cardano fee derivation failed, using flat fee")
                             flatFee
                         }
-                    BlockChainSpecificAndUtxo(
-                        blockChainSpecific =
-                            BlockChainSpecific.Cardano(
-                                byteFee = byteFee,
-                                sendMaxAmount = isMaxAmountEnabled,
-                                ttl = ttl,
-                            ),
-                        utxos = utxos,
-                    )
-                } else if (chain == Chain.Dash) {
-                    val dashUtxos =
-                        try {
-                            dashApi.getAddressUtxos(address)
-                        } catch (e: Exception) {
-                            Timber.e(e, "Dash RPC failed, falling back to Blockchair")
-                            null
-                        }
+                    } else {
+                        flatFee
+                    }
+                BlockChainSpecificAndUtxo(
+                    blockChainSpecific =
+                        BlockChainSpecific.Cardano(
+                            byteFee = byteFee,
+                            sendMaxAmount = isMaxAmountEnabled,
+                            ttl = ttl,
+                        ),
+                    utxos = utxos,
+                )
+            }
 
-                    BlockChainSpecificAndUtxo(
-                        blockChainSpecific =
-                            BlockChainSpecific.UTXO(
-                                byteFee = gasFee.value,
-                                sendMaxAmount = isMaxAmountEnabled,
-                            ),
-                        utxos =
-                            dashUtxos?.excludingDust(chain)?.let {
-                                SpendableUtxos.reconcile(
-                                    candidates = it,
-                                    dustThreshold = chain.getDustThreshold.toLong(),
-                                    inFlight = utxoInFlightRepository.getInFlight(chain, address),
-                                )
-                            } ?: spendableUtxos(chain, address),
-                    )
-                } else {
-                    val utxos = spendableUtxos(chain, address)
+            TokenStandard.UTXO if chain == Chain.Dash -> {
+                val dashUtxos =
+                    try {
+                        dashApi.getAddressUtxos(address)
+                    } catch (e: Exception) {
+                        Timber.e(e, "Dash RPC failed, falling back to Blockchair")
+                        null
+                    }
 
-                    BlockChainSpecificAndUtxo(
-                        blockChainSpecific =
-                            BlockChainSpecific.UTXO(
-                                byteFee = gasFee.value,
-                                sendMaxAmount = isMaxAmountEnabled,
-                                // Resolve the live ZIP-243 branch id for ZEC at build time so it
-                                // travels with the payload to the signing helpers; null (constant
-                                // fallback) for the other UTXO chains and when the RPC is down.
-                                zcashBranchId =
-                                    if (chain == Chain.Zcash) zcashApi.getConsensusBranchIdHex()
-                                    else null,
-                            ),
-                        utxos = utxos,
-                    )
-                }
+                BlockChainSpecificAndUtxo(
+                    blockChainSpecific =
+                        BlockChainSpecific.UTXO(
+                            byteFee = gasFee.value,
+                            sendMaxAmount = isMaxAmountEnabled,
+                        ),
+                    utxos =
+                        dashUtxos?.excludingDust(chain)?.let {
+                            SpendableUtxos.reconcile(
+                                candidates = it,
+                                dustThreshold = chain.getDustThreshold.toLong(),
+                                inFlight = utxoInFlightRepository.getInFlight(chain, address),
+                            )
+                        } ?: spendableUtxos(chain, address),
+                )
+            }
+
+            TokenStandard.UTXO -> {
+                val utxos = spendableUtxos(chain, address)
+
+                BlockChainSpecificAndUtxo(
+                    blockChainSpecific =
+                        BlockChainSpecific.UTXO(
+                            byteFee = gasFee.value,
+                            sendMaxAmount = isMaxAmountEnabled,
+                            // Resolve the live ZIP-243 branch id for ZEC at build time so it
+                            // travels with the payload to the signing helpers; null (constant
+                            // fallback) for the other UTXO chains and when the RPC is down.
+                            zcashBranchId =
+                                if (chain == Chain.Zcash) zcashApi.getConsensusBranchIdHex()
+                                else null,
+                        ),
+                    utxos = utxos,
+                )
             }
 
             TokenStandard.SOL ->
@@ -415,32 +417,32 @@ constructor(
 
                 val denomTrace =
                     when (chain) {
-                        Chain.Terra ->
-                            if (token.contractAddress.startsWith("ibc/")) {
-                                val denomTrace = api.getIbcDenomTraces(token.contractAddress)
-                                val timeout =
-                                    (clock.now() + 10.minutes)
-                                        .toEpochMilliseconds()
-                                        .milliseconds
-                                        .inWholeNanoseconds
+                        Chain.Terra if token.contractAddress.startsWith("ibc/") -> {
+                            val denomTrace = api.getIbcDenomTraces(token.contractAddress)
+                            val timeout =
+                                (clock.now() + 10.minutes)
+                                    .toEpochMilliseconds()
+                                    .milliseconds
+                                    .inWholeNanoseconds
 
-                                CosmosIbcDenomTrace(
-                                    path = denomTrace.path,
-                                    baseDenom = denomTrace.baseDenom,
-                                    latestBlock = "${api.getLatestBlock()}_$timeout",
-                                )
-                            } else {
-                                val timeout =
-                                    (clock.now() + 10.minutes)
-                                        .toEpochMilliseconds()
-                                        .milliseconds
-                                        .inWholeNanoseconds
-                                CosmosIbcDenomTrace(
-                                    path = "",
-                                    baseDenom = "",
-                                    latestBlock = "${api.getLatestBlock()}_$timeout",
-                                )
-                            }
+                            CosmosIbcDenomTrace(
+                                path = denomTrace.path,
+                                baseDenom = denomTrace.baseDenom,
+                                latestBlock = "${api.getLatestBlock()}_$timeout",
+                            )
+                        }
+                        Chain.Terra -> {
+                            val timeout =
+                                (clock.now() + 10.minutes)
+                                    .toEpochMilliseconds()
+                                    .milliseconds
+                                    .inWholeNanoseconds
+                            CosmosIbcDenomTrace(
+                                path = "",
+                                baseDenom = "",
+                                latestBlock = "${api.getLatestBlock()}_$timeout",
+                            )
+                        }
 
                         Chain.GaiaChain,
                         Chain.Osmosis -> {

@@ -91,22 +91,20 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
 
             Chain.Ethereum -> ethereumProviders(ticker)
 
-            Chain.BscChain ->
-                if (isThorEligible(Chain.BscChain, ticker, thorBscTokens))
-                    thorchainPlusEvmAggregators
-                else evmAggregators
+            Chain.BscChain if isThorEligible(Chain.BscChain, ticker, thorBscTokens) ->
+                thorchainPlusEvmAggregators
+            Chain.BscChain -> evmAggregators
 
-            Chain.Avalanche ->
-                if (isThorEligible(Chain.Avalanche, ticker, thorAvaxTokens))
-                    thorchainPlusEvmAggregators
-                else evmAggregators
+            Chain.Avalanche if isThorEligible(Chain.Avalanche, ticker, thorAvaxTokens) ->
+                thorchainPlusEvmAggregators
+            Chain.Avalanche -> evmAggregators
 
             // 1inch (#5256) and KyberSwap (#5255) are same-chain aggregators live-confirmed on
             // Base; iOS and the SDK both offer them here. This makes Base match the BSC/Avalanche
             // EVM arm.
-            Chain.Base ->
-                if (isThorEligible(Chain.Base, ticker, thorBaseTokens)) thorchainPlusEvmAggregators
-                else evmAggregators
+            Chain.Base if isThorEligible(Chain.Base, ticker, thorBaseTokens) ->
+                thorchainPlusEvmAggregators
+            Chain.Base -> evmAggregators
 
             Chain.Optimism,
             Chain.Polygon -> evmAggregators
@@ -128,10 +126,9 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
             // would be sent as `GAIA.<TICKER>-ibc/...`, which Thornode rejects with "bad to asset"
             // (#5113) — offer them no providers instead of a guaranteed-to-fail quote. A live
             // Available pool can still add a route for a listed token.
-            Chain.GaiaChain ->
-                if (isThorEligible(Chain.GaiaChain, ticker, thorGaiaTokens))
-                    setOf(SwapProvider.THORCHAIN)
-                else emptySet()
+            Chain.GaiaChain if isThorEligible(Chain.GaiaChain, ticker, thorGaiaTokens) ->
+                setOf(SwapProvider.THORCHAIN)
+            Chain.GaiaChain -> emptySet()
 
             Chain.Dogecoin,
             Chain.BitcoinCash,
@@ -139,17 +136,16 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
 
             Chain.Zcash -> setOf(SwapProvider.MAYA)
 
-            Chain.Arbitrum ->
-                if (isMayaEligible(Chain.Arbitrum, ticker, mayaArbTokens)) mayaPlusEvmAggregators
-                else evmAggregators
+            Chain.Arbitrum if isMayaEligible(Chain.Arbitrum, ticker, mayaArbTokens) ->
+                mayaPlusEvmAggregators
+            Chain.Arbitrum -> evmAggregators
 
             Chain.Blast,
             Chain.CronosChain -> setOf(SwapProvider.LIFI)
 
-            Chain.Solana ->
-                if (coin.isNativeToken)
-                    setOf(SwapProvider.THORCHAIN, SwapProvider.JUPITER, SwapProvider.LIFI)
-                else setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
+            Chain.Solana if coin.isNativeToken ->
+                setOf(SwapProvider.THORCHAIN, SwapProvider.JUPITER, SwapProvider.LIFI)
+            Chain.Solana -> setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
 
             Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
 

@@ -362,9 +362,8 @@ class SafeLaunchTest {
                 onError = { e ->
                     uiErrorMessage =
                         when (e) {
-                            is NetworkException ->
-                                if (e.httpStatusCode == 0) "No internet connection"
-                                else "Server error: ${e.message}"
+                            is NetworkException if e.httpStatusCode == 0 -> "No internet connection"
+                            is NetworkException -> "Server error: ${e.message}"
 
                             else -> "Unexpected error: ${e.message}"
                         }

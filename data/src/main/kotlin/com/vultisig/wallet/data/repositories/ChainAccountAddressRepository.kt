@@ -218,21 +218,16 @@ constructor(private val solanaApi: SolanaApi) : ChainAccountAddressRepository {
      */
     private suspend fun solanaRecipientVerdict(address: String): RecipientValidity =
         when (val ownership = solanaApi.getAccountOwnership(address)) {
-            is SolanaAccountOwnership.Owned ->
-                if (ownership.programId in SOLANA_TOKEN_PROGRAM_IDS) {
-                    RecipientValidity.NotAWalletAddress
-                } else {
-                    RecipientValidity.Valid
-                }
+            is SolanaAccountOwnership.Owned if ownership.programId in SOLANA_TOKEN_PROGRAM_IDS ->
+                RecipientValidity.NotAWalletAddress
+            is SolanaAccountOwnership.Owned -> RecipientValidity.Valid
             // No account at that address, so it is not a token account. A program vault that only
             // ever holds SPL never needs its own account on-chain: the tokens live in ATAs it owns.
             SolanaAccountOwnership.Missing -> RecipientValidity.Valid
-            SolanaAccountOwnership.Unavailable ->
-                if (SolanaProgramDerivedAddress.isWalletAddress(address)) {
-                    RecipientValidity.Valid
-                } else {
-                    RecipientValidity.NotAWalletAddress
-                }
+            SolanaAccountOwnership.Unavailable if
+                SolanaProgramDerivedAddress.isWalletAddress(address) ->
+                RecipientValidity.Valid
+            SolanaAccountOwnership.Unavailable -> RecipientValidity.NotAWalletAddress
         }
 
     /**

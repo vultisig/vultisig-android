@@ -36,12 +36,9 @@ class SecurityScannerTransactionFactory(
             // Cardano rides in TokenStandard.UTXO but is ed25519 + CBOR, not a Bitcoin proto; the
             // BTC path would build a Bitcoin tx for it. Unreachable today (Cardano isn't a Blockaid
             // supported chain) — guard so it can't slip through if that list ever widens.
-            TokenStandard.UTXO ->
-                if (chain == Chain.Cardano) {
-                    throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
-                } else {
-                    createBTCSecurityScannerTransaction(transaction)
-                }
+            TokenStandard.UTXO if chain == Chain.Cardano ->
+                throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
+            TokenStandard.UTXO -> createBTCSecurityScannerTransaction(transaction)
             else -> throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
         }
     }

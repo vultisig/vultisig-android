@@ -322,15 +322,15 @@ constructor(
                         }
                     }
 
-                    is BackupType.CurrentVault -> {
-                        if (vaultId != null) {
-                            withContext(Dispatchers.IO) {
-                                vaultDataStoreRepository.setBackupStatus(vaultId, true)
-                            }
-                        } else {
-                            showError()
-                            return@launch
+                    is BackupType.CurrentVault if vaultId != null -> {
+                        withContext(Dispatchers.IO) {
+                            vaultDataStoreRepository.setBackupStatus(vaultId, true)
                         }
+                    }
+
+                    is BackupType.CurrentVault -> {
+                        showError()
+                        return@launch
                     }
 
                     null -> Unit

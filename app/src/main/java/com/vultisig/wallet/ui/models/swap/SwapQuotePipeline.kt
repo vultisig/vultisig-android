@@ -352,12 +352,9 @@ internal class SwapQuotePipeline(
             // SwapKit survives the recipient filter, so it can be the provider whose verdict wins
             // the ranking — and its route verdicts are the same news as SwapRouteNotAvailable,
             // just typed by the aggregator instead of the native protocol.
-            is SwapKitError ->
-                if (swapKitSaysThePairHasNoRoute(cause)) {
-                    UiText.StringResource(R.string.swap_external_recipient_unsupported)
-                } else {
-                    error
-                }
+            is SwapKitError if swapKitSaysThePairHasNoRoute(cause) ->
+                UiText.StringResource(R.string.swap_external_recipient_unsupported)
+            is SwapKitError -> error
             else -> error
         }
     }
@@ -509,10 +506,9 @@ internal class SwapQuotePipeline(
                 // SwapKit BTC is a PSBT deposit to targetAddress; route it through the same UTXO
                 // plan-fee path so the network fee is computed and swap() doesn't abort with
                 // invalid_gas_fee_calculation.
-                is SwapQuote.SwapKit ->
-                    if (srcToken.chain.standard == TokenStandard.UTXO) {
-                        quote.data.targetAddress to quote.data.memo
-                    } else null
+                is SwapQuote.SwapKit if srcToken.chain.standard == TokenStandard.UTXO ->
+                    quote.data.targetAddress to quote.data.memo
+                is SwapQuote.SwapKit -> null
                 else -> null
             }
         val isUtxoSwap =

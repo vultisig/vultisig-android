@@ -77,10 +77,10 @@ class TronTransactionDecoder @Inject constructor() : TransactionContentDecoder {
          */
         fun committed(signed: SignedAmount): DecodedAmount =
             when (signed) {
-                is SignedAmount.Committed ->
-                    if (signed.value.signum() > 0 && signed.value <= INT64_MAX)
-                        DecodedAmount.Units(signed.value, DecodedAsset.ChainNative)
-                    else DecodedAmount.Unstated
+                is SignedAmount.Committed if
+                    signed.value.signum() > 0 && signed.value <= INT64_MAX ->
+                    DecodedAmount.Units(signed.value, DecodedAsset.ChainNative)
+                is SignedAmount.Committed -> DecodedAmount.Unstated
 
                 SignedAmount.ComputedAtSigning -> DecodedAmount.Unstated
             }
