@@ -29,6 +29,7 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 heroContent = this.tx.heroContent,
                 signRipple = this.tx.signRipple,
                 rippleTrustSet = this.tx.rippleTrustSet,
+                signSubstrate = this.tx.signSubstrate,
             )
         }
         is TransactionTypeUiModel.Deposit -> {

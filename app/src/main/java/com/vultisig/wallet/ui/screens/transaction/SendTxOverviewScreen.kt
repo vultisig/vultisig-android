@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.RippleDappTx
+import com.vultisig.wallet.data.chains.helpers.SubstrateDappTx
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.RippleTrustSetDisplay
@@ -35,6 +36,7 @@ import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.SignRippleDisplayView
+import com.vultisig.wallet.ui.components.SignSubstrateDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
@@ -124,6 +126,7 @@ internal fun SendTxOverviewScreen(
             ) {
                 val trustSet = tx.rippleTrustSet
                 val rippleDapp = tx.signRipple
+                val substrateDapp = tx.signSubstrate
                 if (trustSet != null) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -143,6 +146,33 @@ internal fun SendTxOverviewScreen(
                                     R.string.ripple_trust_line_hero_title,
                                     trustSet.ticker,
                                 ),
+                            style = Theme.brockmann.headings.title2,
+                            color = Theme.v2.colors.text.primary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                } else if (substrateDapp != null && substrateDapp.transfer == null) {
+                    // A Substrate dApp call that is not a transfer has no native amount; name the
+                    // call instead of a misleading "0 DOT". The signer payload card below carries
+                    // the bytes.
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        val chainName = tx.token.token.chain.raw
+                        Text(
+                            text = stringResource(R.string.substrate_dapp_transaction, chainName),
+                            style = Theme.brockmann.supplementary.captionSmall,
+                            color = Theme.v2.colors.text.tertiary,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                        )
+                        UiSpacer(12.dp)
+                        Text(
+                            text =
+                                substrateDapp.callIndex?.let {
+                                    stringResource(R.string.substrate_call_index, it)
+                                } ?: stringResource(R.string.substrate_dapp_transaction, chainName),
                             style = Theme.brockmann.headings.title2,
                             color = Theme.v2.colors.text.primary,
                             textAlign = TextAlign.Center,
@@ -220,6 +250,11 @@ internal fun SendTxOverviewScreen(
                 tx.signRipple?.let { rippleDapp ->
                     VerifyCardDivider(size = 1.dp)
                     SignRippleDisplayView(tx = rippleDapp, initiallyExpanded = true)
+                }
+
+                tx.signSubstrate?.let { substrateDapp ->
+                    VerifyCardDivider(size = 1.dp)
+                    SignSubstrateDisplayView(tx = substrateDapp, initiallyExpanded = true)
                 }
 
                 VerifyCardDivider(size = 1.dp)
@@ -651,6 +686,11 @@ internal data class UiTransactionInfo(
     val signRipple: RippleDappTx? = null,
     /** Signed terms of an XRPL trust-line activation, which transfers nothing. */
     val rippleTrustSet: RippleTrustSetDisplay? = null,
+    /**
+     * Decoded dApp Substrate signer payload. A call that is not a Balances transfer has no native
+     * amount, so the done screen names the call instead of showing a "0 DOT" hero.
+     */
+    val signSubstrate: SubstrateDappTx? = null,
 )
 
 internal enum class UiTransactionInfoType {

@@ -5,6 +5,8 @@ package com.vultisig.wallet.ui.models.keysign
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
+import com.vultisig.wallet.data.chains.helpers.SubstrateDappTransactionDecoder
+import com.vultisig.wallet.data.chains.helpers.SubstrateTransferCallReader
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.GasFeeParams
@@ -12,7 +14,9 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.substrateDappPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -87,12 +91,30 @@ constructor(
         val address = payloadToken.address
         val chain = payloadToken.chain
 
+        // A Substrate dApp call is signed as the bytes in the memo, so the recipient and amount
+        // shown here are read out of those bytes (a Balances transfer) or not shown at all; the
+        // wire `toAddress` / `toAmount` are the initiator's display copy and are never trusted.
+        val substrateDapp = payload.substrateDappPayload
+        val substrateTransfer =
+            substrateDapp?.let { dapp ->
+                SubstrateTransferCallReader.read(dapp.methodBytes())?.let {
+                    SubstrateDappTransactionDecoder.walletCoreSs58(it.destination, chain) to
+                        it.amount
+                }
+            }
+        val dstAddress =
+            when {
+                substrateDapp == null -> payload.toAddress
+                else -> substrateTransfer?.first.orEmpty()
+            }
+        val amount =
+            when {
+                substrateDapp == null -> payload.toAmount
+                else -> substrateTransfer?.second ?: BigInteger.ZERO
+            }
+
         val tokenValue =
-            TokenValue(
-                value = payload.toAmount,
-                unit = payloadToken.ticker,
-                decimals = payloadToken.decimal,
-            )
+            TokenValue(value = amount, unit = payloadToken.ticker, decimals = payloadToken.decimal)
 
         val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return null
 
@@ -105,7 +127,7 @@ constructor(
                         vaultHexPublicKey = vault.getPubKeyByChain(chain),
                     ),
                 amount = tokenValue.value,
-                to = payload.toAddress,
+                to = dstAddress,
                 memo = payload.memo,
                 isMax = false,
             )
@@ -131,6 +153,18 @@ constructor(
 
                 rippleDappFeeDrops != null ->
                     TokenValue(value = rippleDappFeeDrops, token = nativeCoin)
+
+                // The fee service would rebuild a transfer around the payload's (empty) toAddress
+                // to estimate. The initiator already put its Substrate fee estimate in `gas`.
+                substrateDapp != null ->
+                    TokenValue(
+                        value =
+                            (payload.blockChainSpecific as? BlockChainSpecific.Polkadot)
+                                ?.gas
+                                ?.toString()
+                                ?.toBigInteger() ?: BigInteger.ZERO,
+                        token = nativeCoin,
+                    )
 
                 else ->
                     feeResolver.resolveJoinKeysignNetworkFee(
@@ -186,11 +220,13 @@ constructor(
                 chainId = chain.id,
                 token = payloadToken,
                 srcAddress = address,
-                dstAddress = payload.toAddress,
+                dstAddress = dstAddress,
                 tokenValue = tokenValue,
                 fiatValue = convertTokenValueToFiat(payloadToken, tokenValue, currency),
                 gasFee = gasFee,
-                memo = payload.memo.takeIf { functionInfo == null },
+                // A Substrate signer payload is the signed content, rendered by its own card, not
+                // a memo.
+                memo = payload.memo.takeIf { functionInfo == null && substrateDapp == null },
                 estimatedFee = totalGasAndFee.formattedFiatValue,
                 blockChainSpecific = payload.blockChainSpecific,
                 totalGas = totalGasAndFee.formattedTokenValue,
@@ -199,6 +235,7 @@ constructor(
                 signSolana = signSolana,
                 signSui = signSui,
                 signRipple = signRipple,
+                signSubstrate = substrateDapp?.rawJson,
             )
 
         val transactionToUiModel = mapTransactionToUiModel(transaction)
@@ -208,12 +245,12 @@ constructor(
             resolveDstVaultName(
                 allVaults = allVaults,
                 chain = chain,
-                dstAddress = payload.toAddress,
+                dstAddress = dstAddress,
                 chainAccountAddressRepository = chainAccountAddressRepository,
             )
         val dstAddressBookTitle =
             if (dstVaultName == null) {
-                addressBookRepository.getEntry(chain.id, payload.toAddress)?.title
+                addressBookRepository.getEntry(chain.id, dstAddress)?.title
             } else null
 
         val isUnlimitedApproval =
@@ -240,7 +277,7 @@ constructor(
         val decodedExtras =
             enrichDecodedCall(
                 chain = chain,
-                dstAddress = payload.toAddress,
+                dstAddress = dstAddress,
                 functionInfo = functionInfo,
                 allVaults = allVaults,
                 isUnlimitedApproval = isUnlimitedApproval,

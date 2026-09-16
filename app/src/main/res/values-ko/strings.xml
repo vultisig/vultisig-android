@@ -1366,6 +1366,17 @@
     <string name="ripple_field_flags">Flags</string>
     <string name="ripple_field_paths">결제 경로</string>
     <string name="ripple_partial_payment_warning">부분 결제: 표시된 금액은 최대값이며 보장되지 않습니다. 더 적게 전달될 수 있습니다.</string>
+    <string name="substrate_dapp_transaction">%1$s 거래</string>
+    <string name="substrate_call_index">호출 %1$s</string>
+    <string name="substrate_signer_payload">서명자 페이로드</string>
+    <string name="substrate_field_call_data">호출 데이터</string>
+    <string name="substrate_field_nonce">논스</string>
+    <string name="substrate_field_tip">팁</string>
+    <string name="substrate_field_era">에라</string>
+    <string name="substrate_field_spec_version">스펙 버전</string>
+    <string name="substrate_field_transaction_version">거래 버전</string>
+    <string name="substrate_field_genesis_hash">제네시스 해시</string>
+    <string name="substrate_field_block_hash">블록 해시</string>
     <string name="sui_sender">보내는 주소</string>
     <string name="sui_gas_budget">가스 예산: %1$s SUI</string>
     <string name="sui_gas_price">가스 가격: %1$s MIST</string>

@@ -28,6 +28,11 @@ data class Transaction(
     val signSui: String? = null,
     /** Raw XRPL transaction JSON of a dApp-supplied `SignRipple`, surfaced for verify display. */
     val signRipple: String? = null,
+    /**
+     * A dApp's Substrate `SignerPayloadJSON` (the keysign memo, verbatim), surfaced for verify
+     * display. The call bytes inside it are what gets signed, not `dstAddress` / `tokenValue`.
+     */
+    val signSubstrate: String? = null,
     val estimatedFee: String,
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),

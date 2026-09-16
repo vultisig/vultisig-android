@@ -1339,6 +1339,17 @@
     <string name="ripple_field_flags">Flags</string>
     <string name="ripple_field_paths">Percorsi di pagamento</string>
     <string name="ripple_partial_payment_warning">Pagamento parziale: l\'importo mostrato è un massimo, non una garanzia. Potrebbe essere consegnato un importo inferiore.</string>
+    <string name="substrate_dapp_transaction">Transazione %1$s</string>
+    <string name="substrate_call_index">Chiamata %1$s</string>
+    <string name="substrate_signer_payload">Payload del firmatario</string>
+    <string name="substrate_field_call_data">Dati della chiamata</string>
+    <string name="substrate_field_nonce">Nonce</string>
+    <string name="substrate_field_tip">Mancia</string>
+    <string name="substrate_field_era">Era</string>
+    <string name="substrate_field_spec_version">Versione spec</string>
+    <string name="substrate_field_transaction_version">Versione transazione</string>
+    <string name="substrate_field_genesis_hash">Hash genesis</string>
+    <string name="substrate_field_block_hash">Hash del blocco</string>
     <string name="sui_sender">Da</string>
     <string name="sui_gas_budget">Budget gas: %1$s SUI</string>
     <string name="sui_gas_price">Prezzo del gas: %1$s MIST</string>
