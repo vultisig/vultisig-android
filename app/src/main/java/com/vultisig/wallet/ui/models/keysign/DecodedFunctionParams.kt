@@ -172,15 +172,15 @@ private data class HandlerContext(
     val isUnlimitedApproval: Boolean,
 )
 
-private typealias ParamHandler = (HandlerContext) -> List<DecodedFunctionParam>?
-
 /**
  * A curated handler paired with the parameter arity it is designed for. Gating on arity (not just
  * the function name) keeps a same-name different-arity call — e.g. a 3-arg
  * `transfer(address,uint256,bytes)` whose trailing `bytes` the 2-arg [transferRows] would silently
  * drop — out of the curated path so it falls through to the generic, name-recovering fallback.
  */
-private class SemanticHandler(val rows: ParamHandler, val matchesArity: (Int) -> Boolean)
+private class SemanticHandler(val rows: Handler, val matchesArity: (Int) -> Boolean) {
+    typealias Handler = (HandlerContext) -> List<DecodedFunctionParam>?
+}
 
 private val PARAM_HANDLERS: Map<String, SemanticHandler> =
     mapOf(
