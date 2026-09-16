@@ -1,0 +1,163 @@
+package com.vultisig.wallet.data.chains.helpers
+
+import com.vultisig.wallet.data.models.payload.SubstrateSignerPayload
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import java.math.BigInteger
+import org.junit.jupiter.api.Test
+
+/**
+ * Pins the signing bytes to the output of the extension's `constructPolkadotSigningPayload`
+ * (`@polkadot/util` `compactToU8a` / `hexToU8a` / `blake2AsU8a`), captured for each fixture with
+ * the real library. The initiator signs those bytes and nothing else, so one differing byte here is
+ * a ceremony that signs two messages.
+ */
+class SubstrateDappSignerTest {
+
+    private fun hex(bytes: ByteArray) = bytes.joinToString("") { "%02x".format(it) }
+
+    private fun payload(vararg overrides: Pair<String, String?>): SubstrateSignerPayload {
+        val fields = REALISTIC.toMutableMap()
+        overrides.forEach { (key, value) ->
+            if (value == null) fields.remove(key) else fields[key] = value
+        }
+        val json =
+            fields.entries.joinToString(
+                ",",
+                prefix = "{",
+                postfix = ",\"signedExtensions\":[],\"version\":4}",
+            ) {
+                "\"${it.key}\":\"${it.value}\""
+            }
+        return requireNotNull(SubstrateSignerPayload.fromMemo(json))
+    }
+
+    @Test
+    fun `the playground's all-zero payload is signed raw, field by field`() {
+        val playground =
+            payload(
+                "address" to "",
+                "blockHash" to "0x" + "00".repeat(32),
+                "blockNumber" to "0x00000000",
+                "era" to "0x0000",
+                "method" to "0x0000",
+                "nonce" to "0x00000000",
+                "specVersion" to "0x00000000",
+                "tip" to "0x" + "00".repeat(16),
+                "transactionVersion" to "0x00000000",
+            )
+
+        hex(SubstrateDappSigner.signingBytes(playground)) shouldBe
+            "0000" + // method
+                "0000" + // era
+                "00" + // compact(nonce = 0)
+                "00" + // compact(tip = 0)
+                "00000000" + // specVersion
+                "00000000" + // transactionVersion
+                GENESIS.removePrefix("0x") +
+                "00".repeat(32)
+    }
+
+    @Test
+    fun `a mortal transfer with a four-byte compact tip matches the extension byte for byte`() {
+        hex(SubstrateDappSigner.signingBytes(payload())) shouldBe
+            "050300d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d0700e40b5402" +
+                "f502" + // era
+                "1d01" + // compact(0x47 = 71): two-byte mode
+                "1e5a4b00" + // compact(1_234_567): four-byte mode
+                "f84e0f00" + // specVersion 1_003_256 LE
+                "1a000000" + // transactionVersion 26 LE
+                GENESIS.removePrefix("0x") +
+                BLOCK_HASH.removePrefix("0x")
+    }
+
+    @Test
+    fun `a tip past 2^30 takes the big-integer compact mode with a length prefix`() {
+        val bytes =
+            SubstrateDappSigner.signingBytes(
+                payload(
+                    "nonce" to "0x00000100",
+                    "tip" to "0x" + BigInteger.TWO.pow(40).toString(16).padStart(32, '0'),
+                )
+            )
+
+        hex(bytes) shouldBe
+            "050300d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d0700e40b5402" +
+                "f502" +
+                "0104" + // compact(256)
+                "0b000000000001" + // compact(2^40): (5 bytes - 4) << 2 | 0b11, then LE magnitude
+                "f84e0f00" +
+                "1a000000" +
+                GENESIS.removePrefix("0x") +
+                BLOCK_HASH.removePrefix("0x")
+    }
+
+    @Test
+    fun `a payload longer than 256 bytes is blake2b-256 hashed before signing`() {
+        val bytes =
+            SubstrateDappSigner.signingBytes(payload("method" to "0x0700" + "ab".repeat(300)))
+
+        bytes.size shouldBe 32
+        hex(bytes) shouldBe "a9d2d11c8c7cb30008df8f2b6fab7f7a40d3171708a9b50874545c69c2875850"
+    }
+
+    @Test
+    fun `a missing tip is a zero tip`() {
+        hex(SubstrateDappSigner.signingBytes(payload("tip" to null))) shouldBe
+            hex(SubstrateDappSigner.signingBytes(payload("tip" to "0x" + "00".repeat(16))))
+    }
+
+    @Test
+    fun `a decimal tip reads like a hex tip of the same value`() {
+        hex(SubstrateDappSigner.signingBytes(payload("tip" to "1234567"))) shouldBe
+            hex(SubstrateDappSigner.signingBytes(payload()))
+    }
+
+    @Test
+    fun `the pre-signed image hash is the signing bytes as unprefixed hex`() {
+        SubstrateDappSigner.getPreSignedImageHash(payload()) shouldBe
+            listOf(hex(SubstrateDappSigner.signingBytes(payload())))
+    }
+
+    // The extension's hexToU8a pads an odd-length string and parseInt stops at the first bad
+    // character; a payload only a broken initiator produces is refused here, not guessed at.
+    @Test
+    fun `malformed fields are refused rather than padded or truncated`() {
+        shouldThrow<IllegalStateException> {
+            SubstrateDappSigner.signingBytes(payload("method" to "0x050"))
+        }
+        shouldThrow<IllegalStateException> {
+            SubstrateDappSigner.signingBytes(payload("era" to "0xzz"))
+        }
+        shouldThrow<IllegalStateException> {
+            SubstrateDappSigner.signingBytes(payload("nonce" to "0x100000000"))
+        }
+        shouldThrow<IllegalStateException> {
+            SubstrateDappSigner.signingBytes(payload("specVersion" to ""))
+        }
+        shouldThrow<IllegalStateException> {
+            SubstrateDappSigner.signingBytes(payload("tip" to "-1"))
+        }
+    }
+
+    private companion object {
+        const val GENESIS = "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3"
+        const val BLOCK_HASH = "0x1f5a9d2c1b8e7f6a5d4c3b2a19087f6e5d4c3b2a19087f6e5d4c3b2a19087f6e"
+        const val ALICE = "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"
+
+        // transfer_keep_alive(Alice, 10 DOT), nonce 71, tip 0.0001234567 DOT, on runtime 1_003_256.
+        val REALISTIC =
+            mapOf(
+                "address" to "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+                "blockHash" to BLOCK_HASH,
+                "blockNumber" to "0x01312d00",
+                "era" to "0xf502",
+                "genesisHash" to GENESIS,
+                "method" to "0x050300" + ALICE + "0700e40b5402",
+                "nonce" to "0x00000047",
+                "specVersion" to "0x000f4ef8",
+                "tip" to "0x0000000000000000000000000012d687",
+                "transactionVersion" to "0x0000001a",
+            )
+    }
+}
