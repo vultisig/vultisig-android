@@ -48,21 +48,18 @@ class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory)
     private fun resolveCall(transaction: BlockchainTransaction): ZkCall {
         val coin = transaction.coin
         return when (transaction) {
+            // A native send calls the recipient directly and carries the memo as its
+            // payload — no memo means no calldata.
+            is Transfer if coin.isNativeToken ->
+                ZkCall(to = transaction.to, data = memoCallData(transaction.memo).asCallData())
+            // An ERC-20 send calls the token contract, not the recipient (see
+            // ERC20Helper). Estimating against the recipient priced a bare value
+            // transfer, so the signed limit could not cover the token transfer.
             is Transfer ->
-                if (coin.isNativeToken) {
-                    // A native send calls the recipient directly and carries the memo as its
-                    // payload — no memo means no calldata.
-                    ZkCall(to = transaction.to, data = memoCallData(transaction.memo).asCallData())
-                } else {
-                    // An ERC-20 send calls the token contract, not the recipient (see
-                    // ERC20Helper). Estimating against the recipient priced a bare value
-                    // transfer, so the signed limit could not cover the token transfer.
-                    ZkCall(
-                        to = coin.contractAddress,
-                        data =
-                            erc20TransferCallData(transaction.to, transaction.amount).asCallData(),
-                    )
-                }
+                ZkCall(
+                    to = coin.contractAddress,
+                    data = erc20TransferCallData(transaction.to, transaction.amount).asCallData(),
+                )
             is Swap ->
                 ZkCall(
                     to = transaction.to,

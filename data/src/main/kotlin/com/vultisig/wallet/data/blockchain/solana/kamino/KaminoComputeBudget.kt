@@ -176,12 +176,9 @@ object KaminoComputeBudget {
     fun unitLimitFor(vault: KaminoVault, action: KaminoAction): BigInteger =
         when (action) {
             KaminoAction.WITHDRAW -> WITHDRAW_UNIT_LIMIT
-            KaminoAction.DEPOSIT ->
-                if (vault.tokenMint == KaminoVaultRegistry.WRAPPED_SOL_MINT) {
-                    NATIVE_DEPOSIT_UNIT_LIMIT
-                } else {
-                    TOKEN_DEPOSIT_UNIT_LIMIT
-                }
+            KaminoAction.DEPOSIT if vault.tokenMint == KaminoVaultRegistry.WRAPPED_SOL_MINT ->
+                NATIVE_DEPOSIT_UNIT_LIMIT
+            KaminoAction.DEPOSIT -> TOKEN_DEPOSIT_UNIT_LIMIT
         }.let(BigInteger::valueOf)
 
     /**

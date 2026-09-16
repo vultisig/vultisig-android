@@ -95,30 +95,28 @@ class CosmosSignDocDecoder @Inject constructor() : TransactionContentDecoder {
         }
 
         return when (intent) {
-            is CosmosStakingPayload.Delegate -> {
-                if (intent.validatorAddress.isEmpty()) return null
+            is CosmosStakingPayload.Delegate if intent.validatorAddress.isEmpty() -> null
+            is CosmosStakingPayload.Delegate ->
                 DecodedTransaction(
                     operation = DecodedOperation.Delegate,
                     amount = amount(intent.amount) ?: return null,
                     counterparty = DecodedCounterparty.Validator(intent.validatorAddress),
                     evidence = DecodedEvidence.StructuredPayload,
                 )
-            }
 
-            is CosmosStakingPayload.Undelegate -> {
-                if (intent.validatorAddress.isEmpty()) return null
+            is CosmosStakingPayload.Undelegate if intent.validatorAddress.isEmpty() -> null
+            is CosmosStakingPayload.Undelegate ->
                 DecodedTransaction(
                     operation = DecodedOperation.Undelegate,
                     amount = amount(intent.amount) ?: return null,
                     counterparty = DecodedCounterparty.Validator(intent.validatorAddress),
                     evidence = DecodedEvidence.StructuredPayload,
                 )
-            }
 
-            is CosmosStakingPayload.Redelegate -> {
-                if (intent.validatorSrcAddress.isEmpty() || intent.validatorDstAddress.isEmpty()) {
-                    return null
-                }
+            is CosmosStakingPayload.Redelegate if
+                intent.validatorSrcAddress.isEmpty() || intent.validatorDstAddress.isEmpty() ->
+                null
+            is CosmosStakingPayload.Redelegate ->
                 DecodedTransaction(
                     operation = DecodedOperation.Redelegate,
                     amount = amount(intent.amount) ?: return null,
@@ -126,7 +124,6 @@ class CosmosSignDocDecoder @Inject constructor() : TransactionContentDecoder {
                     counterparty = DecodedCounterparty.Validator(intent.validatorDstAddress),
                     evidence = DecodedEvidence.StructuredPayload,
                 )
-            }
 
             is CosmosStakingPayload.WithdrawRewards -> {
                 val validators = intent.validators

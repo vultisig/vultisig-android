@@ -132,9 +132,10 @@ internal fun VsTextInputField(
                                             Theme.v2.colors.alerts.success
                                         VsTextInputFieldInnerState.Error ->
                                             Theme.v2.colors.alerts.error
+                                        VsTextInputFieldInnerState.Default if focused ->
+                                            Theme.v2.colors.border.normal
                                         VsTextInputFieldInnerState.Default ->
-                                            if (focused) Theme.v2.colors.border.normal
-                                            else Theme.v2.colors.border.light
+                                            Theme.v2.colors.border.light
                                     },
                             ),
                         shape = textFieldBackgroundShape,

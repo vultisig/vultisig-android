@@ -132,10 +132,9 @@ class MayaChainTransactionDecoder @Inject constructor() : TransactionContentDeco
 
         fun carried(signed: SignedAmount): DecodedAmount =
             when (signed) {
-                is SignedAmount.Committed ->
-                    if (signed.value.signum() > 0)
-                        DecodedAmount.Units(signed.value, DecodedAsset.TransactionCoin)
-                    else DecodedAmount.Unstated
+                is SignedAmount.Committed if signed.value.signum() > 0 ->
+                    DecodedAmount.Units(signed.value, DecodedAsset.TransactionCoin)
+                is SignedAmount.Committed -> DecodedAmount.Unstated
 
                 SignedAmount.ComputedAtSigning -> DecodedAmount.Unstated
             }

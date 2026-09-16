@@ -58,10 +58,9 @@ class BuildHeroContentUseCase @Inject constructor() {
                     from = simulation.fromCoin.toHeroAmount(simulation.fromAmountText()),
                     to = simulation.toCoin.toHeroAmount(simulation.toAmountText()),
                 )
-            null ->
-                if (didLoadSimulation && (decodedFunctionName != null || isRawDappTransaction))
-                    HeroContent.Unverified
-                else null
+            null if didLoadSimulation && (decodedFunctionName != null || isRawDappTransaction) ->
+                HeroContent.Unverified
+            null -> null
         }
 
     private fun BlockaidSimulationCoin.toHeroAmount(formatted: String): HeroCoinAmount =

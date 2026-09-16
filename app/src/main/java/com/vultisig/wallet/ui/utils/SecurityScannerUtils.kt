@@ -8,13 +8,8 @@ fun handleSigningFlowCommon(
     onSign: () -> Unit,
 ) {
     when (txScanStatus) {
-        is TransactionScanStatus.Scanned -> {
-            if (!txScanStatus.result.isSecure) {
-                showWarning()
-            } else {
-                onSign()
-            }
-        }
+        is TransactionScanStatus.Scanned if !txScanStatus.result.isSecure -> showWarning()
+        is TransactionScanStatus.Scanned -> onSign()
         is TransactionScanStatus.Error,
         TransactionScanStatus.NotStarted,
         TransactionScanStatus.Scanning -> onSign()

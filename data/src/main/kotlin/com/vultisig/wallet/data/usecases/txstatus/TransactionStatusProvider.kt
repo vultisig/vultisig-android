@@ -46,15 +46,14 @@ constructor(
     private fun getProvider(chain: Chain) =
         when (chain.standard) {
             TokenStandard.EVM -> evmProvider
-            TokenStandard.UTXO -> {
-                if (chain == Chain.Cardano) cardanoProvider else utxoProvider
-            }
+            TokenStandard.UTXO if chain == Chain.Cardano -> cardanoProvider
+            TokenStandard.UTXO -> utxoProvider
 
             TokenStandard.COSMOS -> cosmosProvider
             TokenStandard.THORCHAIN -> thorChainProvider
             TokenStandard.SOL -> solanaProvider
-            TokenStandard.SUBSTRATE ->
-                if (chain == Chain.Bittensor) bittensorProvider else polkadotProvider
+            TokenStandard.SUBSTRATE if chain == Chain.Bittensor -> bittensorProvider
+            TokenStandard.SUBSTRATE -> polkadotProvider
             TokenStandard.SUI -> suiProvider
             TokenStandard.TON -> tonProvider
             TokenStandard.RIPPLE -> rippleProvider

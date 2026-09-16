@@ -537,10 +537,9 @@ constructor(private val inboundVaults: InboundVaultCorroborating) : TransactionC
         /** Max sends expose no committed amount because signing computes it later. */
         fun carried(signed: SignedAmount): DecodedAmount =
             when (signed) {
-                is SignedAmount.Committed ->
-                    if (signed.value.signum() > 0)
-                        DecodedAmount.Units(signed.value, DecodedAsset.TransactionCoin)
-                    else DecodedAmount.Unstated
+                is SignedAmount.Committed if signed.value.signum() > 0 ->
+                    DecodedAmount.Units(signed.value, DecodedAsset.TransactionCoin)
+                is SignedAmount.Committed -> DecodedAmount.Unstated
 
                 SignedAmount.ComputedAtSigning -> DecodedAmount.Unstated
             }

@@ -195,53 +195,49 @@ internal fun MayachainDefiPositionsScreenContent(
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 when (state.selectedTab) {
-                    DeFiTab.BONDED.displayNameRes -> {
-                        if (!state.selectedPositions.hasBondPositions()) {
-                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                        } else {
-                            BondedTabContent(
-                                bondToNodeOnClick = onClickBondToNode,
-                                state =
-                                    ThorchainDefiPositionsUiModel(
-                                        bonded = state.bonded,
-                                        isBalanceVisible = state.isBalanceVisible,
-                                        totalAmountPrice = state.totalAmountPrice,
-                                        isTotalAmountLoading = state.isTotalAmountLoading,
-                                    ),
-                                onClickBond = onClickBond,
-                                onClickUnbond = onClickUnbond,
-                                coinName = "CACAO",
-                                coinIconRes = R.drawable.cacao,
-                            )
-                        }
-                    }
+                    DeFiTab.BONDED.displayNameRes if !state.selectedPositions.hasBondPositions() ->
+                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
 
-                    DeFiTab.STAKED.displayNameRes -> {
-                        if (!state.selectedPositions.hasMayaStakingPositions()) {
-                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                        } else {
-                            StakingTabContent(
-                                state = state.staking,
-                                onClickStake = onClickStake,
-                                onClickUnstake = onClickUnstake,
-                                onClickWithdraw = {},
-                                onClickTransfer = {},
-                                isBalanceVisible = state.isBalanceVisible,
-                            )
-                        }
-                    }
+                    DeFiTab.BONDED.displayNameRes ->
+                        BondedTabContent(
+                            bondToNodeOnClick = onClickBondToNode,
+                            state =
+                                ThorchainDefiPositionsUiModel(
+                                    bonded = state.bonded,
+                                    isBalanceVisible = state.isBalanceVisible,
+                                    totalAmountPrice = state.totalAmountPrice,
+                                    isTotalAmountLoading = state.isTotalAmountLoading,
+                                ),
+                            onClickBond = onClickBond,
+                            onClickUnbond = onClickUnbond,
+                            coinName = "CACAO",
+                            coinIconRes = R.drawable.cacao,
+                        )
 
-                    DeFiTab.LP.displayNameRes -> {
-                        if (!state.selectedPositions.hasLpPositions(state.lpPositionsDialog)) {
-                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                        } else {
-                            LpTabContent(
-                                state = state.lp,
-                                onClickAdd = onClickAddLp,
-                                onClickRemove = onClickRemoveLp,
-                            )
-                        }
-                    }
+                    DeFiTab.STAKED.displayNameRes if
+                        !state.selectedPositions.hasMayaStakingPositions() ->
+                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+
+                    DeFiTab.STAKED.displayNameRes ->
+                        StakingTabContent(
+                            state = state.staking,
+                            onClickStake = onClickStake,
+                            onClickUnstake = onClickUnstake,
+                            onClickWithdraw = {},
+                            onClickTransfer = {},
+                            isBalanceVisible = state.isBalanceVisible,
+                        )
+
+                    DeFiTab.LP.displayNameRes if
+                        !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) ->
+                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+
+                    DeFiTab.LP.displayNameRes ->
+                        LpTabContent(
+                            state = state.lp,
+                            onClickAdd = onClickAddLp,
+                            onClickRemove = onClickRemoveLp,
+                        )
                 }
 
                 UiSpacer(size = 16.dp)

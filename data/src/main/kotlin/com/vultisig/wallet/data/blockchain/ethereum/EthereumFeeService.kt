@@ -123,22 +123,19 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
     private fun resolveL1CallContext(transaction: BlockchainTransaction): L1CallContext {
         val coin = transaction.coin
         return when (transaction) {
+            is Transfer if coin.isNativeToken ->
+                L1CallContext(
+                    to = transaction.to,
+                    value = transaction.amount,
+                    data =
+                        transaction.memo?.takeIf { it.isNotEmpty() }?.toByteArray() ?: ByteArray(0),
+                )
             is Transfer ->
-                if (coin.isNativeToken) {
-                    L1CallContext(
-                        to = transaction.to,
-                        value = transaction.amount,
-                        data =
-                            transaction.memo?.takeIf { it.isNotEmpty() }?.toByteArray()
-                                ?: ByteArray(0),
-                    )
-                } else {
-                    L1CallContext(
-                        to = coin.contractAddress,
-                        value = BigInteger.ZERO,
-                        data = erc20TransferCallData(transaction.to, transaction.amount),
-                    )
-                }
+                L1CallContext(
+                    to = coin.contractAddress,
+                    value = BigInteger.ZERO,
+                    data = erc20TransferCallData(transaction.to, transaction.amount),
+                )
             is Swap ->
                 L1CallContext(
                     to = transaction.to,

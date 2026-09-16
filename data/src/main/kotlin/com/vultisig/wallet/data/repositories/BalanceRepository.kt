@@ -594,39 +594,24 @@ constructor(
                                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
                             }
 
-                            Solana -> {
-                                if (coin.isNativeToken) {
-                                    solanaApi.getBalanceOrNull(address)
-                                        ?: error("Solana balance read failed for $address")
-                                } else {
-                                    splTokenRepository.getBalance(coin)
-                                        ?: splTokenRepository.getCachedBalance(coin)
-                                }
-                            }
+                            Solana if coin.isNativeToken ->
+                                solanaApi.getBalanceOrNull(address)
+                                    ?: error("Solana balance read failed for $address")
+                            Solana ->
+                                splTokenRepository.getBalance(coin)
+                                    ?: splTokenRepository.getCachedBalance(coin)
                             Polkadot -> polkadotApi.getBalance(address)
                             Chain.Bittensor -> bittensorApi.getBalance(address)
 
                             Sui -> suiApi.getBalance(address, coin.contractAddress)
 
-                            Ton ->
-                                if (coin.isNativeToken) {
-                                    tonApi.getBalance(address)
-                                } else {
-                                    tonApi.getJettonBalance(address, coin.contractAddress)
-                                }
-                            Chain.Ripple ->
-                                if (coin.isNativeToken) {
-                                    rippleApi.getBalance(coin)
-                                } else {
-                                    rippleApi.getTokenBalance(coin)
-                                }
+                            Ton if coin.isNativeToken -> tonApi.getBalance(address)
+                            Ton -> tonApi.getJettonBalance(address, coin.contractAddress)
+                            Chain.Ripple if coin.isNativeToken -> rippleApi.getBalance(coin)
+                            Chain.Ripple -> rippleApi.getTokenBalance(coin)
                             Chain.Tron -> tronApi.getBalance(coin)
-                            Chain.Cardano ->
-                                if (coin.isNativeToken) {
-                                    cardanoApi.getBalance(coin)
-                                } else {
-                                    cardanoApi.getTokenBalance(coin)
-                                }
+                            Chain.Cardano if coin.isNativeToken -> cardanoApi.getBalance(coin)
+                            Chain.Cardano -> cardanoApi.getTokenBalance(coin)
                         },
                         coin.ticker,
                         coin.decimal,

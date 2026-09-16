@@ -112,12 +112,9 @@ private fun PasscodeEntryStep.headlineRes(): Int =
 @Composable
 private fun PasscodeEntryStep.caption(action: PasscodeEntryAction): String =
     when (this) {
-        PasscodeEntryStep.Current ->
-            if (action == PasscodeEntryAction.Disable) {
-                stringResource(R.string.passcode_entry_caption_current_disable)
-            } else {
-                stringResource(R.string.passcode_entry_caption_current_change)
-            }
+        PasscodeEntryStep.Current if action == PasscodeEntryAction.Disable ->
+            stringResource(R.string.passcode_entry_caption_current_disable)
+        PasscodeEntryStep.Current -> stringResource(R.string.passcode_entry_caption_current_change)
         // The digit count comes from the constant the input field and validation share, so the copy
         // cannot drift from the length actually enforced.
         PasscodeEntryStep.New ->

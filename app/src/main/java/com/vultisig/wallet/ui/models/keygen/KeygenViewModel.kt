@@ -968,31 +968,30 @@ constructor(
         navigator.route(
             route =
                 when (action) {
+                    TssAction.KEYGEN if vault.isFastVault() ->
+                        Route.Onboarding.VaultBackup(
+                            vaultId = vaultId,
+                            pubKeyEcdsa = vault.pubKeyECDSA,
+                            email = args.email,
+                            vaultType = vaultType,
+                            action = action,
+                            vaultName = args.vaultName,
+                            password = args.password,
+                            deviceCount = args.deviceCount,
+                        )
+
                     TssAction.KEYGEN ->
-                        if (vault.isFastVault()) {
-                            Route.Onboarding.VaultBackup(
-                                vaultId = vaultId,
-                                pubKeyEcdsa = vault.pubKeyECDSA,
-                                email = args.email,
-                                vaultType = vaultType,
-                                action = action,
-                                vaultName = args.vaultName,
-                                password = args.password,
-                                deviceCount = args.deviceCount,
-                            )
-                        } else {
-                            Route.ReviewVaultDevices(
-                                vaultId = vaultId,
-                                pubKeyEcdsa = vault.pubKeyECDSA,
-                                email = args.email,
-                                vaultType = vaultType,
-                                action = action,
-                                vaultName = args.vaultName,
-                                password = args.password,
-                                devices = keygenCommittee,
-                                localPartyId = vault.localPartyID,
-                            )
-                        }
+                        Route.ReviewVaultDevices(
+                            vaultId = vaultId,
+                            pubKeyEcdsa = vault.pubKeyECDSA,
+                            email = args.email,
+                            vaultType = vaultType,
+                            action = action,
+                            vaultName = args.vaultName,
+                            password = args.password,
+                            devices = keygenCommittee,
+                            localPartyId = vault.localPartyID,
+                        )
 
                     TssAction.ReShare ->
                         Route.Onboarding.VaultBackup(
@@ -1028,26 +1027,26 @@ constructor(
                             )
                         }
 
+                    TssAction.SingleKeygen if !args.email.isNullOrEmpty() -> {
+                        val email = args.email
+                        checkNotNull(email)
+                        Route.FastVaultVerification(
+                            vaultId = vaultId,
+                            pubKeyEcdsa = vault.pubKeyECDSA,
+                            email = email,
+                            tssAction = action,
+                            vaultName = args.vaultName,
+                            password = args.password,
+                        )
+                    }
+
                     TssAction.SingleKeygen ->
-                        if (!args.email.isNullOrEmpty()) {
-                            val email = args.email
-                            checkNotNull(email)
-                            Route.FastVaultVerification(
-                                vaultId = vaultId,
-                                pubKeyEcdsa = vault.pubKeyECDSA,
-                                email = email,
-                                tssAction = action,
-                                vaultName = args.vaultName,
-                                password = args.password,
-                            )
-                        } else {
-                            Route.BackupVault(
-                                vaultId = vaultId,
-                                vaultType = vaultType,
-                                action = args.action,
-                                passwordType = BackupPasswordType.UserSelectionPassword,
-                            )
-                        }
+                        Route.BackupVault(
+                            vaultId = vaultId,
+                            vaultType = vaultType,
+                            action = args.action,
+                            passwordType = BackupPasswordType.UserSelectionPassword,
+                        )
                 },
             opts =
                 NavigationOptions(popUpToRoute = Route.Keygen.Generating::class, inclusive = true),
@@ -1122,10 +1121,9 @@ constructor(
                 progress =
                     when (step) {
                         is KeygenState.CreatingInstance -> 0.0f
-                        is KeygenState.KeygenECDSA ->
-                            if (usesParallelRootKeyStage) 0.50f
-                            else if (libType == SigningLibType.KeyImport) 0.25f else 0.33f
-
+                        is KeygenState.KeygenECDSA if usesParallelRootKeyStage -> 0.50f
+                        is KeygenState.KeygenECDSA if libType == SigningLibType.KeyImport -> 0.25f
+                        is KeygenState.KeygenECDSA -> 0.33f
                         is KeygenState.KeygenEdDSA -> 0.50f
                         is KeygenState.KeygenMLDSA -> 0.66f
                         is KeygenState.KeygenChains -> 0.83f

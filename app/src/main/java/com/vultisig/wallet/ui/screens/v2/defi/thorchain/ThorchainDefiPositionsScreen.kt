@@ -190,33 +190,30 @@ internal fun ThorchainDefiPositionScreenContent(
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 when (state.selectedTab) {
-                    DeFiTab.BONDED.displayNameRes -> {
-                        if (!state.selectedPositions.hasBondPositions()) {
-                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                        } else {
-                            BondedTabContent(
-                                bondToNodeOnClick = onClickBondToNode,
-                                state = state,
-                                onClickUnbond = onClickUnbond,
-                                onClickBond = onClickBond,
-                            )
-                        }
-                    }
+                    DeFiTab.BONDED.displayNameRes if !state.selectedPositions.hasBondPositions() ->
+                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
 
-                    DeFiTab.STAKED.displayNameRes -> {
-                        if (!state.selectedPositions.hasStakingPositions()) {
-                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                        } else {
-                            StakingTabContent(
-                                state = state.staking,
-                                onClickStake = onClickStake,
-                                onClickUnstake = onClickUnstake,
-                                onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) },
-                                onClickTransfer = onClickTransfer,
-                                isBalanceVisible = state.isBalanceVisible,
-                            )
-                        }
-                    }
+                    DeFiTab.BONDED.displayNameRes ->
+                        BondedTabContent(
+                            bondToNodeOnClick = onClickBondToNode,
+                            state = state,
+                            onClickUnbond = onClickUnbond,
+                            onClickBond = onClickBond,
+                        )
+
+                    DeFiTab.STAKED.displayNameRes if
+                        !state.selectedPositions.hasStakingPositions() ->
+                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+
+                    DeFiTab.STAKED.displayNameRes ->
+                        StakingTabContent(
+                            state = state.staking,
+                            onClickStake = onClickStake,
+                            onClickUnstake = onClickUnstake,
+                            onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) },
+                            onClickTransfer = onClickTransfer,
+                            isBalanceVisible = state.isBalanceVisible,
+                        )
 
                     DeFiTab.LP.displayNameRes -> {
                         // Both feeds must settle before the tab can say anything definitive: the

@@ -398,13 +398,9 @@ constructor(
                 uiModel.update { it.copy(isAdvanceSetting = true) }
             }
 
-            is VaultSettingsItem.BackupVaultShare -> {
-                if (hasFastSign) {
-                    uiModel.update { it.copy(isBackupVaultBottomSheetVisible = true) }
-                } else {
-                    navigateToBackupPasswordScreen()
-                }
-            }
+            is VaultSettingsItem.BackupVaultShare if hasFastSign ->
+                uiModel.update { it.copy(isBackupVaultBottomSheetVisible = true) }
+            is VaultSettingsItem.BackupVaultShare -> navigateToBackupPasswordScreen()
 
             is VaultSettingsItem.BiometricFastSign -> {
                 viewModelScope.launch {

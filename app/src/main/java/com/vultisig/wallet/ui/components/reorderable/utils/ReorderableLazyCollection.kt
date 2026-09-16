@@ -255,10 +255,10 @@ internal constructor(
     private fun Offset.reverseAxisWithLayoutDirectionIfLazyVerticalStaggeredGridRtlFix() =
         when (layoutDirection) {
             LayoutDirection.Ltr -> this
-            LayoutDirection.Rtl ->
-                if (lazyVerticalStaggeredGridRtlFix && orientation == Orientation.Vertical)
-                    reverseAxis(Orientation.Horizontal)
-                else this
+            LayoutDirection.Rtl if
+                lazyVerticalStaggeredGridRtlFix && orientation == Orientation.Vertical ->
+                reverseAxis(Orientation.Horizontal)
+            LayoutDirection.Rtl -> this
         }
 
     private fun Offset.reverseAxisIfNecessary() =

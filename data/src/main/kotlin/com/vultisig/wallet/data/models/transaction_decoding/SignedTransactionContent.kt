@@ -100,8 +100,8 @@ data class CorroboratedContent(
     /** Returns the memo only when the reader's precedence permits it. */
     fun memo(precedence: MemoPrecedence): String? {
         return when (precedence) {
-            MemoPrecedence.MemoIsInertWhenRoutedEarlier ->
-                if (routedBeforeTheChainHelper) null else rawMemo
+            MemoPrecedence.MemoIsInertWhenRoutedEarlier if routedBeforeTheChainHelper -> null
+            MemoPrecedence.MemoIsInertWhenRoutedEarlier -> rawMemo
             MemoPrecedence.MemoTravelsWithTheEarlierRoute -> rawMemo
         }
     }

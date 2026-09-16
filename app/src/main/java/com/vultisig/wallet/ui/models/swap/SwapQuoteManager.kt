@@ -1672,9 +1672,10 @@ constructor(
                 UiText.StringResource(R.string.swapkit_error_provider_not_enabled)
             is SwapKitError.RouteFiltered ->
                 UiText.StringResource(R.string.swapkit_error_route_filtered)
+            is SwapKitError.MalformedAmount if e.raw.isBlank() ->
+                UiText.StringResource(R.string.swapkit_error_decoding)
             is SwapKitError.MalformedAmount ->
-                if (e.raw.isBlank()) UiText.StringResource(R.string.swapkit_error_decoding)
-                else UiText.FormattedText(R.string.swapkit_error_malformed_amount, listOf(e.raw))
+                UiText.FormattedText(R.string.swapkit_error_malformed_amount, listOf(e.raw))
             is SwapKitError.Network -> UiText.StringResource(R.string.swapkit_error_network)
             is SwapKitError.Decoding -> UiText.StringResource(R.string.swapkit_error_decoding)
             is SwapKitError.Server ->

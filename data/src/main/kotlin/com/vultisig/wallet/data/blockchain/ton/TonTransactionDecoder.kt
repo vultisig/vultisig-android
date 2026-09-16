@@ -79,10 +79,9 @@ class TonTransactionDecoder @Inject constructor() : TransactionContentDecoder {
         /** A positive committed deposit moves chain-native TON; anything else states no figure. */
         fun deposited(signed: SignedAmount): DecodedAmount =
             when (signed) {
-                is SignedAmount.Committed ->
-                    if (signed.value.signum() > 0)
-                        DecodedAmount.Units(signed.value, DecodedAsset.ChainNative)
-                    else DecodedAmount.Unstated
+                is SignedAmount.Committed if signed.value.signum() > 0 ->
+                    DecodedAmount.Units(signed.value, DecodedAsset.ChainNative)
+                is SignedAmount.Committed -> DecodedAmount.Unstated
 
                 SignedAmount.ComputedAtSigning -> DecodedAmount.Unstated
             }
