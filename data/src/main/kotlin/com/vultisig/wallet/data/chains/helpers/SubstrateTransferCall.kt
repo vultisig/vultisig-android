@@ -12,8 +12,9 @@ data class SubstrateTransferCall(val destination: ByteArray, val amount: BigInte
  *
  * Returns null for any other call: a staking or subnet call carries no comparable scalar, and a
  * number on Verify that the signed bytes do not mean is exactly what this exists to prevent. Throws
- * when the bytes claim to be a transfer but do not decode, so the caller fails closed instead of
- * showing a guess.
+ * when the bytes claim to be a transfer but do not decode, and when they are too short to even name
+ * a pallet and call — no runtime decodes that, so the caller fails closed instead of showing a
+ * guess, exactly as the extension's reader does.
  */
 object SubstrateTransferCallReader {
 

@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.models.payload
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -96,9 +97,36 @@ class SubstrateSignerPayloadTest {
     @Test
     fun `only Polkadot and Bittensor payloads carry the route`() {
         keysignPayload(Chain.Polkadot, PLAYGROUND_MEMO).substrateDappPayload.shouldNotBeNull()
-        keysignPayload(Chain.Bittensor, PLAYGROUND_MEMO).substrateDappPayload.shouldNotBeNull()
+        keysignPayload(Chain.Bittensor, PLAYGROUND_MEMO.replace(GENESIS, BITTENSOR_GENESIS))
+            .substrateDappPayload
+            .shouldNotBeNull()
         keysignPayload(Chain.Solana, PLAYGROUND_MEMO).substrateDappPayload.shouldBeNull()
         keysignPayload(Chain.Polkadot, null).substrateDappPayload.shouldBeNull()
+    }
+
+    // The chain names the network on Verify; the genesis hash is what the signature binds to. Both
+    // chains share one ed25519 key, so a Polkadot-labelled payload carrying Bittensor's genesis
+    // would sign something valid on Bittensor.
+    @Test
+    fun `a genesis hash that belongs to another chain is refused`() {
+        shouldThrow<IllegalStateException> {
+            keysignPayload(Chain.Polkadot, PLAYGROUND_MEMO.replace(GENESIS, BITTENSOR_GENESIS))
+                .substrateDappPayload
+        }
+        shouldThrow<IllegalStateException> {
+            keysignPayload(Chain.Bittensor, PLAYGROUND_MEMO).substrateDappPayload
+        }
+        shouldThrow<IllegalStateException> {
+            keysignPayload(Chain.Polkadot, PLAYGROUND_MEMO.replace(GENESIS, "0x" + "ab".repeat(32)))
+                .substrateDappPayload
+        }
+    }
+
+    @Test
+    fun `the genesis hash match is case-insensitive`() {
+        keysignPayload(Chain.Polkadot, PLAYGROUND_MEMO.replace(GENESIS, GENESIS.uppercase()))
+            .substrateDappPayload
+            .shouldNotBeNull()
     }
 
     private fun keysignPayload(chain: Chain, memo: String?) =
@@ -136,6 +164,8 @@ class SubstrateSignerPayloadTest {
 
     private companion object {
         const val GENESIS = "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3"
+        const val BITTENSOR_GENESIS =
+            "0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03"
 
         // The memo the extension sends for the Vultisig playground's all-zero raw payload (#5904).
         val PLAYGROUND_MEMO =

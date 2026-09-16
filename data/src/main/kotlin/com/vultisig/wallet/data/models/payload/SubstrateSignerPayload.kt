@@ -121,14 +121,32 @@ data class SubstrateSignerPayload(
 }
 
 /**
+ * The genesis hash each Substrate chain's dApp route signs for — the same two the extension's
+ * `substrateChainByGenesisHash` accepts (Polkadot is the relay chain, not Asset Hub).
+ */
+private val substrateGenesisHashByChain =
+    mapOf(
+        Chain.Polkadot to "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3",
+        Chain.Bittensor to "0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03",
+    )
+
+/**
  * The dApp signer payload this keysign carries, or null for a native Substrate send. Only Polkadot
- * and Bittensor have the route (the two genesis hashes the extension accepts); a JSON-shaped memo
- * on any other chain is just a memo.
+ * and Bittensor have the route; a JSON-shaped memo on any other chain is just a memo.
+ *
+ * The payload's `genesisHash` must be the one [KeysignPayload.coin]'s chain signs for. The chain is
+ * what Verify names and what the co-signer consents to, while the genesis hash is what the
+ * signature is actually bound to — and both chains sign with the same ed25519 key, so a payload
+ * labelled Polkadot carrying Bittensor's genesis would produce a signature valid on Bittensor. The
+ * extension derives the chain from the genesis hash at intake and refuses any other; a mismatch
+ * here is a payload no honest initiator sends, and it is refused rather than signed.
  */
 val KeysignPayload.substrateDappPayload: SubstrateSignerPayload?
-    get() =
-        if (coin.chain == Chain.Polkadot || coin.chain == Chain.Bittensor) {
-            SubstrateSignerPayload.fromMemo(memo)
-        } else {
-            null
+    get() {
+        val genesisHash = substrateGenesisHashByChain[coin.chain] ?: return null
+        val payload = SubstrateSignerPayload.fromMemo(memo) ?: return null
+        check(payload.genesisHash.equals(genesisHash, ignoreCase = true)) {
+            "Substrate signer payload genesis hash does not belong to ${coin.chain.raw}"
         }
+        return payload
+    }
