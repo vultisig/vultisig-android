@@ -26,10 +26,13 @@ object SubstrateDappSigner {
     private const val HASH_THRESHOLD_BYTES = 256
 
     /**
-     * `method ‖ era ‖ compact(nonce) ‖ compact(tip) ‖ u32le(specVersion) ‖
-     * u32le(transactionVersion) ‖ genesisHash ‖ blockHash`, blake2b-256'd when longer than 256
-     * bytes. Every co-signer and the extension must produce the same bytes here or the ceremony
-     * signs different messages.
+     * The `SignedPayload` polkadot.js builds for the relay / Bittensor signed extensions: the call,
+     * then the extensions' extra bytes `era ‖ compact(nonce) ‖ compact(tip) [‖ mode]`, then their
+     * additional-signed bytes `u32le(specVersion) ‖ u32le(transactionVersion) ‖ genesisHash ‖
+     * blockHash [‖ Option<metadataHash>]` — the bracketed bytes only when the payload lists
+     * `CheckMetadataHash`, which both runtimes now do. Blake2b-256'd when longer than 256 bytes.
+     * Every co-signer must produce these exact bytes or the ceremony signs different messages, and
+     * the runtime must agree with them or the dApp's submission is refused with a bad signature.
      */
     fun signingBytes(payload: SubstrateSignerPayload): ByteArray {
         val out = ByteArrayOutputStream()
@@ -37,10 +40,12 @@ object SubstrateDappSigner {
         out.write(payload.eraBytes())
         out.write(SubstrateScale.compact(payload.nonceValue().toBigInteger()))
         out.write(SubstrateScale.compact(payload.tipValue()))
+        if (payload.hasCheckMetadataHash) out.write(payload.modeByte().toInt())
         out.write(SubstrateScale.u32LE(payload.specVersionValue()))
         out.write(SubstrateScale.u32LE(payload.transactionVersionValue()))
         out.write(payload.genesisHashBytes())
         out.write(payload.blockHashBytes())
+        if (payload.hasCheckMetadataHash) out.write(payload.metadataHashOption())
         val raw = out.toByteArray()
         return if (raw.size > HASH_THRESHOLD_BYTES) Utils.blake2bHash(raw) else raw
     }

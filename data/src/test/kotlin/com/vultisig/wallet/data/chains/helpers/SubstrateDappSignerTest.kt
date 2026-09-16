@@ -16,17 +16,16 @@ class SubstrateDappSignerTest {
 
     private fun hex(bytes: ByteArray) = bytes.joinToString("") { "%02x".format(it) }
 
-    private fun payload(vararg overrides: Pair<String, String?>): SubstrateSignerPayload {
+    private fun payload(
+        vararg overrides: Pair<String, String?>,
+        extras: String = "\"signedExtensions\":[]",
+    ): SubstrateSignerPayload {
         val fields = REALISTIC.toMutableMap()
         overrides.forEach { (key, value) ->
             if (value == null) fields.remove(key) else fields[key] = value
         }
         val json =
-            fields.entries.joinToString(
-                ",",
-                prefix = "{",
-                postfix = ",\"signedExtensions\":[],\"version\":4}",
-            ) {
+            fields.entries.joinToString(",", prefix = "{", postfix = ",$extras,\"version\":4}") {
                 "\"${it.key}\":\"${it.value}\""
             }
         return requireNotNull(SubstrateSignerPayload.fromMemo(json))
@@ -113,6 +112,76 @@ class SubstrateDappSignerTest {
             hex(SubstrateDappSigner.signingBytes(payload()))
     }
 
+    // Vectors from `@polkadot/types` 16.5.6 `ExtrinsicPayload.toU8a({ method: true })` with the
+    // relay chain's signed extensions. `mode` sits after the tip, `Option<metadataHash>` after the
+    // block hash; neither exists when the payload does not list CheckMetadataHash.
+    @Test
+    fun `CheckMetadataHash adds the mode byte and a None metadata hash`() {
+        val bytes =
+            SubstrateDappSigner.signingBytes(
+                payload(extras = "$RELAY_EXTENSIONS,\"mode\":0,\"metadataHash\":null")
+            )
+
+        hex(bytes) shouldBe
+            "050300d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d0700e40b5402" +
+                "f502" +
+                "1d01" +
+                "1e5a4b00" +
+                "00" + // mode = 0
+                "f84e0f00" +
+                "1a000000" +
+                GENESIS.removePrefix("0x") +
+                BLOCK_HASH.removePrefix("0x") +
+                "00" // Option<metadataHash> = None
+    }
+
+    @Test
+    fun `CheckMetadataHash mode 1 carries the metadata hash as Some`() {
+        val bytes =
+            SubstrateDappSigner.signingBytes(
+                payload(
+                    extras =
+                        "$RELAY_EXTENSIONS,\"mode\":1,\"metadataHash\":\"0x${"ab".repeat(32)}\""
+                )
+            )
+
+        hex(bytes) shouldBe
+            "050300d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d0700e40b5402" +
+                "f502" +
+                "1d01" +
+                "1e5a4b00" +
+                "01" + // mode = 1
+                "f84e0f00" +
+                "1a000000" +
+                GENESIS.removePrefix("0x") +
+                BLOCK_HASH.removePrefix("0x") +
+                "01" + // Option<metadataHash> = Some
+                "ab".repeat(32)
+    }
+
+    @Test
+    fun `a payload without CheckMetadataHash signs the legacy layout even if mode is present`() {
+        val legacy = SubstrateDappSigner.signingBytes(payload())
+        val withStrayMode =
+            SubstrateDappSigner.signingBytes(
+                payload(extras = "\"signedExtensions\":[\"CheckMortality\"],\"mode\":0")
+            )
+
+        hex(withStrayMode) shouldBe hex(legacy)
+    }
+
+    @Test
+    fun `a malformed mode or metadata hash is refused`() {
+        shouldThrow<IllegalStateException> {
+            SubstrateDappSigner.signingBytes(payload(extras = "$RELAY_EXTENSIONS,\"mode\":256"))
+        }
+        shouldThrow<IllegalStateException> {
+            SubstrateDappSigner.signingBytes(
+                payload(extras = "$RELAY_EXTENSIONS,\"mode\":1,\"metadataHash\":\"0xabcd\"")
+            )
+        }
+    }
+
     @Test
     fun `the pre-signed image hash is the signing bytes as unprefixed hex`() {
         SubstrateDappSigner.getPreSignedImageHash(payload()) shouldBe
@@ -142,6 +211,11 @@ class SubstrateDappSignerTest {
 
     private companion object {
         const val GENESIS = "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3"
+        const val RELAY_EXTENSIONS =
+            "\"signedExtensions\":[\"CheckNonZeroSender\",\"CheckSpecVersion\"," +
+                "\"CheckTxVersion\",\"CheckGenesis\",\"CheckMortality\",\"CheckNonce\"," +
+                "\"CheckWeight\",\"ChargeTransactionPayment\",\"PrevalidateAttests\"," +
+                "\"CheckMetadataHash\"]"
         const val BLOCK_HASH = "0x1f5a9d2c1b8e7f6a5d4c3b2a19087f6e5d4c3b2a19087f6e5d4c3b2a19087f6e"
         const val ALICE = "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"
 

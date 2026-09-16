@@ -87,6 +87,33 @@ class SubstrateSignerPayloadTest {
     }
 
     @Test
+    fun `signed extensions, a numeric mode and a null metadata hash are read as polkadot js sends them`() {
+        val payload =
+            SubstrateSignerPayload.fromMemo(
+                    """{"method":"0x0000","genesisHash":"$GENESIS",""" +
+                        """"signedExtensions":["CheckMortality","CheckMetadataHash"],""" +
+                        """"mode":0,"metadataHash":null}"""
+                )
+                .shouldNotBeNull()
+
+        payload.signedExtensions shouldBe listOf("CheckMortality", "CheckMetadataHash")
+        payload.hasCheckMetadataHash shouldBe true
+        payload.modeByte() shouldBe 0.toByte()
+        payload.metadataHashOption().toList() shouldBe listOf<Byte>(0)
+    }
+
+    @Test
+    fun `a payload that lists no CheckMetadataHash has no mode or metadata hash bytes`() {
+        val payload =
+            SubstrateSignerPayload.fromMemo("""{"method":"0x0000","genesisHash":"$GENESIS"}""")
+                .shouldNotBeNull()
+
+        payload.signedExtensions shouldBe emptyList()
+        payload.hasCheckMetadataHash shouldBe false
+        payload.modeByte() shouldBe 0.toByte()
+    }
+
+    @Test
     fun `a call shorter than a pallet and call index has no call index`() {
         SubstrateSignerPayload.fromMemo("""{"method":"0x05","genesisHash":"$GENESIS"}""")
             .shouldNotBeNull()
