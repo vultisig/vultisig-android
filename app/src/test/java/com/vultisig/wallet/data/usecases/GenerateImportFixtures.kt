@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalSerializationApi::class, ExperimentalEncodingApi::class)
+@file:OptIn(ExperimentalSerializationApi::class)
 
 package com.vultisig.wallet.data.usecases
 
@@ -12,7 +12,6 @@ import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf

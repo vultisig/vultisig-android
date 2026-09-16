@@ -132,7 +132,6 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             }
             .bodyOrThrow<TonAddressInfoResponseJson>()
 
-    @OptIn(ExperimentalStdlibApi::class)
     override suspend fun broadcastTransaction(transaction: String): String? {
         val response =
             http
@@ -226,7 +225,6 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
      * Returns the jetton master as raw `workchain:hex`, or `null` for the native asset / a
      * malformed cell.
      */
-    @OptIn(ExperimentalStdlibApi::class)
     private fun parseDedustAssetMaster(cellBase64: String): String? =
         runCatching {
                 val slice = TonBocParser.parse(cellBase64).beginParse()

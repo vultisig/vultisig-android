@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.sign
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -12,8 +14,9 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.util.UUID
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import vultisig.keysign.v1.CustomMessagePayload
@@ -48,7 +51,7 @@ constructor(
 
             val payload =
                 CustomMessagePayloadDto(
-                    id = UUID.randomUUID().toString(),
+                    id = Uuid.random().toString(),
                     vaultId = vaultId,
                     payload =
                         CustomMessagePayload(

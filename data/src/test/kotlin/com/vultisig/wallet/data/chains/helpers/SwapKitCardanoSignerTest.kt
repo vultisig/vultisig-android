@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.data.chains.helpers
 
 import org.bouncycastle.crypto.digests.Blake2bDigest

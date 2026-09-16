@@ -126,8 +126,7 @@ dependencies {
 
     // other
     implementation(libs.accompanist.permissions)
-    implementation(libs.apache.compress)
-    implementation(libs.apache.compress.xz)
+    implementation(libs.xz)
     implementation(libs.mlkit.barcode)
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)

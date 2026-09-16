@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalCoroutinesApi::class, ExperimentalStdlibApi::class)
+@file:OptIn(ExperimentalCoroutinesApi::class)
 
 package com.vultisig.wallet.ui.models.send
 

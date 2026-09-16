@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalStdlibApi::class)
 class RippleHelperTest {
 
     private val vaultXrpAddress = "rB5TihdPbKgMrkFqrqUC3yLdE8hhv4BdeY"

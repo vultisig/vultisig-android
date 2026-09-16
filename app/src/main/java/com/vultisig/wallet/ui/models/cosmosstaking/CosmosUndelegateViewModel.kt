@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.cosmosstaking
 
 import android.content.Context
@@ -33,10 +35,11 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Clock
 import kotlin.time.toJavaInstant
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -257,7 +260,7 @@ constructor(
 
             val depositTx =
                 DepositTransaction(
-                    id = UUID.randomUUID().toString(),
+                    id = Uuid.random().toString(),
                     vaultId = route.vaultId,
                     srcToken = coin,
                     srcAddress = coin.address,

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.crypto.Ed25519ScalarUtil

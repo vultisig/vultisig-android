@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCaseImpl
 import com.vultisig.wallet.data.usecases.VaultBackupEncryption
 import io.mockk.mockk
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -24,7 +23,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalEncodingApi::class)
 internal class MapVaultToProtoImplTest {
 
     private val mapper = MapVaultToProtoImpl()

@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalSerializationApi::class)
+@file:OptIn(ExperimentalSerializationApi::class, ExperimentalUuidApi::class)
 
 package com.vultisig.wallet.ui.models.qbtc
 
@@ -59,9 +59,10 @@ import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.encodeBase64
 import java.math.BigInteger
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -341,7 +342,7 @@ constructor(
      * surface a clear error instead of leaving the user stranded on the pairing screen.
      */
     private suspend fun pairAndKickoff(vault: Vault, btcCoin: Coin): QbtcClaimKeysignSession? {
-        val sessionId = UUID.randomUUID().toString()
+        val sessionId = Uuid.random().toString()
         val encryptionKeyHex = Utils.encryptionKeyHex
         val serverUrl = Endpoints.VULTISIG_RELAY_URL
         val localPartyId = vault.localPartyID

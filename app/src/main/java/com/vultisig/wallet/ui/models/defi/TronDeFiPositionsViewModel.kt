@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.defi
 
 import androidx.compose.runtime.Immutable
@@ -47,9 +49,10 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import java.text.NumberFormat
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -461,7 +464,7 @@ constructor(
 
                     val transaction =
                         Transaction(
-                            id = UUID.randomUUID().toString(),
+                            id = Uuid.random().toString(),
                             vaultId = vaultId,
                             chainId = Chain.Tron.raw,
                             token = trxCoin,

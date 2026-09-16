@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalStdlibApi::class, ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.vultisig.wallet.ui.navigation
 

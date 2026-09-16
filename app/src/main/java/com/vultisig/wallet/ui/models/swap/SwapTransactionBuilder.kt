@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
@@ -19,10 +21,11 @@ import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import java.math.BigInteger
 import java.math.RoundingMode
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Display-only fee/discount context captured from the swap form at build time, carried onto the
@@ -102,7 +105,7 @@ constructor(
                 val isAffiliate = true
 
                 RegularSwapTransaction(
-                    id = UUID.randomUUID().toString(),
+                    id = Uuid.random().toString(),
                     vaultId = vaultId,
                     srcToken = srcToken,
                     srcTokenValue = srcTokenValue,
@@ -184,7 +187,7 @@ constructor(
                 val isAffiliate = true
 
                 RegularSwapTransaction(
-                    id = UUID.randomUUID().toString(),
+                    id = Uuid.random().toString(),
                     vaultId = vaultId,
                     srcToken = srcToken,
                     srcTokenValue = srcTokenValue,
@@ -247,7 +250,7 @@ constructor(
                         gasFee = gasFee,
                     )
                 RegularSwapTransaction(
-                    id = UUID.randomUUID().toString(),
+                    id = Uuid.random().toString(),
                     vaultId = vaultId,
                     srcToken = srcToken,
                     srcTokenValue = srcTokenValue,
@@ -358,7 +361,7 @@ constructor(
                     }
 
                 RegularSwapTransaction(
-                    id = UUID.randomUUID().toString(),
+                    id = Uuid.random().toString(),
                     vaultId = vaultId,
                     srcToken = srcToken,
                     srcTokenValue = srcTokenValue,

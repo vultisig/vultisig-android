@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString

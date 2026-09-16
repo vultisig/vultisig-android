@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -16,7 +18,8 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigInteger
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import vultisig.keysign.v1.TransactionType
 
 /**
@@ -100,7 +103,7 @@ internal class TransferIbcStrategy(
         val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
 
         return DepositTransaction(
-            id = UUID.randomUUID().toString(),
+            id = Uuid.random().toString(),
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,

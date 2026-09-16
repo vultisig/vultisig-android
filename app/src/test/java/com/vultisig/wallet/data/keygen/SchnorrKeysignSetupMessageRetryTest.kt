@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalEncodingApi::class)
-
 package com.vultisig.wallet.data.keygen
 
 import com.vultisig.wallet.data.api.RelaySendBudget
@@ -13,7 +11,6 @@ import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
