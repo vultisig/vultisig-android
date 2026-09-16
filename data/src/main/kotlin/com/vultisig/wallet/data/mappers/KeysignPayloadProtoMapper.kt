@@ -34,7 +34,9 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             vaultLocalPartyID = from.vaultLocalPartyId,
             vaultPublicKeyECDSA = from.vaultPublicKeyEcdsa,
             toAddress = from.toAddress,
-            toAmount = BigInteger(from.toAmount),
+            // A Substrate dApp call that is not a Balances transfer has no amount to review, and
+            // the extension sends "" for it rather than a zero the signed bytes do not agree with.
+            toAmount = if (from.toAmount.isEmpty()) BigInteger.ZERO else BigInteger(from.toAmount),
             memo = from.memo,
             coin = requireNotNull(from.coin).toCoin(),
             libType = SigningLibType.from(from.libType),
