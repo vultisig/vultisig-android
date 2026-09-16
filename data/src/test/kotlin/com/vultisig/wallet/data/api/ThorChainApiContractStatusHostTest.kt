@@ -14,6 +14,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -70,7 +71,7 @@ internal class ThorChainApiContractStatusHostTest {
             thorChainSwapQuoteResponseJsonSerializer =
                 mockk<ThorChainSwapQuoteResponseJsonSerializer>(),
             json = jsonFormat,
-            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(),
+            inboundVaultSnapshot = ThorChainInboundVaultSnapshot(TestTimeSource()),
         )
     }
 

@@ -7,7 +7,9 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
@@ -19,7 +21,7 @@ import timber.log.Timber
  * Foreground SwapKit `/track` poll budget on the done screen. After this the row is left in-flight
  * and handed off to the background tx-history poller, mirroring iOS' 30-minute give-up window.
  */
-private const val SWAPKIT_FOREGROUND_TIMEOUT_MS = 30 * 60 * 1000L
+private val SWAPKIT_FOREGROUND_TIMEOUT = 30.minutes
 
 /**
  * How long to wait for the status service's binding to connect. The service runs in this process,
@@ -67,6 +69,7 @@ constructor(
     private val swapKitTrackingService: SwapKitTrackingService,
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val timeSource: TimeSource,
 ) {
 
     /**
@@ -158,9 +161,9 @@ constructor(
                 .getConfigurationForChain(chain)
                 .pollIntervalSeconds
                 .seconds
-        val startTime = System.currentTimeMillis()
+        val deadline = timeSource.markNow() + SWAPKIT_FOREGROUND_TIMEOUT
         while (coroutineContext.isActive) {
-            if (System.currentTimeMillis() - startTime >= SWAPKIT_FOREGROUND_TIMEOUT_MS) {
+            if (deadline.hasPassedNow()) {
                 // Hand off to the background tx-history poller; leave the row pending.
                 onStatus(TransactionResult.Pending)
                 return TxStatusPollOutcome.HandedOff

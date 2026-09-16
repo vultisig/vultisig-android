@@ -27,6 +27,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlin.time.TimeSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -87,8 +88,10 @@ object FeeServiceProvidersModule {
     @Provides
     @Singleton
     @CosmosFee
-    fun provideCosmosService(cosmosApiFactory: CosmosApiFactory): FeeService =
-        CosmosFeeService(cosmosApiFactory)
+    fun provideCosmosService(
+        cosmosApiFactory: CosmosApiFactory,
+        timeSource: TimeSource,
+    ): FeeService = CosmosFeeService(cosmosApiFactory, timeSource)
 
     @Provides
     @Singleton

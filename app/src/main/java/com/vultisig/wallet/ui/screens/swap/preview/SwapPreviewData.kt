@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.data.utils.plus
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.DiscountInfo
@@ -24,7 +23,7 @@ import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Instant
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -55,7 +54,7 @@ internal class SwapScreenPreviewProvider : PreviewParameterProvider<SwapScreenPr
                                     provider = UiText.DynamicString("ThorSwap"),
                                     estimatedDstTokenValue = "12.80",
                                     estimatedDstFiatValue = "5.24",
-                                    expiredAt = Instant.now(),
+                                    expiredAt = Clock.System.now(),
                                 ),
                             feeBreakdown =
                                 FeeBreakdown(
@@ -82,7 +81,7 @@ internal class SwapScreenPreviewProvider : PreviewParameterProvider<SwapScreenPr
                                     provider = UiText.DynamicString("ThorSwap"),
                                     estimatedDstTokenValue = "12.80",
                                     estimatedDstFiatValue = "5.24",
-                                    expiredAt = Instant.now(),
+                                    expiredAt = Clock.System.now(),
                                 ),
                             feeBreakdown =
                                 FeeBreakdown(
@@ -109,7 +108,7 @@ internal class SwapScreenPreviewProvider : PreviewParameterProvider<SwapScreenPr
                                     provider = UiText.DynamicString("ThorSwap"),
                                     estimatedDstTokenValue = "12.80",
                                     estimatedDstFiatValue = "5.24",
-                                    expiredAt = Instant.now(),
+                                    expiredAt = Clock.System.now(),
                                 ),
                             feeBreakdown =
                                 FeeBreakdown(
@@ -186,7 +185,7 @@ internal fun SwapFormProviderPreview() {
                         estimatedDstTokenValue = "12.80",
                         estimatedDstFiatValue = "$5.24",
                         hasQuote = true,
-                        expiredAt = Instant.now().plus(36.seconds),
+                        expiredAt = Clock.System.now() + 36.seconds,
                     ),
                 feeBreakdown =
                     FeeBreakdown(
@@ -222,7 +221,7 @@ internal fun SwapFormFiatInputPreview(longTicker: Boolean = false) {
                         estimatedDstTokenValue = "12.80",
                         estimatedDstFiatValue = "$5.24",
                         hasQuote = true,
-                        expiredAt = Instant.now().plus(36.seconds),
+                        expiredAt = Clock.System.now() + 36.seconds,
                     ),
                 feeBreakdown =
                     FeeBreakdown(
@@ -254,7 +253,7 @@ internal fun SwapToolbarPreview() {
                         provider = UiText.DynamicString("ThorSwap"),
                         estimatedDstTokenValue = "12.80",
                         estimatedDstFiatValue = "$5.24",
-                        expiredAt = Instant.now().plus(36.seconds),
+                        expiredAt = Clock.System.now() + 36.seconds,
                     ),
             ),
         srcAmountTextFieldState = TextFieldState("1.5"),

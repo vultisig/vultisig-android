@@ -6,6 +6,11 @@ import com.vultisig.wallet.data.models.Chain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TestTimeSource
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -25,17 +30,8 @@ internal class SwapKitProviderCacheTest {
 
     private val api: SwapKitApi = mockk()
 
-    /**
-     * Default `now` is non-zero so `fetchedAtMillis` after the first fetch never collides with
-     * `SwapKitProviderCache`'s `fetchedAtMillis == 0L` "never fetched" sentinel — otherwise a test
-     * that intends to read from the cache would silently re-hit the API instead.
-     */
-    private class FakeClock(var now: Long = 1_000L) : SwapKitProviderCacheImpl.Clock {
-        override fun nowMillis(): Long = now
-    }
-
-    private fun cache(clock: FakeClock = FakeClock()) =
-        SwapKitProviderCacheImpl(api).also { it.clock = clock }
+    private fun cache(timeSource: TimeSource = TestTimeSource()) =
+        SwapKitProviderCacheImpl(api, timeSource)
 
     /**
      * Entries whose chains are live. `supportedChainIds` mirrors them, as the wire usually does.
@@ -90,13 +86,13 @@ internal class SwapKitProviderCacheTest {
     fun `api is hit only once across repeated calls within TTL`() = runTest {
         coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
 
-        val clock = FakeClock(now = 1_000L)
-        val cache = cache(clock)
+        val timeSource = TestTimeSource()
+        val cache = cache(timeSource)
 
         cache.isEnabled(Chain.Ethereum)
-        clock.now += 60_000L // +1 min — well within 24h
+        timeSource += 1.minutes // +1 min — well within 24h
         cache.isEnabled(Chain.Ethereum)
-        clock.now += 23L * 60L * 60L * 1000L // +23h — still within TTL
+        timeSource += 23.hours // +23h — still within TTL
         cache.isEnabled(Chain.Solana)
 
         coVerify(exactly = 1) { api.providers() }
@@ -106,15 +102,13 @@ internal class SwapKitProviderCacheTest {
     fun `api is refetched once TTL has elapsed`() = runTest {
         coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
 
-        // Start at a non-zero clock so we exercise the TTL boundary, not the
-        // `fetchedAtMillis == 0` sentinel that means "never fetched yet".
-        val clock = FakeClock(now = 1_000L)
-        val cache = cache(clock)
+        val timeSource = TestTimeSource()
+        val cache = cache(timeSource)
 
         cache.isEnabled(Chain.Ethereum) // first fetch
-        clock.now += 60_000L // +1 min — still inside TTL, no refetch
+        timeSource += 1.minutes // +1 min — still inside TTL, no refetch
         cache.isEnabled(Chain.Ethereum)
-        clock.now += 24L * 60L * 60L * 1000L // push past TTL — should refetch
+        timeSource += 24.hours // push past TTL — should refetch
         cache.isEnabled(Chain.Ethereum)
 
         coVerify(exactly = 2) { api.providers() }
@@ -128,11 +122,11 @@ internal class SwapKitProviderCacheTest {
                 providersResponse("CHAINFLIP" to listOf("1", "solana")),
             )
 
-        val clock = FakeClock(now = 1_000L)
-        val cache = cache(clock)
+        val timeSource = TestTimeSource()
+        val cache = cache(timeSource)
 
         assertFalse(cache.isEnabled(Chain.Solana)) // Solana not present in first fetch
-        clock.now += 24L * 60L * 60L * 1000L + 1L // past TTL
+        timeSource += 24.hours + 1.milliseconds // past TTL
         assertTrue(cache.isEnabled(Chain.Solana)) // refetch picks it up
     }
 
@@ -161,12 +155,12 @@ internal class SwapKitProviderCacheTest {
         // screen. iOS serves last-good here; so do we.
         coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1", "solana"))
 
-        val clock = FakeClock(now = 1_000L)
-        val cache = cache(clock)
+        val timeSource = TestTimeSource()
+        val cache = cache(timeSource)
 
         assertTrue(cache.isEnabled(Chain.Ethereum)) // populates the snapshot
         coEvery { api.providers() } throws RuntimeException("transport boom")
-        clock.now += 24L * 60L * 60L * 1000L + 1L // past TTL, so the refresh is attempted and fails
+        timeSource += 24.hours + 1.milliseconds // past TTL, so the refresh is attempted and fails
 
         assertTrue(cache.isEnabled(Chain.Ethereum))
         assertTrue(cache.isEnabled(Chain.Solana))
@@ -177,15 +171,15 @@ internal class SwapKitProviderCacheTest {
     fun `a failed refresh holds off the next attempt while the stale snapshot stands`() = runTest {
         coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
 
-        val clock = FakeClock(now = 1_000L)
-        val cache = cache(clock)
+        val timeSource = TestTimeSource()
+        val cache = cache(timeSource)
 
         assertTrue(cache.isEnabled(Chain.Ethereum)) // populates the snapshot
         coEvery { api.providers() } throws RuntimeException("transport boom")
-        clock.now += 24L * 60L * 60L * 1000L + 1L // past TTL — one refresh is attempted, and fails
+        timeSource += 24.hours + 1.milliseconds // past TTL — one refresh is attempted, and fails
 
         assertTrue(cache.isEnabled(Chain.Ethereum))
-        clock.now += 60_000L // +1 min, well inside the retry window
+        timeSource += 1.minutes // +1 min, well inside the retry window
         assertTrue(cache.isEnabled(Chain.Ethereum))
         assertTrue(cache.isEnabled(Chain.Ethereum))
 
@@ -199,23 +193,23 @@ internal class SwapKitProviderCacheTest {
     fun `the refresh is attempted again once the retry window lapses`() = runTest {
         coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
 
-        val clock = FakeClock(now = 1_000L)
-        val cache = cache(clock)
+        val timeSource = TestTimeSource()
+        val cache = cache(timeSource)
 
         assertTrue(cache.isEnabled(Chain.Ethereum))
         coEvery { api.providers() } throws RuntimeException("transport boom")
-        clock.now += 24L * 60L * 60L * 1000L + 1L // past TTL
+        timeSource += 24.hours + 1.milliseconds // past TTL
         assertTrue(cache.isEnabled(Chain.Ethereum)) // refresh fails, stale answer served
         coVerify(exactly = 2) { api.providers() }
 
         coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1", "solana"))
-        clock.now += 5L * 60L * 1000L // retry window lapsed
+        timeSource += 5.minutes // retry window lapsed
         assertTrue(cache.isEnabled(Chain.Solana)) // recovered endpoint is picked up
         coVerify(exactly = 3) { api.providers() }
 
         // A success clears the backoff along with the TTL, so the fresh snapshot is served outright
         // rather than through the stale path.
-        clock.now += 60_000L
+        timeSource += 1.minutes
         assertTrue(cache.isEnabled(Chain.Solana))
         coVerify(exactly = 3) { api.providers() }
     }
@@ -256,11 +250,11 @@ internal class SwapKitProviderCacheTest {
     fun `invalidate forces a refetch on next call`() = runTest {
         coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
 
-        val clock = FakeClock(now = 1_000L)
-        val cache = cache(clock)
+        val timeSource = TestTimeSource()
+        val cache = cache(timeSource)
 
         cache.isEnabled(Chain.Ethereum)
-        clock.now += 60_000L // still inside TTL
+        timeSource += 1.minutes // still inside TTL
         cache.invalidate()
         cache.isEnabled(Chain.Ethereum)
 

@@ -35,9 +35,8 @@ import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Instant
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.toJavaDuration
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -228,7 +227,7 @@ internal class JoinSwapPriceImpactTest {
                 router = null,
                 error = null,
             )
-        val expiry = Instant.now().plus(5.minutes.toJavaDuration())
+        val expiry = Clock.System.now() + 5.minutes
         val zero = TokenValue(BigInteger.ZERO, eth)
         return if (provider == SwapProvider.MAYA) {
             SwapQuote.MayaChain(

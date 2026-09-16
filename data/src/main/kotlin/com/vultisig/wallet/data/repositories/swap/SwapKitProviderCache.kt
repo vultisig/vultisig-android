@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.repositories.swap
 
-import androidx.annotation.VisibleForTesting
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.SwapKitProvidersResponseJson
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
@@ -9,6 +8,10 @@ import com.vultisig.wallet.data.models.evmChainId
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -32,7 +35,7 @@ import timber.log.Timber
  *
  * A stale snapshot that is being served does not reset the TTL, so without a second deadline every
  * later call would re-attempt the failing endpoint: two dead round-trips in front of each quote,
- * since a pair check tests both legs. [RETRY_BACKOFF_MILLIS] holds those off while the stale answer
+ * since a pair check tests both legs. [RETRY_BACKOFF] holds those off while the stale answer
  * stands. The no-data edge deliberately keeps retrying eagerly — there is nothing to serve there,
  * so backing off would only extend an outage the next call might clear.
  */
@@ -54,31 +57,22 @@ interface SwapKitProviderCache {
  * In-memory [SwapKitProviderCache] with a 24h TTL, mutex-guarded refresh, and fail-closed reads.
  */
 @Singleton
-internal class SwapKitProviderCacheImpl @Inject constructor(private val api: SwapKitApi) :
+internal class SwapKitProviderCacheImpl
+@Inject
+constructor(private val api: SwapKitApi, private val timeSource: TimeSource) :
     SwapKitProviderCache {
-
-    /** Minimal clock seam so tests can advance time without sleeping. */
-    fun interface Clock {
-        fun nowMillis(): Long
-    }
-
-    /**
-     * Overridable clock so tests can advance time deterministically; production uses
-     * `System.currentTimeMillis`. Not [Inject]ed to keep Hilt wiring trivial.
-     */
-    @VisibleForTesting internal var clock: Clock = Clock { System.currentTimeMillis() }
 
     private val mutex = Mutex()
     @Volatile private var enabledChains: Set<Chain> = emptySet()
-    @Volatile private var fetchedAtMillis: Long = 0
+    @Volatile private var fetchedAt: TimeMark? = null
 
     /**
-     * Wall-clock instant before which a stale snapshot is served without re-attempting
-     * `/providers`. Zero when no refresh has failed since the last success. Only ever set while a
-     * last-good snapshot exists, so a reader that observes it non-zero has already observed a
-     * non-zero [fetchedAtMillis], and therefore the [enabledChains] published before it.
+     * Mark before which a stale snapshot is served without re-attempting `/providers`. Null when no
+     * refresh has failed since the last success. Only ever set while a last-good snapshot exists,
+     * so a reader that observes it non-null has already observed a non-null [fetchedAt], and
+     * therefore the [enabledChains] published before it.
      */
-    @Volatile private var retryAfterMillis: Long = 0
+    @Volatile private var retryUntil: TimeMark? = null
 
     override suspend fun isEnabled(chain: Chain): Boolean {
         val cached = ensureFresh() ?: return false
@@ -87,73 +81,74 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
 
     override suspend fun invalidate() =
         mutex.withLock {
-            // Publish through `fetchedAtMillis` last to match the refresh-path ordering
-            // (chains-then-timestamp). A reader on the fast path that sees the reset timestamp is
-            // then guaranteed to see the cleared chains too — without this swap the two volatile
-            // writes have no joint happens-before and a brief stale read is observable.
+            // Publish through `fetchedAt` last to match the refresh-path ordering
+            // (chains-then-mark). A reader on the fast path that sees the reset mark is then
+            // guaranteed to see the cleared chains too — without this swap the two volatile writes
+            // have no joint happens-before and a brief stale read is observable.
             enabledChains = emptySet()
-            retryAfterMillis = 0
-            fetchedAtMillis = 0
+            retryUntil = null
+            fetchedAt = null
         }
 
     private suspend fun ensureFresh(): Set<Chain>? {
-        if (isServable(clock.nowMillis())) {
+        if (isServable()) {
             return enabledChains
         }
         return mutex.withLock {
-            val now = clock.nowMillis()
-            if (isServable(now)) {
+            if (isServable()) {
                 return@withLock enabledChains
             }
             try {
                 val response = api.providers()
                 val chains = response.toEnabledChains()
                 enabledChains = chains
-                retryAfterMillis = 0
-                fetchedAtMillis = now
+                retryUntil = null
+                fetchedAt = timeSource.markNow()
                 chains
             } catch (e: CancellationException) {
                 throw e
             } catch (_: SwapKitError) {
                 // Expected transport/decoding failure from the SwapKit proxy — already classified
                 // at the API layer. Serve the last good answer if there is one.
-                backOffAndServeLastGood(now)
+                backOffAndServeLastGood()
             } catch (e: Exception) {
                 // Unexpected (mapping/parse regression, programmer error). Surface it in logs
                 // rather than silently treat SwapKit as "disabled" forever.
                 Timber.w(e, "SwapKit providers refresh failed unexpectedly")
-                backOffAndServeLastGood(now)
+                backOffAndServeLastGood()
             }
         }
     }
 
     /**
      * True when [enabledChains] can be returned as-is: either still inside the TTL, or stale but
-     * inside the retry window opened by the last failed refresh. `fetchedAtMillis != 0L` gates both
-     * — it is what makes the read see a published snapshot rather than the empty initial one.
+     * inside the retry window opened by the last failed refresh. `fetchedAt != null` gates both —
+     * it is what makes the read see a published snapshot rather than the empty initial one.
      */
-    private fun isServable(now: Long): Boolean =
-        fetchedAtMillis != 0L && ((now - fetchedAtMillis) < TTL_MILLIS || now < retryAfterMillis)
+    private fun isServable(): Boolean {
+        val fetchedAt = fetchedAt ?: return false
+        return fetchedAt.elapsedNow() < TTL || retryUntil?.hasNotPassedNow() == true
+    }
 
     /**
      * Serves the last good snapshot after a failed refresh and, when there is one, holds off the
-     * next attempt for [RETRY_BACKOFF_MILLIS]. The deadline is only armed alongside an answer: with
-     * no snapshot the call already returns `false`, so retrying costs nothing a caller can see and
-     * is the only way back. Called under [mutex].
+     * next attempt for [RETRY_BACKOFF]. The deadline is only armed alongside an answer: with no
+     * snapshot the call already returns `false`, so retrying costs nothing a caller can see and is
+     * the only way back. Called under [mutex].
      */
-    private fun backOffAndServeLastGood(now: Long): Set<Chain>? {
+    private fun backOffAndServeLastGood(): Set<Chain>? {
         val lastGood = lastGoodOrNull() ?: return null
-        retryAfterMillis = now + RETRY_BACKOFF_MILLIS
+        retryUntil = timeSource.markNow() + RETRY_BACKOFF
         return lastGood
     }
 
     /**
      * The last successfully fetched chain set, or null when `/providers` has never been read in
-     * this process. `fetchedAtMillis` is the flag rather than `enabledChains.isEmpty()`: a
-     * legitimately empty response would otherwise be indistinguishable from no data. Called only
-     * under [mutex], after a refresh attempt left both fields untouched.
+     * this process. `fetchedAt` is the flag rather than `enabledChains.isEmpty()`: a legitimately
+     * empty response would otherwise be indistinguishable from no data. Called only under [mutex],
+     * after a refresh attempt left both fields untouched.
      */
-    private fun lastGoodOrNull(): Set<Chain>? = if (fetchedAtMillis == 0L) null else enabledChains
+    private fun lastGoodOrNull(): Set<Chain>? = if (fetchedAt == null) null else enabledChains
 
     private fun SwapKitProvidersResponseJson.toEnabledChains(): Set<Chain> =
         filterNot { it.provider.uppercase(Locale.ROOT) in FILTERED_PROVIDERS }
@@ -167,14 +162,14 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
 
     companion object {
         /** Cache TTL — 24h. */
-        private const val TTL_MILLIS: Long = 24L * 60L * 60L * 1000L
+        private val TTL = 24.hours
 
         /**
          * How long a stale snapshot stands after a failed refresh before `/providers` is tried
          * again. Short enough that a recovered endpoint is picked up within a session, long enough
          * that a sustained outage does not put a dead request in front of every quote.
          */
-        private const val RETRY_BACKOFF_MILLIS: Long = 5L * 60L * 1000L
+        private val RETRY_BACKOFF = 5.minutes
 
         /**
          * Sub-providers whose enablement never counts as SwapKit coverage. Vultisig routes

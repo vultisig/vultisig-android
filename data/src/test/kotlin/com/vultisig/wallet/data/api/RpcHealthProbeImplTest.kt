@@ -12,6 +12,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -53,7 +54,8 @@ internal class RpcHealthProbeImplTest {
         // 0x1 == 1 == Ethereum mainnet
         val probe =
             RpcHealthProbeImpl(
-                client(HttpStatusCode.OK, """{"id":1,"result":"0x1","error":null}""")
+                client(HttpStatusCode.OK, """{"id":1,"result":"0x1","error":null}"""),
+                TestTimeSource(),
             )
         val result = probe.probe(Chain.Ethereum, "https://node.example")
         assertInstanceOf(RpcHealthResult.Reachable::class.java, result)
@@ -65,7 +67,8 @@ internal class RpcHealthProbeImplTest {
         // 0x89 == 137 (Polygon), but we ask for Ethereum
         val probe =
             RpcHealthProbeImpl(
-                client(HttpStatusCode.OK, """{"id":1,"result":"0x89","error":null}""")
+                client(HttpStatusCode.OK, """{"id":1,"result":"0x89","error":null}"""),
+                TestTimeSource(),
             )
         assertEquals(
             RpcHealthResult.WrongChain,
@@ -76,7 +79,10 @@ internal class RpcHealthProbeImplTest {
     @Test
     fun `evm missing result is invalid response`() = runBlocking {
         val probe =
-            RpcHealthProbeImpl(client(HttpStatusCode.OK, """{"id":1,"result":null,"error":null}"""))
+            RpcHealthProbeImpl(
+                client(HttpStatusCode.OK, """{"id":1,"result":null,"error":null}"""),
+                TestTimeSource(),
+            )
         assertEquals(
             RpcHealthResult.InvalidResponse,
             probe.probe(Chain.Ethereum, "https://node.example"),
@@ -85,7 +91,11 @@ internal class RpcHealthProbeImplTest {
 
     @Test
     fun `cosmos success is reachable but unverified`() = runBlocking {
-        val probe = RpcHealthProbeImpl(client(HttpStatusCode.OK, """{"default_node_info":{}}"""))
+        val probe =
+            RpcHealthProbeImpl(
+                client(HttpStatusCode.OK, """{"default_node_info":{}}"""),
+                TestTimeSource(),
+            )
         val result = probe.probe(Chain.GaiaChain, "https://cosmos.example")
         assertInstanceOf(RpcHealthResult.Reachable::class.java, result)
         assertTrue(!(result as RpcHealthResult.Reachable).networkVerified)
@@ -93,7 +103,8 @@ internal class RpcHealthProbeImplTest {
 
     @Test
     fun `server error is unreachable`() = runBlocking {
-        val probe = RpcHealthProbeImpl(client(HttpStatusCode.InternalServerError, "boom"))
+        val probe =
+            RpcHealthProbeImpl(client(HttpStatusCode.InternalServerError, "boom"), TestTimeSource())
         assertEquals(
             RpcHealthResult.Unreachable,
             probe.probe(Chain.GaiaChain, "https://cosmos.example"),
@@ -104,7 +115,10 @@ internal class RpcHealthProbeImplTest {
     fun `blank url is unreachable without a request`() = runBlocking {
         var requestCount = 0
         val probe =
-            RpcHealthProbeImpl(client(HttpStatusCode.OK, "{}", onRequest = { requestCount++ }))
+            RpcHealthProbeImpl(
+                client(HttpStatusCode.OK, "{}", onRequest = { requestCount++ }),
+                TestTimeSource(),
+            )
         assertEquals(RpcHealthResult.Unreachable, probe.probe(Chain.Ethereum, "   "))
         assertEquals(0, requestCount)
     }

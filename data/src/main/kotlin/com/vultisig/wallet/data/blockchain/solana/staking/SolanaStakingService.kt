@@ -6,6 +6,10 @@ import com.vultisig.wallet.data.api.models.SolanaVoteAccountJson
 import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
@@ -24,17 +28,18 @@ import kotlinx.coroutines.sync.withLock
  * so [fetchStakeAccounts] always issues a fresh read.
  */
 @Singleton
-class SolanaStakingService @Inject constructor(private val solanaApi: SolanaApi) {
+class SolanaStakingService
+@Inject
+constructor(private val solanaApi: SolanaApi, private val timeSource: TimeSource) {
 
     /**
-     * Clock + TTLs are `internal var` so tests can pin them; not constructor params because Dagger
-     * ignores Kotlin default-valued arguments.
+     * TTLs are `internal var` so tests can pin them; not constructor params because Dagger ignores
+     * Kotlin default-valued arguments.
      */
-    internal var clock: () -> Long = { System.currentTimeMillis() }
-    internal var validatorsTtlMillis: Long = 10L * 60L * 1000L
-    internal var epochTtlMillis: Long = 60L * 1000L
+    internal var validatorsTtl: Duration = 10.minutes
+    internal var epochTtl: Duration = 1.minutes
 
-    private data class Cached<T>(val value: T, val fetchedAt: Long)
+    private data class Cached<T>(val value: T, val fetchedAt: TimeMark)
 
     // One mutex per cache (not a shared lock) so a slow getVoteAccounts can't block an unrelated
     // epoch read — and so the concurrent epoch + stake-accounts fan-out in fetchStakeAccounts stays
@@ -65,27 +70,23 @@ class SolanaStakingService @Inject constructor(private val solanaApi: SolanaApi)
 
     /**
      * All non-delinquent then delinquent validator vote accounts (the on-chain source of truth),
-     * cached for [validatorsTtlMillis]. Empty when the RPC read fails.
+     * cached for [validatorsTtl]. Empty when the RPC read fails.
      */
     suspend fun fetchValidators(): List<SolanaValidator> =
         validatorsMutex.withLock {
-            cachedValidators?.let {
-                if (isFresh(it.fetchedAt, validatorsTtlMillis)) return it.value
-            }
+            cachedValidators?.let { if (isFresh(it.fetchedAt, validatorsTtl)) return it.value }
             val result = solanaApi.getVoteAccounts() ?: return emptyList()
             val validators =
                 (result.current.orEmpty().map { it.toValidator(delinquent = false) } +
                     result.delinquent.orEmpty().map { it.toValidator(delinquent = true) })
-            cachedValidators = Cached(validators, clock())
+            cachedValidators = Cached(validators, timeSource.markNow())
             validators
         }
 
-    /**
-     * Current cluster epoch progress, cached for [epochTtlMillis]. Null when the RPC read fails.
-     */
+    /** Current cluster epoch progress, cached for [epochTtl]. Null when the RPC read fails. */
     suspend fun fetchEpochInfo(): SolanaEpochInfo? =
         epochMutex.withLock {
-            cachedEpoch?.let { if (isFresh(it.fetchedAt, epochTtlMillis)) return it.value }
+            cachedEpoch?.let { if (isFresh(it.fetchedAt, epochTtl)) return it.value }
             val result = solanaApi.getEpochInfo() ?: return null
             val epoch =
                 SolanaEpochInfo(
@@ -94,11 +95,11 @@ class SolanaStakingService @Inject constructor(private val solanaApi: SolanaApi)
                     slotsInEpoch = result.slotsInEpoch,
                     absoluteSlot = result.absoluteSlot,
                 )
-            cachedEpoch = Cached(epoch, clock())
+            cachedEpoch = Cached(epoch, timeSource.markNow())
             epoch
         }
 
-    private fun isFresh(fetchedAt: Long, ttlMillis: Long): Boolean = clock() - fetchedAt < ttlMillis
+    private fun isFresh(fetchedAt: TimeMark, ttl: Duration): Boolean = fetchedAt.elapsedNow() < ttl
 
     private fun SolanaVoteAccountJson.toValidator(delinquent: Boolean): SolanaValidator =
         SolanaValidator(

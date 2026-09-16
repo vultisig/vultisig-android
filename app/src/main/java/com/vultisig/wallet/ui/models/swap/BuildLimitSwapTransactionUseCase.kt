@@ -27,7 +27,7 @@ import com.vultisig.wallet.data.swap.limit.toThorchainFixedPoint
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -64,6 +64,7 @@ constructor(
     private val swapGasCalculator: SwapGasCalculator,
     private val allowanceRepository: AllowanceRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
+    private val clock: Clock,
 ) {
 
     data class Params(
@@ -83,7 +84,6 @@ constructor(
         val gasFeeFiatValue: FiatValue,
         val estimatedNetworkFeeTokenValue: TokenValue?,
         val estimatedNetworkFeeFiatValue: FiatValue?,
-        val now: Long = System.currentTimeMillis(),
     )
 
     suspend fun build(params: Params): RegularSwapTransaction {
@@ -243,8 +243,7 @@ constructor(
                         toAmountLimit = "0",
                         streamingInterval = "1",
                         streamingQuantity = "0",
-                        expirationTime =
-                            (params.now.milliseconds + 15.minutes).inWholeSeconds.toULong(),
+                        expirationTime = (clock.now() + 15.minutes).epochSeconds.toULong(),
                         isAffiliate = true,
                     )
                 ),

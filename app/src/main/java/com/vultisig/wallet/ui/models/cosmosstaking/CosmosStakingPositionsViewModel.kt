@@ -34,6 +34,8 @@ import java.math.BigInteger
 import java.text.NumberFormat
 import java.time.Instant
 import javax.inject.Inject
+import kotlin.time.Clock
+import kotlin.time.toJavaInstant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -117,6 +119,7 @@ constructor(
     private val cosmosStakingDeFiBalanceService: CosmosStakingDeFiBalanceService,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val clock: Clock,
 ) : ViewModel() {
 
     /**
@@ -303,7 +306,7 @@ constructor(
                     val validatorsByAddress = validators.associateBy { it.operatorAddress }
                     val unbondingsByValidator = unbondings.groupBy { it.validatorAddress }
 
-                    val now = Instant.now()
+                    val now = clock.now().toJavaInstant()
                     val decimals = coin.decimal
 
                     // Resolve chain APY in parallel with the validator metadata join. Failure

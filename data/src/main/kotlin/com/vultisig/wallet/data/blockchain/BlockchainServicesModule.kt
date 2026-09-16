@@ -36,6 +36,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlin.time.TimeSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -61,8 +62,14 @@ internal interface BlockchainServicesModule {
             thorChainApi: ThorChainApi,
             tokenPriceRepository: TokenPriceRepository,
             stakingDetailsRepository: StakingDetailsRepository,
+            timeSource: TimeSource,
         ): TCYStakingService =
-            TCYStakingService(thorChainApi, tokenPriceRepository, stakingDetailsRepository)
+            TCYStakingService(
+                thorChainApi,
+                tokenPriceRepository,
+                stakingDetailsRepository,
+                timeSource,
+            )
 
         @Provides
         @Singleton

@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.utils.NetworkException
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import java.net.SocketTimeoutException
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -50,7 +51,8 @@ class RippleApiBalanceTest {
             }
             """
                 .trimIndent()
-        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
+        val api =
+            RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body), TestTimeSource())
 
         // 99000000 - (10000000 + 3 * 2000000) = 83000000
         assertEquals(BigInteger("83000000"), api.getBalance(rippleCoin))
@@ -77,7 +79,8 @@ class RippleApiBalanceTest {
             }
             """
                 .trimIndent()
-        val api = RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body))
+        val api =
+            RippleApiImp(MockHttpClient.respondingWith(HttpStatusCode.OK, body), TestTimeSource())
 
         assertEquals(BigInteger.ZERO, api.getBalance(rippleCoin))
     }
@@ -88,7 +91,10 @@ class RippleApiBalanceTest {
     @Test
     fun `getBalance propagates a timeout instead of swallowing it into zero`() {
         val api =
-            RippleApiImp(MockHttpClient.throwingIOException(SocketTimeoutException("timeout")))
+            RippleApiImp(
+                MockHttpClient.throwingIOException(SocketTimeoutException("timeout")),
+                TestTimeSource(),
+            )
 
         val error = assertThrows<NetworkException> { runBlocking { api.getBalance(rippleCoin) } }
 
@@ -100,7 +106,10 @@ class RippleApiBalanceTest {
     @Test
     fun `fetchAccountsInfo rethrows the original network exception preserving its kind`() {
         val api =
-            RippleApiImp(MockHttpClient.throwingIOException(SocketTimeoutException("timeout")))
+            RippleApiImp(
+                MockHttpClient.throwingIOException(SocketTimeoutException("timeout")),
+                TestTimeSource(),
+            )
 
         val error =
             assertThrows<NetworkException> {

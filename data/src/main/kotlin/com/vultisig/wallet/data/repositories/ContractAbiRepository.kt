@@ -10,6 +10,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -57,20 +59,19 @@ internal class ContractAbiRepositoryImpl
 constructor(
     private val sourcifyApi: SourcifyApi,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val timeSource: TimeSource,
 ) : ContractAbiRepository {
 
-    private var clock: () -> Long = { System.currentTimeMillis() }
     private var ttl: Duration = DEFAULT_TTL
 
-    /** Test-only seam for the [clock]/[ttl] expiry path, mirroring `TokenMetadataResolver`. */
+    /** Test-only seam for the [ttl] expiry path, mirroring `TokenMetadataResolver`. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal constructor(
         sourcifyApi: SourcifyApi,
         ioDispatcher: CoroutineDispatcher,
-        clock: () -> Long,
+        timeSource: TimeSource,
         ttl: Duration,
-    ) : this(sourcifyApi, ioDispatcher) {
-        this.clock = clock
+    ) : this(sourcifyApi, ioDispatcher, timeSource) {
         this.ttl = ttl
     }
 
@@ -114,7 +115,7 @@ constructor(
         val slot =
             mutex.withLock {
                 cache[key]?.let { cached ->
-                    if (clock() - cached.fetchedAt < ttl.inWholeMilliseconds) {
+                    if (cached.fetchedAt.elapsedNow() < ttl) {
                         return cached.abi
                     }
                 }
@@ -144,7 +145,7 @@ constructor(
                     ?.let(::parseAbi) ?: emptyMap()
             mutex.withLock {
                 inFlight.remove(key)
-                cache[key] = CacheEntry(abi = abi, fetchedAt = clock())
+                cache[key] = CacheEntry(abi = abi, fetchedAt = timeSource.markNow())
             }
             owned.complete(abi)
             return abi
@@ -188,7 +189,7 @@ constructor(
         return AbiParam(name = name, type = type, components = components)
     }
 
-    private data class CacheEntry(val abi: Map<String, List<AbiParam>>, val fetchedAt: Long)
+    private data class CacheEntry(val abi: Map<String, List<AbiParam>>, val fetchedAt: TimeMark)
 
     private sealed interface Slot {
         val deferred: CompletableDeferred<Map<String, List<AbiParam>>>

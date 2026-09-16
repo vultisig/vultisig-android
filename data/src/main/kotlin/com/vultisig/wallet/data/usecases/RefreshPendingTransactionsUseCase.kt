@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -44,6 +45,7 @@ constructor(
     private val transactionStatusRepository: TransactionStatusRepository,
     private val swapKitTrackingService: SwapKitTrackingService,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
+    private val clock: Clock,
 ) : RefreshPendingTransactionsUseCase {
 
     override suspend fun invoke(vaultId: String, chain: String?) {
@@ -138,7 +140,7 @@ constructor(
             (BASE_BACKOFF_MS shl (retryCount - 1).coerceAtMost(MAX_SHIFT)).coerceAtMost(
                 MAX_BACKOFF_MS
             )
-        val elapsed = (System.currentTimeMillis() - lastChecked).coerceAtLeast(0L)
+        val elapsed = (clock.now().toEpochMilliseconds() - lastChecked).coerceAtLeast(0L)
         return elapsed >= backoffMs
     }
 

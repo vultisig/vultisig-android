@@ -31,6 +31,8 @@ import java.security.NoSuchAlgorithmException
 import java.security.UnrecoverableEntryException
 import javax.inject.Qualifier
 import javax.inject.Singleton
+import kotlin.time.Clock
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -119,6 +121,20 @@ internal interface MainDataModule {
         @Provides
         @DefaultDispatcher
         fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
+
+        /**
+         * Wall clock for logic that compares against a persisted or on-chain timestamp: quote and
+         * order expiry, cooldowns, vote windows, replay windows. Tests hand a class a fixed or
+         * [TimeSource.asClock]-derived [Clock] instead.
+         */
+        @Provides fun provideClock(): Clock = Clock.System
+
+        /**
+         * Monotonic source for elapsed-time logic: TTL caches, poll deadlines, latency. Immune to
+         * NTP and user wall-clock jumps, which is why it is not [Clock]; tests hand a class a
+         * [kotlin.time.TestTimeSource].
+         */
+        @Provides fun provideTimeSource(): TimeSource = TimeSource.Monotonic
 
         /**
          * Provides the singleton [SharedPreferences] backed by AndroidKeyStore AES-256-GCM

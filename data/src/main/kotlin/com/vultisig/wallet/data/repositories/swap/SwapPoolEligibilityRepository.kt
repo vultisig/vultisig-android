@@ -7,6 +7,10 @@ import com.vultisig.wallet.data.models.swapAssetName
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -59,13 +63,16 @@ internal object EmptySwapPoolEligibility : SwapPoolEligibilityRepository {
 @Singleton
 internal class SwapPoolEligibilityRepositoryImpl
 @Inject
-constructor(private val thorChainApi: ThorChainApi, private val mayaChainApi: MayaChainApi) :
-    SwapPoolEligibilityRepository {
+constructor(
+    private val thorChainApi: ThorChainApi,
+    private val mayaChainApi: MayaChainApi,
+    private val timeSource: TimeSource,
+) : SwapPoolEligibilityRepository {
 
     @Volatile private var thorPools: Set<String> = emptySet()
     @Volatile private var mayaPools: Set<String> = emptySet()
-    @Volatile private var lastRefreshMs: Long = 0L
-    @Volatile private var lastRefreshAttemptMs: Long = 0L
+    @Volatile private var lastRefresh: TimeMark? = null
+    @Volatile private var lastRefreshAttempt: TimeMark? = null
 
     private val _eligibilityVersion = MutableStateFlow(0)
     override val eligibilityVersion: StateFlow<Int> = _eligibilityVersion.asStateFlow()
@@ -93,17 +100,16 @@ constructor(private val thorChainApi: ThorChainApi, private val mayaChainApi: Ma
     }
 
     private fun ensureFresh() {
-        val now = System.currentTimeMillis()
         // A fresh successful snapshot stands until it ages past the TTL.
-        if (now - lastRefreshMs < CACHE_TTL_MS) return
+        if (lastRefresh?.let { it.elapsedNow() < CACHE_TTL } == true) return
         // The snapshot is stale or was never loaded (cold start, or every fetch has failed so far).
         // Throttle retries with a short backoff so repeated failures don't hammer both pool
         // endpoints on every read, while still recovering well before the full TTL once
         // connectivity returns — gating purely on the success time would lock a cold cache to the
         // static fallback for the entire TTL after a single failed attempt.
-        if (now - lastRefreshAttemptMs < RETRY_BACKOFF_MS) return
+        if (lastRefreshAttempt?.let { it.elapsedNow() < RETRY_BACKOFF } == true) return
         if (!isRefreshing.compareAndSet(false, true)) return
-        lastRefreshAttemptMs = now
+        lastRefreshAttempt = timeSource.markNow()
         scope.launch {
             try {
                 refreshInternal()
@@ -128,7 +134,7 @@ constructor(private val thorChainApi: ThorChainApi, private val mayaChainApi: Ma
             }
             .onFailure { Timber.w(it, "MayaChain pools refresh failed; keeping last-good") }
         if (anySuccess) {
-            lastRefreshMs = System.currentTimeMillis()
+            lastRefresh = timeSource.markNow()
             // Signal a one-time re-evaluation only on the cold-start empty→populated transition, so
             // a pair picked before the first fetch landed is re-checked (#4975). Later refreshes
             // keep version at 1 to avoid disrupting a displayed quote.
@@ -174,7 +180,7 @@ constructor(private val thorChainApi: ThorChainApi, private val mayaChainApi: Ma
 
     private companion object {
         const val STATUS_AVAILABLE = "available"
-        const val CACHE_TTL_MS = 5 * 60 * 1000L
-        const val RETRY_BACKOFF_MS = 30 * 1000L
+        val CACHE_TTL = 5.minutes
+        val RETRY_BACKOFF = 30.seconds
     }
 }

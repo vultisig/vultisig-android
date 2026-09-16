@@ -19,6 +19,8 @@ import javax.inject.Inject
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.pow
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.TimeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -34,6 +36,7 @@ constructor(
     private val thorChainApi: ThorChainApi,
     private val tokenPriceRepository: TokenPriceRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
+    timeSource: TimeSource,
 ) {
     companion object {
         private const val TCY_DECIMALS = 8
@@ -42,7 +45,7 @@ constructor(
         private const val DAYS_IN_YEAR = 365
 
         // Cache duration for constants (1 hour)
-        private const val CONSTANTS_CACHE_DURATION_MS = 3600_000L
+        private val CONSTANTS_CACHE_DURATION = 1.hours
         private const val CONSTANT_CACHE_KEY = "constants-key"
     }
 
@@ -53,7 +56,7 @@ constructor(
     )
 
     private val constantsCache =
-        SimpleCache<String, TcyConstants>(defaultExpirationMs = CONSTANTS_CACHE_DURATION_MS)
+        SimpleCache<String, TcyConstants>(CONSTANTS_CACHE_DURATION, timeSource)
 
     fun getStakingDetails(address: String, vaultId: String): Flow<StakingDetails> =
         flow {

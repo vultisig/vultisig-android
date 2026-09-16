@@ -9,6 +9,10 @@ import io.ktor.http.ContentType
 import java.math.BigDecimal
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
@@ -26,9 +30,9 @@ import timber.log.Timber
 /**
  * Concrete [ValidatorMetadataProvider] backed by Stakewiz (`https://api.stakewiz.com`). The
  * `/validators` endpoint returns the full validator set in one response, so a single fetch enriches
- * an arbitrary batch of vote pubkeys; results are cached per vote pubkey for [ttlMillis] (~1h). A
- * failed or rate-limited fetch yields whatever is already cached (possibly nothing) — the call
- * never throws, so callers degrade to on-chain-only display. Mirrors the iOS
+ * an arbitrary batch of vote pubkeys; results are cached per vote pubkey for [ttl] (~1h). A failed
+ * or rate-limited fetch yields whatever is already cached (possibly nothing) — the call never
+ * throws, so callers degrade to on-chain-only display. Mirrors the iOS
  * `StakewizValidatorMetadataProvider` (vultisig-ios #4660).
  *
  * The logo prefers Stakewiz's own bundled `image` URL (already in the bulk response), falling back
@@ -39,17 +43,19 @@ import timber.log.Timber
 @Singleton
 internal class StakewizValidatorMetadataProvider
 @Inject
-constructor(private val httpClient: HttpClient, private val avatarService: KeybaseAvatarService) :
-    ValidatorMetadataProvider {
+constructor(
+    private val httpClient: HttpClient,
+    private val avatarService: KeybaseAvatarService,
+    private val timeSource: TimeSource,
+) : ValidatorMetadataProvider {
 
     /**
-     * Clock + TTL are `internal var` so tests can pin them; not in the `@Inject` constructor
-     * because Dagger ignores Kotlin default-valued params.
+     * TTL is an `internal var` so tests can pin it; not in the `@Inject` constructor because Dagger
+     * ignores Kotlin default-valued params.
      */
-    internal var clock: () -> Long = { System.currentTimeMillis() }
-    internal var ttlMillis: Long = 60L * 60L * 1000L
+    internal var ttl: Duration = 1.hours
 
-    private data class CachedEntry(val value: ValidatorMetadata, val fetchedAt: Long)
+    private data class CachedEntry(val value: ValidatorMetadata, val fetchedAt: TimeMark)
 
     private val mutex = Mutex()
     private val cache = mutableMapOf<String, CachedEntry>()
@@ -96,7 +102,7 @@ constructor(private val httpClient: HttpClient, private val avatarService: Keyba
             pending.map { row -> async { row.voteIdentity to map(row) } }.awaitAll()
         }
 
-        val fetchedAt = clock()
+        val fetchedAt = timeSource.markNow()
         return mutex.withLock {
             resolved.forEach { (pubkey, metadata) ->
                 cache[pubkey] = CachedEntry(metadata, fetchedAt)
@@ -171,7 +177,7 @@ constructor(private val httpClient: HttpClient, private val avatarService: Keyba
             .getOrDefault(emptyList())
     }
 
-    private fun isFresh(fetchedAt: Long): Boolean = clock() - fetchedAt < ttlMillis
+    private fun isFresh(fetchedAt: TimeMark): Boolean = fetchedAt.elapsedNow() < ttl
 
     /**
      * Stakewiz reports `apy_estimate` as a percentage (e.g. `5.72`). Store it as a fraction to

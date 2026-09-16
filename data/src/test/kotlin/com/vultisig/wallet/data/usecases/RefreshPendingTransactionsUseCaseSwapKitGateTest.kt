@@ -18,6 +18,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
+import kotlin.time.Clock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -45,6 +46,7 @@ class RefreshPendingTransactionsUseCaseSwapKitGateTest {
             transactionStatusRepository = statusRepository,
             swapKitTrackingService = trackingService,
             dispatcher = UnconfinedTestDispatcher(),
+            clock = Clock.System,
         )
 
     @Test

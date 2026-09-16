@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.mockk
 import kotlin.test.assertEquals
+import kotlin.time.Clock
 import org.junit.jupiter.api.Test
 
 /**
@@ -24,6 +25,7 @@ internal class SwapKitErrorMappingTest {
             fiatValueToString = mockk(relaxed = true),
             searchToken = mockk(relaxed = true),
             convertTokenToTokenUseCase = mockk(relaxed = true),
+            clock = Clock.System,
         )
 
     @Test

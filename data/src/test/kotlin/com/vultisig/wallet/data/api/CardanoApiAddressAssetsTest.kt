@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import java.math.BigInteger
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -51,6 +52,7 @@ class CardanoApiAddressAssetsTest {
                         jsonFormat = json,
                     ),
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         val assets = api.getAddressAssets(ADDRESS)
@@ -85,6 +87,7 @@ class CardanoApiAddressAssetsTest {
                         page
                     },
                 json = json,
+                timeSource = TestTimeSource(),
             )
         val snek = Coins.Cardano.SNEK.copy(address = ADDRESS)
 
@@ -113,6 +116,7 @@ class CardanoApiAddressAssetsTest {
                         "[]"
                     },
                 json = json,
+                timeSource = TestTimeSource(),
             )
 
         api.getAddressAssets(ADDRESS)
@@ -135,6 +139,7 @@ class CardanoApiAddressAssetsTest {
                     httpClient =
                         MockHttpClient.respondingWithGenerated(jsonFormat = json) { fullPage },
                     json = json,
+                    timeSource = TestTimeSource(),
                 )
 
             val failure = runCatching { api.getAddressAssets(ADDRESS) }.exceptionOrNull()
@@ -152,6 +157,7 @@ class CardanoApiAddressAssetsTest {
                     rows.joinToString(prefix = "[", separator = ",", postfix = "]")
                 },
             json = json,
+            timeSource = TestTimeSource(),
         )
 
     private companion object {

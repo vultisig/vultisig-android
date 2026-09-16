@@ -27,6 +27,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -131,6 +132,7 @@ internal class CosmosRedelegateViewModelTest {
             context = mockk(relaxed = true),
             navigator = navigator,
             ioDispatcher = testDispatcher,
+            clock = Clock.System,
         )
 
     @Test

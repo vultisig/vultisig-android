@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.blockchain.cosmos.staking
 
-import java.time.Clock
 import java.time.Instant
 
 /**
@@ -25,13 +24,13 @@ object CosmosRedelegationCooldownGate {
      * Evaluates whether the source validator is currently under a redelegation cooldown. Pure
      * function over an LCD-fetched list.
      *
-     * [now] is injected so the unit tests can pin the boundary deterministically — production
-     * callers pass `Instant.now(Clock.systemUTC())`.
+     * [now] is the caller's clock reading, so the unit tests can pin the boundary
+     * deterministically.
      */
     fun evaluate(
         sourceValidator: String,
         redelegations: List<CosmosRedelegationEntry>,
-        now: Instant = Instant.now(Clock.systemUTC()),
+        now: Instant,
     ): CosmosRedelegationCooldownState {
         val pending =
             redelegations
@@ -57,8 +56,8 @@ object CosmosRedelegationCooldownGate {
         sourceValidator: String,
         destinationValidator: String,
         redelegations: List<CosmosRedelegationEntry>,
+        now: Instant,
         maxEntries: Int = CosmosStakingConfig.MAX_ENTRIES,
-        now: Instant = Instant.now(Clock.systemUTC()),
     ): Boolean =
         redelegations.count {
             it.srcValidator == sourceValidator &&

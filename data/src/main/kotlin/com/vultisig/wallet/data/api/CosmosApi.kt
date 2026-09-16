@@ -41,6 +41,10 @@ import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -128,11 +132,12 @@ constructor(
     private val json: Json,
     private val cosmosThorChainResponseSerializer: CosmosThorChainResponseSerializer,
     private val customRpcRepository: CustomRpcRepository,
+    timeSource: TimeSource,
 ) : CosmosApiFactory {
     // Shared across every CosmosApiImp this @Singleton factory hands out so the per-token
     // bank-balance requests for one address collapse to a single round-trip. See
     // CosmosBalanceCache.
-    private val balanceCache = CosmosBalanceCache()
+    private val balanceCache = CosmosBalanceCache(timeSource)
 
     override fun createCosmosApi(chain: Chain): CosmosApi {
         val defaultApiUrl = CustomRpcDefaultEndpoint.cosmosUrl(chain)
@@ -166,9 +171,12 @@ constructor(
  * hits the network. Mirrors the SimpleCache + per-key-mutex pattern already used by the DeFi
  * balance path, but stores in a ConcurrentHashMap so reads across different keys stay thread-safe.
  */
-internal class CosmosBalanceCache(private val ttlMs: Long = DEFAULT_TTL_MS) {
+internal class CosmosBalanceCache(
+    private val timeSource: TimeSource,
+    private val ttl: Duration = DEFAULT_TTL,
+) {
 
-    private class Entry(val value: List<CosmosBalance>, val expiresAt: Long)
+    private class Entry(val value: List<CosmosBalance>, val expiresAt: TimeMark)
 
     private val entries = ConcurrentHashMap<String, Entry>()
     private val locks = ConcurrentHashMap<String, Mutex>()
@@ -180,15 +188,14 @@ internal class CosmosBalanceCache(private val ttlMs: Long = DEFAULT_TTL_MS) {
         locks
             .computeIfAbsent(key) { Mutex() }
             .withLock {
-                val now = System.currentTimeMillis()
-                entries[key]?.takeIf { now < it.expiresAt }?.value
-                    ?: fetch().also { entries[key] = Entry(it, now + ttlMs) }
+                entries[key]?.takeIf { it.expiresAt.hasNotPassedNow() }?.value
+                    ?: fetch().also { entries[key] = Entry(it, timeSource.markNow() + ttl) }
             }
 
     companion object {
         // Long enough to absorb the per-token fan-out for one address, short enough that a later
         // manual refresh still fetches fresh balances.
-        private const val DEFAULT_TTL_MS = 10_000L
+        private val DEFAULT_TTL = 10.seconds
     }
 }
 
@@ -197,7 +204,7 @@ internal class CosmosApiImp(
     private val rpcEndpoint: String,
     private val json: Json,
     private val cosmosThorChainResponseSerializer: CosmosThorChainResponseSerializer,
-    private val balanceCache: CosmosBalanceCache = CosmosBalanceCache(),
+    private val balanceCache: CosmosBalanceCache = CosmosBalanceCache(TimeSource.Monotonic),
 ) : CosmosApi {
     override suspend fun getBalance(address: String): List<CosmosBalance> =
         balanceCache.getOrFetch("$rpcEndpoint|$address") {

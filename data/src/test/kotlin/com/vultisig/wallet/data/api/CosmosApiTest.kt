@@ -13,6 +13,8 @@ import io.ktor.serialization.kotlinx.json.json
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Duration
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
@@ -230,7 +232,7 @@ class CosmosApiTest {
                         )
                     },
                 // ttl 0 => every entry is already expired, so caching never masks a stale balance.
-                balanceCache = CosmosBalanceCache(ttlMs = 0),
+                balanceCache = CosmosBalanceCache(TestTimeSource(), ttl = Duration.ZERO),
             )
 
         api.getBalance("cosmos1abc")
@@ -241,7 +243,7 @@ class CosmosApiTest {
 
     private fun cosmosApi(
         engine: MockEngine,
-        balanceCache: CosmosBalanceCache = CosmosBalanceCache(),
+        balanceCache: CosmosBalanceCache = CosmosBalanceCache(TestTimeSource()),
     ): CosmosApi {
         val json = Json { ignoreUnknownKeys = true }
         return CosmosApiImp(

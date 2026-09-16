@@ -5,6 +5,10 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
@@ -67,17 +71,19 @@ interface CosmosStakingAPYResolver {
 @Singleton
 internal class CosmosStakingAPYResolverImpl
 @Inject
-constructor(private val cosmosStakingService: CosmosStakingService) : CosmosStakingAPYResolver {
+constructor(
+    private val cosmosStakingService: CosmosStakingService,
+    private val timeSource: TimeSource,
+) : CosmosStakingAPYResolver {
 
     /**
-     * Wall clock + TTL are `internal var` so unit tests can pin them deterministically. Dagger
-     * ignores Kotlin default-valued constructor params, so they are intentionally NOT in the
-     * `@Inject` constructor — production uses the defaults.
+     * TTL is an `internal var` so unit tests can pin it. Dagger ignores Kotlin default-valued
+     * constructor params, so it is intentionally NOT in the `@Inject` constructor — production uses
+     * the default.
      */
-    internal var clock: () -> Long = { System.currentTimeMillis() }
-    internal var ttlMillis: Long = 5L * 60L * 1000L
+    internal var ttl: Duration = 5.minutes
 
-    private data class CachedEntry(val data: CosmosChainApyData, val fetchedAt: Long)
+    private data class CachedEntry(val data: CosmosChainApyData, val fetchedAt: TimeMark)
 
     private val mutex = Mutex()
     private val cache = mutableMapOf<Chain, CachedEntry>()
@@ -102,7 +108,7 @@ constructor(private val cosmosStakingService: CosmosStakingService) : CosmosStak
         val deferred: CompletableDeferred<CosmosChainApyData?> =
             mutex.withLock {
                 cache[chain]?.let { entry ->
-                    if (clock() - entry.fetchedAt < ttlMillis) {
+                    if (entry.fetchedAt.elapsedNow() < ttl) {
                         return entry.data
                     }
                 }
@@ -138,7 +144,7 @@ constructor(private val cosmosStakingService: CosmosStakingService) : CosmosStak
                 }
             mutex.withLock {
                 inFlight.remove(chain)
-                if (result != null) cache[chain] = CachedEntry(result, clock())
+                if (result != null) cache[chain] = CachedEntry(result, timeSource.markNow())
             }
             deferred.complete(result)
         }

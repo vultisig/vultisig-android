@@ -19,6 +19,10 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
+import kotlin.time.TestTimeSource
+import kotlin.time.asClock
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -34,8 +38,19 @@ internal class RefreshLimitOrdersUseCaseTest {
     private val outcomes = mockk<MidgardLimitOutcomeResolver>()
     private val transactionStatusRepository = mockk<TransactionStatusRepository>(relaxed = true)
 
+    private val timeSource = TestTimeSource()
+
+    /** Pinned wall clock; `createdAt = NOW_MS` is an order placed this instant. */
+    private val clock = timeSource.asClock(origin = Instant.fromEpochMilliseconds(NOW_MS))
+
     private fun useCase() =
-        RefreshLimitOrdersUseCase(repository, thorChainApi, outcomes, transactionStatusRepository)
+        RefreshLimitOrdersUseCase(
+            repository,
+            thorChainApi,
+            outcomes,
+            transactionStatusRepository,
+            clock,
+        )
 
     private val order =
         PendingLimitOrderEntity(
@@ -300,7 +315,7 @@ internal class RefreshLimitOrdersUseCaseTest {
                     status = LimitOrderStatus.Cancelling.raw,
                     cancelBroadcastHash = "0xcancel",
                     cancelConfirmed = true,
-                    createdAt = System.currentTimeMillis(),
+                    createdAt = NOW_MS,
                 )
             coEvery { repository.getOpenOrders("vault") } returns listOf(cancelling)
             coEvery { thorChainApi.getLimitSwapQueue("thor1abc") } returns
@@ -315,13 +330,38 @@ internal class RefreshLimitOrdersUseCaseTest {
         }
 
     @Test
+    fun `a refund after a confirmed cancel is not credited once the order's TTL has lapsed`() =
+        runTest {
+            val cancelling =
+                order.copy(
+                    status = LimitOrderStatus.Cancelling.raw,
+                    cancelBroadcastHash = "0xcancel",
+                    cancelConfirmed = true,
+                    createdAt = NOW_MS,
+                )
+            coEvery { repository.getOpenOrders("vault") } returns listOf(cancelling)
+            coEvery { thorChainApi.getLimitSwapQueue("thor1abc") } returns
+                ThorchainLimitSwapQueueResponse(emptyList())
+            coEvery { outcomes.resolveOutcome("HASH") } returns LimitOrderOutcome.Refunded
+
+            // 14_400 blocks at ~6 s each is the order's own TTL: a refund landing at its end is a
+            // genuine expiry, so the confirmed cancel may not relabel it.
+            timeSource += (cancelling.expiryBlocks * 6).seconds
+            val useCase = useCase()
+            useCase("vault")
+            useCase("vault")
+
+            coVerify { repository.recordStatus("HASH", LimitOrderStatus.Refunded) }
+        }
+
+    @Test
     fun `a refund is not credited to a cancel that was only broadcast`() = runTest {
         val cancelling =
             order.copy(
                 status = LimitOrderStatus.Cancelling.raw,
                 cancelBroadcastHash = "0xcancel",
                 cancelConfirmed = false,
-                createdAt = System.currentTimeMillis(),
+                createdAt = NOW_MS,
             )
         coEvery { repository.getOpenOrders("vault") } returns listOf(cancelling)
         coEvery { thorChainApi.getLimitSwapQueue("thor1abc") } returns
@@ -391,5 +431,9 @@ internal class RefreshLimitOrdersUseCaseTest {
         coVerify(exactly = 1) {
             transactionStatusRepository.checkTransactionStatus("0xcancel", Chain.ThorChain)
         }
+    }
+
+    private companion object {
+        const val NOW_MS = 1_700_000_000_000L
     }
 }

@@ -34,6 +34,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlin.math.roundToInt
+import kotlin.time.Clock
+import kotlin.time.toJavaInstant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
@@ -128,6 +130,7 @@ constructor(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val clock: Clock,
 ) : ViewModel() {
 
     private var vaultId: String? = null
@@ -166,7 +169,7 @@ constructor(
             ) {
                 val coin = resolveCoin(vaultId)
                 val api = cosmosApiFactory.createCosmosApi(Chain.Qbtc)
-                val now = Instant.now()
+                val now = clock.now().toJavaInstant()
 
                 val (activeResult, passedResult, rejectedResult) =
                     withContext(ioDispatcher) {
@@ -254,7 +257,9 @@ constructor(
         if (_state.value.isSubmitting) return
         // The window can close while the sheet is open; a late vote is rejected on-chain.
         val proposal = _state.value.active.firstOrNull { it.id == proposalId }
-        if (proposal == null || proposal.votingEndTime?.isAfter(Instant.now()) != true) {
+        if (
+            proposal == null || proposal.votingEndTime?.isAfter(clock.now().toJavaInstant()) != true
+        ) {
             _state.update {
                 it.copy(
                     voteSheetProposal = null,

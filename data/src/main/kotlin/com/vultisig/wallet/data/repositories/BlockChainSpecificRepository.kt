@@ -48,10 +48,9 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.Numeric.max
 import com.vultisig.wallet.data.utils.increaseByPercent
-import com.vultisig.wallet.data.utils.plus
 import java.math.BigInteger
-import java.time.Instant
 import javax.inject.Inject
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -115,6 +114,7 @@ constructor(
     @TronFee private val tronFeeService: FeeService,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val utxoInFlightRepository: UtxoInFlightRepository,
+    private val clock: Clock,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -419,9 +419,8 @@ constructor(
                             if (token.contractAddress.startsWith("ibc/")) {
                                 val denomTrace = api.getIbcDenomTraces(token.contractAddress)
                                 val timeout =
-                                    Instant.now()
-                                        .plus(10.minutes)
-                                        .toEpochMilli()
+                                    (clock.now() + 10.minutes)
+                                        .toEpochMilliseconds()
                                         .milliseconds
                                         .inWholeNanoseconds
 
@@ -432,9 +431,8 @@ constructor(
                                 )
                             } else {
                                 val timeout =
-                                    Instant.now()
-                                        .plus(10.minutes)
-                                        .toEpochMilli()
+                                    (clock.now() + 10.minutes)
+                                        .toEpochMilliseconds()
                                         .milliseconds
                                         .inWholeNanoseconds
                                 CosmosIbcDenomTrace(
@@ -448,9 +446,8 @@ constructor(
                         Chain.Osmosis -> {
                             if (transactionType == TransactionType.TRANSACTION_TYPE_IBC_TRANSFER) {
                                 val timeout =
-                                    Instant.now()
-                                        .plus(10.minutes)
-                                        .toEpochMilli()
+                                    (clock.now() + 10.minutes)
+                                        .toEpochMilliseconds()
                                         .milliseconds
                                         .inWholeNanoseconds
                                 CosmosIbcDenomTrace(
@@ -663,7 +660,7 @@ constructor(
                             BlockChainSpecific.Ton(
                                 sequenceNumber =
                                     sequenceNumberDeferred.await().toString().toULong(),
-                                expireAt = (Instant.now().epochSecond + 600L).toULong(),
+                                expireAt = (clock.now().epochSeconds + 600L).toULong(),
                                 bounceable = isBounceable.await(),
                                 isDeposit = isDeposit,
                                 sendMaxAmount = isMaxAmountEnabled,
@@ -693,7 +690,7 @@ constructor(
 
             TokenStandard.TRC20 -> {
                 val specific = tronApi.getSpecific()
-                val now = Instant.now()
+                val now = clock.now()
                 val expiration = now + 1.hours
                 val rawData = specific.blockHeader.rawData
 
@@ -754,8 +751,8 @@ constructor(
                 BlockChainSpecificAndUtxo(
                     blockChainSpecific =
                         BlockChainSpecific.Tron(
-                            timestamp = now.toEpochMilli().toULong(),
-                            expiration = expiration.toEpochMilli().toULong(),
+                            timestamp = now.toEpochMilliseconds().toULong(),
+                            expiration = expiration.toEpochMilliseconds().toULong(),
                             blockHeaderTimestamp = rawData.timeStamp,
                             blockHeaderNumber = rawData.number,
                             blockHeaderVersion = rawData.version,

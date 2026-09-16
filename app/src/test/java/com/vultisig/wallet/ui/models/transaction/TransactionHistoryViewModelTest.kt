@@ -52,6 +52,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import java.math.BigInteger
 import java.util.concurrent.TimeUnit
+import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -143,6 +144,7 @@ internal class TransactionHistoryViewModelTest {
             featureFlagRepository = featureFlagRepository,
             limitSwapConfig = limitSwapConfig,
             navigator = navigator,
+            clock = Clock.System,
         )
 
     /** Verifies selectTab updates selectedTab and re-enters the loading state. */

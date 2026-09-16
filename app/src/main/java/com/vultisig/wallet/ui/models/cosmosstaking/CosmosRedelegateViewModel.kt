@@ -41,6 +41,8 @@ import java.math.BigInteger
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlin.time.Clock
+import kotlin.time.toJavaInstant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
@@ -121,6 +123,7 @@ constructor(
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val clock: Clock,
 ) : ViewModel() {
 
     /**
@@ -197,6 +200,7 @@ constructor(
                 sourceValidator = route.validatorSrcAddress,
                 destinationValidator = validator.operatorAddress,
                 redelegations = redelegations,
+                now = clock.now().toJavaInstant(),
             )
         _state.update {
             it.copy(
@@ -508,6 +512,7 @@ constructor(
                 CosmosRedelegationCooldownGate.evaluate(
                     sourceValidator = route.validatorSrcAddress,
                     redelegations = fetched,
+                    now = clock.now().toJavaInstant(),
                 )
             val message =
                 when (cooldown) {

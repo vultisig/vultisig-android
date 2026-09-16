@@ -5,8 +5,9 @@ import com.vultisig.wallet.data.utils.NetworkException
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -20,12 +21,12 @@ internal class PollingTxStatusUseCaseImpl
 constructor(
     private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val transactionStatusRepository: TransactionStatusRepository,
+    private val timeSource: TimeSource,
 ) : PollingTxStatusUseCase {
 
     override fun invoke(chain: Chain, txHash: String) = flow {
         val config = txStatusConfigurationProvider.getConfigurationForChain(chain)
-        val startTime = System.currentTimeMillis()
-        val timeoutMillis = config.maxWaitSeconds.seconds.inWholeMilliseconds
+        val deadline = timeSource.markNow() + config.maxWaitSeconds.seconds
 
         var errorCount = 0
         // Consecutive rate-limited (HTTP 429) or errored polls; drives the exponential backoff so a
@@ -36,7 +37,7 @@ constructor(
         var backoffAttempt = 0
 
         while (currentCoroutineContext().isActive) {
-            if (System.currentTimeMillis() - startTime >= timeoutMillis) {
+            if (deadline.hasPassedNow()) {
                 emit(TransactionResult.TimedOut)
                 return@flow
             }
@@ -56,7 +57,7 @@ constructor(
                             backoffDelay(
                                 config.pollIntervalSeconds,
                                 attempt = 0,
-                                remainingMillis(startTime, timeoutMillis),
+                                remaining(deadline),
                             )
                         )
                 }
@@ -71,7 +72,7 @@ constructor(
                         backoffDelay(
                             config.pollIntervalSeconds,
                             backoffAttempt++,
-                            remainingMillis(startTime, timeoutMillis),
+                            remaining(deadline),
                         )
                     )
                 } else {
@@ -84,7 +85,7 @@ constructor(
                         backoffDelay(
                             config.pollIntervalSeconds,
                             backoffAttempt++,
-                            remainingMillis(startTime, timeoutMillis),
+                            remaining(deadline),
                         )
                     )
                 }
@@ -108,22 +109,21 @@ constructor(
      * Capped exponential backoff for the poll loop: `pollInterval * 2^attempt`, clamped to
      * [MAX_POLL_BACKOFF]. Healthy polls pass `attempt = 0` and keep the configured interval; only
      * sustained rate-limit (429) / error cycles grow `attempt` so they stop hammering the status
-     * endpoint at a fixed rate. The delay is further clamped to [remainingMillis] so the loop never
+     * endpoint at a fixed rate. The delay is further clamped to [remaining] so the loop never
      * sleeps past the polling deadline before emitting [TransactionResult.TimedOut].
      */
     private fun backoffDelay(
         pollIntervalSeconds: Long,
         attempt: Int,
-        remainingMillis: Long,
+        remaining: Duration,
     ): Duration {
         val multiplier = 1 shl attempt.coerceIn(0, MAX_BACKOFF_SHIFT)
         val capped = minOf(pollIntervalSeconds.seconds * multiplier, MAX_POLL_BACKOFF)
-        return minOf(capped, remainingMillis.coerceAtLeast(0).milliseconds)
+        return minOf(capped, remaining.coerceAtLeast(Duration.ZERO))
     }
 
-    /** Milliseconds left before the polling deadline; may be zero or negative once elapsed. */
-    private fun remainingMillis(startTime: Long, timeoutMillis: Long): Long =
-        timeoutMillis - (System.currentTimeMillis() - startTime)
+    /** Time left before the polling [deadline]; zero or negative once elapsed. */
+    private fun remaining(deadline: TimeMark): Duration = -deadline.elapsedNow()
 
     private companion object {
         const val MAX_ERRORS = 5

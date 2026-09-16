@@ -25,6 +25,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Base64
 import java.util.Locale
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.decodeFromString
@@ -65,7 +66,8 @@ internal class SwapKitQuoteSourceTest {
     private val MAX_AMOUNT_WORD = "f".repeat(64) // 32-byte amount word
     private val APPROVE_SELECTOR = "095ea7b3"
 
-    private fun source(): SwapKitQuoteSource = SwapKitQuoteSource(api, config, providerCache, json)
+    private fun source(): SwapKitQuoteSource =
+        SwapKitQuoteSource(api, config, providerCache, json, Clock.System)
 
     @Test
     fun `fetch throws NoRoutes when feature flag is disabled`() = runTest {

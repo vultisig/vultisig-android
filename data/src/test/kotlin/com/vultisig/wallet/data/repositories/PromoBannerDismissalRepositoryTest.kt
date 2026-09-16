@@ -5,8 +5,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import com.vultisig.wallet.data.sources.AppDataStore
 import io.kotest.matchers.shouldBe
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
+import kotlin.time.TestTimeSource
+import kotlin.time.asClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -24,13 +28,11 @@ internal class PromoBannerDismissalRepositoryTest {
     /** In-memory [AppDataStore] so reads observe prior writes without Android DataStore. */
     private val store = FakeAppDataStore()
 
-    private val repo = PromoBannerDismissalRepositoryImpl(store)
+    private val timeSource = TestTimeSource()
 
-    private var now = 1_000_000L
+    private val clock = timeSource.asClock(origin = Instant.fromEpochMilliseconds(1_000_000L))
 
-    init {
-        repo.clock = PromoBannerDismissalRepositoryImpl.Clock { now }
-    }
+    private val repo = PromoBannerDismissalRepositoryImpl(store, clock)
 
     @Test
     fun `a banner is not dismissed before it is ever closed`() = runTest {
@@ -44,7 +46,7 @@ internal class PromoBannerDismissalRepositoryTest {
         repo.isDismissed(PromoBanner.BuyVultSwap).first() shouldBe true
 
         // One millisecond before the TTL elapses it is still hidden.
-        now += ttlOf(PromoBanner.BuyVultSwap) - 1
+        timeSource += ttlOf(PromoBanner.BuyVultSwap) - 1.milliseconds
         repo.isDismissed(PromoBanner.BuyVultSwap).first() shouldBe true
     }
 
@@ -52,7 +54,7 @@ internal class PromoBannerDismissalRepositoryTest {
     fun `a dismissal lapses once the TTL elapses`() = runTest {
         repo.dismiss(PromoBanner.FollowXVultisig)
 
-        now += ttlOf(PromoBanner.FollowXVultisig) + 1.milliseconds.inWholeMilliseconds
+        timeSource += ttlOf(PromoBanner.FollowXVultisig) + 1.milliseconds
 
         repo.isDismissed(PromoBanner.FollowXVultisig).first() shouldBe false
     }
@@ -70,7 +72,7 @@ internal class PromoBannerDismissalRepositoryTest {
     fun `a permanent dismissal outlasts any TTL`() = runTest {
         repo.dismiss(PromoBanner.BuyVultSwap)
 
-        now += 3650.days.inWholeMilliseconds
+        timeSource += 3650.days
 
         repo.isDismissed(PromoBanner.BuyVultSwap).first() shouldBe false
         repo.isDismissed(PromoBanner.BuyVultSwap, DismissPolicy.Permanent).first() shouldBe true
@@ -86,7 +88,7 @@ internal class PromoBannerDismissalRepositoryTest {
         repo.dismiss(PromoBanner.BuyVultSwap)
         repo.dismiss(PromoBanner.FollowXVultisig)
 
-        now += ttlOf(PromoBanner.FollowXVultisig) + 1.milliseconds.inWholeMilliseconds
+        timeSource += ttlOf(PromoBanner.FollowXVultisig) + 1.milliseconds
 
         repo.isDismissed(PromoBanner.BuyVultSwap, DismissPolicy.Permanent).first() shouldBe true
         repo.isDismissed(PromoBanner.FollowXVultisig).first() shouldBe false
@@ -96,7 +98,7 @@ internal class PromoBannerDismissalRepositoryTest {
     fun `closing the QBTC claim banner keeps it closed for good`() = runTest {
         repo.dismiss(PromoBanner.ClaimQbtc)
 
-        now += 3650.days.inWholeMilliseconds
+        timeSource += 3650.days
 
         repo.isDismissed(PromoBanner.ClaimQbtc).first() shouldBe true
     }
@@ -108,7 +110,7 @@ internal class PromoBannerDismissalRepositoryTest {
         repo.isDismissed(PromoBanner.BackupVaultShare).first() shouldBe true
 
         // Unlike a TTL, no amount of elapsed time brings it back inside this process.
-        now += 3650.days.inWholeMilliseconds
+        timeSource += 3650.days
         repo.isDismissed(PromoBanner.BackupVaultShare).first() shouldBe true
     }
 
@@ -118,7 +120,7 @@ internal class PromoBannerDismissalRepositoryTest {
 
         // A fresh instance over the same storage stands in for a cold launch: the timestamp is
         // still on disk, and a session policy is required to ignore it.
-        val relaunched = PromoBannerDismissalRepositoryImpl(store)
+        val relaunched = PromoBannerDismissalRepositoryImpl(store, clock)
 
         relaunched.isDismissed(PromoBanner.BackupVaultShare).first() shouldBe false
     }
@@ -131,10 +133,10 @@ internal class PromoBannerDismissalRepositoryTest {
         repo.isDismissed(PromoBanner.FollowXVultisig).first() shouldBe false
     }
 
-    private fun ttlOf(banner: PromoBanner): Long {
+    private fun ttlOf(banner: PromoBanner): Duration {
         val policy = banner.dismissPolicy
         check(policy is DismissPolicy.Ttl) { "Expected a TTL policy for $banner" }
-        return policy.duration.inWholeMilliseconds
+        return policy.duration
     }
 
     private class FakeAppDataStore : AppDataStore {

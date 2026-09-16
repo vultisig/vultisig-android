@@ -12,6 +12,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.isSuccess
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.TimeSource
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.buildJsonArray
@@ -43,7 +44,9 @@ interface RpcHealthProbe {
     suspend fun probe(chain: Chain, url: String): RpcHealthResult
 }
 
-internal class RpcHealthProbeImpl @Inject constructor(private val httpClient: HttpClient) :
+internal class RpcHealthProbeImpl
+@Inject
+constructor(private val httpClient: HttpClient, private val timeSource: TimeSource) :
     RpcHealthProbe {
 
     override suspend fun probe(chain: Chain, url: String): RpcHealthResult {
@@ -70,14 +73,14 @@ internal class RpcHealthProbeImpl @Inject constructor(private val httpClient: Ht
     }
 
     private suspend fun probeEvm(chain: Chain, url: String): RpcHealthResult {
-        val started = System.currentTimeMillis()
+        val started = timeSource.markNow()
         val response =
             httpClient
                 .post(url) {
                     setBody(RpcPayload(method = "eth_chainId", params = buildJsonArray {}))
                 }
                 .bodyOrThrow<RpcResponse>()
-        val latency = System.currentTimeMillis() - started
+        val latency = started.elapsedNow().inWholeMilliseconds
 
         val reportedChainId =
             response.result?.removePrefix("0x")?.toLongOrNull(16)
@@ -93,9 +96,9 @@ internal class RpcHealthProbeImpl @Inject constructor(private val httpClient: Ht
     }
 
     private suspend fun probeCosmos(url: String): RpcHealthResult {
-        val started = System.currentTimeMillis()
+        val started = timeSource.markNow()
         val response = httpClient.get("${url.trimEnd('/')}/$COSMOS_NODE_INFO_PATH")
-        val latency = System.currentTimeMillis() - started
+        val latency = started.elapsedNow().inWholeMilliseconds
         // The LCD node_info endpoint confirms liveness. We don't verify the reported network id
         // against the chain here, so this stays a liveness-only result.
         return if (response.status.isSuccess()) {
@@ -106,9 +109,9 @@ internal class RpcHealthProbeImpl @Inject constructor(private val httpClient: Ht
     }
 
     private suspend fun probeReachability(url: String): RpcHealthResult {
-        val started = System.currentTimeMillis()
+        val started = timeSource.markNow()
         val response = httpClient.get(url)
-        val latency = System.currentTimeMillis() - started
+        val latency = started.elapsedNow().inWholeMilliseconds
         return if (response.status.isSuccess()) {
             RpcHealthResult.Reachable(latency, networkVerified = false)
         } else {

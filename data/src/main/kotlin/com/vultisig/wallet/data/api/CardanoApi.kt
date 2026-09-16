@@ -24,9 +24,10 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.path
 import java.math.BigInteger
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -63,7 +64,8 @@ interface CardanoApi {
 
 internal class CardanoApiImpl
 @Inject
-constructor(private val httpClient: HttpClient, private val json: Json) : CardanoApi {
+constructor(private val httpClient: HttpClient, private val json: Json, timeSource: TimeSource) :
+    CardanoApi {
     private val url: String = "https://api.koios.rest"
     private val apiV1Path: String = "api/v1"
     private val ogmiosUrl = "https://api.vultisig.com/ada/"
@@ -79,7 +81,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
      * just after the shared one resolved, and at five seconds it sits far below Cardano's ~20s
      * block time, so it can never hide a settled balance change from a refresh.
      */
-    private val addressAssetsCache = TtlCache<String, List<CardanoAssetResponseJson>>()
+    private val addressAssetsCache = TtlCache<String, List<CardanoAssetResponseJson>>(timeSource)
 
     private companion object {
         // Ogmios "UnknownOutputReference": the tx spends inputs the ledger no longer knows.
@@ -90,7 +92,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
         const val KOIOS_PAGE_SIZE = 1000
         // Stops the walk if the node ever keeps returning full pages (50k distinct assets).
         const val KOIOS_MAX_PAGES = 50
-        val ADDRESS_ASSETS_TTL_MILLIS = TimeUnit.SECONDS.toMillis(5)
+        val ADDRESS_ASSETS_TTL = 5.seconds
     }
 
     override suspend fun getBalance(coin: Coin): BigInteger {
@@ -151,7 +153,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Cardan
         address: String,
         subject: String,
     ): List<CardanoAssetResponseJson> =
-        addressAssetsCache.getOrPut(address, ADDRESS_ASSETS_TTL_MILLIS) {
+        addressAssetsCache.getOrPut(address, ADDRESS_ASSETS_TTL) {
             fetchAddressAssets(address, subject)
         }
 

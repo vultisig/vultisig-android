@@ -5,6 +5,9 @@ import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -44,7 +47,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("9D305...74D", Chain.ThorChain)
 
@@ -63,7 +66,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -79,7 +82,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -112,7 +115,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -144,7 +147,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -169,7 +172,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -184,7 +187,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -199,7 +202,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -214,7 +217,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -229,7 +232,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -257,7 +260,7 @@ class ThorMayaChainStatusProviderTest {
                 HttpStatusCode.OK to """{ "actions": [] }""",
                 HttpStatusCode.OK to nativeFailed,
             )
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -279,7 +282,7 @@ class ThorMayaChainStatusProviderTest {
                 HttpStatusCode.OK to """{ "actions": [] }""",
                 HttpStatusCode.OK to nativeSuccess,
             )
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.MayaChain)
 
@@ -308,7 +311,7 @@ class ThorMayaChainStatusProviderTest {
                 HttpStatusCode.OK to nativeSuccess,
                 HttpStatusCode.OK to refundAction,
             )
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
         provider.checkStatus("hash", Chain.ThorChain) shouldBe
@@ -331,7 +334,7 @@ class ThorMayaChainStatusProviderTest {
                     HttpStatusCode.OK to """{ "actions": [] }""",
                     HttpStatusCode.OK to nativeSuccess,
                 )
-            val provider = ThorMayaChainStatusProvider(client)
+            val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
             val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -341,7 +344,7 @@ class ThorMayaChainStatusProviderTest {
     @Test
     fun `indexable memo with repeated empty midgard actions eventually trusts native code 0`() =
         runTest {
-            var nowMillis = 0L
+            val timeSource = TestTimeSource()
             val nativeSuccess =
                 """
                 {
@@ -357,10 +360,10 @@ class ThorMayaChainStatusProviderTest {
                     HttpStatusCode.OK to """{ "actions": [] }""",
                     HttpStatusCode.OK to nativeSuccess,
                 )
-            val provider = ThorMayaChainStatusProvider(client) { nowMillis }
+            val provider = ThorMayaChainStatusProvider(client, timeSource)
 
             provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
-            nowMillis = 15_000L
+            timeSource += 15.seconds
             provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Confirmed
         }
 
@@ -382,7 +385,7 @@ class ThorMayaChainStatusProviderTest {
                     HttpStatusCode.OK to """{ "actions": [] }""",
                     HttpStatusCode.OK to nativeSuccess,
                 )
-            val provider = ThorMayaChainStatusProvider(client) { 0L }
+            val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
             provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
             provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
@@ -390,7 +393,7 @@ class ThorMayaChainStatusProviderTest {
 
     @Test
     fun `stale empty action streak does not carry over to a later polling session`() = runTest {
-        var nowMillis = 0L
+        val timeSource = TestTimeSource()
         val nativeSuccess =
             """
             {
@@ -406,13 +409,13 @@ class ThorMayaChainStatusProviderTest {
                 HttpStatusCode.OK to """{ "actions": [] }""",
                 HttpStatusCode.OK to nativeSuccess,
             )
-        val provider = ThorMayaChainStatusProvider(client) { nowMillis }
+        val provider = ThorMayaChainStatusProvider(client, timeSource)
 
         provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
 
         // A new polling session starts long after the streak's TTL — the stale count must not
         // let this poll confirm immediately even though 15s+ has technically elapsed.
-        nowMillis = 10 * 60_000L
+        timeSource += 10.minutes
         provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
     }
 
@@ -442,7 +445,7 @@ class ThorMayaChainStatusProviderTest {
                     HttpStatusCode.OK to """{ "actions": [] }""",
                     HttpStatusCode.OK to nativeSuccess,
                 )
-            val provider = ThorMayaChainStatusProvider(client)
+            val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
             val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -461,7 +464,7 @@ class ThorMayaChainStatusProviderTest {
                 HttpStatusCode.OK to """{ "actions": [] }""",
                 HttpStatusCode.OK to nativeSuccess,
             )
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -486,7 +489,7 @@ class ThorMayaChainStatusProviderTest {
                     HttpStatusCode.OK to """{ "actions": [] }""",
                     HttpStatusCode.OK to nativeSuccess,
                 )
-            val provider = ThorMayaChainStatusProvider(client)
+            val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
             provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
             provider.checkStatus("hash", Chain.ThorChain) shouldBe TransactionResult.Pending
@@ -500,7 +503,7 @@ class ThorMayaChainStatusProviderTest {
                 HttpStatusCode.OK to """{ "actions": [] }""",
                 HttpStatusCode.NotFound to "",
             )
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -519,7 +522,7 @@ class ThorMayaChainStatusProviderTest {
                 HttpStatusCode.OK to """{ "actions": [] }""",
                 HttpStatusCode.OK to nativeFailed,
             )
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -535,7 +538,7 @@ class ThorMayaChainStatusProviderTest {
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.MayaChain)
 
@@ -545,7 +548,7 @@ class ThorMayaChainStatusProviderTest {
     @Test
     fun `unknown chain returns Failed`() = runTest {
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, """{ "actions": [] }""")
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.Ethereum)
 
@@ -555,7 +558,7 @@ class ThorMayaChainStatusProviderTest {
     @Test
     fun `network failure returns Pending so polling continues`() = runTest {
         val client = MockHttpClient.throwingIOException(java.io.IOException("offline"))
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
@@ -565,7 +568,7 @@ class ThorMayaChainStatusProviderTest {
     @Test
     fun `malformed json returns Pending`() = runTest {
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, "not-json")
-        val provider = ThorMayaChainStatusProvider(client)
+        val provider = ThorMayaChainStatusProvider(client, TestTimeSource())
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 

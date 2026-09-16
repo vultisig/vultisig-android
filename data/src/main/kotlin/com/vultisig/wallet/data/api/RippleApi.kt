@@ -15,6 +15,10 @@ import io.ktor.client.request.setBody
 import java.math.BigInteger
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
@@ -61,9 +65,12 @@ interface RippleApi {
  * the network. Mirrors [CosmosBalanceCache], which solves the same fan-out on the Cosmos bank
  * endpoint.
  */
-internal class RippleAccountLinesCache(private val ttlMs: Long = DEFAULT_TTL_MS) {
+internal class RippleAccountLinesCache(
+    private val timeSource: TimeSource,
+    private val ttl: Duration = DEFAULT_TTL,
+) {
 
-    private class Entry(val value: List<RippleTrustLineJson>, val expiresAt: Long)
+    private class Entry(val value: List<RippleTrustLineJson>, val expiresAt: TimeMark)
 
     private val entries = ConcurrentHashMap<String, Entry>()
     private val locks = ConcurrentHashMap<String, Mutex>()
@@ -75,23 +82,24 @@ internal class RippleAccountLinesCache(private val ttlMs: Long = DEFAULT_TTL_MS)
         locks
             .computeIfAbsent(address) { Mutex() }
             .withLock {
-                val now = System.currentTimeMillis()
-                entries[address]?.takeIf { now < it.expiresAt }?.value
-                    ?: fetch().also { entries[address] = Entry(it, now + ttlMs) }
+                entries[address]?.takeIf { it.expiresAt.hasNotPassedNow() }?.value
+                    ?: fetch().also { entries[address] = Entry(it, timeSource.markNow() + ttl) }
             }
 
     companion object {
         // Long enough to absorb the per-token fan-out for one address, short enough that a later
         // manual refresh still fetches fresh balances.
-        private const val DEFAULT_TTL_MS = 10_000L
+        private val DEFAULT_TTL = 10.seconds
     }
 }
 
-internal class RippleApiImp @Inject constructor(private val http: HttpClient) : RippleApi {
+internal class RippleApiImp
+@Inject
+constructor(private val http: HttpClient, timeSource: TimeSource) : RippleApi {
 
     // Safe to hold per instance: RippleApi is bound as a @Singleton, so every caller shares one
     // cache. See RippleAccountLinesCache.
-    private val accountLinesCache = RippleAccountLinesCache()
+    private val accountLinesCache = RippleAccountLinesCache(timeSource)
 
     override suspend fun broadcastTransaction(tx: String): String {
         val result =

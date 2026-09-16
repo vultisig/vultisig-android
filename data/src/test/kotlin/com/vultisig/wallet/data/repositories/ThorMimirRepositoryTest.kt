@@ -6,6 +6,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -18,7 +19,7 @@ internal class ThorMimirRepositoryTest {
     @BeforeEach
     fun setUp() {
         api = mockk()
-        repository = ThorMimirRepositoryImpl(api)
+        repository = ThorMimirRepositoryImpl(api, TestTimeSource())
     }
 
     @Test
@@ -116,11 +117,11 @@ internal class ThorMimirRepositoryTest {
         coEvery { api.getMimir() } returns mapOf("ENABLEADVSWAPQUEUE" to 1L)
         assertTrue(repository.isAdvancedSwapQueueEnabled())
 
-        repository = ThorMimirRepositoryImpl(api)
+        repository = ThorMimirRepositoryImpl(api, TestTimeSource())
         coEvery { api.getMimir() } returns mapOf("ENABLEADVSWAPQUEUE" to 2L)
         assertFalse(repository.isAdvancedSwapQueueEnabled())
 
-        repository = ThorMimirRepositoryImpl(api)
+        repository = ThorMimirRepositoryImpl(api, TestTimeSource())
         coEvery { api.getMimir() } throws RuntimeException("thornode down")
         assertFalse(repository.isAdvancedSwapQueueEnabled())
     }
