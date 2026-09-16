@@ -122,11 +122,36 @@ class SubstrateSignerPayloadTest {
         }
     }
 
+    // The chain binding compares case-insensitively, so the readers behind it must decode the
+    // same spelling — a payload the gate accepts and the signer then refuses is a wedged ceremony.
     @Test
-    fun `the genesis hash match is case-insensitive`() {
-        keysignPayload(Chain.Polkadot, PLAYGROUND_MEMO.replace(GENESIS, GENESIS.uppercase()))
-            .substrateDappPayload
-            .shouldNotBeNull()
+    fun `an uppercase hex prefix passes the chain binding and decodes the same bytes`() {
+        val upper =
+            keysignPayload(Chain.Polkadot, PLAYGROUND_MEMO.replace(GENESIS, GENESIS.uppercase()))
+                .substrateDappPayload
+                .shouldNotBeNull()
+        val lower =
+            keysignPayload(Chain.Polkadot, PLAYGROUND_MEMO).substrateDappPayload.shouldNotBeNull()
+
+        upper.genesisHashBytes().toList() shouldBe lower.genesisHashBytes().toList()
+    }
+
+    @Test
+    fun `typed readers accept the 0X prefix like parseInt and BigInt do`() {
+        val payload =
+            SubstrateSignerPayload.fromMemo(
+                    """{"method":"0X050300","genesisHash":"$GENESIS","nonce":"0X00000047",""" +
+                        """"specVersion":"0X000f4ef8","transactionVersion":"0X0000001a",""" +
+                        """"tip":"0X0000000000000000000000000012d687","era":"0Xf502"}"""
+                )
+                .shouldNotBeNull()
+
+        payload.methodBytes().toList() shouldBe listOf<Byte>(5, 3, 0)
+        payload.eraBytes().toList() shouldBe listOf(0xf5.toByte(), 0x02)
+        payload.nonceValue() shouldBe 71L
+        payload.specVersionValue() shouldBe 1_003_256L
+        payload.transactionVersionValue() shouldBe 26L
+        payload.tipValue() shouldBe BigInteger.valueOf(1_234_567)
     }
 
     private fun keysignPayload(chain: Chain, memo: String?) =

@@ -56,8 +56,11 @@ data class SubstrateSignerPayload(
     fun tipValue(): BigInteger {
         if (tip.isEmpty()) return BigInteger.ZERO
         val value =
-            if (tip.startsWith(HEX_PREFIX)) tip.removePrefix(HEX_PREFIX).toBigIntegerOrNull(16)
-            else tip.toBigIntegerOrNull()
+            if (tip.startsWith(HEX_PREFIX, ignoreCase = true)) {
+                tip.removeHexPrefix().toBigIntegerOrNull(16)
+            } else {
+                tip.toBigIntegerOrNull()
+            }
         return value?.takeIf { it.signum() >= 0 }
             ?: error("Substrate signer payload has a malformed tip")
     }
@@ -72,12 +75,20 @@ data class SubstrateSignerPayload(
     }
 
     private fun hexBytes(field: String, value: String): ByteArray =
-        value.removePrefix(HEX_PREFIX).hexToByteArrayOrNull()
+        value.removeHexPrefix().hexToByteArrayOrNull()
             ?: error("Substrate signer payload field $field is not hex")
 
     private fun u32(field: String, value: String): Long =
-        value.removePrefix(HEX_PREFIX).toLongOrNull(16)?.takeIf { it in 0..U32_MAX }
+        value.removeHexPrefix().toLongOrNull(16)?.takeIf { it in 0..U32_MAX }
             ?: error("Substrate signer payload field $field is not a u32")
+
+    /**
+     * Strips `0x` in either case, as JavaScript's `parseInt(…, 16)` / `BigInt(…)` do and as the
+     * chain binding in [substrateDappPayload] does — one gate must not accept what the next
+     * refuses.
+     */
+    private fun String.removeHexPrefix(): String =
+        if (startsWith(HEX_PREFIX, ignoreCase = true)) drop(HEX_PREFIX.length) else this
 
     companion object {
         private const val HEX_PREFIX = "0x"
