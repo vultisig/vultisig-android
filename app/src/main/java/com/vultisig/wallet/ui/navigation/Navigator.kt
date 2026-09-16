@@ -6,8 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import timber.log.Timber
 
-internal typealias VsNavigator = Navigator<Destination>
-
 internal interface Navigator<Dest> {
 
     val destination: Flow<NavigateAction<Dest>>
