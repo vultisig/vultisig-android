@@ -20,6 +20,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
@@ -31,6 +32,8 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import timber.log.Timber
@@ -82,10 +85,14 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
     /**
      * The proxy occasionally answers a 200 with an ack body (`{"message":"ok"}`) instead of the
      * TronGrid payload. `bodyOrThrow` would surface that body's own `message` — the useless error
-     * `ok` — so a 2xx that fails to deserialize is re-thrown as an explicit invalid response.
+     * `ok` — so a 2xx that is the ack, or that fails to deserialize, is thrown as an explicit
+     * invalid response.
      */
-    private suspend inline fun <reified T> HttpResponse.tronBodyOrThrow(): T =
-        try {
+    private suspend inline fun <reified T> HttpResponse.tronBodyOrThrow(): T {
+        if (status.isSuccess() && isProxyAckBody()) {
+            throw NetworkException(status.value, "Invalid Tron response from $tronGrid")
+        }
+        return try {
             bodyOrThrow<T>()
         } catch (e: NetworkException) {
             if (status.isSuccess() && e.cause is ContentConvertException) {
@@ -93,6 +100,24 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
             }
             throw e
         }
+    }
+
+    /**
+     * True when a 2xx body is the proxy's bare acknowledgement (`{"message":"ok"}`) rather than a
+     * TronGrid payload. Failing to deserialize is not a reliable signal on its own: every field of
+     * [TronAccountJson] and [TronAccountResourceJson] has a default, so the ack parses cleanly into
+     * zeroed data that would price a fee off zero resources or report an activated account as new.
+     */
+    private suspend fun HttpResponse.isProxyAckBody(): Boolean {
+        val root =
+            try {
+                Json.parseToJsonElement(bodyAsText())
+            } catch (e: SerializationException) {
+                Timber.d(e, "Tron response is not JSON")
+                return false
+            }
+        return root is JsonObject && root.keys == setOf("message")
+    }
 
     override suspend fun broadcastTransaction(tx: String): String {
         repeat(MAX_BROADCAST_RETRIES) { attempt ->

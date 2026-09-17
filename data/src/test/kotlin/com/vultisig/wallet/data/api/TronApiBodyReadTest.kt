@@ -286,6 +286,55 @@ class TronApiBodyReadTest {
     }
 
     @Test
+    fun `getAccount throws a descriptive error on a 200 ack body`() {
+        // Every TronAccountJson field has a default, so the ack body deserializes cleanly into an
+        // empty account — which isNewAccount() would read as "destination not activated" and price
+        // an activation fee that the send does not owe.
+        val api = newApi("""{"message":"ok"}""")
+
+        val error =
+            assertThrows<NetworkException> {
+                runBlocking { api.getAccount("T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb") }
+            }
+
+        assertNotEquals("ok", error.message)
+        assertTrue(
+            error.message.contains("Invalid Tron response"),
+            "unexpected message: ${error.message}",
+        )
+    }
+
+    @Test
+    fun `getAccount returns an empty account for the node's unknown-address response`() =
+        runBlocking {
+            // TronGrid answers `{}` for an address that is not on chain; that is a real answer,
+            // not an ack, and must still read as a new account.
+            val api = newApi("""{}""")
+
+            val result = api.getAccount("T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb")
+
+            assertEquals("", result.address)
+        }
+
+    @Test
+    fun `getAccountResource throws a descriptive error on a 200 ack body`() {
+        // Same defaults problem: the ack would otherwise become zero bandwidth and zero energy,
+        // and TronFeeService would price the transfer as if the account had no resources at all.
+        val api = newApi("""{"message":"ok"}""")
+
+        val error =
+            assertThrows<NetworkException> {
+                runBlocking { api.getAccountResource("T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb") }
+            }
+
+        assertNotEquals("ok", error.message)
+        assertTrue(
+            error.message.contains("Invalid Tron response"),
+            "unexpected message: ${error.message}",
+        )
+    }
+
+    @Test
     fun `getBalance throws on a transport failure instead of reading zero`() {
         val api =
             TronApiImpl(httpClient = MockHttpClient.throwingIOException(UnknownHostException()))
