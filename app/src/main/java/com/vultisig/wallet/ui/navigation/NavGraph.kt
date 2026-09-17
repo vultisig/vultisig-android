@@ -208,7 +208,6 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             val args = entry.toRoute<Route.Deposit>()
 
             DepositScreen(
-                navController = navController,
                 vaultId = args.vaultId,
                 chainId = args.chainId,
                 depositType = args.depositType,

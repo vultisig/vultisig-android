@@ -8,7 +8,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -35,7 +34,6 @@ import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
 
 @Composable
 internal fun DepositScreen(
-    navController: NavController,
     vaultId: String,
     chainId: String,
     viewModel: DepositViewModel = hiltViewModel(),
@@ -58,12 +56,6 @@ internal fun DepositScreen(
     val route = navBackStackEntry?.destination?.route
 
     val shouldUseMainNavigator = route == SendDst.Send.route
-    val topBarNavController =
-        if (shouldUseMainNavigator) {
-            navController
-        } else {
-            depositNavHostController
-        }
 
     val chainName =
         remember(chainId) {

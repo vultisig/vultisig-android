@@ -258,7 +258,8 @@ private fun VerifyDepositDetails(
                 .padding(all = 24.dp)
         }
 
-    // The sheet lists its rows without rules between them; the full screen keeps them.
+    // The sheet lists its rows without rules between them; the full screen keeps them. The one
+    // rule the sheet does keep is the direct one below, which sets the network fee apart.
     val rowDivider: @Composable () -> Unit = {
         if (!inSheet) {
             VerifyCardDivider(0.dp)

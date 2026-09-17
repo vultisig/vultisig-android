@@ -19,17 +19,20 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindowProvider
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
@@ -74,6 +77,14 @@ internal fun OverviewBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+
+    // The route that hosts this sheet is a dialog destination, and its window dims whatever is
+    // under it on its own. The sheet then opens a second window above that and draws
+    // [OverviewSheetScrim] there, so the two would stack and leave the form at a fifth of its
+    // brightness instead of half. The host's dim is cleared here, during composition: the window
+    // is shown from an effect, and an effect runs too late to stop it from being added dimmed.
+    val view = LocalView.current
+    remember(view) { (view.parent as? DialogWindowProvider)?.window?.apply { setDimAmount(0f) } }
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
