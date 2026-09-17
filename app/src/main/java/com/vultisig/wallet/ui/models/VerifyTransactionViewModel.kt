@@ -92,6 +92,13 @@ internal data class TransactionDetailsUiModel(
     /** Set for an XRPL trust-line activation, whose amount is a limit rather than a transfer. */
     val isRippleTrustSet: Boolean = false,
     /**
+     * Set when a Polkadot/Bittensor send carries the initiator's allow-death intent: it is signed
+     * as `transfer_allow_death`, so if it drops the sender under the existential deposit the
+     * runtime reaps the account instead of refusing the transfer. The co-signer rebuilds the same
+     * call from the payload, so this is its only chance to see what it is approving.
+     */
+    val emptiesSenderAccount: Boolean = false,
+    /**
      * Null when the terms cannot be read — separate from [isRippleTrustSet] so an unreadable trust
      * line still suppresses the payment rows.
      */

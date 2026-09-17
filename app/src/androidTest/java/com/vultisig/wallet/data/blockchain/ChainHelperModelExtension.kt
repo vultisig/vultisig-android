@@ -228,6 +228,7 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 transactionVersion = polkadotSpecific.transactionVersion.toUInt(),
                 genesisHash = polkadotSpecific.genesisHash,
                 gas = polkadotSpecific.gas.toULong(),
+                allowDeath = polkadotSpecific.allowDeath,
             )
         }
 

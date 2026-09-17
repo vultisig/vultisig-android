@@ -261,6 +261,7 @@
     <string name="vault_settings_delete_vault_eddsa_key">Clave EdDSA:</string>
     <string name="vault_settings_delete_vault_id">ID de dispositivo:</string>
     <string name="verify_transaction_memo_title">Memorándum</string>
+    <string name="verify_transaction_allow_death_warning">Esta transferencia puede vaciar la cuenta del remitente. Si el saldo restante cae por debajo del depósito existencial, la cuenta se desactivará (se recuperará) y se perderán los %1$s restantes.</string>
     <string name="vault_settings_delete_vault_value">Valor de la Bóveda:</string>
     <string name="join_keysign_wrong_reshare">ReShare incorrecto</string>
     <string name="swap_screen_provider_title">Proveedor</string>

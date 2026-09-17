@@ -381,6 +381,31 @@ internal fun VerifySendScreen(
                             subtitle = tx.destinationTag,
                         )
                     }
+
+                    if (tx.emptiesSenderAccount) {
+                        VerifyCardDivider(0.dp)
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        ) {
+                            UiIcon(
+                                drawableResId = R.drawable.ic_triangle_alert,
+                                tint = Theme.v2.colors.alerts.warning,
+                                size = 16.dp,
+                            )
+                            Text(
+                                text =
+                                    stringResource(
+                                        R.string.verify_transaction_allow_death_warning,
+                                        tx.token.token.ticker,
+                                    ),
+                                style = Theme.brockmann.body.s.medium,
+                                color = Theme.v2.colors.alerts.warning,
+                            )
+                        }
+                    }
                     tx.signAmino
                         ?.takeIf { it.isNotBlank() }
                         ?.let {
@@ -624,6 +649,32 @@ private fun PreviewVerifySendScreenUnlimitedApproval() {
                         isUnlimitedApproval = true,
                         approvalSpender = uniswapV3Router,
                         approvalTokenTicker = "USDC",
+                    )
+            ),
+        isConsentsEnabled = true,
+        confirmTitle = stringResource(R.string.keysign_sign_transaction),
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onFastSignClick = {},
+        onConfirm = {},
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewVerifySendScreenAllowDeath() {
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        token =
+                            ValuedToken(Coins.Bittensor.TAO, value = "1.25", fiatValue = "$412"),
+                        srcAddress = "5Ej64CJQSZFsPK4byPVCZhNWiYeRXnELwYw4KYQBq6yfvaQ3",
+                        dstAddress = "5DtJMgqtYZg6NyCM1KDkmgZ6nW7pKgL1fneDHQtwPjBrQuXG",
+                        emptiesSenderAccount = true,
+                        networkFeeTokenValue = "0.0002 TAO",
+                        networkFeeFiatValue = "$0.07",
                     )
             ),
         isConsentsEnabled = true,

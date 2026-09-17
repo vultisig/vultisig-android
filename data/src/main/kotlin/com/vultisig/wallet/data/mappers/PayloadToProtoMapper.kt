@@ -125,6 +125,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         transactionVersion = specific.transactionVersion,
                         genesisHash = specific.genesisHash,
                         gas = specific.gas,
+                        allowDeath = specific.allowDeath,
                     )
                 } else null,
             suicheSpecific =
