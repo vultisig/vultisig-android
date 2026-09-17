@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.utils.toSafeByteArray
 import java.math.BigInteger
 import wallet.core.jni.CoinType
 import wallet.core.jni.EthereumRlp
+import wallet.core.jni.proto.Common.SigningError
 import wallet.core.jni.proto.EthereumRlp.EncodingInput
 import wallet.core.jni.proto.EthereumRlp.EncodingOutput
 import wallet.core.jni.proto.EthereumRlp.RlpItem
@@ -51,6 +52,18 @@ object EthereumRlpEncoder {
 
         val output =
             EncodingOutput.parseFrom(EthereumRlp.encode(CoinType.ETHEREUM, input.toByteArray()))
+        return toEip1559Envelope(output)
+    }
+
+    /**
+     * Wraps wallet-core's encoder result in the type-2 envelope. A failed encode leaves `encoded`
+     * empty, which would otherwise pass through as a plausible 1-byte payload, so the error is
+     * surfaced here rather than at each caller.
+     */
+    internal fun toEip1559Envelope(output: EncodingOutput): ByteArray {
+        require(output.error == SigningError.OK) {
+            "RLP encoding failed: ${output.error} ${output.errorMessage}"
+        }
         val encoded = output.encoded.toByteArray()
 
         return ByteArray(encoded.size + 1).apply {
