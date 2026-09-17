@@ -21,7 +21,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -59,8 +58,8 @@ constructor(
     private val scanChainBalances: ScanChainBalancesUseCase,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(KeyImportChainsSetupUiModel())
-    val state: StateFlow<KeyImportChainsSetupUiModel> = _state.asStateFlow()
+    val state: StateFlow<KeyImportChainsSetupUiModel>
+        field = MutableStateFlow(KeyImportChainsSetupUiModel())
 
     val searchTextFieldState = TextFieldState()
 
@@ -77,7 +76,7 @@ constructor(
     }
 
     private fun filterChains(query: String) {
-        _state.update { current ->
+        state.update { current ->
             current.copy(filteredChains = applyFilter(current.allChains, query))
         }
     }
@@ -93,7 +92,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to scan chain balances")
-                _state.update { current ->
+                state.update { current ->
                     // If user is already in CustomizeChains, don't disturb them
                     if (current.screenState == ChainsSetupState.CustomizeChains) {
                         current
@@ -136,7 +135,7 @@ constructor(
                     )
                 }
 
-            _state.update { current ->
+            state.update { current ->
                 if (current.screenState == ChainsSetupState.CustomizeChains) {
                     val updatedAllChains =
                         current.allChains.map { item ->
@@ -178,7 +177,7 @@ constructor(
     }
 
     fun selectManually() {
-        _state.update {
+        state.update {
             if (it.allChains.isNotEmpty()) {
                 it.copy(screenState = ChainsSetupState.CustomizeChains)
             } else {
@@ -203,10 +202,10 @@ constructor(
 
     fun toggleChain(chain: Chain) {
         val updatedChains =
-            _state.value.allChains.map {
+            state.value.allChains.map {
                 if (it.chain == chain) it.copy(isSelected = !it.isSelected) else it
             }
-        _state.update {
+        state.update {
             it.copy(
                 allChains = updatedChains,
                 filteredChains = applyFilter(updatedChains),
@@ -216,8 +215,8 @@ constructor(
     }
 
     fun selectAll() {
-        val updatedChains = _state.value.allChains.map { it.copy(isSelected = true) }
-        _state.update {
+        val updatedChains = state.value.allChains.map { it.copy(isSelected = true) }
+        state.update {
             it.copy(
                 allChains = updatedChains,
                 filteredChains = applyFilter(updatedChains),
@@ -227,8 +226,8 @@ constructor(
     }
 
     fun deselectAll() {
-        val updatedChains = _state.value.allChains.map { it.copy(isSelected = false) }
-        _state.update {
+        val updatedChains = state.value.allChains.map { it.copy(isSelected = false) }
+        state.update {
             it.copy(
                 allChains = updatedChains,
                 filteredChains = applyFilter(updatedChains),
@@ -265,12 +264,12 @@ constructor(
     }
 
     fun back() {
-        val currentState = _state.value
+        val currentState = state.value
         if (
             currentState.screenState == ChainsSetupState.CustomizeChains &&
                 currentState.activeChains.isNotEmpty()
         ) {
-            _state.update { it.copy(screenState = ChainsSetupState.ActiveChains) }
+            state.update { it.copy(screenState = ChainsSetupState.ActiveChains) }
         } else {
             viewModelScope.launch { navigator.back() }
         }

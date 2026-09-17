@@ -58,7 +58,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -247,8 +246,8 @@ constructor(
 
     private var transaction: Transaction? = null
 
-    private val _uiState = MutableStateFlow(VerifyTransactionUiModel())
-    val uiState: StateFlow<VerifyTransactionUiModel> = _uiState.asStateFlow()
+    val uiState: StateFlow<VerifyTransactionUiModel>
+        field = MutableStateFlow(VerifyTransactionUiModel())
     private val password = MutableStateFlow<String?>(null)
 
     private val _fastSignFlow = Channel<Boolean>()
@@ -263,23 +262,23 @@ constructor(
     }
 
     fun checkConsentAddress(checked: Boolean) {
-        viewModelScope.launch { _uiState.update { it.copy(consentAddress = checked) } }
+        viewModelScope.launch { uiState.update { it.copy(consentAddress = checked) } }
     }
 
     fun checkConsentAmount(checked: Boolean) {
-        viewModelScope.launch { _uiState.update { it.copy(consentAmount = checked) } }
+        viewModelScope.launch { uiState.update { it.copy(consentAmount = checked) } }
     }
 
     fun checkConsentIssuer(checked: Boolean) {
-        viewModelScope.launch { _uiState.update { it.copy(consentIssuer = checked) } }
+        viewModelScope.launch { uiState.update { it.copy(consentIssuer = checked) } }
     }
 
     fun checkConsentLimit(checked: Boolean) {
-        viewModelScope.launch { _uiState.update { it.copy(consentLimit = checked) } }
+        viewModelScope.launch { uiState.update { it.copy(consentLimit = checked) } }
     }
 
     fun checkConsentDappTransaction(checked: Boolean) {
-        viewModelScope.launch { _uiState.update { it.copy(consentDappTransaction = checked) } }
+        viewModelScope.launch { uiState.update { it.copy(consentDappTransaction = checked) } }
     }
 
     fun authFastSign() {
@@ -298,28 +297,28 @@ constructor(
     fun joinKeySign() {
         _fastSign = false
         handleSigningFlowCommon(
-            txScanStatus = _uiState.value.txScanStatus,
-            showWarning = { _uiState.update { it.copy(showScanningWarning = true) } },
+            txScanStatus = uiState.value.txScanStatus,
+            showWarning = { uiState.update { it.copy(showScanningWarning = true) } },
             onSign = { keysign(KeysignInitType.QR_CODE) },
         )
     }
 
     private fun joinKeySignAndSkipWarnings() {
-        _uiState.update { it.copy(showScanningWarning = false) }
+        uiState.update { it.copy(showScanningWarning = false) }
         keysign(KeysignInitType.QR_CODE)
     }
 
     fun fastSign() {
         _fastSign = true
         handleSigningFlowCommon(
-            txScanStatus = _uiState.value.txScanStatus,
-            showWarning = { _uiState.update { it.copy(showScanningWarning = true) } },
+            txScanStatus = uiState.value.txScanStatus,
+            showWarning = { uiState.update { it.copy(showScanningWarning = true) } },
             onSign = { fastSignAndSkipWarnings() },
         )
     }
 
     private fun fastSignAndSkipWarnings() {
-        _uiState.update { it.copy(showScanningWarning = false) }
+        uiState.update { it.copy(showScanningWarning = false) }
 
         if (!tryToFastSignWithPassword()) {
             viewModelScope.launch { _fastSignFlow.send(true) }
@@ -335,11 +334,11 @@ constructor(
     }
 
     fun dismissError() {
-        _uiState.update { it.copy(errorText = null) }
+        uiState.update { it.copy(errorText = null) }
     }
 
     fun dismissScanningWarning() {
-        _uiState.update { it.copy(showScanningWarning = false) }
+        uiState.update { it.copy(showScanningWarning = false) }
     }
 
     fun back() {
@@ -347,7 +346,7 @@ constructor(
     }
 
     private fun keysign(keysignInitType: KeysignInitType) {
-        if (_uiState.value.hasAllConsents) {
+        if (uiState.value.hasAllConsents) {
             viewModelScope.launch {
                 launchKeysign(
                     keysignInitType,
@@ -358,7 +357,7 @@ constructor(
                 )
             }
         } else {
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     errorText =
                         UiText.StringResource(R.string.verify_transaction_error_not_enough_consent)
@@ -374,7 +373,7 @@ constructor(
     private fun loadFastSign() {
         viewModelScope.launch {
             val hasFastSign = isVaultHasFastSignById(vaultId)
-            _uiState.update { it.copy(hasFastSign = hasFastSign) }
+            uiState.update { it.copy(hasFastSign = hasFastSign) }
         }
     }
 
@@ -472,7 +471,7 @@ constructor(
                     isUniversalRouterSwap = decodedExtras.isUniversalRouterSwap,
                 )
 
-            _uiState.update { it.copy(transaction = namedUiModel) }
+            uiState.update { it.copy(transaction = namedUiModel) }
 
             loadDecodedHero(tx, signingVault?.coins.orEmpty())
             scanTransaction()
@@ -500,7 +499,7 @@ constructor(
                     )
                 } ?: return@safeLaunch
 
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     transaction =
                         it.transaction.copy(heroContent = hero.applyTo(it.transaction.heroContent))
@@ -520,7 +519,7 @@ constructor(
 
             if (!isSupported) return
 
-            _uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
+            uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 
             val securityScannerTransaction =
                 securityScannerService.createSecurityScannerTransaction(tx)
@@ -530,13 +529,13 @@ constructor(
                     securityScannerService.scanTransaction(securityScannerTransaction)
                 }
 
-            _uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
+            uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
         } catch (t: Throwable) {
             if (t is kotlinx.coroutines.CancellationException) throw t
             val errorMessage = "Security scan failed ${t.message}"
             Timber.e(t, errorMessage)
 
-            _uiState.update {
+            uiState.update {
                 val message = t.message ?: errorMessage
                 it.copy(
                     txScanStatus =

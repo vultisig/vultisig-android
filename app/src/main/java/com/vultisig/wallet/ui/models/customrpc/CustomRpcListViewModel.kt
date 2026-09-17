@@ -19,7 +19,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,8 +46,8 @@ constructor(
 
     val searchTextFieldState = TextFieldState()
 
-    private val _state = MutableStateFlow(CustomRpcListUiState())
-    val state: StateFlow<CustomRpcListUiState> = _state.asStateFlow()
+    val state: StateFlow<CustomRpcListUiState>
+        field = MutableStateFlow(CustomRpcListUiState())
 
     init {
         viewModelScope.launch {
@@ -70,7 +69,7 @@ constructor(
                             )
                         }
                 }
-                .collect { chains -> _state.update { it.copy(chains = chains) } }
+                .collect { chains -> state.update { it.copy(chains = chains) } }
         }
     }
 

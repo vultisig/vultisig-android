@@ -13,7 +13,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -45,8 +45,8 @@ constructor(private val navigator: Navigator<Destination>, savedStateHandle: Sav
     private val args = savedStateHandle.toRoute<Route.SetupVaultInfo>()
     private val deviceCount = args.count
     private val tssAction = args.tssAction
-    private val _uiState = MutableStateFlow(SetupVaultInfoUiState())
-    val uiState = _uiState.asStateFlow()
+    val uiState: StateFlow<SetupVaultInfoUiState>
+        field = MutableStateFlow(SetupVaultInfoUiState())
 
     init {
         val state =
@@ -90,7 +90,7 @@ constructor(private val navigator: Navigator<Destination>, savedStateHandle: Sav
                 else -> error("is not possible")
             }
 
-        _uiState.update { state }
+        uiState.update { state }
     }
 
     fun onEvent(event: SetupVaultInfoEvent) {

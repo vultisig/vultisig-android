@@ -59,7 +59,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
@@ -154,8 +153,8 @@ constructor(
     private val clock: Clock,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<TronDeFiUiState>(TronDeFiUiState.Loading)
-    val state: StateFlow<TronDeFiUiState> = _state.asStateFlow()
+    val state: StateFlow<TronDeFiUiState>
+        field = MutableStateFlow<TronDeFiUiState>(TronDeFiUiState.Loading)
 
     private var vaultId: VaultId = ""
     private var cachedTrxCoin: Coin? = null
@@ -179,8 +178,8 @@ constructor(
                     Timber.e(e, "Failed to load Tron DeFi data")
                     // Don't blow away a screen that's already showing data on a background-refresh
                     // failure; only surface the error state when there's nothing rendered yet.
-                    if (_state.value !is TronDeFiUiState.Success) {
-                        _state.value =
+                    if (state.value !is TronDeFiUiState.Success) {
+                        state.value =
                             TronDeFiUiState.Error(
                                 R.string.error_view_default_description.asUiText()
                             )
@@ -191,7 +190,7 @@ constructor(
                 val trxCoin = findTrxCoin(vaultId)
                 cachedTrxCoin = trxCoin
                 if (trxCoin == null) {
-                    _state.value =
+                    state.value =
                         TronDeFiUiState.Error(R.string.tron_defi_error_trx_not_in_vault.asUiText())
                     return@safeLaunch
                 }
@@ -216,7 +215,7 @@ constructor(
                         isBalanceVisible = isBalanceVisible,
                     )
                 } else {
-                    _state.value = TronDeFiUiState.Loading
+                    state.value = TronDeFiUiState.Loading
                 }
 
                 // Fetch fresh account state and resource usage in parallel
@@ -249,7 +248,7 @@ constructor(
      * mid-claim, re-enabling the claim button and dismissing the error the user hadn't read yet.
      */
     private fun publishLoaded(tronData: TronStakingUiModel, isBalanceVisible: Boolean) {
-        _state.update { current ->
+        state.update { current ->
             (current as? TronDeFiUiState.Success)?.copy(
                 tronData = tronData,
                 isBalanceVisible = isBalanceVisible,
@@ -323,13 +322,13 @@ constructor(
         vaultRepository.get(vaultId)?.coins?.find { it.chain == Chain.Tron && it.isNativeToken }
 
     fun onTabSelected(tab: DeFiTab) {
-        _state.update { current ->
+        state.update { current ->
             if (current is TronDeFiUiState.Success) current.copy(selectedTab = tab) else current
         }
     }
 
     fun setPositionSelectionDialogVisibility(visible: Boolean) {
-        _state.update { current ->
+        state.update { current ->
             if (current is TronDeFiUiState.Success)
                 current.copy(
                     showPositionSelectionDialog = visible,
@@ -340,7 +339,7 @@ constructor(
     }
 
     fun onPositionSelectionChange(ticker: String, selected: Boolean) {
-        _state.update { current ->
+        state.update { current ->
             if (current is TronDeFiUiState.Success) {
                 val updated =
                     if (selected) current.tempSelectedPositions + ticker
@@ -351,7 +350,7 @@ constructor(
     }
 
     fun onPositionSelectionDone() {
-        _state.update { current ->
+        state.update { current ->
             if (current is TronDeFiUiState.Success)
                 current.copy(
                     showPositionSelectionDialog = false,
@@ -372,7 +371,7 @@ constructor(
     fun onClaimExpiredWithdrawals() {
         if (claimJob?.isActive == true) return
         val trxCoin = cachedTrxCoin ?: return
-        val current = _state.value as? TronDeFiUiState.Success ?: return
+        val current = state.value as? TronDeFiUiState.Success ?: return
 
         val claimableSun =
             current.tronData.pendingWithdrawals
@@ -507,7 +506,7 @@ constructor(
     }
 
     private fun updateSuccess(transform: (TronDeFiUiState.Success) -> TronDeFiUiState.Success) {
-        _state.update { current ->
+        state.update { current ->
             if (current is TronDeFiUiState.Success) transform(current) else current
         }
     }

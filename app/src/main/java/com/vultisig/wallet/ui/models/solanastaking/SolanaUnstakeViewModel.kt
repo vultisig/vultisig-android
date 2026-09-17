@@ -30,7 +30,6 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
 
@@ -54,17 +53,17 @@ constructor(
 
     private val route = savedStateHandle.toRoute<Route.SolanaUnstake>()
 
-    private val _state =
-        MutableStateFlow(SolanaUnstakeUiState(stakePubkey = shortAddress(route.stakePubkey)))
-    val state: StateFlow<SolanaUnstakeUiState> = _state.asStateFlow()
+    val state: StateFlow<SolanaUnstakeUiState>
+        field =
+            MutableStateFlow(SolanaUnstakeUiState(stakePubkey = shortAddress(route.stakePubkey)))
 
     fun onContinue() {
-        if (_state.value.isSubmitting) return
-        _state.update { it.copy(isSubmitting = true, error = null) }
+        if (state.value.isSubmitting) return
+        state.update { it.copy(isSubmitting = true, error = null) }
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to build Solana unstake tx")
-                _state.update {
+                state.update {
                     it.copy(isSubmitting = false, error = (e.message ?: "").asUiText())
                 }
             }

@@ -21,8 +21,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -43,32 +41,32 @@ internal class AddressManager(
     private val vaultIdProvider: () -> String?,
     private val checkIfTokenSelectionRequired: (currentChain: Chain, newChain: Chain) -> Unit,
 ) {
-    private val _resolvedDstAddress = MutableStateFlow<String?>(null)
-    val resolvedDstAddress: StateFlow<String?> = _resolvedDstAddress.asStateFlow()
+    val resolvedDstAddress: StateFlow<String?>
+        field = MutableStateFlow<String?>(null)
 
-    private val _dstAddressLabel = MutableStateFlow<String?>(null)
-    val dstAddressLabel: StateFlow<String?> = _dstAddressLabel.asStateFlow()
+    val dstAddressLabel: StateFlow<String?>
+        field = MutableStateFlow<String?>(null)
 
     // True while the destination tag was auto-filled from a pasted X-address (locks the field).
-    private val _destinationTagLocked = MutableStateFlow(false)
-    val destinationTagLocked: StateFlow<Boolean> = _destinationTagLocked.asStateFlow()
+    val destinationTagLocked: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     // The classic address an X-address normalized to; used to keep the lock while the field holds
     // that normalized value, and to release it once the user replaces the address.
     private var lockedClassicAddress: String? = null
 
-    private val _isDstAddressComplete = MutableStateFlow(false)
-    val isDstAddressComplete: StateFlow<Boolean> = _isDstAddressComplete.asStateFlow()
+    val isDstAddressComplete: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     // Why a non-empty recipient was rejected, or null once the input is accepted or empty. Drives
     // the inline recipient error. While name resolution is in flight the value is held, so a
     // standing error stays put until the new input resolves instead of blinking off and back on.
     // Chain-general: every send chain validates through the same path below.
-    private val _addressError = MutableStateFlow<RecipientValidity?>(null)
-    val addressError: StateFlow<RecipientValidity?> = _addressError.asStateFlow()
+    val addressError: StateFlow<RecipientValidity?>
+        field = MutableStateFlow<RecipientValidity?>(null)
 
-    private val _onAddressValidated = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val onAddressValidated: SharedFlow<Unit> = _onAddressValidated.asSharedFlow()
+    val onAddressValidated: SharedFlow<Unit>
+        field = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     fun start() {
         scope.launch { collectIsComplete() }
@@ -96,7 +94,7 @@ internal class AddressManager(
 
     private suspend fun collectIsComplete() {
         addressFieldState.textAsFlow().collect { text ->
-            _isDstAddressComplete.value = text.toString().isNotBlank()
+            isDstAddressComplete.value = text.toString().isNotBlank()
         }
     }
 
@@ -132,9 +130,9 @@ internal class AddressManager(
         }
 
         if (addressStr.isEmpty()) {
-            _resolvedDstAddress.value = null
-            _dstAddressLabel.value = null
-            _addressError.value = null
+            resolvedDstAddress.value = null
+            dstAddressLabel.value = null
+            addressError.value = null
             return
         }
 
@@ -142,26 +140,26 @@ internal class AddressManager(
             RecipientValidity.Valid -> {
                 // Only clear ENS label if the user typed a new raw address,
                 // not when we programmatically set the field to the resolved address.
-                if (addressStr != _resolvedDstAddress.value) {
-                    _dstAddressLabel.value = null
+                if (addressStr != resolvedDstAddress.value) {
+                    dstAddressLabel.value = null
                 }
-                _resolvedDstAddress.value = addressStr
-                _addressError.value = null
-                _onAddressValidated.tryEmit(Unit)
+                resolvedDstAddress.value = addressStr
+                addressError.value = null
+                onAddressValidated.tryEmit(Unit)
             }
             // A token account, program address or burn address is a well-formed address, so
             // there is no name for the resolver to find — reject it here instead of sending it
             // round that path.
             RecipientValidity.NotAWalletAddress,
             RecipientValidity.BurnAddress -> {
-                _resolvedDstAddress.value = null
-                _dstAddressLabel.value = null
-                _addressError.value = validity
+                resolvedDstAddress.value = null
+                dstAddressLabel.value = null
+                addressError.value = validity
             }
             RecipientValidity.InvalidForChain -> {
                 // Clear stale resolved address while async resolution is in-flight
-                _resolvedDstAddress.value = null
-                _dstAddressLabel.value = null
+                resolvedDstAddress.value = null
+                dstAddressLabel.value = null
                 tryResolveName(addressStr, token)
             }
         }
@@ -172,8 +170,8 @@ internal class AddressManager(
      * was locked) is dropped; a hand-typed tag is user intent and is preserved.
      */
     private fun releaseDerivedTagLock() {
-        if (_destinationTagLocked.value) destinationTagFieldState.clearText()
-        _destinationTagLocked.value = false
+        if (destinationTagLocked.value) destinationTagFieldState.clearText()
+        destinationTagLocked.value = false
         lockedClassicAddress = null
     }
 
@@ -181,23 +179,23 @@ internal class AddressManager(
         val tag = decoded.tag
         if (tag != null) {
             destinationTagFieldState.setTextAndPlaceCursorAtEnd(tag.toString())
-            _destinationTagLocked.value = true
+            destinationTagLocked.value = true
         } else {
             // No embedded tag: normalize the address and leave the tag field editable, but drop a
             // tag a *previous* X-address derived (it was locked) so it can't ride onto this new
             // address; a hand-typed tag is user intent and is preserved.
-            if (_destinationTagLocked.value) destinationTagFieldState.clearText()
-            _destinationTagLocked.value = false
+            if (destinationTagLocked.value) destinationTagFieldState.clearText()
+            destinationTagLocked.value = false
         }
         lockedClassicAddress = decoded.classicAddress
         if (addressFieldState.text.toString() != decoded.classicAddress) {
             addressFieldState.setTextAndPlaceCursorAtEnd(decoded.classicAddress)
         }
-        _resolvedDstAddress.value = decoded.classicAddress
-        _addressError.value = null
+        resolvedDstAddress.value = decoded.classicAddress
+        addressError.value = null
         // Surface the pasted X-address as the label so Verify/Done show what the user entered.
-        _dstAddressLabel.value = originalInput
-        _onAddressValidated.tryEmit(Unit)
+        dstAddressLabel.value = originalInput
+        onAddressValidated.tryEmit(Unit)
     }
 
     private suspend fun tryResolveName(addressStr: String, token: Coin) {
@@ -208,15 +206,15 @@ internal class AddressManager(
             if (addressFieldState.text.asAddressInput() != addressStr) return
             val validity = chainAccountAddressRepository.validateRecipient(chain, resolved)
             if (validity == RecipientValidity.Valid) {
-                _dstAddressLabel.value = addressStr
-                _resolvedDstAddress.value = resolved
-                _addressError.value = null
+                dstAddressLabel.value = addressStr
+                resolvedDstAddress.value = resolved
+                addressError.value = null
                 addressFieldState.setTextAndPlaceCursorAtEnd(resolved)
-                _onAddressValidated.tryEmit(Unit)
+                onAddressValidated.tryEmit(Unit)
             } else {
-                _resolvedDstAddress.value = null
-                _dstAddressLabel.value = null
-                _addressError.value = validity
+                resolvedDstAddress.value = null
+                dstAddressLabel.value = null
+                addressError.value = validity
             }
         } catch (e: CancellationException) {
             throw e
@@ -224,9 +222,9 @@ internal class AddressManager(
             // Resolver failures are non-fatal (the user can retry), but log at warning so a
             // genuine bug in the resolver surface — RPC, parsing, etc. — isn't silently buried.
             Timber.w(e, "Failed to resolve address %s on %s", addressStr, chain)
-            _resolvedDstAddress.value = null
-            _dstAddressLabel.value = null
-            _addressError.value = RecipientValidity.InvalidForChain
+            resolvedDstAddress.value = null
+            dstAddressLabel.value = null
+            addressError.value = RecipientValidity.InvalidForChain
         }
     }
 }

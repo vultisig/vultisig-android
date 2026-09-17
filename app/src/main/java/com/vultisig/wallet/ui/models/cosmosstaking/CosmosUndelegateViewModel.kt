@@ -44,7 +44,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -132,15 +131,15 @@ constructor(
     private val prefilledStakedBalance: BigDecimal =
         route.stakedAmount?.toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO } ?: BigDecimal.ZERO
 
-    private val _state =
-        MutableStateFlow(
-            CosmosUndelegateUiState(
-                ticker = route.ticker.orEmpty(),
-                validatorAddress = route.validatorAddress,
-                stakedBalance = prefilledStakedBalance,
+    val state: StateFlow<CosmosUndelegateUiState>
+        field =
+            MutableStateFlow(
+                CosmosUndelegateUiState(
+                    ticker = route.ticker.orEmpty(),
+                    validatorAddress = route.validatorAddress,
+                    stakedBalance = prefilledStakedBalance,
+                )
             )
-        )
-    val state: StateFlow<CosmosUndelegateUiState> = _state.asStateFlow()
 
     private var coin: Coin? = null
 
@@ -156,12 +155,12 @@ constructor(
     }
 
     fun onPercentageChange(percent: Int) {
-        _state.update { it.copy(percentageSelected = percent) }
+        state.update { it.copy(percentageSelected = percent) }
         applyPercentage(percent)
     }
 
     fun dismissError() {
-        _state.update { it.copy(errorMessage = null) }
+        state.update { it.copy(errorMessage = null) }
     }
 
     fun back() {
@@ -169,7 +168,7 @@ constructor(
     }
 
     fun submit() {
-        val currentState = _state.value
+        val currentState = state.value
         if (currentState.isSubmitting) return
 
         val amountText = amountFieldState.text.toString().trim()
@@ -205,7 +204,7 @@ constructor(
 
         // Flip the flag before launching so two quick taps can't both pass the guard above and
         // start duplicate submit coroutines. Cleared by setError on any failure path.
-        _state.update { it.copy(isSubmitting = true, errorMessage = null) }
+        state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
         viewModelScope.safeLaunch(
             onError = { e -> setError(e.message ?: "Failed to build undelegate transaction") }
@@ -280,7 +279,7 @@ constructor(
                 Route.CosmosStakingVerify(vaultId = route.vaultId, transactionId = depositTx.id),
                 NavigationOptions(popUpToRoute = Route.CosmosStakingVerify::class, inclusive = true),
             )
-            _state.update { it.copy(isSubmitting = false) }
+            state.update { it.copy(isSubmitting = false) }
         }
     }
 
@@ -354,7 +353,7 @@ constructor(
                 replace(0, length, stakedBalance.stripTrailingZeros().toPlainString())
             }
 
-            _state.update {
+            state.update {
                 it.copy(
                     ticker = nativeCoin.ticker,
                     validatorMoniker = moniker.orEmpty(),
@@ -421,7 +420,7 @@ constructor(
     }
 
     private fun applyPercentage(percent: Int) {
-        val staked = _state.value.stakedBalance
+        val staked = state.value.stakedBalance
         if (staked <= BigDecimal.ZERO) return
         val amount =
             staked
@@ -433,7 +432,7 @@ constructor(
     }
 
     private fun setError(message: String) {
-        _state.update { it.copy(errorMessage = message, isSubmitting = false) }
+        state.update { it.copy(errorMessage = message, isSubmitting = false) }
     }
 }
 

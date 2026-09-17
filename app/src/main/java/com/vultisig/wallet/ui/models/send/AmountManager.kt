@@ -18,7 +18,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
@@ -41,11 +40,11 @@ internal class AmountManager(
     private var lastFiatValueUserInput = ""
     private var maxAmount: BigDecimal = BigDecimal.ZERO
 
-    private val _isMaxAmount = MutableStateFlow(false)
-    val isMaxAmount: StateFlow<Boolean> = _isMaxAmount.asStateFlow()
+    val isMaxAmount: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _reapingError = MutableStateFlow<UiText?>(null)
-    val reapingError: StateFlow<UiText?> = _reapingError.asStateFlow()
+    val reapingError: StateFlow<UiText?>
+        field = MutableStateFlow<UiText?>(null)
 
     /** Snapshot of the last value the user picked as "max" — read at submit time. */
     val currentMaxAmount: BigDecimal
@@ -59,7 +58,7 @@ internal class AmountManager(
     /** Capture the value the user just picked as max, so the conversion flow can recognize it. */
     fun markMax(amount: BigDecimal) {
         maxAmount = amount
-        _isMaxAmount.value = amount > BigDecimal.ZERO
+        isMaxAmount.value = amount > BigDecimal.ZERO
     }
 
     /**
@@ -79,7 +78,7 @@ internal class AmountManager(
             lastFiatValueUserInput = fiatAmount
         }
         // The suppressed handleTokenInput would have re-derived this; keep it in step.
-        _isMaxAmount.value =
+        isMaxAmount.value =
             tokenAmount.toPlainBigDecimalOrNull()?.compareTo(maxAmount) == 0 &&
                 maxAmount > BigDecimal.ZERO
     }
@@ -93,7 +92,7 @@ internal class AmountManager(
         lastTokenValueUserInput = ""
         lastFiatValueUserInput = ""
         maxAmount = BigDecimal.ZERO
-        _isMaxAmount.value = false
+        isMaxAmount.value = false
     }
 
     fun validateTokenAmount(value: String): UiText? {
@@ -137,7 +136,7 @@ internal class AmountManager(
 
     private suspend fun handleTokenInput(token: Coin, tokenString: String) {
         val tokenDecimal = tokenString.toPlainBigDecimalOrNull()
-        _isMaxAmount.value = tokenDecimal?.compareTo(maxAmount) == 0 && maxAmount > BigDecimal.ZERO
+        isMaxAmount.value = tokenDecimal?.compareTo(maxAmount) == 0 && maxAmount > BigDecimal.ZERO
 
         val fiatValue =
             convertValue(tokenString, token) { value, price, t ->
@@ -175,12 +174,12 @@ internal class AmountManager(
             lastFiatValueUserInput = fiatString
             lastTokenValueUserInput = ""
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd("")
-            _isMaxAmount.value = false
+            isMaxAmount.value = false
             return
         }
 
         val tokenDecimal = tokenValue.toPlainBigDecimalOrNull()
-        _isMaxAmount.value = tokenDecimal?.compareTo(maxAmount) == 0 && maxAmount > BigDecimal.ZERO
+        isMaxAmount.value = tokenDecimal?.compareTo(maxAmount) == 0 && maxAmount > BigDecimal.ZERO
 
         lastTokenValueUserInput = tokenValue
         lastFiatValueUserInput = fiatString
@@ -217,7 +216,7 @@ internal class AmountManager(
                 ->
                 // Don't filterNotNull on token/gas — when they clear (e.g. mid fee recalculation)
                 // we need the combine to still emit so we can drop any stale reaping warning.
-                _reapingError.value =
+                reapingError.value =
                     if (token == null || gas == null) {
                         null
                     } else {

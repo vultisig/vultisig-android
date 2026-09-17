@@ -56,7 +56,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -314,12 +313,12 @@ constructor(
     val slippageFieldState
         get() = fields.slippageFieldState
 
-    private val _state = MutableStateFlow(DepositFormUiModel())
-    val state: StateFlow<DepositFormUiModel> = _state.asStateFlow()
+    val state: StateFlow<DepositFormUiModel>
+        field = MutableStateFlow(DepositFormUiModel())
     var isLoading: Boolean
         get() = state.value.isLoading
         set(value) {
-            _state.update { it.copy(isLoading = value) }
+            state.update { it.copy(isLoading = value) }
         }
 
     private val address = MutableStateFlow<Address?>(null)
@@ -330,7 +329,7 @@ constructor(
     private val liquidityDataLoader: LiquidityDataLoader =
         liquidityDataLoaderFactory.create(
             scope = viewModelScope,
-            state = _state,
+            state = state,
             address = address,
             assetsFieldState = assetsFieldState,
             lpUnitsFieldState = lpUnitsFieldState,
@@ -351,7 +350,7 @@ constructor(
         cacaoMaturityLoaderFactory.create(
             scope = viewModelScope,
             onResult = { isMature, unlocksInText ->
-                _state.update {
+                state.update {
                     it.copy(isUnstakeMature = isMature, unstakeUnlocksInText = unlocksInText)
                 }
             },
@@ -360,7 +359,7 @@ constructor(
     private val depositOptionCoordinator: DepositOptionCoordinator =
         depositOptionCoordinatorFactory.create(
             scope = viewModelScope,
-            state = _state,
+            state = state,
             address = address,
             fields = fields,
             liquidityDataLoader = liquidityDataLoader,
@@ -374,7 +373,7 @@ constructor(
     private val nodeWhitelistChecker: NodeWhitelistChecker =
         nodeWhitelistCheckerFactory.create(
             scope = viewModelScope,
-            state = _state,
+            state = state,
             address = address,
             nodeAddressFieldState = nodeAddressFieldState,
             chainProvider = { chain },
@@ -383,7 +382,7 @@ constructor(
     private val fieldInputCoordinator: DepositFieldInputCoordinator =
         depositFieldInputCoordinatorFactory.create(
             scope = viewModelScope,
-            state = _state,
+            state = state,
             fields = fields,
             nodeWhitelistChecker = nodeWhitelistChecker,
             chainProvider = { chain },
@@ -404,7 +403,7 @@ constructor(
             scope = viewModelScope,
             fields = fields,
             appCurrency = appCurrency,
-            state = _state,
+            state = state,
             chain = { chain },
             vaultId = { vaultId },
         )
@@ -461,7 +460,7 @@ constructor(
             vaultId = vaultId,
             chain = chain,
             tokensToMerge = tokensToMerge,
-            state = _state,
+            state = state,
             updateTokenAmount = depositAmountHelper::updateTokenAmount,
             selectDstChain = ::selectDstChain,
             collectSecuredAssetAddresses = securedAssetLoader::collectSecuredAssetAddresses,
@@ -472,7 +471,7 @@ constructor(
                     chain = chain,
                     address = address,
                     onResult = { totalGas, estimatedFee ->
-                        _state.update { it.copy(totalGas = totalGas, estimatedFee = estimatedFee) }
+                        state.update { it.copy(totalGas = totalGas, estimatedFee = estimatedFee) }
                     },
                 )
             },
@@ -486,7 +485,7 @@ constructor(
         // position the memo does not name.
         val isUnbond = state.value.depositOption == DepositOption.Unbond
         val pool = if (isUnbond) null else liquidityDataLoader.bondPoolFor(asset)
-        _state.update {
+        state.update {
             it.copy(
                 selectedBondAsset = asset,
                 availableLpUnits = pool?.availableUnits,
@@ -538,7 +537,7 @@ constructor(
             val selectedToken = selectedAsset?.token
 
             if (selectedToken != null) {
-                _state.update { it.copy(selectedToken = selectedToken) }
+                state.update { it.copy(selectedToken = selectedToken) }
             }
         }
     }
@@ -554,7 +553,7 @@ constructor(
     fun selectDstChain(chain: Chain) = fieldInputCoordinator.selectDstChain(chain)
 
     fun selectMergeToken(mergeInfo: TokenMergeInfo) {
-        _state.update { it.copy(selectedCoin = mergeInfo) }
+        state.update { it.copy(selectedCoin = mergeInfo) }
     }
 
     /**
@@ -630,7 +629,7 @@ constructor(
     }
 
     fun dismissError() {
-        _state.update { it.copy(errorText = null) }
+        state.update { it.copy(errorText = null) }
     }
 
     fun deposit() {
@@ -720,7 +719,7 @@ constructor(
     }
 
     private fun showError(text: UiText) {
-        _state.update { it.copy(errorText = text) }
+        state.update { it.copy(errorText = text) }
     }
 
     /** Validates the assets field; see [DepositFieldInputCoordinator.validateAssets]. */
@@ -731,7 +730,7 @@ constructor(
 
     fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {
         val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)
-        _state.update {
+        state.update {
             it.copy(selectedSecuredAsset = asset, balance = balance?.asUiText() ?: UiText.Empty)
         }
     }

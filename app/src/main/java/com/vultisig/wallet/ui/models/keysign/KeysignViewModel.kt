@@ -95,7 +95,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
@@ -383,16 +382,14 @@ constructor(
         ): KeysignViewModel
     }
 
-    private val _state =
-        MutableStateFlow(KeysignUiState(transactionUiModel = transactionTypeUiModel))
-
     /** Aggregated read-only keysign UI state; observed by the Compose screen. */
-    val state: StateFlow<KeysignUiState> = _state.asStateFlow()
+    val state: StateFlow<KeysignUiState>
+        field = MutableStateFlow(KeysignUiState(transactionUiModel = transactionTypeUiModel))
 
     /** Test-only seam to seed [state] without driving the full signing flow. */
     @VisibleForTesting
     internal fun updateUiStateForTesting(transform: (KeysignUiState) -> KeysignUiState) {
-        _state.update(transform)
+        state.update(transform)
     }
 
     /**
@@ -438,7 +435,7 @@ constructor(
         // even for deposits with no destination — e.g. a Mint LP add-liquidity — which otherwise
         // skip the destination-gated label block below and would show a raw address (issue #5351).
         transactionTypeUiModel?.let { model ->
-            _state.update {
+            state.update {
                 it.copy(transactionUiModel = model.withResolvedSrcVaultName(vault.name))
             }
         }
@@ -450,7 +447,7 @@ constructor(
         if (target != null) {
             viewModelScope.safeLaunch {
                 val labels = resolveDestinationLabels(target.chain, target.dstAddress)
-                _state.update { current ->
+                state.update { current ->
                     current.copy(
                         showSaveToAddressBook = labels.showSaveToAddressBook,
                         // Layer the labels onto whatever is in state, not onto the model captured
@@ -499,7 +496,7 @@ constructor(
                         doneTransactionPresentation.specificTitle(payload)
                 }
 
-            _state.update { current ->
+            state.update { current ->
                 current.copy(
                     operationHero = hero,
                     // A Blockaid simulation owns figures the decoder cannot improve on, so only
@@ -739,15 +736,15 @@ constructor(
         waitingProgress: Float,
         runKeysign: RunKeysign,
     ) {
-        _state.update { it.copy(signingState = activeState) }
+        state.update { it.copy(signingState = activeState) }
         val newSignatures =
             runKeysign(
                 { peers ->
-                    _state.update {
+                    state.update {
                         it.copy(signingState = KeysignState.WaitingForPeer(peers, waitingProgress))
                     }
                 },
-                { _state.update { it.copy(signingState = activeState) } },
+                { state.update { it.copy(signingState = activeState) } },
             )
         if (newSignatures.isEmpty()) {
             error("Failed to sign transaction, signatures empty")
@@ -779,7 +776,7 @@ constructor(
             if (customMessagePayload != null) {
                 // For custom message signing, we consider the flow complete after signing without
                 // broadcasting
-                _state.update {
+                state.update {
                     it.copy(
                         signingState = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
                     )
@@ -791,7 +788,7 @@ constructor(
             throw e
         } catch (e: MaliciousPartyException) {
             Timber.e(e)
-            _state.update {
+            state.update {
                 it.copy(
                     signingState =
                         KeysignState.Error(
@@ -801,7 +798,7 @@ constructor(
             }
         } catch (e: Exception) {
             Timber.e(e)
-            _state.update {
+            state.update {
                 it.copy(signingState = KeysignState.Error(e.message or R.string.unknown_error))
             }
         }
@@ -829,7 +826,7 @@ constructor(
      * status (vs. `Broadcasted`) keeps the success screen honest — the tx is not yet on-chain.
      */
     private fun finishWithoutBroadcast() {
-        _state.update {
+        state.update {
             it.copy(signingState = KeysignState.KeysignFinished(TransactionStatus.Signed))
         }
     }
@@ -848,7 +845,7 @@ constructor(
 
     private suspend fun signAndBroadcast() {
         Timber.d("Start to SignAndBroadcast")
-        _state.update { it.copy(signingState = KeysignState.CreatingInstance) }
+        state.update { it.copy(signingState = KeysignState.CreatingInstance) }
         runSigningFlow(
             cancelPullJobOnFinish = true,
             onAllSigned = { extractCustomMessageSignature() },
@@ -882,7 +879,7 @@ constructor(
         val chainSpecific = keysignPayload?.blockChainSpecific
         if (chainSpecific !is BlockChainSpecific.THORChain) return
         if (!chainSpecific.isDeposit) return
-        val transactionDetail = thorChainApi.getTransactionDetail(_state.value.txHash)
+        val transactionDetail = thorChainApi.getTransactionDetail(state.value.txHash)
 
         // https://docs.cosmos.network/v0.46/building-modules/errors.html#registration
         if (transactionDetail.code != null && !transactionDetail.codeSpace.isNullOrBlank()) {
@@ -925,13 +922,13 @@ constructor(
                 when (keyType) {
                     TssKeyType.ECDSA -> {
                         keysignReq.pubKey = vault.pubKeyECDSA
-                        _state.update { it.copy(signingState = KeysignState.KeysignECDSA) }
+                        state.update { it.copy(signingState = KeysignState.KeysignECDSA) }
                         service.keysignECDSA(keysignReq)
                     }
 
                     TssKeyType.EDDSA -> {
                         keysignReq.pubKey = vault.pubKeyEDDSA
-                        _state.update { it.copy(signingState = KeysignState.KeysignEdDSA) }
+                        state.update { it.copy(signingState = KeysignState.KeysignEdDSA) }
                         service.keysignEdDSA(keysignReq)
                     }
 
@@ -976,7 +973,7 @@ constructor(
                 // MLDSA keysign populates derSignature rather than r/s/recoveryID
                 TssKeyType.MLDSA -> keysignResp.derSignature
             }
-        _state.update { it.copy(txHash = signature) }
+        state.update { it.copy(txHash = signature) }
     }
 
     private suspend fun broadcastTransaction() {
@@ -995,7 +992,7 @@ constructor(
     internal suspend fun applyBroadcastResult(result: KeysignBroadcastResult) {
         when (result) {
             is KeysignBroadcastResult.ApprovalNotConfirmed -> {
-                _state.update {
+                state.update {
                     it.copy(
                         approveTxHash = result.approveTxHash,
                         approveTxLink = result.approveTxLink,
@@ -1018,7 +1015,7 @@ constructor(
                 }
             }
             is KeysignBroadcastResult.Broadcasted -> {
-                _state.update {
+                state.update {
                     it.copy(
                         approveTxHash = result.approveTxHash,
                         approveTxLink = result.approveTxLink,
@@ -1026,7 +1023,7 @@ constructor(
                 }
                 val txHash = result.txHash
                 if (txHash != null) {
-                    _state.update {
+                    state.update {
                         it.copy(
                             txHash = txHash,
                             txLink = result.txLink,
@@ -1049,7 +1046,7 @@ constructor(
                 } else {
                     // Land on "broadcasted" instead of leaving signingState stuck (infinite
                     // spinner → user may double-send by retrying).
-                    _state.update {
+                    state.update {
                         it.copy(
                             signingState =
                                 KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
@@ -1121,7 +1118,7 @@ constructor(
             vaultId = vault.id,
             txHash = txHash,
             chain = chain,
-            explorerUrl = explorerUrl ?: _state.value.let { it.swapProgressLink ?: it.txLink },
+            explorerUrl = explorerUrl ?: state.value.let { it.swapProgressLink ?: it.txLink },
             transactionHistoryData = transactionHistoryData,
             // Polkadot extrinsics are mortal: persist the head block at broadcast so the status
             // poller can scan the absolute inclusion window instead of a head-relative one that
@@ -1144,7 +1141,7 @@ constructor(
             viewModelScope.safeLaunch {
                 val outcome =
                     txStatusPoller.poll(txHash, chain, isSwapKitSwap = isSwapKitSwap()) { result ->
-                        _state.update {
+                        state.update {
                             it.copy(
                                 signingState =
                                     KeysignState.KeysignFinished(
@@ -1159,7 +1156,7 @@ constructor(
                     // status that can never advance — land where a broadcast with nothing to poll
                     // lands. The history row is still settled by the tx-history poller (#5510).
                     TxStatusPollOutcome.NotTracked ->
-                        _state.update {
+                        state.update {
                             it.copy(
                                 signingState =
                                     KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
@@ -1188,7 +1185,7 @@ constructor(
             onError = { e -> Timber.w(e, "Failed to update EVM actual fee for %s", txHash) }
         ) {
             val estimatedFee = updateEvmActualFee(txHash, chain, coin) ?: return@safeLaunch
-            _state.update { current ->
+            state.update { current ->
                 val sendTx =
                     current.transactionUiModel as? TransactionTypeUiModel.Send
                         ?: return@update current
@@ -1217,7 +1214,7 @@ constructor(
      */
     fun navigateToHome() {
         viewModelScope.launch {
-            if (_state.value.signingState is KeysignState.KeysignFinished) {
+            if (state.value.signingState is KeysignState.KeysignFinished) {
                 navigator.route(Route.Home(), NavigationOptions(clearBackStack = true))
             } else {
                 navigator.navigate(Destination.Back)

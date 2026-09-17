@@ -35,7 +35,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -94,8 +93,8 @@ constructor(
     private val transactionId = route.transactionId
     private val vaultId = route.vaultId
 
-    private val _state = MutableStateFlow(CosmosStakingVerifyUiState())
-    val state: StateFlow<CosmosStakingVerifyUiState> = _state.asStateFlow()
+    val state: StateFlow<CosmosStakingVerifyUiState>
+        field = MutableStateFlow(CosmosStakingVerifyUiState())
 
     private var password: String? = null
 
@@ -109,7 +108,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { t ->
                 Timber.e(t, "Failed to load staking verify summary")
-                _state.update {
+                state.update {
                     it.copy(
                         isLoading = false,
                         errorText = UiText.StringResource(R.string.try_again),
@@ -147,7 +146,7 @@ constructor(
                     .formatTokenAmount(coin.ticker)
 
             // Render with truncated valopers first, then enrich with monikers + commission.
-            _state.update {
+            state.update {
                 it.copy(
                     headlineRes = headlineRes,
                     amount = amount,
@@ -172,7 +171,7 @@ constructor(
                         .associateBy { it.operatorAddress }
                 }
             if (byAddress.isNotEmpty()) {
-                _state.update { it.copy(validatorRows = buildValidatorRows(payload, byAddress)) }
+                state.update { it.copy(validatorRows = buildValidatorRows(payload, byAddress)) }
             }
         }
     }
@@ -197,7 +196,7 @@ constructor(
                     )
                 } ?: return@safeLaunch
 
-            _state.update { it.copy(heroContent = hero.applyTo(it.heroContent)) }
+            state.update { it.copy(heroContent = hero.applyTo(it.heroContent)) }
         }
     }
 
@@ -281,7 +280,7 @@ constructor(
     }
 
     fun dismissError() {
-        _state.update { it.copy(errorText = null) }
+        state.update { it.copy(errorText = null) }
     }
 
     fun back() {
@@ -290,7 +289,7 @@ constructor(
 
     private fun keysign(initType: KeysignInitType) {
         viewModelScope.safeLaunch(
-            onError = { e -> _state.update { it.copy(errorText = (e.message ?: "").asUiText()) } }
+            onError = { e -> state.update { it.copy(errorText = (e.message ?: "").asUiText()) } }
         ) {
             launchKeysign(
                 initType,
@@ -311,7 +310,7 @@ constructor(
     private fun loadFastSign() {
         viewModelScope.safeLaunch(onError = { Timber.w(it, "load fast sign failed") }) {
             val hasFastSign = withContext(ioDispatcher) { isVaultHasFastSignById(vaultId) }
-            _state.update { it.copy(hasFastSign = hasFastSign) }
+            state.update { it.copy(hasFastSign = hasFastSign) }
         }
     }
 }

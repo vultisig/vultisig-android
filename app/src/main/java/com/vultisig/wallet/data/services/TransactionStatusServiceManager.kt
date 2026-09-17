@@ -14,7 +14,6 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
 
 /**
@@ -28,21 +27,21 @@ class TransactionStatusServiceManager
 constructor(@param:ApplicationContext private val context: Context) {
     private var serviceBinder: TransactionStatusService? = null
     private var isBound = false
-    private val _serviceReady = MutableStateFlow(false)
-    val serviceReady: StateFlow<Boolean> = _serviceReady.asStateFlow()
+    val serviceReady: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     private val serviceConnection =
         object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
                 serviceBinder = (binder as? TransactionStatusService.LocalBinder)?.getService()
                 isBound = true
-                _serviceReady.value = true
+                serviceReady.value = true
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {
                 serviceBinder = null
                 isBound = false
-                _serviceReady.value = false
+                serviceReady.value = false
             }
         }
 
@@ -99,7 +98,7 @@ constructor(@param:ApplicationContext private val context: Context) {
 
         unbindIfBound()
         serviceBinder = null
-        _serviceReady.value = false
+        serviceReady.value = false
 
         runCatching { context.stopService(Intent(context, TransactionStatusService::class.java)) }
             .onFailure { Timber.w(it, "Failed to stop transaction status service") }
@@ -108,7 +107,7 @@ constructor(@param:ApplicationContext private val context: Context) {
     fun cancelPollingAndRemoveNotification() {
         serviceBinder?.cancelPollingAndRemoveNotification()
         unbindIfBound()
-        _serviceReady.value = false
+        serviceReady.value = false
     }
 
     fun getStatusFlow(): Flow<TransactionResult>? {

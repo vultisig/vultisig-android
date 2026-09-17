@@ -36,7 +36,6 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -110,8 +109,8 @@ constructor(
 
     val amountFieldState: TextFieldState = TextFieldState()
 
-    private val _state = MutableStateFlow(CosmosDelegateUiState())
-    val state: StateFlow<CosmosDelegateUiState> = _state.asStateFlow()
+    val state: StateFlow<CosmosDelegateUiState>
+        field = MutableStateFlow(CosmosDelegateUiState())
 
     private var coin: Coin? = null
 
@@ -121,27 +120,27 @@ constructor(
     }
 
     fun openValidatorPicker() {
-        _state.update { it.copy(isShowingPicker = true, validatorSearchQuery = "") }
+        state.update { it.copy(isShowingPicker = true, validatorSearchQuery = "") }
     }
 
     fun closeValidatorPicker() {
-        _state.update { it.copy(isShowingPicker = false) }
+        state.update { it.copy(isShowingPicker = false) }
     }
 
     fun selectValidator(validator: CosmosValidator) {
-        _state.update {
+        state.update {
             it.copy(selectedValidator = validator, isShowingPicker = false, errorMessage = null)
         }
     }
 
     fun onSearchQueryChange(query: String) {
-        _state.update { it.copy(validatorSearchQuery = query) }
+        state.update { it.copy(validatorSearchQuery = query) }
     }
 
     /** 25/50/75/100% chip → fill the amount field from the stakeable balance. */
     fun onPercentageChange(percent: Int) {
-        _state.update { it.copy(percentageSelected = percent) }
-        val available = _state.value.stakeableBalance
+        state.update { it.copy(percentageSelected = percent) }
+        val available = state.value.stakeableBalance
         if (available <= BigDecimal.ZERO) return
         val amount =
             available
@@ -153,7 +152,7 @@ constructor(
     }
 
     fun dismissError() {
-        _state.update { it.copy(errorMessage = null) }
+        state.update { it.copy(errorMessage = null) }
     }
 
     fun back() {
@@ -184,7 +183,7 @@ constructor(
     }
 
     fun submit() {
-        val currentState = _state.value
+        val currentState = state.value
         if (currentState.isSubmitting) return
 
         val validator =
@@ -207,7 +206,7 @@ constructor(
         // Flip the flag BEFORE launching so two rapid taps can't both pass the `isSubmitting` guard
         // above and queue duplicate submit coroutines. Matches the pattern in the other three
         // staking VMs. setError() clears the flag on any failure path.
-        _state.update { it.copy(isSubmitting = true, errorMessage = null) }
+        state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
         viewModelScope.safeLaunch(
             onError = { e -> setError(e.message ?: "Failed to build delegate transaction") }
@@ -292,7 +291,7 @@ constructor(
                 Route.CosmosStakingVerify(vaultId = route.vaultId, transactionId = depositTx.id),
                 NavigationOptions(popUpToRoute = Route.CosmosStakingVerify::class, inclusive = true),
             )
-            _state.update { it.copy(isSubmitting = false) }
+            state.update { it.copy(isSubmitting = false) }
         }
     }
 
@@ -331,7 +330,7 @@ constructor(
                 withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }
             val stakeable = (total - feeReservation).coerceAtLeast(BigDecimal.ZERO)
 
-            _state.update {
+            state.update {
                 it.copy(
                     ticker = nativeCoin.ticker,
                     decimal = nativeCoin.decimal,
@@ -345,22 +344,22 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to fetch validators")
-                _state.update { it.copy(isLoadingValidators = false) }
+                state.update { it.copy(isLoadingValidators = false) }
                 setError("Failed to load validator list")
             }
         ) {
             val chain =
                 Chain.entries.firstOrNull { it.raw.equals(route.chainId, ignoreCase = true) }
                     ?: return@safeLaunch
-            _state.update { it.copy(isLoadingValidators = true, errorMessage = null) }
+            state.update { it.copy(isLoadingValidators = true, errorMessage = null) }
             val validators =
                 withContext(ioDispatcher) { cosmosStakingService.fetchValidators(chain) }
-            _state.update { it.copy(validators = validators, isLoadingValidators = false) }
+            state.update { it.copy(validators = validators, isLoadingValidators = false) }
         }
     }
 
     private fun setError(message: String) {
-        _state.update { it.copy(errorMessage = message, isSubmitting = false) }
+        state.update { it.copy(errorMessage = message, isSubmitting = false) }
     }
 }
 

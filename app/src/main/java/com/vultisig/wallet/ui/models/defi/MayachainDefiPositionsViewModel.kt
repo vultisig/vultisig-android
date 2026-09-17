@@ -55,7 +55,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -153,8 +152,8 @@ constructor(
 
     private lateinit var vaultId: String
 
-    private val _state = MutableStateFlow<MayachainDefiUiState>(MayachainDefiUiState.Loading)
-    val state: StateFlow<MayachainDefiUiState> = _state.asStateFlow()
+    val state: StateFlow<MayachainDefiUiState>
+        field = MutableStateFlow<MayachainDefiUiState>(MayachainDefiUiState.Loading)
 
     private val bondedNodesRefreshTrigger = MutableStateFlow(0)
 
@@ -178,20 +177,20 @@ constructor(
 
     private val currentModel: MayachainDefiPositionsUiModel
         get() =
-            (_state.value as? MayachainDefiUiState.Success)?.data ?: MayachainDefiPositionsUiModel()
+            (state.value as? MayachainDefiUiState.Success)?.data ?: MayachainDefiPositionsUiModel()
 
     private fun updateModel(
         transform: (MayachainDefiPositionsUiModel) -> MayachainDefiPositionsUiModel
     ) {
-        _state.update { s ->
+        state.update { s ->
             if (s is MayachainDefiUiState.Success) s.copy(data = transform(s.data)) else s
         }
     }
 
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
-        if (_state.value !is MayachainDefiUiState.Success) {
-            _state.value = MayachainDefiUiState.Success(restoredModel(vaultId))
+        if (state.value !is MayachainDefiUiState.Success) {
+            state.value = MayachainDefiUiState.Success(restoredModel(vaultId))
         }
         loadBalanceVisibility()
         savedPositionsJob?.cancel()
@@ -222,7 +221,7 @@ constructor(
     }
 
     override fun onCleared() {
-        val model = (_state.value as? MayachainDefiUiState.Success)?.data
+        val model = (state.value as? MayachainDefiUiState.Success)?.data
         if (::vaultId.isInitialized && model != null) {
             snapshotCache.write(vaultId, model)
         }

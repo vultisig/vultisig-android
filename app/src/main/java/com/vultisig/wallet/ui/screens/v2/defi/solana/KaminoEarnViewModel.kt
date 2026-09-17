@@ -37,7 +37,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -82,8 +81,8 @@ constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(KaminoEarnUiModel())
-    val state: StateFlow<KaminoEarnUiModel> = _state.asStateFlow()
+    val state: StateFlow<KaminoEarnUiModel>
+        field = MutableStateFlow(KaminoEarnUiModel())
 
     private lateinit var vaultId: String
     private var loadJob: Job? = null
@@ -128,7 +127,7 @@ constructor(
         val cached = snapshotCache.read(vaultId, KaminoEarnSnapshot::class) ?: return
         totalCoverage = cached.totalCoverage
         pricedCurrency = cached.pricedCurrency
-        _state.value = cached.model.copy(isShowingPicker = false, pendingSelection = emptySet())
+        state.value = cached.model.copy(isShowingPicker = false, pendingSelection = emptySet())
     }
 
     override fun onCleared() {
@@ -136,7 +135,7 @@ constructor(
             snapshotCache.write(
                 vaultId,
                 KaminoEarnSnapshot(
-                    model = _state.value,
+                    model = state.value,
                     totalCoverage = totalCoverage,
                     pricedCurrency = pricedCurrency,
                 ),
@@ -176,18 +175,18 @@ constructor(
     fun openPicker() {
         viewModelScope.safeLaunch {
             val current = selectionRepository.getSelectedVaults(vaultId).first()
-            _state.update { it.copy(isShowingPicker = true, pendingSelection = current) }
+            state.update { it.copy(isShowingPicker = true, pendingSelection = current) }
         }
     }
 
     /** Dismisses the picker without saving. */
     fun closePicker() {
-        _state.update { it.copy(isShowingPicker = false) }
+        state.update { it.copy(isShowingPicker = false) }
     }
 
     fun onVaultToggled(vaultAddress: String, isSelected: Boolean) {
         if (!KaminoVaultRegistry.isAllowed(vaultAddress)) return
-        _state.update { current ->
+        state.update { current ->
             current.copy(
                 pendingSelection =
                     if (isSelected) current.pendingSelection + vaultAddress
@@ -201,8 +200,8 @@ constructor(
      * the repository records that as a real choice rather than falling back to the default.
      */
     fun savePicker() {
-        val pending = _state.value.pendingSelection
-        _state.update { it.copy(isShowingPicker = false) }
+        val pending = state.value.pendingSelection
+        state.update { it.copy(isShowingPicker = false) }
         viewModelScope.safeLaunch {
             withContext(ioDispatcher) { selectionRepository.saveSelectedVaults(vaultId, pending) }
             // The selection flow re-emits and reloads, so nothing else has to be refreshed here.
@@ -239,7 +238,7 @@ constructor(
         viewModelScope.safeLaunch {
             val isVisible =
                 withContext(ioDispatcher) { balanceVisibilityRepository.getVisibility(vaultId) }
-            _state.update { it.copy(isBalanceVisible = isVisible) }
+            state.update { it.copy(isBalanceVisible = isVisible) }
         }
     }
 
@@ -259,7 +258,7 @@ constructor(
                     )
                     .distinctUntilChanged()
                     .collect { (selected, currency) ->
-                        _state.update { it.copy(hasEnabledVaults = selected.isNotEmpty()) }
+                        state.update { it.copy(hasEnabledVaults = selected.isNotEmpty()) }
                         load(selected, currency)
                     }
             }
@@ -273,7 +272,7 @@ constructor(
                     Timber.e(throwable, "Failed to load Kamino Earn positions")
                     // Said on screen, not only in the log: a silent stop leaves the tab looking as
                     // though the vaults simply hold nothing.
-                    _state.update { it.copy(isLoading = false, loadFailed = true) }
+                    state.update { it.copy(isLoading = false, loadFailed = true) }
                 }
             ) {
                 val enabled = selected ?: selectionRepository.getSelectedVaults(vaultId).first()
@@ -283,9 +282,9 @@ constructor(
                 // Drop a stored total that no longer describes this selection or this currency
                 // before anything else, so neither this load's fallback nor a failure part-way
                 // through can leave it on screen as though it still answered.
-                if (totalCoverage != enabled || _state.value.totalValue?.currency != currency) {
+                if (totalCoverage != enabled || state.value.totalValue?.currency != currency) {
                     totalCoverage = emptySet()
-                    _state.update { it.copy(totalValue = null) }
+                    state.update { it.copy(totalValue = null) }
                 }
 
                 // The cards carry their own fiat, priced in whatever currency was selected when
@@ -294,7 +293,7 @@ constructor(
                 // total, so they would sit there in the old currency indefinitely.
                 if (pricedCurrency != null && pricedCurrency != currency) {
                     pricedCurrency = null
-                    _state.update { current ->
+                    state.update { current ->
                         current.copy(
                             rows =
                                 current.rows.map { row ->
@@ -305,7 +304,7 @@ constructor(
                 }
 
                 if (vaults.isEmpty()) {
-                    _state.update {
+                    state.update {
                         it.copy(
                             isLoading = false,
                             hasEnabledVaults = false,
@@ -318,7 +317,7 @@ constructor(
                     return@safeLaunch
                 }
 
-                _state.update {
+                state.update {
                     it.copy(isLoading = true, hasEnabledVaults = true, loadFailed = false)
                 }
 
@@ -362,7 +361,7 @@ constructor(
                     } else {
                         null
                     }
-                _state.update { current ->
+                state.update { current ->
                     // A row whose fiat value did not resolve this refresh keeps its last known
                     // value rather than going blank or zero — same principle as keeping the whole
                     // card standing on a failed vault call, one row at a time.
