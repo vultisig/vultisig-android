@@ -402,7 +402,7 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             swapScreen(navController = navController)
         }
 
-        composable<VerifySwap> { VerifySwapScreen() }
+        dialog<VerifySwap> { VerifySwapScreen() }
 
         composable<VerifyDeposit> { VerifyDepositScreen(navController = navController) }
 
