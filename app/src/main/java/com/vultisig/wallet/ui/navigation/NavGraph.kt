@@ -394,7 +394,8 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             sendScreen(navController = navController)
         }
 
-        composable<VerifySend> { VerifySendScreen() }
+        // The review floats over the form as a sheet, so the form stays visible behind it.
+        dialog<VerifySend> { VerifySendScreen() }
 
         // swap
         navigation<Swap>(startDestination = Swap.SwapMain) {
