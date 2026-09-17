@@ -19,6 +19,7 @@ import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
@@ -78,6 +79,21 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
 
     private val tronGrid = "https://api.vultisig.com/tron"
 
+    /**
+     * The proxy occasionally answers a 200 with an ack body (`{"message":"ok"}`) instead of the
+     * TronGrid payload. `bodyOrThrow` would surface that body's own `message` — the useless error
+     * `ok` — so a 2xx that fails to deserialize is re-thrown as an explicit invalid response.
+     */
+    private suspend inline fun <reified T> HttpResponse.tronBodyOrThrow(): T =
+        try {
+            bodyOrThrow<T>()
+        } catch (e: NetworkException) {
+            if (status.isSuccess() && e.cause is ContentConvertException) {
+                throw NetworkException(status.value, "Invalid Tron response from $tronGrid", e)
+            }
+            throw e
+        }
+
     override suspend fun broadcastTransaction(tx: String): String {
         repeat(MAX_BROADCAST_RETRIES) { attempt ->
             val httpResponse =
@@ -86,7 +102,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                     contentType(ContentType.Application.Json)
                     setBody(tx)
                 }
-            val response = httpResponse.bodyOrThrow<TronBroadcastTxResponseJson>()
+            val response = httpResponse.tronBodyOrThrow<TronBroadcastTxResponseJson>()
             if (response.code == NOT_ENOUGH_EFFECTIVE_CONNECTION_ERROR_CODE) {
                 Timber.d("Tron broadcast NOT_ENOUGH_EFFECTIVE_CONNECTION, attempt %d", attempt + 1)
                 if (attempt < MAX_BROADCAST_RETRIES - 1) {
@@ -104,7 +120,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
     override suspend fun getSpecific() =
         httpClient
             .post(tronGrid) { url { path("tron", "wallet", "getnowblock") } }
-            .bodyOrThrow<TronSpecificBlockJson>()
+            .tronBodyOrThrow<TronSpecificBlockJson>()
 
     override suspend fun getTriggerConstantContractFee(
         ownerAddressBase58: String,
@@ -133,7 +149,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                     setBody(body)
                     accept(ContentType.Application.Json)
                 }
-                .bodyOrThrow<TronTriggerConstantContractJson>()
+                .tronBodyOrThrow<TronTriggerConstantContractJson>()
 
         // A 200 does not mean the transfer would land. A revert is returned as an ordinary response
         // whose energy figures are far below the real cost, and consuming one produces a signed
@@ -151,7 +167,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
     override suspend fun getChainParameters(): TronChainParametersJson {
         return httpClient
             .post(tronGrid) { url { path("tron", "wallet", "getchainparameters") } }
-            .bodyOrThrow<TronChainParametersJson>()
+            .tronBodyOrThrow<TronChainParametersJson>()
     }
 
     /**
@@ -159,27 +175,12 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
      * the TRC-20 fee simulation, so swallowing an RPC failure would show real funds as empty and
      * simulate the transfer at amount 0 — a different shape from the send that actually gets
      * signed. Only an account the node does not know reads zero.
-     *
-     * The proxy occasionally answers a 200 with an ack body (`{"message":"ok"}`) instead of the
-     * TronGrid account payload. `bodyOrThrow` would surface that body's own `message` — the
-     * useless error `ok` — so a 2xx that fails to deserialize is re-thrown as an explicit invalid
-     * response instead.
      */
     override suspend fun getBalance(coin: Coin): BigInteger {
-        val response = httpClient.get("$tronGrid/v1/accounts/${coin.address}")
         val content =
-            try {
-                response.bodyOrThrow<TronBalanceResponseJson>()
-            } catch (e: NetworkException) {
-                if (response.status.isSuccess() && e.cause is ContentConvertException) {
-                    throw NetworkException(
-                        response.status.value,
-                        "Invalid Tron account response from $tronGrid",
-                        e,
-                    )
-                }
-                throw e
-            }
+            httpClient
+                .get("$tronGrid/v1/accounts/${coin.address}")
+                .tronBodyOrThrow<TronBalanceResponseJson>()
         val account = content.tronBalanceResponseData.firstOrNull() ?: return BigInteger.ZERO
 
         return if (coin.isNativeToken) {
@@ -199,7 +200,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                 contentType(ContentType.Application.Json)
                 setBody(TronAccountRequestJson(address, true))
             }
-            .bodyOrThrow<TronAccountResourceJson>()
+            .tronBodyOrThrow<TronAccountResourceJson>()
     }
 
     override suspend fun getAccount(address: String): TronAccountJson {
@@ -209,7 +210,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                 contentType(ContentType.Application.Json)
                 setBody(TronAccountRequestJson(address, true))
             }
-            .bodyOrThrow<TronAccountJson>()
+            .tronBodyOrThrow<TronAccountJson>()
     }
 
     override suspend fun readContractConstant(
@@ -229,7 +230,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                     setBody(body)
                     accept(ContentType.Application.Json)
                 }
-                .bodyOrThrow<TronTriggerConstantContractJson>()
+                .tronBodyOrThrow<TronTriggerConstantContractJson>()
                 .takeIf { it.isSuccessfulSimulation() }
                 ?.constantResult
                 ?.firstOrNull()
@@ -276,7 +277,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                     url { path("tron", "wallet", "gettransactionbyid") }
                     setBody(mapOf("value" to txHash))
                 }
-                .bodyOrThrow<TronTransactionStatusResponse?>()
+                .tronBodyOrThrow<TronTransactionStatusResponse?>()
                 ?.takeIf { it.txId != null }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e

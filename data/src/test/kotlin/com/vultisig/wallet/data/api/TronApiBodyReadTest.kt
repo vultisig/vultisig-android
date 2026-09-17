@@ -27,8 +27,8 @@ import org.junit.jupiter.api.assertThrows
 
 /**
  * Characterization tests for [TronApiImpl] methods that deserialize a response body. Every call
- * site reads through `bodyOrThrow<T>()`; these pin the success-path (HTTP 200) behavior that the
- * migration off the raw `body<T>()` had to preserve.
+ * site reads through `tronBodyOrThrow<T>()`; these pin the success-path (HTTP 200) behavior that
+ * the migration off the raw `body<T>()` had to preserve, plus the proxy ack-body failure path.
  *
  * Methods covered:
  * - [TronApi.broadcastTransaction] — `bodyOrThrow<TronBroadcastTxResponseJson>()` (null code + dup
@@ -250,7 +250,37 @@ class TronApiBodyReadTest {
 
         assertNotEquals("ok", error.message)
         assertTrue(
-            error.message.contains("Invalid Tron account response"),
+            error.message.contains("Invalid Tron response"),
+            "unexpected message: ${error.message}",
+        )
+    }
+
+    @Test
+    fun `getSpecific throws a descriptive error when the proxy answers 200 with an ack body`() {
+        // The Send/Freeze fee path reads the block header through getSpecific; the ack body must
+        // not surface as the error "ok".
+        val api = newApi("""{"message":"ok"}""")
+
+        val error = assertThrows<NetworkException> { runBlocking { api.getSpecific() } }
+
+        assertNotEquals("ok", error.message)
+        assertTrue(
+            error.message.contains("Invalid Tron response"),
+            "unexpected message: ${error.message}",
+        )
+    }
+
+    @Test
+    fun `getChainParameters throws a descriptive error on a 200 ack body`() {
+        // TronFeeService reads the chain parameters behind the Freeze screen; the ack body must not
+        // surface as the error "ok".
+        val api = newApi("""{"message":"ok"}""")
+
+        val error = assertThrows<NetworkException> { runBlocking { api.getChainParameters() } }
+
+        assertNotEquals("ok", error.message)
+        assertTrue(
+            error.message.contains("Invalid Tron response"),
             "unexpected message: ${error.message}",
         )
     }
