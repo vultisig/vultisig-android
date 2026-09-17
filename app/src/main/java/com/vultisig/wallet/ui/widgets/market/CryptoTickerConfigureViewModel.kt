@@ -22,7 +22,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -53,13 +52,12 @@ constructor(
 
     val searchFieldState = TextFieldState()
 
-    private val _state = MutableStateFlow(CryptoTickerConfigureUiModel())
-    val state: StateFlow<CryptoTickerConfigureUiModel> = _state.asStateFlow()
-
-    private val _saved = MutableStateFlow<Int?>(null)
+    val state: StateFlow<CryptoTickerConfigureUiModel>
+        field = MutableStateFlow(CryptoTickerConfigureUiModel())
 
     /** The app widget id whose asset was just stored, so the activity can finish with a result. */
-    val saved: StateFlow<Int?> = _saved.asStateFlow()
+    val saved: StateFlow<Int?>
+        field = MutableStateFlow<Int?>(null)
 
     init {
         observeSearch()
@@ -71,7 +69,7 @@ constructor(
         viewModelScope.safeLaunch(onError = { Timber.d(it, "No stored widget selection") }) {
             val glanceId = GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId)
             val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId)
-            _state.update { it.copy(selectedId = CryptoTickerWidget.selectedAssetId(prefs)) }
+            state.update { it.copy(selectedId = CryptoTickerWidget.selectedAssetId(prefs)) }
         }
     }
 
@@ -87,7 +85,7 @@ constructor(
 
     private suspend fun search(query: String) {
         if (query.isEmpty()) {
-            _state.update {
+            state.update {
                 it.copy(
                     query = "",
                     results = emptyList(),
@@ -97,7 +95,7 @@ constructor(
             }
             return
         }
-        _state.update { it.copy(query = query, isSearching = true, isSearchFailed = false) }
+        state.update { it.copy(query = query, isSearching = true, isSearchFailed = false) }
         val results =
             try {
                 repository.search(query)
@@ -110,7 +108,7 @@ constructor(
         // The field may have moved on while the request was in flight; only publish an answer
         // for the query the user is still looking at.
         if (searchFieldState.text.toString().trim() != query) return
-        _state.update {
+        state.update {
             it.copy(
                 results = results.orEmpty(),
                 isSearching = false,
@@ -120,13 +118,13 @@ constructor(
     }
 
     fun select(appWidgetId: Int, asset: MarketWidgetAssetIdentity) {
-        if (_state.value.isSaving) return
-        _state.update { it.copy(isSaving = true, selectedId = asset.id) }
+        if (state.value.isSaving) return
+        state.update { it.copy(isSaving = true, selectedId = asset.id) }
         viewModelScope.safeLaunch(
             onError = { e ->
                 // The selection was not persisted; release the guard so the user can retry.
                 Timber.e(e, "Could not store the widget asset selection")
-                _state.update { it.copy(isSaving = false) }
+                state.update { it.copy(isSaving = false) }
             }
         ) {
             val manager = GlanceAppWidgetManager(context)
@@ -155,7 +153,7 @@ constructor(
             bestEffort("Could not schedule the widget refresh") {
                 MarketWidgetRefreshWorker.schedulePeriodic(context)
             }
-            _saved.value = appWidgetId
+            saved.value = appWidgetId
         }
     }
 

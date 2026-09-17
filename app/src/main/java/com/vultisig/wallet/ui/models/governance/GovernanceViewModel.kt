@@ -43,7 +43,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import vultisig.keysign.v1.TransactionType
@@ -137,8 +137,8 @@ constructor(
     private var voterCoin: Coin? = null
     private var loadJob: Job? = null
 
-    private val _state = MutableStateFlow(GovernanceUiState())
-    val state = _state.asStateFlow()
+    val state: StateFlow<GovernanceUiState>
+        field = MutableStateFlow(GovernanceUiState())
 
     /**
      * Idempotent — re-invoking with the same vault is a no-op so recomposition doesn't re-fetch.
@@ -153,13 +153,13 @@ constructor(
 
     private fun load(isRefresh: Boolean) {
         val vaultId = vaultId ?: return
-        _state.update { it.copy(isRefreshing = isRefresh, isLoading = !isRefresh && it.isEmpty) }
+        state.update { it.copy(isRefreshing = isRefresh, isLoading = !isRefresh && it.isEmpty) }
         loadJob?.cancel()
         loadJob =
             viewModelScope.safeLaunch(
                 onError = {
-                    _state.update { state ->
-                        state.copy(
+                    state.update {
+                        it.copy(
                             isLoading = false,
                             isRefreshing = false,
                             error = R.string.governance_error_load_proposals.asUiText(),
@@ -182,7 +182,7 @@ constructor(
                 // Surface a total failure as an error rather than a misleading empty state; once
                 // any list has loaded, transient per-status failures degrade to empty.
                 val results = listOf(activeResult, passedResult, rejectedResult)
-                if (results.all { it.isFailure } && _state.value.isEmpty) {
+                if (results.all { it.isFailure } && state.value.isEmpty) {
                     throw results.firstNotNullOf { it.exceptionOrNull() }
                 }
                 val active = activeResult.getOrDefault(emptyList())
@@ -217,7 +217,7 @@ constructor(
                 val passedUi = passed.map { it.toUi(ProposalStatus.Passed, now, null, null) }
                 val rejectedUi = rejected.map { it.toUi(ProposalStatus.Rejected, now, null, null) }
 
-                _state.update {
+                state.update {
                     it.copy(
                         isLoading = false,
                         isRefreshing = false,
@@ -245,22 +245,22 @@ constructor(
 
     fun openVoteSheet(proposal: ProposalUi) {
         if (!proposal.isVotable) return
-        _state.update { it.copy(voteSheetProposal = proposal) }
+        state.update { it.copy(voteSheetProposal = proposal) }
     }
 
     fun dismissVoteSheet() {
-        _state.update { it.copy(voteSheetProposal = null) }
+        state.update { it.copy(voteSheetProposal = null) }
     }
 
     fun castVote(proposalId: String, option: VoteOption) {
         val vaultId = vaultId ?: return
-        if (_state.value.isSubmitting) return
+        if (state.value.isSubmitting) return
         // The window can close while the sheet is open; a late vote is rejected on-chain.
-        val proposal = _state.value.active.firstOrNull { it.id == proposalId }
+        val proposal = state.value.active.firstOrNull { it.id == proposalId }
         if (
             proposal == null || proposal.votingEndTime?.isAfter(clock.now().toJavaInstant()) != true
         ) {
-            _state.update {
+            state.update {
                 it.copy(
                     voteSheetProposal = null,
                     error = R.string.governance_voting_closed.asUiText(),
@@ -268,10 +268,10 @@ constructor(
             }
             return
         }
-        _state.update { it.copy(isSubmitting = true, error = null) }
+        state.update { it.copy(isSubmitting = true, error = null) }
         viewModelScope.safeLaunch(
             onError = {
-                _state.update {
+                state.update {
                     it.copy(
                         isSubmitting = false,
                         voteSheetProposal = null,
@@ -316,13 +316,13 @@ constructor(
                 )
 
             depositTransactionRepository.addTransaction(tx)
-            _state.update { it.copy(isSubmitting = false, voteSheetProposal = null) }
+            state.update { it.copy(isSubmitting = false, voteSheetProposal = null) }
             navigator.route(Route.VerifyDeposit(vaultId = vaultId, transactionId = tx.id))
         }
     }
 
     fun dismissError() {
-        _state.update { it.copy(error = null) }
+        state.update { it.copy(error = null) }
     }
 
     private fun CosmosGovProposal.toUi(

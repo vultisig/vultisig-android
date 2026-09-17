@@ -46,7 +46,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -89,23 +88,22 @@ constructor(
     // Guards the one-shot restore, so a later setData cannot seed over a rendered load.
     private var hasRestoredSnapshot = false
 
-    private val _state =
-        MutableStateFlow(
-            DefiUiModel(
-                isTotalAmountLoading = true,
-                isBalanceVisible = true,
-                supportEditChains = false,
-                selectedTab = DeFiTab.DEPOSITED.displayNameRes,
-                bannerImage = R.drawable.circle_defi_banner,
-            )
-        )
-
     /** Current UI state for the DeFi positions screen. */
-    val state: StateFlow<DefiUiModel> = _state.asStateFlow()
+    val state: StateFlow<DefiUiModel>
+        field =
+            MutableStateFlow(
+                DefiUiModel(
+                    isTotalAmountLoading = true,
+                    isBalanceVisible = true,
+                    supportEditChains = false,
+                    selectedTab = DeFiTab.DEPOSITED.displayNameRes,
+                    bannerImage = R.drawable.circle_defi_banner,
+                )
+            )
 
-    private val _isRefreshing = MutableStateFlow(false)
     /** True while a user-initiated pull-to-refresh is in flight. */
-    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+    val isRefreshing: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     /** Initializes the ViewModel with [vaultId] and starts loading positions. */
     fun setData(vaultId: String) {
@@ -126,14 +124,14 @@ constructor(
         hasRestoredSnapshot = true
         val cached = snapshotCache.read(vaultId, CircleDeFiSnapshot::class) ?: return
         mscaAddress = cached.mscaAddress
-        _state.value = cached.model
+        state.value = cached.model
     }
 
     override fun onCleared() {
         if (::vaultId.isInitialized) {
             snapshotCache.write(
                 vaultId,
-                CircleDeFiSnapshot(model = _state.value, mscaAddress = mscaAddress),
+                CircleDeFiSnapshot(model = state.value, mscaAddress = mscaAddress),
             )
         }
         super.onCleared()
@@ -141,7 +139,7 @@ constructor(
 
     /** Triggers a user-initiated pull-to-refresh; resets [isRefreshing] when complete. */
     fun refresh() {
-        _isRefreshing.value = true
+        isRefreshing.value = true
         loadCirclePositions()
     }
 
@@ -150,7 +148,7 @@ constructor(
             try {
                 val hideWarning =
                     withContext(ioDispatcher) { scaCircleAccountRepository.getCloseWarning() }
-                _state.update { currentState ->
+                state.update { currentState ->
                     currentState.copy(
                         circleDefi = currentState.circleDefi.copy(closeWarning = hideWarning)
                     )
@@ -167,7 +165,7 @@ constructor(
             try {
                 val isVisible =
                     withContext(ioDispatcher) { balanceVisibilityRepository.getVisibility(vaultId) }
-                _state.update { it.copy(isBalanceVisible = isVisible) }
+                state.update { it.copy(isBalanceVisible = isVisible) }
             } catch (t: Throwable) {
                 if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
@@ -184,7 +182,7 @@ constructor(
                     // restored from the snapshot, or refreshed by a pull — keeps its figures while
                     // this read runs, rather than blanking a position the user holds for the
                     // duration of a network call.
-                    _state.update { currentState ->
+                    state.update { currentState ->
                         if (currentState.totalAmountPrice != null) currentState
                         else
                             currentState.copy(
@@ -211,7 +209,7 @@ constructor(
                             // Preserve `isAccountOpen` from current state: if `onCreateAccount`
                             // raced ahead and already marked the account open, don't stomp it back
                             // to false based on this now-stale "no account" finding.
-                            _state.update { currentState ->
+                            state.update { currentState ->
                                 currentState.copy(
                                     isTotalAmountLoading = false,
                                     totalAmountPrice = zero,
@@ -225,7 +223,7 @@ constructor(
                         }
                     } else { // If account exists, show cache, then fetch and update from network
                         mscaAddress = addressSca
-                        _state.update { currentState ->
+                        state.update { currentState ->
                             currentState.copy(
                                 circleDefi = currentState.circleDefi.copy(isAccountOpen = true)
                             )
@@ -246,7 +244,7 @@ constructor(
                     throw e
                 } catch (t: Throwable) {
                     Timber.e(t)
-                    _state.update { currentState ->
+                    state.update { currentState ->
                         currentState.copy(
                             isTotalAmountLoading = false,
                             circleDefi = currentState.circleDefi.copy(isLoading = false),
@@ -254,7 +252,7 @@ constructor(
                     }
                 } finally {
                     if (coroutineContext[Job]?.isCancelled != true) {
-                        _isRefreshing.value = false
+                        isRefreshing.value = false
                     }
                 }
             }
@@ -262,7 +260,7 @@ constructor(
 
     /** Updates the currently selected DeFi tab. */
     fun onTabSelected(tab: DeFiTab) {
-        _state.update { currentState -> currentState.copy(selectedTab = tab.displayNameRes) }
+        state.update { currentState -> currentState.copy(selectedTab = tab.displayNameRes) }
     }
 
     /** Persists and dismisses the Circle DeFi warning banner. */
@@ -270,7 +268,7 @@ constructor(
         viewModelScope.launch {
             try {
                 withContext(ioDispatcher) { scaCircleAccountRepository.saveCloseWarning() }
-                _state.update { currentState ->
+                state.update { currentState ->
                     currentState.copy(
                         circleDefi = currentState.circleDefi.copy(closeWarning = true)
                     )
@@ -292,7 +290,7 @@ constructor(
                         circleApi.createScAccount(ethereumVaultAddress)
                     }
                 mscaAddress = newAddress
-                _state.update { currentState ->
+                state.update { currentState ->
                     currentState.copy(
                         circleDefi = currentState.circleDefi.copy(isAccountOpen = true)
                     )
@@ -413,7 +411,7 @@ constructor(
 
             val formattedPrice = currencyFormat.await().format(usdcTokenPrice.value)
 
-            _state.update { currentState ->
+            state.update { currentState ->
                 currentState.copy(
                     totalAmountPrice = formattedPrice,
                     isTotalAmountLoading = false,

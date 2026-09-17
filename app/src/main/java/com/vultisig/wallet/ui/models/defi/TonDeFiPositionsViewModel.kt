@@ -35,7 +35,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
@@ -125,8 +124,8 @@ constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<TonDeFiUiState>(TonDeFiUiState.Loading)
-    val state: StateFlow<TonDeFiUiState> = _state.asStateFlow()
+    val state: StateFlow<TonDeFiUiState>
+        field = MutableStateFlow<TonDeFiUiState>(TonDeFiUiState.Loading)
 
     private var vaultId: VaultId = ""
     private var cachedTonCoin: Coin? = null
@@ -157,7 +156,7 @@ constructor(
         val cached = snapshotCache.read(vaultId, TonStakingSnapshot::class) ?: return
         cachedPoolAddress = cached.poolAddress
         cachedStakedDisplay = cached.stakedDisplay
-        _state.value =
+        state.value =
             cached.state.copy(
                 isReloading = false,
                 showPositionSelectionDialog = false,
@@ -166,7 +165,7 @@ constructor(
     }
 
     override fun onCleared() {
-        val success = _state.value as? TonDeFiUiState.Success
+        val success = state.value as? TonDeFiUiState.Success
         if (vaultId.isNotEmpty() && success != null) {
             snapshotCache.write(
                 vaultId,
@@ -188,7 +187,7 @@ constructor(
         loadJob?.cancel()
         // Flag the in-flight reload on an already-rendered screen so the buttons disable while the
         // isActionLocked() guard is closed by the active loadJob.
-        _state.update { current ->
+        state.update { current ->
             if (current is TonDeFiUiState.Success) current.copy(isReloading = true) else current
         }
         loadJob =
@@ -198,11 +197,11 @@ constructor(
                     // Keep a screen that already shows data on a background-refresh failure; only
                     // surface the error state when there's nothing rendered yet. Clear the reload
                     // flag so the buttons re-enable once the failed refresh settles.
-                    if (_state.value !is TonDeFiUiState.Success) {
-                        _state.value =
+                    if (state.value !is TonDeFiUiState.Success) {
+                        state.value =
                             TonDeFiUiState.Error(R.string.error_view_default_description.asUiText())
                     } else {
-                        _state.update { current ->
+                        state.update { current ->
                             if (current is TonDeFiUiState.Success) current.copy(isReloading = false)
                             else current
                         }
@@ -212,7 +211,7 @@ constructor(
                 val tonCoin = findTonCoin(vaultId)
                 cachedTonCoin = tonCoin
                 if (tonCoin == null) {
-                    _state.value =
+                    state.value =
                         TonDeFiUiState.Error(R.string.ton_defi_error_ton_not_in_vault.asUiText())
                     return@safeLaunch
                 }
@@ -280,7 +279,7 @@ constructor(
                         )
                     }
 
-                _state.value =
+                state.value =
                     TonDeFiUiState.Success(
                         tonData = tonData,
                         isBalanceVisible = isBalanceVisible,
@@ -362,13 +361,13 @@ constructor(
         vaultRepository.get(vaultId)?.coins?.find { it.chain == Chain.Ton && it.isNativeToken }
 
     fun onTabSelected(tab: DeFiTab) {
-        _state.update { current ->
+        state.update { current ->
             if (current is TonDeFiUiState.Success) current.copy(selectedTab = tab) else current
         }
     }
 
     fun setPositionSelectionDialogVisibility(visible: Boolean) {
-        _state.update { current ->
+        state.update { current ->
             if (current is TonDeFiUiState.Success)
                 current.copy(
                     showPositionSelectionDialog = visible,
@@ -379,7 +378,7 @@ constructor(
     }
 
     fun onPositionSelectionChange(ticker: String, selected: Boolean) {
-        _state.update { current ->
+        state.update { current ->
             if (current is TonDeFiUiState.Success) {
                 val updated =
                     if (selected) current.tempSelectedPositions + ticker
@@ -390,7 +389,7 @@ constructor(
     }
 
     fun onPositionSelectionDone() {
-        _state.update { current ->
+        state.update { current ->
             if (current is TonDeFiUiState.Success)
                 current.copy(
                     showPositionSelectionDialog = false,
@@ -407,7 +406,7 @@ constructor(
      */
     private fun isActionLocked(): Boolean {
         if (loadJob?.isActive == true) return true
-        return (_state.value as? TonDeFiUiState.Success)?.tonData?.isActionLocked ?: false
+        return (state.value as? TonDeFiUiState.Success)?.tonData?.isActionLocked ?: false
     }
 
     /**

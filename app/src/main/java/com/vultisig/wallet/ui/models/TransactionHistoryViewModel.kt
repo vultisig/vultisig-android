@@ -53,7 +53,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -233,8 +232,8 @@ constructor(
 
     val assetSearchTextFieldState = TextFieldState()
 
-    private val _uiState = MutableStateFlow(TransactionHistoryUiState(chainName = chainId))
-    val uiState: StateFlow<TransactionHistoryUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<TransactionHistoryUiState>
+        field = MutableStateFlow(TransactionHistoryUiState(chainName = chainId))
 
     /**
      * Screen visibility, driven by the composable's resume effect. A flow rather than a job handle
@@ -270,15 +269,15 @@ constructor(
     }
 
     fun selectTab(tab: TransactionHistoryTab) {
-        _uiState.update { it.copy(selectedTab = tab, isLoading = true) }
+        uiState.update { it.copy(selectedTab = tab, isLoading = true) }
     }
 
     fun openSearch() {
-        _uiState.update { it.copy(isAssetSearchSheetVisible = true) }
+        uiState.update { it.copy(isAssetSearchSheetVisible = true) }
     }
 
     fun toggleAssetSelection(asset: TransactionAssetUiModel) {
-        _uiState.update { state ->
+        uiState.update { state ->
             val wasSelected = asset.tokenId in state.selectedAssetIds
             val newIds =
                 if (wasSelected) state.selectedAssetIds - asset.tokenId
@@ -291,7 +290,7 @@ constructor(
     }
 
     fun removeAssetFilter(assetId: String) {
-        _uiState.update { state ->
+        uiState.update { state ->
             val newIds = state.selectedAssetIds - assetId
             val newList = state.selectedAssets.filter { a -> a.tokenId != assetId }
             state.copy(selectedAssetIds = newIds, selectedAssets = newList)
@@ -299,15 +298,15 @@ constructor(
     }
 
     fun clearAllFilters() {
-        _uiState.update { it.copy(selectedAssetIds = emptySet(), selectedAssets = emptyList()) }
+        uiState.update { it.copy(selectedAssetIds = emptySet(), selectedAssets = emptyList()) }
     }
 
     fun confirmAssetSearch() {
-        _uiState.update { it.copy(isAssetSearchSheetVisible = false) }
+        uiState.update { it.copy(isAssetSearchSheetVisible = false) }
     }
 
     fun closeSearch() {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 isAssetSearchSheetVisible = false,
                 selectedAssetIds = emptySet(),
@@ -326,7 +325,7 @@ constructor(
      * sweep's backoff would otherwise do. One status call is a fair price for a current answer.
      */
     fun openDetail(item: TransactionHistoryItemUiModel) {
-        _uiState.update { it.copy(selectedItem = item) }
+        uiState.update { it.copy(selectedItem = item) }
         if (!item.status.isInFlight()) return
         viewModelScope.safeLaunch(
             onError = { t -> Timber.w(t, "Detail-sheet status re-check failed") }
@@ -336,14 +335,14 @@ constructor(
     }
 
     fun dismissDetail() {
-        _uiState.update { it.copy(selectedItem = null) }
+        uiState.update { it.copy(selectedItem = null) }
     }
 
     fun refresh() {
         viewModelScope.safeLaunch(
             onError = { t -> Timber.w(t, "TransactionHistoryViewModel.refresh() failed") }
         ) {
-            _uiState.update { it.copy(isRefreshing = true) }
+            uiState.update { it.copy(isRefreshing = true) }
             try {
                 // Independently, for the same reason refreshOnEnter keeps them apart: a queue poll
                 // that fails must not take the rest of the history down with it, and vice versa.
@@ -359,7 +358,7 @@ constructor(
                 }
                 delay(100.milliseconds) // prevent refresh ui freezing
             } finally {
-                _uiState.update { it.copy(isRefreshing = false) }
+                uiState.update { it.copy(isRefreshing = false) }
             }
         }
     }
@@ -433,12 +432,12 @@ constructor(
             combine(
                     pendingLimitOrderRepository.observeOrders(vaultId),
                     expiryTicks(),
-                    _uiState.map { it.selectedAssetIds }.distinctUntilChanged(),
+                    uiState.map { it.selectedAssetIds }.distinctUntilChanged(),
                 ) { orders, now, assetIds ->
                     mapLimitOrderToUiModel.map(orders, now).filter { it.matchesAssetIds(assetIds) }
                 }
                 .collect { uiModels ->
-                    _uiState.update {
+                    uiState.update {
                         it.copy(
                             limitOrders = uiModels,
                             // An order the user already has keeps the tab reachable regardless of
@@ -460,7 +459,7 @@ constructor(
             val isRemoteEnabled = featureFlagRepository.getFeatureFlags().isLimitSwapEnabled
             limitSwapConfig.isFeatureEnabled.collect { isLocallyEnabled ->
                 if (isRemoteEnabled && isLocallyEnabled) {
-                    _uiState.update { it.copy(isLimitTabVisible = true) }
+                    uiState.update { it.copy(isLimitTabVisible = true) }
                 }
             }
         }
@@ -503,7 +502,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { t ->
                 Timber.w(t, "Could not prepare a limit-order cancel")
-                _uiState.update { it.copy(cancelError = t.toCancelErrorText()) }
+                uiState.update { it.copy(cancelError = t.toCancelErrorText()) }
             }
         ) {
             val order =
@@ -516,7 +515,7 @@ constructor(
     }
 
     fun dismissCancelError() {
-        _uiState.update { it.copy(cancelError = null) }
+        uiState.update { it.copy(cancelError = null) }
     }
 
     private fun Throwable.toCancelErrorText(): UiText =
@@ -557,7 +556,7 @@ constructor(
                     val now = clock.now().toEpochMilliseconds()
                     entities.mapNotNull { it.toUiModel() }.groupByDate(now)
                 }
-                .combine(_uiState.map { it.selectedAssetIds }.distinctUntilChanged()) { groups, ids
+                .combine(uiState.map { it.selectedAssetIds }.distinctUntilChanged()) { groups, ids
                     ->
                     if (ids.isEmpty()) groups
                     else
@@ -567,7 +566,7 @@ constructor(
                         }
                 }
                 .collect { groups ->
-                    _uiState.update {
+                    uiState.update {
                         it.copy(
                             groups = groups,
                             isLoading = false,
@@ -663,7 +662,7 @@ constructor(
                     val q = query.toString().trim()
                     if (q.isBlank()) items else items.filter { it.matchesSearch(q) }
                 }
-                .collect { items -> _uiState.update { it.copy(assetSearchItems = items) } }
+                .collect { items -> uiState.update { it.copy(assetSearchItems = items) } }
         }
     }
 

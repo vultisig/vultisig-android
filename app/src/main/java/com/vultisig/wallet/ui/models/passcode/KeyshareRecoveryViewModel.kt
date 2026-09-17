@@ -27,7 +27,6 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -60,8 +59,8 @@ constructor(
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(KeyshareRecoveryUiModel())
-    val state: StateFlow<KeyshareRecoveryUiModel> = _state.asStateFlow()
+    val state: StateFlow<KeyshareRecoveryUiModel>
+        field = MutableStateFlow(KeyshareRecoveryUiModel())
 
     val passwordTextFieldState = TextFieldState()
 
@@ -83,11 +82,11 @@ constructor(
     }
 
     fun onPasswordPromptDismissed() {
-        _state.update { it.copy(isPasswordPromptVisible = false, passwordError = null) }
+        state.update { it.copy(isPasswordPromptVisible = false, passwordError = null) }
     }
 
     fun onPasswordVisibilityToggled() {
-        _state.update { it.copy(isPasswordObfuscated = !it.isPasswordObfuscated) }
+        state.update { it.copy(isPasswordObfuscated = !it.isPasswordObfuscated) }
     }
 
     fun onRetry() {
@@ -126,7 +125,7 @@ constructor(
         // tap cannot start a second restore that finds the row the first just wrote and reports a
         // duplicate over its success.
         if (state.value.isRestoring) return
-        _state.update {
+        state.update {
             it.copy(message = R.string.passcode_key_unavailable_message, isRestoring = true)
         }
         try {
@@ -160,7 +159,7 @@ constructor(
             }
             settle(restored, refusal)
         } finally {
-            _state.update { it.copy(isRestoring = false) }
+            state.update { it.copy(isRestoring = false) }
         }
     }
 
@@ -198,7 +197,7 @@ constructor(
     }
 
     private fun promptForPassword(isRetry: Boolean) {
-        _state.update {
+        state.update {
             it.copy(
                 isPasswordPromptVisible = true,
                 passwordError = R.string.import_file_screen_password_error.takeIf { _ -> isRetry },
@@ -207,7 +206,7 @@ constructor(
     }
 
     private fun report(@StringRes message: Int) {
-        _state.update {
+        state.update {
             it.copy(message = message, isPasswordPromptVisible = false, passwordError = null)
         }
     }

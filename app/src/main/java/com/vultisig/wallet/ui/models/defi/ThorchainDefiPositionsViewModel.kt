@@ -157,21 +157,19 @@ constructor(
     // silently jumps as the rest land. A single shared "is loading" flag could not express that:
     // whichever leg finished first cleared it for everyone. Every terminal path in a leg — the
     // success collect, each .catch, and every early bail-out — must therefore assign here.
-    private val _totalValueBond = MutableStateFlow<BigInteger?>(null)
-    private val _totalValueDefaultStake = MutableStateFlow<StakeLegTotal<StakeDefaultValues>?>(null)
-    private val _totalValueRujiStake = MutableStateFlow<StakeLegTotal<BigInteger>?>(null)
-    private val _totalValueTCYStake = MutableStateFlow<StakeLegTotal<BigInteger>?>(null)
+    val totalValueBond: StateFlow<BigInteger?>
+        field = MutableStateFlow<BigInteger?>(null)
+    val totalValueDefaultStake: StateFlow<StakeLegTotal<StakeDefaultValues>?>
+        field = MutableStateFlow<StakeLegTotal<StakeDefaultValues>?>(null)
+    val totalValueRujiStake: StateFlow<StakeLegTotal<BigInteger>?>
+        field = MutableStateFlow<StakeLegTotal<BigInteger>?>(null)
+    val totalValueTCYStake: StateFlow<StakeLegTotal<BigInteger>?>
+        field = MutableStateFlow<StakeLegTotal<BigInteger>?>(null)
     // LP is priced per pool from two different assets, so it joins the total already converted to
     // fiat rather than as a raw chain amount like the other legs — see [LpLegTotal] for why it
     // carries a currency and why a failed pool reports as unavailable rather than as zero.
-    private val _totalValueLpFiat = MutableStateFlow<LpLegTotal?>(null)
-
-    val totalValueBond: StateFlow<BigInteger?> = _totalValueBond
-    val totalValueDefaultStake: StateFlow<StakeLegTotal<StakeDefaultValues>?> =
-        _totalValueDefaultStake
-    val totalValueRujiStake: StateFlow<StakeLegTotal<BigInteger>?> = _totalValueRujiStake
-    val totalValueTCYStake: StateFlow<StakeLegTotal<BigInteger>?> = _totalValueTCYStake
-    val totalValueLpFiat: StateFlow<LpLegTotal?> = _totalValueLpFiat
+    val totalValueLpFiat: StateFlow<LpLegTotal?>
+        field = MutableStateFlow<LpLegTotal?>(null)
 
     // Cached "available" pool list shared by the Manage-Positions dialog and the LP tab loader so
     // cold start makes a single getPoolStats call instead of two. `null` means "not loaded yet"
@@ -448,7 +446,7 @@ constructor(
      */
     private suspend fun reportLpFiat(value: BigDecimal) {
         val currency = appCurrencyRepository.currency.first()
-        _totalValueLpFiat.value = LpLegTotal.Priced(FiatValue(value, currency.ticker))
+        totalValueLpFiat.value = LpLegTotal.Priced(FiatValue(value, currency.ticker))
     }
 
     /**
@@ -484,11 +482,11 @@ constructor(
      * and the legs together is what makes the spinner honest.
      */
     private fun resetTotalsToPending() {
-        _totalValueBond.value = null
-        _totalValueDefaultStake.value = null
-        _totalValueRujiStake.value = null
-        _totalValueTCYStake.value = null
-        _totalValueLpFiat.value = null
+        totalValueBond.value = null
+        totalValueDefaultStake.value = null
+        totalValueRujiStake.value = null
+        totalValueTCYStake.value = null
+        totalValueLpFiat.value = null
         state.update { it.copy(totalAmountPrice = null, isTotalAmountLoading = true) }
     }
 
@@ -524,9 +522,9 @@ constructor(
      * [markStakingTotalsUnavailable] instead.
      */
     private fun settleStakingTotals() {
-        _totalValueDefaultStake.update { StakeLegTotal.Loaded(StakeDefaultValues()) }
-        _totalValueRujiStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
-        _totalValueTCYStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
+        totalValueDefaultStake.update { StakeLegTotal.Loaded(StakeDefaultValues()) }
+        totalValueRujiStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
+        totalValueTCYStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
     }
 
     /**
@@ -535,9 +533,9 @@ constructor(
      * a total that silently counts all of staking as zero.
      */
     private fun markStakingTotalsUnavailable() {
-        _totalValueDefaultStake.update { StakeLegTotal.Unavailable }
-        _totalValueRujiStake.update { StakeLegTotal.Unavailable }
-        _totalValueTCYStake.update { StakeLegTotal.Unavailable }
+        totalValueDefaultStake.update { StakeLegTotal.Unavailable }
+        totalValueRujiStake.update { StakeLegTotal.Unavailable }
+        totalValueTCYStake.update { StakeLegTotal.Unavailable }
     }
 
     /**
@@ -769,7 +767,7 @@ constructor(
         loadBondedNodesJob =
             viewModelScope.launch {
                 if (!state.value.selectedPositions.hasBondPositions()) {
-                    _totalValueBond.value = BigInteger.ZERO
+                    totalValueBond.value = BigInteger.ZERO
 
                     val zero = zeroFiat()
                     state.update { it.copy(bonded = emptyBondedTabUiModel(zero)) }
@@ -799,7 +797,7 @@ constructor(
                                 bonded = it.bonded.copy(isLoading = false, totalBondedPrice = zero)
                             )
                         }
-                        _totalValueBond.update { BigInteger.ZERO }
+                        totalValueBond.update { BigInteger.ZERO }
                         return@launch
                     }
 
@@ -815,7 +813,7 @@ constructor(
                                 // run that has been replaced understates the total until the
                                 // replacement lands.
                                 if (cause !is CancellationException) {
-                                    _totalValueBond.compareAndSet(null, BigInteger.ZERO)
+                                    totalValueBond.compareAndSet(null, BigInteger.ZERO)
                                 }
                             }
                         }
@@ -831,7 +829,7 @@ constructor(
                                         it.bonded.copy(isLoading = false, totalBondedPrice = zero)
                                 )
                             }
-                            _totalValueBond.update { BigInteger.ZERO }
+                            totalValueBond.update { BigInteger.ZERO }
                         }
                         .collect { activeNodes ->
                             // Format UI data and show
@@ -855,7 +853,7 @@ constructor(
                                 )
                             }
 
-                            _totalValueBond.update { totalBondedRaw }
+                            totalValueBond.update { totalBondedRaw }
                         }
                 } catch (t: Throwable) {
                     if (t is kotlinx.coroutines.CancellationException) throw t
@@ -866,7 +864,7 @@ constructor(
                     state.update {
                         it.copy(bonded = it.bonded.copy(isLoading = false, totalBondedPrice = zero))
                     }
-                    _totalValueBond.update { BigInteger.ZERO }
+                    totalValueBond.update { BigInteger.ZERO }
                 }
             }
     }
@@ -964,12 +962,12 @@ constructor(
                     if (coinsToLoad.contains(Coins.ThorChain.RUJI.id)) {
                         createRujiStakePosition(address, vaultId)
                     } else {
-                        _totalValueRujiStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
+                        totalValueRujiStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
                     }
                     if (coinsToLoad.contains(Coins.ThorChain.TCY.id)) {
                         createTCYStakePosition(address, vaultId)
                     } else {
-                        _totalValueTCYStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
+                        totalValueTCYStake.update { StakeLegTotal.Loaded(BigInteger.ZERO) }
                     }
 
                     createGenericStakePosition(address, vaultId, coinsToLoad)
@@ -996,7 +994,7 @@ constructor(
                     // value would survive a refresh whose cards no longer stand behind it. It
                     // reports *unavailable*, not zero — the read failed, so the position is
                     // unknown, and both the cards and the header say so.
-                    _totalValueRujiStake.update { StakeLegTotal.Unavailable }
+                    totalValueRujiStake.update { StakeLegTotal.Unavailable }
                     markStakingPositionsUnavailable { it.coin.id in RUJI_POSITION_COIN_IDS }
                 }
                 // A source that finishes without ever emitting is done, not pending, and has to
@@ -1005,7 +1003,7 @@ constructor(
                 // still-pending leg a zero it never reported.
                 .onCompletion { cause ->
                     if (cause !is CancellationException) {
-                        _totalValueRujiStake.compareAndSet(
+                        totalValueRujiStake.compareAndSet(
                             null,
                             StakeLegTotal.Loaded(BigInteger.ZERO),
                         )
@@ -1017,7 +1015,7 @@ constructor(
                     }
 
                     // Both positions are denominated in RUJI, so the tab's RUJI total is their sum.
-                    _totalValueRujiStake.update {
+                    totalValueRujiStake.update {
                         StakeLegTotal.Loaded(
                             detailsList.fold(BigInteger.ZERO) { acc, details ->
                                 acc + details.stakeAmount
@@ -1076,12 +1074,12 @@ constructor(
                 .getStakingDetails(address = address, vaultId = vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions TCY Stake")
-                    _totalValueTCYStake.update { StakeLegTotal.Unavailable }
+                    totalValueTCYStake.update { StakeLegTotal.Unavailable }
                     markStakingPositionsUnavailable { it.coin.id == Coins.ThorChain.TCY.id }
                 }
                 .onCompletion { cause ->
                     if (cause !is CancellationException) {
-                        _totalValueTCYStake.compareAndSet(
+                        totalValueTCYStake.compareAndSet(
                             null,
                             StakeLegTotal.Loaded(BigInteger.ZERO),
                         )
@@ -1111,7 +1109,7 @@ constructor(
 
                     updateExistingPosition(stakePosition)
 
-                    _totalValueTCYStake.update { StakeLegTotal.Loaded(position.stakeAmount) }
+                    totalValueTCYStake.update { StakeLegTotal.Loaded(position.stakeAmount) }
                 }
         }
     }
@@ -1126,7 +1124,7 @@ constructor(
                 .getStakingDetails(address, vaultId)
                 .catch { t ->
                     Timber.e(t, "Failed to load staking positions")
-                    _totalValueDefaultStake.update { StakeLegTotal.Unavailable }
+                    totalValueDefaultStake.update { StakeLegTotal.Unavailable }
                     markStakingPositionsUnavailable {
                         it.coin.id == Coins.ThorChain.yRUNE.id ||
                             it.coin.id == Coins.ThorChain.yTCY.id ||
@@ -1136,7 +1134,7 @@ constructor(
                 }
                 .onCompletion { cause ->
                     if (cause !is CancellationException) {
-                        _totalValueDefaultStake.compareAndSet(
+                        totalValueDefaultStake.compareAndSet(
                             null,
                             StakeLegTotal.Loaded(StakeDefaultValues()),
                         )
@@ -1240,7 +1238,7 @@ constructor(
                             position to defaultPosition.stakeAmount
                         }
 
-                    _totalValueDefaultStake.update {
+                    totalValueDefaultStake.update {
                         StakeLegTotal.Loaded(
                             StakeDefaultValues(
                                 stakeElements =
@@ -1428,7 +1426,7 @@ constructor(
                             }
                         }
 
-                    _totalValueLpFiat.value =
+                    totalValueLpFiat.value =
                         if (failedSelectedPools.isEmpty()) {
                             LpLegTotal.Priced(
                                 FiatValue(

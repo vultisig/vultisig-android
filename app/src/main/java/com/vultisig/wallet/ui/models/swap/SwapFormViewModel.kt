@@ -88,10 +88,9 @@ constructor(
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
 
-    private val _uiState = MutableStateFlow(SwapFormUiModel())
-
-    /** Read-only swap form UI state; mutation is confined to this ViewModel via [_uiState]. */
-    val uiState: StateFlow<SwapFormUiModel> = _uiState
+    /** Read-only swap form UI state; mutation is confined to this ViewModel. */
+    val uiState: StateFlow<SwapFormUiModel>
+        field = MutableStateFlow(SwapFormUiModel())
 
     val srcAmountState = TextFieldState()
 
@@ -163,7 +162,7 @@ constructor(
         swapQuotePipelineControllerFactory.create(
             scope = viewModelScope,
             swapQuoteManager = swapQuoteManager,
-            uiState = _uiState,
+            uiState = uiState,
             selectedSrc = selectedSrc,
             selectedDst = selectedDst,
             referralCode = referralCode,
@@ -185,7 +184,7 @@ constructor(
             selectedSrcToken = selectedSrc.map { it?.account?.token },
             appCurrencyRepository = appCurrencyRepository,
             tokenPriceRepository = tokenPriceRepository,
-            uiState = _uiState,
+            uiState = uiState,
             // A fiat keystroke rewrites the whole token string; without this the pipeline reads
             // the jump as a paste and skips the typing debounce on every key.
             onTokenAmountConverted = swapQuoteManager::markConvertedAmount,
@@ -196,9 +195,9 @@ constructor(
     private var selectTokensJob: Job? = null
 
     private var isLoadingNextScreen: Boolean
-        get() = _uiState.value.isLoadingNextScreen
+        get() = uiState.value.isLoadingNextScreen
         set(value) {
-            _uiState.update { it.copy(isLoadingNextScreen = value) }
+            uiState.update { it.copy(isLoadingNextScreen = value) }
         }
 
     init {
@@ -214,7 +213,7 @@ constructor(
         swapTokenSelector.collectSelectedAccounts(
             selectedSrc,
             selectedDst,
-            _uiState,
+            uiState,
             viewModelScope,
         )
         collectSelectedTokens()
@@ -240,7 +239,7 @@ constructor(
                     // EVM-aggregator route returns, and the builder ignores it meanwhile.
                     if (!isEvmSource && gasLimitOverride.value != null) {
                         gasLimitOverride.value = null
-                        _uiState.update { it.copy(gasLimitOverride = null) }
+                        uiState.update { it.copy(gasLimitOverride = null) }
                     }
                     // Until a quote resolves (honors == null) stay applicable for an EVM source;
                     // once resolved, only an EVM-aggregator route honors the override.
@@ -248,7 +247,7 @@ constructor(
                 }
                 .distinctUntilChanged()
                 .collect { applicable ->
-                    _uiState.update { it.copy(isGasLimitApplicable = applicable) }
+                    uiState.update { it.copy(isGasLimitApplicable = applicable) }
                 }
         }
     }
@@ -387,7 +386,7 @@ constructor(
     fun onSelectSwapMode(mode: SwapMode) {
         swapMode.value = mode
         // The Limit form recomputes via the swapMode collector in observeLimitForm().
-        _uiState.update { it.copy(swapMode = mode) }
+        uiState.update { it.copy(swapMode = mode) }
     }
 
     fun onLimitPresetSelected(preset: LimitPricePreset) {
@@ -576,7 +575,7 @@ constructor(
             if (swapMode.value == SwapMode.Limit) {
                 onSelectSwapMode(SwapMode.Market)
             }
-            _uiState.update { it.copy(isLimitTabEnabled = enabled, limitOrder = null) }
+            uiState.update { it.copy(isLimitTabEnabled = enabled, limitOrder = null) }
             return
         }
 
@@ -619,11 +618,11 @@ constructor(
         // Use the resolved token logos the Market form uses (drawable/URL ImageModel), not the raw
         // Coin.logo name, which SubcomposeAsyncImage can't load — that is why the reference/asset
         // logos rendered as first-letter placeholders (#4154 UI).
-        val current = _uiState.value
+        val current = uiState.value
         val sellLogo = current.selectedSrcToken?.tokenLogo ?: srcCoin.logo
         val buyLogo = current.selectedDstToken?.tokenLogo ?: dstCoin.logo
 
-        _uiState.update {
+        uiState.update {
             it.copy(
                 isLimitTabEnabled = true,
                 limitOrder =
@@ -778,10 +777,10 @@ constructor(
                 }
 
             // Snapshot the fee/discount display alongside `inputs`, before the build. Reading
-            // _uiState.value after it could attach a later quote's fee label or discounts to this
+            // uiState.value after it could attach a later quote's fee label or discounts to this
             // transaction if polling lands a new quote in the meantime (#5358).
             val feeDisplay =
-                _uiState.value.let { state ->
+                uiState.value.let { state ->
                     SwapFeeDisplay(
                         swapFeePercent = state.feeBreakdown.swapFeePercent,
                         swapFeeIncludedInRate = state.feeBreakdown.swapFeeIncludedInRate,
@@ -887,7 +886,7 @@ constructor(
                 selectedSrcId = selectedSrcId,
                 selectedDstId = selectedDstId,
                 addresses = addresses,
-                uiState = _uiState,
+                uiState = uiState,
                 // Raise the quote skeletons while loading a not-yet-held token's account only when
                 // the pair the pick forms could actually be quoted — a positive amount AND a
                 // routable (distinct, provider-backed) pair, mirroring the pipeline's own
@@ -1000,7 +999,7 @@ constructor(
         // can't outlive the condition that raised it. The screen renders `error ?: formError`, so a
         // stale `error` (only ever cleared by an explicit dismiss) would otherwise pin a one-off
         // "insufficient balance" warning on a now-valid amount and mask the live quote/formError.
-        _uiState.update { it.copy(error = null) }
+        uiState.update { it.copy(error = null) }
 
         // The 25/50/75 chips take a plain fraction of the full balance, matching iOS and the
         // desktop app. Only MAX reserves the source-chain network fee, and only for a native source
@@ -1079,7 +1078,7 @@ constructor(
 
     fun validateAmount() {
         val errorMessage = swapValidator.validateSrcAmount(srcAmountState.text.toString())
-        _uiState.update { it.copy(error = errorMessage) }
+        uiState.update { it.copy(error = errorMessage) }
     }
 
     /** Flips the From amount between token and fiat input (#5888). */
@@ -1111,7 +1110,7 @@ constructor(
     fun setSlippageBps(bps: Int?) {
         if (bps != null && bps !in 1..MAX_SLIPPAGE_BPS) return
         slippageBps.value = bps
-        _uiState.update { it.copy(slippageBps = bps) }
+        uiState.update { it.copy(slippageBps = bps) }
     }
 
     /**
@@ -1120,7 +1119,7 @@ constructor(
      */
     fun setGasLimit(units: Long?) {
         gasLimitOverride.value = units
-        _uiState.update { it.copy(gasLimitOverride = units) }
+        uiState.update { it.copy(gasLimitOverride = units) }
     }
 
     /**
@@ -1158,7 +1157,7 @@ constructor(
         val typed = externalRecipient.value
         val error = externalRecipientError(typed, selectedDst.value?.account?.token?.chain)
         quoteRecipient.value = typed?.takeIf { error == null }
-        _uiState.update { it.copy(externalRecipient = typed, externalRecipientError = error) }
+        uiState.update { it.copy(externalRecipient = typed, externalRecipientError = error) }
     }
 
     /**
@@ -1170,10 +1169,10 @@ constructor(
         val vaultId = vaultId ?: return
         viewModelScope.safeLaunch {
             if (getDiscountBpsUseCase.hasReachedSilverTier(vaultId)) {
-                _uiState.update { it.copy(showAdvancedSettings = true) }
+                uiState.update { it.copy(showAdvancedSettings = true) }
             } else {
                 val balance = getDiscountBpsUseCase.getVultBalance(vaultId) ?: BigInteger.ZERO
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         advancedSettingsGate =
                             VultTierGateUiModel(
@@ -1188,7 +1187,7 @@ constructor(
     }
 
     fun dismissAdvancedSettings() {
-        _uiState.update { it.copy(showAdvancedSettings = false) }
+        uiState.update { it.copy(showAdvancedSettings = false) }
     }
 
     /**
@@ -1200,7 +1199,7 @@ constructor(
     }
 
     fun dismissAdvancedSettingsGate() {
-        _uiState.update { it.copy(advancedSettingsGate = null) }
+        uiState.update { it.copy(advancedSettingsGate = null) }
     }
 
     /**
@@ -1208,7 +1207,7 @@ constructor(
      */
     fun onGetVult() {
         val vaultId = vaultId ?: return
-        _uiState.update { it.copy(advancedSettingsGate = null) }
+        uiState.update { it.copy(advancedSettingsGate = null) }
         viewModelScope.launch {
             // launchSingleTop is forced on every navigation, so popping the current swap first is
             // what makes the already-open swap actually re-open with the ETH → VULT pair (#4858).
@@ -1230,11 +1229,11 @@ constructor(
     }
 
     fun hideError() {
-        _uiState.update { it.copy(error = null, formError = null) }
+        uiState.update { it.copy(error = null, formError = null) }
     }
 
     private fun showError(error: UiText) {
-        _uiState.update { it.copy(error = error) }
+        uiState.update { it.copy(error = error) }
     }
 
     companion object {

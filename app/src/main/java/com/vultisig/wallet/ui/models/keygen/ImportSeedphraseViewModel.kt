@@ -22,7 +22,6 @@ import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
@@ -48,8 +47,8 @@ constructor(
 ) : ViewModel() {
 
     val mnemonicFieldState = TextFieldState()
-    private val _state = MutableStateFlow(ImportSeedphraseUiModel())
-    val state: StateFlow<ImportSeedphraseUiModel> = _state.asStateFlow()
+    val state: StateFlow<ImportSeedphraseUiModel>
+        field = MutableStateFlow(ImportSeedphraseUiModel())
 
     init {
         // Two separate collectors: immediate (no debounce) clears stale errors on every
@@ -61,7 +60,7 @@ constructor(
     private fun observeImmediateInput() =
         viewModelScope.launch {
             mnemonicFieldState.textAsFlow().collect {
-                _state.update {
+                state.update {
                     it.copy(
                         errorMessage = null,
                         isImportEnabled = false,
@@ -76,7 +75,7 @@ constructor(
             mnemonicFieldState.textAsFlow().debounce(500).collectLatest { text ->
                 val trimmed = cleanMnemonic(text.toString())
                 if (trimmed.isEmpty()) {
-                    _state.update {
+                    state.update {
                         it.copy(
                             wordCount = 0,
                             expectedWordCount = 12,
@@ -117,7 +116,7 @@ constructor(
                             VsTextInputFieldInnerState.Error
                     }
 
-                _state.update {
+                state.update {
                     it.copy(
                         wordCount = wordCount,
                         expectedWordCount = expectedWordCount,
@@ -136,13 +135,13 @@ constructor(
         val mnemonic = cleanMnemonic(mnemonicFieldState.text.toString())
 
         viewModelScope.launch {
-            _state.update { it.copy(isImporting = true) }
+            state.update { it.copy(isImporting = true) }
 
             try {
                 val isDuplicate = checkMnemonicDuplicate(mnemonic)
 
                 if (isDuplicate) {
-                    _state.update {
+                    state.update {
                         it.copy(
                             isImporting = false,
                             errorMessage =
@@ -155,14 +154,14 @@ constructor(
 
                 keyImportRepository.setMnemonic(mnemonic)
 
-                _state.update { it.copy(isImporting = false) }
+                state.update { it.copy(isImporting = false) }
 
                 navigator.route(Route.KeyImport.ChainsSetup)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 keyImportRepository.clear()
-                _state.update {
+                state.update {
                     it.copy(
                         isImporting = false,
                         errorMessage =

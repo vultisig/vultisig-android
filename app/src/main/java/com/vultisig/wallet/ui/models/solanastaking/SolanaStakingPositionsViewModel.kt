@@ -47,7 +47,6 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -148,8 +147,8 @@ constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(SolanaStakingPositionsUiState())
-    val state: StateFlow<SolanaStakingPositionsUiState> = _state.asStateFlow()
+    val state: StateFlow<SolanaStakingPositionsUiState>
+        field = MutableStateFlow(SolanaStakingPositionsUiState())
 
     private var vaultId: VaultId = ""
     private var loadJob: Job? = null
@@ -190,7 +189,7 @@ constructor(
                         // strings are priced too, and a reload that then fails never rebuilds
                         // them, so leaving them would strand each card on the old currency.
                         pricing = null
-                        _state.update {
+                        state.update {
                             it.copy(
                                 isLoading = true,
                                 totalStakedFiatDisplay = null,
@@ -207,7 +206,7 @@ constructor(
 
     fun refresh() {
         if (vaultId.isEmpty()) return
-        _state.update { it.copy(isReloading = true) }
+        state.update { it.copy(isReloading = true) }
         loadData()
     }
 
@@ -223,7 +222,7 @@ constructor(
      * of order, so an earlier total could land last and sit on the banner as the current one.
      */
     fun onKaminoTotalChanged(total: DefiFiatTotal?) {
-        _state.update { it.withChainTotal(staked = it.stakedFiat, kamino = total) }
+        state.update { it.withChainTotal(staked = it.stakedFiat, kamino = total) }
     }
 
     fun onStake() {
@@ -321,7 +320,7 @@ constructor(
             onError = { e ->
                 isBuildingStakingTx = false
                 Timber.e(e, "Failed to build Solana staking tx")
-                _state.update { it.copy(error = (e.message ?: "").asUiText()) }
+                state.update { it.copy(error = (e.message ?: "").asUiText()) }
             }
         ) {
             val vault = vaultRepository.get(vaultId) ?: error("Vault not found")
@@ -373,7 +372,7 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to load Solana staking positions")
-                    _state.update {
+                    state.update {
                         it.copy(
                             isLoading = false,
                             isReloading = false,
@@ -384,7 +383,7 @@ constructor(
             ) {
                 val solCoin = findSolCoin(vaultId)
                 if (solCoin == null) {
-                    _state.update {
+                    state.update {
                         it.copy(
                             isLoading = false,
                             isReloading = false,
@@ -424,7 +423,7 @@ constructor(
                 // adds up is checked against this currency, so a load still in flight must not
                 // already claim its own.
                 pricing = Pricing(currency = currency, format = currencyFormat)
-                _state.update {
+                state.update {
                     it.copy(
                             isLoading = false,
                             isReloading = false,

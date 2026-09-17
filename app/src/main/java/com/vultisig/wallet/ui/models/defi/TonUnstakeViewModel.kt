@@ -34,7 +34,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -80,11 +79,14 @@ constructor(
 
     private val route: Route.TonUnstake = savedStateHandle.toRoute()
 
-    private val _state =
-        MutableStateFlow(
-            TonUnstakeUiState(poolAddress = route.poolAddress, stakedDisplay = route.stakedDisplay)
-        )
-    val state: StateFlow<TonUnstakeUiState> = _state.asStateFlow()
+    val state: StateFlow<TonUnstakeUiState>
+        field =
+            MutableStateFlow(
+                TonUnstakeUiState(
+                    poolAddress = route.poolAddress,
+                    stakedDisplay = route.stakedDisplay,
+                )
+            )
 
     private var coin: Coin? = null
 
@@ -97,14 +99,14 @@ constructor(
     }
 
     fun dismissError() {
-        _state.update { it.copy(errorMessage = null) }
+        state.update { it.copy(errorMessage = null) }
     }
 
     fun submit() {
-        val current = _state.value
+        val current = state.value
         if (current.isLoading || current.isSubmitting || !current.hasSufficientBalance) return
 
-        _state.update { it.copy(isSubmitting = true, errorMessage = null) }
+        state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
         viewModelScope.safeLaunch(
             onError = { e ->
@@ -137,7 +139,7 @@ constructor(
                 navigator.route(
                     Route.VerifyDeposit(vaultId = route.vaultId, transactionId = transaction.id)
                 )
-                _state.update { it.copy(isSubmitting = false) }
+                state.update { it.copy(isSubmitting = false) }
             } catch (e: InvalidTransactionDataException) {
                 setError(e.text)
             }
@@ -152,13 +154,13 @@ constructor(
             onError = { e ->
                 Timber.e(e, "Failed to load TON coin for unstake flow")
                 setError(R.string.ton_defi_error_ton_not_in_vault.asUiText())
-                _state.update { it.copy(isLoading = false, hasSufficientBalance = false) }
+                state.update { it.copy(isLoading = false, hasSufficientBalance = false) }
             }
         ) {
             val vault = withContext(ioDispatcher) { vaultRepository.get(route.vaultId) }
             val nativeCoin =
                 vault?.coins?.firstOrNull { it.chain == Chain.Ton && it.isNativeToken }
-                    ?: return@safeLaunch _state.update {
+                    ?: return@safeLaunch state.update {
                         it.copy(
                             isLoading = false,
                             hasSufficientBalance = false,
@@ -186,7 +188,7 @@ constructor(
             val balance =
                 withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }
 
-            _state.update {
+            state.update {
                 it.copy(
                     isLoading = false,
                     ticker = nativeCoin.ticker,
@@ -197,7 +199,7 @@ constructor(
     }
 
     private fun setError(message: UiText) {
-        _state.update { it.copy(errorMessage = message, isSubmitting = false) }
+        state.update { it.copy(errorMessage = message, isSubmitting = false) }
     }
 }
 

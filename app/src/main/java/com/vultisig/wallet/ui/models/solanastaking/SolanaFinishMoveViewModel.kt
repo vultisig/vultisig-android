@@ -32,7 +32,6 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
@@ -61,9 +60,9 @@ constructor(
 
     private val route = savedStateHandle.toRoute<Route.SolanaFinishMove>()
 
-    private val _state =
-        MutableStateFlow(SolanaFinishMoveUiState(stakePubkey = shortAddress(route.stakePubkey)))
-    val state: StateFlow<SolanaFinishMoveUiState> = _state.asStateFlow()
+    val state: StateFlow<SolanaFinishMoveUiState>
+        field =
+            MutableStateFlow(SolanaFinishMoveUiState(stakePubkey = shortAddress(route.stakePubkey)))
 
     private var coin: Coin? = null
 
@@ -72,19 +71,19 @@ constructor(
     }
 
     fun onSearchQueryChange(query: String) {
-        _state.update { it.copy(validatorSearchQuery = query) }
+        state.update { it.copy(validatorSearchQuery = query) }
     }
 
     fun openValidatorPicker() {
-        _state.update { it.copy(isShowingPicker = true, validatorSearchQuery = "") }
+        state.update { it.copy(isShowingPicker = true, validatorSearchQuery = "") }
     }
 
     fun closeValidatorPicker() {
-        _state.update { it.copy(isShowingPicker = false) }
+        state.update { it.copy(isShowingPicker = false) }
     }
 
     fun selectValidator(validator: SolanaValidatorOption) {
-        _state.update { it.copy(selectedValidator = validator, isShowingPicker = false) }
+        state.update { it.copy(selectedValidator = validator, isShowingPicker = false) }
     }
 
     fun visibleValidators(state: SolanaFinishMoveUiState): List<SolanaValidatorOption> {
@@ -100,7 +99,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to load Solana finish-move data")
-                _state.update {
+                state.update {
                     it.copy(
                         isLoading = false,
                         error =
@@ -121,20 +120,20 @@ constructor(
                 moveIntentRepository.getDestination(route.stakePubkey)?.let { saved ->
                     options.firstOrNull { it.votePubkey == saved }
                 }
-            _state.update {
+            state.update {
                 it.copy(validators = options, selectedValidator = remembered, isLoading = false)
             }
         }
     }
 
     fun submit() {
-        if (_state.value.isSubmitting) return
-        val votePubkey = _state.value.selectedValidator?.votePubkey ?: return
-        _state.update { it.copy(isSubmitting = true, error = null) }
+        if (state.value.isSubmitting) return
+        val votePubkey = state.value.selectedValidator?.votePubkey ?: return
+        state.update { it.copy(isSubmitting = true, error = null) }
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Solana finish-move submit failed")
-                _state.update {
+                state.update {
                     it.copy(isSubmitting = false, error = (e.message ?: "").asUiText())
                 }
             }

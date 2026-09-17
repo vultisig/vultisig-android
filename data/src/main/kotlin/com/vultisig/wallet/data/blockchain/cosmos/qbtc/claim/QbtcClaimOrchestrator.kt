@@ -7,7 +7,6 @@ import com.vultisig.wallet.data.models.Vault
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
 
 /** Phase of the claim run, surfaced to the UI. Mirrors iOS `QBTCClaimPhase`. */
@@ -76,11 +75,11 @@ class QbtcClaimOrchestrator(
     private val peerResultPusher: QbtcClaimPeerResultPusher? = null,
     private val chainId: String = QbtcClaimConfig.CHAIN_ID,
 ) {
-    private val _phase = MutableStateFlow<QbtcClaimPhase>(QbtcClaimPhase.Idle)
-    val phase: StateFlow<QbtcClaimPhase> = _phase.asStateFlow()
+    val phase: StateFlow<QbtcClaimPhase>
+        field = MutableStateFlow<QbtcClaimPhase>(QbtcClaimPhase.Idle)
 
     fun reset() {
-        _phase.value = QbtcClaimPhase.Idle
+        phase.value = QbtcClaimPhase.Idle
     }
 
     suspend fun run(input: QbtcClaimRunInput) {
@@ -90,10 +89,10 @@ class QbtcClaimOrchestrator(
             throw e
         } catch (e: QbtcClaimException) {
             Timber.e(e, "QBTC claim failed: %s", e.kind)
-            _phase.value = QbtcClaimPhase.Failed(e.kind)
+            phase.value = QbtcClaimPhase.Failed(e.kind)
         } catch (e: Exception) {
             Timber.e(e, "QBTC claim failed")
-            _phase.value = QbtcClaimPhase.Failed(QbtcClaimError.GENERIC)
+            phase.value = QbtcClaimPhase.Failed(QbtcClaimError.GENERIC)
         }
     }
 
@@ -112,7 +111,7 @@ class QbtcClaimOrchestrator(
             )
         val messageHashHex = hashes.messageHash.toHex()
 
-        _phase.value = QbtcClaimPhase.SigningBtc
+        phase.value = QbtcClaimPhase.SigningBtc
         val btcSig =
             btcRoundRunner.run(
                 QbtcClaimBtcRoundInput(
@@ -123,7 +122,7 @@ class QbtcClaimOrchestrator(
                 )
             )
 
-        _phase.value = QbtcClaimPhase.GeneratingProofAndBroadcasting
+        phase.value = QbtcClaimPhase.GeneratingProofAndBroadcasting
         val proof =
             proofService.generateProof(
                 ClaimProofRequest.create(
@@ -149,7 +148,7 @@ class QbtcClaimOrchestrator(
 
         notifyPeer(uppercasedTxHash, totalSats)
 
-        _phase.value = QbtcClaimPhase.Done(QbtcClaimRunResult(uppercasedTxHash, totalSats))
+        phase.value = QbtcClaimPhase.Done(QbtcClaimRunResult(uppercasedTxHash, totalSats))
     }
 
     /**

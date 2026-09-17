@@ -34,9 +34,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -70,21 +69,20 @@ constructor(
 
     private val _navigationReady = CompletableDeferred<Unit>()
 
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    val isLoading: StateFlow<Boolean>
+        field = MutableStateFlow(true)
 
-    private val _isOffline = MutableStateFlow(false)
-    val isOffline: StateFlow<Boolean> = _isOffline.asStateFlow()
+    val isOffline: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _startUpdateEvent = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
-    val startUpdateEvent = _startUpdateEvent.asSharedFlow()
+    val startUpdateEvent: SharedFlow<Unit>
+        field = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
 
-    private val _startDestination = MutableStateFlow<Any>(Route.Home())
-    val startDestination: StateFlow<Any> = _startDestination.asStateFlow()
+    val startDestination: StateFlow<Any>
+        field = MutableStateFlow<Any>(Route.Home())
 
-    private val _foregroundNotification = MutableStateFlow<ForegroundNotificationState?>(null)
-    val foregroundNotification: StateFlow<ForegroundNotificationState?> =
-        _foregroundNotification.asStateFlow()
+    val foregroundNotification: StateFlow<ForegroundNotificationState?>
+        field = MutableStateFlow<ForegroundNotificationState?>(null)
 
     val destination: Flow<NavigateAction<Destination>> = navigator.destination
 
@@ -94,8 +92,8 @@ constructor(
 
     init {
         viewModelScope.safeLaunch {
-            _startDestination.value = resolveStartDestination()
-            _isLoading.value = false
+            startDestination.value = resolveStartDestination()
+            isLoading.value = false
         }
 
         viewModelScope.safeLaunch {
@@ -116,7 +114,7 @@ constructor(
             .observeConnectivityAsFlow()
             .map { !it } // offline = not online
             .distinctUntilChanged()
-            .onEach { _isOffline.value = it }
+            .onEach { isOffline.value = it }
             .catch { Timber.w(it, "Connectivity flow failed") }
             .launchIn(viewModelScope)
     }
@@ -153,7 +151,7 @@ constructor(
                                 ?: UiText.StringResource(R.string.ripple_dapp_transaction)
                         null -> UiText.Empty
                     }
-                _foregroundNotification.value =
+                foregroundNotification.value =
                     ForegroundNotificationState(
                         qrCodeData = qrCodeData,
                         vaultName = vault?.name ?: "",
@@ -163,7 +161,7 @@ constructor(
     }
 
     fun onForegroundBannerTapped() {
-        val qrCodeData = _foregroundNotification.value?.qrCodeData ?: return
+        val qrCodeData = foregroundNotification.value?.qrCodeData ?: return
         // Do NOT clear the banner here. Clearing is bound to banner visibility, so an eager
         // clear hides the banner before navigation lands — and if navigation is dropped (the
         // user is inside a nested keysign/send flow), the user is left with no banner and no
@@ -179,7 +177,7 @@ constructor(
         // banner away (or any other dismissal) does not still land the user on the Join
         // screen they tried to dismiss while the lookup was still suspended.
         navigationJob?.cancel()
-        _foregroundNotification.value = null
+        foregroundNotification.value = null
     }
 
     private var navigationJob: kotlinx.coroutines.Job? = null
@@ -198,7 +196,7 @@ constructor(
                     )
                     // No navigation happens on this branch, so the route-change observer will
                     // never clear the banner — clear it here so it doesn't linger forever.
-                    _foregroundNotification.value = null
+                    foregroundNotification.value = null
                     return@safeLaunch
                 }
                 val direction = getDirectionByQrCodeUseCase(qrCodeData, vault.id)
@@ -237,7 +235,7 @@ constructor(
                         // navigation may not land immediately. Destinations that never reach that
                         // observer (Send, ScanError) are cleared here so the banner doesn't stay
                         // stuck after a successful dispatch.
-                        _foregroundNotification.value = null
+                        foregroundNotification.value = null
                     }
                 }
             }
@@ -276,7 +274,7 @@ constructor(
     fun checkUpdates() {
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
             if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE)
-                _startUpdateEvent.tryEmit(Unit)
+                startUpdateEvent.tryEmit(Unit)
         }
     }
 

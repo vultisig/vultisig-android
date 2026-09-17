@@ -37,7 +37,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -114,8 +113,8 @@ constructor(
     val amountFieldState = TextFieldState()
     val searchTextFieldState = TextFieldState()
 
-    private val _state = MutableStateFlow(TonStakeUiState())
-    val state: StateFlow<TonStakeUiState> = _state.asStateFlow()
+    val state: StateFlow<TonStakeUiState>
+        field = MutableStateFlow(TonStakeUiState())
 
     private var coin: Coin? = null
     private var allPools: List<TonPoolUiModel> = emptyList()
@@ -128,11 +127,11 @@ constructor(
 
     fun openPoolPicker() {
         searchTextFieldState.clearText()
-        _state.update { it.copy(isShowingPicker = true, pools = allPools) }
+        state.update { it.copy(isShowingPicker = true, pools = allPools) }
     }
 
     fun closePoolPicker() {
-        _state.update { it.copy(isShowingPicker = false) }
+        state.update { it.copy(isShowingPicker = false) }
     }
 
     /**
@@ -149,13 +148,13 @@ constructor(
                             it.name.lowercase().contains(needle) ||
                                 it.address.lowercase().contains(needle)
                         }
-                _state.update { it.copy(pools = visible) }
+                state.update { it.copy(pools = visible) }
             }
         }
     }
 
     fun onPoolSelected(pool: TonPoolUiModel) {
-        _state.update {
+        state.update {
             it.copy(
                 selectedPool = pool,
                 isShowingPicker = false,
@@ -167,8 +166,8 @@ constructor(
 
     /** 25/50/75/100% chip → fill the amount field from the stakeable balance. */
     fun onPercentageChange(percent: Int) {
-        _state.update { it.copy(percentageSelected = percent) }
-        val available = _state.value.stakeableBalance
+        state.update { it.copy(percentageSelected = percent) }
+        val available = state.value.stakeableBalance
         if (available <= BigDecimal.ZERO) return
         // Deliberately not locale-formatted: `submit()` reads this field back with
         // `toBigDecimalOrNull()`, which only parses `.` as the decimal separator and rejects
@@ -183,7 +182,7 @@ constructor(
     }
 
     fun dismissError() {
-        _state.update { it.copy(errorMessage = null) }
+        state.update { it.copy(errorMessage = null) }
     }
 
     fun back() {
@@ -191,7 +190,7 @@ constructor(
     }
 
     fun submit() {
-        val current = _state.value
+        val current = state.value
         if (current.isSubmitting) return
 
         val pool = current.selectedPool
@@ -206,7 +205,7 @@ constructor(
             return
         }
 
-        _state.update { it.copy(isSubmitting = true, errorMessage = null) }
+        state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
         viewModelScope.safeLaunch(
             onError = { e ->
@@ -242,7 +241,7 @@ constructor(
                 navigator.route(
                     Route.VerifyDeposit(vaultId = route.vaultId, transactionId = transaction.id)
                 )
-                _state.update { it.copy(isSubmitting = false) }
+                state.update { it.copy(isSubmitting = false) }
             } catch (e: InvalidTransactionDataException) {
                 setError(e.text)
             }
@@ -286,7 +285,7 @@ constructor(
                 withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }
             val stakeable = (total - gasReservation).coerceAtLeast(BigDecimal.ZERO)
 
-            _state.update { it.copy(ticker = nativeCoin.ticker, stakeableBalance = stakeable) }
+            state.update { it.copy(ticker = nativeCoin.ticker, stakeableBalance = stakeable) }
         }
     }
 
@@ -296,16 +295,16 @@ constructor(
                 Timber.e(e, "Failed to load TON staking pools")
                 // Clear the spinner so the picker falls back to its empty state instead of
                 // spinning forever when the pools request fails.
-                _state.update { it.copy(isLoadingPools = false) }
+                state.update { it.copy(isLoadingPools = false) }
             }
         ) {
-            _state.update { it.copy(isLoadingPools = true) }
+            state.update { it.copy(isLoadingPools = true) }
             val decimals = coin?.decimal ?: com.vultisig.wallet.data.models.Coins.Ton.TON.decimal
             allPools =
                 withContext(ioDispatcher) {
                     filterAndSortPools(tonStakingApi.getStakingPools(), decimals)
                 }
-            _state.update { it.copy(isLoadingPools = false, pools = allPools) }
+            state.update { it.copy(isLoadingPools = false, pools = allPools) }
             prefillExistingPool(decimals)
         }
     }
@@ -313,7 +312,7 @@ constructor(
     /** For an add-more stake, preselect the position's pool (fetch it if capacity-filtered out). */
     private suspend fun prefillExistingPool(decimals: Int) {
         val poolAddress = route.poolAddress?.takeIf { it.isNotBlank() } ?: return
-        if (_state.value.selectedPool != null) return
+        if (state.value.selectedPool != null) return
         val existing =
             allPools.firstOrNull { it.address == poolAddress }
                 ?: runCatching {
@@ -331,11 +330,11 @@ constructor(
                     }
         // Re-check after the async lookup: if the user picked a pool in the picker while the
         // fetch was in flight, keep their choice rather than clobbering it with the prefill.
-        if (existing != null && _state.value.selectedPool == null) onPoolSelected(existing)
+        if (existing != null && state.value.selectedPool == null) onPoolSelected(existing)
     }
 
     private fun setError(message: UiText) {
-        _state.update { it.copy(errorMessage = message, isSubmitting = false) }
+        state.update { it.copy(errorMessage = message, isSubmitting = false) }
     }
 
     companion object {

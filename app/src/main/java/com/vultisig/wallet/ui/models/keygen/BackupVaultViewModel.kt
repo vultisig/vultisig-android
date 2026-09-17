@@ -73,6 +73,8 @@ constructor(
     val createDocumentRequestFlow = MutableSharedFlow<String>()
     val isFastVault: Boolean = args.vaultType == VaultInfo.VaultType.Fast
 
+    // Kept as a backing property: lint's UAST does not visit an explicit backing field's
+    // initializer, so the R.string reference below would be reported as UnusedResources.
     private val _title =
         MutableStateFlow<UiText>(
             if (isFastVault) UiText.StringResource(R.string.backup_save_backup_to_the_cloud)

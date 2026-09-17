@@ -84,7 +84,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -300,10 +299,9 @@ constructor(
     private val vaultId: String = args.vaultId
     private val qrBase64: String = args.qr
     private var _currentVault: Vault = Vault(id = Uuid.random().toString(), "temp vault")
-    private val _currentState =
-        MutableStateFlow<JoinKeysignState>(JoinKeysignState.DiscoveringSessionID)
     /** Read-only view of the join-keysign flow state the screen observes. */
-    val currentState: StateFlow<JoinKeysignState> = _currentState.asStateFlow()
+    val currentState: StateFlow<JoinKeysignState>
+        field = MutableStateFlow<JoinKeysignState>(JoinKeysignState.DiscoveringSessionID)
     private var _localPartyID: String = ""
     private var _sessionID: String = ""
     private var _serviceName: String = ""
@@ -318,10 +316,9 @@ constructor(
             field = value
             // Mirror dappMetadata into the StateFlow so the verify banner is observable on its own,
             // independent of [verifyUiModel] emission ordering.
-            _dappMetadata.value = value?.dappMetadata
+            dappMetadata.value = value?.dappMetadata
         }
 
-    private val _dappMetadata = MutableStateFlow<DAppMetadata?>(null)
     private var customMessagePayload: CustomMessagePayload? = null
     private var messagesToSign: List<String> = emptyList()
 
@@ -357,7 +354,8 @@ constructor(
      * notified the moment the payload is parsed — no implicit dependency on the ordering of
      * `verifyUiModel.value = …` emissions.
      */
-    val dappMetadata: StateFlow<DAppMetadata?> = _dappMetadata.asStateFlow()
+    val dappMetadata: StateFlow<DAppMetadata?>
+        field = MutableStateFlow<DAppMetadata?>(null)
 
     val keysignViewModel: KeysignViewModel
         get() =
@@ -474,35 +472,35 @@ constructor(
                         }
                     } else if (payloadCustomPayloadId.isNotEmpty()) {
                         if (!fetchAndHandleCustomMessagePayload(_serverAddress)) {
-                            _currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
+                            currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
                             return@launch
                         }
                     }
                     if (_keysignPayload?.isQbtcClaim == true) {
                         showQbtcClaimConsent()
                     } else {
-                        _currentState.value = JoinKeysignState.JoinKeysign
+                        currentState.value = JoinKeysignState.JoinKeysign
                     }
                 } else {
-                    _currentState.value = JoinKeysignState.DiscoverService
+                    currentState.value = JoinKeysignState.DiscoverService
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: SwapException.NetworkConnection) {
                 Timber.d(e, "Network connection failure during QR scan")
-                _currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: UnknownHostException) {
                 Timber.d(e, "Failed to resolve request")
-                _currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: SocketException) {
                 Timber.d(e, "Socket failure during QR scan")
-                _currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: SocketTimeoutException) {
                 Timber.d(e, "Socket timeout during QR scan")
-                _currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
                 Timber.d(e, "Failed to parse QR code")
-                _currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
             }
         }
     }
@@ -519,17 +517,17 @@ constructor(
                 switchToCorrectVault(matchingVault)
                 return true
             } else
-                _currentState.value = JoinKeysignState.Error(JoinKeysignError.MissingRequiredVault)
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.MissingRequiredVault)
             return false
         }
 
         if (localPartyId == _localPartyID) {
-            _currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVaultShare)
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVaultShare)
             return false
         }
 
         if (libType != null && libType != _currentVault.libType) {
-            _currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongLibType)
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongLibType)
             return false
         }
 
@@ -627,7 +625,7 @@ constructor(
                 _currentVault.resharePrefix !=
                     requireNotNull(deepLinkHelper.value).getResharePrefix()
             ) {
-                _currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongReShare)
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongReShare)
                 return false
             }
         }
@@ -1050,7 +1048,7 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to fetch keysign payload")
-                    _currentState.value =
+                    currentState.value =
                         JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
                 }
             ) {
@@ -1072,7 +1070,7 @@ constructor(
                         if (handleKeysignMessage(keysignMsgProto)) {
                             return@safeLaunch
                         }
-                        _currentState.value = JoinKeysignState.JoinKeysign
+                        currentState.value = JoinKeysignState.JoinKeysign
                     }
                 }
             }
@@ -1080,17 +1078,17 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to fetch custom message payload")
-                    _currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
+                    currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
                 }
             ) {
                 if (fetchAndHandleCustomMessagePayload(_serverAddress)) {
-                    _currentState.value = JoinKeysignState.JoinKeysign
+                    currentState.value = JoinKeysignState.JoinKeysign
                 } else {
-                    _currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
+                    currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
                 }
             }
         } else {
-            _currentState.value = JoinKeysignState.JoinKeysign
+            currentState.value = JoinKeysignState.JoinKeysign
         }
 
         // discovery finished
@@ -1111,7 +1109,7 @@ constructor(
      * account fails here — before signing — instead of mid-co-sign.
      */
     private suspend fun showQbtcClaimConsent() {
-        _currentState.value =
+        currentState.value =
             try {
                 buildQbtcClaimConsentState(resolveQbtcClaimCoins(_currentVault))
             } catch (_: MissingQbtcClaimAccountException) {
@@ -1127,7 +1125,7 @@ constructor(
      */
     private fun startQbtcClaimCosign() {
         if (!isJoiningKeysign.compareAndSet(false, true)) return
-        _currentState.value = JoinKeysignState.QbtcClaim(txHash = null, totalSats = null)
+        currentState.value = JoinKeysignState.QbtcClaim(txHash = null, totalSats = null)
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "QBTC claim co-sign failed")
@@ -1137,7 +1135,7 @@ constructor(
                             JoinKeysignError.MissingQbtcClaimAccount
                         else -> JoinKeysignError.FailedConnectToServer
                     }
-                _currentState.value = JoinKeysignState.Error(error)
+                currentState.value = JoinKeysignState.Error(error)
             }
         ) {
             val result =
@@ -1147,7 +1145,7 @@ constructor(
                     sessionId = _sessionID,
                     encryptionKeyHex = _encryptionKeyHex,
                 )
-            _currentState.value =
+            currentState.value =
                 JoinKeysignState.QbtcClaim(
                     txHash = result.txHash,
                     totalSats = result.totalSats,
@@ -1177,7 +1175,7 @@ constructor(
                     // the
                     // state afterwards would overwrite that transition back to
                     // WaitingForKeysignStart.
-                    _currentState.value = JoinKeysignState.WaitingForKeysignStart
+                    currentState.value = JoinKeysignState.WaitingForKeysignStart
                     waitForKeysignToStart()
                 } catch (e: CancellationException) {
                     throw e
@@ -1188,7 +1186,7 @@ constructor(
                             e.statusCode,
                             e.stackTraceToString(),
                         )
-                    _currentState.value =
+                    currentState.value =
                         if (e.statusCode >= 500) {
                             JoinKeysignState.Error(JoinKeysignError.RelayUnavailable)
                         } else {
@@ -1200,7 +1198,7 @@ constructor(
                 } catch (e: Exception) {
                     Timber.tag("JoinKeysignViewModel")
                         .e("Failed to join keysign: %s", e.stackTraceToString())
-                    _currentState.value =
+                    currentState.value =
                         JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.message.toString()))
                     isJoiningKeysign.set(false)
                 }
@@ -1222,7 +1220,7 @@ constructor(
 
                 JoinKeysignError.RelayUnavailable,
                 JoinKeysignError.Timeout -> {
-                    _currentState.value = JoinKeysignState.JoinKeysign
+                    currentState.value = JoinKeysignState.JoinKeysign
                     joinKeysign()
                 }
 
@@ -1252,11 +1250,11 @@ constructor(
                             )
                     ) {
                         KeysignStartOutcome.Started ->
-                            _currentState.value = JoinKeysignState.Keysign
+                            currentState.value = JoinKeysignState.Keysign
 
                         is KeysignStartOutcome.FailedToPrepare -> {
                             Timber.e("Failed to prepare messages to sign")
-                            _currentState.value =
+                            currentState.value =
                                 JoinKeysignState.Error(
                                     JoinKeysignError.FailedToCheck(outcome.message)
                                 )
@@ -1264,7 +1262,7 @@ constructor(
 
                         is KeysignStartOutcome.FailedToCheck -> {
                             Timber.e("Failed to check keysign start: %s", outcome.message)
-                            _currentState.value =
+                            currentState.value =
                                 JoinKeysignState.Error(
                                     JoinKeysignError.FailedToCheck(outcome.message)
                                 )
@@ -1274,7 +1272,7 @@ constructor(
                             Timber.w("Timed out waiting for the initiator to start the keysign")
                             // Allow tryAgain() to re-register and re-poll the session.
                             isJoiningKeysign.set(false)
-                            _currentState.value = JoinKeysignState.Error(JoinKeysignError.Timeout)
+                            currentState.value = JoinKeysignState.Error(JoinKeysignError.Timeout)
                         }
                     }
                 }

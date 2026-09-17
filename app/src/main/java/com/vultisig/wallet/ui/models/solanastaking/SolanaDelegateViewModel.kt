@@ -37,7 +37,6 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
@@ -97,8 +96,8 @@ constructor(
 
     val amountFieldState = TextFieldState()
 
-    private val _state = MutableStateFlow(SolanaDelegateUiState())
-    val state: StateFlow<SolanaDelegateUiState> = _state.asStateFlow()
+    val state: StateFlow<SolanaDelegateUiState>
+        field = MutableStateFlow(SolanaDelegateUiState())
 
     private var coin: Coin? = null
     private var balanceLamports: BigInteger = BigInteger.ZERO
@@ -111,19 +110,19 @@ constructor(
     }
 
     fun onSearchQueryChange(query: String) {
-        _state.update { it.copy(validatorSearchQuery = query) }
+        state.update { it.copy(validatorSearchQuery = query) }
     }
 
     fun openValidatorPicker() {
-        _state.update { it.copy(isShowingPicker = true, validatorSearchQuery = "") }
+        state.update { it.copy(isShowingPicker = true, validatorSearchQuery = "") }
     }
 
     fun closeValidatorPicker() {
-        _state.update { it.copy(isShowingPicker = false) }
+        state.update { it.copy(isShowingPicker = false) }
     }
 
     fun selectValidator(validator: SolanaValidatorOption) {
-        _state.update {
+        state.update {
             it.copy(selectedValidator = validator, isShowingPicker = false, error = null)
         }
     }
@@ -139,8 +138,8 @@ constructor(
 
     /** 25/50/75/100% chip → fill the amount field from the stakeable balance. */
     fun onPercentageChange(percent: Int) {
-        _state.update { it.copy(percentageSelected = percent) }
-        val available = _state.value.stakeableBalance
+        state.update { it.copy(percentageSelected = percent) }
+        val available = state.value.stakeableBalance
         if (available <= BigDecimal.ZERO) return
         val amount =
             available
@@ -155,7 +154,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to load Solana delegate data")
-                _state.update {
+                state.update {
                     it.copy(
                         isLoading = false,
                         error =
@@ -188,7 +187,7 @@ constructor(
             // Shared with the move / finish-move pickers so the fetch→filter→sort→enrich→format
             // logic lives in exactly one place.
             val options = loadValidatorOptions(solCoin)
-            _state.update {
+            state.update {
                 it.copy(
                     ticker = solCoin.ticker,
                     validators = options,
@@ -208,12 +207,12 @@ constructor(
             .takeIf { it.signum() > 0 } ?: SolanaStakingConfig.RENT_EXEMPT_RESERVE_FALLBACK_LAMPORTS
 
     fun submit() {
-        if (_state.value.isSubmitting) return
-        _state.update { it.copy(isSubmitting = true, error = null) }
+        if (state.value.isSubmitting) return
+        state.update { it.copy(isSubmitting = true, error = null) }
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Solana delegate submit failed")
-                _state.update {
+                state.update {
                     it.copy(isSubmitting = false, error = (e.message ?: "").asUiText())
                 }
             }
@@ -222,7 +221,7 @@ constructor(
             val solCoin = coin ?: error("SOL not in this vault")
 
             val votePubkey =
-                _state.value.selectedValidator?.votePubkey
+                state.value.selectedValidator?.votePubkey
                     ?: error("Select a validator to stake with")
 
             val amountSol =
@@ -294,7 +293,7 @@ constructor(
             depositTransactionRepository.addTransaction(depositTx)
 
             amountFieldState.clearText()
-            _state.update { it.copy(isSubmitting = false) }
+            state.update { it.copy(isSubmitting = false) }
             navigator.route(
                 Route.VerifyDeposit(vaultId = route.vaultId, transactionId = depositTx.id)
             )
@@ -302,7 +301,7 @@ constructor(
     }
 
     fun dismissError() {
-        _state.update { it.copy(error = null) }
+        state.update { it.copy(error = null) }
     }
 
     fun back() {

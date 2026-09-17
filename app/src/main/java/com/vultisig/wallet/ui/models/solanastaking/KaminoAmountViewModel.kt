@@ -60,7 +60,6 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
@@ -150,8 +149,8 @@ constructor(
 
     val amountFieldState = TextFieldState()
 
-    private val _state = MutableStateFlow(KaminoAmountUiState(isWithdraw = route.isWithdraw))
-    val state: StateFlow<KaminoAmountUiState> = _state.asStateFlow()
+    val state: StateFlow<KaminoAmountUiState>
+        field = MutableStateFlow(KaminoAmountUiState(isWithdraw = route.isWithdraw))
 
     /**
      * Resolved from the local allow-list rather than taken from the navigation argument, so a
@@ -178,7 +177,7 @@ constructor(
     private fun load() {
         val vault = vault
         if (vault == null) {
-            _state.update {
+            state.update {
                 it.copy(
                     isLoading = false,
                     error = UiText.StringResource(R.string.kamino_error_unknown_vault),
@@ -187,14 +186,14 @@ constructor(
             return
         }
 
-        _state.update {
+        state.update {
             it.copy(vaultName = vault.fallbackName, ticker = vault.coin?.ticker.orEmpty())
         }
 
         viewModelScope.safeLaunch(
             onError = { throwable ->
                 Timber.e(throwable, "Failed to load Kamino amount form")
-                _state.update {
+                state.update {
                     it.copy(
                         isLoading = false,
                         error = UiText.StringResource(R.string.kamino_error_load_failed),
@@ -214,7 +213,7 @@ constructor(
             val vaultState =
                 runCatchingCancellable { kaminoApi.getVaultState(vault.address) }.getOrNull()
 
-            _state.update {
+            state.update {
                 it.copy(
                     isLoading = false,
                     vaultName =
@@ -401,7 +400,7 @@ constructor(
         withdrawMaximumTokens = maximum
         liquidBuffer = KaminoTokenAmount.parse(metrics?.tokensAvailable, vault.tokenDecimals)
 
-        _state.update {
+        state.update {
             it.copy(
                 isLoading = false,
                 vaultName =
@@ -430,14 +429,14 @@ constructor(
     }
 
     fun onPercentageChange(percentage: Int) {
-        val available = _state.value.available
+        val available = state.value.available
         val amount =
             available
                 .multiply(BigDecimal(percentage))
                 .divide(ONE_HUNDRED)
                 .setScale(tokenCoin?.decimal ?: DEFAULT_SCALE, RoundingMode.DOWN)
         amountFieldState.setTextAndPlaceCursorAtEnd(amount.stripTrailingZeros().toPlainString())
-        _state.update { it.copy(percentageSelected = percentage) }
+        state.update { it.copy(percentageSelected = percentage) }
     }
 
     fun submit() {
@@ -445,12 +444,12 @@ constructor(
         val coin = tokenCoin ?: return
         val rawAmount = amountFieldState.text.toString().toBigDecimalOrNull() ?: return
 
-        _state.update { it.copy(isSubmitting = true, error = null) }
+        state.update { it.copy(isSubmitting = true, error = null) }
 
         viewModelScope.safeLaunch(
             onError = { throwable ->
                 Timber.e(throwable, "Failed to build Kamino transaction")
-                _state.update {
+                state.update {
                     it.copy(
                         isSubmitting = false,
                         // Surface the refusal reason rather than a generic failure: a rejected
@@ -473,8 +472,8 @@ constructor(
             // show another.
             val amount = rawAmount.setScale(coin.decimal, RoundingMode.DOWN)
             if (amount.signum() <= 0) refuse(KaminoAmountRefusal.BELOW_SMALLEST_UNIT)
-            if (amount > _state.value.available) refuse(KaminoAmountRefusal.EXCEEDS_AVAILABLE)
-            _state.value.minimum?.let { minimum ->
+            if (amount > state.value.available) refuse(KaminoAmountRefusal.EXCEEDS_AVAILABLE)
+            state.value.minimum?.let { minimum ->
                 if (amount < minimum) refuse(KaminoAmountRefusal.BELOW_MINIMUM)
             }
             refuseIfSolCannotCover(vault, coin, amount)
@@ -598,13 +597,13 @@ constructor(
                         if (route.isWithdraw) OPERATION_KAMINO_WITHDRAW
                         else OPERATION_KAMINO_DEPOSIT,
                     // Shown on verify as the destination vault, not as a validator.
-                    validatorName = _state.value.vaultName,
+                    validatorName = state.value.vaultName,
                     signSolana = keysignPayload.signSolana,
                 )
             depositTransactionRepository.addTransaction(depositTx)
 
             amountFieldState.clearText()
-            _state.update { it.copy(isSubmitting = false) }
+            state.update { it.copy(isSubmitting = false) }
             navigator.route(
                 Route.VerifyDeposit(vaultId = route.vaultId, transactionId = depositTx.id)
             )
@@ -622,7 +621,7 @@ constructor(
      * round-tripped through tokens.
      */
     private fun withdrawShares(amount: BigDecimal, coin: Coin): String {
-        val eligibility = _state.value.eligibility
+        val eligibility = state.value.eligibility
         if (eligibility !is KaminoWithdrawEligibility.Withdrawable) {
             refuse(
                 if (eligibility == KaminoWithdrawEligibility.Empty) {
@@ -675,8 +674,8 @@ constructor(
         val liquidity =
             if (requested == null) KaminoWithdrawLiquidity.Instant
             else KaminoWithdrawLiquidity.resolve(requested, liquidBuffer)
-        if (liquidity != _state.value.liquidity) {
-            _state.update { it.copy(liquidity = liquidity) }
+        if (liquidity != state.value.liquidity) {
+            state.update { it.copy(liquidity = liquidity) }
         }
     }
 
@@ -740,7 +739,7 @@ constructor(
         throw KaminoAmountRefused(refusal, formatArgs)
 
     fun dismissError() {
-        _state.update { it.copy(error = null) }
+        state.update { it.copy(error = null) }
     }
 
     fun back() {
