@@ -404,7 +404,9 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
 
         dialog<VerifySwap> { VerifySwapScreen() }
 
-        composable<VerifyDeposit> { VerifyDepositScreen(navController = navController) }
+        dialog<VerifyDeposit> {
+            VerifyDepositScreen(onDismissRequest = { navController.popBackStack() })
+        }
 
         // keysign
         composable<Keysign.Join> { JoinKeysignView() }

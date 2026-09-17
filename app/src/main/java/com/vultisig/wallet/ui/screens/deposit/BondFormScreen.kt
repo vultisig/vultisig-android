@@ -36,6 +36,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
@@ -91,12 +92,7 @@ internal fun BondFormScreen(navController: NavController, vaultId: String, chain
     val shouldUseMainNavigator = route == SendDst.Send.route
     val topBarNavController = if (shouldUseMainNavigator) navController else bondNavHostController
 
-    val title =
-        when (route) {
-            SendDst.VerifyTransaction.staticRoute ->
-                stringResource(R.string.verify_transaction_screen_title)
-            else -> stringResource(R.string.bond)
-        }
+    val title = stringResource(R.string.bond)
 
     val qrAddress by depositViewModel.addressProvider.address.collectAsState()
     val qr = qrAddress.takeIf { it.isNotEmpty() }
@@ -121,11 +117,11 @@ internal fun BondFormScreen(navController: NavController, vaultId: String, chain
             composable(route = SendDst.Send.route) {
                 BondFormContent(vaultId = vaultId, chainId = chainId)
             }
-            composable(
+            dialog(
                 route = SendDst.VerifyTransaction.staticRoute,
                 arguments = SendDst.transactionArgs,
             ) {
-                VerifyDepositScreen()
+                VerifyDepositScreen(onDismissRequest = { bondNavHostController.popBackStack() })
             }
         }
     }
