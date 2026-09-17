@@ -22,7 +22,9 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.http.path
+import io.ktor.serialization.ContentConvertException
 import java.io.IOException
 import java.math.BigInteger
 import javax.inject.Inject
@@ -157,10 +159,27 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
      * the TRC-20 fee simulation, so swallowing an RPC failure would show real funds as empty and
      * simulate the transfer at amount 0 — a different shape from the send that actually gets
      * signed. Only an account the node does not know reads zero.
+     *
+     * The proxy occasionally answers a 200 with an ack body (`{"message":"ok"}`) instead of the
+     * TronGrid account payload. `bodyOrThrow` would surface that body's own `message` — the
+     * useless error `ok` — so a 2xx that fails to deserialize is re-thrown as an explicit invalid
+     * response instead.
      */
     override suspend fun getBalance(coin: Coin): BigInteger {
         val response = httpClient.get("$tronGrid/v1/accounts/${coin.address}")
-        val content = response.bodyOrThrow<TronBalanceResponseJson>()
+        val content =
+            try {
+                response.bodyOrThrow<TronBalanceResponseJson>()
+            } catch (e: NetworkException) {
+                if (response.status.isSuccess() && e.cause is ContentConvertException) {
+                    throw NetworkException(
+                        response.status.value,
+                        "Invalid Tron account response from $tronGrid",
+                        e,
+                    )
+                }
+                throw e
+            }
         val account = content.tronBalanceResponseData.firstOrNull() ?: return BigInteger.ZERO
 
         return if (coin.isNativeToken) {

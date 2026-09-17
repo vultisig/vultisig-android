@@ -19,7 +19,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -236,6 +238,21 @@ class TronApiBodyReadTest {
         val result = api.getBalance(coin)
 
         assertEquals(BigInteger.ZERO, result)
+    }
+
+    @Test
+    fun `getBalance throws a descriptive error when the proxy answers 200 with an ack body`() {
+        // api.vultisig.com intermittently answers this route with a health/ack body instead of the
+        // TronGrid account payload. The body's own "message" must not become the error message.
+        val api = newApiWithBigInteger("""{"message":"ok"}""")
+
+        val error = assertThrows<NetworkException> { runBlocking { api.getBalance(nativeCoin()) } }
+
+        assertNotEquals("ok", error.message)
+        assertTrue(
+            error.message.contains("Invalid Tron account response"),
+            "unexpected message: ${error.message}",
+        )
     }
 
     @Test
