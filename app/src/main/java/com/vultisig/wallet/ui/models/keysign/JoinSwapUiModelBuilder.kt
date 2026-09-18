@@ -181,6 +181,19 @@ constructor(
         // don't carry one (#4858 review). Reused across the provider branches below.
         val externalRecipient = resolveExternalRecipient(payload, swapPayload, dstToken, vault)
 
+        // Only the native memo names the recipient. A SwapKit route arrives as opaque transaction
+        // bytes whose output may be bound for the vault or for an address the initiator chose,
+        // and nothing here can tell which, so its history row says so and never offers a retry
+        // (#5918). The EVM aggregators need no such mark: every platform drops them the moment a
+        // recipient is set, so their output is always the vault's.
+        val isRecipientUnknown =
+            when (swapPayload) {
+                is SwapPayload.ThorChain,
+                is SwapPayload.MayaChain -> false
+                is SwapPayload.EVM -> provider == SwapProvider.SWAPKIT.getSwapProviderId()
+                is SwapPayload.SwapKit -> true
+            }
+
         return when (swapPayload) {
             is SwapPayload.EVM -> {
                 val oneInchSwapTxJson = swapPayload.data.quote.tx
@@ -359,7 +372,7 @@ constructor(
                             feeRow.vultDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
                     )
 
-                swapResult(swapTransaction, vault, payload)
+                swapResult(swapTransaction, vault, payload, isRecipientUnknown)
             }
 
             is SwapPayload.ThorChain -> {
@@ -376,7 +389,7 @@ constructor(
                             providerFeeToken = srcToken,
                             currency = currency,
                         )
-                    return swapResult(lpAddUiModel, vault, payload)
+                    return swapResult(lpAddUiModel, vault, payload, isRecipientUnknown)
                 }
                 // Re-fetching with no discount quoted the co-signer the full 50 bps while the
                 // initiator had signed a discounted one, so the two devices disagreed on the
@@ -437,7 +450,7 @@ constructor(
                         vultBps = thorVultBps,
                         priceImpact = formatPriceImpact(swapPayload.data.priceImpact),
                     )
-                swapResult(swapTransactionUiModel, vault, payload)
+                swapResult(swapTransactionUiModel, vault, payload, isRecipientUnknown)
             }
 
             is SwapPayload.MayaChain -> {
@@ -454,7 +467,7 @@ constructor(
                             providerFeeToken = srcToken,
                             currency = currency,
                         )
-                    return swapResult(lpAddUiModel, vault, payload)
+                    return swapResult(lpAddUiModel, vault, payload, isRecipientUnknown)
                 }
                 // Re-fetching with no discount quoted the co-signer the full 50 bps while the
                 // initiator had signed a discounted one, so the two devices disagreed on the
@@ -506,7 +519,7 @@ constructor(
                         vultBps = mayaVultBps,
                         priceImpact = formatPriceImpact(swapPayload.data.priceImpact),
                     )
-                swapResult(swapTransactionUiModel, vault, payload)
+                swapResult(swapTransactionUiModel, vault, payload, isRecipientUnknown)
             }
 
             is SwapPayload.SwapKit -> {
@@ -580,27 +593,32 @@ constructor(
                         providerLabel = providerLabel,
                         swapFeeHidden = swapFeeHidden,
                     )
-                swapResult(swapTransactionUiModel, vault, payload)
+                swapResult(swapTransactionUiModel, vault, payload, isRecipientUnknown)
             }
         }
     }
 
     /**
      * The three views every branch of [build] hands back for one swap model. The history row also
-     * records whether a dApp authored the swap, so a failed one is never offered to try again
-     * through the form — its route and terms were the dApp's, not the form's (#5918).
+     * records what would make a retry wrong: a dApp authored the swap, so its route and terms were
+     * the dApp's, not the form's; or the recipient could not be read off the route, so the form
+     * could not be told where to pay (#5918).
      */
     private fun swapResult(
         tx: SwapTransactionUiModel,
         vault: Vault,
         payload: KeysignPayload,
+        isRecipientUnknown: Boolean,
     ): JoinKeysignVerifyResult =
         JoinKeysignVerifyResult(
             verifyUiModel = VerifyUiModel.Swap(VerifySwapUiModel(tx = tx, vaultName = vault.name)),
             transactionTypeUiModel = TransactionTypeUiModel.Swap(tx),
             transactionHistoryData =
                 mapSwapTransactionToHistoryData(tx)
-                    .copy(isDappRequest = payload.dappMetadata != null),
+                    .copy(
+                        isDappRequest = payload.dappMetadata != null,
+                        isRecipientUnknown = isRecipientUnknown,
+                    ),
         )
 
     private suspend fun buildSwapUiModel(

@@ -34,7 +34,28 @@ internal class SwapRetryTest {
         route.srcTokenId shouldBe eth.id
         route.dstTokenId shouldBe btc.id
         route.srcAmount shouldBe "0.5"
+        route.externalRecipient.shouldBeNull()
         route.verifyOnQuote shouldBe true
+    }
+
+    @Test
+    fun `an output routed to a chosen address is routed there again`() {
+        // Without this the form would reopen with the recipient off and pay the vault — a
+        // different destination from the one the user approved the first time.
+        val route =
+            row(externalRecipient = "bc1qsomeoneelse")
+                .toSwapRetry(listOf(eth, btc))
+                .shouldNotBeNull()
+                .toRoute("vault-1")
+
+        route.externalRecipient shouldBe "bc1qsomeoneelse"
+    }
+
+    @Test
+    fun `a row whose destination the recording device could not read offers no retry`() {
+        // A co-signer sees a SwapKit route as opaque bytes: the output may have gone to the vault
+        // or elsewhere, and a retry would have to pick one.
+        row(isRecipientUnknown = true).toSwapRetry(listOf(eth, btc)).shouldBeNull()
     }
 
     @Test
@@ -74,17 +95,33 @@ internal class SwapRetryTest {
         retry.shouldNotBeNull().srcToken shouldBe customUsdc
     }
 
+    @Test
+    fun `a contract address is matched exactly where its case is part of the address`() {
+        val jetton = token("USDT", "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs", Chain.Ton)
+        val row =
+            row(
+                fromToken = "USDT",
+                fromChain = Chain.Ton.id,
+                fromContractAddress = jetton.contractAddress.lowercase(),
+            )
+
+        row.toSwapRetry(listOf(jetton, btc)).shouldBeNull()
+    }
+
     private fun row(
         fromToken: String = "ETH",
+        fromChain: String = Chain.Ethereum.id,
         fromContractAddress: String = "",
         fromAmountDecimal: String = "0.5",
         isLimitOrder: Boolean = false,
         isDappRequest: Boolean = false,
+        externalRecipient: String? = null,
+        isRecipientUnknown: Boolean = false,
     ) =
         SwapTransactionHistoryData(
             fromToken = fromToken,
             fromAmount = "0.5",
-            fromChain = Chain.Ethereum.id,
+            fromChain = fromChain,
             fromTokenLogo = "",
             toToken = "BTC",
             toAmount = "0.01",
@@ -98,11 +135,13 @@ internal class SwapRetryTest {
             fromContractAddress = fromContractAddress,
             fromAmountDecimal = fromAmountDecimal,
             isDappRequest = isDappRequest,
+            externalRecipient = externalRecipient,
+            isRecipientUnknown = isRecipientUnknown,
         )
 
-    private fun token(ticker: String, contractAddress: String) =
+    private fun token(ticker: String, contractAddress: String, chain: Chain = Chain.Ethereum) =
         Coin(
-            chain = Chain.Ethereum,
+            chain = chain,
             ticker = ticker,
             logo = "",
             address = "0xvault",

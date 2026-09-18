@@ -330,8 +330,9 @@ constructor(
     }
 
     /**
-     * Reopens the swap form on the selected row's pair and amount, to re-quote and review afresh
-     * (#5918). The sheet closes first so the form is not found under an open sheet on the way back.
+     * Reopens the swap form on the selected row's pair, amount and recipient, to re-quote and
+     * review afresh (#5918). The sheet closes first so the form is not found under an open sheet on
+     * the way back.
      */
     fun retrySelectedSwap() {
         val retry = (uiState.value.selectedItem as? TransactionHistoryItemUiModel.Swap)?.retry

@@ -221,6 +221,10 @@ constructor(
                 srcAmountState.setTextAndPlaceCursorAtEnd(amount)
             }
 
+        // A routed-in recipient is set the way a typed one is, ahead of the pipeline so its first
+        // quote is already routed there, and re-validated against the destination once it loads.
+        args.externalRecipient?.let(::setExternalRecipient)
+
         swapTokenSelector.collectSelectedAccounts(
             selectedSrc,
             selectedDst,
@@ -251,7 +255,9 @@ constructor(
      * Fires once, and only while the form still holds exactly what the route asked for. The token
      * selector falls back to a default when a requested id is not held rather than failing, and the
      * user can edit while the quote loads; reviewing whatever is on the form as if it were the
-     * retry would be wrong either way, so the pair and amount are re-checked as the quote lands.
+     * retry would be wrong either way, so the pair, amount and recipient are re-checked as the
+     * quote lands. A recipient the destination turns out to reject is left to [swap]'s own gate,
+     * which refuses with the reason on screen rather than silently staying put.
      */
     private fun verifyOnFirstQuote() {
         viewModelScope.launch {
@@ -272,7 +278,8 @@ constructor(
                     quoteState.quote != null &&
                     selectedSrc.value?.account?.token?.id == args.srcTokenId &&
                     selectedDst.value?.account?.token?.id == args.dstTokenId &&
-                    srcAmountState.text.toString() == args.srcAmount
+                    srcAmountState.text.toString() == args.srcAmount &&
+                    externalRecipient.value == args.externalRecipient
             if (holdsRequestedTrade) swap()
         }
     }

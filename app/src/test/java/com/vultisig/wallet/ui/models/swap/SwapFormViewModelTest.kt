@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
+import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -59,6 +60,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkStatic
 import java.math.BigDecimal
@@ -4403,9 +4405,64 @@ internal class SwapFormViewModelTest {
             coVerify(exactly = 0) { navigator.route(any()) }
         }
 
+    /**
+     * The failed swap paid a chosen address; the retry must pay the same one, quoted for it and
+     * stamped on the transaction Verify shows — not the vault the form defaults to.
+     */
+    @Test
+    fun `a retry routes its output where the failed swap did`() =
+        runTest(mainDispatcher) {
+            coEvery { anyBestQuoteFetchWithRecipient() } returns
+                createDefaultQuoteFetchResult(quote = createSignableThorChainQuote())
+
+            val vm = createRetryViewModel(verifyOnQuote = true, externalRecipient = "bc1qelse")
+            advanceUntilIdle()
+
+            assertEquals("bc1qelse", vm.uiState.value.externalRecipient)
+            coVerify(exactly = 1) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    "bc1qelse",
+                )
+            }
+            val staged = slot<SwapTransaction>()
+            coVerify(exactly = 1) { swapTransactionRepository.addTransaction(capture(staged)) }
+            assertEquals(
+                "bc1qelse",
+                (staged.captured as SwapTransaction.RegularSwapTransaction).externalRecipient,
+            )
+        }
+
+    /** A recipient the user turned off while the quote loaded is not the retry's trade either. */
+    @Test
+    fun `a retry never reviews a recipient the user cleared while the quote loaded`() =
+        runTest(mainDispatcher) {
+            val quote = CompletableDeferred<RankedQuotes>()
+            coEvery { anyBestQuoteFetchWithRecipient() } coAnswers { quote.await() }
+
+            val vm = createRetryViewModel(verifyOnQuote = true, externalRecipient = "bc1qelse")
+            advanceUntilIdle()
+            vm.setExternalRecipient(null)
+            quote.complete(createDefaultQuoteFetchResult(quote = createSignableThorChainQuote()))
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { swapTransactionRepository.addTransaction(any()) }
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
     private fun createRetryViewModel(
         verifyOnQuote: Boolean,
         srcTokenId: String = ETH_COIN.id,
+        externalRecipient: String? = null,
     ): SwapFormViewModel {
         every { any<SavedStateHandle>().toRoute<Route.Swap>() } returns
             Route.Swap(
@@ -4414,6 +4471,7 @@ internal class SwapFormViewModelTest {
                 srcTokenId = srcTokenId,
                 dstTokenId = BTC_COIN.id,
                 srcAmount = "0.5",
+                externalRecipient = externalRecipient,
                 verifyOnQuote = verifyOnQuote,
             )
         coEvery { tokenSelectorAccountsRepository.loadAddresses(any()) } returns
@@ -4427,6 +4485,25 @@ internal class SwapFormViewModelTest {
 
     private suspend fun MockKMatcherScope.anyBestQuoteFetch(): RankedQuotes =
         swapQuoteManager.fetchBestQuote(
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+        )
+
+    /**
+     * [anyBestQuoteFetch] leaves the trailing slippage and recipient at their null defaults, so a
+     * fetch routed to a recipient slips past it; this one matches whatever they hold.
+     */
+    private suspend fun MockKMatcherScope.anyBestQuoteFetchWithRecipient(): RankedQuotes =
+        swapQuoteManager.fetchBestQuote(
+            any(),
+            any(),
             any(),
             any(),
             any(),

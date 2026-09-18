@@ -31,5 +31,6 @@ internal class SwapTransactionToHistoryDataMapperImpl @Inject constructor() :
             isLimitOrder = from.isLimitOrder,
             fromContractAddress = from.src.token.contractAddress,
             fromAmountDecimal = from.srcAmountDecimal,
+            externalRecipient = from.externalRecipient?.takeIf { it.isNotBlank() },
         )
 }

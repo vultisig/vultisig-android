@@ -4,15 +4,10 @@ package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.THORChainSwapPayload
+import com.vultisig.wallet.data.models.SwapTransactionHistoryData
+import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.DAppMetadata
-import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
-import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -22,8 +17,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.mockk
-import java.math.BigDecimal
-import java.math.BigInteger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -33,11 +26,11 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import vultisig.keysign.v1.TransactionType
 
 /**
- * The done screen's Try again is derived from the signed payload, so both the initiator and the
- * co-signer — which rebuilds its UI model from that same payload — offer the same retry (#5918).
+ * The done screen's Try again is resolved from the history row the keysign records — the initiator
+ * builds it from the transaction it staged, the co-signer from the payload it signs — so both
+ * devices offer the same retry, and it is the same retry History offers later (#5918).
  */
 internal class KeysignViewModelSwapRetryTest {
 
@@ -58,50 +51,60 @@ internal class KeysignViewModelSwapRetryTest {
 
     @Test
     fun `a market swap the vault holds on both sides can be tried again`() {
-        val vm = createViewModel(keysignPayload = swapPayload())
+        val vm = createViewModel(transactionHistoryData = swapRow())
 
         val retry = vm.swapRetry.shouldNotBeNull()
         retry.srcToken shouldBe rune
         retry.dstToken shouldBe eth
         // Raw and trimmed, as the form's field takes it — not the abbreviated display amount.
         retry.srcAmount shouldBe "1.5"
+        retry.externalRecipient.shouldBeNull()
+    }
+
+    @Test
+    fun `an output routed to a chosen address is routed there again`() {
+        val vm = createViewModel(transactionHistoryData = swapRow(externalRecipient = "0xelse"))
+
+        vm.swapRetry.shouldNotBeNull().externalRecipient shouldBe "0xelse"
     }
 
     @Test
     fun `a limit order offers no retry`() {
-        val vm =
-            createViewModel(
-                keysignPayload = swapPayload(),
-                transactionTypeUiModel = swapUiModel(isLimitOrder = true),
-            )
-
-        vm.swapRetry.shouldBeNull()
+        createViewModel(transactionHistoryData = swapRow(isLimitOrder = true))
+            .swapRetry
+            .shouldBeNull()
     }
 
     @Test
     fun `a dApp-driven swap offers no retry`() {
-        val payload =
-            swapPayload().copy(dappMetadata = DAppMetadata("dapp", "https://dapp.example", ""))
+        createViewModel(transactionHistoryData = swapRow(isDappRequest = true))
+            .swapRetry
+            .shouldBeNull()
+    }
 
-        createViewModel(keysignPayload = payload).swapRetry.shouldBeNull()
+    @Test
+    fun `a route whose recipient this device could not read offers no retry`() {
+        createViewModel(transactionHistoryData = swapRow(isRecipientUnknown = true))
+            .swapRetry
+            .shouldBeNull()
     }
 
     @Test
     fun `a pair the vault no longer holds on both sides offers no retry`() {
-        createViewModel(keysignPayload = swapPayload(), heldCoins = listOf(rune))
+        createViewModel(transactionHistoryData = swapRow(), heldCoins = listOf(rune))
             .swapRetry
             .shouldBeNull()
     }
 
     @Test
     fun `a send has nothing to retry`() {
-        createViewModel(keysignPayload = null).swapRetry.shouldBeNull()
+        createViewModel(transactionHistoryData = null).swapRetry.shouldBeNull()
     }
 
     @Test
     fun `retrySwap reopens the form on the failed trade above Home`() =
         runTest(testDispatcher) {
-            val vm = createViewModel(keysignPayload = swapPayload())
+            val vm = createViewModel(transactionHistoryData = swapRow(externalRecipient = "0xelse"))
 
             vm.retrySwap()
 
@@ -113,6 +116,7 @@ internal class KeysignViewModelSwapRetryTest {
                         srcTokenId = rune.id,
                         dstTokenId = eth.id,
                         srcAmount = "1.5",
+                        externalRecipient = "0xelse",
                         verifyOnQuote = true,
                     ),
                     NavigationOptions(popUpToRoute = Route.Home::class),
@@ -121,8 +125,7 @@ internal class KeysignViewModelSwapRetryTest {
         }
 
     private fun createViewModel(
-        keysignPayload: KeysignPayload?,
-        transactionTypeUiModel: TransactionTypeUiModel = swapUiModel(isLimitOrder = false),
+        transactionHistoryData: TransactionHistoryData?,
         heldCoins: List<Coin> = listOf(rune, eth),
     ) =
         KeysignViewModel(
@@ -133,11 +136,11 @@ internal class KeysignViewModelSwapRetryTest {
             encryptionKeyHex = "",
             messagesToSign = emptyList(),
             keyType = TssKeyType.ECDSA,
-            keysignPayload = keysignPayload,
+            keysignPayload = null,
             customMessagePayload = null,
-            transactionTypeUiModel = transactionTypeUiModel,
+            transactionTypeUiModel = null,
             isInitiatingDevice = false,
-            transactionHistoryData = null,
+            transactionHistoryData = transactionHistoryData,
             thorChainApi = mockk(relaxed = true),
             evmApiFactory = mockk(relaxed = true),
             broadcastTx = mockk(relaxed = true),
@@ -163,50 +166,31 @@ internal class KeysignViewModelSwapRetryTest {
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
 
-    private fun swapUiModel(isLimitOrder: Boolean) =
-        TransactionTypeUiModel.Swap(
-            SwapTransactionUiModel(
-                src = ValuedToken(token = rune, value = "1.5", fiatValue = "$3"),
-                dst = ValuedToken(token = eth, value = "0.001", fiatValue = "$3"),
-                isLimitOrder = isLimitOrder,
-            )
-        )
-
-    private fun swapPayload() =
-        KeysignPayload(
-            coin = rune,
-            toAddress = "thorInbound",
-            toAmount = SRC_AMOUNT,
-            memo = "=:ETH.ETH:0xdst",
-            blockChainSpecific =
-                BlockChainSpecific.THORChain(
-                    accountNumber = BigInteger.ZERO,
-                    sequence = BigInteger.ZERO,
-                    fee = BigInteger.valueOf(2_000_000L),
-                    isDeposit = false,
-                    transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
-                ),
-            swapPayload =
-                SwapPayload.ThorChain(
-                    THORChainSwapPayload(
-                        fromAddress = "thorsrc",
-                        fromCoin = rune,
-                        toCoin = eth,
-                        vaultAddress = "thorInbound",
-                        routerAddress = null,
-                        fromAmount = SRC_AMOUNT,
-                        toAmountDecimal = BigDecimal("0.001"),
-                        toAmountLimit = "0",
-                        streamingInterval = "0",
-                        streamingQuantity = "0",
-                        expirationTime = 0UL,
-                        isAffiliate = true,
-                    )
-                ),
-            vaultPublicKeyECDSA = "pub",
-            vaultLocalPartyID = "party",
-            libType = null,
-            wasmExecuteContractPayload = null,
+    private fun swapRow(
+        isLimitOrder: Boolean = false,
+        isDappRequest: Boolean = false,
+        externalRecipient: String? = null,
+        isRecipientUnknown: Boolean = false,
+    ) =
+        SwapTransactionHistoryData(
+            fromToken = rune.ticker,
+            fromAmount = "1.5",
+            fromChain = rune.chain.id,
+            fromTokenLogo = "",
+            toToken = eth.ticker,
+            toAmount = "0.001",
+            toChain = eth.chain.id,
+            toTokenLogo = "",
+            provider = "THORChain",
+            fiatValue = "$3",
+            toContractAddress = "",
+            toIsNative = true,
+            isLimitOrder = isLimitOrder,
+            fromContractAddress = "",
+            fromAmountDecimal = "1.5",
+            isDappRequest = isDappRequest,
+            externalRecipient = externalRecipient,
+            isRecipientUnknown = isRecipientUnknown,
         )
 
     private val rune =
@@ -234,9 +218,4 @@ internal class KeysignViewModelSwapRetryTest {
             contractAddress = "",
             isNativeToken = true,
         )
-
-    private companion object {
-        /** 1.5 RUNE in 1e8 units. */
-        val SRC_AMOUNT: BigInteger = BigInteger.valueOf(150_000_000L)
-    }
 }

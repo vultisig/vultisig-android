@@ -133,11 +133,28 @@ data class SwapTransactionHistoryData(
     /**
      * Whether a dApp, not the swap form, authored this swap (the keysign carried `dappMetadata`).
      * Its terms — route, recipient, slippage — were the dApp's, so the row never offers to try it
-     * again through the form; the done screen makes the same call from the live payload. Default
-     * `false` so legacy rows stay readable (no Room migration) and, since only a co-signed dApp
-     * keysign can set it, an in-app swap is never mistaken for one.
+     * again through the form, on the done screen or in History. Default `false` so legacy rows stay
+     * readable (no Room migration) and, since only a co-signed dApp keysign can set it, an in-app
+     * swap is never mistaken for one.
      */
     val isDappRequest: Boolean = false,
+    /**
+     * Address the output was routed to when the form's advanced settings named one, or null when it
+     * went to the vault's own address. A retry pays the same destination: reopening the form
+     * without it would quietly send the output to the vault instead. Default null so legacy rows
+     * stay readable (no Room migration) — they carry no [fromAmountDecimal] either, so they never
+     * offer a retry that could misroute.
+     */
+    val externalRecipient: String? = null,
+    /**
+     * Whether the device that wrote this row could not tell where the output was routed. A
+     * co-signer reads the recipient out of the memo it signs, which only the native THORChain and
+     * Maya routes carry; a SwapKit route reaches it as opaque transaction bytes that may pay the
+     * vault or an address the initiator chose. Such a row never offers a retry — the form would
+     * have to guess the destination. Default `false`: the initiator always knows, and so does a
+     * co-signer of any other route.
+     */
+    val isRecipientUnknown: Boolean = false,
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(
