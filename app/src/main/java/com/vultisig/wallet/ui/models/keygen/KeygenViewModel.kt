@@ -85,7 +85,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -157,8 +156,8 @@ constructor(
 
     private val args = savedStateHandle.toRoute<Route.Keygen.Generating>()
 
-    private val _state = MutableStateFlow(KeygenUiModel(action = args.action))
-    val state: StateFlow<KeygenUiModel> = _state.asStateFlow()
+    val state: StateFlow<KeygenUiModel>
+        field = MutableStateFlow(KeygenUiModel(action = args.action))
 
     private val vault =
         Vault(
@@ -323,7 +322,7 @@ constructor(
                 }
             }
 
-            _state.update { it.copy(error = null) }
+            state.update { it.copy(error = null) }
 
             try {
                 // The ceremony holds auto-lock off from here until the keyshare is written. The
@@ -359,7 +358,7 @@ constructor(
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "generateKey error")
 
-                _state.update {
+                state.update {
                     it.copy(
                         error = resolveKeygenErrorFromException(e),
                         isSuccess = false,
@@ -1114,7 +1113,7 @@ constructor(
 
     private fun updateStep(step: KeygenState) {
         val usesParallelRootKeyStage = usesParallelRootKeyStage(step)
-        _state.update { uiModel ->
+        state.update { uiModel ->
             uiModel.copy(
                 isSuccess = step is KeygenState.Success,
                 keygenState = step,

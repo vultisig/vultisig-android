@@ -26,7 +26,6 @@ import java.net.URI
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -58,14 +57,14 @@ constructor(
 
     val urlFieldState = TextFieldState()
 
-    private val _state =
-        MutableStateFlow(
-            CustomRpcDetailUiState(
-                chainName = chain.raw,
-                defaultEndpoint = CustomRpcDefaultEndpoint.string(chain),
+    val state: StateFlow<CustomRpcDetailUiState>
+        field =
+            MutableStateFlow(
+                CustomRpcDetailUiState(
+                    chainName = chain.raw,
+                    defaultEndpoint = CustomRpcDefaultEndpoint.string(chain),
+                )
             )
-        )
-    val state: StateFlow<CustomRpcDetailUiState> = _state.asStateFlow()
 
     init {
         // Read the persisted override off the main thread via the reactive API. The synchronous
@@ -74,7 +73,7 @@ constructor(
             val existing = customRpcRepository.overrides.first()[chain]
             if (existing != null) {
                 urlFieldState.setTextAndPlaceCursorAtEnd(existing)
-                _state.update { it.copy(hasExistingOverride = true) }
+                state.update { it.copy(hasExistingOverride = true) }
             }
         }
 
@@ -83,7 +82,7 @@ constructor(
             snapshotFlow { urlFieldState.text.toString() }
                 .collectLatest { text ->
                     val trimmed = text.trim()
-                    _state.update {
+                    state.update {
                         it.copy(
                             canSave = trimmed.isNotEmpty() && isValidRpcUrl(trimmed),
                             errorMessage = null,
@@ -106,15 +105,15 @@ constructor(
     fun onSaveClick() {
         val url = urlFieldState.text.toString().trim()
         if (!isValidRpcUrl(url)) {
-            _state.update {
+            state.update {
                 it.copy(errorMessage = UiText.StringResource(R.string.custom_rpc_invalid_url))
             }
             return
         }
-        _state.update { it.copy(isSaving = true, errorMessage = null) }
+        state.update { it.copy(isSaving = true, errorMessage = null) }
         viewModelScope.safeLaunch(
             onError = {
-                _state.update {
+                state.update {
                     it.copy(
                         isSaving = false,
                         errorMessage = UiText.StringResource(R.string.custom_rpc_unreachable),
@@ -131,14 +130,14 @@ constructor(
                     navigator.back()
                 }
                 RpcHealthResult.WrongChain ->
-                    _state.update {
+                    state.update {
                         it.copy(
                             isSaving = false,
                             errorMessage = UiText.StringResource(R.string.custom_rpc_wrong_chain),
                         )
                     }
                 RpcHealthResult.InvalidResponse ->
-                    _state.update {
+                    state.update {
                         it.copy(
                             isSaving = false,
                             errorMessage =
@@ -146,7 +145,7 @@ constructor(
                         )
                     }
                 RpcHealthResult.Unreachable ->
-                    _state.update {
+                    state.update {
                         it.copy(
                             isSaving = false,
                             errorMessage = UiText.StringResource(R.string.custom_rpc_unreachable),

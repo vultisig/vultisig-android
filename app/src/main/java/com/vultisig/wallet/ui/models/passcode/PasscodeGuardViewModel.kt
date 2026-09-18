@@ -10,7 +10,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @Immutable
@@ -58,8 +57,8 @@ internal class PasscodeGuardViewModel
 @Inject
 constructor(private val passcodeRepository: PasscodeRepository) : ViewModel() {
 
-    private val _state = MutableStateFlow(PasscodeGuardUiModel())
-    val state: StateFlow<PasscodeGuardUiModel> = _state.asStateFlow()
+    val state: StateFlow<PasscodeGuardUiModel>
+        field = MutableStateFlow(PasscodeGuardUiModel())
 
     init {
         // Reads the persisted credentials off the main thread; until it completes the state stays
@@ -71,7 +70,7 @@ constructor(private val passcodeRepository: PasscodeRepository) : ViewModel() {
         viewModelScope.safeLaunch { passcodeRepository.initialize() }
 
         viewModelScope.launch {
-            passcodeRepository.state.collect { passcodeState -> _state.update(passcodeState) }
+            passcodeRepository.state.collect { passcodeState -> state.update(passcodeState) }
         }
     }
 

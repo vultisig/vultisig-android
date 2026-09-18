@@ -35,7 +35,6 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -110,8 +109,8 @@ constructor(
 
     private val route: Route.CosmosStakingWithdrawRewards = savedStateHandle.toRoute()
 
-    private val _state = MutableStateFlow(CosmosWithdrawRewardsUiState())
-    val state: StateFlow<CosmosWithdrawRewardsUiState> = _state.asStateFlow()
+    val state: StateFlow<CosmosWithdrawRewardsUiState>
+        field = MutableStateFlow(CosmosWithdrawRewardsUiState())
 
     private var coin: Coin? = null
 
@@ -120,7 +119,7 @@ constructor(
     }
 
     fun dismissError() {
-        _state.update { it.copy(errorMessage = null) }
+        state.update { it.copy(errorMessage = null) }
     }
 
     fun back() {
@@ -128,7 +127,7 @@ constructor(
     }
 
     fun toggle(validatorAddress: String) {
-        _state.update { s ->
+        state.update { s ->
             val cap = s.maxBatchSize
             val current = s.selectedValidators
             val updated: Set<String>
@@ -158,7 +157,7 @@ constructor(
      * all. Otherwise select the first cap candidates and raise the cap warning if there are more.
      */
     fun toggleSelectAll() {
-        _state.update { s ->
+        state.update { s ->
             val cap = s.maxBatchSize
             val targetSize = minOf(s.candidates.size, cap)
             val isAllSelected = s.selectedValidators.size == targetSize
@@ -177,13 +176,13 @@ constructor(
     }
 
     fun submit() {
-        val currentState = _state.value
+        val currentState = state.value
         if (currentState.isSubmitting || !currentState.validForm) return
 
         // Flip the flag before launching so two quick taps can't both pass the guard above and
         // enqueue duplicate submit coroutines (each would persist its own DepositTransaction).
         // Cleared by setError on any failure path.
-        _state.update { it.copy(isSubmitting = true, errorMessage = null) }
+        state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
         viewModelScope.safeLaunch(
             onError = { e -> setError(e.message ?: "Failed to build claim transaction") }
@@ -250,7 +249,7 @@ constructor(
                 Route.CosmosStakingVerify(vaultId = route.vaultId, transactionId = depositTx.id),
                 NavigationOptions(popUpToRoute = Route.CosmosStakingVerify::class, inclusive = true),
             )
-            _state.update { it.copy(isSubmitting = false) }
+            state.update { it.copy(isSubmitting = false) }
         }
     }
 
@@ -258,7 +257,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to fetch claim candidates")
-                _state.update { it.copy(isLoading = false) }
+                state.update { it.copy(isLoading = false) }
                 setError("Failed to load rewards")
             }
         ) {
@@ -278,7 +277,7 @@ constructor(
                     )
             coin = nativeCoin
 
-            _state.update { it.copy(isLoading = true, ticker = nativeCoin.ticker) }
+            state.update { it.copy(isLoading = true, ticker = nativeCoin.ticker) }
 
             val entry = CosmosStakingConfig.entryFor(chain)
             // Sequential fetches — the LCD is fast enough that parallel fan-out's complexity
@@ -297,7 +296,7 @@ constructor(
                     }
                     .getOrElse {
                         Timber.w(it, "Failed to fetch delegator rewards")
-                        _state.update { s -> s.copy(isLoading = false) }
+                        state.update { s -> s.copy(isLoading = false) }
                         return@safeLaunch setError("Failed to load rewards")
                     }
             val validators =
@@ -336,14 +335,14 @@ constructor(
             val preselected = candidates.take(cap).map { it.validatorAddress }.toSet()
 
             val initialState =
-                _state.value.copy(
+                state.value.copy(
                     candidates = candidates,
                     selectedValidators = preselected,
                     hitBatchCapWarning = candidates.size > cap,
                     spendableBalance = spendableBalance,
                     isLoading = false,
                 )
-            _state.update { recomputeTotals(initialState) }
+            state.update { recomputeTotals(initialState) }
         }
     }
 
@@ -373,7 +372,7 @@ constructor(
     }
 
     private fun setError(message: String) {
-        _state.update { it.copy(errorMessage = message, isSubmitting = false) }
+        state.update { it.copy(errorMessage = message, isSubmitting = false) }
     }
 }
 

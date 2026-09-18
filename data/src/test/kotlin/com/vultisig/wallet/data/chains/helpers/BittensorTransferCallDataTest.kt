@@ -9,7 +9,8 @@ import org.junit.jupiter.api.Test
  * Pins the Balances call a TAO send signs. `pallet_balances` numbers `transfer_allow_death` 0 and
  * `transfer_keep_alive` 3, and only the second refuses a transfer that would drop the sender under
  * the existential deposit — the difference between a rejected extrinsic and a reaped account whose
- * remainder the runtime destroys.
+ * remainder the runtime destroys. Only the payload's explicit allow-death intent selects the first,
+ * so every device co-signing the same payload hashes the same call index.
  */
 class BittensorTransferCallDataTest {
 
@@ -18,12 +19,24 @@ class BittensorTransferCallDataTest {
     private fun ByteArray.hex(): String = joinToString("") { "%02x".format(it) }
 
     @Test
-    fun `transfer is signed as keep_alive, never as allow_death`() {
+    fun `transfer is signed as keep_alive unless the payload asks for allow_death`() {
         val callData =
             BittensorHelper.buildTransferCallData(destination, BigInteger.valueOf(1_000_000_000L))
 
         assertEquals(5, callData[0].toInt()) // Balances pallet
         assertEquals(3, callData[1].toInt()) // transfer_keep_alive (allow_death is 0)
+    }
+
+    @Test
+    fun `an explicit allow_death intent signs transfer_allow_death`() {
+        val callData =
+            BittensorHelper.buildTransferCallData(
+                destination,
+                BigInteger.valueOf(1_000_000_000L),
+                allowDeath = true,
+            )
+
+        assertEquals("050000" + destination.hex() + "02286bee", callData.hex())
     }
 
     @Test

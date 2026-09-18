@@ -602,6 +602,7 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_unknown_address_after" -> QbtcUnknownAddressAfterPreview()
                     "chain_selection" -> ChainSelectionClipPreview()
                     "verify_send_empty_memo" -> VerifySendEmptyMemoPreview()
+                    "verify_send_allow_death" -> VerifySendAllowDeathPreview()
                     "unbond_verify_before" -> UnbondVerifyPreview(after = false)
                     "unbond_verify_after" -> UnbondVerifyPreview(after = true)
                     "edit_folder" -> EditFolderPreview()
@@ -2263,6 +2264,36 @@ private fun UnbondVerifyPreview(after: Boolean) {
         onFastSignClick = {},
         onConfirm = {},
         onBackClick = {},
+    )
+}
+
+@Composable
+private fun VerifySendAllowDeathPreview() {
+    val tao = Coins.Bittensor.TAO
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        token = ValuedToken(token = tao, value = "1.25", fiatValue = "$412.50"),
+                        srcAddress = "5Ej64CJQSZFsPK4byPVCZhNWiYeRXnELwYw4KYQBq6yfvaQ3",
+                        srcVaultName = "Main Vault",
+                        dstAddress = "5DtJMgqtYZg6NyCM1KDkmgZ6nW7pKgL1fneDHQtwPjBrQuXG",
+                        emptiesSenderAccount = true,
+                        networkFeeFiatValue = "$0.07",
+                        networkFeeTokenValue = "0.0002 TAO",
+                    )
+            ),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
     )
 }
 

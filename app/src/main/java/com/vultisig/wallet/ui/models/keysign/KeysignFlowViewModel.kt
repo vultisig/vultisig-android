@@ -113,24 +113,21 @@ constructor(
     private var _currentVault: Vault? = null
     private var _keysignPayload: KeysignPayload? = null
     private var customMessagePayload: CustomMessagePayload? = null
-    private val _keysignMessage: MutableStateFlow<String> = MutableStateFlow("")
+    val keysignMessage: StateFlow<String>
+        field = MutableStateFlow<String>("")
     private var messagesToSign = emptyList<String>()
 
-    private val _currentState: MutableStateFlow<KeysignFlowState> =
-        MutableStateFlow(KeysignFlowState.PeerDiscovery)
-    val currentState: StateFlow<KeysignFlowState> = _currentState
+    val currentState: StateFlow<KeysignFlowState>
+        field = MutableStateFlow<KeysignFlowState>(KeysignFlowState.PeerDiscovery)
 
     val selection: StateFlow<List<String>>
         get() = participantDiscovery.selection
 
-    val keysignMessage: StateFlow<String> = _keysignMessage
-
     val participants: StateFlow<List<String>>
         get() = participantDiscovery.participants
 
-    private val _networkOption: MutableStateFlow<NetworkOption> =
-        MutableStateFlow(NetworkOption.Internet)
-    val networkOption: StateFlow<NetworkOption> = _networkOption
+    val networkOption: StateFlow<NetworkOption>
+        field = MutableStateFlow<NetworkOption>(NetworkOption.Internet)
 
     private val args = savedStateHandle.toRoute<Route.Keysign.Keysign>()
     private val password = args.password
@@ -140,13 +137,13 @@ constructor(
         get() = !password.isNullOrBlank()
 
     private val isRelayEnabled: Boolean
-        get() = _networkOption.value == NetworkOption.Internet || isFastSign
+        get() = networkOption.value == NetworkOption.Internet || isFastSign
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _isDataLoaded = MutableStateFlow(false)
-    val isDataLoaded: StateFlow<Boolean> = _isDataLoaded
+    val isDataLoaded: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
     private var transactionHistoryData = MutableStateFlow<TransactionHistoryData?>(null)
@@ -191,8 +188,8 @@ constructor(
         )
     }
 
-    private val _uiState = MutableStateFlow(KeysignFlowUiState())
-    val uiState: StateFlow<KeysignFlowUiState> = _uiState
+    val uiState: StateFlow<KeysignFlowUiState>
+        field = MutableStateFlow(KeysignFlowUiState())
 
     init {
         viewModelScope.launch {
@@ -250,24 +247,24 @@ constructor(
                 viewModelScope.launch {
                     launch {
                         shareViewModel.amount.collect { amount ->
-                            _uiState.update { it.copy(amount = amount) }
+                            uiState.update { it.copy(amount = amount) }
                         }
                     }
                     launch {
                         shareViewModel.toAmount.collect { toAmount ->
-                            _uiState.update { it.copy(toAmount = toAmount) }
+                            uiState.update { it.copy(toAmount = toAmount) }
                         }
                     }
                     launch {
                         shareViewModel.qrBitmapPainter.collect { painter ->
-                            _uiState.update { it.copy(qrBitmapPainter = painter) }
+                            uiState.update { it.copy(qrBitmapPainter = painter) }
                         }
                     }
                 }
 
             val srcLogoModel = keysignPayload?.coin?.tokenLogoRes()
             val dstLogoModel = keysignPayload?.swapPayload?.dstToken?.tokenLogoRes()
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     vault = vault,
                     isSwap = shareViewModel.keysignPayload?.swapPayload != null,
@@ -332,11 +329,11 @@ constructor(
                 useVultisigRelay = isRelayEnabled,
             )
 
-        _keysignMessage.value =
+        keysignMessage.value =
             "https://vultisig.com?type=SignTransaction&resharePrefix=${vault.resharePrefix}&vault=${vault.pubKeyECDSA}&jsonData=" +
                 data
 
-        addressProvider.update(_keysignMessage.value)
+        addressProvider.update(keysignMessage.value)
         if (vault.isSecureVault()) sendNotification()
     }
 
@@ -391,8 +388,8 @@ constructor(
     }
 
     fun sendNotification() {
-        if (_uiState.value.resendCooldownSeconds > 0) return
-        val currentQrData = _keysignMessage.value
+        if (uiState.value.resendCooldownSeconds > 0) return
+        val currentQrData = keysignMessage.value
         if (currentQrData == lastNotifiedQrData) return
         viewModelScope.safeLaunch(
             onError = {
@@ -419,11 +416,11 @@ constructor(
             viewModelScope.launch {
                 var seconds = 30
                 while (seconds > 0) {
-                    _uiState.update { it.copy(resendCooldownSeconds = seconds) }
+                    uiState.update { it.copy(resendCooldownSeconds = seconds) }
                     delay(1.seconds)
                     seconds--
                 }
-                _uiState.update { it.copy(resendCooldownSeconds = 0) }
+                uiState.update { it.copy(resendCooldownSeconds = 0) }
                 lastNotifiedQrData = ""
             }
     }
@@ -440,7 +437,7 @@ constructor(
                         ?: return@safeLaunch
                 transactionTypeUiModel = result.transactionTypeUiModel
                 transactionHistoryData.update { result.transactionHistoryData }
-                _isDataLoaded.value = true
+                isDataLoaded.value = true
             }
         } else {
             transactionTypeUiModel =
@@ -451,7 +448,7 @@ constructor(
                             message = customMessagePayload?.message ?: "",
                         )
                 )
-            _isDataLoaded.value = true
+            isDataLoaded.value = true
         }
     }
 
@@ -468,9 +465,9 @@ constructor(
             if (nextState == KeysignFlowState.Keysign) {
                 cleanQrAddress()
             }
-            _currentState.update { nextState }
+            currentState.update { nextState }
         } catch (e: Exception) {
-            _isLoading.value = false
+            isLoading.value = false
             moveToState(
                 Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
             )
@@ -479,10 +476,10 @@ constructor(
 
     fun moveToKeysignState() {
         viewModelScope.launch {
-            _isLoading.value = true
+            isLoading.value = true
             stopParticipantDiscovery()
             moveToState(KeysignFlowState.Keysign)
-            _isLoading.value = false
+            isLoading.value = false
         }
     }
 
@@ -497,8 +494,8 @@ constructor(
     fun changeNetworkPromptOption(option: NetworkOption, context: Context) {
         val resolvedOption =
             if (isFastSign && option == NetworkOption.Local) NetworkOption.Internet else option
-        if (_networkOption.value == resolvedOption) return
-        _networkOption.value = resolvedOption
+        if (networkOption.value == resolvedOption) return
+        networkOption.value = resolvedOption
         _serverAddress =
             when (resolvedOption) {
                 NetworkOption.Local -> {

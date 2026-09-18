@@ -22,7 +22,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -34,8 +33,8 @@ class TransactionStatusService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var pollingJob: Job? = null
 
-    private val _statusFlow = MutableStateFlow<TransactionResult>(TransactionResult.Pending)
-    val statusFlow: StateFlow<TransactionResult> = _statusFlow.asStateFlow()
+    val statusFlow: StateFlow<TransactionResult>
+        field = MutableStateFlow<TransactionResult>(TransactionResult.Pending)
 
     private val notificationManager by lazy {
         getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -94,7 +93,7 @@ class TransactionStatusService : Service() {
         pollingJob =
             serviceScope.launch {
                 updateNotification(getString(R.string.transaction_status_pending), ongoing = true)
-                _statusFlow.emit(TransactionResult.Pending)
+                statusFlow.emit(TransactionResult.Pending)
 
                 pollingTxStatus(chain, txHash).collect { result ->
                     when (result) {
@@ -110,13 +109,13 @@ class TransactionStatusService : Service() {
                                 contentText = result.toNotificationMessage(),
                                 ongoing = false,
                             )
-                            _statusFlow.emit(result)
+                            statusFlow.emit(result)
                             stopPolling()
                             stopForegroundAndService()
                         }
                         TransactionResult.Pending,
                         TransactionResult.NotFound -> {
-                            _statusFlow.emit(result)
+                            statusFlow.emit(result)
                             updateNotification(
                                 contentText = result.toNotificationMessage(),
                                 ongoing = true,

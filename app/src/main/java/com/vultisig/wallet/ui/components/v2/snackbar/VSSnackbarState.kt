@@ -25,8 +25,8 @@ internal class VSSnackbarState(
     private val duration: Duration,
     private val coroutineScope: CoroutineScope,
 ) {
-    private val _progressState = MutableStateFlow(ProgressState())
-    val progressState: StateFlow<ProgressState> = _progressState
+    val progressState: StateFlow<ProgressState>
+        field = MutableStateFlow(ProgressState())
     private val _showProgress = MutableSharedFlow<Pair<String, SnackbarType>>()
 
     init {
@@ -49,7 +49,7 @@ internal class VSSnackbarState(
                     emit(ProgressState(message = "", isVisible = false, progress = 0f))
                 }
             }
-            .onEach { state -> _progressState.update { state } }
+            .onEach { state -> progressState.update { state } }
             .launchIn(coroutineScope)
     }
 

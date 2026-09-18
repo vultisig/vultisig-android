@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -54,8 +54,8 @@ constructor(
     private val systemNotificationStatus: SystemNotificationStatus,
     private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
-    private val _state = MutableStateFlow(NotificationsSettingsUiState())
-    val state = _state.asStateFlow()
+    val state: StateFlow<NotificationsSettingsUiState>
+        field = MutableStateFlow(NotificationsSettingsUiState())
 
     private val pendingAction = AtomicReference<PendingAction>(PendingAction.AllVaults)
 
@@ -86,7 +86,7 @@ constructor(
                 .collect { (masterEnabled, vaultUiModels) ->
                     // Preserve isBlockedBySystem: it comes from the OS on resume, not from this
                     // flow, and replacing the whole state here would clear the warning.
-                    _state.update { it.copy(masterEnabled = masterEnabled, vaults = vaultUiModels) }
+                    state.update { it.copy(masterEnabled = masterEnabled, vaults = vaultUiModels) }
                 }
         }
     }
@@ -146,7 +146,7 @@ constructor(
      */
     fun refreshSystemNotificationState() {
         val blocked = !systemNotificationStatus.areNotificationsEnabled()
-        _state.update { it.copy(isBlockedBySystem = blocked) }
+        state.update { it.copy(isBlockedBySystem = blocked) }
     }
 
     fun back() {

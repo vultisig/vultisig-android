@@ -54,7 +54,19 @@ class KeysignPayloadProtoMapperPolkadotGasTest {
         restored shouldBe payload.blockChainSpecific
     }
 
-    private fun polkadotPayload(coin: Coin) =
+    // The allow-death intent picks the Balances call every signer encodes, so a co-signer that
+    // dropped it at the proto boundary would hash transfer_keep_alive against the initiator's
+    // transfer_allow_death and stall the ceremony.
+    @Test
+    fun `the allow-death intent survives the round-trip and defaults to keep-alive`() {
+        val keepAlive = inbound(requireNotNull(outbound(polkadotPayload(TAO))))
+        (keepAlive.blockChainSpecific as BlockChainSpecific.Polkadot).allowDeath shouldBe false
+
+        val allowDeath = inbound(requireNotNull(outbound(polkadotPayload(TAO, allowDeath = true))))
+        (allowDeath.blockChainSpecific as BlockChainSpecific.Polkadot).allowDeath shouldBe true
+    }
+
+    private fun polkadotPayload(coin: Coin, allowDeath: Boolean = false) =
         KeysignPayload(
             coin = coin,
             toAddress = "13SykFhb5ZM4jVLGvVdMzmxpEVSVJ8Q4B4TfNw4kdgqfnhaB",
@@ -70,6 +82,7 @@ class KeysignPayloadProtoMapperPolkadotGasTest {
                     genesisHash =
                         "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3",
                     gas = GAS,
+                    allowDeath = allowDeath,
                 ),
             memo = null,
             vaultPublicKeyECDSA = "pub",

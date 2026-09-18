@@ -41,7 +41,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -130,8 +129,8 @@ constructor(
     private var vaultId: String? = null
     private var chainId: String? = null
 
-    private val _state = MutableStateFlow(CosmosStakingPositionsUiState())
-    val state: StateFlow<CosmosStakingPositionsUiState> = _state.asStateFlow()
+    val state: StateFlow<CosmosStakingPositionsUiState>
+        field = MutableStateFlow(CosmosStakingPositionsUiState())
 
     /**
      * Pull-to-refresh spinner state, owned by the VM so the screen never has to infer it from
@@ -140,8 +139,8 @@ constructor(
      * first warm load. The VM flips this true at the start of every [refresh] and false when that
      * run finishes (issue #4773 review).
      */
-    private val _isRefreshing = MutableStateFlow(false)
-    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+    val isRefreshing: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     /**
      * The in-flight [refresh] fan-out. Cancelled before each new run so a slow older response can't
@@ -181,7 +180,7 @@ constructor(
                     onRefreshFailed("Failed to load staking positions")
                 }
             ) {
-                if (!silent) _isRefreshing.value = true
+                if (!silent) isRefreshing.value = true
                 try {
                     val coin = coin ?: return@safeLaunch
                     val cacheKey = snapshotKey(chain, coin.address)
@@ -193,7 +192,7 @@ constructor(
                     // overwrites it.
                     val cached = snapshotCache.read(cacheKey)
                     if (cached != null) {
-                        _state.update {
+                        state.update {
                             it.copy(
                                 positions = cached.positions,
                                 hasClaimableRewards =
@@ -211,7 +210,7 @@ constructor(
                         // refresh.
                         resolveAvatarsAsync(cached.positions)
                     } else {
-                        _state.update { it.copy(isLoading = true, errorMessage = null) }
+                        state.update { it.copy(isLoading = true, errorMessage = null) }
                     }
 
                     // Parallel fan-out — same shape as iOS `refresh(address:decimals:)`.
@@ -357,7 +356,7 @@ constructor(
                     // balance), so the banner and the Total Staked card carry the same value.
                     val totalStakedFiat = currencyFormat.format(totalStaked.multiply(price))
 
-                    _state.update {
+                    state.update {
                         it.copy(
                             positions = positions,
                             hasClaimableRewards = hasClaimableRewards(positions, decimals),
@@ -435,7 +434,7 @@ constructor(
 
                     // Fire-and-forget avatar resolution — each emission updates the row in-place.
                     // Published
-                    // after the list is in `_state` so a cache-hit patch can't land on an empty
+                    // after the list is in `state` so a cache-hit patch can't land on an empty
                     // `positions`
                     // and then be overwritten. The initial render uses the monogram fallback;
                     // avatars swap
@@ -447,7 +446,7 @@ constructor(
                     // whichever
                     // refresh replaced it; a normally-completing run is still active here and
                     // resets it.
-                    if (isActive) _isRefreshing.value = false
+                    if (isActive) isRefreshing.value = false
                 }
             }
     }
@@ -487,7 +486,7 @@ constructor(
                     // Prefill the form instantly from the tapped position; the VM's LCD re-fetch
                     // still corrects the amount if the staked balance changed (#4822).
                     stakedAmount = position.stakedAmount.toPlainString(),
-                    ticker = _state.value.ticker,
+                    ticker = state.value.ticker,
                 ),
                 popOptionsForStaking(Route.CosmosStakingUndelegate::class.java),
             )
@@ -505,7 +504,7 @@ constructor(
                     chainId = chainId,
                     validatorSrcAddress = position.validatorAddress,
                     stakedAmount = position.stakedAmount.toPlainString(),
-                    ticker = _state.value.ticker,
+                    ticker = state.value.ticker,
                 ),
                 popOptionsForStaking(Route.CosmosStakingRedelegate::class.java),
             )
@@ -537,7 +536,7 @@ constructor(
         NavigationOptions(popUpToRoute = routeClass.kotlin, inclusive = true)
 
     fun dismissError() {
-        _state.update { it.copy(errorMessage = null) }
+        state.update { it.copy(errorMessage = null) }
     }
 
     private fun buildRow(
@@ -639,7 +638,7 @@ constructor(
                 ) {
                     val url = keybaseAvatarService.avatarUrl(identity)
                     if (url != null) {
-                        _state.update { current ->
+                        state.update { current ->
                             current.copy(
                                 positions =
                                     current.positions.map { p ->
@@ -691,7 +690,7 @@ constructor(
                     )
             coin = nativeCoin
             val ticker = nativeCoin.ticker
-            _state.update {
+            state.update {
                 it.copy(
                     ticker = ticker,
                     coinLogo = nativeCoin.logo,
@@ -715,11 +714,11 @@ constructor(
     }
 
     fun onTabSelected(tab: DeFiTab) {
-        _state.update { it.copy(selectedTab = tab) }
+        state.update { it.copy(selectedTab = tab) }
     }
 
     fun setPositionSelectionDialogVisibility(visible: Boolean) {
-        _state.update {
+        state.update {
             it.copy(
                 showPositionSelectionDialog = visible,
                 tempSelectedPositions = it.selectedPositions,
@@ -728,7 +727,7 @@ constructor(
     }
 
     fun onPositionSelectionChange(ticker: String, selected: Boolean) {
-        _state.update {
+        state.update {
             val updated =
                 if (selected) it.tempSelectedPositions + ticker
                 else it.tempSelectedPositions - ticker
@@ -737,7 +736,7 @@ constructor(
     }
 
     fun onPositionSelectionDone() {
-        _state.update {
+        state.update {
             it.copy(
                 showPositionSelectionDialog = false,
                 selectedPositions = it.tempSelectedPositions,
@@ -754,7 +753,7 @@ constructor(
     }
 
     private fun setError(message: String) {
-        _state.update { it.copy(errorMessage = message, isLoading = false) }
+        state.update { it.copy(errorMessage = message, isLoading = false) }
     }
 
     /**
@@ -764,7 +763,7 @@ constructor(
      * rendered yet.
      */
     private fun onRefreshFailed(message: String) {
-        _state.update { current ->
+        state.update { current ->
             if (current.positions.isNotEmpty()) current.copy(isLoading = false)
             else current.copy(errorMessage = message, isLoading = false)
         }

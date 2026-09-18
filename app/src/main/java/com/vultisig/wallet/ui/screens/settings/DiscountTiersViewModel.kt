@@ -28,7 +28,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -58,8 +57,8 @@ constructor(
 
     private val vaultId: String = savedStateHandle.toRoute<Route.DiscountTiers>().vaultId
 
-    private val _state = MutableStateFlow(DiscountTiersUiModel())
-    val state: StateFlow<DiscountTiersUiModel> = _state.asStateFlow()
+    val state: StateFlow<DiscountTiersUiModel>
+        field = MutableStateFlow(DiscountTiersUiModel())
 
     init {
         loadTierType()
@@ -93,7 +92,7 @@ constructor(
                         if (cachedVultBalance != null) {
                             val cachedTier =
                                 cachedVultBalance.determineTier()?.applyExtraDiscount(hasNFTCache)
-                            _state.value =
+                            state.value =
                                 DiscountTiersUiModel(activeTier = cachedTier, isLoading = false)
                             Timber.d(
                                 "VULT cached balance: $cachedVultBalance, Active tier: $cachedTier"
@@ -114,8 +113,7 @@ constructor(
                             val vultBalance = freshTokenValue.value
                             val tier = vultBalance.determineTier()?.applyExtraDiscount(hasNFTValue)
 
-                            _state.value =
-                                DiscountTiersUiModel(activeTier = tier, isLoading = false)
+                            state.value = DiscountTiersUiModel(activeTier = tier, isLoading = false)
 
                             Timber.d("VULT fresh balance: $vultBalance, Active tier: $tier")
 
@@ -130,15 +128,15 @@ constructor(
                             }
                         }
                     } else {
-                        _state.value = DiscountTiersUiModel(activeTier = null, isLoading = false)
+                        state.value = DiscountTiersUiModel(activeTier = null, isLoading = false)
                     }
                 } else {
-                    _state.value = DiscountTiersUiModel(isLoading = false, activeTier = null)
+                    state.value = DiscountTiersUiModel(isLoading = false, activeTier = null)
                 }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "Error loading VULT balance")
-                _state.value = DiscountTiersUiModel(isLoading = false, activeTier = null)
+                state.value = DiscountTiersUiModel(isLoading = false, activeTier = null)
             }
         }
     }
@@ -217,10 +215,10 @@ constructor(
     }
 
     fun onTierUnlockClick(tier: TierType) {
-        _state.update { it.copy(tierClicked = tier, showBottomSheetDialog = true) }
+        state.update { it.copy(tierClicked = tier, showBottomSheetDialog = true) }
     }
 
     fun dismissBottomSheet() {
-        _state.update { it.copy(tierClicked = null, showBottomSheetDialog = false) }
+        state.update { it.copy(tierClicked = null, showBottomSheetDialog = false) }
     }
 }

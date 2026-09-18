@@ -10,7 +10,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -236,12 +235,11 @@ internal class PasscodeRepositoryImpl(
         SystemClock::elapsedRealtime,
     )
 
-    private val _state = MutableStateFlow<PasscodeState>(PasscodeState.Unknown)
-    override val state: StateFlow<PasscodeState> = _state.asStateFlow()
+    override val state: StateFlow<PasscodeState>
+        field = MutableStateFlow<PasscodeState>(PasscodeState.Unknown)
 
-    private val _isBiometricUnlockEnabled = MutableStateFlow(false)
-    override val isBiometricUnlockEnabled: StateFlow<Boolean> =
-        _isBiometricUnlockEnabled.asStateFlow()
+    override val isBiometricUnlockEnabled: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     /**
      * Guards read-modify-write sequences over the persisted credentials and lockout counters, so
@@ -268,7 +266,7 @@ internal class PasscodeRepositoryImpl(
     override fun dataKeyOrNull(): ByteArray? = synchronized(keyLock) { dataKey?.copyOf() }
 
     override fun isLocked(): Boolean =
-        when (_state.value) {
+        when (state.value) {
             PasscodeState.Locked,
             PasscodeState.KeyUnavailable,
             PasscodeState.StoreUnavailable -> true
@@ -282,23 +280,23 @@ internal class PasscodeRepositoryImpl(
         // initialize, so a caller reached from a service or a worker — with no UI in this process
         // — would otherwise wait on an Unknown that nothing is going to move.
         initialize()
-        _state.first { it != PasscodeState.Unknown && it != PasscodeState.Locked }
+        state.first { it != PasscodeState.Unknown && it != PasscodeState.Locked }
     }
 
     override suspend fun initialize() {
         mutex.withLock {
-            if (_state.value != PasscodeState.Unknown) return
-            _state.value = resolveOrReport()
+            if (state.value != PasscodeState.Unknown) return
+            state.value = resolveOrReport()
             refreshBiometricUnlockEnabled()
         }
     }
 
     override suspend fun retry() {
         mutex.withLock {
-            when (_state.value) {
+            when (state.value) {
                 PasscodeState.KeyUnavailable,
                 PasscodeState.StoreUnavailable -> {
-                    _state.value = resolveOrReport()
+                    state.value = resolveOrReport()
                     refreshBiometricUnlockEnabled()
                 }
                 else -> Unit
@@ -315,8 +313,8 @@ internal class PasscodeRepositoryImpl(
      * from advertising itself as a way in.
      */
     private suspend fun refreshBiometricUnlockEnabled() {
-        _isBiometricUnlockEnabled.value =
-            _state.value.isConfigured && withContext(dispatcher) { biometrics.isEnabled() }
+        isBiometricUnlockEnabled.value =
+            state.value.isConfigured && withContext(dispatcher) { biometrics.isEnabled() }
     }
 
     /**
@@ -443,7 +441,7 @@ internal class PasscodeRepositoryImpl(
      * writes would store new ones in the clear.
      */
     private fun publishUnlockedUnlessLocked() {
-        _state.value = if (dataKey != null) PasscodeState.Unlocked else PasscodeState.Locked
+        state.value = if (dataKey != null) PasscodeState.Unlocked else PasscodeState.Locked
     }
 
     override suspend fun changePasscode(
@@ -505,10 +503,10 @@ internal class PasscodeRepositoryImpl(
                         // instead of iOS's binding blob. No earlier than this, or the abort above
                         // would turn the shortcut off over an operation that changed nothing.
                         withContext(dispatcher) { biometrics.clear() }
-                        _isBiometricUnlockEnabled.value = false
+                        isBiometricUnlockEnabled.value = false
                         withContext(dispatcher) { store.clearCredentials() }
                         swapDataKey(null)
-                        _state.value = PasscodeState.Disabled
+                        state.value = PasscodeState.Disabled
                         key.fill(0)
                     }
                 } catch (e: CancellationException) {
@@ -593,7 +591,7 @@ internal class PasscodeRepositoryImpl(
         mutex.withLock {
             // Anything else is an app with nothing for this to open: already unlocked, no passcode
             // at all, or one of the states where no key of any kind reaches the keyshares.
-            if (_state.value != PasscodeState.Locked) {
+            if (state.value != PasscodeState.Locked) {
                 return@withLock PasscodeUnlockResult.Failed
             }
 
@@ -628,7 +626,7 @@ internal class PasscodeRepositoryImpl(
         // the foreground, without waiting on a coroutine that may never be scheduled. Racing a
         // reader is safe because both sides hold keyLock, so a copy is taken whole or not at all.
         swapDataKey(null)
-        _state.compareAndSet(PasscodeState.Unlocked, PasscodeState.Locked)
+        state.compareAndSet(PasscodeState.Unlocked, PasscodeState.Locked)
     }
 
     /**

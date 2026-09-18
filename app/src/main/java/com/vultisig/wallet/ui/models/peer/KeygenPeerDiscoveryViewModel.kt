@@ -67,7 +67,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -140,29 +139,28 @@ constructor(
             .onFailure { Timber.e(it, "Failed to deserialize PeerDiscovery args") }
             .getOrNull()
 
-    private val _state =
-        MutableStateFlow(
-            PeerDiscoveryUiModel(
-                minimumDevices = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
-                minimumDevicesDisplayed = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
-                deviceCount = args?.deviceCount,
-                allowsMoreDevices =
-                    (args?.deviceCount ?: MIN_KEYGEN_DEVICES) >= UNBOUNDED_KEYGEN_DEVICE_COUNT,
-                // Seed the connecting state for every Fast Vault flow (credentials present) so the
-                // QR/devices branch is never composed during the async loadData() window (it would
-                // otherwise flash before startVultiServerConnection() flips this to non-null).
-                // loadData() clears this back to null for the only Fast Vault path that shows peer
-                // discovery instead of connecting to the server (active-vault migrate, signers >
-                // 2),
-                // which we cannot detect synchronously here.
-                connectingToServer =
-                    if (!args?.email.isNullOrBlank() && !args.password.isNullOrBlank())
-                        ConnectingToServerUiModel(false)
-                    else null,
-                enableNotification = false,
+    val state: StateFlow<PeerDiscoveryUiModel>
+        field =
+            MutableStateFlow(
+                PeerDiscoveryUiModel(
+                    minimumDevices = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
+                    minimumDevicesDisplayed = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
+                    deviceCount = args?.deviceCount,
+                    allowsMoreDevices =
+                        (args?.deviceCount ?: MIN_KEYGEN_DEVICES) >= UNBOUNDED_KEYGEN_DEVICE_COUNT,
+                    // Seed the connecting state for every Fast Vault flow (credentials present) so
+                    // the QR/devices branch is never composed during the async loadData() window
+                    // (it would otherwise flash before startVultiServerConnection() flips this to
+                    // non-null). loadData() clears this back to null for the only Fast Vault path
+                    // that shows peer discovery instead of connecting to the server (active-vault
+                    // migrate, signers > 2), which we cannot detect synchronously here.
+                    connectingToServer =
+                        if (!args?.email.isNullOrBlank() && !args.password.isNullOrBlank())
+                            ConnectingToServerUiModel(false)
+                        else null,
+                    enableNotification = false,
+                )
             )
-        )
-    val state: StateFlow<PeerDiscoveryUiModel> = _state.asStateFlow()
 
     // var, not val: switchMode() mints a fresh id so a re-entered network mode never reuses a
     // still-alive relay/mediator session and resurfaces stale peers (issue #4944).
@@ -226,7 +224,7 @@ constructor(
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) return
 
         viewModelScope.launch {
-            _state.map { it.selectedDevices.size }.first { it >= targetDeviceCount - 1 }
+            state.map { it.selectedDevices.size }.first { it >= targetDeviceCount - 1 }
             next()
         }
     }
@@ -266,7 +264,7 @@ constructor(
         }
 
     private fun showNetworkWarning() {
-        _state.update {
+        state.update {
             it.copy(
                 warning =
                     ErrorUiModel(
@@ -336,7 +334,7 @@ constructor(
         mediatorServiceController.stop()
         val newSessionId = Uuid.random().toHexString()
         sessionId = newSessionId
-        _state.update {
+        state.update {
             it.copy(
                 network =
                     when (it.network) {
@@ -351,7 +349,7 @@ constructor(
     }
 
     fun selectDevice(device: ParticipantName) {
-        _state.update {
+        state.update {
             val isReshare = args?.action == TssAction.ReShare
             val maxOtherDevices = it.minimumDevices - 1
             it.copy(
@@ -375,7 +373,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to start keygen session")
-                _state.update { it.copy(warning = e.toKeygenErrorUiModel()) }
+                state.update { it.copy(warning = e.toKeygenErrorUiModel()) }
             }
         ) {
             val session = session
@@ -383,7 +381,7 @@ constructor(
             // Snapshot the selection once: startWithCommittee suspends, and oldCommittee below
             // reads it again — without the snapshot a selection change mid-call would desync the
             // started committee from the navigation args.
-            val selectedDevices = _state.value.selectedDevices
+            val selectedDevices = state.value.selectedDevices
             val keygenCommittee = (listOf(session.localPartyId) + selectedDevices).distinct()
             sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
 
@@ -441,7 +439,7 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to load peer discovery data")
-                    _state.update {
+                    state.update {
                         it.copy(
                             error =
                                 ErrorUiModel(
@@ -464,7 +462,7 @@ constructor(
                     val mnemonic = keyImportRepository.get()?.mnemonic
                     if (mnemonic == null) {
                         Timber.w("KeyImport: no mnemonic found in repository")
-                        _state.update {
+                        state.update {
                             it.copy(
                                 error =
                                     ErrorUiModel(
@@ -484,7 +482,7 @@ constructor(
                             extractMasterKeys(mnemonic)
                         } catch (e: Exception) {
                             Timber.e(e, "KeyImport: failed to extract master keys")
-                            _state.update {
+                            state.update {
                                 it.copy(
                                     error =
                                         ErrorUiModel(
@@ -503,7 +501,7 @@ constructor(
                         }
                     if (masterKeys == null) {
                         Timber.w("KeyImport: extractMasterKeys returned null")
-                        _state.update {
+                        state.update {
                             it.copy(
                                 error =
                                     ErrorUiModel(
@@ -541,7 +539,7 @@ constructor(
                     signers = existingVault.signers
 
                     if (args.action == TssAction.Migrate || args.action == TssAction.SingleKeygen) {
-                        _state.update {
+                        state.update {
                             it.copy(
                                 minimumDevices = existingVault.signers.size,
                                 minimumDevicesDisplayed = existingVault.signers.size,
@@ -561,7 +559,7 @@ constructor(
                         isTssBatchEnabled = isTssBatchEnabled,
                     )
 
-                _state.update { it.copy(error = null, warning = null) }
+                state.update { it.copy(error = null, warning = null) }
 
                 if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
                     // For active vault, we should present PeerDiscovery screen, so the other device
@@ -573,7 +571,7 @@ constructor(
                         // the
                         // connecting screen, so undo the connecting state seeded in the initial UI
                         // model.
-                        _state.update { it.copy(connectingToServer = null) }
+                        state.update { it.copy(connectingToServer = null) }
                         startPeerDiscovery(sessionId)
                         requestVultiServerConnection(sessionId)
                     } else {
@@ -606,14 +604,14 @@ constructor(
         val session = session
         checkQrHelperModalIsVisited()
 
-        val isRelayEnabled = _state.value.network == NetworkOption.Internet
+        val isRelayEnabled = state.value.network == NetworkOption.Internet
 
         val keygenPayload =
             args.action.strategy().buildPayload(actionContext(session, sessionId), isRelayEnabled)
 
         loadQr(keygenPayload)
 
-        _state.update { it.copy(localPartyId = session.localPartyId) }
+        state.update { it.copy(localPartyId = session.localPartyId) }
 
         if (isRelayEnabled) {
             serverUrl = VULTISIG_RELAY_URL
@@ -628,7 +626,7 @@ constructor(
     private suspend fun startVultiServerConnection() {
         // Snapshot the session for this run so a later switchMode() can't shift it mid-flight.
         val sessionId = sessionId
-        _state.update { it.copy(connectingToServer = ConnectingToServerUiModel(false)) }
+        state.update { it.copy(connectingToServer = ConnectingToServerUiModel(false)) }
 
         try {
             startSessionWithRetry(sessionId)
@@ -639,7 +637,7 @@ constructor(
                 sessionId = sessionId,
                 onDiscovered = { devices ->
                     if (devices.size == 1) {
-                        _state.update {
+                        state.update {
                             it.copy(
                                 connectingToServer = it.connectingToServer?.copy(isSuccess = true)
                             )
@@ -654,7 +652,7 @@ constructor(
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to connect to Vultiserver")
-            _state.update { it.copy(error = e.toKeygenErrorUiModel()) }
+            state.update { it.copy(error = e.toKeygenErrorUiModel()) }
         }
     }
 
@@ -681,7 +679,7 @@ constructor(
      */
     @VisibleForTesting
     internal fun applyDiscoveredDevices(devices: List<ParticipantName>) {
-        val currentState = _state.value
+        val currentState = state.value
         val existingDevices = currentState.devices.toSet()
         val newDevices = devices - existingDevices
 
@@ -697,12 +695,12 @@ constructor(
             }
         val selectedDevices = currentState.selectedDevices.toSet() + devicesToAutoSelect
 
-        _state.update { it.copy(devices = devices, selectedDevices = selectedDevices.toList()) }
+        state.update { it.copy(devices = devices, selectedDevices = selectedDevices.toList()) }
     }
 
     private suspend fun checkQrHelperModalIsVisited() {
         val showQrHelpModal = !qrHelperModalRepository.isVisited()
-        _state.update { it.copy(showQrHelpModal = showQrHelpModal) }
+        state.update { it.copy(showQrHelpModal = showQrHelpModal) }
     }
 
     private suspend fun loadQr(data: String) {
@@ -718,7 +716,7 @@ constructor(
         this@KeygenPeerDiscoveryViewModel.qrBitmap.value = qrBitmap
         val bitmapPainter =
             BitmapPainter(qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None)
-        _state.update { it.copy(qr = bitmapPainter) }
+        state.update { it.copy(qr = bitmapPainter) }
     }
 
     private suspend fun requestVultiServerConnection(sessionId: String) {
@@ -734,7 +732,7 @@ constructor(
     fun dismissQrHelpModal() {
         viewModelScope.launch {
             qrHelperModalRepository.visited()
-            _state.update { it.copy(showQrHelpModal = false) }
+            state.update { it.copy(showQrHelpModal = false) }
         }
     }
 
@@ -762,7 +760,7 @@ constructor(
                 Timber.tag("startSessionAndDiscovery").e(e, "Attempt %d failed", attempt + 1)
                 if (attempt >= 2) {
                     Timber.tag("startSessionAndDiscovery").e("All attempts to start session failed")
-                    _state.update { it.copy(error = e.toKeygenErrorUiModel()) }
+                    state.update { it.copy(error = e.toKeygenErrorUiModel()) }
                 }
             }
         }

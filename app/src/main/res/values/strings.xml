@@ -366,6 +366,7 @@
     <string name="send_from_invalid_amount">Invalid amount</string>
     <string name="insufficient_utxos_error">Not enough available UTXOs to cover the selected amount. Please add more funds or reduce the amount you\'re sending</string>
     <string name="verify_transaction_memo_title">Memo</string>
+    <string name="verify_transaction_allow_death_warning">This transfer may empty the sender\'s account. If the remaining balance falls below the Existential Deposit, the account will be deactivated (reaped) and any remaining %1$s will be lost.</string>
     <string name="join_keysign_wrong_reshare">Wrong ReShare</string>
     <string name="swap_screen_provider_title">Provider</string>
     <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>

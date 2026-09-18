@@ -20,7 +20,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -71,8 +70,8 @@ constructor(
 ) : MarketWidgetRepository {
 
     private val mutex = Mutex()
-    private val _version = MutableStateFlow(0L)
-    override val version: StateFlow<Long> = _version.asStateFlow()
+    override val version: StateFlow<Long>
+        field = MutableStateFlow(0L)
 
     private val cacheDir: File
         get() = File(context.filesDir, CACHE_DIR)
@@ -200,7 +199,7 @@ constructor(
             }
             // Only after the file is on disk: readers re-read the file on this signal, so bumping
             // it for a write that never landed would just have them re-render the old snapshot.
-            _version.update { it + 1 }
+            version.update { it + 1 }
         }
 
     /** Delete icons that no cached entry references any more. */

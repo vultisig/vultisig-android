@@ -83,6 +83,14 @@ sealed class BlockChainSpecific {
         val transactionVersion: UInt,
         val genesisHash: String,
         val gas: ULong,
+        /**
+         * The initiator's stated intent to empty the sender: every signer encodes
+         * `Balances.transfer_allow_death` (call 0) instead of `transfer_keep_alive` (call 3), so
+         * the runtime reaps the account instead of refusing the transfer. Only the payload selects
+         * the call — nothing is inferred from the amount or the balance. Unset decodes as false and
+         * keeps today's keep-alive bytes.
+         */
+        val allowDeath: Boolean = false,
     ) : BlockChainSpecific()
 
     data class Ton(

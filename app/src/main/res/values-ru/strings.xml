@@ -261,6 +261,7 @@
     <string name="insufficient_utxos_error">Недостаточно доступных UTXO для покрытия выбранной суммы. Пожалуйста, добавьте больше средств или уменьшите отправляемую сумму</string>
     <string name="swap_screen_invalid_vault">Транзакция, скорее всего, завершится неудачей, хранилище не удалось загрузить.</string>
     <string name="verify_transaction_memo_title">Мемо</string>
+    <string name="verify_transaction_allow_death_warning">Этот перевод может опустошить счет отправителя. Если оставшийся баланс опустится ниже экзистенциального депозита, счет будет деактивирован (изъят), а все оставшиеся %1$s будут потеряны.</string>
     <string name="join_keysign_wrong_reshare">Неправильный ReShare</string>
     <string name="swap_screen_provider_title">Провайдер</string>
     <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %1$s %2$s</string>

@@ -26,7 +26,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -75,8 +74,8 @@ constructor(
     private val tssAction = args.tssAction
     private val vaultId = args.vaultId
 
-    private val _uiState = MutableStateFlow(VerifyExistingVaultUiState())
-    val uiState: StateFlow<VerifyExistingVaultUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<VerifyExistingVaultUiState>
+        field = MutableStateFlow(VerifyExistingVaultUiState())
 
     val emailTextFieldState = TextFieldState()
     val passwordTextFieldState = TextFieldState()
@@ -101,7 +100,7 @@ constructor(
                 VerifyExistingVaultStepType.Email to VerifyExistingVaultStepState.InProgress,
                 VerifyExistingVaultStepType.Password to VerifyExistingVaultStepState.Inactive,
             )
-        _uiState.update { it.copy(stepAndStates = stepAndStates) }
+        uiState.update { it.copy(stepAndStates = stepAndStates) }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -121,7 +120,7 @@ constructor(
                 }
             }
             .onEach { (innerState, errorMessage) ->
-                _uiState.update { it.copy(innerState = innerState, errorMessage = errorMessage) }
+                uiState.update { it.copy(innerState = innerState, errorMessage = errorMessage) }
             }
             .launchIn(viewModelScope)
     }
@@ -156,7 +155,7 @@ constructor(
                         VerifyExistingVaultStepType.Password -> password.isNotBlank()
                     }
 
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         stepAndStates = map,
                         textFieldHint = hint,
@@ -177,7 +176,7 @@ constructor(
     }
 
     private fun togglePasswordVisibility() {
-        _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+        uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
     }
 
     private fun clearInput() {
@@ -198,7 +197,7 @@ constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            _uiState.update { it.copy(activeStep = newStep) }
+            uiState.update { it.copy(activeStep = newStep) }
         }
     }
 
@@ -216,7 +215,7 @@ constructor(
                 return@launch
             }
             val newStep = uiState.value.stepAndStates.keys.elementAt(nextIndex)
-            _uiState.update { it.copy(activeStep = newStep) }
+            uiState.update { it.copy(activeStep = newStep) }
         }
     }
 
@@ -239,14 +238,14 @@ constructor(
         val password = passwordTextFieldState.text.toString()
         if (password.isBlank()) return
 
-        _uiState.update { it.copy(isLoading = true) }
+        uiState.update { it.copy(isLoading = true) }
 
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to verify vault password")
                 passwordInnerState.value = VsTextInputFieldInnerState.Error
                 passwordErrorMessage.value = StringResource(R.string.fast_vault_invalid_password)
-                _uiState.update { it.copy(isLoading = false) }
+                uiState.update { it.copy(isLoading = false) }
             }
         ) {
             val vault = vaultRepository.get(vaultId)
@@ -254,7 +253,7 @@ constructor(
                 passwordInnerState.value = VsTextInputFieldInnerState.Error
                 passwordErrorMessage.value =
                     StringResource(R.string.push_notification_vault_not_found)
-                _uiState.update { it.copy(isLoading = false) }
+                uiState.update { it.copy(isLoading = false) }
                 return@safeLaunch
             }
 
@@ -284,7 +283,7 @@ constructor(
                     passwordErrorMessage.value = UiText.DynamicString(result.message)
                 }
             }
-            _uiState.update { it.copy(isLoading = false) }
+            uiState.update { it.copy(isLoading = false) }
         }
     }
 

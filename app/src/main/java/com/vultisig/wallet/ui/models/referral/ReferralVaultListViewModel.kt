@@ -15,7 +15,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,8 +43,8 @@ constructor(
 ) : ViewModel() {
     private val vaultId: String = savedStateHandle.toRoute<Route.ReferralListVault>().vaultId
 
-    private val _state = MutableStateFlow(ReferralVaultListUiState())
-    val state: StateFlow<ReferralVaultListUiState> = _state.asStateFlow()
+    val state: StateFlow<ReferralVaultListUiState>
+        field = MutableStateFlow(ReferralVaultListUiState())
 
     init {
         loadVaults()
@@ -80,10 +79,10 @@ constructor(
                         )
                     }
 
-                _state.update { it.copy(vaults = vaultItems, error = null) }
+                state.update { it.copy(vaults = vaultItems, error = null) }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                _state.update { it.copy(error = e.message ?: "Failed to load vaults") }
+                state.update { it.copy(error = e.message ?: "Failed to load vaults") }
             }
         }
     }

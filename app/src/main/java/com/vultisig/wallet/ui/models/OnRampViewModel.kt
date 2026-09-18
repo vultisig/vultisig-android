@@ -12,7 +12,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -25,8 +25,8 @@ constructor(savedStateHandle: SavedStateHandle, private val vaultRepository: Vau
     private val vaultId: String = args.vaultId
     private val chainId: String = args.chainId
 
-    private val _banxaUrl = MutableStateFlow<String?>(null)
-    val banxaUrl = _banxaUrl.asStateFlow()
+    val banxaUrl: StateFlow<String?>
+        field = MutableStateFlow<String?>(null)
 
     fun openBanxaWebsite() {
         viewModelScope.launch {
@@ -57,18 +57,18 @@ constructor(savedStateHandle: SavedStateHandle, private val vaultRepository: Vau
                     )
 
                 // Set the URL to trigger the UI to open it
-                _banxaUrl.value = url
+                banxaUrl.value = url
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 // Default navigation for error
                 Timber.e(e, "Error opening Banxa website")
-                _banxaUrl.value = BANXA_URL
+                banxaUrl.value = BANXA_URL
             }
         }
     }
 
     fun onUrlOpened() {
-        _banxaUrl.value = null
+        banxaUrl.value = null
     }
 
     private fun getBuyURL(address: String, blockChainCode: String, coinType: String): String {

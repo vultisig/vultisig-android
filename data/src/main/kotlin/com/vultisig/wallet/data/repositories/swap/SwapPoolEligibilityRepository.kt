@@ -74,8 +74,8 @@ constructor(
     @Volatile private var lastRefresh: TimeMark? = null
     @Volatile private var lastRefreshAttempt: TimeMark? = null
 
-    private val _eligibilityVersion = MutableStateFlow(0)
-    override val eligibilityVersion: StateFlow<Int> = _eligibilityVersion.asStateFlow()
+    override val eligibilityVersion: StateFlow<Int>
+        field = MutableStateFlow(0)
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val isRefreshing = AtomicBoolean(false)
@@ -139,9 +139,9 @@ constructor(
             // a pair picked before the first fetch landed is re-checked (#4975). Later refreshes
             // keep version at 1 to avoid disrupting a displayed quote.
             if (
-                _eligibilityVersion.value == 0 && (thorPools.isNotEmpty() || mayaPools.isNotEmpty())
+                eligibilityVersion.value == 0 && (thorPools.isNotEmpty() || mayaPools.isNotEmpty())
             ) {
-                _eligibilityVersion.value = 1
+                eligibilityVersion.value = 1
             }
         }
     }
