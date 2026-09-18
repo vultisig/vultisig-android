@@ -162,7 +162,6 @@ private fun PreviewSignSubstrateDisplayView() {
                 chain = Chain.Polkadot,
                 decimals = 10,
                 ticker = "DOT",
-                ss58Encode = { _, _ -> "" },
             ),
         initiallyExpanded = true,
     )

@@ -10,7 +10,11 @@ import org.junit.jupiter.api.Test
 
 class SubstrateDappTransactionDecoderTest {
 
-    private fun decode(method: String, tip: String = "0x" + "00".repeat(16)) =
+    private fun decode(
+        method: String,
+        tip: String = "0x" + "00".repeat(16),
+        chain: Chain = Chain.Polkadot,
+    ) =
         SubstrateDappTransactionDecoder.decode(
             payload =
                 requireNotNull(
@@ -21,10 +25,9 @@ class SubstrateDappTransactionDecoderTest {
                             """"blockHash":"$BLOCK_HASH"}"""
                     )
                 ),
-            chain = Chain.Polkadot,
+            chain = chain,
             decimals = 10,
             ticker = "DOT",
-            ss58Encode = { accountId, chain -> "ss58(${chain.raw}):" + accountId.size },
         )
 
     @Test
@@ -33,8 +36,28 @@ class SubstrateDappTransactionDecoderTest {
 
         val transfer = tx.transfer.shouldNotBeNull()
         transfer.amount shouldBe BigInteger.valueOf(10_000_000_000)
-        transfer.recipient shouldBe "ss58(Polkadot):32"
+        transfer.recipient shouldBe "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5"
         tx.callIndex shouldBe "0x0503"
+    }
+
+    @Test
+    fun `the recipient is spelled under the chain's SS58 prefix`() {
+        decode("0x050300" + ALICE + "04", chain = Chain.Bittensor)
+            .transfer
+            .shouldNotBeNull()
+            .recipient shouldBe "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+    }
+
+    @Test
+    fun `a recipient that is not an Edwards point is still spelled out`() {
+        // Bob's sr25519 dev key: a valid AccountId a transfer can name, but not an ed25519 point,
+        // so WalletCore's AnyAddress route left the To row blank for it.
+        decode("0x050300" + BOB + "04").transfer.shouldNotBeNull().recipient shouldBe
+            "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3"
+        decode("0x050300" + BOB + "04", chain = Chain.Bittensor)
+            .transfer
+            .shouldNotBeNull()
+            .recipient shouldBe "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"
     }
 
     @Test
@@ -80,5 +103,6 @@ class SubstrateDappTransactionDecoderTest {
         const val GENESIS = "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3"
         const val BLOCK_HASH = "0x1f5a9d2c1b8e7f6a5d4c3b2a19087f6e5d4c3b2a19087f6e5d4c3b2a19087f6e"
         const val ALICE = "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"
+        const val BOB = "8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48"
     }
 }

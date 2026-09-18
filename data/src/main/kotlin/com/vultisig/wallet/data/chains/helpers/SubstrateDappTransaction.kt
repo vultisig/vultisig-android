@@ -5,10 +5,6 @@ import com.vultisig.wallet.data.models.payload.SubstrateSignerPayload
 import com.vultisig.wallet.data.utils.Numeric
 import java.math.BigDecimal
 import java.math.BigInteger
-import wallet.core.jni.AnyAddress
-import wallet.core.jni.CoinType
-import wallet.core.jni.PublicKey
-import wallet.core.jni.PublicKeyType
 
 /**
  * Semantic identifier of a decoded signer-payload row. The data layer stores this key (never an
@@ -59,22 +55,21 @@ object SubstrateDappTransactionDecoder {
     private val ss58PrefixByChain = mapOf(Chain.Polkadot to 0, Chain.Bittensor to 42)
 
     /**
-     * Reads the transfer (if the call is one) and the fields of [payload]. Throws when the call
-     * claims to be a transfer but does not decode — see [SubstrateTransferCallReader].
+     * Reads the transfer (if the call is one) and the fields of [payload]. A transfer whose bytes
+     * the reader cannot follow is flagged, not thrown — see [SubstrateTransferCallReader].
      */
     fun decode(
         payload: SubstrateSignerPayload,
         chain: Chain,
         decimals: Int,
         ticker: String,
-        ss58Encode: (ByteArray, Chain) -> String = ::walletCoreSs58,
     ): SubstrateDappTx {
         val call = payload.methodBytes()
         val reading = SubstrateTransferCallReader.readForDisplay(call)
         val transfer =
             (reading as? SubstrateCallReading.Transfer)?.call?.let {
                 SubstrateDappTransfer(
-                    recipient = ss58Encode(it.destination, chain),
+                    recipient = Ss58.encode(it.destination, ss58PrefixByChain.getValue(chain)),
                     amount = it.amount,
                 )
             }
@@ -109,15 +104,6 @@ object SubstrateDappTransactionDecoder {
             rawJson = payload.rawJson,
         )
     }
-
-    /** The SS58 spelling of a 32-byte AccountId under [chain]'s prefix, via WalletCore. */
-    fun walletCoreSs58(accountId: ByteArray, chain: Chain): String =
-        AnyAddress(
-                PublicKey(accountId, PublicKeyType.ED25519),
-                CoinType.POLKADOT,
-                ss58PrefixByChain.getValue(chain),
-            )
-            .description()
 
     private fun formatPlanck(value: BigInteger, decimals: Int, ticker: String): String =
         "${BigDecimal(value).movePointLeft(decimals).stripTrailingZeros().toPlainString()} $ticker"
