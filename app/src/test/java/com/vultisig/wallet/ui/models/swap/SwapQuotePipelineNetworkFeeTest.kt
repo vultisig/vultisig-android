@@ -123,6 +123,82 @@ internal class SwapQuotePipelineNetworkFeeTest {
         }
 
     @Test
+    fun `prices the EVM aggregator network fee at the gas-limit override`() = runTest {
+        // SwapTransactionBuilder prices the review sheet at the override; the form must state the
+        // same maximum, so the override replaces the route gas here too.
+        val ethCoin = coin(Chain.Ethereum)
+        val rebased = gasResult(ethCoin, BigInteger.valueOf(10_000_000))
+        coEvery {
+            swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), routeGas = 1_000_000L)
+        } returns rebased
+
+        val outcome =
+            pipeline.resolveNetworkFee(
+                result = success(oneInchQuote(ethCoin, routeGas = 286_146L)),
+                src = sendSrc(ethCoin),
+                vaultId = "vault",
+                gasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                gasFeeChain = Chain.Ethereum,
+                networkFeeTokenValue = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                gasLimitOverride = 1_000_000L,
+            )
+
+        val set = assertIs<NetworkFeeUpdate.Set>(outcome.networkFee)
+        assertEquals(BigInteger.valueOf(10_000_000), set.tokenValue.value)
+        coVerify(exactly = 0) {
+            swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 286_146L)
+        }
+    }
+
+    @Test
+    fun `ignores a non-positive gas-limit override and keeps the route gas`() = runTest {
+        // Mirrors the builder: only a positive override replaces the aggregator's estimate.
+        val ethCoin = coin(Chain.Ethereum)
+        coEvery {
+            swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), routeGas = 286_146L)
+        } returns gasResult(ethCoin, BigInteger.valueOf(2_861_460))
+
+        val outcome =
+            pipeline.resolveNetworkFee(
+                result = success(oneInchQuote(ethCoin, routeGas = 286_146L)),
+                src = sendSrc(ethCoin),
+                vaultId = "vault",
+                gasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                gasFeeChain = Chain.Ethereum,
+                networkFeeTokenValue = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                gasLimitOverride = 0L,
+            )
+
+        val set = assertIs<NetworkFeeUpdate.Set>(outcome.networkFee)
+        assertEquals(BigInteger.valueOf(2_861_460), set.tokenValue.value)
+    }
+
+    @Test
+    fun `restores the gas-pass estimate when no re-base applies to an EVM aggregator quote`() =
+        runTest {
+            // The limit landed back on the default (a cleared override, or a route whose gas the
+            // floor swallows): the fee re-based for the previous limit must not linger.
+            val ethCoin = coin(Chain.Ethereum)
+            val baseline = gasResult(ethCoin, BigInteger.valueOf(6_000_000)).estimated
+            coEvery { swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), any()) } returns
+                null
+
+            val outcome =
+                pipeline.resolveNetworkFee(
+                    result = success(oneInchQuote(ethCoin, routeGas = 550_000L)),
+                    src = sendSrc(ethCoin),
+                    vaultId = "vault",
+                    gasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
+                    gasFeeChain = Chain.Ethereum,
+                    networkFeeTokenValue = TokenValue(BigInteger.valueOf(10_000_000), ethCoin),
+                    evmBaselineEstimate = baseline,
+                )
+
+            val set = assertIs<NetworkFeeUpdate.Set>(outcome.networkFee)
+            assertEquals(BigInteger.valueOf(6_000_000), set.tokenValue.value)
+        }
+
+    @Test
     fun `leaves the network fee untouched for a Solana aggregator quote`() = runTest {
         val solCoin = coin(Chain.Solana)
         val outcome =

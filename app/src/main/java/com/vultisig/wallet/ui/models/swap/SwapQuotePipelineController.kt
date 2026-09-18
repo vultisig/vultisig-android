@@ -44,6 +44,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
@@ -84,6 +85,7 @@ constructor(
     @Assisted("selectedDst") private val selectedDst: StateFlow<SendSrc?>,
     @Assisted private val referralCode: MutableStateFlow<String?>,
     @Assisted private val slippageBps: StateFlow<Int?>,
+    @Assisted private val gasLimitOverride: StateFlow<Long?>,
     @Assisted private val externalRecipient: StateFlow<String?>,
     @Assisted private val srcAmountState: TextFieldState,
     @Assisted private val vaultId: () -> String?,
@@ -105,6 +107,7 @@ constructor(
             @Assisted("selectedDst") selectedDst: StateFlow<SendSrc?>,
             referralCode: MutableStateFlow<String?>,
             slippageBps: StateFlow<Int?>,
+            gasLimitOverride: StateFlow<Long?>,
             externalRecipient: StateFlow<String?>,
             srcAmountState: TextFieldState,
             vaultId: () -> String?,
@@ -147,9 +150,10 @@ constructor(
 
     private var refreshQuoteJob: Job? = null
 
-    // The input and ranked candidate set of the last applied quote, kept so a Select-route pick can
-    // rebuild and apply another already-fetched candidate without a network round-trip. Cleared on
-    // every reset/supersede path — a pick must never apply a quote for stale input.
+    // The input and applied result (with its ranked candidate set) of the last applied quote, kept
+    // so a Select-route pick can rebuild and apply another already-fetched candidate — and a
+    // gas-limit change can re-price the applied one — without a network round-trip. Cleared on
+    // every reset/supersede path — neither must ever act on a quote for stale input.
     private var routeContext: RouteContext? = null
 
     // The in-flight manual route pick. The quote pipeline's collectLatest serializes its own
@@ -164,7 +168,10 @@ constructor(
     // owns its fee, so a writer resuming on a stale ticket drops its outcome.
     private var quoteApplyGeneration = 0
 
-    private data class RouteContext(val input: QuoteInput, val ranked: List<BestQuote>)
+    private data class RouteContext(
+        val input: QuoteInput,
+        val applied: SwapQuotePipelineResult.Success,
+    )
 
     // Suppresses the quote-refresh timer while the form isn't the foreground screen. The form's
     // scope (= viewModelScope) stays alive on the back stack once the flow proceeds to
@@ -211,6 +218,7 @@ constructor(
         warmEligibilityCache()
         calculateGas()
         observeQuotePipeline()
+        observeGasLimitOverride()
         collectTotalFee()
     }
 
@@ -509,7 +517,7 @@ constructor(
         val (src, dst) = input.address
 
         val generation = ++quoteApplyGeneration
-        routeContext = RouteContext(input, result.rankedQuotes)
+        routeContext = RouteContext(input, result)
         val routeOptions =
             buildRouteOptions(
                 ranked = result.rankedQuotes,
@@ -560,6 +568,7 @@ constructor(
             )
         }
 
+        val pricedGasLimitOverride = gasLimitOverride.value
         val networkFeeOutcome =
             swapQuotePipeline.resolveNetworkFee(
                 result = result,
@@ -569,14 +578,54 @@ constructor(
                 gasFeeChain = gasFeeChain.value,
                 networkFeeTokenValue = estimatedNetworkFeeTokenValue.value,
                 evmBaselineEstimate = evmBaselineEstimate,
+                gasLimitOverride = pricedGasLimitOverride,
             )
         // resolveNetworkFee suspends (plan fetch, balance read). Another writer — a manual pick, a
         // fresh pipeline result, a reset — may own the quote on screen by now, and it arms its own
         // fee and timer; this outcome belongs to a quote that is no longer displayed.
         if (generation != quoteApplyGeneration) return
         applyNetworkFeeOutcome(networkFeeOutcome)
+        // A gas-limit change that landed while this fee resolved re-priced the quote on its own
+        // coroutine, which this outcome may just have overwritten with the older limit — price it
+        // once more at the limit now set.
+        if (pricedGasLimitOverride != gasLimitOverride.value) repriceNetworkFee()
 
         quoteState.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
+    }
+
+    /**
+     * Re-prices the network fee of the quote on screen whenever the EVM gas-limit override changes,
+     * so the form states the same maximum the review sheet will build with (#4858). Only an
+     * EVM-aggregator route consumes the override, and only the fee moves — the route, rate and
+     * discounts are untouched, so nothing is re-fetched. The ticket taken by the last quote writer
+     * still owns the fee: a re-price that resumes on a stale ticket drops its outcome, the same as
+     * any other writer.
+     */
+    private fun observeGasLimitOverride() {
+        scope.safeLaunch(onError = { Timber.e(it, "observeGasLimitOverride") }) {
+            // The value in force when the quote applied was priced by applyQuoteResult itself.
+            gasLimitOverride.drop(1).collectLatest { repriceNetworkFee() }
+        }
+    }
+
+    private suspend fun repriceNetworkFee() {
+        val ctx = routeContext ?: return
+        if (quoteState.honorsGasLimitOverride.value != true) return
+        val generation = quoteApplyGeneration
+        val (src, _) = ctx.input.address
+        val outcome =
+            swapQuotePipeline.resolveNetworkFee(
+                result = ctx.applied,
+                src = src,
+                vaultId = vaultId(),
+                gasFee = gasFee.value,
+                gasFeeChain = gasFeeChain.value,
+                networkFeeTokenValue = estimatedNetworkFeeTokenValue.value,
+                evmBaselineEstimate = evmBaselineEstimate,
+                gasLimitOverride = gasLimitOverride.value,
+            )
+        if (generation != quoteApplyGeneration) return
+        applyNetworkFeeOutcome(outcome)
     }
 
     /**
@@ -658,7 +707,8 @@ constructor(
     fun selectRoute(provider: SwapProvider) {
         val ctx = routeContext ?: return
         if (quoteState.provider == provider) return
-        val candidate = ctx.ranked.firstOrNull { it.candidate.provider == provider } ?: return
+        val ranked = ctx.applied.rankedQuotes
+        val candidate = ranked.firstOrNull { it.candidate.provider == provider } ?: return
         // A row that lapsed while the sheet was open can no longer be signed at its quoted rate:
         // don't apply it (Swap would stay enabled against an expired quote) — refresh instead, so
         // a fresh candidate set replaces the whole list.
@@ -681,7 +731,7 @@ constructor(
                         srcTokenValue = srcTokenValue,
                         tokenValue = tokenValue,
                         currentDiscountInfo = uiState.value.discountInfo,
-                        rankedQuotes = ctx.ranked,
+                        rankedQuotes = ranked,
                     )
                 // buildSuccess suspends (discount checks); a refresh or reset may have replaced or
                 // cleared the context meanwhile. That newer state wins — drop the pick.

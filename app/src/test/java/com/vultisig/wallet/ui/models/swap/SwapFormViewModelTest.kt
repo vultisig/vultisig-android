@@ -315,6 +315,7 @@ internal class SwapFormViewModelTest {
                 selectedDst: StateFlow<SendSrc?>,
                 referralCode: MutableStateFlow<String?>,
                 slippageBps: StateFlow<Int?>,
+                gasLimitOverride: StateFlow<Long?>,
                 externalRecipient: StateFlow<String?>,
                 srcAmountState: TextFieldState,
                 vaultId: () -> String?,
@@ -342,6 +343,7 @@ internal class SwapFormViewModelTest {
                     selectedDst = selectedDst,
                     referralCode = referralCode,
                     slippageBps = slippageBps,
+                    gasLimitOverride = gasLimitOverride,
                     externalRecipient = externalRecipient,
                     srcAmountState = srcAmountState,
                     vaultId = vaultId,
@@ -2604,6 +2606,88 @@ internal class SwapFormViewModelTest {
             // selectedSrc changes again.
             assertEquals("0.001 ETH", state.feeBreakdown.networkFee)
             assertEquals("$2.00", state.feeBreakdown.networkFeeFiat)
+        }
+
+    @Test
+    fun `re-prices the network fee row at the gas-limit override without re-fetching`() =
+        runTest(mainDispatcher) {
+            // The review sheet prices an EVM-aggregator swap at the override; the form's row must
+            // state the same maximum, and move again when the override is cleared — off the quote
+            // already on screen, not a fresh fetch.
+            val overrideBond = TokenValue(BigInteger("10000000000000000"), ETH_COIN)
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 0L)
+            } returns null
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 1_000_000L)
+            } returns
+                GasCalculationResult(
+                    gasFee = overrideBond,
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.01 ETH",
+                            formattedFiatValue = "$20.00",
+                            tokenValue = overrideBond,
+                            fiatValue = FiatValue(BigDecimal("20.00"), "USD"),
+                        ),
+                    chain = Chain.Ethereum,
+                )
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.LIFI)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote = createLiFiQuote(),
+                    provider = SwapProvider.LIFI,
+                    providerUiText = R.string.swap_for_provider_li_fi.asUiText(),
+                )
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress(), btcAddress()),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = BTC_COIN.id,
+                )
+            advanceUntilIdle()
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.5")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+            assertEquals("0.001 ETH", vm.uiState.value.feeBreakdown.networkFee)
+
+            vm.setGasLimit(1_000_000L)
+            advanceUntilIdle()
+
+            assertEquals("0.01 ETH", vm.uiState.value.feeBreakdown.networkFee)
+            assertEquals("$20.00", vm.uiState.value.feeBreakdown.networkFeeFiat)
+
+            vm.setGasLimit(null)
+            advanceUntilIdle()
+
+            assertEquals("0.001 ETH", vm.uiState.value.feeBreakdown.networkFee)
+            coVerify(exactly = 1) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
         }
 
     @Test
