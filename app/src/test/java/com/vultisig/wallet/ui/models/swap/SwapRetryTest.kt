@@ -43,6 +43,13 @@ internal class SwapRetryTest {
     }
 
     @Test
+    fun `a dApp-authored swap is never retried through the form`() {
+        // The done screen hides the button from the live payload's dappMetadata; the row carries
+        // the same verdict so History agrees with it once the payload is gone.
+        row(isDappRequest = true).toSwapRetry(listOf(eth, btc)).shouldBeNull()
+    }
+
+    @Test
     fun `a legacy row without a raw amount offers no retry`() {
         // Its display amount is abbreviated and locale-formatted; guessing a number from it could
         // stage a trade a thousand times the size of the one that failed.
@@ -72,6 +79,7 @@ internal class SwapRetryTest {
         fromContractAddress: String = "",
         fromAmountDecimal: String = "0.5",
         isLimitOrder: Boolean = false,
+        isDappRequest: Boolean = false,
     ) =
         SwapTransactionHistoryData(
             fromToken = fromToken,
@@ -89,6 +97,7 @@ internal class SwapRetryTest {
             isLimitOrder = isLimitOrder,
             fromContractAddress = fromContractAddress,
             fromAmountDecimal = fromAmountDecimal,
+            isDappRequest = isDappRequest,
         )
 
     private fun token(ticker: String, contractAddress: String) =

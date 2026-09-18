@@ -29,11 +29,12 @@ data class SwapRetry(
 /**
  * Resolves a history row to the retry it can offer against the vault's current [coins], or null
  * when the button must stay hidden: a limit order (its terms live in a memo the form does not
- * restore), a legacy row without a machine-readable amount, or a side whose token the vault no
- * longer holds — or holds twice, where picking one would be guessing which asset to sell.
+ * restore), a dApp-authored swap (its terms were the dApp's, not the form's), a legacy row without
+ * a machine-readable amount, or a side whose token the vault no longer holds — or holds twice,
+ * where picking one would be guessing which asset to sell.
  */
 internal fun SwapTransactionHistoryData.toSwapRetry(coins: List<Coin>): SwapRetry? {
-    if (isLimitOrder) return null
+    if (isLimitOrder || isDappRequest) return null
     val amount = fromAmountDecimal.takeIf { it.isNotEmpty() } ?: return null
     val src = coins.singleOrNull { it.matches(fromChain, fromToken, fromContractAddress) }
     val dst = coins.singleOrNull { it.matches(toChain, toToken, toContractAddress) }

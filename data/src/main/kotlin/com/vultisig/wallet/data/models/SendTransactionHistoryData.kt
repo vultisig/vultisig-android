@@ -130,6 +130,14 @@ data class SwapTransactionHistoryData(
      * therefore offer no retry — a guessed amount is worse than none.
      */
     val fromAmountDecimal: String = "",
+    /**
+     * Whether a dApp, not the swap form, authored this swap (the keysign carried `dappMetadata`).
+     * Its terms — route, recipient, slippage — were the dApp's, so the row never offers to try it
+     * again through the form; the done screen makes the same call from the live payload. Default
+     * `false` so legacy rows stay readable (no Room migration) and, since only a co-signed dApp
+     * keysign can set it, an in-app swap is never mistaken for one.
+     */
+    val isDappRequest: Boolean = false,
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(

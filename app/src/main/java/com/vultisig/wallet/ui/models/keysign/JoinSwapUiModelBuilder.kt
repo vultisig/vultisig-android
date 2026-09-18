@@ -158,8 +158,6 @@ constructor(
             )
         val networkGasFeeFiatValue = estimatedNetworkGasFee.fiatValue
 
-        val vaultName = vault.name
-
         val provider =
             when (swapPayload) {
                 is SwapPayload.ThorChain -> SwapProvider.THORCHAIN.getSwapProviderId()
@@ -361,14 +359,7 @@ constructor(
                             feeRow.vultDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
                     )
 
-                JoinKeysignVerifyResult(
-                    verifyUiModel =
-                        VerifyUiModel.Swap(
-                            VerifySwapUiModel(tx = swapTransaction, vaultName = vaultName)
-                        ),
-                    transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction),
-                    transactionHistoryData = mapSwapTransactionToHistoryData(swapTransaction),
-                )
+                swapResult(swapTransaction, vault, payload)
             }
 
             is SwapPayload.ThorChain -> {
@@ -385,14 +376,7 @@ constructor(
                             providerFeeToken = srcToken,
                             currency = currency,
                         )
-                    return JoinKeysignVerifyResult(
-                        verifyUiModel =
-                            VerifyUiModel.Swap(
-                                VerifySwapUiModel(tx = lpAddUiModel, vaultName = vaultName)
-                            ),
-                        transactionTypeUiModel = TransactionTypeUiModel.Swap(lpAddUiModel),
-                        transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel),
-                    )
+                    return swapResult(lpAddUiModel, vault, payload)
                 }
                 // Re-fetching with no discount quoted the co-signer the full 50 bps while the
                 // initiator had signed a discounted one, so the two devices disagreed on the
@@ -453,14 +437,7 @@ constructor(
                         vultBps = thorVultBps,
                         priceImpact = formatPriceImpact(swapPayload.data.priceImpact),
                     )
-                JoinKeysignVerifyResult(
-                    verifyUiModel =
-                        VerifyUiModel.Swap(
-                            VerifySwapUiModel(tx = swapTransactionUiModel, vaultName = vaultName)
-                        ),
-                    transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel),
-                    transactionHistoryData = mapSwapTransactionToHistoryData(swapTransactionUiModel),
-                )
+                swapResult(swapTransactionUiModel, vault, payload)
             }
 
             is SwapPayload.MayaChain -> {
@@ -477,14 +454,7 @@ constructor(
                             providerFeeToken = srcToken,
                             currency = currency,
                         )
-                    return JoinKeysignVerifyResult(
-                        verifyUiModel =
-                            VerifyUiModel.Swap(
-                                VerifySwapUiModel(tx = lpAddUiModel, vaultName = vaultName)
-                            ),
-                        transactionTypeUiModel = TransactionTypeUiModel.Swap(lpAddUiModel),
-                        transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel),
-                    )
+                    return swapResult(lpAddUiModel, vault, payload)
                 }
                 // Re-fetching with no discount quoted the co-signer the full 50 bps while the
                 // initiator had signed a discounted one, so the two devices disagreed on the
@@ -536,14 +506,7 @@ constructor(
                         vultBps = mayaVultBps,
                         priceImpact = formatPriceImpact(swapPayload.data.priceImpact),
                     )
-                JoinKeysignVerifyResult(
-                    verifyUiModel =
-                        VerifyUiModel.Swap(
-                            VerifySwapUiModel(tx = swapTransactionUiModel, vaultName = vaultName)
-                        ),
-                    transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel),
-                    transactionHistoryData = mapSwapTransactionToHistoryData(swapTransactionUiModel),
-                )
+                swapResult(swapTransactionUiModel, vault, payload)
             }
 
             is SwapPayload.SwapKit -> {
@@ -617,17 +580,28 @@ constructor(
                         providerLabel = providerLabel,
                         swapFeeHidden = swapFeeHidden,
                     )
-                JoinKeysignVerifyResult(
-                    verifyUiModel =
-                        VerifyUiModel.Swap(
-                            VerifySwapUiModel(tx = swapTransactionUiModel, vaultName = vaultName)
-                        ),
-                    transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel),
-                    transactionHistoryData = mapSwapTransactionToHistoryData(swapTransactionUiModel),
-                )
+                swapResult(swapTransactionUiModel, vault, payload)
             }
         }
     }
+
+    /**
+     * The three views every branch of [build] hands back for one swap model. The history row also
+     * records whether a dApp authored the swap, so a failed one is never offered to try again
+     * through the form — its route and terms were the dApp's, not the form's (#5918).
+     */
+    private fun swapResult(
+        tx: SwapTransactionUiModel,
+        vault: Vault,
+        payload: KeysignPayload,
+    ): JoinKeysignVerifyResult =
+        JoinKeysignVerifyResult(
+            verifyUiModel = VerifyUiModel.Swap(VerifySwapUiModel(tx = tx, vaultName = vault.name)),
+            transactionTypeUiModel = TransactionTypeUiModel.Swap(tx),
+            transactionHistoryData =
+                mapSwapTransactionToHistoryData(tx)
+                    .copy(isDappRequest = payload.dappMetadata != null),
+        )
 
     private suspend fun buildSwapUiModel(
         srcToken: Coin,
