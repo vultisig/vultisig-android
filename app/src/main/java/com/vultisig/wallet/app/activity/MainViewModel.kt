@@ -148,7 +148,15 @@ constructor(
                             )
                         is KeysignTransactionSummary.DappTransaction ->
                             summary.summary?.let { UiText.DynamicString(it) }
-                                ?: UiText.StringResource(R.string.ripple_dapp_transaction)
+                                ?: when (summary.chain) {
+                                    Chain.Ripple ->
+                                        UiText.StringResource(R.string.ripple_dapp_transaction)
+                                    else ->
+                                        UiText.FormattedText(
+                                            R.string.substrate_dapp_transaction,
+                                            listOf(summary.chain.raw),
+                                        )
+                                }
                         null -> UiText.Empty
                     }
                 foregroundNotification.value =

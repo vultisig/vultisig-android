@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.substrateDappPayload
 import com.vultisig.wallet.data.models.tokenLogoRes
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -836,6 +837,12 @@ constructor(
         if (payload?.signBitcoin != null) {
             // PSBT co-signing: only the dApp orchestrating the session can assemble
             // the final signed transaction, so the wallet must never broadcast.
+            return true
+        }
+        if (payload?.substrateDappPayload != null) {
+            // Substrate `signPayload`: the dApp wraps the raw signature around its own call and
+            // submits it; there is no extrinsic here to compile or broadcast. The extension does
+            // not set the wire flag on this route, so it has to be inferred from the memo shape.
             return true
         }
         val flag = payload?.skipBroadcast ?: false

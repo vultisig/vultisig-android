@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SubstrateSignerPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
@@ -30,13 +31,14 @@ interface KeysignPayloadProtoMapper : MapperFunc<KeysignPayloadProto, KeysignPay
 internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayloadProtoMapper {
 
     override fun invoke(from: KeysignPayloadProto): KeysignPayload {
+        val coin = requireNotNull(from.coin).toCoin()
         return KeysignPayload(
             vaultLocalPartyID = from.vaultLocalPartyId,
             vaultPublicKeyECDSA = from.vaultPublicKeyEcdsa,
             toAddress = from.toAddress,
-            toAmount = BigInteger(from.toAmount),
+            toAmount = from.readToAmount(coin.chain),
             memo = from.memo,
-            coin = requireNotNull(from.coin).toCoin(),
+            coin = coin,
             libType = SigningLibType.from(from.libType),
             utxos =
                 from.utxoInfo
@@ -331,6 +333,19 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     ?.takeUnless { it.isEmpty },
         )
     }
+
+    /**
+     * A Substrate dApp call that is not a Balances transfer has no amount to review, and the
+     * extension sends "" for it rather than a zero the signed bytes do not agree with. That is the
+     * only payload allowed to omit the amount: every other one keeps refusing a wire amount that is
+     * not a number, so a malformed send is not signed over a zero it never stated.
+     */
+    private fun KeysignPayloadProto.readToAmount(chain: Chain): BigInteger =
+        if (toAmount.isEmpty() && SubstrateSignerPayload.fromKeysign(chain, memo) != null) {
+            BigInteger.ZERO
+        } else {
+            BigInteger(toAmount)
+        }
 
     private fun CoinProto.toCoin(): Coin =
         Coin(

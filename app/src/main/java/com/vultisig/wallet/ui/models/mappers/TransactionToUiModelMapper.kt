@@ -6,10 +6,12 @@ import com.vultisig.wallet.data.blockchain.tron.TRON_WITHDRAW_EXPIRE_UNFREEZE_ME
 import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
 import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.RippleDestinationTag
+import com.vultisig.wallet.data.chains.helpers.SubstrateDappTransactionDecoder
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.SubstrateSignerPayload
 import com.vultisig.wallet.data.models.rippleTrustSetDisplay
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -110,6 +112,17 @@ constructor(
                 from.signRipple
                     ?.takeIf { it.isNotBlank() }
                     ?.let { RippleDappTransactionDecoder.decode(it) },
+            signSubstrate =
+                from.signSubstrate
+                    ?.let { SubstrateSignerPayload.fromMemo(it) }
+                    ?.let {
+                        SubstrateDappTransactionDecoder.decode(
+                            payload = it,
+                            chain = from.token.chain,
+                            decimals = from.token.decimal,
+                            ticker = from.token.ticker,
+                        )
+                    },
             networkFeeFiatValue = from.estimatedFee,
             networkFeeTokenValue = from.totalGas,
         )
