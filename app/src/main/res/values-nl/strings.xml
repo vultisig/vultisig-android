@@ -1344,6 +1344,8 @@
     <string name="substrate_field_transaction_version">Transactieversie</string>
     <string name="substrate_field_genesis_hash">Genesis-hash</string>
     <string name="substrate_field_block_hash">Blokhash</string>
+    <string name="substrate_field_metadata_hash_mode">Metadata-hashmodus</string>
+    <string name="substrate_field_metadata_hash">Metadata-hash</string>
     <string name="substrate_transfer_unreadable">Deze Balances-aanroep kon niet worden gedecodeerd. Controleer de aanroepgegevens voordat je ondertekent.</string>
     <string name="sui_sender">Van</string>
     <string name="sui_gas_budget">Gasbudget: %1$s SUI</string>

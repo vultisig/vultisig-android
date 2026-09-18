@@ -132,6 +132,9 @@ private val SubstrateDappTxFieldKey.labelRes: Int
                 R.string.substrate_field_transaction_version
             SubstrateDappTxFieldKey.GENESIS_HASH -> R.string.substrate_field_genesis_hash
             SubstrateDappTxFieldKey.BLOCK_HASH -> R.string.substrate_field_block_hash
+            SubstrateDappTxFieldKey.METADATA_HASH_MODE ->
+                R.string.substrate_field_metadata_hash_mode
+            SubstrateDappTxFieldKey.METADATA_HASH -> R.string.substrate_field_metadata_hash
         }
 
 private val rowModifier: Modifier

@@ -14,6 +14,7 @@ class SubstrateDappTransactionDecoderTest {
         method: String,
         tip: String = "0x" + "00".repeat(16),
         chain: Chain = Chain.Polkadot,
+        extensions: String = "",
     ) =
         SubstrateDappTransactionDecoder.decode(
             payload =
@@ -22,7 +23,7 @@ class SubstrateDappTransactionDecoderTest {
                         """{"method":"$method","genesisHash":"$GENESIS","era":"0xf502",""" +
                             """"nonce":"0x00000047","specVersion":"0x000f4ef8",""" +
                             """"transactionVersion":"0x0000001a","tip":"$tip",""" +
-                            """"blockHash":"$BLOCK_HASH"}"""
+                            """"blockHash":"$BLOCK_HASH"$extensions}"""
                     )
                 ),
             chain = chain,
@@ -85,9 +86,8 @@ class SubstrateDappTransactionDecoderTest {
     fun `every signed field is listed, with the tip in the chain's unit`() {
         val tx = decode("0x0000", tip = "0x0000000000000000000000000012d687")
 
-        tx.fields.map { it.key } shouldBe SubstrateDappTxFieldKey.entries
-        tx.fields.associate { it.key to it.value } shouldBe
-            mapOf(
+        tx.fields.map { it.key to it.value } shouldBe
+            listOf(
                 SubstrateDappTxFieldKey.CALL_DATA to "0x0000",
                 SubstrateDappTxFieldKey.NONCE to "71",
                 SubstrateDappTxFieldKey.TIP to "0.0001234567 DOT",
@@ -99,10 +99,53 @@ class SubstrateDappTransactionDecoderTest {
             )
     }
 
+    @Test
+    fun `a CheckMetadataHash payload lists the mode and the hash it signs`() {
+        val tx =
+            decode(
+                "0x0000",
+                extensions =
+                    ""","signedExtensions":["CheckMortality","CheckMetadataHash"],""" +
+                        """"mode":1,"metadataHash":"$METADATA_HASH"""",
+            )
+
+        tx.fields.takeLast(2).map { it.key to it.value } shouldBe
+            listOf(
+                SubstrateDappTxFieldKey.METADATA_HASH_MODE to "1",
+                SubstrateDappTxFieldKey.METADATA_HASH to METADATA_HASH,
+            )
+    }
+
+    @Test
+    fun `a CheckMetadataHash payload under mode 0 lists the mode and no hash`() {
+        val tx =
+            decode(
+                "0x0000",
+                extensions =
+                    ""","signedExtensions":["CheckMetadataHash"],"mode":0,"metadataHash":null""",
+            )
+
+        tx.fields.last().key shouldBe SubstrateDappTxFieldKey.METADATA_HASH_MODE
+        tx.fields.last().value shouldBe "0"
+        tx.fields.none { it.key == SubstrateDappTxFieldKey.METADATA_HASH } shouldBe true
+    }
+
+    @Test
+    fun `a payload without the extension lists neither`() {
+        val tx = decode("0x0000", extensions = ""","signedExtensions":["CheckMortality"]""")
+
+        tx.fields.none {
+            it.key == SubstrateDappTxFieldKey.METADATA_HASH_MODE ||
+                it.key == SubstrateDappTxFieldKey.METADATA_HASH
+        } shouldBe true
+    }
+
     private companion object {
         const val GENESIS = "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3"
         const val BLOCK_HASH = "0x1f5a9d2c1b8e7f6a5d4c3b2a19087f6e5d4c3b2a19087f6e5d4c3b2a19087f6e"
         const val ALICE = "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"
         const val BOB = "8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48"
+        const val METADATA_HASH =
+            "0x8b2b9e9f1f3a3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5"
     }
 }

@@ -1349,6 +1349,8 @@
     <string name="substrate_field_transaction_version">Transaktionsversion</string>
     <string name="substrate_field_genesis_hash">Genesis-Hash</string>
     <string name="substrate_field_block_hash">Block-Hash</string>
+    <string name="substrate_field_metadata_hash_mode">Metadaten-Hash-Modus</string>
+    <string name="substrate_field_metadata_hash">Metadaten-Hash</string>
     <string name="substrate_transfer_unreadable">Dieser Balances-Aufruf konnte nicht dekodiert werden. Prüfen Sie die Aufrufdaten vor dem Unterschreiben.</string>
     <string name="sui_sender">Von</string>
     <string name="sui_gas_budget">Gas-Budget: %1$s SUI</string>

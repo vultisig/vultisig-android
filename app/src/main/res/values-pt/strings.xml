@@ -1349,6 +1349,8 @@
     <string name="substrate_field_transaction_version">Versão da transação</string>
     <string name="substrate_field_genesis_hash">Hash de génese</string>
     <string name="substrate_field_block_hash">Hash do bloco</string>
+    <string name="substrate_field_metadata_hash_mode">Modo de hash de metadados</string>
+    <string name="substrate_field_metadata_hash">Hash de metadados</string>
     <string name="substrate_transfer_unreadable">Não foi possível descodificar esta chamada Balances. Verifique os dados da chamada antes de assinar.</string>
     <string name="sui_sender">De</string>
     <string name="sui_gas_budget">Orçamento de gás: %1$s SUI</string>

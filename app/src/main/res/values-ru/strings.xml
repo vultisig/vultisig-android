@@ -1354,6 +1354,8 @@
     <string name="substrate_field_transaction_version">Версия транзакции</string>
     <string name="substrate_field_genesis_hash">Genesis-хэш</string>
     <string name="substrate_field_block_hash">Хэш блока</string>
+    <string name="substrate_field_metadata_hash_mode">Режим хэша метаданных</string>
+    <string name="substrate_field_metadata_hash">Хэш метаданных</string>
     <string name="substrate_transfer_unreadable">Не удалось декодировать этот вызов Balances. Проверьте данные вызова перед подписанием.</string>
     <string name="sui_sender">От</string>
     <string name="sui_gas_budget">Бюджет газа: %1$s SUI</string>

@@ -1353,6 +1353,8 @@
     <string name="substrate_field_transaction_version">Verzija transakcije</string>
     <string name="substrate_field_genesis_hash">Genesis hash</string>
     <string name="substrate_field_block_hash">Hash bloka</string>
+    <string name="substrate_field_metadata_hash_mode">Način rada hasha metapodataka</string>
+    <string name="substrate_field_metadata_hash">Hash metapodataka</string>
     <string name="substrate_transfer_unreadable">Ovaj Balances poziv nije bilo moguće dekodirati. Provjerite podatke poziva prije potpisivanja.</string>
     <string name="sui_sender">Od</string>
     <string name="sui_gas_budget">Proračun za gas: %1$s SUI</string>
