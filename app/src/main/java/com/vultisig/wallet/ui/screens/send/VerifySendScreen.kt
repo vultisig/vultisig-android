@@ -305,7 +305,19 @@ private fun VerifySendConsents(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        if (state.transaction.isRippleTrustSet) {
+        if (state.transaction.signRipple != null) {
+            // A dApp XRPL tx has no native recipient/amount to attest to, so show a
+            // single "reviewed the details" consent instead of the address/amount
+            // pair, which would ask the co-signer to confirm values that aren't
+            // what's being signed. Checked before isRippleTrustSet: a dApp TrustSet
+            // still carries signRipple, and hasAllConsents gates on signRipple first,
+            // so the checkbox it requires must be the one rendered here too.
+            VsCheckField(
+                title = stringResource(R.string.verify_transaction_consent_dapp_transaction),
+                isChecked = state.consentDappTransaction,
+                onCheckedChange = onConsentDappTransaction,
+            )
+        } else if (state.transaction.isRippleTrustSet) {
             VsCheckField(
                 title = stringResource(R.string.ripple_trust_line_issuer_check),
                 isChecked = state.consentIssuer,
@@ -316,16 +328,6 @@ private fun VerifySendConsents(
                 title = stringResource(R.string.ripple_trust_line_limit_check),
                 isChecked = state.consentLimit,
                 onCheckedChange = onConsentLimit,
-            )
-        } else if (state.transaction.signRipple != null) {
-            // A dApp XRPL tx has no native recipient/amount to attest to, so show a
-            // single "reviewed the details" consent instead of the address/amount
-            // pair, which would ask the co-signer to confirm values that aren't
-            // what's being signed.
-            VsCheckField(
-                title = stringResource(R.string.verify_transaction_consent_dapp_transaction),
-                isChecked = state.consentDappTransaction,
-                onCheckedChange = onConsentDappTransaction,
             )
         } else {
             VsCheckField(
