@@ -102,6 +102,32 @@ internal class JoinSwapRecipientTest {
     }
 
     @Test
+    fun `a THORChain memo is unreadable when the vault's own address cannot be derived`() =
+        runTest {
+            // Without the vault's address the memo's cannot be told apart from it, and a row
+            // that called the swap vault-bound would retry it into the vault.
+            stub()
+            coEvery { chainAccountAddressRepository.getAddress(eth, any()) } throws
+                IllegalStateException("no key for chain")
+
+            val row =
+                join(thorPayload(memo = "=:ETH.ETH:0xelse"), SwapPayload.ThorChain(thorSwap()))
+
+            row.externalRecipient.shouldBeNull()
+            row.isRecipientUnknown shouldBe true
+        }
+
+    @Test
+    fun `a THORChain memo without a destination is unreadable`() = runTest {
+        stub()
+
+        val row = join(thorPayload(memo = "=:ETH.ETH"), SwapPayload.ThorChain(thorSwap()))
+
+        row.externalRecipient.shouldBeNull()
+        row.isRecipientUnknown shouldBe true
+    }
+
+    @Test
     fun `a native SwapKit route's recipient is unreadable`() = runTest {
         stub()
 
