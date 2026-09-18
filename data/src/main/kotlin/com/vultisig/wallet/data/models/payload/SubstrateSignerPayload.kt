@@ -179,6 +179,28 @@ data class SubstrateSignerPayload(
             )
         }
 
+        /**
+         * The dApp signer payload a keysign on [chain] with this [memo] carries, or null for a
+         * native Substrate send. Only Polkadot and Bittensor have the route; a JSON-shaped memo on
+         * any other chain is just a memo.
+         *
+         * The payload's `genesisHash` must be the one [chain] signs for. The chain is what Verify
+         * names and what the co-signer consents to, while the genesis hash is what the signature is
+         * actually bound to — and both chains sign with the same ed25519 key, so a payload labelled
+         * Polkadot carrying Bittensor's genesis would produce a signature valid on Bittensor. The
+         * extension derives the chain from the genesis hash at intake and refuses any other; a
+         * mismatch here is a payload no honest initiator sends, and it is refused rather than
+         * signed.
+         */
+        fun fromKeysign(chain: Chain, memo: String?): SubstrateSignerPayload? {
+            val genesisHash = substrateGenesisHashByChain[chain] ?: return null
+            val payload = fromMemo(memo) ?: return null
+            check(payload.genesisHash.equals(genesisHash, ignoreCase = true)) {
+                "Substrate signer payload genesis hash does not belong to ${chain.raw}"
+            }
+            return payload
+        }
+
         private fun JsonObject.string(key: String): String =
             (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull ?: ""
     }
@@ -194,23 +216,6 @@ private val substrateGenesisHashByChain =
         Chain.Bittensor to "0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03",
     )
 
-/**
- * The dApp signer payload this keysign carries, or null for a native Substrate send. Only Polkadot
- * and Bittensor have the route; a JSON-shaped memo on any other chain is just a memo.
- *
- * The payload's `genesisHash` must be the one [KeysignPayload.coin]'s chain signs for. The chain is
- * what Verify names and what the co-signer consents to, while the genesis hash is what the
- * signature is actually bound to — and both chains sign with the same ed25519 key, so a payload
- * labelled Polkadot carrying Bittensor's genesis would produce a signature valid on Bittensor. The
- * extension derives the chain from the genesis hash at intake and refuses any other; a mismatch
- * here is a payload no honest initiator sends, and it is refused rather than signed.
- */
+/** The dApp signer payload this keysign carries — see [SubstrateSignerPayload.fromKeysign]. */
 val KeysignPayload.substrateDappPayload: SubstrateSignerPayload?
-    get() {
-        val genesisHash = substrateGenesisHashByChain[coin.chain] ?: return null
-        val payload = SubstrateSignerPayload.fromMemo(memo) ?: return null
-        check(payload.genesisHash.equals(genesisHash, ignoreCase = true)) {
-            "Substrate signer payload genesis hash does not belong to ${coin.chain.raw}"
-        }
-        return payload
-    }
+    get() = SubstrateSignerPayload.fromKeysign(coin.chain, memo)
