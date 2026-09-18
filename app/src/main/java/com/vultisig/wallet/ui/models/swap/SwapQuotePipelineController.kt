@@ -152,8 +152,10 @@ constructor(
 
     // The input and applied result (with its ranked candidate set) of the last applied quote, kept
     // so a Select-route pick can rebuild and apply another already-fetched candidate — and a
-    // gas-limit change can re-price the applied one — without a network round-trip. Cleared on
-    // every reset/supersede path — neither must ever act on a quote for stale input.
+    // gas-limit change can re-price the applied one — without a network round-trip. Published in
+    // the same synchronous block as quoteState, so a reader that pairs the two never sees a
+    // context for a quote that isn't on screen yet. Cleared on every reset/supersede path — neither
+    // must ever act on a quote for stale input.
     private var routeContext: RouteContext? = null
 
     // The in-flight manual route pick. The quote pipeline's collectLatest serializes its own
@@ -517,7 +519,6 @@ constructor(
         val (src, dst) = input.address
 
         val generation = ++quoteApplyGeneration
-        routeContext = RouteContext(input, result)
         val routeOptions =
             buildRouteOptions(
                 ranked = result.rankedQuotes,
@@ -531,6 +532,10 @@ constructor(
         // writer's and only its fee would be dropped by the later ticket check.
         if (generation != quoteApplyGeneration) return
 
+        // Published together with the quote it belongs to, not before the suspension above: a
+        // re-price or a pick that ran meanwhile read the context and quoteState as a pair, and
+        // both must still describe the quote on screen.
+        routeContext = RouteContext(input, result)
         quoteState.provider = result.provider
         quoteState.quote = result.quote
         // Only the EVM-aggregator route consumes the gas-limit override at build time.
@@ -597,9 +602,12 @@ constructor(
      * Re-prices the network fee of the quote on screen whenever the EVM gas-limit override changes,
      * so the form states the same maximum the review sheet will build with (#4858). Only an
      * EVM-aggregator route consumes the override, and only the fee moves — the route, rate and
-     * discounts are untouched, so nothing is re-fetched. The ticket taken by the last quote writer
-     * still owns the fee: a re-price that resumes on a stale ticket drops its outcome, the same as
-     * any other writer.
+     * discounts are untouched, so nothing is re-fetched. The fee belongs to the context it was
+     * priced for: a re-price that resumes after another writer replaced or cleared that context
+     * drops its outcome, the same as a pick does. The generation ticket alone can't tell it apart —
+     * a fresh apply takes its ticket before it suspends in buildRouteOptions, and a re-price of the
+     * quote still on screen that resumes after that apply lands would pass the ticket check and
+     * stamp the previous route's fee over the new quote.
      */
     private fun observeGasLimitOverride() {
         scope.safeLaunch(onError = { Timber.e(it, "observeGasLimitOverride") }) {
@@ -611,7 +619,6 @@ constructor(
     private suspend fun repriceNetworkFee() {
         val ctx = routeContext ?: return
         if (quoteState.honorsGasLimitOverride.value != true) return
-        val generation = quoteApplyGeneration
         val (src, _) = ctx.input.address
         val outcome =
             swapQuotePipeline.resolveNetworkFee(
@@ -624,7 +631,7 @@ constructor(
                 evmBaselineEstimate = evmBaselineEstimate,
                 gasLimitOverride = gasLimitOverride.value,
             )
-        if (generation != quoteApplyGeneration) return
+        if (routeContext !== ctx) return
         applyNetworkFeeOutcome(outcome)
     }
 

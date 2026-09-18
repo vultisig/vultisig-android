@@ -2691,6 +2691,157 @@ internal class SwapFormViewModelTest {
         }
 
     @Test
+    fun `a gas-limit change while a fresh quote is applying prices the quote on screen`() =
+        runTest(mainDispatcher) {
+            // A fresh quote suspends mid-apply (pricing its route picker) while the previous quote
+            // is still the one on screen. An override landing then must re-price what is on
+            // screen, and a re-price that is still resolving when the fresh quote lands must not
+            // stamp the previous route's fee over it.
+            val overrideBond = TokenValue(BigInteger("10000000000000000"), ETH_COIN)
+            fun overrideResult(formatted: String) =
+                GasCalculationResult(
+                    gasFee = overrideBond,
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = formatted,
+                            formattedFiatValue = "$20.00",
+                            tokenValue = overrideBond,
+                            fiatValue = FiatValue(BigDecimal("20.00"), "USD"),
+                        ),
+                    chain = Chain.Ethereum,
+                )
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 0L)
+            } returns null
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 1_000_000L)
+            } returns overrideResult("0.01 ETH")
+            val rebaseGate = CompletableDeferred<Unit>()
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 2_000_000L)
+            } coAnswers
+                {
+                    rebaseGate.await()
+                    overrideResult("0.02 ETH")
+                }
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.LIFI, SwapProvider.THORCHAIN)
+            // The second fetch's runner-up carries a fee only the route picker formats, so the
+            // gate parks the apply exactly inside buildRouteOptions.
+            val runnerUpFee = FiatValue(BigDecimal("7.77"), "USD")
+            val pickerGate = CompletableDeferred<Unit>()
+            coEvery {
+                fiatValueToString(
+                    match { it.value.compareTo(runnerUpFee.value) == 0 },
+                    asFee = true,
+                )
+            } coAnswers
+                {
+                    pickerGate.await()
+                    "$7.77"
+                }
+            val lifiQuote =
+                createDefaultQuoteFetchResult(
+                    quote = createLiFiQuote(),
+                    provider = SwapProvider.LIFI,
+                    providerUiText = R.string.swap_for_provider_li_fi.asUiText(),
+                )
+            val thorBest = createDefaultQuoteFetchResult().best
+            val lifiRunnerUp =
+                BestQuote(
+                    candidate =
+                        QuoteCandidate(
+                            provider = SwapProvider.LIFI,
+                            vultBPSDiscount = null,
+                            referral = null,
+                        ),
+                    result =
+                        lifiQuote.best.result.copy(
+                            swapFeeFiat = runnerUpFee,
+                            affiliateFeeFiat = runnerUpFee,
+                        ),
+                )
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                lifiQuote andThen
+                RankedQuotes(best = thorBest, ranked = listOf(thorBest, lifiRunnerUp))
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress(), btcAddress()),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = BTC_COIN.id,
+                )
+            advanceUntilIdle()
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.5")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+            assertEquals(
+                UiText.StringResource(R.string.swap_for_provider_li_fi),
+                vm.uiState.value.quoteDisplay.provider,
+            )
+            assertEquals("0.001 ETH", vm.uiState.value.feeBreakdown.networkFee)
+
+            // The THORChain quote is fetched and parks in buildRouteOptions; LI.FI stays on screen.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.6")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+            assertEquals(
+                UiText.StringResource(R.string.swap_for_provider_li_fi),
+                vm.uiState.value.quoteDisplay.provider,
+            )
+
+            vm.setGasLimit(1_000_000L)
+            advanceUntilIdle()
+
+            // Priced for the LI.FI route on screen — not for the parked THORChain result, whose
+            // branch would have put the flat baseline back.
+            assertEquals("0.01 ETH", vm.uiState.value.feeBreakdown.networkFee)
+
+            // This re-price is still resolving when the THORChain quote lands.
+            vm.setGasLimit(2_000_000L)
+            advanceUntilIdle()
+            pickerGate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(
+                UiText.StringResource(R.string.swap_form_provider_thorchain),
+                vm.uiState.value.quoteDisplay.provider,
+            )
+            assertEquals("0.001 ETH", vm.uiState.value.feeBreakdown.networkFee)
+
+            rebaseGate.complete(Unit)
+            advanceUntilIdle()
+
+            // The stale re-price resumed on a replaced context and dropped its outcome.
+            assertEquals("0.001 ETH", vm.uiState.value.feeBreakdown.networkFee)
+            coVerify(exactly = 2) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+        }
+
+    @Test
     fun `labels the network fee as a maximum on an EVM source`() =
         runTest(mainDispatcher) {
             // The default gas mock quotes an Ethereum bond (maxFeePerGas × limit): the most the
