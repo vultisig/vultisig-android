@@ -549,6 +549,9 @@ internal class SwapQuotePipeline(
      *
      * @param networkFeeTokenValue the current gas-driven network fee, used for the balance check
      *   when no UTXO plan fee is computed.
+     * @param gasLimitOverride the user's EVM gas-limit override in units, or null for "Auto". An
+     *   EVM-aggregator route is priced at it, exactly as `SwapTransactionBuilder` prices the review
+     *   sheet, so the form and the sheet state the same maximum for one swap.
      */
     suspend fun resolveNetworkFee(
         result: SwapQuotePipelineResult.Success,
@@ -558,6 +561,7 @@ internal class SwapQuotePipeline(
         gasFeeChain: Chain?,
         networkFeeTokenValue: TokenValue?,
         evmBaselineEstimate: EstimatedGasFee? = null,
+        gasLimitOverride: Long? = null,
     ): NetworkFeeOutcome {
         val srcToken = src.account.token
         // Base state mirrors the display update: UTXO swaps stay disabled until the plan fee lands.
@@ -616,17 +620,24 @@ internal class SwapQuotePipeline(
                 effectiveNetworkFeeTokenValue = null
             } else {
                 // Re-base the gas-pass's flat estimate onto the EVM aggregator route's real gas
-                // (#5056); no usable route gas (e.g. Jupiter's Solana quotes) keeps the gas-pass
-                // fee.
+                // (#5056). A gas-limit override replaces the route gas, as it does in the signed
+                // payload (#4858), so the row prices the bond the sheet will show.
                 val rebased =
                     swapGasCalculator.rebaseEvmSwapNetworkFee(
                         srcToken = srcToken,
                         baselineGasFee = currentGasFee,
-                        routeGas = quote.data.tx.gas,
+                        routeGas = gasLimitOverride?.takeIf { it > 0L } ?: quote.data.tx.gas,
                     )
+                val baseline = evmBaselineEstimate?.takeIf { gasFeeChain == srcToken.chain }
                 if (rebased != null) {
                     networkFee = rebased.estimated.toNetworkFeeSet()
                     effectiveNetworkFeeTokenValue = rebased.estimated.tokenValue
+                } else if (baseline != null) {
+                    // No re-base applies at this limit (no usable route gas, an OP-stack L2, or a
+                    // limit that lands on the default): put the gas-pass estimate back, so a fee
+                    // re-based for a previous route or a since-cleared override doesn't linger.
+                    networkFee = baseline.toNetworkFeeSet()
+                    effectiveNetworkFeeTokenValue = baseline.tokenValue
                 }
             }
         } else if (srcToken.chain.standard == TokenStandard.EVM) {

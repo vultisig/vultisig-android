@@ -271,6 +271,35 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
     }
 
     /**
+     * EVM gas is quoted at maxFeePerGas × limit — the most the swap can cost, not what it will — so
+     * the row is labelled as a maximum, in line with the "Max. Total Fee" line.
+     */
+    @Test
+    fun `labels an EVM source's network fee as a maximum`() = runTest {
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } returns "0"
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+
+        val uiModel = mapper().invoke(transaction())
+
+        uiModel.isNetworkFeeMax shouldBe true
+    }
+
+    @Test
+    fun `keeps the plain network fee label where the fee is exact`() = runTest {
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { fiatValueToStringMapper(any(), any()) } returns "0"
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns usd("0")
+        coEvery { tokenRepository.getNativeToken(btc.chain.id) } returns btc
+
+        val uiModel = mapper().invoke(swapKitUtxoTransaction())
+
+        uiModel.isNetworkFeeMax shouldBe false
+    }
+
+    /**
      * #5335: on a thin route the liquidity cost the user actually gave up dwarfs the fee total, but
      * it is baked into the received amount and so contributes nothing to Total Fee. It must reach
      * the screens as its own Price Impact row — without moving into the total, which stays exactly

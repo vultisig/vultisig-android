@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
 import com.vultisig.wallet.ui.models.swap.formatAffiliatePercent
 import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
+import com.vultisig.wallet.ui.models.swap.hasSwapNetworkFeeCeiling
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
@@ -348,6 +349,7 @@ constructor(
                         networkFeeFormatted =
                             mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                                 " ${estimatedNetworkGasFee.tokenValue.unit}",
+                        isNetworkFeeMax = srcToken.chain.hasSwapNetworkFeeCeiling,
                         totalFee = fiatValueToStringMapper(swapFeeForTotal, asFee = true),
                         provider = provider,
                         swapFeeIncludedInRate = isOneInchIncludedInRate,
@@ -728,6 +730,7 @@ constructor(
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                     " ${estimatedNetworkGasFee.tokenValue.unit}",
+            isNetworkFeeMax = srcToken.chain.hasSwapNetworkFeeCeiling,
             totalFee =
                 fiatValueToStringMapper(
                     if (swapFeeHidden) estimatedNetworkGasFee.fiatValue
