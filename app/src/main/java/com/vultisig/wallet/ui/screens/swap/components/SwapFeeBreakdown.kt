@@ -144,7 +144,13 @@ internal fun SwapFeeBreakdown(
                             modifier = Modifier.fillMaxWidth(),
                             title =
                                 buildAnnotatedString {
-                                    append(stringResource(R.string.swap_form_gas_title))
+                                    append(
+                                        stringResource(
+                                            if (feeBreakdown.isNetworkFeeMax)
+                                                R.string.swap_max_network_fee
+                                            else R.string.swap_form_gas_title
+                                        )
+                                    )
                                 },
                             value =
                                 buildAnnotatedString {

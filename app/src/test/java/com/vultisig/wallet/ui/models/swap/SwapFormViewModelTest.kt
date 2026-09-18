@@ -2607,6 +2607,48 @@ internal class SwapFormViewModelTest {
         }
 
     @Test
+    fun `labels the network fee as a maximum on an EVM source`() =
+        runTest(mainDispatcher) {
+            // The default gas mock quotes an Ethereum bond (maxFeePerGas × limit): the most the
+            // swap can cost, so the row is labelled as such alongside "Max. Total Fee".
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals("0.001 ETH", state.feeBreakdown.networkFee)
+            assertTrue(state.feeBreakdown.isNetworkFeeMax)
+        }
+
+    @Test
+    fun `keeps the plain network fee label on a source whose fee is exact`() =
+        runTest(mainDispatcher) {
+            val solFee = TokenValue(value = BigInteger("5000"), token = SOL_COIN)
+            coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
+                GasCalculationResult(
+                    gasFee = solFee,
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.000005 SOL",
+                            formattedFiatValue = "$0.00",
+                            tokenValue = solFee,
+                            fiatValue = FiatValue(BigDecimal("0.00"), "USD"),
+                        ),
+                    chain = Chain.Solana,
+                )
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(solanaAddress(), ethAddress()),
+                    srcTokenId = SOL_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals("0.000005 SOL", state.feeBreakdown.networkFee)
+            assertFalse(state.feeBreakdown.isNetworkFeeMax)
+        }
+
+    @Test
     fun `calculateFees recovers hasQuote on success after a swap exception`() =
         runTest(mainDispatcher) {
             // First call throws, second call (after a new amount) succeeds.

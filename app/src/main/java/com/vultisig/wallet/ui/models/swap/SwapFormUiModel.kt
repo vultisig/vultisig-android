@@ -28,6 +28,9 @@ internal data class QuoteDisplay(
 internal data class FeeBreakdown(
     val networkFee: String = "",
     val networkFeeFiat: String = "",
+    // True when [networkFee] is the most the transaction can cost rather than what it will (EVM
+    // gas is quoted at maxFeePerGas × limit); the row is then labelled as a maximum.
+    val isNetworkFeeMax: Boolean = false,
     val totalFee: String = "0",
     val fee: String = "",
     val outboundFee: String? = null,

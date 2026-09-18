@@ -260,6 +260,7 @@ private fun VerifySwapSheetDetails(tx: SwapTransactionUiModel, vaultName: String
                     FeeBreakdown(
                         networkFee = tx.networkFeeFormatted,
                         networkFeeFiat = tx.networkFee.fiatValue,
+                        isNetworkFeeMax = tx.isNetworkFeeMax,
                         totalFee = tx.totalFee,
                         fee = if (tx.swapFeeHidden) "" else tx.providerFee.fiatValue,
                         outboundFee = tx.outboundFee,
@@ -663,6 +664,11 @@ private fun VerifySwapScreen(
                     EstimatedNetworkFee(
                         tokenGas = tx.networkFeeFormatted,
                         fiatGas = tx.networkFee.fiatValue,
+                        title =
+                            stringResource(
+                                if (tx.isNetworkFeeMax) R.string.swap_max_network_fee
+                                else R.string.send_form_est_network_fee
+                            ),
                     )
 
                     // Swap Fee row mirrors the form (#5358): percentage in the title when known,

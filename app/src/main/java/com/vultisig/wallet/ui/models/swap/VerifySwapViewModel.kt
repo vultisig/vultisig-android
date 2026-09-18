@@ -54,6 +54,9 @@ internal data class SwapTransactionUiModel(
     val outboundFee: String? = null,
     val totalFee: String = "",
     val networkFeeFormatted: String = "",
+    // True when [networkFee] is the most the transaction can cost rather than what it will (EVM
+    // gas is quoted at maxFeePerGas × limit); the row is then labelled as a maximum.
+    val isNetworkFeeMax: Boolean = false,
     val providerFeeFormatted: String = "",
     val hasConsentAllowance: Boolean = false,
     // Canonical provider id (e.g. `SwapKit`). Behavioral key: copied onto the tx-history row and

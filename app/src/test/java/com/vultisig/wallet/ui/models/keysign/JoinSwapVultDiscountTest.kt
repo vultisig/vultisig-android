@@ -84,6 +84,18 @@ internal class JoinSwapVultDiscountTest {
     }
 
     @Test
+    fun `labels an EVM source's network fee as the maximum it can cost`() = runTest {
+        stubFees(vultBps = 0)
+
+        val tx = builder().build(payload(), swapPayload(), vault, AppCurrency.USD)
+
+        // The co-signer shows the same gas bond the initiator does; it is a ceiling, so the row
+        // says so, in line with "Max. Total Fee".
+        val swap = tx.transactionTypeUiModel as TransactionTypeUiModel.Swap
+        swap.swapTransactionUiModel.isNetworkFeeMax shouldBe true
+    }
+
+    @Test
     fun `leaves the charged fee alone for a vault with no tier`() = runTest {
         stubFees(vultBps = 0)
 

@@ -261,6 +261,7 @@ constructor(
                                         it.feeBreakdown.copy(
                                             networkFee = result.estimated.formattedTokenValue,
                                             networkFeeFiat = result.estimated.formattedFiatValue,
+                                            isNetworkFeeMax = chain.hasSwapNetworkFeeCeiling,
                                         )
                                 )
                             }
@@ -285,7 +286,11 @@ constructor(
                         uiState.update {
                             it.copy(
                                 feeBreakdown =
-                                    it.feeBreakdown.copy(networkFee = "", networkFeeFiat = "")
+                                    it.feeBreakdown.copy(
+                                        networkFee = "",
+                                        networkFeeFiat = "",
+                                        isNetworkFeeMax = false,
+                                    )
                             )
                         }
                         // The plan-fee block in calculateFees() may have already run
