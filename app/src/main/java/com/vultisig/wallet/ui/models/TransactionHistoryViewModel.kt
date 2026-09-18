@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
 import com.vultisig.wallet.data.db.models.isInFlight
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
@@ -23,6 +24,7 @@ import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryType
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.usecases.RefreshLimitOrdersUseCase
 import com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase
@@ -32,6 +34,8 @@ import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelException
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelFailure
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderHistoryUiModel
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderToUiModelMapper
+import com.vultisig.wallet.ui.models.swap.SwapRetry
+import com.vultisig.wallet.ui.models.swap.toSwapRetry
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -161,6 +165,11 @@ sealed interface TransactionHistoryItemUiModel {
         // A limit order's amount is the floor its memo enforces; a market swap's is the expected
         // output. Only the former may be labelled "min. payout" (#5711).
         val isLimitOrder: Boolean = false,
+        /**
+         * The trade to reopen the swap form on, when this row is a failed or refunded market swap
+         * the vault can still place; null hides the Try again button (#5918).
+         */
+        val retry: SwapRetry? = null,
     ) : TransactionHistoryItemUiModel
 }
 
@@ -222,6 +231,7 @@ constructor(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val featureFlagRepository: FeatureFlagRepository,
     private val limitSwapConfig: LimitSwapConfig,
+    private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>,
     private val clock: Clock,
 ) : ViewModel() {
@@ -317,6 +327,17 @@ constructor(
 
     fun back() {
         viewModelScope.launch { navigator.back() }
+    }
+
+    /**
+     * Reopens the swap form on the selected row's pair and amount, to re-quote and review afresh
+     * (#5918). The sheet closes first so the form is not found under an open sheet on the way back.
+     */
+    fun retrySelectedSwap() {
+        val retry = (uiState.value.selectedItem as? TransactionHistoryItemUiModel.Swap)?.retry
+        if (retry == null) return
+        dismissDetail()
+        viewModelScope.launch { navigator.route(retry.toRoute(vaultId = vaultId)) }
     }
 
     /**
@@ -552,9 +573,11 @@ constructor(
                         )
                     } ?: flowOf(emptyList())
                 }
-                .map { entities ->
+                // Resolved against the vault's live coins so a retry offered on a row is one the
+                // form can actually place: a token removed from the vault takes its button with it.
+                .combine(vaultRepository.getEnabledTokens(vaultId)) { entities, coins ->
                     val now = clock.now().toEpochMilliseconds()
-                    entities.mapNotNull { it.toUiModel() }.groupByDate(now)
+                    entities.mapNotNull { it.toUiModel(coins) }.groupByDate(now)
                 }
                 .combine(uiState.map { it.selectedAssetIds }.distinctUntilChanged()) { groups, ids
                     ->
@@ -675,7 +698,9 @@ constructor(
             TransactionHistoryTab.LIMIT -> null
         }
 
-    private fun TransactionHistoryEntity.toUiModel(): TransactionHistoryItemUiModel? {
+    private fun TransactionHistoryEntity.toUiModel(
+        vaultCoins: List<Coin>
+    ): TransactionHistoryItemUiModel? {
         val statusUiModel =
             when (status) {
                 TransactionStatus.BROADCASTED -> TransactionStatusUiModel.Broadcasted
@@ -736,6 +761,17 @@ constructor(
                     toAddress = null,
                     feeEstimate = null,
                     isLimitOrder = p.isLimitOrder,
+                    // Only a terminal failure: a swap still in flight may yet land, and retrying
+                    // it would sell the same funds twice (#5918).
+                    retry =
+                        if (
+                            status == TransactionStatus.FAILED ||
+                                status == TransactionStatus.REFUNDED
+                        ) {
+                            p.toSwapRetry(vaultCoins)
+                        } else {
+                            null
+                        },
                 )
 
             is UnknownTransactionHistoryData -> null

@@ -12,6 +12,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
+import com.vultisig.wallet.data.api.models.quotes.Fees
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -51,6 +53,7 @@ import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.swap.SwapMode
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import io.mockk.MockKMatcherScope
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -4311,6 +4314,145 @@ internal class SwapFormViewModelTest {
             )
             coVerify(exactly = 0) { buildLimitSwapTransactionUseCase.build(any()) }
         }
+
+    // Trying a failed swap again (#5918): the route carries the pair and amount, and the form
+    // opens Verify by itself on the first usable quote — never signing, never reusing the old
+    // quote.
+
+    @Test
+    fun `a routed-in amount fills the field and quotes at once`() =
+        runTest(mainDispatcher) {
+            stubBestQuote(createDefaultQuoteFetchResult())
+
+            val vm = createRetryViewModel(verifyOnQuote = false)
+            // Well under the 300ms typing debounce — only an immediate fetch can have fired.
+            advanceTimeBy(50)
+
+            assertEquals("0.5", vm.srcAmountState.text.toString())
+            coVerify(exactly = 1) { anyBestQuoteFetch() }
+        }
+
+    @Test
+    fun `a retry opens Verify on the first usable quote without a Swap tap`() =
+        runTest(mainDispatcher) {
+            stubBestQuote(createDefaultQuoteFetchResult(quote = createSignableThorChainQuote()))
+
+            createRetryViewModel(verifyOnQuote = true)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { swapTransactionRepository.addTransaction(any()) }
+            coVerify(exactly = 1) { navigator.route(any<Route.VerifySwap>()) }
+        }
+
+    @Test
+    fun `without the flag a routed-in amount never opens Verify by itself`() =
+        runTest(mainDispatcher) {
+            stubBestQuote(createDefaultQuoteFetchResult(quote = createSignableThorChainQuote()))
+
+            createRetryViewModel(verifyOnQuote = false)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { swapTransactionRepository.addTransaction(any()) }
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    /**
+     * The selector falls back to a default when a requested token is not held; reviewing that
+     * default as if it were the failed trade would sell the wrong asset.
+     */
+    @Test
+    fun `a retry whose source the vault does not hold never opens Verify`() =
+        runTest(mainDispatcher) {
+            stubBestQuote(createDefaultQuoteFetchResult(quote = createSignableThorChainQuote()))
+
+            createRetryViewModel(verifyOnQuote = true, srcTokenId = SOL_COIN.id)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { swapTransactionRepository.addTransaction(any()) }
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    /** An edit made while the quote loads is the user's trade now, not the retry's. */
+    @Test
+    fun `a retry never reviews an amount the user changed while the quote loaded`() =
+        runTest(mainDispatcher) {
+            val quote = CompletableDeferred<RankedQuotes>()
+            coEvery { anyBestQuoteFetch() } coAnswers { quote.await() }
+
+            val vm = createRetryViewModel(verifyOnQuote = true)
+            advanceUntilIdle()
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.7")
+            Snapshot.sendApplyNotifications()
+            quote.complete(createDefaultQuoteFetchResult(quote = createSignableThorChainQuote()))
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { swapTransactionRepository.addTransaction(any()) }
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    /** A quote that never becomes usable never opens Verify either. */
+    @Test
+    fun `a retry stays on the form when the quote fails`() =
+        runTest(mainDispatcher) {
+            coEvery { anyBestQuoteFetch() } throws SwapException.SwapRouteNotAvailable("no route")
+
+            createRetryViewModel(verifyOnQuote = true)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { swapTransactionRepository.addTransaction(any()) }
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    private fun createRetryViewModel(
+        verifyOnQuote: Boolean,
+        srcTokenId: String = ETH_COIN.id,
+    ): SwapFormViewModel {
+        every { any<SavedStateHandle>().toRoute<Route.Swap>() } returns
+            Route.Swap(
+                vaultId = TEST_VAULT_ID,
+                chainId = Chain.Ethereum.id,
+                srcTokenId = srcTokenId,
+                dstTokenId = BTC_COIN.id,
+                srcAmount = "0.5",
+                verifyOnQuote = verifyOnQuote,
+            )
+        coEvery { tokenSelectorAccountsRepository.loadAddresses(any()) } returns
+            flowOf(listOf(ethAddressWithBalance(BigInteger("1000000000000000000")), btcAddress()))
+        return createViewModel()
+    }
+
+    private fun stubBestQuote(result: RankedQuotes) {
+        coEvery { anyBestQuoteFetch() } returns result
+    }
+
+    private suspend fun MockKMatcherScope.anyBestQuoteFetch(): RankedQuotes =
+        swapQuoteManager.fetchBestQuote(
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+            any(),
+        )
+
+    /** A THORChain quote the transaction builder can turn into a keysign-ready swap. */
+    private fun createSignableThorChainQuote(): SwapQuote.ThorChain =
+        createThorChainQuote(
+                expectedDstValue = TokenValue(value = BigInteger("1000000"), token = BTC_COIN)
+            )
+            .copy(
+                data =
+                    mockk<THORChainSwapQuote>(relaxed = true).apply {
+                        every { fees } returns
+                            Fees(affiliate = "0", asset = "0", outbound = "0", total = "0")
+                        every { router } returns null
+                        every { inboundAddress } returns "thor-inbound"
+                        every { memo } returns "=:BTC.BTC:bc1qbtcaddress"
+                    }
+            )
 
     // region Helpers
 

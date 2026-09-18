@@ -102,5 +102,6 @@ private fun Keysign(
         dappMetadata = keysignViewModel.dappMetadata,
         coinLogoRes = keysignViewModel.coinLogoRes,
         operationHero = uiState.operationHero,
+        onTryAgain = keysignViewModel.swapRetry?.let { { keysignViewModel.retrySwap() } },
     )
 }

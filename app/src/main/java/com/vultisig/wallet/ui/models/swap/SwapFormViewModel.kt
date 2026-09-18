@@ -55,6 +55,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -210,6 +211,16 @@ constructor(
             )
         }
 
+        args.srcAmount
+            ?.takeIf { it.isNotBlank() }
+            ?.let { amount ->
+                // Set before the pipeline starts so its first amount emission already carries the
+                // value, and marked immediate: a routed-in amount is as deliberate as a Max tap, so
+                // it should not wait out the typing debounce either.
+                swapQuoteManager.markImmediateFetch()
+                srcAmountState.setTextAndPlaceCursorAtEnd(amount)
+            }
+
         swapTokenSelector.collectSelectedAccounts(
             selectedSrc,
             selectedDst,
@@ -223,6 +234,47 @@ constructor(
 
         quotePipeline.start()
         fiatAmountInput.start()
+
+        if (args.verifyOnQuote) verifyOnFirstQuote()
+    }
+
+    /**
+     * Trying a failed swap again (#5918) opens the form with its pair and amount already in place,
+     * so the first usable quote goes straight to Verify — the user's part is to read the new rate
+     * and sign, not to re-enter a trade they already entered once. Nothing is signed here: this is
+     * the same [swap] a tap on the button runs, with a fresh quote and a freshly built transaction.
+     *
+     * "Usable" is the moment the Swap button would enable, plus the gas fee [swap] needs: the fee
+     * is fetched alongside the quote, not ahead of it, and a tap that beat it would be refused — a
+     * human cannot tap that fast, but this can.
+     *
+     * Fires once, and only while the form still holds exactly what the route asked for. The token
+     * selector falls back to a default when a requested id is not held rather than failing, and the
+     * user can edit while the quote loads; reviewing whatever is on the form as if it were the
+     * retry would be wrong either way, so the pair and amount are re-checked as the quote lands.
+     */
+    private fun verifyOnFirstQuote() {
+        viewModelScope.launch {
+            combine(
+                    uiState,
+                    quotePipeline.gasFee,
+                    quotePipeline.estimatedNetworkFeeFiatValue,
+                ) { state, gasFee, gasFeeFiat ->
+                    !state.isSwapDisabled &&
+                        !state.isLoading &&
+                        gasFee != null &&
+                        gasFee.value != BigInteger.ZERO &&
+                        gasFeeFiat != null
+                }
+                .first { it }
+            val holdsRequestedTrade =
+                swapMode.value == SwapMode.Market &&
+                    quoteState.quote != null &&
+                    selectedSrc.value?.account?.token?.id == args.srcTokenId &&
+                    selectedDst.value?.account?.token?.id == args.dstTokenId &&
+                    srcAmountState.text.toString() == args.srcAmount
+            if (holdsRequestedTrade) swap()
+        }
     }
 
     /**

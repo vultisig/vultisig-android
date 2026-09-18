@@ -317,6 +317,8 @@ constructor(
                                         convertTokenValueToFiat(srcToken, srcTokenValue, currency)
                                     ),
                             ),
+                        srcAmountDecimal =
+                            srcTokenValue.decimal.stripTrailingZeros().toPlainString(),
                         dst =
                             ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
@@ -702,6 +704,7 @@ constructor(
                     token = srcToken,
                     fiatValue = fiatValueToStringMapper(srcFiat),
                 ),
+            srcAmountDecimal = srcTokenValue.decimal.stripTrailingZeros().toPlainString(),
             dst =
                 ValuedToken(
                     value = mapTokenValueToDecimalUiString(dstTokenValue),

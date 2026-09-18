@@ -38,13 +38,18 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.models.swap.SwapRetry
 import com.vultisig.wallet.ui.screens.transaction.components.TokenAmountAnnotated
 import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle
 import com.vultisig.wallet.ui.screens.transaction.components.TypeBadge
@@ -62,6 +67,7 @@ internal fun TransactionDetailBottomSheet(
     item: TransactionHistoryItemUiModel,
     onDismiss: () -> Unit,
     onViewExplorer: (String) -> Unit,
+    onTryAgain: () -> Unit = {},
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -135,6 +141,23 @@ internal fun TransactionDetailBottomSheet(
                 }
 
                 UiSpacer(size = 24.dp)
+
+                // The ViewModel decides which rows can be retried — a failed or refunded market
+                // swap whose pair the vault still holds — so the sheet only reads the verdict
+                // (#5918).
+                val canTryAgain = (item as? TransactionHistoryItemUiModel.Swap)?.retry != null
+                if (canTryAgain) {
+                    VsButton(
+                        label = stringResource(R.string.try_again),
+                        variant = VsButtonVariant.Primary,
+                        size = VsButtonSize.Small,
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onTryAgain,
+                    )
+                    if (item.explorerUrl.isNotEmpty()) {
+                        UiSpacer(size = 12.dp)
+                    }
+                }
 
                 if (item.explorerUrl.isNotEmpty()) {
                     Row(
@@ -541,4 +564,24 @@ private fun PreviewTransactionDetailBottomSheetSend() {
 @Composable
 private fun PreviewTransactionDetailBottomSheetSwap() {
     TransactionDetailBottomSheet(item = previewSwap, onDismiss = {}, onViewExplorer = {})
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewTransactionDetailBottomSheetSwapFailed() {
+    TransactionDetailBottomSheet(
+        item =
+            previewSwap.copy(
+                status = TransactionStatusUiModel.Failed(reason = null),
+                explorerUrl = "https://example.com/tx",
+                retry =
+                    SwapRetry(
+                        srcToken = Coins.ThorChain.RUNE,
+                        dstToken = Coins.Ethereum.WBTC,
+                        srcAmount = "1000.12",
+                    ),
+            ),
+        onDismiss = {},
+        onViewExplorer = {},
+    )
 }

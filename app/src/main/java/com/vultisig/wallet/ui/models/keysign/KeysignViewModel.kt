@@ -72,6 +72,7 @@ import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
+import com.vultisig.wallet.ui.models.swap.SwapRetry
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.transactiondecoding.DoneTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Destination
@@ -406,6 +407,31 @@ constructor(
      * async-loaded [transactionTypeUiModel], which may still be null while signing is in progress.
      */
     @DrawableRes val coinLogoRes: Int? = keysignPayload?.coin?.tokenLogoRes()
+
+    /**
+     * The trade the done screen can offer to try again once this swap fails or is refunded (#5918),
+     * or null when it must not: a limit order (out of scope — its terms live in a memo the form
+     * does not restore), a dApp-driven swap (its terms were the dApp's, not the form's), or a pair
+     * this vault does not hold on both sides, where the form would fall back to a default token
+     * rather than the one that failed. Read from the payload rather than the UI model so the
+     * co-signing device, which rebuilds its UI model from the same payload, offers the same retry.
+     */
+    val swapRetry: SwapRetry? =
+        keysignPayload?.swapPayload?.let { swap ->
+            val isLimitOrder =
+                (transactionTypeUiModel as? TransactionTypeUiModel.Swap)
+                    ?.swapTransactionUiModel
+                    ?.isLimitOrder == true
+            if (isLimitOrder || dappMetadata != null) return@let null
+            val srcToken = vault.coins.firstOrNull { it.id == swap.srcToken.id }
+            val dstToken = vault.coins.firstOrNull { it.id == swap.dstToken.id }
+            if (srcToken == null || dstToken == null) return@let null
+            SwapRetry(
+                srcToken = srcToken,
+                dstToken = dstToken,
+                srcAmount = swap.srcTokenValue.decimal.stripTrailingZeros().toPlainString(),
+            )
+        }
 
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
@@ -1219,6 +1245,22 @@ constructor(
             } else {
                 navigator.navigate(Destination.Back)
             }
+        }
+    }
+
+    /**
+     * Reopens the swap form on the failed trade's pair and amount, to re-quote and review afresh.
+     * Everything above Home is popped — the form, verify sheet and keysign the initiator came
+     * through, or the joiner's scan — so the retry starts from a clean stack rather than stacking a
+     * second form over a finished one.
+     */
+    fun retrySwap() {
+        val retry = swapRetry ?: return
+        viewModelScope.launch {
+            navigator.route(
+                retry.toRoute(vaultId = vault.id),
+                NavigationOptions(popUpToRoute = Route.Home::class),
+            )
         }
     }
 
