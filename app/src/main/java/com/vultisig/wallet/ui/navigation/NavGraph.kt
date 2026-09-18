@@ -208,7 +208,6 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             val args = entry.toRoute<Route.Deposit>()
 
             DepositScreen(
-                navController = navController,
                 vaultId = args.vaultId,
                 chainId = args.chainId,
                 depositType = args.depositType,
@@ -394,16 +393,19 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             sendScreen(navController = navController)
         }
 
-        composable<VerifySend> { VerifySendScreen() }
+        // The review floats over the form as a sheet, so the form stays visible behind it.
+        dialog<VerifySend> { VerifySendScreen() }
 
         // swap
         navigation<Swap>(startDestination = Swap.SwapMain) {
             swapScreen(navController = navController)
         }
 
-        composable<VerifySwap> { VerifySwapScreen() }
+        dialog<VerifySwap> { VerifySwapScreen() }
 
-        composable<VerifyDeposit> { VerifyDepositScreen(navController = navController) }
+        dialog<VerifyDeposit> {
+            VerifyDepositScreen(onDismissRequest = { navController.popBackStack() })
+        }
 
         // keysign
         composable<Keysign.Join> { JoinKeysignView() }

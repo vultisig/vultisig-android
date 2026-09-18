@@ -29,7 +29,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
@@ -48,6 +47,7 @@ import com.vultisig.wallet.ui.components.hero.HeroContentView
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositViewModel
@@ -56,12 +56,16 @@ import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.SwapToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
+import com.vultisig.wallet.ui.screens.verify.VerifyAmountHero
+import com.vultisig.wallet.ui.screens.verify.VerifyOverviewSheet
+import com.vultisig.wallet.ui.screens.verify.VerifyPresentation
+import com.vultisig.wallet.ui.screens.verify.VerifyVaultRow
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun VerifyDepositScreen(
-    navController: NavController? = null,
+    onDismissRequest: () -> Unit,
     viewModel: VerifyDepositViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -87,20 +91,53 @@ internal fun VerifyDepositScreen(
         )
     }
 
-    VerifyDepositScreen(
-        hasToolbar = navController != null, // comes from new graph, and not legacy
+    VerifyDepositSheet(
         state = state,
-        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onDismissRequest = onDismissRequest,
         onConfirm = viewModel::confirm,
         onFastSignClick = {
             if (!viewModel.tryToFastSignWithPassword()) {
                 authorize()
             }
         },
-        onBackClick = { navController?.popBackStack() },
     )
 }
 
+/**
+ * The initiator's review, as a sheet over the deposit form. Deposits are not scanned, so the
+ * control beside the title never carries a verdict.
+ */
+@Composable
+internal fun VerifyDepositSheet(
+    state: VerifyDepositUiModel,
+    onDismissRequest: () -> Unit,
+    onFastSignClick: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    VerifyOverviewSheet(
+        title = stringResource(R.string.verify_deposit_function_overview),
+        scanStatus = TransactionScanStatus.NotStarted,
+        showScanningWarning = false,
+        onDismissRequest = onDismissRequest,
+        onContinueAnyway = {},
+        onDismissWarning = {},
+        footer = {
+            VerifyDepositActions(
+                state = state,
+                confirmTitle = stringResource(R.string.verify_swap_sign_button),
+                onConfirm = onConfirm,
+                onFastSignClick = onFastSignClick,
+            )
+        },
+    ) {
+        VerifyDepositDetails(state = state, presentation = VerifyPresentation.Sheet)
+    }
+}
+
+/**
+ * The review as a full screen: what a co-signer sees on joining, where there is no form to float
+ * over. The initiator's sheet is [VerifyDepositSheet].
+ */
 @Composable
 internal fun VerifyDepositScreen(
     state: VerifyDepositUiModel,
@@ -131,299 +168,376 @@ internal fun VerifyDepositScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState()),
             ) {
-                dappMetadata?.takeUnless { it.isEmpty }?.let { DappRequestBanner(metadata = it) }
-
-                val tx = state.depositTransactionUiModel
-
-                Column(
-                    modifier =
-                        Modifier.background(
-                                color = Theme.v2.colors.backgrounds.secondary,
-                                shape = Theme.v2.radius.xl,
-                            )
-                            .padding(all = 24.dp)
-                ) {
-                    val hero = tx.heroContent
-                    if (hero != null) {
-                        // What the transaction actually does, read from what will be signed. It
-                        // replaces the header and the amount together, because a projected reading
-                        // states its scope ("your whole stake") in place of a figure.
-                        HeroContentView(content = hero, verbAlignment = Alignment.Start)
-                    } else {
-                        Text(
-                            text = stringResource(tx.titleRes),
-                            style = Theme.brockmann.headings.subtitle,
-                            color = Theme.v2.colors.text.secondary,
-                        )
-
-                        // Which order is being closed, in THORChain's own asset spelling. A cancel
-                        // moves
-                        // no funds by design, so the amount below it is either zero or the dust
-                        // Bifrost needs to observe — the pair is the only thing that identifies the
-                        // order.
-                        tx.limitCancelPair?.let { pair ->
-                            UiSpacer(4.dp)
-                            Text(
-                                text = pair,
-                                style = Theme.brockmann.supplementary.footnote,
-                                color = Theme.v2.colors.text.tertiary,
-                            )
-                        }
-
-                        UiSpacer(24.dp)
-
-                        SwapToken(valuedToken = tx.token, isLoading = state.isLoading)
-                    }
-
-                    // A joining co-signer's Kamino withdraw: the amount above is a token
-                    // projection of a share figure, at a rate that never crossed the wire. Naming
-                    // the share count the instruction does carry is the difference between a
-                    // number this device checked and one it only relayed.
-                    tx.unverifiedWithdrawShares?.let { shares ->
-                        UiSpacer(12.dp)
-                        Text(
-                            text =
-                                stringResource(R.string.kamino_verify_withdraw_unverified, shares),
-                            style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.tertiary,
-                        )
-                    }
-
-                    // Stated before signing, not after: cancelling refunds only what has not
-                    // filled, and on the L1 route the amount above is dust that is DONATED — it has
-                    // no refund path — so that route gets a sentence that names it rather than the
-                    // one-network-fee wording, which would understate the cost by 2 DOGE on
-                    // Dogecoin.
-                    if (tx.limitCancelPair != null) {
-                        UiSpacer(12.dp)
-                        Text(
-                            text =
-                                stringResource(
-                                    if (tx.limitCancelDonatesDust)
-                                        R.string.limit_order_cancel_explanation_l1
-                                    else R.string.limit_order_cancel_explanation
-                                ),
-                            style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.tertiary,
-                        )
-                    }
-
-                    if (tx.operation == OPERATION_MINT && tx.pool.isNotEmpty()) {
-                        UiSpacer(8.dp)
-                        Text(
-                            text =
-                                stringResource(
-                                    R.string.lp_destination_format,
-                                    tx.pool.substringBefore('-'),
-                                    tx.token.token.ticker,
-                                ),
-                            style = Theme.brockmann.headings.title3,
-                            color = Theme.v2.colors.text.primary,
-                        )
-                    }
-
-                    UiSpacer(12.dp)
-
-                    VerifyCardDivider(8.dp)
-
-                    tx.srcAddress
-                        .takeIf { it.isNotEmpty() }
-                        ?.let {
-                            VerifyCardDetails(
-                                title = stringResource(R.string.verify_transaction_from_title),
-                                subtitle = tx.srcVaultName ?: tx.srcAddress,
-                                bracketValue = tx.srcVaultName?.let { tx.srcAddress },
-                            )
-
-                            VerifyCardDivider(0.dp)
-                        }
-
-                    if (tx.validatorName.isNotEmpty()) {
-                        VerifyCardDetails(
-                            // The same field carries a validator for native staking and a vault
-                            // name
-                            // for Kamino Earn; labelling both "Validator" would misname the vault.
-                            title =
-                                stringResource(
-                                    if (
-                                        tx.operation == OPERATION_KAMINO_DEPOSIT ||
-                                            tx.operation == OPERATION_KAMINO_WITHDRAW
-                                    ) {
-                                        R.string.kamino_verify_vault
-                                    } else {
-                                        R.string.solana_delegate_validator
-                                    }
-                                ),
-                            subtitle = tx.validatorName,
-                        )
-                        VerifyCardDivider(0.dp)
-                    }
-                    if (tx.dstAddress.isNotEmpty()) {
-                        val toDstLabel = tx.dstVaultName ?: tx.dstAddressBookTitle
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_to_title),
-                            subtitle = toDstLabel ?: tx.dstAddress,
-                            bracketValue = toDstLabel?.let { tx.dstAddress },
-                        )
-                        VerifyCardDivider(0.dp)
-                    }
-                    if (tx.pool.isNotEmpty()) {
-                        VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
-                        VerifyCardDivider(0.dp)
-                    }
-                    // A pre-built Solana transaction — Kamino Earn, native staking — does its work
-                    // in
-                    // instructions the amount and destination rows say nothing about. Decoding them
-                    // here is what lets the person approving it, on either device of a co-signed
-                    // vault, see which programs it invokes.
-                    tx.signSolana
-                        .takeIf { it.isNotEmpty() }
-                        ?.let { rawTransactions ->
-                            SignSolanaDisplayView(rawTransactions = rawTransactions)
-                            VerifyCardDivider(0.dp)
-                        }
-                    // Unbond sets dstAddress and nodeAddress to the same node address, so it
-                    // already
-                    // renders as the "To" row above; only show the Node address row when it adds a
-                    // distinct value (issue #5301).
-                    if (tx.nodeAddress.isNotEmpty() && tx.nodeAddress != tx.dstAddress) {
-                        VerifyCardDetails(
-                            title = stringResource(R.string.node_address),
-                            subtitle = tx.nodeAddress,
-                        )
-                        VerifyCardDivider(0.dp)
-                    }
-                    if (tx.pairedAddress.isNotEmpty()) {
-                        VerifyCardDetails(
-                            title = stringResource(R.string.paired_address),
-                            subtitle = tx.pairedAddress,
-                        )
-                        VerifyCardDivider(0.dp)
-                    }
-                    if (tx.thorAddress.isNotEmpty()) {
-                        VerifyCardDetails(
-                            title = stringResource(R.string.thor_address),
-                            subtitle = tx.thorAddress,
-                        )
-                        VerifyCardDivider(0.dp)
-                    }
-                    if (tx.operation.isNotEmpty()) {
-                        VerifyCardDetails(
-                            title = stringResource(R.string.operation),
-                            subtitle = tx.operation,
-                        )
-                        VerifyCardDivider(0.dp)
-                    }
-
-                    if (tx.memo.isNotEmpty()) {
-                        if (tx.dstAddress.isNotEmpty()) VerifyCardDivider(0.dp)
-
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_memo_title),
-                            subtitle = tx.memo,
-                            showAllContent = true,
-                        )
-                    }
-
-                    val hasContent =
-                        tx.srcAddress.isNotEmpty() ||
-                            tx.dstAddress.isNotEmpty() ||
-                            tx.memo.isNotEmpty()
-
-                    if (hasContent) {
-                        VerifyCardDivider(0.dp)
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.verify_deposit_network),
-                            style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.tertiary,
-                            maxLines = 1,
-                        )
-
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            val chain = state.depositTransactionUiModel.token.token.chain
-
-                            if (state.isLoading) {
-                                UiPlaceholderLoader(modifier = Modifier.height(20.dp).width(150.dp))
-                            } else {
-                                Image(
-                                    painter = painterResource(chain.logo),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                )
-
-                                Text(
-                                    text = chain.raw,
-                                    style = Theme.brockmann.supplementary.footnote,
-                                    color = Theme.v2.colors.text.primary,
-                                    textAlign = TextAlign.End,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.MiddleEllipsis,
-                                )
-                            }
-                        }
-                    }
-
-                    VerifyCardDivider(0.dp)
-
-                    UiSpacer(12.dp)
-
-                    EstimatedNetworkFee(
-                        tokenGas = tx.networkFeeTokenValue,
-                        fiatGas = tx.networkFeeFiatValue,
-                        isLoading = state.isLoading,
-                    )
-                }
+                VerifyDepositDetails(
+                    state = state,
+                    presentation = VerifyPresentation.Screen,
+                    dappMetadata = dappMetadata,
+                )
             }
         },
         bottomBar = {
+            VerifyDepositActions(
+                state = state,
+                confirmTitle = confirmTitle,
+                onConfirm = onConfirm,
+                onFastSignClick = onFastSignClick,
+                modifier =
+                    Modifier.padding(horizontal = if (hasToolbar) 24.dp else 8.dp, vertical = 12.dp),
+            )
+        },
+    )
+}
+
+@Composable
+private fun VerifyDepositActions(
+    state: VerifyDepositUiModel,
+    confirmTitle: String,
+    onConfirm: () -> Unit,
+    onFastSignClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        state.insufficientBalanceError?.let { error ->
+            Text(
+                text = error.asString(),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.alerts.error,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        val buttonState =
+            if (state.isLoading || !state.hasEnoughBalance) VsButtonState.Disabled
+            else VsButtonState.Enabled
+
+        if (state.hasFastSign) {
+            FastSignPairedButtons(
+                onFastSignClick = onFastSignClick,
+                onPairedSignClick = onConfirm,
+                state = buttonState,
+            )
+        } else {
+            VsButton(
+                state = buttonState,
+                label = confirmTitle,
+                onClick = onConfirm,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+/**
+ * Everything the deposit is, in the order the reader checks it. Shared by the sheet and the full
+ * screen, which differ only in chrome — see [VerifyPresentation].
+ */
+@Composable
+private fun VerifyDepositDetails(
+    state: VerifyDepositUiModel,
+    presentation: VerifyPresentation,
+    dappMetadata: DAppMetadata? = null,
+) {
+    val tx = state.depositTransactionUiModel
+    val inSheet = presentation == VerifyPresentation.Sheet
+
+    dappMetadata?.takeUnless { it.isEmpty }?.let { DappRequestBanner(metadata = it) }
+
+    val cardModifier =
+        if (inSheet) {
+            Modifier.fillMaxWidth()
+        } else {
+            Modifier.background(
+                    color = Theme.v2.colors.backgrounds.secondary,
+                    shape = Theme.v2.radius.xl,
+                )
+                .padding(all = 24.dp)
+        }
+
+    // The sheet lists its rows without rules between them; the full screen keeps them. The one
+    // rule the sheet does keep is the direct one below, which sets the network fee apart.
+    val rowDivider: @Composable () -> Unit = {
+        if (!inSheet) {
+            VerifyCardDivider(0.dp)
+        }
+    }
+
+    Column(
+        horizontalAlignment = if (inSheet) Alignment.CenterHorizontally else Alignment.Start,
+        modifier = cardModifier,
+    ) {
+        val hero = tx.heroContent
+        if (hero != null) {
+            // What the transaction actually does, read from what will be signed. It
+            // replaces the header and the amount together, because a projected reading
+            // states its scope ("your whole stake") in place of a figure.
+            HeroContentView(
+                content = hero,
+                verbAlignment = if (inSheet) Alignment.CenterHorizontally else Alignment.Start,
+            )
+        } else if (inSheet) {
+            // The sheet stacks the amount under its heading, centred, like the send overview.
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = if (hasToolbar) 24.dp else 8.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                state.insufficientBalanceError?.let { error ->
+                VerifyAmountHero(header = stringResource(tx.titleRes), valuedToken = tx.token)
+
+                tx.limitCancelPair?.let { pair ->
+                    UiSpacer(4.dp)
                     Text(
-                        text = error.asString(),
+                        text = pair,
                         style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.v2.colors.alerts.error,
+                        color = Theme.v2.colors.text.tertiary,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-
-                val buttonState =
-                    if (state.isLoading || !state.hasEnoughBalance) VsButtonState.Disabled
-                    else VsButtonState.Enabled
-
-                if (state.hasFastSign) {
-                    FastSignPairedButtons(
-                        onFastSignClick = onFastSignClick,
-                        onPairedSignClick = onConfirm,
-                        state = buttonState,
-                    )
-                } else {
-                    VsButton(
-                        state = buttonState,
-                        label = confirmTitle,
-                        onClick = onConfirm,
-                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
-        },
-    )
+        } else {
+            Text(
+                text = stringResource(tx.titleRes),
+                style = Theme.brockmann.headings.subtitle,
+                color = Theme.v2.colors.text.secondary,
+            )
+
+            // Which order is being closed, in THORChain's own asset spelling. A cancel
+            // moves
+            // no funds by design, so the amount below it is either zero or the dust
+            // Bifrost needs to observe — the pair is the only thing that identifies the
+            // order.
+            tx.limitCancelPair?.let { pair ->
+                UiSpacer(4.dp)
+                Text(
+                    text = pair,
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+            }
+
+            UiSpacer(24.dp)
+
+            SwapToken(valuedToken = tx.token, isLoading = state.isLoading)
+        }
+
+        // A joining co-signer's Kamino withdraw: the amount above is a token
+        // projection of a share figure, at a rate that never crossed the wire. Naming
+        // the share count the instruction does carry is the difference between a
+        // number this device checked and one it only relayed.
+        tx.unverifiedWithdrawShares?.let { shares ->
+            UiSpacer(12.dp)
+            Text(
+                text = stringResource(R.string.kamino_verify_withdraw_unverified, shares),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+                textAlign = if (inSheet) TextAlign.Center else TextAlign.Start,
+            )
+        }
+
+        // Stated before signing, not after: cancelling refunds only what has not
+        // filled, and on the L1 route the amount above is dust that is DONATED — it has
+        // no refund path — so that route gets a sentence that names it rather than the
+        // one-network-fee wording, which would understate the cost by 2 DOGE on
+        // Dogecoin.
+        if (tx.limitCancelPair != null) {
+            UiSpacer(12.dp)
+            Text(
+                text =
+                    stringResource(
+                        if (tx.limitCancelDonatesDust) R.string.limit_order_cancel_explanation_l1
+                        else R.string.limit_order_cancel_explanation
+                    ),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+                textAlign = if (inSheet) TextAlign.Center else TextAlign.Start,
+            )
+        }
+
+        if (tx.operation == OPERATION_MINT && tx.pool.isNotEmpty()) {
+            UiSpacer(8.dp)
+            Text(
+                text =
+                    stringResource(
+                        R.string.lp_destination_format,
+                        tx.pool.substringBefore('-'),
+                        tx.token.token.ticker,
+                    ),
+                style = Theme.brockmann.headings.title3,
+                color = Theme.v2.colors.text.primary,
+                textAlign = if (inSheet) TextAlign.Center else TextAlign.Start,
+            )
+        }
+
+        UiSpacer(if (inSheet) 20.dp else 12.dp)
+
+        if (!inSheet) {
+            VerifyCardDivider(8.dp)
+        }
+
+        tx.srcAddress
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                if (inSheet) {
+                    VerifyVaultRow(
+                        name = tx.srcVaultName ?: tx.srcAddress,
+                        address = tx.srcVaultName?.let { tx.srcAddress }.orEmpty(),
+                    )
+
+                    UiSpacer(12.dp)
+                } else {
+                    VerifyCardDetails(
+                        title = stringResource(R.string.verify_transaction_from_title),
+                        subtitle = tx.srcVaultName ?: tx.srcAddress,
+                        bracketValue = tx.srcVaultName?.let { tx.srcAddress },
+                    )
+
+                    VerifyCardDivider(0.dp)
+                }
+            }
+
+        if (tx.validatorName.isNotEmpty()) {
+            VerifyCardDetails(
+                // The same field carries a validator for native staking and a vault
+                // name
+                // for Kamino Earn; labelling both "Validator" would misname the vault.
+                title =
+                    stringResource(
+                        if (
+                            tx.operation == OPERATION_KAMINO_DEPOSIT ||
+                                tx.operation == OPERATION_KAMINO_WITHDRAW
+                        ) {
+                            R.string.kamino_verify_vault
+                        } else {
+                            R.string.solana_delegate_validator
+                        }
+                    ),
+                subtitle = tx.validatorName,
+            )
+            rowDivider()
+        }
+        if (tx.dstAddress.isNotEmpty()) {
+            val toDstLabel = tx.dstVaultName ?: tx.dstAddressBookTitle
+            VerifyCardDetails(
+                title = stringResource(R.string.verify_transaction_to_title),
+                subtitle = toDstLabel ?: tx.dstAddress,
+                bracketValue = toDstLabel?.let { tx.dstAddress },
+            )
+            rowDivider()
+        }
+        if (tx.pool.isNotEmpty()) {
+            VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
+            rowDivider()
+        }
+        // A pre-built Solana transaction — Kamino Earn, native staking — does its work
+        // in
+        // instructions the amount and destination rows say nothing about. Decoding them
+        // here is what lets the person approving it, on either device of a co-signed
+        // vault, see which programs it invokes.
+        tx.signSolana
+            .takeIf { it.isNotEmpty() }
+            ?.let { rawTransactions ->
+                SignSolanaDisplayView(rawTransactions = rawTransactions)
+                rowDivider()
+            }
+        // Unbond sets dstAddress and nodeAddress to the same node address, so it
+        // already
+        // renders as the "To" row above; only show the Node address row when it adds a
+        // distinct value (issue #5301).
+        if (tx.nodeAddress.isNotEmpty() && tx.nodeAddress != tx.dstAddress) {
+            VerifyCardDetails(
+                title = stringResource(R.string.node_address),
+                subtitle = tx.nodeAddress,
+            )
+            rowDivider()
+        }
+        if (tx.pairedAddress.isNotEmpty()) {
+            VerifyCardDetails(
+                title = stringResource(R.string.paired_address),
+                subtitle = tx.pairedAddress,
+            )
+            rowDivider()
+        }
+        if (tx.thorAddress.isNotEmpty()) {
+            VerifyCardDetails(
+                title = stringResource(R.string.thor_address),
+                subtitle = tx.thorAddress,
+            )
+            rowDivider()
+        }
+        if (tx.operation.isNotEmpty()) {
+            VerifyCardDetails(title = stringResource(R.string.operation), subtitle = tx.operation)
+            rowDivider()
+        }
+
+        if (tx.memo.isNotEmpty()) {
+            if (tx.dstAddress.isNotEmpty()) rowDivider()
+
+            VerifyCardDetails(
+                title = stringResource(R.string.verify_transaction_memo_title),
+                subtitle = tx.memo,
+                showAllContent = true,
+            )
+        }
+
+        val hasContent =
+            tx.srcAddress.isNotEmpty() || tx.dstAddress.isNotEmpty() || tx.memo.isNotEmpty()
+
+        if (hasContent) {
+            rowDivider()
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.verify_deposit_network),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.tertiary,
+                maxLines = 1,
+            )
+
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val chain = state.depositTransactionUiModel.token.token.chain
+
+                if (state.isLoading) {
+                    UiPlaceholderLoader(modifier = Modifier.height(20.dp).width(150.dp))
+                } else {
+                    Image(
+                        painter = painterResource(chain.logo),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                    )
+
+                    Text(
+                        text = chain.raw,
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.v2.colors.text.primary,
+                        textAlign = TextAlign.End,
+                        maxLines = 1,
+                        overflow = TextOverflow.MiddleEllipsis,
+                    )
+                }
+            }
+        }
+
+        VerifyCardDivider(0.dp)
+
+        UiSpacer(12.dp)
+
+        EstimatedNetworkFee(
+            tokenGas = tx.networkFeeTokenValue,
+            fiatGas = tx.networkFeeFiatValue,
+            isLoading = state.isLoading,
+        )
+    }
 }
 
 @Preview

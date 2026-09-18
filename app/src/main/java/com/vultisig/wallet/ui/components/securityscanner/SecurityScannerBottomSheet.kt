@@ -56,6 +56,7 @@ internal fun SecurityScannerBottomSheet(
             securityScannerProvider = securityScannerModel.provider,
             onDismissRequest = onDismissRequest,
             onContinueAnyway = onContinueAnyway,
+            modifier = Modifier.padding(16.dp).navigationBarsPadding(),
         )
     }
 }
@@ -77,6 +78,7 @@ internal fun SettingsSecurityScannerBottomSheet(
             securityScannerProvider = null,
             onDismissRequest = onDismissRequest,
             onContinueAnyway = onContinueAnyway,
+            modifier = Modifier.padding(16.dp).navigationBarsPadding(),
         )
     }
 }
@@ -87,9 +89,10 @@ fun SecurityScannerBottomSheetContent(
     securityScannerProvider: String?,
     onDismissRequest: () -> Unit,
     onContinueAnyway: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier.padding(16.dp).fillMaxWidth().navigationBarsPadding(),
+        modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {

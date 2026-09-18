@@ -3,10 +3,13 @@ package com.vultisig.wallet.ui.screens.swap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,11 +47,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.ui.components.SwapProviderLabel
+import com.vultisig.wallet.ui.components.TokenAndChainLogo
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -63,6 +68,9 @@ import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.swap.DiscountInfo
+import com.vultisig.wallet.ui.models.swap.FeeBreakdown
+import com.vultisig.wallet.ui.models.swap.QuoteDisplay
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
@@ -70,8 +78,13 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.components.PriceImpactRow
 import com.vultisig.wallet.ui.screens.swap.components.ReferralDiscountRow
+import com.vultisig.wallet.ui.screens.swap.components.SwapFeeBreakdown
 import com.vultisig.wallet.ui.screens.swap.components.VultDiscountRow
+import com.vultisig.wallet.ui.screens.verify.VerifyOverviewSheet
+import com.vultisig.wallet.ui.screens.verify.VerifyPairNotch
+import com.vultisig.wallet.ui.screens.verify.VerifyVaultRow
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -107,21 +120,337 @@ internal fun VerifySwapScreen(viewModel: VerifySwapViewModel = hiltViewModel()) 
         }
     }
 
-    VerifySwapScreen(
+    VerifySwapSheet(
         state = state,
-        hasToolbar = true,
-        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onDismissRequest = viewModel::back,
         onConsentReceiveAmount = viewModel::consentReceiveAmount,
         onConsentAmount = viewModel::consentAmount,
         onConfirm = viewModel::joinKeySign,
         onConsentAllowance = viewModel::consentAllowance,
-        onBackClick = viewModel::back,
         onFastSignClick = viewModel::fastSign,
         onContinueAnyway = viewModel::onConfirmScanning,
-        onDismissRequest = viewModel::onDismissSecurityScanner,
+        onDismissWarning = viewModel::onDismissSecurityScanner,
     )
 }
 
+/**
+ * The initiator's review, as a sheet over the swap form: the pair, the vault, the fee breakdown the
+ * form already showed — collapsed again here — with the consents and the sign buttons pinned
+ * beneath.
+ */
+@Composable
+internal fun VerifySwapSheet(
+    state: VerifySwapUiModel,
+    onDismissRequest: () -> Unit,
+    onFastSignClick: () -> Unit,
+    onConfirm: () -> Unit,
+    onConsentReceiveAmount: (Boolean) -> Unit = {},
+    onConsentAmount: (Boolean) -> Unit = {},
+    onConsentAllowance: (Boolean) -> Unit = {},
+    onContinueAnyway: () -> Unit = {},
+    onDismissWarning: () -> Unit = {},
+) {
+    val tx = state.tx
+
+    VerifyOverviewSheet(
+        title = stringResource(R.string.verify_swap_swap_overview),
+        scanStatus = state.txScanStatus,
+        showScanningWarning = state.showScanningWarning,
+        onDismissRequest = onDismissRequest,
+        onContinueAnyway = onContinueAnyway,
+        onDismissWarning = onDismissWarning,
+        footer = {
+            VerifySwapConsents(
+                tx = tx,
+                consentAmount = state.consentAmount,
+                consentReceiveAmount = state.consentReceiveAmount,
+                consentAllowance = state.consentAllowance,
+                onConsentAmount = onConsentAmount,
+                onConsentReceiveAmount = onConsentReceiveAmount,
+                onConsentAllowance = onConsentAllowance,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            UiSpacer(20.dp)
+
+            VerifySwapActions(
+                hasFastSign = state.hasFastSign,
+                isSignEnabled = state.hasAllConsents && !state.isSigning,
+                isSigning = state.isSigning,
+                confirmTitle = stringResource(R.string.verify_swap_sign_button),
+                onConfirm = onConfirm,
+                onFastSignClick = onFastSignClick,
+            )
+        },
+    ) {
+        VerifySwapSheetDetails(tx = tx, vaultName = state.vaultName)
+    }
+}
+
+@Composable
+private fun VerifySwapSheetDetails(tx: SwapTransactionUiModel, vaultName: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        if (tx.isLimitOrder) {
+            Text(
+                text = stringResource(R.string.verify_limit_order_title),
+                style = Theme.brockmann.headings.subtitle,
+                color = Theme.v2.colors.text.secondary,
+            )
+        }
+
+        SwapPairCards(tx = tx)
+
+        if (tx.isLimitOrder && tx.limitTargetPriceLabel != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text =
+                        stringResource(
+                            R.string.verify_limit_order_target_price,
+                            tx.limitTargetPriceLabel,
+                        ),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                tx.limitExpiryLabel?.let { expiry ->
+                    Text(
+                        text = expiry.asString(),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.secondary,
+                    )
+                }
+            }
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            VerifyVaultRow(name = vaultName, address = tx.src.token.address)
+
+            // External recipient must be visible before signing — never a silent default
+            // (#4858). Only shown when the user routed the output to a custom address, and
+            // given warning emphasis so it reads as a deliberate deviation, not a fee row.
+            tx.externalRecipient
+                ?.takeIf { it.isNotBlank() }
+                ?.let { recipient -> VerifyExternalRecipientRow(address = recipient) }
+
+            HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.light)
+
+            // The same breakdown the form showed, so the figures being signed read exactly as
+            // they were quoted; the total is labelled as the maximum it is by now.
+            SwapFeeBreakdown(
+                isLoading = false,
+                quoteDisplay =
+                    QuoteDisplay(
+                        provider = UiText.DynamicString(tx.providerLabel.ifBlank { tx.provider }),
+                        hasQuote = true,
+                    ),
+                feeBreakdown =
+                    FeeBreakdown(
+                        networkFee = tx.networkFeeFormatted,
+                        networkFeeFiat = tx.networkFee.fiatValue,
+                        totalFee = tx.totalFee,
+                        fee = if (tx.swapFeeHidden) "" else tx.providerFee.fiatValue,
+                        outboundFee = tx.outboundFee,
+                        swapFeePercent = tx.swapFeePercent,
+                        swapFeeIncludedInRate = !tx.swapFeeHidden && tx.swapFeeIncludedInRate,
+                        priceImpactPercent = tx.priceImpactPercent,
+                        priceImpactLevel = tx.priceImpactLevel,
+                    ),
+                discountInfo =
+                    DiscountInfo(
+                        tierType = tx.vultBpsDiscount?.getTierType(),
+                        vultBpsDiscount = tx.vultBpsDiscount,
+                        vultBpsDiscountFiatValue = tx.vultBpsDiscountFiatValue,
+                        referralBpsDiscount = tx.referralBpsDiscount,
+                        referralBpsDiscountFiatValue = tx.referralBpsDiscountFiatValue,
+                    ),
+                totalFeeTitle = stringResource(R.string.verify_swap_screen_total_fees),
+                showProvider = tx.provider.isNotBlank(),
+            )
+        }
+    }
+}
+
+/** The source and destination side by side, joined by a chevron. */
+@Composable
+private fun SwapPairCards(tx: SwapTransactionUiModel) {
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+        ) {
+            SwapPairCard(valuedToken = tx.src, modifier = Modifier.weight(1f).fillMaxHeight())
+
+            SwapPairCard(
+                valuedToken = tx.dst,
+                // A market swap's amount is the quote's *expected* output — the memo's floor, when
+                // there is one, sits below it and gets its own line — so calling it the minimum
+                // overstates what the signature guarantees. A limit order is the opposite case: its
+                // amount IS the signed floor, so "min. payout" is exactly right there (#5711).
+                caption =
+                    stringResource(
+                        if (tx.isLimitOrder) R.string.swap_form_min_pay
+                        else R.string.swap_form_expected_pay
+                    ),
+                // The floor the signed memo actually enforces. Absent — not zeroed, not
+                // substituted — on routes that enforce none, so the sheet never asserts a
+                // guarantee the signature doesn't back (#5711).
+                footnote =
+                    tx.minPayout?.let {
+                        stringResource(R.string.swap_form_min_pay_amount, it, tx.dst.token.ticker)
+                    },
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            )
+        }
+
+        VerifyPairNotch(chevron = R.drawable.ic_chevron_right_small)
+    }
+}
+
+@Composable
+private fun SwapPairCard(
+    valuedToken: ValuedToken,
+    modifier: Modifier = Modifier,
+    caption: String? = null,
+    footnote: String? = null,
+) {
+    val token = valuedToken.token
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+        modifier =
+            modifier
+                .background(
+                    color = Theme.v2.colors.backgrounds.surface2,
+                    shape = Theme.v2.radius.lg,
+                )
+                .padding(16.dp),
+    ) {
+        TokenAndChainLogo(
+            tokenLogo = getCoinLogo(token.logo),
+            tokenTicker = token.ticker,
+            // A native asset on its own L1 says which chain it is by name; a token or an L2 asset
+            // needs the badge.
+            chainLogo = token.chain.logo.takeIf { !token.isNativeToken || token.chain.isLayer2 },
+            chainBorderColor = Theme.v2.colors.backgrounds.surface1,
+        )
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            if (caption != null) {
+                Text(
+                    text = caption,
+                    style = Theme.brockmann.supplementary.captionSmall,
+                    color = Theme.v2.colors.text.tertiary,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
+            Text(
+                text = "${valuedToken.value} ${token.ticker}",
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+                textAlign = TextAlign.Center,
+            )
+
+            Text(
+                text = valuedToken.fiatValue,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.tertiary,
+                textAlign = TextAlign.Center,
+            )
+
+            if (footnote != null) {
+                Text(
+                    text = footnote,
+                    style = Theme.brockmann.supplementary.captionSmall,
+                    color = Theme.v2.colors.text.tertiary,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VerifySwapConsents(
+    tx: SwapTransactionUiModel,
+    consentAmount: Boolean,
+    consentReceiveAmount: Boolean,
+    consentAllowance: Boolean,
+    onConsentAmount: (Boolean) -> Unit,
+    onConsentReceiveAmount: (Boolean) -> Unit,
+    onConsentAllowance: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        VsCheckField(
+            title = stringResource(R.string.verify_swap_consent_amount),
+            isChecked = consentAmount,
+            onCheckedChange = onConsentAmount,
+        )
+
+        VsCheckField(
+            title = stringResource(R.string.verify_swap_agree_receive_amount),
+            isChecked = consentReceiveAmount,
+            onCheckedChange = onConsentReceiveAmount,
+        )
+
+        if (tx.hasConsentAllowance) {
+            VsCheckField(
+                title = stringResource(R.string.verify_swap_agree_allowance),
+                isChecked = consentAllowance,
+                onCheckedChange = onConsentAllowance,
+            )
+        }
+    }
+}
+
+@Composable
+private fun VerifySwapActions(
+    hasFastSign: Boolean,
+    isSignEnabled: Boolean,
+    isSigning: Boolean,
+    confirmTitle: String,
+    onConfirm: () -> Unit,
+    onFastSignClick: () -> Unit,
+) {
+    val buttonState = if (isSignEnabled) VsButtonState.Enabled else VsButtonState.Disabled
+
+    if (hasFastSign) {
+        FastSignPairedButtons(
+            onFastSignClick = onFastSignClick,
+            onPairedSignClick = onConfirm,
+            state = buttonState,
+            isLoading = isSigning,
+        )
+    } else {
+        VsButton(
+            label = confirmTitle,
+            modifier = Modifier.fillMaxWidth(),
+            state = buttonState,
+            isLoading = isSigning,
+            onClick = onConfirm,
+        )
+    }
+}
+
+/**
+ * The review as a full screen: what a co-signer sees on joining, where there is no form to float
+ * over. The initiator's sheet is [VerifySwapSheet].
+ */
 @Composable
 internal fun VerifySwapScreen(
     state: VerifySwapUiModel,

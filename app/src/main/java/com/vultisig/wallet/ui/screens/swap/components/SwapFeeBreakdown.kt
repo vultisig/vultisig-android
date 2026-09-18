@@ -52,6 +52,9 @@ import com.vultisig.wallet.ui.utils.asString
  * @param quoteDisplay quote-side values (provider label and quote availability).
  * @param feeBreakdown network and swap fee values rendered in the details panel.
  * @param discountInfo VULT-tier and referral discount values rendered in the details panel.
+ * @param totalFeeTitle the label on the expandable row; the review sheet calls the same figure the
+ *   maximum, since by then it is the ceiling being signed rather than an estimate.
+ * @param showProvider whether to lead with the provider row; off where the provider is unknown.
  */
 @Composable
 internal fun SwapFeeBreakdown(
@@ -59,6 +62,8 @@ internal fun SwapFeeBreakdown(
     quoteDisplay: QuoteDisplay,
     feeBreakdown: FeeBreakdown,
     discountInfo: DiscountInfo,
+    totalFeeTitle: String = stringResource(R.string.swap_form_total_fees_title),
+    showProvider: Boolean = true,
 ) {
     var isFeeDetailsExpanded by remember { mutableStateOf(false) }
 
@@ -74,25 +79,27 @@ internal fun SwapFeeBreakdown(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.padding(horizontal = 8.dp),
         ) {
-            FormDetails2(
-                title = stringResource(R.string.swap_screen_provider_title),
-                valueComposable = {
-                    if (isLoading) {
-                        loadingPlaceholder()
-                    } else {
-                        SwapProviderLabel(
-                            provider = quoteDisplay.provider.asString(),
-                            style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.text.secondary,
-                        )
-                    }
-                },
-            )
+            if (showProvider) {
+                FormDetails2(
+                    title = stringResource(R.string.swap_screen_provider_title),
+                    valueComposable = {
+                        if (isLoading) {
+                            loadingPlaceholder()
+                        } else {
+                            SwapProviderLabel(
+                                provider = quoteDisplay.provider.asString(),
+                                style = Theme.brockmann.supplementary.caption,
+                                color = Theme.v2.colors.text.secondary,
+                            )
+                        }
+                    },
+                )
+            }
 
             FormDetails2(
                 modifier =
                     Modifier.clickable(onClick = { isFeeDetailsExpanded = !isFeeDetailsExpanded }),
-                title = stringResource(R.string.swap_form_total_fees_title),
+                title = totalFeeTitle,
                 valueComposable =
                     if (isLoading) {
                         { loadingPlaceholder() }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Blockaid logomark on its own, lifted from the wordmark in blockaid_logo.xml. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="12dp"
+    android:height="12dp"
+    android:viewportWidth="10.772"
+    android:viewportHeight="10.772">
+  <group android:translateY="0.513">
+    <path
+        android:pathData="M7.857,1.6H0.533V0H7.857C9.226,0 10.338,1.018 10.338,2.273C10.338,3.527 9.226,4.545 7.857,4.545H2.538C2.339,4.545 2.16,4.691 2.16,4.873C2.16,5.055 2.319,5.2 2.538,5.2H7.857C9.226,5.2 10.338,6.218 10.338,7.473C10.338,8.727 9.226,9.745 7.857,9.745H0.533V8.145H7.857C8.254,8.145 8.591,7.836 8.591,7.473C8.591,7.109 8.254,6.8 7.857,6.8H2.538C1.386,6.818 0.434,5.945 0.434,4.873C0.434,3.818 1.386,2.945 2.538,2.945H7.857C8.254,2.945 8.591,2.636 8.591,2.273C8.591,1.909 8.254,1.6 7.857,1.6Z"
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"/>
+  </group>
+</vector>

@@ -65,6 +65,10 @@ import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
+import com.vultisig.wallet.ui.screens.verify.VerifyAccountCards
+import com.vultisig.wallet.ui.screens.verify.VerifyAmountHero
+import com.vultisig.wallet.ui.screens.verify.VerifyOverviewSheet
+import com.vultisig.wallet.ui.screens.verify.VerifyPresentation
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -100,24 +104,81 @@ internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewMo
         }
     }
 
-    VerifySendScreen(
+    VerifySendSheet(
         state = state,
-        isConsentsEnabled = true,
-        hasToolbar = true,
-        confirmTitle = stringResource(R.string.keysign_sign_transaction),
+        onDismissRequest = viewModel::back,
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDappTransaction = viewModel::checkConsentDappTransaction,
         onConsentIssuer = viewModel::checkConsentIssuer,
         onConsentLimit = viewModel::checkConsentLimit,
         onConfirm = viewModel::joinKeySign,
-        onBackClick = viewModel::back,
         onFastSignClick = viewModel::fastSign,
         onConfirmScanning = viewModel::onConfirmScanning,
         onDismissScanning = viewModel::dismissScanningWarning,
     )
 }
 
+/**
+ * The initiator's review, as a sheet over the send form: the details scroll, the consents and the
+ * sign buttons stay put beneath them.
+ */
+@Composable
+internal fun VerifySendSheet(
+    state: VerifyTransactionUiModel,
+    onDismissRequest: () -> Unit,
+    onFastSignClick: () -> Unit,
+    onConfirm: () -> Unit,
+    onConsentAddress: (Boolean) -> Unit = {},
+    onConsentAmount: (Boolean) -> Unit = {},
+    onConsentDappTransaction: (Boolean) -> Unit = {},
+    onConsentIssuer: (Boolean) -> Unit = {},
+    onConsentLimit: (Boolean) -> Unit = {},
+    onConfirmScanning: () -> Unit = {},
+    onDismissScanning: () -> Unit = {},
+    initiallyExpandedDetails: Boolean = false,
+) {
+    VerifyOverviewSheet(
+        title = stringResource(state.transaction.overviewTitleRes),
+        scanStatus = state.txScanStatus,
+        showScanningWarning = state.showScanningWarning,
+        onDismissRequest = onDismissRequest,
+        onContinueAnyway = onConfirmScanning,
+        onDismissWarning = onDismissScanning,
+        footer = {
+            VerifySendConsents(
+                state = state,
+                onConsentAddress = onConsentAddress,
+                onConsentAmount = onConsentAmount,
+                onConsentDappTransaction = onConsentDappTransaction,
+                onConsentIssuer = onConsentIssuer,
+                onConsentLimit = onConsentLimit,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            UiSpacer(20.dp)
+
+            VerifySendActions(
+                state = state,
+                isConsentsEnabled = true,
+                confirmTitle = stringResource(R.string.keysign_sign_transaction),
+                onConfirm = onConfirm,
+                onFastSignClick = onFastSignClick,
+            )
+        },
+    ) {
+        VerifySendDetails(
+            state = state,
+            presentation = VerifyPresentation.Sheet,
+            initiallyExpandedDetails = initiallyExpandedDetails,
+        )
+    }
+}
+
+/**
+ * The review as a full screen: what a co-signer sees on joining, where there is no form to float
+ * over. The initiator's sheet is [VerifySendSheet].
+ */
 @Composable
 internal fun VerifySendScreen(
     state: VerifyTransactionUiModel,
@@ -152,39 +213,21 @@ internal fun VerifySendScreen(
     }
 
     V2Scaffold(
-        title =
-            stringResource(
-                    if (state.transaction.isUniversalRouterSwap) {
-                        R.string.verify_swap_swap_overview
-                    } else {
-                        R.string.verify_send_send_overview
-                    }
-                )
-                .takeIf { hasToolbar },
+        title = stringResource(state.transaction.overviewTitleRes).takeIf { hasToolbar },
         onBackClick = onBackClick.takeIf { hasToolbar },
         bottomBar = {
-            val buttonState =
-                if (isConsentsEnabled && !state.hasAllConsents) VsButtonState.Disabled
-                else VsButtonState.Enabled
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
             ) {
-                if (state.hasFastSign) {
-                    FastSignPairedButtons(
-                        onFastSignClick = onFastSignClick,
-                        onPairedSignClick = onConfirm,
-                        state = buttonState,
-                    )
-                } else {
-                    VsButton(
-                        label = confirmTitle,
-                        state = buttonState,
-                        onClick = onConfirm,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
+                VerifySendActions(
+                    state = state,
+                    isConsentsEnabled = isConsentsEnabled,
+                    confirmTitle = confirmTitle,
+                    onConfirm = onConfirm,
+                    onFastSignClick = onFastSignClick,
+                )
             }
         },
         content = {
@@ -193,439 +236,537 @@ internal fun VerifySendScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             ) {
-                val tx = state.transaction
-
-                dappMetadata?.takeUnless { it.isEmpty }?.let { DappRequestBanner(metadata = it) }
-
-                SecurityScannerBadget(state.txScanStatus)
-
-                // Success border ties the card to the scanner badge above when the scan came back
-                // benign.
-                val isScannedBenign =
-                    (state.txScanStatus as? TransactionScanStatus.Scanned)?.result?.let { r ->
-                        r.isSecure &&
-                            (r.riskLevel == SecurityRiskLevel.NONE ||
-                                r.riskLevel == SecurityRiskLevel.LOW)
-                    } == true
-
-                val cardShape = Theme.v2.radius.xl
-                val cardModifier =
-                    Modifier.background(
-                            color = Theme.v2.colors.backgrounds.secondary,
-                            shape = cardShape,
-                        )
-                        .let {
-                            if (isScannedBenign) {
-                                it.border(
-                                    width = 1.dp,
-                                    color = Theme.v2.colors.alerts.success,
-                                    shape = cardShape,
-                                )
-                            } else {
-                                it
-                            }
-                        }
-                        .padding(all = 24.dp)
-
-                Column(modifier = cardModifier) {
-                    UiSpacer(12.dp)
-
-                    // Universal Router decodes to the raw `execute` selector; show "Swap" so users
-                    // see intent, not router plumbing.
-                    val heroTitle =
-                        if (tx.isUniversalRouterSwap) {
-                            stringResource(R.string.decoded_function_swap_title)
-                        } else {
-                            tx.functionName
-                        }
-                    TransactionHero(
-                        heroContent = tx.heroContent,
-                        functionName = heroTitle,
-                        modifier = Modifier.fillMaxWidth(),
-                        // Verify leads with the verb, so it sits against the card's left edge with
-                        // the rows below it. Done keeps the centred default.
-                        verbAlignment = Alignment.Start,
-                    ) {
-                        val rippleDapp = tx.signRipple
-                        if (rippleDapp != null) {
-                            // A dApp XRPL transaction has no native send amount (`toAmount` is 0),
-                            // so a "You're sending 0 XRP" hero would be misleading. Show the
-                            // operation type instead; the decoded Selling / Buying / Issuer terms
-                            // render in the summary card below.
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.ripple_dapp_transaction),
-                                    style = Theme.brockmann.supplementary.captionSmall,
-                                    color = Theme.v2.colors.text.tertiary,
-                                    textAlign = TextAlign.Center,
-                                    maxLines = 1,
-                                )
-                                UiSpacer(12.dp)
-                                Text(
-                                    text =
-                                        rippleDapp.transactionType
-                                            ?: stringResource(R.string.ripple_dapp_transaction),
-                                    style = Theme.brockmann.headings.title2,
-                                    color = Theme.v2.colors.text.primary,
-                                    textAlign = TextAlign.Center,
-                                )
-                            }
-                        } else if (tx.isRippleTrustSet) {
-
-                            Text(
-                                text =
-                                    tx.rippleTrustSet?.ticker?.let {
-                                        stringResource(R.string.ripple_trust_line_hero_title, it)
-                                    } ?: stringResource(R.string.ripple_trust_line_title),
-                                style = Theme.brockmann.headings.title2,
-                                color = Theme.v2.colors.text.primary,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        } else {
-                            VsOverviewToken(
-                                header =
-                                    stringResource(
-                                        tx.headerTitleRes ?: R.string.verify_deposit_sending
-                                    ),
-                                valuedToken = tx.token,
-                                shape = RoundedCornerShape(0.dp),
-                                modifier = Modifier.fillMaxWidth(),
-                                withContainer = false,
-                            )
-                        }
-                    }
-
-                    UiSpacer(12.dp)
-
-                    VerifyCardDivider(8.dp)
-
-                    VerifyCardDetails(
-                        title = stringResource(R.string.verify_transaction_from_title),
-                        subtitle = tx.srcVaultName ?: tx.srcAddress,
-                        bracketValue = tx.srcVaultName?.let { tx.srcAddress },
-                    )
-
-                    // For a dApp XRPL tx the native `To` comes from the wire `toAddress`, which is
-                    // not the value being signed — the real recipient (if any) lives in the raw
-                    // JSON `Destination` and is rendered by SignRippleDisplayView below. Showing
-                    // the
-                    // wire address here would let a relay display a trusted label/vault while the
-                    // signed JSON sends elsewhere, so suppress the native To row for signRipple.
-                    if (tx.isRippleTrustSet) {
-                        // Values come from the token id and the signed amount, never from the
-                        // relayed wire fields.
-                        val trustSet = tx.rippleTrustSet
-                        VerifyCardDivider(0.dp)
-                        if (trustSet != null) {
-                            VerifyCardDetails(
-                                title = stringResource(R.string.ripple_field_issuer),
-                                subtitle = trustSet.issuer,
-                            )
-
-                            VerifyCardDivider(0.dp)
-                            VerifyCardDetails(
-                                title = stringResource(R.string.ripple_trust_line_currency),
-                                subtitle = trustSet.ticker,
-                            )
-
-                            VerifyCardDivider(0.dp)
-                            VerifyCardDetails(
-                                title = stringResource(R.string.ripple_trust_line_limit),
-                                subtitle = "${trustSet.groupedLimit} ${trustSet.ticker}",
-                            )
-                        } else {
-                            VerifyCardDetails(
-                                title = stringResource(R.string.ripple_trust_line_unreviewable),
-                                subtitle =
-                                    stringResource(R.string.ripple_trust_line_unreviewable_value),
-                                showAllContent = true,
-                                subtitleColor = Theme.v2.colors.alerts.error,
-                            )
-                        }
-                    } else if (tx.signRipple == null) {
-                        VerifyCardDivider(0.dp)
-
-                        val toDstLabel =
-                            tx.dstVaultName
-                                ?: tx.dstAddressBookTitle
-                                ?: tx.dstContractLabel
-                                ?: tx.dstLabel
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_to_title),
-                            subtitle = toDstLabel ?: tx.dstAddress,
-                            bracketValue = toDstLabel?.let { tx.dstAddress },
-                        )
-                    }
-
-                    // A memo that merely echoes the destination tag is signed as tag-only, so it is
-                    // not shown as a separate Memo row (it appears in the Destination Tag row
-                    // below).
-                    if (!tx.memo.isNullOrBlank() && tx.memo != tx.destinationTag) {
-                        VerifyCardDivider(0.dp)
-
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_memo_title),
-                            subtitle = tx.memo,
-                        )
-                    }
-
-                    if (!tx.destinationTag.isNullOrBlank()) {
-                        VerifyCardDivider(0.dp)
-
-                        VerifyCardDetails(
-                            title = stringResource(R.string.send_form_destination_tag),
-                            subtitle = tx.destinationTag,
-                        )
-                    }
-
-                    if (tx.emptiesSenderAccount) {
-                        VerifyCardDivider(0.dp)
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                        ) {
-                            UiIcon(
-                                drawableResId = R.drawable.ic_triangle_alert,
-                                tint = Theme.v2.colors.alerts.warning,
-                                size = 16.dp,
-                            )
-                            Text(
-                                text =
-                                    stringResource(
-                                        R.string.verify_transaction_allow_death_warning,
-                                        tx.token.token.ticker,
-                                    ),
-                                style = Theme.brockmann.body.s.medium,
-                                color = Theme.v2.colors.alerts.warning,
-                            )
-                        }
-                    }
-                    tx.signAmino
-                        ?.takeIf { it.isNotBlank() }
-                        ?.let {
-                            VerifyCardDivider(0.dp)
-
-                            VerifyCardJsonDetails(
-                                title = stringResource(R.string.amino_sign),
-                                subtitle = it,
-                            )
-                        }
-
-                    tx.signDirect
-                        ?.takeIf { it.isNotBlank() }
-                        ?.let {
-                            VerifyCardDivider(0.dp)
-
-                            VerifyCardJsonDetails(
-                                title = stringResource(R.string.amino_direct),
-                                subtitle = it,
-                            )
-                        }
-                    tx.signSolana
-                        .takeIf { it.isNotEmpty() }
-                        ?.let {
-                            VerifyCardDivider(0.dp)
-
-                            SignSolanaDisplayView(
-                                rawTransactions = it,
-                                initiallyExpanded = initiallyExpandedDetails,
-                            )
-                        }
-
-                    tx.signSui
-                        ?.takeIf { it.isNotBlank() }
-                        ?.let {
-                            VerifyCardDivider(0.dp)
-
-                            SignSuiDisplayView(
-                                sender = tx.srcAddress,
-                                unsignedTxMsg = it,
-                                initiallyExpanded = initiallyExpandedDetails,
-                            )
-                        }
-
-                    tx.signRipple?.let {
-                        VerifyCardDivider(0.dp)
-
-                        // Expanded by default: the decoded terms are the primary content for a
-                        // dApp XRPL tx (the hero shows no amount), mirroring the extension summary.
-                        SignRippleDisplayView(tx = it, initiallyExpanded = true)
-                    }
-
-                    tx.tonMessages
-                        .takeIf { it.isNotEmpty() }
-                        ?.let { tonMessages ->
-                            VerifyCardDivider(0.dp)
-
-                            SignTonDisplayView(
-                                messages = tonMessages,
-                                initiallyExpanded = initiallyExpandedDetails,
-                            )
-                        }
-
-                    if (tx.isUnlimitedApproval) {
-                        VerifyCardDivider(0.dp)
-                        val approvalToken = tx.token.token
-                        val approvalTicker =
-                            tx.approvalTokenTicker ?: sanitizeDisplayString(approvalToken.ticker)
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                        ) {
-                            TokenAndChainLogo(
-                                tokenLogo = getCoinLogo(approvalToken.logo),
-                                tokenTicker = approvalTicker,
-                                chainLogo =
-                                    approvalToken.chain.monoToneLogo.takeIf {
-                                        !approvalToken.isNativeToken || approvalToken.chain.isLayer2
-                                    },
-                            )
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(
-                                    text = stringResource(R.string.erc20_approval_title),
-                                    style = Theme.brockmann.body.m.medium,
-                                    color = Theme.v2.colors.text.primary,
-                                )
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    UiIcon(
-                                        drawableResId = R.drawable.ic_triangle_alert,
-                                        tint = Theme.v2.colors.alerts.warning,
-                                        size = 16.dp,
-                                    )
-                                    Text(
-                                        text =
-                                            stringResource(
-                                                R.string.erc20_approval_unlimited_amount,
-                                                approvalTicker,
-                                            ),
-                                        style = Theme.brockmann.body.s.medium,
-                                        color = Theme.v2.colors.alerts.warning,
-                                    )
-                                }
-                            }
-                        }
-                        tx.approvalSpender?.let { spender ->
-                            VerifyCardDivider(0.dp)
-                            VerifyCardDetails(
-                                title = stringResource(R.string.erc20_approval_spender),
-                                subtitle = spender,
-                            )
-                        }
-                    }
-
-                    if (tx.functionSignature != null || tx.functionInputs != null) {
-                        VerifyCardDivider(0.dp)
-                        TransactionDetailsSection(
-                            functionSignature = tx.functionSignature,
-                            functionInputs = tx.functionInputs,
-                            decodedFunctionParams = tx.decodedFunctionParams,
-                            initiallyExpanded = initiallyExpandedDetails,
-                        )
-                    }
-
-                    VerifyCardDivider(0.dp)
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.verify_deposit_network),
-                            style = Theme.brockmann.supplementary.footnote,
-                            color = Theme.v2.colors.text.tertiary,
-                            maxLines = 1,
-                        )
-
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            val chain = state.transaction.token.token.chain
-
-                            Image(
-                                painter = painterResource(chain.logo),
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                            )
-
-                            Text(
-                                text = chain.raw,
-                                style = Theme.brockmann.body.s.medium,
-                                color = Theme.v2.colors.text.primary,
-                                textAlign = TextAlign.End,
-                                maxLines = 1,
-                                overflow = TextOverflow.MiddleEllipsis,
-                            )
-                        }
-                    }
-
-                    VerifyCardDivider(0.dp)
-
-                    UiSpacer(12.dp)
-
-                    EstimatedNetworkFee(
-                        tokenGas = tx.networkFeeTokenValue,
-                        fiatGas = tx.networkFeeFiatValue,
-                        isLoading = state.isLoadingFees,
-                    )
-                }
+                VerifySendDetails(
+                    state = state,
+                    presentation = VerifyPresentation.Screen,
+                    dappMetadata = dappMetadata,
+                    initiallyExpandedDetails = initiallyExpandedDetails,
+                )
 
                 if (isConsentsEnabled) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        if (state.transaction.isRippleTrustSet) {
-                            VsCheckField(
-                                title = stringResource(R.string.ripple_trust_line_issuer_check),
-                                isChecked = state.consentIssuer,
-                                onCheckedChange = onConsentIssuer,
-                            )
-
-                            VsCheckField(
-                                title = stringResource(R.string.ripple_trust_line_limit_check),
-                                isChecked = state.consentLimit,
-                                onCheckedChange = onConsentLimit,
-                            )
-                        } else if (state.transaction.signRipple != null) {
-                            // A dApp XRPL tx has no native recipient/amount to attest to, so show a
-                            // single "reviewed the details" consent instead of the address/amount
-                            // pair, which would ask the co-signer to confirm values that aren't
-                            // what's being signed.
-                            VsCheckField(
-                                title =
-                                    stringResource(
-                                        R.string.verify_transaction_consent_dapp_transaction
-                                    ),
-                                isChecked = state.consentDappTransaction,
-                                onCheckedChange = onConsentDappTransaction,
-                            )
-                        } else {
-                            VsCheckField(
-                                title = stringResource(R.string.verify_transaction_consent_address),
-                                isChecked = state.consentAddress,
-                                onCheckedChange = onConsentAddress,
-                            )
-
-                            VsCheckField(
-                                title = stringResource(R.string.verify_transaction_consent_amount),
-                                isChecked = state.consentAmount,
-                                onCheckedChange = onConsentAmount,
-                            )
-                        }
-                    }
+                    VerifySendConsents(
+                        state = state,
+                        onConsentAddress = onConsentAddress,
+                        onConsentAmount = onConsentAmount,
+                        onConsentDappTransaction = onConsentDappTransaction,
+                        onConsentIssuer = onConsentIssuer,
+                        onConsentLimit = onConsentLimit,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
         },
     )
+}
+
+// Universal Router decodes to the raw `execute` selector; call the review a swap so users see
+// intent, not router plumbing.
+private val TransactionDetailsUiModel.overviewTitleRes: Int
+    get() =
+        if (isUniversalRouterSwap) R.string.verify_swap_swap_overview
+        else R.string.verify_send_send_overview
+
+@Composable
+private fun VerifySendActions(
+    state: VerifyTransactionUiModel,
+    isConsentsEnabled: Boolean,
+    confirmTitle: String,
+    onConfirm: () -> Unit,
+    onFastSignClick: () -> Unit,
+) {
+    val buttonState =
+        if (isConsentsEnabled && !state.hasAllConsents) VsButtonState.Disabled
+        else VsButtonState.Enabled
+
+    if (state.hasFastSign) {
+        FastSignPairedButtons(
+            onFastSignClick = onFastSignClick,
+            onPairedSignClick = onConfirm,
+            state = buttonState,
+        )
+    } else {
+        VsButton(
+            label = confirmTitle,
+            state = buttonState,
+            onClick = onConfirm,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun VerifySendConsents(
+    state: VerifyTransactionUiModel,
+    onConsentAddress: (Boolean) -> Unit,
+    onConsentAmount: (Boolean) -> Unit,
+    onConsentDappTransaction: (Boolean) -> Unit,
+    onConsentIssuer: (Boolean) -> Unit,
+    onConsentLimit: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        if (state.transaction.signRipple != null) {
+            // A dApp XRPL tx has no native recipient/amount to attest to, so show a
+            // single "reviewed the details" consent instead of the address/amount
+            // pair, which would ask the co-signer to confirm values that aren't
+            // what's being signed. Checked before isRippleTrustSet: a dApp TrustSet
+            // still carries signRipple, and hasAllConsents gates on signRipple first,
+            // so the checkbox it requires must be the one rendered here too.
+            VsCheckField(
+                title = stringResource(R.string.verify_transaction_consent_dapp_transaction),
+                isChecked = state.consentDappTransaction,
+                onCheckedChange = onConsentDappTransaction,
+            )
+        } else if (state.transaction.isRippleTrustSet) {
+            VsCheckField(
+                title = stringResource(R.string.ripple_trust_line_issuer_check),
+                isChecked = state.consentIssuer,
+                onCheckedChange = onConsentIssuer,
+            )
+
+            VsCheckField(
+                title = stringResource(R.string.ripple_trust_line_limit_check),
+                isChecked = state.consentLimit,
+                onCheckedChange = onConsentLimit,
+            )
+        } else {
+            VsCheckField(
+                title = stringResource(R.string.verify_transaction_consent_address),
+                isChecked = state.consentAddress,
+                onCheckedChange = onConsentAddress,
+            )
+
+            VsCheckField(
+                title = stringResource(R.string.verify_transaction_consent_amount),
+                isChecked = state.consentAmount,
+                onCheckedChange = onConsentAmount,
+            )
+        }
+    }
+}
+
+/**
+ * Everything the transaction is, in the order the reader checks it: the hero, the parties, the
+ * decoded payload, the network and the fee. Shared by the sheet and the full screen, which differ
+ * only in chrome — see [VerifyPresentation].
+ */
+@Composable
+private fun VerifySendDetails(
+    state: VerifyTransactionUiModel,
+    presentation: VerifyPresentation,
+    dappMetadata: DAppMetadata? = null,
+    initiallyExpandedDetails: Boolean = false,
+) {
+    val tx = state.transaction
+    val inSheet = presentation == VerifyPresentation.Sheet
+
+    dappMetadata?.takeUnless { it.isEmpty }?.let { DappRequestBanner(metadata = it) }
+
+    // The sheet carries the scan verdict on the control beside its title instead.
+    if (!inSheet) {
+        SecurityScannerBadget(state.txScanStatus)
+    }
+
+    // Success border ties the card to the scanner badge above when the scan came back
+    // benign.
+    val isScannedBenign =
+        (state.txScanStatus as? TransactionScanStatus.Scanned)?.result?.let { r ->
+            r.isSecure &&
+                (r.riskLevel == SecurityRiskLevel.NONE || r.riskLevel == SecurityRiskLevel.LOW)
+        } == true
+
+    val cardShape = Theme.v2.radius.xl
+    val cardModifier =
+        if (inSheet) {
+            Modifier.fillMaxWidth()
+        } else {
+            Modifier.background(color = Theme.v2.colors.backgrounds.secondary, shape = cardShape)
+                .let {
+                    if (isScannedBenign) {
+                        it.border(
+                            width = 1.dp,
+                            color = Theme.v2.colors.alerts.success,
+                            shape = cardShape,
+                        )
+                    } else {
+                        it
+                    }
+                }
+                .padding(all = 24.dp)
+        }
+
+    // The sheet lists its rows without rules between them; the full screen keeps them. The one
+    // rule the sheet does keep is the direct one below, which sets the network fee apart.
+    val rowDivider: @Composable () -> Unit = {
+        if (!inSheet) {
+            VerifyCardDivider(0.dp)
+        }
+    }
+
+    Column(modifier = cardModifier) {
+        if (!inSheet) {
+            UiSpacer(12.dp)
+        }
+
+        // Universal Router decodes to the raw `execute` selector; show "Swap" so users
+        // see intent, not router plumbing.
+        val heroTitle =
+            if (tx.isUniversalRouterSwap) {
+                stringResource(R.string.decoded_function_swap_title)
+            } else {
+                tx.functionName
+            }
+        TransactionHero(
+            heroContent = tx.heroContent,
+            functionName = heroTitle,
+            modifier = Modifier.fillMaxWidth(),
+            // Verify leads with the verb, so it sits against the card's left edge with
+            // the rows below it. Done keeps the centred default, and so does the sheet, whose
+            // hero is centred like everything else in it.
+            verbAlignment = if (inSheet) Alignment.CenterHorizontally else Alignment.Start,
+        ) {
+            val rippleDapp = tx.signRipple
+            if (rippleDapp != null) {
+                // A dApp XRPL transaction has no native send amount (`toAmount` is 0),
+                // so a "You're sending 0 XRP" hero would be misleading. Show the
+                // operation type instead; the decoded Selling / Buying / Issuer terms
+                // render in the summary card below.
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(R.string.ripple_dapp_transaction),
+                        style = Theme.brockmann.supplementary.captionSmall,
+                        color = Theme.v2.colors.text.tertiary,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                    )
+                    UiSpacer(12.dp)
+                    Text(
+                        text =
+                            rippleDapp.transactionType
+                                ?: stringResource(R.string.ripple_dapp_transaction),
+                        style = Theme.brockmann.headings.title2,
+                        color = Theme.v2.colors.text.primary,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            } else if (tx.isRippleTrustSet) {
+
+                Text(
+                    text =
+                        tx.rippleTrustSet?.ticker?.let {
+                            stringResource(R.string.ripple_trust_line_hero_title, it)
+                        } ?: stringResource(R.string.ripple_trust_line_title),
+                    style = Theme.brockmann.headings.title2,
+                    color = Theme.v2.colors.text.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else if (inSheet) {
+                VerifyAmountHero(
+                    header = stringResource(tx.headerTitleRes ?: R.string.verify_deposit_sending),
+                    valuedToken = tx.token,
+                )
+            } else {
+                VsOverviewToken(
+                    header = stringResource(tx.headerTitleRes ?: R.string.verify_deposit_sending),
+                    valuedToken = tx.token,
+                    shape = RoundedCornerShape(0.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    withContainer = false,
+                )
+            }
+        }
+
+        UiSpacer(if (inSheet) 20.dp else 12.dp)
+
+        if (!inSheet) {
+            VerifyCardDivider(8.dp)
+        }
+
+        // The parties. A plain send draws them as the sheet's stacked cards; anything with a
+        // decoded payload keeps the row form, where the extra terms have somewhere to go.
+        val toDstLabel =
+            tx.dstVaultName ?: tx.dstAddressBookTitle ?: tx.dstContractLabel ?: tx.dstLabel
+        val isPlainSend = tx.signRipple == null && !tx.isRippleTrustSet
+        if (inSheet && isPlainSend) {
+            VerifyAccountCards(
+                fromName = tx.srcVaultName,
+                fromAddress = tx.srcAddress,
+                toName = toDstLabel,
+                toAddress = tx.dstAddress,
+            )
+
+            UiSpacer(8.dp)
+        } else {
+            VerifyCardDetails(
+                title = stringResource(R.string.verify_transaction_from_title),
+                subtitle = tx.srcVaultName ?: tx.srcAddress,
+                bracketValue = tx.srcVaultName?.let { tx.srcAddress },
+            )
+        }
+
+        // For a dApp XRPL tx the native `To` comes from the wire `toAddress`, which is
+        // not the value being signed — the real recipient (if any) lives in the raw
+        // JSON `Destination` and is rendered by SignRippleDisplayView below. Showing
+        // the
+        // wire address here would let a relay display a trusted label/vault while the
+        // signed JSON sends elsewhere, so suppress the native To row for signRipple.
+        if (tx.isRippleTrustSet) {
+            // Values come from the token id and the signed amount, never from the
+            // relayed wire fields.
+            val trustSet = tx.rippleTrustSet
+            rowDivider()
+            if (trustSet != null) {
+                VerifyCardDetails(
+                    title = stringResource(R.string.ripple_field_issuer),
+                    subtitle = trustSet.issuer,
+                )
+
+                rowDivider()
+                VerifyCardDetails(
+                    title = stringResource(R.string.ripple_trust_line_currency),
+                    subtitle = trustSet.ticker,
+                )
+
+                rowDivider()
+                VerifyCardDetails(
+                    title = stringResource(R.string.ripple_trust_line_limit),
+                    subtitle = "${trustSet.groupedLimit} ${trustSet.ticker}",
+                )
+            } else {
+                VerifyCardDetails(
+                    title = stringResource(R.string.ripple_trust_line_unreviewable),
+                    subtitle = stringResource(R.string.ripple_trust_line_unreviewable_value),
+                    showAllContent = true,
+                    subtitleColor = Theme.v2.colors.alerts.error,
+                )
+            }
+        } else if (tx.signRipple == null && !(inSheet && isPlainSend)) {
+            rowDivider()
+
+            VerifyCardDetails(
+                title = stringResource(R.string.verify_transaction_to_title),
+                subtitle = toDstLabel ?: tx.dstAddress,
+                bracketValue = toDstLabel?.let { tx.dstAddress },
+            )
+        }
+
+        // A memo that merely echoes the destination tag is signed as tag-only, so it is
+        // not shown as a separate Memo row (it appears in the Destination Tag row
+        // below).
+        if (!tx.memo.isNullOrBlank() && tx.memo != tx.destinationTag) {
+            rowDivider()
+
+            VerifyCardDetails(
+                title = stringResource(R.string.verify_transaction_memo_title),
+                subtitle = tx.memo,
+            )
+        }
+
+        if (!tx.destinationTag.isNullOrBlank()) {
+            rowDivider()
+
+            VerifyCardDetails(
+                title = stringResource(R.string.send_form_destination_tag),
+                subtitle = tx.destinationTag,
+            )
+        }
+
+        if (tx.emptiesSenderAccount) {
+            rowDivider()
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.ic_triangle_alert,
+                    tint = Theme.v2.colors.alerts.warning,
+                    size = 16.dp,
+                )
+                Text(
+                    text =
+                        stringResource(
+                            R.string.verify_transaction_allow_death_warning,
+                            tx.token.token.ticker,
+                        ),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.alerts.warning,
+                )
+            }
+        }
+        tx.signAmino
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                rowDivider()
+
+                VerifyCardJsonDetails(title = stringResource(R.string.amino_sign), subtitle = it)
+            }
+
+        tx.signDirect
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                rowDivider()
+
+                VerifyCardJsonDetails(title = stringResource(R.string.amino_direct), subtitle = it)
+            }
+        tx.signSolana
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                rowDivider()
+
+                SignSolanaDisplayView(
+                    rawTransactions = it,
+                    initiallyExpanded = initiallyExpandedDetails,
+                )
+            }
+
+        tx.signSui
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                rowDivider()
+
+                SignSuiDisplayView(
+                    sender = tx.srcAddress,
+                    unsignedTxMsg = it,
+                    initiallyExpanded = initiallyExpandedDetails,
+                )
+            }
+
+        tx.signRipple?.let {
+            rowDivider()
+
+            // Expanded by default: the decoded terms are the primary content for a
+            // dApp XRPL tx (the hero shows no amount), mirroring the extension summary.
+            SignRippleDisplayView(tx = it, initiallyExpanded = true)
+        }
+
+        tx.tonMessages
+            .takeIf { it.isNotEmpty() }
+            ?.let { tonMessages ->
+                rowDivider()
+
+                SignTonDisplayView(
+                    messages = tonMessages,
+                    initiallyExpanded = initiallyExpandedDetails,
+                )
+            }
+
+        if (tx.isUnlimitedApproval) {
+            rowDivider()
+            val approvalToken = tx.token.token
+            val approvalTicker =
+                tx.approvalTokenTicker ?: sanitizeDisplayString(approvalToken.ticker)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            ) {
+                TokenAndChainLogo(
+                    tokenLogo = getCoinLogo(approvalToken.logo),
+                    tokenTicker = approvalTicker,
+                    chainLogo =
+                        approvalToken.chain.monoToneLogo.takeIf {
+                            !approvalToken.isNativeToken || approvalToken.chain.isLayer2
+                        },
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = stringResource(R.string.erc20_approval_title),
+                        style = Theme.brockmann.body.m.medium,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        UiIcon(
+                            drawableResId = R.drawable.ic_triangle_alert,
+                            tint = Theme.v2.colors.alerts.warning,
+                            size = 16.dp,
+                        )
+                        Text(
+                            text =
+                                stringResource(
+                                    R.string.erc20_approval_unlimited_amount,
+                                    approvalTicker,
+                                ),
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.alerts.warning,
+                        )
+                    }
+                }
+            }
+            tx.approvalSpender?.let { spender ->
+                rowDivider()
+                VerifyCardDetails(
+                    title = stringResource(R.string.erc20_approval_spender),
+                    subtitle = spender,
+                )
+            }
+        }
+
+        if (tx.functionSignature != null || tx.functionInputs != null) {
+            rowDivider()
+            TransactionDetailsSection(
+                functionSignature = tx.functionSignature,
+                functionInputs = tx.functionInputs,
+                decodedFunctionParams = tx.decodedFunctionParams,
+                initiallyExpanded = initiallyExpandedDetails,
+            )
+        }
+
+        rowDivider()
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.verify_deposit_network),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.tertiary,
+                maxLines = 1,
+            )
+
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val chain = state.transaction.token.token.chain
+
+                Image(
+                    painter = painterResource(chain.logo),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
+
+                Text(
+                    text = chain.raw,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.primary,
+                    textAlign = TextAlign.End,
+                    maxLines = 1,
+                    overflow = TextOverflow.MiddleEllipsis,
+                )
+            }
+        }
+
+        VerifyCardDivider(0.dp)
+
+        UiSpacer(12.dp)
+
+        EstimatedNetworkFee(
+            tokenGas = tx.networkFeeTokenValue,
+            fiatGas = tx.networkFeeFiatValue,
+            isLoading = state.isLoadingFees,
+        )
+    }
 }
 
 @Preview

@@ -8,11 +8,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
@@ -34,7 +34,6 @@ import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
 
 @Composable
 internal fun DepositScreen(
-    navController: NavController,
     vaultId: String,
     chainId: String,
     viewModel: DepositViewModel = hiltViewModel(),
@@ -57,20 +56,12 @@ internal fun DepositScreen(
     val route = navBackStackEntry?.destination?.route
 
     val shouldUseMainNavigator = route == SendDst.Send.route
-    val topBarNavController =
-        if (shouldUseMainNavigator) {
-            navController
-        } else {
-            depositNavHostController
-        }
-
-    val title: String
 
     val chainName =
         remember(chainId) {
             Chain.entries.firstOrNull { it.raw.equals(chainId, ignoreCase = true) }?.raw ?: chainId
         }
-    val defaultTitle =
+    val title =
         when (depositType) {
             DeFiNavActions.ADD_LP.type -> stringResource(R.string.add_lp_title, chainName)
             DeFiNavActions.REMOVE_LP.type -> stringResource(R.string.remove_lp_title, chainName)
@@ -79,17 +70,6 @@ internal fun DepositScreen(
             else -> stringResource(R.string.tx_overview_screen_tx_deposit)
         }
 
-    when (route) {
-        SendDst.Send.route -> {
-            title = defaultTitle
-        }
-        SendDst.VerifyTransaction.staticRoute -> {
-            title = stringResource(R.string.verify_deposit_function_overview)
-        }
-        else -> {
-            title = defaultTitle
-        }
-    }
     val qrAddress by viewModel.addressProvider.address.collectAsState()
     val qr = qrAddress.takeIf { it.isNotEmpty() }
     DepositScreen(
@@ -167,11 +147,12 @@ private fun DepositScreen(
                     }
                 }
             }
-            composable(
+            // The review floats over the form as a sheet, so the form stays visible behind it.
+            dialog(
                 route = SendDst.VerifyTransaction.staticRoute,
                 arguments = SendDst.transactionArgs,
             ) {
-                VerifyDepositScreen()
+                VerifyDepositScreen(onDismissRequest = { navHostController.popBackStack() })
             }
         }
     }
