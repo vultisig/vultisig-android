@@ -6,66 +6,46 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.ui.navigation.Route
 
 /**
- * What goes back into the swap form when a failed or refunded market swap is tried again (#5918):
- * the pair, the amount and where the output goes, and nothing else. The old quote and keysign
- * payload are never reused — the form re-quotes the best route and Verify shows the new rate before
- * anything is signed.
+ * The pair a failed or refunded market swap is tried again on (#5918): the swap form reopens with
+ * these two tokens selected and the user takes it from there — amount, route and review are all
+ * entered afresh, and nothing from the failed swap is reused.
  */
-data class SwapRetry(
-    val srcToken: Coin,
-    val dstToken: Coin,
-    /** Plain decimal, e.g. `12.5`, exactly as the form's amount field takes it. */
-    val srcAmount: String,
-    /**
-     * Address the failed swap's output was routed to, or null when it was the vault's own. Carried
-     * so the retry pays the same destination rather than quietly falling back to the vault.
-     */
-    val externalRecipient: String? = null,
-) {
+data class SwapRetry(val srcToken: Coin, val dstToken: Coin) {
     internal fun toRoute(vaultId: String): Route.Swap =
         Route.Swap(
             vaultId = vaultId,
             chainId = srcToken.chain.id,
             srcTokenId = srcToken.id,
             dstTokenId = dstToken.id,
-            srcAmount = srcAmount,
-            externalRecipient = externalRecipient,
-            verifyOnQuote = true,
         )
 }
 
 /**
- * Resolves a history row to the retry it can offer against the vault's current [coins], or null
- * when the button must stay hidden: a limit order (its terms live in a memo the form does not
- * restore), a dApp-authored swap (its terms were the dApp's, not the form's), a row whose
- * destination the recording device could not read, a legacy row without a machine-readable amount,
- * or a side whose token the vault no longer holds — or holds twice, where picking one would be
- * guessing which asset to sell.
+ * Resolves a history row to the pair it can offer against the vault's current [coins], or null when
+ * the button must stay hidden: a limit order (out of scope), or a side whose token the vault no
+ * longer holds — or holds twice, where picking one would be guessing which asset to sell.
  */
 internal fun SwapTransactionHistoryData.toSwapRetry(coins: List<Coin>): SwapRetry? {
-    if (isLimitOrder || isDappRequest || isRecipientUnknown) return null
-    val amount = fromAmountDecimal.takeIf { it.isNotEmpty() } ?: return null
+    if (isLimitOrder) return null
     val src = coins.singleOrNull { it.matches(fromChain, fromToken, fromContractAddress) }
     val dst = coins.singleOrNull { it.matches(toChain, toToken, toContractAddress) }
     if (src == null || dst == null) return null
-    return SwapRetry(
-        srcToken = src,
-        dstToken = dst,
-        srcAmount = amount,
-        externalRecipient = externalRecipient?.takeIf { it.isNotBlank() },
-    )
+    return SwapRetry(srcToken = src, dstToken = dst)
 }
 
 /**
- * Contract addresses are compared the way [resolveExternalSwapRecipient] compares addresses: case
- * folded on EVM, where the same contract may be held checksummed and re-added lowercase, and
- * exactly everywhere else, where case is part of the address.
+ * A row recorded before it carried a contract address, and a native token on any row, both leave
+ * [contractAddress] empty, so an empty one matches on chain and ticker alone and the caller's
+ * uniqueness check decides. A non-empty one is compared case-folded on EVM, where the same contract
+ * may be held checksummed and re-added lowercase, and exactly everywhere else, where case is part
+ * of the address.
  */
 private fun Coin.matches(chainId: String, ticker: String, contractAddress: String): Boolean =
     chain.id == chainId &&
         this.ticker == ticker &&
-        if (chain.standard == TokenStandard.EVM) {
-            this.contractAddress.equals(contractAddress, ignoreCase = true)
-        } else {
-            this.contractAddress == contractAddress
-        }
+        (contractAddress.isEmpty() ||
+            if (chain.standard == TokenStandard.EVM) {
+                this.contractAddress.equals(contractAddress, ignoreCase = true)
+            } else {
+                this.contractAddress == contractAddress
+            })

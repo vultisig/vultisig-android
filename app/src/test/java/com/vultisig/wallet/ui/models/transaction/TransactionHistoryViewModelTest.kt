@@ -662,7 +662,7 @@ internal class TransactionHistoryViewModelTest {
      * vault's live coins so the form reopens on the very coin that was sold.
      */
     @Test
-    fun `a failed market swap row offers to try the same trade again`() {
+    fun `a failed market swap row offers to try the same pair again`() {
         every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
             flowOf(listOf(swapEntity(status = TransactionStatus.FAILED)))
         every { vaultRepository.getEnabledTokens(VAULT_ID) } returns
@@ -674,7 +674,6 @@ internal class TransactionHistoryViewModelTest {
         val retry = swapRow(vm).retry.shouldNotBeNull()
         retry.srcToken shouldBe Coins.Ethereum.ETH
         retry.dstToken shouldBe Coins.Bitcoin.BTC
-        retry.srcAmount shouldBe "0.5"
     }
 
     @Test
@@ -728,7 +727,7 @@ internal class TransactionHistoryViewModelTest {
     }
 
     @Test
-    fun `retrySelectedSwap closes the sheet and reopens the swap form on that trade`() {
+    fun `retrySelectedSwap closes the sheet and reopens the swap form on that pair`() {
         every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
             flowOf(listOf(swapEntity(status = TransactionStatus.FAILED)))
         every { vaultRepository.getEnabledTokens(VAULT_ID) } returns
@@ -748,8 +747,6 @@ internal class TransactionHistoryViewModelTest {
                     chainId = Chain.Ethereum.id,
                     srcTokenId = Coins.Ethereum.ETH.id,
                     dstTokenId = Coins.Bitcoin.BTC.id,
-                    srcAmount = "0.5",
-                    verifyOnQuote = true,
                 )
             )
         }
@@ -800,7 +797,6 @@ internal class TransactionHistoryViewModelTest {
                     toContractAddress = "",
                     toIsNative = true,
                     fromContractAddress = "",
-                    fromAmountDecimal = "0.5",
                 ),
             confirmedAt = null,
             failureReason = null,

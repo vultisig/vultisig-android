@@ -228,7 +228,6 @@ constructor(
             providerLabel = providerLabel,
             swapId = swapId,
             expectedDstDecimal = from.expectedDstTokenValue.decimal.toPlainString(),
-            srcAmountDecimal = from.srcTokenValue.decimal.stripTrailingZeros().toPlainString(),
             externalRecipient =
                 (from as? SwapTransaction.RegularSwapTransaction)?.externalRecipient,
             // Resolved here rather than read off the transaction: the fee above is re-valued at

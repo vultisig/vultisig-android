@@ -410,12 +410,12 @@ constructor(
     @DrawableRes val coinLogoRes: Int? = keysignPayload?.coin?.tokenLogoRes()
 
     /**
-     * The trade the done screen can offer to try again once this swap fails or is refunded (#5918),
+     * The pair the done screen can offer to try again once this swap fails or is refunded (#5918),
      * resolved from the history row this keysign records — the same row, by the same rules, that
      * History later resolves its own button from, so the two never disagree. The initiator builds
      * that row from the transaction it staged and the co-signer from the payload it signs, so both
-     * devices offer the retry; neither does for a limit order, a dApp-driven swap, a route whose
-     * recipient this device could not read, or a pair the vault no longer holds on both sides.
+     * devices offer the retry; neither does for a limit order or a pair the vault no longer holds on
+     * both sides.
      */
     val swapRetry: SwapRetry? =
         (transactionHistoryData as? SwapTransactionHistoryData)?.toSwapRetry(vault.coins)
@@ -1236,10 +1236,10 @@ constructor(
     }
 
     /**
-     * Reopens the swap form on the failed trade's pair, amount and recipient, to re-quote and
-     * review afresh. Everything above Home is popped — the form, verify sheet and keysign the
-     * initiator came through, or the joiner's scan — so the retry starts from a clean stack rather
-     * than stacking a second form over a finished one.
+     * Reopens the swap form on the failed trade's pair; the user enters the rest. Everything above
+     * Home is popped — the form, verify sheet and keysign the initiator came through, or the
+     * joiner's scan — so the retry starts from a clean stack rather than stacking a second form
+     * over a finished one.
      */
     fun retrySwap() {
         val retry = swapRetry ?: return

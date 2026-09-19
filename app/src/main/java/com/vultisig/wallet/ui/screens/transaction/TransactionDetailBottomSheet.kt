@@ -574,12 +574,7 @@ private fun PreviewTransactionDetailBottomSheetSwapFailed() {
             previewSwap.copy(
                 status = TransactionStatusUiModel.Failed(reason = null),
                 explorerUrl = "https://example.com/tx",
-                retry =
-                    SwapRetry(
-                        srcToken = Coins.ThorChain.RUNE,
-                        dstToken = Coins.Ethereum.WBTC,
-                        srcAmount = "1000.12",
-                    ),
+                retry = SwapRetry(srcToken = Coins.ThorChain.RUNE, dstToken = Coins.Ethereum.WBTC),
             ),
         onDismiss = {},
         onViewExplorer = {},

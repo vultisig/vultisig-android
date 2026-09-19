@@ -166,7 +166,7 @@ sealed interface TransactionHistoryItemUiModel {
         // output. Only the former may be labelled "min. payout" (#5711).
         val isLimitOrder: Boolean = false,
         /**
-         * The trade to reopen the swap form on, when this row is a failed or refunded market swap
+         * The pair to reopen the swap form on, when this row is a failed or refunded market swap
          * the vault can still place; null hides the Try again button (#5918).
          */
         val retry: SwapRetry? = null,
@@ -330,9 +330,8 @@ constructor(
     }
 
     /**
-     * Reopens the swap form on the selected row's pair, amount and recipient, to re-quote and
-     * review afresh (#5918). The sheet closes first so the form is not found under an open sheet on
-     * the way back.
+     * Reopens the swap form on the selected row's pair; the user enters the rest (#5918). The
+     * sheet closes first so the form is not found under an open sheet on the way back.
      */
     fun retrySelectedSwap() {
         val retry = (uiState.value.selectedItem as? TransactionHistoryItemUiModel.Swap)?.retry

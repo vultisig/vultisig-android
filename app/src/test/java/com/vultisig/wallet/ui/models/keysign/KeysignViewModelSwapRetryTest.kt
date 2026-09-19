@@ -56,35 +56,11 @@ internal class KeysignViewModelSwapRetryTest {
         val retry = vm.swapRetry.shouldNotBeNull()
         retry.srcToken shouldBe rune
         retry.dstToken shouldBe eth
-        // Raw and trimmed, as the form's field takes it — not the abbreviated display amount.
-        retry.srcAmount shouldBe "1.5"
-        retry.externalRecipient.shouldBeNull()
-    }
-
-    @Test
-    fun `an output routed to a chosen address is routed there again`() {
-        val vm = createViewModel(transactionHistoryData = swapRow(externalRecipient = "0xelse"))
-
-        vm.swapRetry.shouldNotBeNull().externalRecipient shouldBe "0xelse"
     }
 
     @Test
     fun `a limit order offers no retry`() {
         createViewModel(transactionHistoryData = swapRow(isLimitOrder = true))
-            .swapRetry
-            .shouldBeNull()
-    }
-
-    @Test
-    fun `a dApp-driven swap offers no retry`() {
-        createViewModel(transactionHistoryData = swapRow(isDappRequest = true))
-            .swapRetry
-            .shouldBeNull()
-    }
-
-    @Test
-    fun `a route whose recipient this device could not read offers no retry`() {
-        createViewModel(transactionHistoryData = swapRow(isRecipientUnknown = true))
             .swapRetry
             .shouldBeNull()
     }
@@ -102,9 +78,9 @@ internal class KeysignViewModelSwapRetryTest {
     }
 
     @Test
-    fun `retrySwap reopens the form on the failed trade above Home`() =
+    fun `retrySwap reopens the form on the failed pair above Home`() =
         runTest(testDispatcher) {
-            val vm = createViewModel(transactionHistoryData = swapRow(externalRecipient = "0xelse"))
+            val vm = createViewModel(transactionHistoryData = swapRow())
 
             vm.retrySwap()
 
@@ -115,9 +91,6 @@ internal class KeysignViewModelSwapRetryTest {
                         chainId = Chain.ThorChain.id,
                         srcTokenId = rune.id,
                         dstTokenId = eth.id,
-                        srcAmount = "1.5",
-                        externalRecipient = "0xelse",
-                        verifyOnQuote = true,
                     ),
                     NavigationOptions(popUpToRoute = Route.Home::class),
                 )
@@ -166,12 +139,7 @@ internal class KeysignViewModelSwapRetryTest {
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
 
-    private fun swapRow(
-        isLimitOrder: Boolean = false,
-        isDappRequest: Boolean = false,
-        externalRecipient: String? = null,
-        isRecipientUnknown: Boolean = false,
-    ) =
+    private fun swapRow(isLimitOrder: Boolean = false) =
         SwapTransactionHistoryData(
             fromToken = rune.ticker,
             fromAmount = "1.5",
@@ -187,10 +155,6 @@ internal class KeysignViewModelSwapRetryTest {
             toIsNative = true,
             isLimitOrder = isLimitOrder,
             fromContractAddress = "",
-            fromAmountDecimal = "1.5",
-            isDappRequest = isDappRequest,
-            externalRecipient = externalRecipient,
-            isRecipientUnknown = isRecipientUnknown,
         )
 
     private val rune =

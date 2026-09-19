@@ -158,21 +158,6 @@ internal sealed class Route {
         val chainId: ChainId? = null,
         val srcTokenId: TokenId? = null,
         val dstTokenId: TokenId? = null,
-        /**
-         * Source amount to open the form with, as a plain decimal (`12.5`); null leaves it empty.
-         */
-        val srcAmount: String? = null,
-        /**
-         * Address to route the swap output to, as the form's advanced settings would set it; null
-         * leaves the output going to the vault's own address.
-         */
-        val externalRecipient: String? = null,
-        /**
-         * Opens Verify on the first usable quote instead of waiting for a Swap tap — how a failed
-         * swap is tried again (#5918). Only honoured while the form still holds exactly the pair,
-         * [srcAmount] and [externalRecipient] this route asked for.
-         */
-        val verifyOnQuote: Boolean = false,
     ) {
         @Serializable object SwapMain
     }

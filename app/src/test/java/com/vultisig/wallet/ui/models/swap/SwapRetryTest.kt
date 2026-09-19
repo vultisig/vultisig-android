@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.swap
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
+import com.vultisig.wallet.ui.navigation.Route
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -16,65 +17,30 @@ import org.junit.jupiter.api.Test
 internal class SwapRetryTest {
 
     @Test
-    fun `a market swap row resolves to the held pair and its raw amount`() {
+    fun `a market swap row resolves to the held pair`() {
         val retry = row().toSwapRetry(listOf(eth, btc))
 
         retry.shouldNotBeNull()
         retry.srcToken shouldBe eth
         retry.dstToken shouldBe btc
-        retry.srcAmount shouldBe "0.5"
     }
 
     @Test
-    fun `the route carries the pair, the amount and the verify-on-quote flag`() {
+    fun `the route carries the pair and nothing else`() {
         val route = row().toSwapRetry(listOf(eth, btc)).shouldNotBeNull().toRoute("vault-1")
 
-        route.vaultId shouldBe "vault-1"
-        route.chainId shouldBe Chain.Ethereum.id
-        route.srcTokenId shouldBe eth.id
-        route.dstTokenId shouldBe btc.id
-        route.srcAmount shouldBe "0.5"
-        route.externalRecipient.shouldBeNull()
-        route.verifyOnQuote shouldBe true
-    }
-
-    @Test
-    fun `an output routed to a chosen address is routed there again`() {
-        // Without this the form would reopen with the recipient off and pay the vault — a
-        // different destination from the one the user approved the first time.
-        val route =
-            row(externalRecipient = "bc1qsomeoneelse")
-                .toSwapRetry(listOf(eth, btc))
-                .shouldNotBeNull()
-                .toRoute("vault-1")
-
-        route.externalRecipient shouldBe "bc1qsomeoneelse"
-    }
-
-    @Test
-    fun `a row whose destination the recording device could not read offers no retry`() {
-        // A co-signer sees a SwapKit route as opaque bytes: the output may have gone to the vault
-        // or elsewhere, and a retry would have to pick one.
-        row(isRecipientUnknown = true).toSwapRetry(listOf(eth, btc)).shouldBeNull()
+        route shouldBe
+            Route.Swap(
+                vaultId = "vault-1",
+                chainId = Chain.Ethereum.id,
+                srcTokenId = eth.id,
+                dstTokenId = btc.id,
+            )
     }
 
     @Test
     fun `a limit order is never retried as a market swap`() {
         row(isLimitOrder = true).toSwapRetry(listOf(eth, btc)).shouldBeNull()
-    }
-
-    @Test
-    fun `a dApp-authored swap is never retried through the form`() {
-        // The done screen hides the button from the live payload's dappMetadata; the row carries
-        // the same verdict so History agrees with it once the payload is gone.
-        row(isDappRequest = true).toSwapRetry(listOf(eth, btc)).shouldBeNull()
-    }
-
-    @Test
-    fun `a legacy row without a raw amount offers no retry`() {
-        // Its display amount is abbreviated and locale-formatted; guessing a number from it could
-        // stage a trade a thousand times the size of the one that failed.
-        row(fromAmountDecimal = "").toSwapRetry(listOf(eth, btc)).shouldBeNull()
     }
 
     @Test
@@ -96,6 +62,24 @@ internal class SwapRetryTest {
     }
 
     @Test
+    fun `a legacy row without a contract address is matched on ticker and chain`() {
+        // Rows recorded before the address was stored can still name their pair; the button is
+        // worth more on them than on nothing, as long as the match is unambiguous.
+        val usdc = token("USDC", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+
+        row(fromToken = "USDC").toSwapRetry(listOf(usdc, btc)).shouldNotBeNull().srcToken shouldBe
+            usdc
+    }
+
+    @Test
+    fun `a legacy row that fits two same-ticker tokens offers no retry`() {
+        val curatedUsdc = token("USDC", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+        val customUsdc = token("USDC", "0xCustomUsdcContract")
+
+        row(fromToken = "USDC").toSwapRetry(listOf(curatedUsdc, customUsdc, btc)).shouldBeNull()
+    }
+
+    @Test
     fun `a contract address is matched exactly where its case is part of the address`() {
         val jetton = token("USDT", "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs", Chain.Ton)
         val row =
@@ -112,11 +96,7 @@ internal class SwapRetryTest {
         fromToken: String = "ETH",
         fromChain: String = Chain.Ethereum.id,
         fromContractAddress: String = "",
-        fromAmountDecimal: String = "0.5",
         isLimitOrder: Boolean = false,
-        isDappRequest: Boolean = false,
-        externalRecipient: String? = null,
-        isRecipientUnknown: Boolean = false,
     ) =
         SwapTransactionHistoryData(
             fromToken = fromToken,
@@ -133,10 +113,6 @@ internal class SwapRetryTest {
             toIsNative = true,
             isLimitOrder = isLimitOrder,
             fromContractAddress = fromContractAddress,
-            fromAmountDecimal = fromAmountDecimal,
-            isDappRequest = isDappRequest,
-            externalRecipient = externalRecipient,
-            isRecipientUnknown = isRecipientUnknown,
         )
 
     private fun token(ticker: String, contractAddress: String, chain: Chain = Chain.Ethereum) =

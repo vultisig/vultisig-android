@@ -34,7 +34,6 @@ import com.vultisig.wallet.data.swap.limit.toThorchainFixedPoint
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
-import com.vultisig.wallet.data.utils.runCatchingCancellable
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
@@ -50,7 +49,6 @@ import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
 import com.vultisig.wallet.ui.models.swap.formatAffiliatePercent
 import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
-import com.vultisig.wallet.ui.models.swap.parseThorchainMemoDestination
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
@@ -160,6 +158,8 @@ constructor(
             )
         val networkGasFeeFiatValue = estimatedNetworkGasFee.fiatValue
 
+        val vaultName = vault.name
+
         val provider =
             when (swapPayload) {
                 is SwapPayload.ThorChain -> SwapProvider.THORCHAIN.getSwapProviderId()
@@ -179,31 +179,9 @@ constructor(
                 else -> provider
             }
 
-        // Only the native memo names the recipient; surfaced on the cosigner's verify screen too
-        // (#4858 review), and reused across the provider branches below.
-        val memoRecipient =
-            when (swapPayload) {
-                is SwapPayload.ThorChain,
-                is SwapPayload.MayaChain -> resolveMemoRecipient(payload.memo, dstToken, vault)
-                is SwapPayload.EVM,
-                is SwapPayload.SwapKit -> null
-            }
-        val externalRecipient = (memoRecipient as? MemoRecipient.External)?.address
-
-        // A history row must never pass a destination nobody read off as the vault's, or a retry
-        // would pay the vault where the original paid someone else (#5918). A native memo is
-        // unread when it carries no destination or the vault's own address could not be derived
-        // to compare it against. A SwapKit route arrives as opaque transaction bytes whose output
-        // may be bound for the vault or for an address the initiator chose, and nothing here can
-        // tell which. The EVM aggregators need no such mark: every platform drops them the moment
-        // a recipient is set, so their output is always the vault's.
-        val isRecipientUnknown =
-            when (swapPayload) {
-                is SwapPayload.ThorChain,
-                is SwapPayload.MayaChain -> memoRecipient == MemoRecipient.Unknown
-                is SwapPayload.EVM -> provider == SwapProvider.SWAPKIT.getSwapProviderId()
-                is SwapPayload.SwapKit -> true
-            }
+        // Surface a custom recipient on the cosigner's verify screen too — null for routes that
+        // don't carry one (#4858 review). Reused across the provider branches below.
+        val externalRecipient = resolveExternalRecipient(payload, swapPayload, dstToken, vault)
 
         return when (swapPayload) {
             is SwapPayload.EVM -> {
@@ -339,8 +317,6 @@ constructor(
                                         convertTokenValueToFiat(srcToken, srcTokenValue, currency)
                                     ),
                             ),
-                        srcAmountDecimal =
-                            srcTokenValue.decimal.stripTrailingZeros().toPlainString(),
                         dst =
                             ValuedToken(
                                 value = mapTokenValueToDecimalUiString(dstTokenValue),
@@ -383,7 +359,14 @@ constructor(
                             feeRow.vultDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
                     )
 
-                swapResult(swapTransaction, vault, payload, isRecipientUnknown)
+                JoinKeysignVerifyResult(
+                    verifyUiModel =
+                        VerifyUiModel.Swap(
+                            VerifySwapUiModel(tx = swapTransaction, vaultName = vaultName)
+                        ),
+                    transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction),
+                    transactionHistoryData = mapSwapTransactionToHistoryData(swapTransaction),
+                )
             }
 
             is SwapPayload.ThorChain -> {
@@ -400,7 +383,14 @@ constructor(
                             providerFeeToken = srcToken,
                             currency = currency,
                         )
-                    return swapResult(lpAddUiModel, vault, payload, isRecipientUnknown)
+                    return JoinKeysignVerifyResult(
+                        verifyUiModel =
+                            VerifyUiModel.Swap(
+                                VerifySwapUiModel(tx = lpAddUiModel, vaultName = vaultName)
+                            ),
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(lpAddUiModel),
+                        transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel),
+                    )
                 }
                 // Re-fetching with no discount quoted the co-signer the full 50 bps while the
                 // initiator had signed a discounted one, so the two devices disagreed on the
@@ -461,7 +451,14 @@ constructor(
                         vultBps = thorVultBps,
                         priceImpact = formatPriceImpact(swapPayload.data.priceImpact),
                     )
-                swapResult(swapTransactionUiModel, vault, payload, isRecipientUnknown)
+                JoinKeysignVerifyResult(
+                    verifyUiModel =
+                        VerifyUiModel.Swap(
+                            VerifySwapUiModel(tx = swapTransactionUiModel, vaultName = vaultName)
+                        ),
+                    transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel),
+                    transactionHistoryData = mapSwapTransactionToHistoryData(swapTransactionUiModel),
+                )
             }
 
             is SwapPayload.MayaChain -> {
@@ -478,7 +475,14 @@ constructor(
                             providerFeeToken = srcToken,
                             currency = currency,
                         )
-                    return swapResult(lpAddUiModel, vault, payload, isRecipientUnknown)
+                    return JoinKeysignVerifyResult(
+                        verifyUiModel =
+                            VerifyUiModel.Swap(
+                                VerifySwapUiModel(tx = lpAddUiModel, vaultName = vaultName)
+                            ),
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(lpAddUiModel),
+                        transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel),
+                    )
                 }
                 // Re-fetching with no discount quoted the co-signer the full 50 bps while the
                 // initiator had signed a discounted one, so the two devices disagreed on the
@@ -530,7 +534,14 @@ constructor(
                         vultBps = mayaVultBps,
                         priceImpact = formatPriceImpact(swapPayload.data.priceImpact),
                     )
-                swapResult(swapTransactionUiModel, vault, payload, isRecipientUnknown)
+                JoinKeysignVerifyResult(
+                    verifyUiModel =
+                        VerifyUiModel.Swap(
+                            VerifySwapUiModel(tx = swapTransactionUiModel, vaultName = vaultName)
+                        ),
+                    transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel),
+                    transactionHistoryData = mapSwapTransactionToHistoryData(swapTransactionUiModel),
+                )
             }
 
             is SwapPayload.SwapKit -> {
@@ -604,33 +615,17 @@ constructor(
                         providerLabel = providerLabel,
                         swapFeeHidden = swapFeeHidden,
                     )
-                swapResult(swapTransactionUiModel, vault, payload, isRecipientUnknown)
+                JoinKeysignVerifyResult(
+                    verifyUiModel =
+                        VerifyUiModel.Swap(
+                            VerifySwapUiModel(tx = swapTransactionUiModel, vaultName = vaultName)
+                        ),
+                    transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel),
+                    transactionHistoryData = mapSwapTransactionToHistoryData(swapTransactionUiModel),
+                )
             }
         }
     }
-
-    /**
-     * The three views every branch of [build] hands back for one swap model. The history row also
-     * records what would make a retry wrong: a dApp authored the swap, so its route and terms were
-     * the dApp's, not the form's; or the recipient could not be read off the route, so the form
-     * could not be told where to pay (#5918).
-     */
-    private fun swapResult(
-        tx: SwapTransactionUiModel,
-        vault: Vault,
-        payload: KeysignPayload,
-        isRecipientUnknown: Boolean,
-    ): JoinKeysignVerifyResult =
-        JoinKeysignVerifyResult(
-            verifyUiModel = VerifyUiModel.Swap(VerifySwapUiModel(tx = tx, vaultName = vault.name)),
-            transactionTypeUiModel = TransactionTypeUiModel.Swap(tx),
-            transactionHistoryData =
-                mapSwapTransactionToHistoryData(tx)
-                    .copy(
-                        isDappRequest = payload.dappMetadata != null,
-                        isRecipientUnknown = isRecipientUnknown,
-                    ),
-        )
 
     private suspend fun buildSwapUiModel(
         srcToken: Coin,
@@ -707,7 +702,6 @@ constructor(
                     token = srcToken,
                     fiatValue = fiatValueToStringMapper(srcFiat),
                 ),
-            srcAmountDecimal = srcTokenValue.decimal.stripTrailingZeros().toPlainString(),
             dst =
                 ValuedToken(
                     value = mapTokenValueToDecimalUiString(dstTokenValue),
@@ -794,46 +788,30 @@ constructor(
     }
 
     /**
-     * Recovers where a native (THORChain / Maya) swap's memo routes the output, which a cosigner
-     * would otherwise never see (#4858 review, #4972): the memo's `destination` segment, compared
-     * with the vault's own address on the destination chain. Parsing and the chain-aware comparison
-     * are delegated to the unit-tested [resolveExternalSwapRecipient]; the two cases it folds into
-     * one null — a memo naming the vault and a memo naming nothing — are kept apart here, because
-     * only the first is a destination a retry may pay (#5918).
+     * Recovers the custom external recipient a cosigner would otherwise never see (#4858
+     * review, #4972). Only the native protocols (THORChain / Maya) carry it, as the swap memo's
+     * `destination` segment; a value matching the vault's own destination address is the normal
+     * case, so only a differing address is surfaced. Parsing and the chain-aware own-address
+     * comparison are delegated to the unit-tested [resolveExternalSwapRecipient]. Returns null when
+     * it can't be determined (EVM aggregators bake the vault address into calldata; SwapKit's route
+     * isn't recoverable here).
      */
-    private suspend fun resolveMemoRecipient(
-        memo: String?,
+    private suspend fun resolveExternalRecipient(
+        payload: KeysignPayload,
+        swapPayload: SwapPayload,
         dstToken: Coin,
         vault: Vault,
-    ): MemoRecipient {
-        if (parseThorchainMemoDestination(memo) == null) return MemoRecipient.Unknown
+    ): String? {
+        if (swapPayload !is SwapPayload.ThorChain && swapPayload !is SwapPayload.MayaChain) {
+            return null
+        }
         val vaultDstAddress =
-            runCatchingCancellable {
-                    chainAccountAddressRepository.getAddress(dstToken, vault).first
-                }
-                .getOrNull()
-                ?.takeIf { it.isNotBlank() } ?: return MemoRecipient.Unknown
-        val external =
-            resolveExternalSwapRecipient(
-                memo = memo,
-                destinationChain = dstToken.chain,
-                vaultDestinationAddress = vaultDstAddress,
-            )
-        return if (external == null) MemoRecipient.Vault else MemoRecipient.External(external)
-    }
-
-    /** Where a native swap's memo routes the output, as far as a cosigner can read it. */
-    private sealed interface MemoRecipient {
-        /** An address other than the vault's own. */
-        data class External(val address: String) : MemoRecipient
-
-        /** The vault's own address on the destination chain. */
-        data object Vault : MemoRecipient
-
-        /**
-         * Not readable: the memo carries no destination, or the vault's own address could not be
-         * derived to tell the memo's apart from it.
-         */
-        data object Unknown : MemoRecipient
+            runCatching { chainAccountAddressRepository.getAddress(dstToken, vault).first }
+                .getOrNull() ?: return null
+        return resolveExternalSwapRecipient(
+            memo = payload.memo,
+            destinationChain = dstToken.chain,
+            vaultDestinationAddress = vaultDstAddress,
+        )
     }
 }
