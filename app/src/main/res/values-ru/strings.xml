@@ -427,6 +427,7 @@
     <string name="swap_error_insufficient_gas_fees">Недостаточно %1$s для оплаты комиссии за газ. Пожалуйста, пополните кошелек.</string>
     <string name="swap_error_time_out">Запрос на обмен истек. Попробуйте еще раз</string>
     <string name="swap_error_high_price_impact">Влияние на цену слишком высокое. Попробуйте меньшую сумму или другую пару токенов.</string>
+    <string name="swap_error_slippage_tolerance_too_low">Допустимое проскальзывание слишком низкое для этого обмена. Увеличьте его или используйте Авто.</string>
     <string name="swap_error_quote_failed">Не удалось получить котировку. Попробуйте снова или измените сумму.</string>
     <string name="swap_error_rate_limit">Слишком много запросов. Попробуйте позже.</string>
     <string name="swap_error_trading_halted">Торговля этим активом временно приостановлена. Попробуйте позже.</string>

@@ -963,7 +963,8 @@ constructor(
             // else, because no balance or route the user could change clears a paused pool.
             is SwapException.TradingHalted -> PRIORITY_HALT
             is SwapException.InsufficientFunds,
-            is SwapException.HighPriceImpact -> PRIORITY_FIXABLE
+            is SwapException.HighPriceImpact,
+            is SwapException.SlippageToleranceTooLow -> PRIORITY_FIXABLE
             is SwapException.SwapRouteNotAvailable,
             is SwapException.SwapIsNotSupported -> PRIORITY_ROUTE
             is SwapException.RateLimitExceeded,
@@ -1588,6 +1589,8 @@ constructor(
                 UiText.StringResource(R.string.swap_error_quote_failed)
             is SwapException.HighPriceImpact ->
                 UiText.StringResource(R.string.swap_error_high_price_impact)
+            is SwapException.SlippageToleranceTooLow ->
+                UiText.StringResource(R.string.swap_error_slippage_tolerance_too_low)
             is SwapException.InsufficentSwapAmount ->
                 UiText.StringResource(R.string.swap_error_amount_too_low)
             is SwapException.SwapRouteNotAvailable ->

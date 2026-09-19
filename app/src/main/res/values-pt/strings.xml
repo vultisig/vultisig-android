@@ -428,6 +428,7 @@
     <string name="swap_error_insufficient_gas_fees">Não há %1$s suficiente para cobrir as taxas de gás. Por favor, financie a carteira.</string>
     <string name="swap_error_time_out">A solicitação de troca expirou. Por favor tente novamente</string>
     <string name="swap_error_high_price_impact">O impacto no preço é muito alto. Tente um valor menor ou um par de tokens diferente.</string>
+    <string name="swap_error_slippage_tolerance_too_low">A tolerância de derrapagem é muito baixa para este swap. Aumente-a ou use Auto.</string>
     <string name="swap_error_quote_failed">Cotação do swap falhou. Tente novamente ou ajuste o valor.</string>
     <string name="swap_error_rate_limit">Demasiados pedidos. Tente novamente mais tarde.</string>
     <string name="swap_error_trading_halted">A negociação deste ativo está temporariamente suspensa. Tente novamente mais tarde.</string>

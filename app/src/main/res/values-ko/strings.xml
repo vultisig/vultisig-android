@@ -541,6 +541,7 @@
     <string name="swap_error_insufficient_gas_fees">가스 수수료를 충당할 %1$s이(가) 부족합니다. 지갑에 자금을 충전해 주세요.</string>
     <string name="swap_error_time_out">스왑 요청 시간이 초과되었습니다. 다시 시도해 주세요</string>
     <string name="swap_error_high_price_impact">가격 영향이 너무 큽니다. 더 적은 금액이나 다른 토큰 쌍을 시도하세요.</string>
+    <string name="swap_error_slippage_tolerance_too_low">이 스왑에 대한 슬리피지 허용 범위가 너무 낮습니다. 값을 높이거나 자동을 사용하세요.</string>
     <string name="swap_error_quote_failed">스왑 견적에 실패했습니다. 다시 시도하거나 금액을 조정하세요.</string>
     <string name="swap_error_rate_limit">요청이 너무 많습니다. 나중에 다시 시도해 주세요.</string>
     <string name="swap_error_trading_halted">이 자산의 거래가 일시적으로 중단되었습니다. 나중에 다시 시도해 주세요.</string>
