@@ -740,6 +740,7 @@
     <string name="swap_error_insufficient_gas_fees">没有足够的 %1$s 来支付 Gas 费用。请为钱包充值。</string>
     <string name="swap_error_time_out">交换请求超时。请重试</string>
     <string name="swap_error_high_price_impact">价格影响过高。请尝试较小的金额或不同的代币对。</string>
+    <string name="swap_error_slippage_tolerance_too_low">此兑换的滑点容差过低。请调高或使用自动。</string>
     <string name="swap_error_quote_failed">兑换报价失败。请重试或调整金额。</string>
     <string name="swap_error_rate_limit">请求次数过多。请稍后重试。</string>
     <string name="swap_error_trading_halted">该资产的交易暂时暂停。请稍后重试。</string>

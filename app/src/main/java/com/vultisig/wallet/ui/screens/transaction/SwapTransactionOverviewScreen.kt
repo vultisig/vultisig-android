@@ -46,6 +46,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.swap.components.PriceImpactRow
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
@@ -63,6 +64,7 @@ internal fun SwapTransactionOverviewScreen(
     isTransactionDetailVisible: Boolean,
     onTransactionDetailVisibleChange: (Boolean) -> Unit,
     dappMetadata: DAppMetadata? = null,
+    onTryAgain: (() -> Unit)? = null,
 ) {
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -244,28 +246,49 @@ internal fun SwapTransactionOverviewScreen(
             }
         },
         bottomBarContent = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            // Only a terminal failure can be tried again: a swap that is still in flight may yet
+            // land, and retrying it would sell the same funds twice (#5918).
+            val canTryAgain =
+                onTryAgain != null &&
+                    (transactionStatus is TransactionStatus.Failed ||
+                        transactionStatus is TransactionStatus.Refunded)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                if (!progressLink.isNullOrBlank()) {
-                    val uriHandler = VsUriHandler()
+                if (canTryAgain) {
                     VsButton(
-                        label = stringResource(R.string.swap_transaction_overview_track),
-                        variant = VsButtonVariant.Secondary,
+                        label = stringResource(R.string.try_again),
+                        variant = VsButtonVariant.Primary,
                         size = VsButtonSize.Small,
-                        modifier = Modifier.weight(1f),
-                        onClick = { uriHandler.openUri(progressLink) },
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onTryAgain,
                     )
                 }
 
-                VsButton(
-                    label = stringResource(R.string.transaction_done_title),
-                    variant = VsButtonVariant.Primary,
-                    size = VsButtonSize.Small,
-                    modifier = Modifier.weight(1f),
-                    onClick = onComplete,
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (!progressLink.isNullOrBlank()) {
+                        val uriHandler = VsUriHandler()
+                        VsButton(
+                            label = stringResource(R.string.swap_transaction_overview_track),
+                            variant = VsButtonVariant.Secondary,
+                            size = VsButtonSize.Small,
+                            modifier = Modifier.weight(1f),
+                            onClick = { uriHandler.openUri(progressLink) },
+                        )
+                    }
+
+                    VsButton(
+                        label = stringResource(R.string.transaction_done_title),
+                        // Try again is the call to action on a failed swap; Done steps back so the
+                        // bar keeps a single primary.
+                        variant =
+                            if (canTryAgain) VsButtonVariant.Secondary else VsButtonVariant.Primary,
+                        size = VsButtonSize.Small,
+                        modifier = Modifier.weight(1f),
+                        onClick = onComplete,
+                    )
+                }
             }
         },
     )
@@ -318,18 +341,35 @@ private fun SwapTransactionOverviewScreenPreviewExpanded() {
     PreviewSwapTransactionOverviewScreen(isTransactionDetailVisible = true)
 }
 
+@Preview
 @Composable
-private fun PreviewSwapTransactionOverviewScreen(isTransactionDetailVisible: Boolean) {
+private fun SwapTransactionOverviewScreenPreviewFailed() {
+    PreviewSwapTransactionOverviewScreen(
+        isTransactionDetailVisible = false,
+        transactionStatus = TransactionStatus.Failed(UiText.DynamicString("out of gas")),
+        progressLink = "https://track.example",
+        onTryAgain = {},
+    )
+}
+
+@Composable
+private fun PreviewSwapTransactionOverviewScreen(
+    isTransactionDetailVisible: Boolean,
+    transactionStatus: TransactionStatus = TransactionStatus.Broadcasted,
+    progressLink: String = "",
+    onTryAgain: (() -> Unit)? = null,
+) {
     SwapTransactionOverviewScreen(
         transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
         approveTransactionHash = "321xba",
         transactionLink = "",
         approveTransactionLink = "",
         onComplete = {},
-        progressLink = "",
+        progressLink = progressLink,
         transactionTypeUiModel = SwapTransactionUiModel(),
-        transactionStatus = TransactionStatus.Broadcasted,
+        transactionStatus = transactionStatus,
         isTransactionDetailVisible = isTransactionDetailVisible,
         onTransactionDetailVisibleChange = {},
+        onTryAgain = onTryAgain,
     )
 }
