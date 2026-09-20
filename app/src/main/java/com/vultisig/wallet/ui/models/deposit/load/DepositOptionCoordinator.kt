@@ -221,7 +221,7 @@ constructor(
         }
     }
 
-    private suspend fun loadThorUnbondCeiling(nodeAddress: String) {
+    internal suspend fun loadThorUnbondCeiling(nodeAddress: String) {
         if (nodeAddress.isBlank()) return
         val vaultId = vaultId() ?: return
         val vaultAddress =

@@ -24,7 +24,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -44,10 +43,7 @@ internal class DepositOptionCoordinatorUnbondTest {
         val state = MutableStateFlow(DepositFormUiModel(depositChain = Chain.ThorChain))
         val coordinator = coordinator(backgroundScope, state, NODE)
 
-        coordinator.selectDepositOption(DepositOption.Unbond)
-        advanceUntilIdle()
-        advanceTimeBy(DEBOUNCE_MS)
-        advanceUntilIdle()
+        coordinator.loadThorUnbondCeiling(NODE)
 
         state.value.bondedRuneCeiling?.nodeAddress shouldBe NODE
         state.value.bondedRuneCeiling?.amount shouldBe bonded
@@ -63,10 +59,7 @@ internal class DepositOptionCoordinatorUnbondTest {
         val state = MutableStateFlow(DepositFormUiModel(depositChain = Chain.ThorChain))
         val coordinator = coordinator(backgroundScope, state, NODE)
 
-        coordinator.selectDepositOption(DepositOption.Unbond)
-        advanceUntilIdle()
-        advanceTimeBy(DEBOUNCE_MS)
-        advanceUntilIdle()
+        coordinator.loadThorUnbondCeiling(NODE)
 
         state.value.bondedRuneCeiling?.amount shouldBe BigInteger.ZERO
     }
@@ -127,6 +120,5 @@ internal class DepositOptionCoordinatorUnbondTest {
         private const val VAULT_ID = "vault-1"
         private const val VAULT_ADDRESS = "thor1vault"
         private const val NODE = "thor1node"
-        private const val DEBOUNCE_MS = 300L
     }
 }
