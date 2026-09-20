@@ -123,6 +123,20 @@ class EvmApiAllowanceTest {
         assertFalse(api.doesErc20ApproveRevert(CONTRACT, OWNER, SPENDER, BigInteger.ONE))
     }
 
+    // A standard ERC-20 approve returns `true`; that word is a success too.
+    @Test
+    fun `doesErc20ApproveRevert reads a bool success as not reverting`() = runTest {
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.OK,
+                body =
+                    """{"id":1,"result":"0x0000000000000000000000000000000000000000000000000000000000000001","error":null}""",
+            )
+        val api = EvmApiImp(client, "https://api.vultisig.com/eth/", Chain.Ethereum)
+
+        assertFalse(api.doesErc20ApproveRevert(CONTRACT, OWNER, SPENDER, BigInteger.ONE))
+    }
+
     // A bare revert() carries no data, so geth reports it under the generic -32000 and only the
     // message says it was the call that failed.
     @Test
@@ -157,6 +171,21 @@ class EvmApiAllowanceTest {
             MockHttpClient.respondingWith(
                 HttpStatusCode.OK,
                 body = """{"id":1,"error":{"code":-32005,"message":"rate limited"}}""",
+            )
+        val api = EvmApiImp(client, "https://api.vultisig.com/eth/", Chain.Ethereum)
+
+        assertFailsWith<NetworkException> {
+            api.doesErc20ApproveRevert(CONTRACT, OWNER, SPENDER, BigInteger.ONE)
+        }
+    }
+
+    // A result that is not return data is a node that did not run the call either.
+    @Test
+    fun `doesErc20ApproveRevert propagates a malformed result with no error`() = runTest {
+        val client =
+            MockHttpClient.respondingWith(
+                HttpStatusCode.OK,
+                body = """{"id":1,"result":"0xabc","error":null}""",
             )
         val api = EvmApiImp(client, "https://api.vultisig.com/eth/", Chain.Ethereum)
 

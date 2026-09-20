@@ -595,14 +595,16 @@ class EvmApiImp(
             )
         val error = rpcResp.error
         if (error == null) {
-            // A healthy node answers a successful call with its return data, "0x" when there is
-            // none; no result and no error is a failed probe, not a success.
-            if (rpcResp.result == null) {
+            // A healthy node answers a successful call with its return data as hex — "0x" when
+            // there is none, as for USDT's approve — so anything else is a failed probe, not a
+            // success.
+            val result = rpcResp.result
+            if (result == null || !isHexData(result)) {
                 throw NetworkException(
                     httpStatusCode = 0,
                     message =
-                        "simulate approve null result, contract=$contractAddress owner=$owner " +
-                            "spender=$spender",
+                        "simulate approve invalid result, contract=$contractAddress owner=$owner " +
+                            "spender=$spender result=$result",
                 )
             }
             return false
@@ -947,6 +949,15 @@ class EvmApiImp(
     companion object {
         /** `keccak("approve(address,uint256)")[0..3]`. */
         private const val ERC20_APPROVE_SELECTOR = "0x095ea7b3"
+
+        /**
+         * `0x`-prefixed, whole bytes, hex digits only — the shape of any `eth_call` return data.
+         */
+        private fun isHexData(value: String): Boolean =
+            value.startsWith("0x") &&
+                value.length % 2 == 0 &&
+                value.drop(2).all { it.digitToIntOrNull(16) != null }
+
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
         private const val CUSTOM_TOKEN_RESPONSE_DECIMAL_ID_ = 3
         private const val CUSTOM_TOKEN_REQUEST_TICKER_DATA = "0x95d89b41"
