@@ -498,6 +498,7 @@
     <string name="deposit_error_invalid_lpunits">LP 유닛이 유효하지 않습니다</string>
     <string name="deposit_error_lpunits_exceeds_available">사용 가능한 LP 유닛을 초과합니다</string>
     <string name="deposit_error_lpunits_exceeds_bonded">이 노드에 본딩된 LP 유닛을 초과합니다</string>
+    <string name="deposit_error_amount_exceeds_bonded">이 노드에 본딩된 RUNE을 초과합니다</string>
     <string name="deposit_error_invalid_assets">자산이 유효하지 않습니다</string>
     <string name="deposit_error_chain_not_enabled">%2$s을(를) 출금하려면 이 볼트에서 %1$s을(를) 활성화하세요</string>
     <string name="deposit_error_has_not_reached_maturity">이 예치는 아직 만기에 도달하지 않았습니다</string>

@@ -384,6 +384,7 @@
     <string name="deposit_error_invalid_lpunits">LP-eenheden zijn ongeldig</string>
     <string name="deposit_error_lpunits_exceeds_available">Overschrijdt uw beschikbare LP-eenheden</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Overschrijdt de aan deze node gebonden LP-eenheden</string>
+    <string name="deposit_error_amount_exceeds_bonded">Overschrijdt de aan deze node gebonden RUNE</string>
     <string name="deposit_error_invalid_assets">Activa zijn ongeldig</string>
     <string name="deposit_error_chain_not_enabled">Schakel %1$s in deze kluis in om %2$s op te nemen</string>
     <string name="deposit_error_has_not_reached_maturity">Deze deposito heeft de vervaldatum nog niet bereikt</string>

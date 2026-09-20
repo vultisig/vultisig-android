@@ -35,6 +35,7 @@ import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
+import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositAmountHelper
@@ -99,6 +100,7 @@ internal class DepositFormViewModelTest {
     private val blockChainSpecificRepository: BlockChainSpecificRepository = mockk(relaxed = true)
     private val thorChainApi: ThorChainApi = mockk(relaxed = true)
     private val mayaChainApi: MayaChainApi = mockk(relaxed = true)
+    private val thorchainBondUseCase: ThorchainBondUseCase = mockk(relaxed = true)
     private val mayachainBondRepository: MayachainBondRepository = mockk(relaxed = true)
     private val balanceRepository: BalanceRepository = mockk(relaxed = true)
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase = mockk(relaxed = true)
@@ -221,6 +223,7 @@ internal class DepositFormViewModelTest {
                     mayaChainApi = mayaChainApi,
                     accountsRepository = accountsRepository,
                     mapTokenValueToStringWithUnit = mapTokenValueToStringWithUnit,
+                    thorchainBondUseCase = thorchainBondUseCase,
                     scope = scope,
                     state = state,
                     address = address,
@@ -306,6 +309,7 @@ internal class DepositFormViewModelTest {
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(mainDispatcher)
+        coEvery { thorchainBondUseCase.getActiveNodes(any(), any()) } returns flowOf(emptyList())
     }
 
     @AfterEach

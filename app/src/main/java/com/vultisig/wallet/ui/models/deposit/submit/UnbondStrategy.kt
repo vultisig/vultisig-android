@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.unbondLpUnitsCeiling
+import com.vultisig.wallet.ui.models.deposit.unbondRuneCeiling
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
@@ -27,10 +28,8 @@ import kotlin.uuid.Uuid
 /**
  * Builds an Unbond [DepositTransaction] for THORChain or MayaChain.
  *
- * On MayaChain the LP units are capped at what this vault has bonded to the node named in the memo,
- * read back through [unbondLpUnitsCeiling]. Known gap: THORChain's leg still caps only at the
- * wallet's combined RUNE balance via the displayed max, not at the node's bonded balance the way
- * the deleted Send-form path (`AccountsLoader.publishUnbond`) and the iOS/Windows clients do.
+ * MayaChain caps LP units through [unbondLpUnitsCeiling]. THORChain caps the RUNE amount through
+ * [unbondRuneCeiling] — both refuse a figure measured on a different node than the memo names.
  */
 internal class UnbondStrategy(
     private val vaultIdProvider: () -> String?,
@@ -125,6 +124,19 @@ internal class UnbondStrategy(
 
         val tokenAmountInt =
             tokenAmount?.movePointRight(selectedToken.decimal)?.toBigInteger() ?: BigInteger.ONE
+
+        if (depositChain == Chain.ThorChain) {
+            val ceiling =
+                state.unbondRuneCeiling(nodeAddress)
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.deposit_form_bonded_assets_load_failed)
+                    )
+            if (tokenAmountInt > ceiling) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.deposit_error_amount_exceeds_bonded)
+                )
+            }
+        }
 
         val srcAddress = selectedToken.address
 

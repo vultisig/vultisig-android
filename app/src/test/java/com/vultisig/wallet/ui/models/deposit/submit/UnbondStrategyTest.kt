@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -15,9 +16,12 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.ui.models.deposit.BondAssetsState
+import com.vultisig.wallet.ui.models.deposit.BondedRuneCeiling
 import com.vultisig.wallet.ui.models.deposit.BondedUnitsCeiling
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
+import com.vultisig.wallet.ui.models.deposit.bondedRuneAmountForNode
+import com.vultisig.wallet.ui.models.deposit.unbondRuneCeiling
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -50,7 +54,7 @@ internal class UnbondStrategyTest {
         nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
         tokenAmount.setTextAndPlaceCursorAtEnd("0.5")
 
-        val tx = build(Chain.ThorChain).build()
+        val tx = build(Chain.ThorChain, state = thorUnbondState()).build()
 
         assertEquals("UNBOND:thorNode:50000000", tx.memo)
         assertEquals(BigInteger.ZERO, tx.srcTokenValue.value)
@@ -190,6 +194,87 @@ internal class UnbondStrategyTest {
 
         assertFailsWith<InvalidTransactionDataException> { build(Chain.ThorChain).build() }
     }
+
+    @Test
+    fun `Thor unbond builds when the entered amount equals the node bond`() = runTest {
+        coEvery { chainRepo.isValid(Chain.ThorChain, "thorNode") } returns true
+        givenSpecific()
+        nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
+        tokenAmount.setTextAndPlaceCursorAtEnd("0.5")
+
+        val tx = build(Chain.ThorChain, state = thorUnbondState()).build()
+
+        tx.memo shouldBe "UNBOND:thorNode:50000000"
+    }
+
+    @Test
+    fun `Thor unbond throws when the entered amount exceeds the node bond`() = runTest {
+        coEvery { chainRepo.isValid(Chain.ThorChain, "thorNode") } returns true
+        nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
+        tokenAmount.setTextAndPlaceCursorAtEnd("0.50000001")
+
+        shouldThrow<InvalidTransactionDataException> {
+            build(Chain.ThorChain, state = thorUnbondState()).build()
+        }
+    }
+
+    @Test
+    fun `Thor unbond throws when the ceiling was measured on a different node`() = runTest {
+        coEvery { chainRepo.isValid(Chain.ThorChain, "otherNode") } returns true
+        nodeAddress.setTextAndPlaceCursorAtEnd("otherNode")
+        tokenAmount.setTextAndPlaceCursorAtEnd("0.5")
+
+        shouldThrow<InvalidTransactionDataException> {
+            build(Chain.ThorChain, state = thorUnbondState()).build()
+        }
+    }
+
+    @Test
+    fun `Thor unbond throws when no bonded position was loaded`() = runTest {
+        coEvery { chainRepo.isValid(Chain.ThorChain, "thorNode") } returns true
+        nodeAddress.setTextAndPlaceCursorAtEnd("thorNode")
+        tokenAmount.setTextAndPlaceCursorAtEnd("0.5")
+
+        shouldThrow<InvalidTransactionDataException> { build(Chain.ThorChain).build() }
+    }
+
+    @Test
+    fun `unbondRuneCeiling answers only the matching Thor node`() {
+        val state = thorUnbondState(amount = BigInteger("1250000000"), node = "thor1a")
+
+        state.unbondRuneCeiling("thor1a") shouldBe BigInteger("1250000000")
+        state.unbondRuneCeiling("thor1b") shouldBe null
+        state.copy(depositChain = Chain.MayaChain).unbondRuneCeiling("thor1a") shouldBe null
+    }
+
+    @Test
+    fun `bondedRuneAmountForNode is zero when the node is absent`() {
+        val nodes =
+            listOf(
+                BondedNodePosition(
+                    id = "rune-thor1a",
+                    node = BondedNodePosition.BondedNode(address = "thor1a", state = "Active"),
+                    amount = BigInteger("5"),
+                    coin = coin(Chain.ThorChain),
+                    apy = 0.0,
+                    nextReward = 0.0,
+                    nextChurn = null,
+                )
+            )
+
+        bondedRuneAmountForNode(nodes, "thor1a") shouldBe BigInteger("5")
+        bondedRuneAmountForNode(nodes, "thor1b") shouldBe BigInteger.ZERO
+    }
+
+    private fun thorUnbondState(
+        amount: BigInteger = BigInteger("50000000"),
+        node: String = "thorNode",
+    ) =
+        DepositFormUiModel(
+            depositChain = Chain.ThorChain,
+            depositOption = DepositOption.Unbond,
+            bondedRuneCeiling = BondedRuneCeiling(nodeAddress = node, amount = amount),
+        )
 
     private fun build(
         chain: Chain,

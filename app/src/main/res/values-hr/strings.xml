@@ -385,6 +385,7 @@
     <string name="deposit_error_invalid_lpunits">LP jedinice nisu važeće</string>
     <string name="deposit_error_lpunits_exceeds_available">Premašuje dostupne LP jedinice</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Premašuje LP jedinice vezane uz ovaj čvor</string>
+    <string name="deposit_error_amount_exceeds_bonded">Premašuje RUNE vezan uz ovaj čvor</string>
     <string name="deposit_error_invalid_assets">Sredstva su nevažeća</string>
     <string name="deposit_error_chain_not_enabled">Omogućite %1$s u ovom trezoru za povlačenje %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Ovaj depozit još nije dostigao rok dospijeća</string>
