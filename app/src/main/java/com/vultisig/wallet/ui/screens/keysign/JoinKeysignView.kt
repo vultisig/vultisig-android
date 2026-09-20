@@ -224,6 +224,8 @@ internal fun JoinKeysignView() {
                     dappMetadata = dappMetadata,
                     coinLogoRes = keysignViewModel.coinLogoRes,
                     operationHero = keysignUiState.operationHero,
+                    onTryAgain =
+                        keysignViewModel.swapRetry?.let { { keysignViewModel.retrySwap() } },
                 )
             }
 

@@ -94,6 +94,7 @@ internal fun KeysignView(
     dappMetadata: DAppMetadata? = null,
     @DrawableRes coinLogoRes: Int? = null,
     operationHero: HeroContent? = null,
+    onTryAgain: (() -> Unit)? = null,
 ) {
     // Block system back while signing/broadcasting is in progress. Popping the nav entry here
     // cancels the ViewModel's coroutine scope mid-broadcast, before a terminal state lands, and a
@@ -145,6 +146,7 @@ internal fun KeysignView(
                                     isTransactionDetailVisible = it
                                 },
                                 dappMetadata = dappMetadata,
+                                onTryAgain = onTryAgain,
                             )
                         }
                         // A limit-order cancel is an ordinary deposit on the wire, but the send

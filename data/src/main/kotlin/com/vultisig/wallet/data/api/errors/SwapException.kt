@@ -38,6 +38,16 @@ sealed class SwapException(message: String) : Exception(message) {
     @Suppress("SerialVersionUIDInSerializableClass")
     class HighPriceImpact(message: String) : SwapException(message)
 
+    /**
+     * THORChain/Maya refused to quote because the user's `tolerance_bps` cannot be met: the node
+     * derives the price limit from the gross pool output but checks it against the emit net of
+     * the fixed outbound and affiliate fees, so a small swap into a high-gas chain fails any
+     * tolerance below its own fee share ("emit asset 31673 less than price limit 41232"). Only
+     * a looser tolerance (or Auto) clears it — a smaller amount makes the fee share worse.
+     */
+    @Suppress("SerialVersionUIDInSerializableClass")
+    class SlippageToleranceTooLow(message: String) : SwapException(message)
+
     @Suppress("SerialVersionUIDInSerializableClass")
     class RateLimitExceeded(message: String) : SwapException(message)
 
@@ -100,6 +110,7 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("no internet connection") -> NetworkConnection(error)
                     contains("too many requests") || contains("rate limit") ->
                         RateLimitExceeded(error)
+                    contains("less than price limit") -> SlippageToleranceTooLow(error)
                     contains("slippage") -> HighPriceImpact(error)
                     contains("price impact") -> HighPriceImpact(error)
                     contains("exceeds desired slippage") -> HighPriceImpact(error)

@@ -115,6 +115,15 @@ data class SwapTransactionHistoryData(
      * is the safe direction, since it claims no guarantee.
      */
     val isLimitOrder: Boolean = false,
+    /**
+     * Source token's contract address, or empty for a native source — the counterpart of
+     * [toContractAddress]. [fromToken] and [fromChain] alone cannot pick the coin to swap again
+     * once a vault holds two tokens with one ticker on one chain (a curated USDC beside a custom
+     * one), and a retry that guesses between them would sell the wrong asset. Default-valued so
+     * legacy rows stay readable (no Room migration); such a row is matched on ticker and chain
+     * alone and offers a retry only when that match is unique.
+     */
+    val fromContractAddress: String = "",
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(

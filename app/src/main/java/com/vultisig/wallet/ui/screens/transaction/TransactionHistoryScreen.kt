@@ -93,6 +93,7 @@ internal fun TransactionHistoryScreen(viewModel: TransactionHistoryViewModel = h
         onItemClick = viewModel::openDetail,
         onDismissDetail = viewModel::dismissDetail,
         onViewExplorer = { url -> if (url.isNotEmpty()) uriHandler.openUri(url) },
+        onTryAgain = viewModel::retrySelectedSwap,
         onSearchClick = viewModel::openSearch,
         assetSearchTextFieldState = viewModel.assetSearchTextFieldState,
         onAssetCheckChange = viewModel::toggleAssetSelection,
@@ -116,6 +117,7 @@ internal fun TransactionHistoryScreen(
     onItemClick: (TransactionHistoryItemUiModel) -> Unit,
     onDismissDetail: () -> Unit = {},
     onViewExplorer: (String) -> Unit = {},
+    onTryAgain: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     assetSearchTextFieldState: TextFieldState = rememberTextFieldState(),
     onAssetCheckChange: (TransactionAssetUiModel) -> Unit = {},
@@ -131,6 +133,7 @@ internal fun TransactionHistoryScreen(
             item = state.selectedItem,
             onDismiss = onDismissDetail,
             onViewExplorer = onViewExplorer,
+            onTryAgain = onTryAgain,
         )
     }
 
