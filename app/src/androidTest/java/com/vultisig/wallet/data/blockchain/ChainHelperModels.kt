@@ -46,6 +46,7 @@ data class TriggerSmartContractPayload(
 data class ERC20ApprovePayload(
     @SerialName("spender") val spender: String,
     @SerialName("amount") val amount: String,
+    @SerialName("reset_allowance_first") val resetAllowanceFirst: Boolean = false,
 )
 
 @Serializable

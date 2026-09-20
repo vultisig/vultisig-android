@@ -1,7 +1,9 @@
 package com.vultisig.wallet.data.api.txstatus
 
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
@@ -163,5 +165,35 @@ class EvmRevertReasonTest {
                 "0001020300000000000000000000000000000000000000000000000000000000"
 
         assertNull(decode(message = null, data = binary))
+    }
+
+    // isExecutionRevert tells a call that ran and reverted from a call the node never ran; the
+    // approve-reset probe turns only the former into an extra signed leg.
+
+    @Test
+    fun `an EIP-1474 execution error is a revert whatever the message`() {
+        assertTrue(EvmRevertReason.isExecutionRevert(code = 3, message = "execution reverted"))
+        assertTrue(EvmRevertReason.isExecutionRevert(code = 3, message = null))
+    }
+
+    @Test
+    fun `a generic error whose message is node revert boilerplate is a revert`() {
+        assertTrue(EvmRevertReason.isExecutionRevert(code = -32000, message = "execution reverted"))
+        assertTrue(
+            EvmRevertReason.isExecutionRevert(
+                code = -32603,
+                message = "VM Exception while processing transaction: revert",
+            )
+        )
+        assertTrue(
+            EvmRevertReason.isExecutionRevert(code = null, message = " Execution reverted: x")
+        )
+    }
+
+    @Test
+    fun `a node failure is not a revert`() {
+        assertFalse(EvmRevertReason.isExecutionRevert(code = -32005, message = "rate limited"))
+        assertFalse(EvmRevertReason.isExecutionRevert(code = -32000, message = "missing trie node"))
+        assertFalse(EvmRevertReason.isExecutionRevert(code = null, message = null))
     }
 }

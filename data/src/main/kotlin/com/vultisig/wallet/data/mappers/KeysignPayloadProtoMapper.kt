@@ -55,7 +55,11 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     .toList(),
             approvePayload =
                 from.erc20ApprovePayload?.let {
-                    ERC20ApprovePayload(amount = BigInteger(it.amount), spender = it.spender)
+                    ERC20ApprovePayload(
+                        amount = BigInteger(it.amount),
+                        spender = it.spender,
+                        resetAllowanceFirst = it.resetAllowanceFirst,
+                    )
                 },
             wasmExecuteContractPayload = from.wasmExecuteContractPayload,
             skipBroadcast = from.skipBroadcast ?: false,

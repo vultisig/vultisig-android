@@ -172,6 +172,7 @@ constructor(
                                 ERC20ApprovePayload(
                                     amount = transaction.srcTokenValue.value,
                                     spender = transaction.approveSpender,
+                                    resetAllowanceFirst = transaction.resetAllowanceFirst,
                                 )
                             else null,
                         libType = vault.libType,

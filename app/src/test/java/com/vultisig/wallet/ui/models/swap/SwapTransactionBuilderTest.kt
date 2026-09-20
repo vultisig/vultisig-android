@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
+import com.vultisig.wallet.data.repositories.ApprovalRequirement
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -58,7 +59,9 @@ internal class SwapTransactionBuilderTest {
                 tokenAmountValue = any(),
             )
         } returns specificAndUtxo
-        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+        coEvery {
+            allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+        } returns ApprovalRequirement.NotRequired
     }
 
     @Test
@@ -361,8 +364,9 @@ internal class SwapTransactionBuilderTest {
             coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
                 ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(99))
             // Allowance below the swap amount -> approval required.
-            coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns
-                BigInteger.ZERO
+            coEvery {
+                allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+            } returns ApprovalRequirement.Approve
             val tx0 =
                 OneInchSwapTxJson(
                     from = "0xsrc",
@@ -400,6 +404,7 @@ internal class SwapTransactionBuilderTest {
             // The ERC20 approve spender is the dedicated allowance target, not the swap `to`.
             assertEquals("0xproxy", tx.approveSpender)
             assertTrue(tx.isApprovalRequired)
+            assertFalse(tx.resetAllowanceFirst)
             // Without an override the displayed EVM network fee comes from the payload's signed gas
             // params (maxFeePerGasWei 99 × the 600k display limit), the same value the joined
             // device
@@ -413,6 +418,63 @@ internal class SwapTransactionBuilderTest {
             assertEquals("99", payload.data.quote.tx.gasPrice)
             // Non-Mantle chains keep the quote's original gas limit.
             assertEquals(21_000L, payload.data.quote.tx.gas)
+        }
+
+    // The reset decision is the repository's; the builder only has to carry it onto the transaction
+    // the keysign payload is built from, with the same spender the plain approve would use.
+    @Test
+    fun `carries the zero-first reset onto the OneInch swap when the probe asks for it`() =
+        runTest {
+            val srcToken =
+                coin(Chain.Ethereum, "USDT", "0xsrc", 6, isNative = false, contract = "0xtoken")
+            val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(99))
+            coEvery {
+                allowanceRepository.getApprovalRequirement(
+                    chain = Chain.Ethereum,
+                    contractAddress = "0xtoken",
+                    srcAddress = "0xsrc",
+                    dstAddress = "0xproxy",
+                    amount = BigInteger.valueOf(1_000),
+                )
+            } returns ApprovalRequirement.ResetThenApprove
+            val tx0 =
+                OneInchSwapTxJson(
+                    from = "0xsrc",
+                    to = "0xrouter",
+                    allowanceTarget = "0xproxy",
+                    gas = 21_000,
+                    data = "0xdata",
+                    value = "0",
+                    gasPrice = "1",
+                )
+            val quote =
+                SwapQuote.OneInch(
+                    expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                    fees = TokenValue(BigInteger.valueOf(9), dstToken),
+                    expiredAt = Clock.System.now(),
+                    data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                    provider = "1inch",
+                )
+
+            val tx =
+                builder.build(
+                    vaultId = "vault-4",
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcAddress = "0xsrc",
+                    srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                    quote = quote,
+                    gasFee = TokenValue(BigInteger.valueOf(8), srcToken),
+                    gasFeeFiatValue = FiatValue(BigDecimal("2.00"), "USD"),
+                    estimatedNetworkFeeTokenValue = null,
+                    estimatedNetworkFeeFiatValue = null,
+                )
+
+            assertTrue(tx.isApprovalRequired)
+            assertTrue(tx.resetAllowanceFirst)
+            assertEquals("0xproxy", tx.approveSpender)
         }
 
     @Test

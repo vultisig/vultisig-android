@@ -34,7 +34,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -112,6 +114,30 @@ internal class KeysignShareViewModelSwapApprovalTest {
         assertEquals(amount, approve.amount)
         // The swap itself is still sent to the entry contract.
         assertEquals(swapEntry, vm.keysignPayload?.toAddress)
+        // And without the reset flag it stays a single approve leg.
+        assertFalse(approve.resetAllowanceFirst)
+    }
+
+    // The reset decision is made once, at the swap form; the payload is how it reaches every
+    // co-signer, so dropping it here would sign one approve leg against the SDK's two.
+    @Test
+    fun `swap approve payload carries the zero-first reset the transaction asked for`() = runTest {
+        coEvery { swapTransactionRepository.getTransaction("tx-3") } returns
+            swapTransaction(
+                amount = BigInteger("5728996"),
+                dstAddress = "0x9025b8ff35ca44f7018c3a37fe0f69e63dbb0743",
+                approveSpender = "0x6c0ad82f9721a6dc986381d19338601a2e6370e5",
+                isApprovalRequired = true,
+                resetAllowanceFirst = true,
+            )
+        coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+
+        val vm = viewModel()
+        vm.loadSwapTransaction("tx-3")
+
+        val approve = requireNotNull(vm.keysignPayload?.approvePayload)
+        assertTrue(approve.resetAllowanceFirst)
+        assertEquals(listOf(BigInteger.ZERO, BigInteger("5728996")), approve.legAmounts)
     }
 
     @Test
@@ -136,6 +162,7 @@ internal class KeysignShareViewModelSwapApprovalTest {
         dstAddress: String,
         approveSpender: String,
         isApprovalRequired: Boolean,
+        resetAllowanceFirst: Boolean = false,
     ): RegularSwapTransaction {
         val usdt =
             Coin(
@@ -201,6 +228,7 @@ internal class KeysignShareViewModelSwapApprovalTest {
                     )
                 ),
             isApprovalRequired = isApprovalRequired,
+            resetAllowanceFirst = resetAllowanceFirst,
             gasFeeFiatValue = FiatValue(BigDecimal.ZERO, "USD"),
         )
     }

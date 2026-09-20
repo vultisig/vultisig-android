@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
+import com.vultisig.wallet.data.repositories.ApprovalRequirement
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.ThorMimirRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
@@ -168,14 +169,14 @@ constructor(
                 tokenAmountValue = if (isRouterDeposit) params.srcTokenValue.value else null,
             )
 
-        val allowance =
-            allowanceRepository.getAllowance(
+        val approval =
+            allowanceRepository.getApprovalRequirement(
                 chain = srcToken.chain,
                 contractAddress = srcToken.contractAddress,
                 srcAddress = params.srcAddress,
                 dstAddress = dstAddress,
+                amount = params.srcTokenValue.value,
             )
-        val isApprovalRequired = allowance != null && allowance < params.srcTokenValue.value
 
         // Minimum payout (the memo's LIM) in the target's natural units, for the "min. payout" row.
         val sourceAmount1e8 = toThorchainFixedPoint(params.srcTokenValue.value, srcToken.decimal)
@@ -225,7 +226,8 @@ constructor(
             outboundFee = outboundFee,
             gasFees = params.estimatedNetworkFeeTokenValue ?: params.gasFee,
             memo = memo,
-            isApprovalRequired = isApprovalRequired,
+            isApprovalRequired = approval != ApprovalRequirement.NotRequired,
+            resetAllowanceFirst = approval == ApprovalRequirement.ResetThenApprove,
             gasFeeFiatValue = params.estimatedNetworkFeeFiatValue ?: params.gasFeeFiatValue,
             externalRecipient = externalRecipient,
             payload =

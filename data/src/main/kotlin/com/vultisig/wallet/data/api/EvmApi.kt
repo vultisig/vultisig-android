@@ -53,6 +53,19 @@ interface EvmApi {
 
     suspend fun getAllowance(contractAddress: String, owner: String, spender: String): BigInteger
 
+    /**
+     * Whether `approve(spender, amount)` sent by [owner] to [contractAddress] would revert right
+     * now, simulated with `eth_call`. True only when the node reports the call reverted; a call the
+     * node could not run (transport, rate limit, node error) throws, so a failed probe never reads
+     * as an answer either way.
+     */
+    suspend fun doesErc20ApproveRevert(
+        contractAddress: String,
+        owner: String,
+        spender: String,
+        amount: BigInteger,
+    ): Boolean
+
     suspend fun sendTransaction(signedTransaction: String): String
 
     suspend fun getMaxPriorityFeePerGas(): BigInteger
@@ -558,6 +571,53 @@ class EvmApiImp(
         }
     }
 
+    override suspend fun doesErc20ApproveRevert(
+        contractAddress: String,
+        owner: String,
+        spender: String,
+        amount: BigInteger,
+    ): Boolean {
+        val paddedSpender = spender.removePrefix("0x").padStart(64, '0')
+        val paddedAmount = amount.toString(16).padStart(64, '0')
+        // A raw call rather than a decoded one: only revert vs. success matters, and USDT-style
+        // approves return no data, which decoding against the standard ABI would misreport.
+        val rpcResp =
+            fetch<EvmCallResponseJson>(
+                "eth_call",
+                buildJsonArray {
+                    addJsonObject {
+                        put("from", owner)
+                        put("to", contractAddress)
+                        put("data", "$ERC20_APPROVE_SELECTOR$paddedSpender$paddedAmount")
+                    }
+                    add("latest")
+                },
+            )
+        val error = rpcResp.error
+        if (error == null) {
+            // A healthy node answers a successful call with its return data, "0x" when there is
+            // none; no result and no error is a failed probe, not a success.
+            if (rpcResp.result == null) {
+                throw NetworkException(
+                    httpStatusCode = 0,
+                    message =
+                        "simulate approve null result, contract=$contractAddress owner=$owner " +
+                            "spender=$spender",
+                )
+            }
+            return false
+        }
+        if (EvmRevertReason.isExecutionRevert(error.code, error.message)) {
+            return true
+        }
+        throw NetworkException(
+            httpStatusCode = 0,
+            message =
+                "simulate approve rpc error, contract=$contractAddress owner=$owner " +
+                    "spender=$spender: ${error.message}",
+        )
+    }
+
     override suspend fun sendTransaction(signedTransaction: String): String {
         val payload =
             RpcPayload(
@@ -885,6 +945,8 @@ class EvmApiImp(
     }
 
     companion object {
+        /** `keccak("approve(address,uint256)")[0..3]`. */
+        private const val ERC20_APPROVE_SELECTOR = "0x095ea7b3"
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
         private const val CUSTOM_TOKEN_RESPONSE_DECIMAL_ID_ = 3
         private const val CUSTOM_TOKEN_REQUEST_TICKER_DATA = "0x95d89b41"

@@ -294,6 +294,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     Erc20ApprovePayload(
                         spender = approvePayload.spender,
                         amount = approvePayload.amount.toString(),
+                        resetAllowanceFirst = approvePayload.resetAllowanceFirst,
                     )
                 } else null,
             skipBroadcast = keysignPayload.skipBroadcast,

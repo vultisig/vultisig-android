@@ -23,6 +23,11 @@ internal object EvmRevertReason {
     /** `keccak("Error(string)")[0..3]` — the selector prefixing a `require`/`revert` string. */
     private const val ERROR_STRING_SELECTOR = "08c379a0"
 
+    /**
+     * EIP-1474's "execution error", the code geth and its peers give a revert that carries data.
+     */
+    private const val EXECUTION_ERROR_CODE = 3
+
     /** One ABI word is 32 bytes, i.e. 64 hex characters. */
     private const val WORD_HEX_LENGTH = 64
 
@@ -47,6 +52,19 @@ internal object EvmRevertReason {
             "reverted:",
             "revert:",
         )
+
+    /**
+     * Whether an `eth_call` error is the node reporting that the call itself reverted, as opposed
+     * to the node failing to run it (a rate limit, a missing block, a malformed request). A revert
+     * with data arrives under [EXECUTION_ERROR_CODE]; one without — a bare `revert()` such as
+     * USDT's approve guard — comes back under the generic -32000 and is only recognisable by its
+     * message, so the same node boilerplate [decode] strips is what identifies it here.
+     */
+    fun isExecutionRevert(code: Int?, message: String?): Boolean {
+        if (code == EXECUTION_ERROR_CODE) return true
+        val trimmed = message?.trim() ?: return false
+        return MESSAGE_PREFIXES.any { trimmed.startsWith(it, ignoreCase = true) }
+    }
 
     /**
      * The revert reason carried by an `eth_call` error, or null when neither carrier holds one.
