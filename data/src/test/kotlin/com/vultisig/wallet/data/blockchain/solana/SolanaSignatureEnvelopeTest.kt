@@ -161,6 +161,30 @@ class SolanaSignatureEnvelopeTest {
     }
 
     @Test
+    fun `the pre-ceremony check refuses exactly what the splice would`() {
+        // Same lookup, run before the keysign round: a transaction the vault can never sign should
+        // not cost a full MPC ceremony to find out.
+        val message =
+            legacyMessage(requiredSigners = listOf(RELAYER), otherAccounts = listOf(VAULT))
+        val envelope = SolanaSignatureEnvelope.parse(byteArrayOf(1) + ByteArray(64) + message)
+
+        val error = assertThrows<IllegalStateException> { envelope.checkSignerSlot(VAULT) }
+
+        assertEquals(
+            "Solana transaction does not require a signature from this vault",
+            error.message,
+        )
+    }
+
+    @Test
+    fun `the pre-ceremony check passes a signer the message requires`() {
+        val message = v0Message(requiredSigners = listOf(RELAYER, VAULT))
+        val envelope = SolanaSignatureEnvelope.parse(byteArrayOf(2) + ByteArray(128) + message)
+
+        envelope.checkSignerSlot(VAULT)
+    }
+
+    @Test
     fun `a slot count that disagrees with the message header is refused`() {
         // Two declared slots over a message requiring one. The runtime refuses the transaction
         // outright, so there is no slot layout worth resolving.

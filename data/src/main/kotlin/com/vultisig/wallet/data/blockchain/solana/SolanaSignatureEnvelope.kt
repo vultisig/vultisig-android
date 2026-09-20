@@ -6,9 +6,9 @@ package com.vultisig.wallet.data.blockchain.solana
  *
  * Shared by the raw-signing path and by the checks that run before it, deliberately. The signing
  * path splices the vault's signature into the vault's own slot ([withSignature]) and leaves every
- * other slot as it received it, so a check that a transaction is safe to sign that way has to read
- * the same envelope the splice writes into — a second, parallel parse could agree with itself and
- * still describe different bytes.
+ * other slot as it received it, so a check that a transaction is safe to sign that way
+ * ([checkSignerSlot]) has to read the same envelope the splice writes into — a second, parallel
+ * parse could agree with itself and still describe different bytes.
  *
  * @property message the pre-image ed25519 signs verbatim.
  * @property requiredSignatures the number of declared signature slots, which is the message
@@ -61,6 +61,18 @@ data class SolanaSignatureEnvelope(
         val offset = signatureOffsetOf(signer)
         val signed = bytes.copyOf().also { signature.copyInto(it, destinationOffset = offset) }
         return copy(bytes = signed)
+    }
+
+    /**
+     * Refuses now everything [withSignature] would refuse for [signer] later — a malformed header,
+     * a slot count the message disagrees with, a signer the message does not require — so a
+     * transaction the vault can never sign fails before the keysign ceremony instead of after a
+     * full MPC round.
+     *
+     * @throws IllegalStateException for anything [signatureOffsetOf] refuses.
+     */
+    fun checkSignerSlot(signer: ByteArray) {
+        signatureOffsetOf(signer)
     }
 
     /**

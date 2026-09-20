@@ -290,7 +290,11 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         keysignPayload.signSolana?.let { signSolana ->
             val allHashes = mutableListOf<String>()
             for (base64Tx in signSolana.rawTransactions) {
-                val hashes = getPreSignedImageHashForRaw(base64Tx)
+                val hashes =
+                    getPreSignedImageHashForRaw(
+                        coinHexPubKey = keysignPayload.coin.hexPublicKey,
+                        base64Transaction = base64Tx,
+                    )
                 allHashes.addAll(hashes)
             }
             return allHashes
@@ -440,8 +444,17 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         return Base64.encode(dataMessage)
     }
 
-    private fun getPreSignedImageHashForRaw(base64Transaction: String): List<String> =
-        listOf(Numeric.toHexStringNoPrefix(parseRawTransaction(base64Transaction).message))
+    private fun getPreSignedImageHashForRaw(
+        coinHexPubKey: String,
+        base64Transaction: String,
+    ): List<String> {
+        val transaction = parseRawTransaction(base64Transaction)
+        // Both devices derive the messages to sign before the ceremony starts, so this is where a
+        // transaction the vault can never sign — one that does not list it as a required signer —
+        // is cheapest to refuse. Left to the splice, the refusal would cost a full MPC round.
+        transaction.checkSignerSlot(coinHexPubKey.toHexByteArray())
+        return listOf(Numeric.toHexStringNoPrefix(transaction.message))
+    }
 
     private fun signRawTransaction(
         coinHexPubKey: String,
