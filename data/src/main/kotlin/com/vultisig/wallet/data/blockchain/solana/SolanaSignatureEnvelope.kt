@@ -34,18 +34,33 @@ data class SolanaSignatureEnvelope(
                 .all { bytes[it] == ZERO_BYTE }
 
     /**
-     * [bytes] with [signature] written into the slot that belongs to [signer], a 32-byte ed25519
-     * public key, and nothing else touched: the message and every other signer's slot come out
-     * exactly as they went in, so a co-signer's signature that was already there is broadcast
+     * The fee payer's signature — slot 0 — or null while that slot is still the all-zero
+     * placeholder.
+     *
+     * This is the transaction id: the chain indexes a transaction by its first signature and by
+     * nothing else, so a transaction whose fee payer has not signed yet has no id, and a
+     * co-signer's signature in a later slot is never one.
+     */
+    val feePayerSignature: ByteArray?
+        get() =
+            bytes
+                .copyOfRange(firstSignatureOffset, firstSignatureOffset + SIGNATURE_LENGTH)
+                .takeUnless { slot -> slot.all { it == ZERO_BYTE } }
+
+    /**
+     * This envelope with [signature] written into the slot that belongs to [signer], a 32-byte
+     * ed25519 public key, and nothing else touched: the message and every other signer's slot come
+     * out exactly as they went in, so a co-signer's signature that was already there is broadcast
      * alongside this one.
      *
      * @throws IllegalStateException if [signature] is not one signature long, or for anything
      *   [signatureOffsetOf] refuses.
      */
-    fun withSignature(signer: ByteArray, signature: ByteArray): ByteArray {
+    fun withSignature(signer: ByteArray, signature: ByteArray): SolanaSignatureEnvelope {
         check(signature.size == SIGNATURE_LENGTH) { "Unexpected Solana signature length" }
         val offset = signatureOffsetOf(signer)
-        return bytes.copyOf().also { signature.copyInto(it, destinationOffset = offset) }
+        val signed = bytes.copyOf().also { signature.copyInto(it, destinationOffset = offset) }
+        return copy(bytes = signed)
     }
 
     /**

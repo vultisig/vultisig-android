@@ -52,9 +52,6 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
     companion object {
         val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
 
-        /** Byte length of an ed25519 signature, and of each slot in a Solana signature array. */
-        private const val SIGNATURE_LENGTH = SolanaSignatureEnvelope.SIGNATURE_LENGTH
-
         /**
          * The Solana transaction id is the first signature in the signed transaction. WalletCore
          * populates [Solana.SigningOutput.getSignaturesList] (base58) on the
@@ -467,20 +464,18 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         // was signed and carries whatever the other signers had already put in.
         val signedTransaction = transaction.withSignature(pubkeyData, signature)
 
-        // The transaction id is the fee payer's signature — slot 0 of what is broadcast — which
-        // is the vault's own only when the vault pays the fee.
-        val transactionId =
-            signedTransaction.copyOfRange(
-                transaction.firstSignatureOffset,
-                transaction.firstSignatureOffset + SIGNATURE_LENGTH,
-            )
+        // The transaction id is the fee payer's signature, which is the vault's own only when the
+        // vault pays the fee. Until the fee payer has signed there is no id to report: the
+        // broadcast cannot succeed without that signature, and the recovery that runs when it
+        // fails looks the id up on-chain, where the vault's own signature is never indexed.
+        val transactionId = signedTransaction.feePayerSignature
 
         // Android broadcasts Solana transactions with the RPC's default base58
         // encoding (see SolanaApi.broadcastTransaction), unlike iOS which pins base64,
         // so the signed transaction and its hash are base58 here.
         return SignedTransactionResult(
-            rawTransaction = Base58.encodeNoCheck(signedTransaction),
-            transactionHash = Base58.encodeNoCheck(transactionId),
+            rawTransaction = Base58.encodeNoCheck(signedTransaction.bytes),
+            transactionHash = transactionId?.let(Base58::encodeNoCheck).orEmpty(),
         )
     }
 

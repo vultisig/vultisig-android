@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.solana
 
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -80,7 +81,8 @@ class SolanaSignatureEnvelopeTest {
 
         val signed = envelope.withSignature(VAULT, VAULT_SIGNATURE)
 
-        assertEquals((byteArrayOf(1) + VAULT_SIGNATURE + message).toList(), signed.toList())
+        assertEquals((byteArrayOf(1) + VAULT_SIGNATURE + message).toList(), signed.bytes.toList())
+        assertEquals(VAULT_SIGNATURE.toList(), signed.feePayerSignature?.toList())
     }
 
     @Test
@@ -98,10 +100,34 @@ class SolanaSignatureEnvelopeTest {
         assertEquals(
             (byteArrayOf(3) + ByteArray(64) + VAULT_SIGNATURE + COSIGNER_SIGNATURE + message)
                 .toList(),
-            signed.toList(),
+            signed.bytes.toList(),
         )
         // The splice returns a copy; the envelope it was read from is still what arrived.
         assertEquals(bytes.toList(), envelope.bytes.toList())
+    }
+
+    @Test
+    fun `there is no transaction id until the fee payer has signed`() {
+        // The chain indexes a transaction by its first signature only. With the relayer's slot
+        // still empty the transaction has no id yet, and the vault's own signature is not one —
+        // reporting it would send a duplicate-broadcast lookup after something never indexed.
+        val message = v0Message(requiredSigners = listOf(RELAYER, VAULT))
+        val envelope = SolanaSignatureEnvelope.parse(byteArrayOf(2) + ByteArray(128) + message)
+
+        val signed = envelope.withSignature(VAULT, VAULT_SIGNATURE)
+
+        assertNull(signed.feePayerSignature)
+    }
+
+    @Test
+    fun `the transaction id is the relayer's signature once it is in slot 0`() {
+        val message = v0Message(requiredSigners = listOf(RELAYER, VAULT))
+        val bytes = byteArrayOf(2) + RELAYER_SIGNATURE + ByteArray(64) + message
+        val envelope = SolanaSignatureEnvelope.parse(bytes)
+
+        val signed = envelope.withSignature(VAULT, VAULT_SIGNATURE)
+
+        assertEquals(RELAYER_SIGNATURE.toList(), signed.feePayerSignature?.toList())
     }
 
     @Test
@@ -113,7 +139,7 @@ class SolanaSignatureEnvelopeTest {
 
         assertEquals(
             (byteArrayOf(2) + ByteArray(64) + VAULT_SIGNATURE + message).toList(),
-            signed.toList(),
+            signed.bytes.toList(),
         )
     }
 
@@ -230,5 +256,6 @@ class SolanaSignatureEnvelopeTest {
 
         val VAULT_SIGNATURE = ByteArray(64) { 0xAA.toByte() }
         val COSIGNER_SIGNATURE = ByteArray(64) { 0xBB.toByte() }
+        val RELAYER_SIGNATURE = ByteArray(64) { 0xCC.toByte() }
     }
 }
