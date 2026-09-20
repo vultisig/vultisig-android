@@ -315,6 +315,7 @@ internal class SwapFormViewModelTest {
                 selectedDst: StateFlow<SendSrc?>,
                 referralCode: MutableStateFlow<String?>,
                 slippageBps: StateFlow<Int?>,
+                gasLimitOverride: StateFlow<Long?>,
                 externalRecipient: StateFlow<String?>,
                 srcAmountState: TextFieldState,
                 vaultId: () -> String?,
@@ -342,6 +343,7 @@ internal class SwapFormViewModelTest {
                     selectedDst = selectedDst,
                     referralCode = referralCode,
                     slippageBps = slippageBps,
+                    gasLimitOverride = gasLimitOverride,
                     externalRecipient = externalRecipient,
                     srcAmountState = srcAmountState,
                     vaultId = vaultId,
@@ -2604,6 +2606,281 @@ internal class SwapFormViewModelTest {
             // selectedSrc changes again.
             assertEquals("0.001 ETH", state.feeBreakdown.networkFee)
             assertEquals("$2.00", state.feeBreakdown.networkFeeFiat)
+        }
+
+    @Test
+    fun `re-prices the network fee row at the gas-limit override without re-fetching`() =
+        runTest(mainDispatcher) {
+            // The review sheet prices an EVM-aggregator swap at the override; the form's row must
+            // state the same maximum, and move again when the override is cleared — off the quote
+            // already on screen, not a fresh fetch.
+            val overrideBond = TokenValue(BigInteger("10000000000000000"), ETH_COIN)
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 0L)
+            } returns null
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 1_000_000L)
+            } returns
+                GasCalculationResult(
+                    gasFee = overrideBond,
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.01 ETH",
+                            formattedFiatValue = "$20.00",
+                            tokenValue = overrideBond,
+                            fiatValue = FiatValue(BigDecimal("20.00"), "USD"),
+                        ),
+                    chain = Chain.Ethereum,
+                )
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.LIFI)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote = createLiFiQuote(),
+                    provider = SwapProvider.LIFI,
+                    providerUiText = R.string.swap_for_provider_li_fi.asUiText(),
+                )
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress(), btcAddress()),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = BTC_COIN.id,
+                )
+            advanceUntilIdle()
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.5")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+            assertEquals("0.001 ETH", vm.uiState.value.feeBreakdown.networkFee)
+
+            vm.setGasLimit(1_000_000L)
+            advanceUntilIdle()
+
+            assertEquals("0.01 ETH", vm.uiState.value.feeBreakdown.networkFee)
+            assertEquals("$20.00", vm.uiState.value.feeBreakdown.networkFeeFiat)
+
+            vm.setGasLimit(null)
+            advanceUntilIdle()
+
+            assertEquals("0.001 ETH", vm.uiState.value.feeBreakdown.networkFee)
+            coVerify(exactly = 1) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+        }
+
+    @Test
+    fun `a gas-limit change while a fresh quote is applying prices the quote on screen`() =
+        runTest(mainDispatcher) {
+            // A fresh quote suspends mid-apply (pricing its route picker) while the previous quote
+            // is still the one on screen. An override landing then must re-price what is on
+            // screen, and a re-price that is still resolving when the fresh quote lands must not
+            // stamp the previous route's fee over it.
+            val overrideBond = TokenValue(BigInteger("10000000000000000"), ETH_COIN)
+            fun overrideResult(formatted: String) =
+                GasCalculationResult(
+                    gasFee = overrideBond,
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = formatted,
+                            formattedFiatValue = "$20.00",
+                            tokenValue = overrideBond,
+                            fiatValue = FiatValue(BigDecimal("20.00"), "USD"),
+                        ),
+                    chain = Chain.Ethereum,
+                )
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 0L)
+            } returns null
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 1_000_000L)
+            } returns overrideResult("0.01 ETH")
+            val rebaseGate = CompletableDeferred<Unit>()
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 2_000_000L)
+            } coAnswers
+                {
+                    rebaseGate.await()
+                    overrideResult("0.02 ETH")
+                }
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.LIFI, SwapProvider.THORCHAIN)
+            // The second fetch's runner-up carries a fee only the route picker formats, so the
+            // gate parks the apply exactly inside buildRouteOptions.
+            val runnerUpFee = FiatValue(BigDecimal("7.77"), "USD")
+            val pickerGate = CompletableDeferred<Unit>()
+            coEvery {
+                fiatValueToString(
+                    match { it.value.compareTo(runnerUpFee.value) == 0 },
+                    asFee = true,
+                )
+            } coAnswers
+                {
+                    pickerGate.await()
+                    "$7.77"
+                }
+            val lifiQuote =
+                createDefaultQuoteFetchResult(
+                    quote = createLiFiQuote(),
+                    provider = SwapProvider.LIFI,
+                    providerUiText = R.string.swap_for_provider_li_fi.asUiText(),
+                )
+            val thorBest = createDefaultQuoteFetchResult().best
+            val lifiRunnerUp =
+                BestQuote(
+                    candidate =
+                        QuoteCandidate(
+                            provider = SwapProvider.LIFI,
+                            vultBPSDiscount = null,
+                            referral = null,
+                        ),
+                    result =
+                        lifiQuote.best.result.copy(
+                            swapFeeFiat = runnerUpFee,
+                            affiliateFeeFiat = runnerUpFee,
+                        ),
+                )
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                lifiQuote andThen
+                RankedQuotes(best = thorBest, ranked = listOf(thorBest, lifiRunnerUp))
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress(), btcAddress()),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = BTC_COIN.id,
+                )
+            advanceUntilIdle()
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.5")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+            assertEquals(
+                UiText.StringResource(R.string.swap_for_provider_li_fi),
+                vm.uiState.value.quoteDisplay.provider,
+            )
+            assertEquals("0.001 ETH", vm.uiState.value.feeBreakdown.networkFee)
+
+            // The THORChain quote is fetched and parks in buildRouteOptions; LI.FI stays on screen.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.6")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+            assertEquals(
+                UiText.StringResource(R.string.swap_for_provider_li_fi),
+                vm.uiState.value.quoteDisplay.provider,
+            )
+
+            vm.setGasLimit(1_000_000L)
+            advanceUntilIdle()
+
+            // Priced for the LI.FI route on screen — not for the parked THORChain result, whose
+            // branch would have put the flat baseline back.
+            assertEquals("0.01 ETH", vm.uiState.value.feeBreakdown.networkFee)
+
+            // This re-price is still resolving when the THORChain quote lands.
+            vm.setGasLimit(2_000_000L)
+            advanceUntilIdle()
+            pickerGate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(
+                UiText.StringResource(R.string.swap_form_provider_thorchain),
+                vm.uiState.value.quoteDisplay.provider,
+            )
+            assertEquals("0.001 ETH", vm.uiState.value.feeBreakdown.networkFee)
+
+            rebaseGate.complete(Unit)
+            advanceUntilIdle()
+
+            // The stale re-price resumed on a replaced context and dropped its outcome.
+            assertEquals("0.001 ETH", vm.uiState.value.feeBreakdown.networkFee)
+            coVerify(exactly = 2) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+        }
+
+    @Test
+    fun `labels the network fee as a maximum on an EVM source`() =
+        runTest(mainDispatcher) {
+            // The default gas mock quotes an Ethereum bond (maxFeePerGas × limit): the most the
+            // swap can cost, so the row is labelled as such alongside "Max. Total Fee".
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals("0.001 ETH", state.feeBreakdown.networkFee)
+            assertTrue(state.feeBreakdown.isNetworkFeeMax)
+        }
+
+    @Test
+    fun `keeps the plain network fee label on a source whose fee is exact`() =
+        runTest(mainDispatcher) {
+            val solFee = TokenValue(value = BigInteger("5000"), token = SOL_COIN)
+            coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
+                GasCalculationResult(
+                    gasFee = solFee,
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.000005 SOL",
+                            formattedFiatValue = "$0.00",
+                            tokenValue = solFee,
+                            fiatValue = FiatValue(BigDecimal("0.00"), "USD"),
+                        ),
+                    chain = Chain.Solana,
+                )
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(solanaAddress(), ethAddress()),
+                    srcTokenId = SOL_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals("0.000005 SOL", state.feeBreakdown.networkFee)
+            assertFalse(state.feeBreakdown.isNetworkFeeMax)
         }
 
     @Test

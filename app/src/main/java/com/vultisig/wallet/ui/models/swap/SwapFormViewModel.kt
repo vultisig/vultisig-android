@@ -139,9 +139,9 @@ constructor(
     // quote with the new tolerance (#4858).
     private val slippageBps = MutableStateFlow<Int?>(null)
 
-    // User EVM gas-limit override (units), or null for "Auto". Applied at transaction-build time
-    // (no quote re-fetch needed), so it stays in the ViewModel rather than the quote pipeline
-    // (#4858).
+    // User EVM gas-limit override (units), or null for "Auto". Applied at transaction-build time,
+    // and the quote pipeline re-prices the form's network fee row at it without re-fetching the
+    // quote (#4858).
     private val gasLimitOverride = MutableStateFlow<Long?>(null)
 
     // Optional external recipient address (exactly as typed): drives the field display and the
@@ -167,6 +167,7 @@ constructor(
             selectedDst = selectedDst,
             referralCode = referralCode,
             slippageBps = slippageBps,
+            gasLimitOverride = gasLimitOverride,
             externalRecipient = quoteRecipient,
             srcAmountState = srcAmountState,
             vaultId = { vaultId },
@@ -1115,7 +1116,8 @@ constructor(
 
     /**
      * Sets the EVM gas-limit override in units, or null for "Auto". Applied when the swap
-     * transaction is built; no quote re-fetch is needed (#4858).
+     * transaction is built, and the form's network fee row is re-priced at it so it states the same
+     * maximum the review sheet will; the quote itself is not re-fetched (#4858).
      */
     fun setGasLimit(units: Long?) {
         gasLimitOverride.value = units

@@ -87,6 +87,16 @@ internal class JoinSwapSwapKitFeeTest {
     }
 
     @Test
+    fun `keeps the plain network fee label on a source whose fee is exact`() = runTest {
+        stub()
+
+        val tx = join(payload(swapFee = "13000000", swapFeeChain = "Tron", swapFeeDecimals = 6))
+
+        // Tron charges exactly the bandwidth/energy it quotes; only EVM gas is a ceiling.
+        tx.isNetworkFeeMax shouldBe false
+    }
+
+    @Test
     fun `prices a Chainflip fee in Ethereum USDC, a coin that is neither leg`() = runTest {
         stub()
         val usdc = Coins.Ethereum.USDC
