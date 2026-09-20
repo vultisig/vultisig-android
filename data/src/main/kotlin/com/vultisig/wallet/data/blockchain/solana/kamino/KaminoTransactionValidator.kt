@@ -364,11 +364,11 @@ object KaminoTransactionValidator {
     /**
      * Refuses anything but a transaction with one still-empty signature slot.
      *
-     * The raw-signing path splices this vault's signature into slot 0 and leaves the message and
-     * every further slot exactly as received — which is right for a dApp co-sign and wrong here. A
-     * second required signer means the app signs and broadcasts something incomplete, or something
-     * completed by whoever supplied the bytes; a slot that already holds bytes means a signature
-     * over some message this device never saw riding along with its own.
+     * The raw-signing path splices this vault's signature into its own slot and leaves the message
+     * and every other slot exactly as received — which is right for a dApp co-sign and wrong here.
+     * A second required signer means the app signs and broadcasts something incomplete, or
+     * something completed by whoever supplied the bytes; a slot that already holds bytes means a
+     * signature over some message this device never saw riding along with its own.
      *
      * Fail-closed on both devices. iOS gates the same decode with `validateUnsignedSingleSigner`.
      */
@@ -376,7 +376,7 @@ object KaminoTransactionValidator {
         if (decoded.requiredSignatures != 1) {
             reject(
                 "transaction declares ${decoded.requiredSignatures} required signatures; only " +
-                    "signer 0's slot is ever filled"
+                    "the wallet's own slot is ever filled"
             )
         }
         if (!decoded.isUnsigned) {

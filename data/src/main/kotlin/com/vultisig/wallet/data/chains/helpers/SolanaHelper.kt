@@ -461,19 +461,26 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
             error("Signature verification failed")
         }
 
-        // Splice signer 0's signature into signer 0's slot in the original bytes; the message and
-        // any further signer slots stay exactly as the dApp built them, so the broadcast
-        // transaction matches the pre-image that was signed.
-        check(signature.size == SIGNATURE_LENGTH) { "Unexpected Solana signature length" }
-        val signedTransaction = transaction.bytes.copyOf()
-        signature.copyInto(signedTransaction, destinationOffset = transaction.firstSignatureOffset)
+        // Splice the vault's signature into the vault's own slot in the original bytes — slot 0
+        // only when the vault is the fee payer; the message and every other signer's slot stay
+        // exactly as the dApp built them, so the broadcast transaction matches the pre-image that
+        // was signed and carries whatever the other signers had already put in.
+        val signedTransaction = transaction.withSignature(pubkeyData, signature)
+
+        // The transaction id is the fee payer's signature — slot 0 of what is broadcast — which
+        // is the vault's own only when the vault pays the fee.
+        val transactionId =
+            signedTransaction.copyOfRange(
+                transaction.firstSignatureOffset,
+                transaction.firstSignatureOffset + SIGNATURE_LENGTH,
+            )
 
         // Android broadcasts Solana transactions with the RPC's default base58
         // encoding (see SolanaApi.broadcastTransaction), unlike iOS which pins base64,
         // so the signed transaction and its hash are base58 here.
         return SignedTransactionResult(
             rawTransaction = Base58.encodeNoCheck(signedTransaction),
-            transactionHash = Base58.encodeNoCheck(signature),
+            transactionHash = Base58.encodeNoCheck(transactionId),
         )
     }
 

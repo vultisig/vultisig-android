@@ -113,13 +113,13 @@ object SolanaStakingTransactionReader {
     /**
      * Whether the envelope is one this wallet alone completes.
      *
-     * The raw-signing path splices this vault's signature into slot 0 and leaves the rest of the
-     * envelope exactly as it arrived. So the fee payer — message account key 0, not any account an
-     * instruction happens to name first — must be the wallet, one signature must be all the message
-     * declares, and every slot must still be an empty placeholder. Otherwise the wallet pays for
-     * somebody else's transaction, signs one that is broadcast incomplete, or countersigns beside a
-     * signature it never saw. These are the same three checks the Kamino raw-Solana path makes for
-     * the same reason.
+     * The raw-signing path splices this vault's signature into its own slot and leaves the rest of
+     * the envelope exactly as it arrived. So the fee payer — message account key 0, not any account
+     * an instruction happens to name first — must be the wallet, one signature must be all the
+     * message declares, and every slot must still be an empty placeholder. Otherwise the wallet
+     * pays for somebody else's transaction, signs one that is broadcast incomplete, or countersigns
+     * beside a signature it never saw. These are the same three checks the Kamino raw-Solana path
+     * makes for the same reason.
      */
     private fun KaminoDecodedTransaction.isSignableBy(signerAddress: String): Boolean =
         feePayer == signerAddress && requiredSignatures == 1 && isUnsigned
