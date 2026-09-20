@@ -131,6 +131,18 @@ class SubstrateDappTransactionDecoderTest {
     }
 
     @Test
+    fun `a CheckMetadataHash mode above 127 is listed unsigned`() {
+        val tx =
+            decode(
+                "0x0000",
+                extensions =
+                    ""","signedExtensions":["CheckMetadataHash"],"mode":255,"metadataHash":null""",
+            )
+
+        tx.fields.last().value shouldBe "255"
+    }
+
+    @Test
     fun `a payload without the extension lists neither`() {
         val tx = decode("0x0000", extensions = ""","signedExtensions":["CheckMortality"]""")
 

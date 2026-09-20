@@ -111,7 +111,7 @@ object SubstrateDappTransactionDecoder {
                 add(
                     SubstrateDappTxField(
                         SubstrateDappTxFieldKey.METADATA_HASH_MODE,
-                        payload.modeByte().toInt().toString(),
+                        payload.modeByte().toUByte().toString(),
                     )
                 )
                 if (payload.metadataHash.isNotEmpty()) {
