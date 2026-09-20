@@ -509,6 +509,7 @@
     <string name="deposit_error_invalid_lpunits">LP units are invalid</string>
     <string name="deposit_error_lpunits_exceeds_available">Exceeds your available LP units</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Exceeds the LP units bonded to this node</string>
+    <string name="deposit_error_amount_exceeds_bonded">Exceeds the RUNE bonded to this node</string>
     <string name="deposit_error_invalid_assets">Assets are invalid</string>
     <string name="deposit_error_chain_not_enabled">Enable %1$s in this vault to withdraw %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">This deposit has not reached its maturity period yet</string>

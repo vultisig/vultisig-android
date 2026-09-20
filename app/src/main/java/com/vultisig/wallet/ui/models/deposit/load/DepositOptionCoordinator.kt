@@ -12,10 +12,13 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
+import com.vultisig.wallet.ui.models.deposit.BondedRuneCeiling
 import com.vultisig.wallet.ui.models.deposit.DepositFieldStates
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
+import com.vultisig.wallet.ui.models.deposit.bondedRuneAmountForNode
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
@@ -34,9 +37,11 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
 /**
@@ -58,6 +63,7 @@ constructor(
     private val mayaChainApi: MayaChainApi,
     private val accountsRepository: AccountsRepository,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
+    private val thorchainBondUseCase: ThorchainBondUseCase,
     @Assisted private val scope: CoroutineScope,
     @Assisted private val state: MutableStateFlow<DepositFormUiModel>,
     @Assisted private val address: StateFlow<Address?>,
@@ -113,17 +119,28 @@ constructor(
             val chain = chainProvider()
 
             when (option) {
-                DepositOption.Bond,
-                DepositOption.Unbond -> {
+                DepositOption.Bond -> {
                     val defaultBondToken =
                         if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
                         else Coins.ThorChain.RUNE
                     state.update {
                         it.copy(selectedToken = defaultBondToken, unstakableAmount = null)
                     }
-                    // The Maya asset load runs after the node-address prefill below: Unbond is
-                    // scoped to that node, and reading the field before it is filled would ask
-                    // about no node at all.
+                }
+
+                DepositOption.Unbond -> {
+                    val defaultBondToken =
+                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
+                        else Coins.ThorChain.RUNE
+                    state.update {
+                        it.copy(
+                            selectedToken = defaultBondToken,
+                            unstakableAmount = null,
+                            bondedRuneCeiling = null,
+                            balance = UiText.Empty,
+                            balanceDecimal = null,
+                        )
+                    }
                 }
 
                 DepositOption.Leave -> {
@@ -157,12 +174,11 @@ constructor(
                 }
 
                 DepositOption.WithdrawSecuredAsset -> {
-                    withdrawSecuredAssetJob =
-                        scope.launch {
-                            address.filterNotNull().collect { address ->
-                                handleWithdrawSecuredAsset(address)
-                            }
+                    withdrawSecuredAssetJob = scope.launch {
+                        address.filterNotNull().collect { address ->
+                            handleWithdrawSecuredAsset(address)
                         }
+                    }
                 }
 
                 else -> Unit
@@ -173,13 +189,64 @@ constructor(
                 fields.nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress)
             }
 
-            if (chain == Chain.MayaChain) {
-                when (option) {
-                    DepositOption.Bond -> liquidityDataLoader.loadMayaBondableAssets()
-                    DepositOption.Unbond -> watchNodeAddressForUnbond()
-                    else -> Unit
+            when {
+                chain == Chain.MayaChain && option == DepositOption.Bond ->
+                    liquidityDataLoader.loadMayaBondableAssets()
+                chain == Chain.MayaChain && option == DepositOption.Unbond ->
+                    watchNodeAddressForUnbond()
+                chain == Chain.ThorChain && option == DepositOption.Unbond ->
+                    watchNodeAddressForThorUnbond()
+            }
+        }
+    }
+
+    /** Dropped on the keystroke so a previous node's bond cannot outlive the field. */
+    private fun watchNodeAddressForThorUnbond() {
+        nodeAddressWatchJob = scope.launch {
+            fields.nodeAddressFieldState
+                .textAsFlow()
+                .map { it.toString() }
+                .distinctUntilChanged()
+                .collectLatest { nodeAddress ->
+                    clearThorUnbondCeiling()
+                    delay(NODE_ADDRESS_DEBOUNCE_MS)
+                    loadThorUnbondCeiling(nodeAddress)
+                }
+        }
+    }
+
+    private fun clearThorUnbondCeiling() {
+        state.update {
+            it.copy(bondedRuneCeiling = null, balance = UiText.Empty, balanceDecimal = null)
+        }
+    }
+
+    private suspend fun loadThorUnbondCeiling(nodeAddress: String) {
+        if (nodeAddress.isBlank()) return
+        val vaultId = vaultId() ?: return
+        val vaultAddress =
+            address.value?.address
+                ?: withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) {
+                    address.filterNotNull().first().address
+                }
+                ?: return
+        try {
+            thorchainBondUseCase.getActiveNodes(vaultId, vaultAddress).collect { nodes ->
+                val amount = bondedRuneAmountForNode(nodes, nodeAddress)
+                val tokenValue = TokenValue(amount, Coins.ThorChain.RUNE)
+                state.update {
+                    it.copy(
+                        bondedRuneCeiling =
+                            BondedRuneCeiling(nodeAddress = nodeAddress, amount = amount),
+                        balance = mapTokenValueToStringWithUnit(tokenValue).asUiText(),
+                        balanceDecimal = tokenValue.decimal,
+                    )
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to load THORChain unbond ceiling for node %s", nodeAddress)
         }
     }
 
@@ -193,18 +260,17 @@ constructor(
      * the previous one, and the memo is built from the field.
      */
     private fun watchNodeAddressForUnbond() {
-        nodeAddressWatchJob =
-            scope.launch {
-                fields.nodeAddressFieldState
-                    .textAsFlow()
-                    .map { it.toString() }
-                    .distinctUntilChanged()
-                    .collectLatest { nodeAddress ->
-                        liquidityDataLoader.clearBondedAssets()
-                        delay(NODE_ADDRESS_DEBOUNCE_MS)
-                        liquidityDataLoader.loadMayaBondedAssets(nodeAddress)
-                    }
-            }
+        nodeAddressWatchJob = scope.launch {
+            fields.nodeAddressFieldState
+                .textAsFlow()
+                .map { it.toString() }
+                .distinctUntilChanged()
+                .collectLatest { nodeAddress ->
+                    liquidityDataLoader.clearBondedAssets()
+                    delay(NODE_ADDRESS_DEBOUNCE_MS)
+                    liquidityDataLoader.loadMayaBondedAssets(nodeAddress)
+                }
+        }
     }
 
     /** Re-runs the MayaChain asset load for the option on screen, after a failed fetch. */
@@ -327,5 +393,6 @@ constructor(
         // Long enough that typing a node address does not fire a request per keystroke, short
         // enough that a paste is answered before the user reaches the units field.
         private const val NODE_ADDRESS_DEBOUNCE_MS = 300L
+        private const val ADDRESS_AWAIT_TIMEOUT_MS = 5_000L
     }
 }

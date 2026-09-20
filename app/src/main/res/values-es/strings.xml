@@ -385,6 +385,7 @@
     <string name="deposit_error_invalid_lpunits">Las unidades LP no son válidas</string>
     <string name="deposit_error_lpunits_exceeds_available">Supera las unidades LP disponibles</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Supera las unidades LP vinculadas a este nodo</string>
+    <string name="deposit_error_amount_exceeds_bonded">Supera el RUNE vinculado a este nodo</string>
     <string name="deposit_error_invalid_assets">Los activos no son válidos</string>
     <string name="deposit_error_chain_not_enabled">Habilita %1$s en esta bóveda para retirar %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Este depósito aún no ha alcanzado su período de vencimiento.</string>

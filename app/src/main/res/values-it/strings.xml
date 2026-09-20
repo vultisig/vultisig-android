@@ -385,6 +385,7 @@
     <string name="deposit_error_invalid_lpunits">Le unità LP non sono valide</string>
     <string name="deposit_error_lpunits_exceeds_available">Supera le unità LP disponibili</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Supera le unità LP vincolate a questo nodo</string>
+    <string name="deposit_error_amount_exceeds_bonded">Supera il RUNE vincolato a questo nodo</string>
     <string name="deposit_error_invalid_assets">Le risorse non sono valide</string>
     <string name="deposit_error_chain_not_enabled">Abilita %1$s in questo vault per prelevare %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Questo deposito non ha ancora raggiunto il suo periodo di scadenza</string>

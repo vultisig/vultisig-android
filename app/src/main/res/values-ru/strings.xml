@@ -384,6 +384,7 @@
     <string name="deposit_error_invalid_lpunits">Единицы LP недействительны</string>
     <string name="deposit_error_lpunits_exceeds_available">Превышает доступные единицы LP</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Превышает единицы LP, связанные с этим узлом</string>
+    <string name="deposit_error_amount_exceeds_bonded">Превышает RUNE, связанные с этим узлом</string>
     <string name="deposit_error_invalid_assets">Активы недействительны</string>
     <string name="deposit_error_chain_not_enabled">Включите %1$s в этом хранилище, чтобы вывести %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Срок действия этого депозита еще не наступил.</string>

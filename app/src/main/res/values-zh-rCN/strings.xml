@@ -668,6 +668,7 @@
     <string name="deposit_error_invalid_lpunits">LP 单位无效</string>
     <string name="deposit_error_lpunits_exceeds_available">超出可用 LP 单位</string>
     <string name="deposit_error_lpunits_exceeds_bonded">超出绑定到此节点的 LP 单位</string>
+    <string name="deposit_error_amount_exceeds_bonded">超出绑定到此节点的 RUNE</string>
     <string name="deposit_error_invalid_assets">资产无效</string>
     <string name="deposit_error_chain_not_enabled">请在此保险库中启用 %1$s 以提取 %2$s</string>
 

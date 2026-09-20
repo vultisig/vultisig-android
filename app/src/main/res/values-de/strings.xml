@@ -385,6 +385,7 @@
     <string name="deposit_error_invalid_lpunits">LP-Einheiten sind ungültig</string>
     <string name="deposit_error_lpunits_exceeds_available">Übersteigt Ihre verfügbaren LP-Einheiten</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Übersteigt die an diese Node gebundenen LP-Einheiten</string>
+    <string name="deposit_error_amount_exceeds_bonded">Übersteigt den an diese Node gebundenen RUNE</string>
     <string name="deposit_error_invalid_assets">Assets ist ungültig</string>
     <string name="deposit_error_chain_not_enabled">Aktivieren Sie %1$s in diesem Tresor, um %2$s abzuheben</string>
     <string name="deposit_error_has_not_reached_maturity">Diese Einlage hat ihre Fälligkeit noch nicht erreicht.</string>
