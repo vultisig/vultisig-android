@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.carriesDappCosmosTx
+import com.vultisig.wallet.data.models.payload.substrateDappPayload
 import com.vultisig.wallet.data.models.payload.zcashBranchId
 import java.math.BigInteger
 import vultisig.keysign.v1.CustomMessagePayload
@@ -328,14 +329,19 @@ object SigningHelper {
                         mayaChainHelper.getPreSignedImageHash(payload)
                     }
 
+                    // A dApp `signPayload` carries its extrinsic payload in the memo and is signed
+                    // as those bytes; the transfer helpers would hash a call the initiator never
+                    // asked for (and refuse the empty toAddress on the way).
                     Chain.Polkadot -> {
-                        val dotHelper = PolkadotHelper(eddsaKey)
-                        dotHelper.getPreSignedImageHash(payload)
+                        val dapp = payload.substrateDappPayload
+                        if (dapp != null) SubstrateDappSigner.getPreSignedImageHash(dapp)
+                        else PolkadotHelper(eddsaKey).getPreSignedImageHash(payload)
                     }
 
                     Chain.Bittensor -> {
-                        val bittensorHelper = BittensorHelper(eddsaKey)
-                        bittensorHelper.getPreSignedImageHash(payload)
+                        val dapp = payload.substrateDappPayload
+                        if (dapp != null) SubstrateDappSigner.getPreSignedImageHash(dapp)
+                        else BittensorHelper(eddsaKey).getPreSignedImageHash(payload)
                     }
 
                     Chain.Sui -> {
@@ -605,13 +611,21 @@ object SigningHelper {
             }
 
             Chain.Polkadot -> {
-                val dotHelper = PolkadotHelper(eddsaKey)
-                return dotHelper.getSignedTransaction(keysignPayload, signatures)
+                val dapp = keysignPayload.substrateDappPayload
+                return if (dapp != null) {
+                    SubstrateDappSigner.getSignedTransaction(eddsaKey, dapp, signatures)
+                } else {
+                    PolkadotHelper(eddsaKey).getSignedTransaction(keysignPayload, signatures)
+                }
             }
 
             Chain.Bittensor -> {
-                val bittensorHelper = BittensorHelper(eddsaKey)
-                return bittensorHelper.getSignedTransaction(keysignPayload, signatures)
+                val dapp = keysignPayload.substrateDappPayload
+                return if (dapp != null) {
+                    SubstrateDappSigner.getSignedTransaction(eddsaKey, dapp, signatures)
+                } else {
+                    BittensorHelper(eddsaKey).getSignedTransaction(keysignPayload, signatures)
+                }
             }
 
             Chain.Sui -> {

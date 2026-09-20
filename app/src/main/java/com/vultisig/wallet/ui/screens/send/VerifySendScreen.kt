@@ -39,6 +39,7 @@ import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.ui.components.SignRippleDisplayView
 import com.vultisig.wallet.ui.components.SignSolanaDisplayView
+import com.vultisig.wallet.ui.components.SignSubstrateDisplayView
 import com.vultisig.wallet.ui.components.SignSuiDisplayView
 import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.TokenAndChainLogo
@@ -305,13 +306,14 @@ private fun VerifySendConsents(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        if (state.transaction.signRipple != null) {
-            // A dApp XRPL tx has no native recipient/amount to attest to, so show a
-            // single "reviewed the details" consent instead of the address/amount
-            // pair, which would ask the co-signer to confirm values that aren't
-            // what's being signed. Checked before isRippleTrustSet: a dApp TrustSet
-            // still carries signRipple, and hasAllConsents gates on signRipple first,
-            // so the checkbox it requires must be the one rendered here too.
+        if (state.transaction.requiresDappConsent) {
+            // A dApp XRPL tx, or a Substrate dApp call that is not a transfer, has
+            // no native recipient/amount to attest to, so show a single "reviewed
+            // the details" consent instead of the address/amount pair, which would
+            // ask the co-signer to confirm values that aren't what's being signed.
+            // Checked before isRippleTrustSet: a dApp TrustSet still carries
+            // signRipple, and hasAllConsents gates on requiresDappConsent first, so
+            // the checkbox it requires must be the one rendered here too.
             VsCheckField(
                 title = stringResource(R.string.verify_transaction_consent_dapp_transaction),
                 isChecked = state.consentDappTransaction,
@@ -452,6 +454,40 @@ private fun VerifySendDetails(
                         textAlign = TextAlign.Center,
                     )
                 }
+            } else if (tx.signSubstrate != null && tx.signSubstrate.transfer == null) {
+                // A Substrate dApp call that is not a Balances transfer moves no
+                // reviewable amount, so name the call instead of showing "0 DOT"; the
+                // signer payload card below carries the bytes.
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text =
+                            stringResource(
+                                R.string.substrate_dapp_transaction,
+                                tx.token.token.chain.raw,
+                            ),
+                        style = Theme.brockmann.supplementary.captionSmall,
+                        color = Theme.v2.colors.text.tertiary,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                    )
+                    UiSpacer(12.dp)
+                    Text(
+                        text =
+                            tx.signSubstrate.callIndex?.let {
+                                stringResource(R.string.substrate_call_index, it)
+                            }
+                                ?: stringResource(
+                                    R.string.substrate_dapp_transaction,
+                                    tx.token.token.chain.raw,
+                                ),
+                        style = Theme.brockmann.headings.title2,
+                        color = Theme.v2.colors.text.primary,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             } else if (tx.isRippleTrustSet) {
 
                 Text(
@@ -490,7 +526,7 @@ private fun VerifySendDetails(
         // decoded payload keeps the row form, where the extra terms have somewhere to go.
         val toDstLabel =
             tx.dstVaultName ?: tx.dstAddressBookTitle ?: tx.dstContractLabel ?: tx.dstLabel
-        val isPlainSend = tx.signRipple == null && !tx.isRippleTrustSet
+        val isPlainSend = tx.signRipple == null && tx.signSubstrate == null && !tx.isRippleTrustSet
         if (inSheet && isPlainSend) {
             VerifyAccountCards(
                 fromName = tx.srcVaultName,
@@ -514,6 +550,8 @@ private fun VerifySendDetails(
         // the
         // wire address here would let a relay display a trusted label/vault while the
         // signed JSON sends elsewhere, so suppress the native To row for signRipple.
+        // A Substrate dApp call has a To row only when the call bytes decode to a
+        // Balances transfer, in which case `dstAddress` is that decoded recipient.
         if (tx.isRippleTrustSet) {
             // Values come from the token id and the signed amount, never from the
             // relayed wire fields.
@@ -544,7 +582,7 @@ private fun VerifySendDetails(
                     subtitleColor = Theme.v2.colors.alerts.error,
                 )
             }
-        } else if (tx.signRipple == null && !(inSheet && isPlainSend)) {
+        } else if (!tx.requiresDappConsent && !(inSheet && isPlainSend)) {
             rowDivider()
 
             VerifyCardDetails(
@@ -643,6 +681,12 @@ private fun VerifySendDetails(
             // Expanded by default: the decoded terms are the primary content for a
             // dApp XRPL tx (the hero shows no amount), mirroring the extension summary.
             SignRippleDisplayView(tx = it, initiallyExpanded = true)
+        }
+
+        tx.signSubstrate?.let {
+            rowDivider()
+
+            SignSubstrateDisplayView(tx = it, initiallyExpanded = true)
         }
 
         tx.tonMessages

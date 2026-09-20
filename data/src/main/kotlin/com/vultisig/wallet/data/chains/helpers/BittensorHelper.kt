@@ -114,8 +114,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
     private fun buildSignedExtra(specific: BlockChainSpecific.Polkadot): ByteArray {
         val out = ByteArrayOutputStream()
         out.write(encodeMortalEra(specific.currentBlockNumber.toLong(), 64))
-        out.write(compactEncode(specific.nonce))
-        out.write(compactEncode(BigInteger.ZERO)) // tip = 0
+        out.write(SubstrateScale.compact(specific.nonce))
+        out.write(SubstrateScale.compact(BigInteger.ZERO)) // tip = 0
         out.write(METADATA_HASH_DISABLED.toInt()) // CheckMetadataHash: Disabled
         return out.toByteArray()
     }
@@ -126,8 +126,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
      */
     private fun buildAdditionalSigned(specific: BlockChainSpecific.Polkadot): ByteArray {
         val out = ByteArrayOutputStream()
-        out.write(uint32LE(specific.specVersion.toInt()))
-        out.write(uint32LE(specific.transactionVersion.toInt()))
+        out.write(SubstrateScale.u32LE(specific.specVersion.toLong()))
+        out.write(SubstrateScale.u32LE(specific.transactionVersion.toLong()))
         out.write(hexToBytes(specific.genesisHash))
         out.write(hexToBytes(specific.recentBlockHash))
         out.write(METADATA_HASH_DISABLED.toInt()) // CheckMetadataHash additional signed
@@ -154,7 +154,7 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
         body.write(callData)
 
         val bodyBytes = body.toByteArray()
-        val lengthPrefix = compactEncode(bodyBytes.size.toBigInteger())
+        val lengthPrefix = SubstrateScale.compact(bodyBytes.size.toBigInteger())
         return lengthPrefix + bodyBytes
     }
 
@@ -236,42 +236,8 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
             out.write((if (allowDeath) TRANSFER_ALLOW_DEATH else TRANSFER_KEEP_ALIVE).toInt())
             out.write(MULTI_ADDRESS_ID.toInt()) // MultiAddress::Id
             out.write(destAccountId)
-            out.write(compactEncode(amount))
+            out.write(SubstrateScale.compact(amount))
             return out.toByteArray()
-        }
-
-        private fun compactEncode(value: BigInteger): ByteArray {
-            require(value >= BigInteger.ZERO) {
-                "SCALE compact encoding requires non-negative value, got $value"
-            }
-            return when {
-                value < BigInteger.valueOf(64) -> byteArrayOf((value.toInt() shl 2).toByte())
-                value < BigInteger.valueOf(16384) -> {
-                    val v = (value.toLong() shl 2) or 1L
-                    byteArrayOf((v and 0xFF).toByte(), ((v shr 8) and 0xFF).toByte())
-                }
-                value < BigInteger.valueOf(1073741824) -> {
-                    val v = (value.toLong() shl 2) or 2L
-                    byteArrayOf(
-                        (v and 0xFF).toByte(),
-                        ((v shr 8) and 0xFF).toByte(),
-                        ((v shr 16) and 0xFF).toByte(),
-                        ((v shr 24) and 0xFF).toByte(),
-                    )
-                }
-                else -> {
-                    val bytes =
-                        value.toByteArray().let { b ->
-                            // BigInteger is big-endian, reverse to little-endian
-                            // Remove leading zero byte if present
-                            val trimmed =
-                                if (b[0] == 0.toByte() && b.size > 1) b.drop(1).toByteArray() else b
-                            trimmed.reversedArray()
-                        }
-                    val prefix = ((bytes.size - 4) shl 2) or 3
-                    byteArrayOf(prefix.toByte()) + bytes
-                }
-            }
         }
 
         private fun encodeMortalEra(blockNumber: Long, period: Int): ByteArray {
@@ -287,15 +253,6 @@ class BittensorHelper(private val vaultHexPublicKey: String) {
                 (Integer.numberOfTrailingZeros(calPeriod) - 1).coerceIn(1, 15) +
                     ((quantizedPhase / quantizeFactor) shl 4)
             return byteArrayOf((encoded and 0xFF).toByte(), ((encoded shr 8) and 0xFF).toByte())
-        }
-
-        private fun uint32LE(value: Int): ByteArray {
-            return byteArrayOf(
-                (value and 0xFF).toByte(),
-                ((value shr 8) and 0xFF).toByte(),
-                ((value shr 16) and 0xFF).toByte(),
-                ((value shr 24) and 0xFF).toByte(),
-            )
         }
 
         /**
