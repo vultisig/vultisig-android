@@ -15,7 +15,6 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import io.kotest.matchers.shouldBe
-import io.mockk.any
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
