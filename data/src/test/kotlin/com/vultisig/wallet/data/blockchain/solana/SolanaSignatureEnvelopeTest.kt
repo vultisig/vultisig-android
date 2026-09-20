@@ -151,6 +151,34 @@ class SolanaSignatureEnvelopeTest {
     }
 
     @Test
+    fun `a message that ends before the account keys it declares is refused`() {
+        // One required signer, three declared account keys, bytes for only the first. The vault
+        // is right there at index 0, but the runtime would fail to deserialize this message, so
+        // there is nothing worth signing into.
+        val message = byteArrayOf(1, 0, 0) + byteArrayOf(3) + VAULT
+        val envelope = SolanaSignatureEnvelope.parse(byteArrayOf(1) + ByteArray(64) + message)
+
+        val error =
+            assertThrows<IllegalStateException> { envelope.withSignature(VAULT, VAULT_SIGNATURE) }
+
+        assertEquals("Solana message too short for its 3 account key(s)", error.message)
+    }
+
+    @Test
+    fun `a message requiring more signatures than it lists keys for is refused`() {
+        val message = byteArrayOf(2, 0, 0) + byteArrayOf(1) + VAULT + ByteArray(32) + byteArrayOf(0)
+        val envelope = SolanaSignatureEnvelope.parse(byteArrayOf(2) + ByteArray(128) + message)
+
+        val error =
+            assertThrows<IllegalStateException> { envelope.withSignature(VAULT, VAULT_SIGNATURE) }
+
+        assertEquals(
+            "Solana message lists 1 account key(s) but requires 2 signature(s)",
+            error.message,
+        )
+    }
+
+    @Test
     fun `a message version other than 0 is refused`() {
         // Only version 0 is defined; a higher version's header could sit anywhere.
         val message = byteArrayOf(0x81.toByte()) + legacyMessage(requiredSigners = listOf(VAULT))

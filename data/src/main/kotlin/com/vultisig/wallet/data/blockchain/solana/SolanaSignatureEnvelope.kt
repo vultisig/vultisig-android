@@ -57,10 +57,11 @@ data class SolanaSignatureEnvelope(
      * vault at index 1 or later, and a signature written to slot 0 there would sit in the fee
      * payer's slot while the vault's own stayed empty.
      *
-     * @throws IllegalStateException if the message header is malformed, if the envelope declares a
-     *   different number of slots than the header requires (the runtime refuses such a transaction
-     *   outright), or if [signer] is not a required signer of this message — there is no slot of
-     *   its own to fill, and filling anybody else's would overwrite that party's signature.
+     * @throws IllegalStateException if the message header or the static account-key array it
+     *   declares is malformed, if the envelope declares a different number of slots than the header
+     *   requires (the runtime refuses such a transaction outright), or if [signer] is not a
+     *   required signer of this message — there is no slot of its own to fill, and filling anybody
+     *   else's would overwrite that party's signature.
      */
     private fun signatureOffsetOf(signer: ByteArray): Int {
         require(signer.size == PUBLIC_KEY_LENGTH) { "Solana signer key must be 32 bytes" }
@@ -74,11 +75,12 @@ data class SolanaSignatureEnvelope(
                 "requires $numRequiredSignatures"
         }
         val (keyCount, keysOffset) = readCompactU16(message, start = headerOffset + HEADER_LENGTH)
-        check(
-            keyCount >= numRequiredSignatures &&
-                message.size >= keysOffset + numRequiredSignatures * PUBLIC_KEY_LENGTH
-        ) {
-            "Solana message too short for its $numRequiredSignatures required signer(s)"
+        check(keyCount >= numRequiredSignatures) {
+            "Solana message lists $keyCount account key(s) but requires $numRequiredSignatures " +
+                "signature(s)"
+        }
+        check(message.size >= keysOffset + keyCount * PUBLIC_KEY_LENGTH) {
+            "Solana message too short for its $keyCount account key(s)"
         }
         val index =
             (0 until numRequiredSignatures).firstOrNull { i ->
