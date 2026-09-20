@@ -9,6 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 import vultisig.keysign.v1.CustomMessagePayload
+import vultisig.keysign.v1.DAppMetadata
 
 class SigningHelperCustomMessageTest {
 
@@ -264,6 +265,29 @@ class SigningHelperCustomMessageTest {
 
         shouldThrow<IllegalStateException> {
             SigningHelper.getKeysignMessages(payload, typedDataHasher = { ByteArray(0) })
+        }
+    }
+
+    @Test
+    fun `dApp metadata is display-only and leaves the digest untouched on every chain family`() {
+        // Co-signers on other platforms recompute the digest from method, message and chain, so
+        // the identity a dApp declares must never reach it.
+        val dapp =
+            DAppMetadata(
+                name = "Uniswap",
+                url = "https://app.uniswap.org",
+                iconUrl = "https://app.uniswap.org/favicon.ico",
+            )
+        listOf("Ethereum", "Solana", "THORChain", "Ripple", "Sui").forEach { chain ->
+            val bare =
+                CustomMessagePayload(
+                    method = "personal_sign",
+                    message = "Sign in to Uniswap",
+                    chain = chain,
+                )
+
+            SigningHelper.getKeysignMessages(bare.copy(dappMetadata = dapp)) shouldBe
+                SigningHelper.getKeysignMessages(bare)
         }
     }
 }

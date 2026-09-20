@@ -126,6 +126,7 @@ internal fun JoinKeysignView() {
             is VerifyUiModel.SignMessage -> {
                 VerifySignMessageScreen(
                     state = model.model,
+                    dappMetadata = dappMetadata,
                     hasToolbar = true,
                     confirmTitle = stringResource(R.string.verify_swap_sign_button),
                     onBackClick = viewModel::navigateToHome,

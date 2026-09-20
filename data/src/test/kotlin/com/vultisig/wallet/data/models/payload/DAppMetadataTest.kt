@@ -2,8 +2,10 @@ package com.vultisig.wallet.data.models.payload
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import vultisig.keysign.v1.DAppMetadata as DAppMetadataProto
 
 class DAppMetadataTest {
 
@@ -71,5 +73,52 @@ class DAppMetadataTest {
         // both render an empty text stack and let a hostile dApp trigger a fetch to an
         // attacker-controlled origin via the banner.
         assertTrue(DAppMetadata(name = "", url = "", iconUrl = "https://x.io/favicon.ico").isEmpty)
+    }
+
+    @Test
+    fun `fromProto maps an absent proto to null`() {
+        assertNull(DAppMetadata.fromProto(null))
+    }
+
+    @Test
+    fun `fromProto trims every field`() {
+        assertEquals(
+            DAppMetadata(
+                name = "Uniswap",
+                url = "https://app.uniswap.org",
+                iconUrl = "https://app.uniswap.org/favicon.ico",
+            ),
+            DAppMetadata.fromProto(
+                DAppMetadataProto(
+                    name = "  Uniswap  ",
+                    url = "\thttps://app.uniswap.org\n",
+                    iconUrl = " https://app.uniswap.org/favicon.ico ",
+                )
+            ),
+        )
+    }
+
+    @Test
+    fun `fromProto treats a banner that is empty after trim as absent`() {
+        assertNull(
+            DAppMetadata.fromProto(DAppMetadataProto(name = "   ", url = "\t\n", iconUrl = ""))
+        )
+    }
+
+    @Test
+    fun `fromProto treats icon-only metadata as absent`() {
+        assertNull(
+            DAppMetadata.fromProto(
+                DAppMetadataProto(name = "", url = "", iconUrl = "https://evil.example/i.png")
+            )
+        )
+    }
+
+    @Test
+    fun `fromProto keeps a host-only identity`() {
+        assertEquals(
+            DAppMetadata(name = "", url = "https://app.uniswap.org", iconUrl = ""),
+            DAppMetadata.fromProto(DAppMetadataProto(name = "", url = "https://app.uniswap.org")),
+        )
     }
 }

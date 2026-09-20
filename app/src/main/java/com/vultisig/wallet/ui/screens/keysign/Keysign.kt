@@ -203,6 +203,7 @@ internal fun KeysignView(
                                 transactionTypeUiModel = transactionTypeUiModel,
                                 showToolbar = showToolbar,
                                 onUriClick = uriHandler::openUri,
+                                dappMetadata = dappMetadata,
                             )
                         }
                     }

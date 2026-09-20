@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.SignMessageCard
 import com.vultisig.wallet.ui.components.SwapProviderLabel
@@ -31,6 +32,7 @@ import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.dapp.DappRequestBanner
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.components.library.form.FormCard
@@ -55,6 +57,7 @@ internal fun TransactionDoneView(
     onUriClick: (String) -> Unit,
     transactionTypeUiModel: TransactionTypeUiModel?,
     showToolbar: Boolean,
+    dappMetadata: DAppMetadata? = null,
 ) {
     BackHandler(onBack = onBack)
 
@@ -84,6 +87,11 @@ internal fun TransactionDoneView(
                     modifier = Modifier.verticalScroll(rememberScrollState()).fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    // The send and swap done screens draw the banner inside their own scaffold; a
+                    // signed message has no such scaffold, so it leads the detail here.
+                    dappMetadata
+                        ?.takeUnless { it.isEmpty }
+                        ?.let { DappRequestBanner(metadata = it) }
                     CustomMessageDetail(transactionTypeUiModel.model, transactionHash)
                 }
             } else {

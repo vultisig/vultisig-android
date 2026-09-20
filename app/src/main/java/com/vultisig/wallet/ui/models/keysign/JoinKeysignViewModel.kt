@@ -347,12 +347,12 @@ constructor(
 
     /**
      * dApp identity attached to the keysign request, if any. Read by the verify and done banners on
-     * the joining-device path. Independent of [verifyUiModel] so every variant (Send/Swap/Deposit)
-     * shares one source.
+     * the joining-device path. Independent of [verifyUiModel] so every variant
+     * (Send/Swap/Deposit/SignMessage) shares one source.
      *
-     * Driven by the custom setter on [_keysignPayload] so consumers observing this flow are
-     * notified the moment the payload is parsed — no implicit dependency on the ordering of
-     * `verifyUiModel.value = …` emissions.
+     * Driven by the custom setter on [_keysignPayload], or by [handleCustomMessage] for a message
+     * request, so consumers observing this flow are notified the moment the payload is parsed — no
+     * implicit dependency on the ordering of `verifyUiModel.value = …` emissions.
      */
     val dappMetadata: StateFlow<DAppMetadata?>
         field = MutableStateFlow<DAppMetadata?>(null)
@@ -554,6 +554,9 @@ constructor(
         }
 
         customMessagePayload = customMessage
+        // A message request carries no KeysignPayload, so the payload setter above never runs for
+        // it; the dApp rides on the custom message itself and is mirrored from here instead.
+        dappMetadata.value = DAppMetadata.fromProto(customMessage.dappMetadata)
 
         // The payload exactly as it will be signed. A reading of it arrives separately and is
         // shown alongside, so the bytes are on screen from the first frame either way.

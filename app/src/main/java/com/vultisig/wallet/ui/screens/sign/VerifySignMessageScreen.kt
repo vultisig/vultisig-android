@@ -19,10 +19,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.SignMessageCard
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.dapp.DappRequestBanner
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.sign.DecodedCustomMessage
@@ -78,12 +80,14 @@ internal fun VerifySignMessageScreen(
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
     onBackClick: () -> Unit,
+    dappMetadata: DAppMetadata? = null,
 ) {
     val transactionUiModel = state.model
     VerifySignMessageScreen(
         method = transactionUiModel.method,
         message = transactionUiModel.message,
         decoded = transactionUiModel.decoded,
+        dappMetadata = dappMetadata,
         confirmTitle = confirmTitle,
         hasFastSign = state.hasFastSign,
         onFastSignClick = onFastSignClick,
@@ -98,6 +102,7 @@ private fun VerifySignMessageScreen(
     method: String,
     message: String,
     decoded: DecodedCustomMessage?,
+    dappMetadata: DAppMetadata?,
     hasFastSign: Boolean,
     hasToolbar: Boolean,
     confirmTitle: String,
@@ -139,6 +144,10 @@ private fun VerifySignMessageScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp)
                     .verticalScroll(rememberScrollState()),
         ) {
+            // Who is asking, ahead of what they are asking for — the same lead the transaction
+            // verify screens give a dApp request.
+            dappMetadata?.takeUnless { it.isEmpty }?.let { DappRequestBanner(metadata = it) }
+
             SignMessageCard(
                 title = stringResource(R.string.verify_sign_message_signing_method),
                 value = method,
@@ -196,6 +205,7 @@ private fun VerifySignMessageScreenPreview() {
         method = "method",
         message = "message",
         decoded = null,
+        dappMetadata = null,
         confirmTitle = "Sign",
         hasFastSign = false,
         hasToolbar = false,
@@ -222,5 +232,11 @@ private fun JoinKeysignSignMessageVerifyPreview() {
         onBackClick = {},
         onFastSignClick = {},
         onConfirm = {},
+        dappMetadata =
+            DAppMetadata(
+                name = "Uniswap",
+                url = "https://app.uniswap.org",
+                iconUrl = "https://app.uniswap.org/favicon.ico",
+            ),
     )
 }
