@@ -83,6 +83,7 @@ data class KeysignFlowUiState(
     val isLoading: Boolean = false,
     val enableNotification: Boolean = false,
     val resendCooldownSeconds: Int = 0,
+    val isNotificationPending: Boolean = false,
     @param:DrawableRes val srcTokenLogoRes: Int? = null,
     @param:DrawableRes val dstTokenLogoRes: Int? = null,
 )
@@ -157,6 +158,7 @@ constructor(
                 ?: TssKeyType.ECDSA
 
     private var resendCooldownJob: Job? = null
+    private var pushJob: Job? = null
     private var lastNotifiedQrData: String = ""
 
     private var _keysignViewModel: KeysignViewModel? = null
@@ -334,7 +336,7 @@ constructor(
                 data
 
         addressProvider.update(keysignMessage.value)
-        if (vault.isSecureVault()) sendNotification()
+        if (vault.isSecureVault()) notifyVaultDevices()
     }
 
     /**
@@ -387,26 +389,58 @@ constructor(
         )
     }
 
+    /** Manual "Resend notification": rate-limited by the cooldown. */
     fun sendNotification() {
         if (uiState.value.resendCooldownSeconds > 0) return
-        val currentQrData = keysignMessage.value
-        if (currentQrData == lastNotifiedQrData) return
-        viewModelScope.safeLaunch(
-            onError = {
-                snackbarFlow.showMessage(
-                    UiText.StringResource(R.string.push_notifications_failed).asString(context),
-                    type = SnackbarType.Error,
-                )
+        notifyVaultDevices()
+    }
+
+    /**
+     * Pushes the current QR to the vault's other devices, or holds it until it can be delivered.
+     *
+     * A rebuilt payload (a network switch changes the server the peers must join) must reach them,
+     * but the notification server drops any push for a vault within 30 s of the previous one and
+     * answers 200 as if it had sent it, so a QR pushed inside the cooldown would be lost while the
+     * screen claimed success. Inside the cooldown — or while a push is still in flight, which is
+     * the same window seen from the other end — the QR is held and sent by [startResendCooldown]
+     * the moment the countdown ends. A QR the peers already hold cancels any hold.
+     *
+     * The decision runs on the main dispatcher, serialized with the countdown loop, so a rebuild
+     * cannot slip between the countdown's last tick and its check of the hold.
+     */
+    private fun notifyVaultDevices() {
+        viewModelScope.launch {
+            val currentQrData = keysignMessage.value
+            if (currentQrData == lastNotifiedQrData) {
+                uiState.update { it.copy(isNotificationPending = false) }
+                return@launch
             }
-        ) {
-            val vault = _currentVault ?: return@safeLaunch
-            pushNotificationManager.notifyVaultDevices(vault, currentQrData)
-            lastNotifiedQrData = currentQrData
-            snackbarFlow.showMessage(
-                message = context.getString(R.string.push_notifications_sent),
-                type = SnackbarType.Success,
-            )
-            startResendCooldown()
+            if (uiState.value.resendCooldownSeconds > 0 || pushJob?.isActive == true) {
+                uiState.update { it.copy(isNotificationPending = true) }
+                return@launch
+            }
+            uiState.update { it.copy(isNotificationPending = false) }
+            pushJob =
+                viewModelScope.safeLaunch(
+                    onError = {
+                        // No countdown follows a failed push, so nothing would deliver a hold.
+                        uiState.update { it.copy(isNotificationPending = false) }
+                        snackbarFlow.showMessage(
+                            UiText.StringResource(R.string.push_notifications_failed)
+                                .asString(context),
+                            type = SnackbarType.Error,
+                        )
+                    }
+                ) {
+                    val vault = _currentVault ?: return@safeLaunch
+                    pushNotificationManager.notifyVaultDevices(vault, currentQrData)
+                    lastNotifiedQrData = currentQrData
+                    snackbarFlow.showMessage(
+                        message = context.getString(R.string.push_notifications_sent),
+                        type = SnackbarType.Success,
+                    )
+                    startResendCooldown()
+                }
         }
     }
 
@@ -422,6 +456,7 @@ constructor(
                 }
                 uiState.update { it.copy(resendCooldownSeconds = 0) }
                 lastNotifiedQrData = ""
+                if (uiState.value.isNotificationPending) notifyVaultDevices()
             }
     }
 

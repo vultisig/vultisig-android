@@ -161,6 +161,7 @@ internal fun KeysignPeerDiscovery(
                     error = null,
                     enableNotification = uiModel.enableNotification,
                     resendCooldownSeconds = uiModel.resendCooldownSeconds,
+                    isNotificationPending = uiModel.isNotificationPending,
                 ),
             onBackClick = viewModel::back,
             showHelp = false,

@@ -1511,6 +1511,9 @@
     <plurals name="resend_notification_in_seconds">
         <item quantity="other">%d초 후 알림 재전송</item>
     </plurals>
+    <plurals name="notify_devices_in_seconds">
+        <item quantity="other">%d초 후 다른 기기에 알림 전송</item>
+    </plurals>
     <plurals name="vault_count">
         <item quantity="other">볼트 %d개</item>
     </plurals>

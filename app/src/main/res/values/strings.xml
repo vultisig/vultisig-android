@@ -1570,6 +1570,10 @@
         <item quantity="one">Resend notification in %d second</item>
         <item quantity="other">Resend notification in %d seconds</item>
     </plurals>
+    <plurals name="notify_devices_in_seconds">
+        <item quantity="one">Other devices will be notified in %d second</item>
+        <item quantity="other">Other devices will be notified in %d seconds</item>
+    </plurals>
     <string name="key_import_chains_found_desc">Each extra chain increases the time to generate your vault and possibility of a timeout.</string>
     <string name="key_import_chains_continue">Get started</string>
     <string name="key_import_chains_customize">Customize chains</string>

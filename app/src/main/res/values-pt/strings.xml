@@ -1487,6 +1487,10 @@
         <item quantity="one">Reenviar notificação em %d segundo</item>
         <item quantity="other">Reenviar notificação em %d segundos</item>
     </plurals>
+    <plurals name="notify_devices_in_seconds">
+        <item quantity="one">Os outros dispositivos receberão a notificação em %d segundo</item>
+        <item quantity="other">Os outros dispositivos receberão a notificação em %d segundos</item>
+    </plurals>
     <plurals name="vault_count">
         <item quantity="one">%d cofre</item>
         <item quantity="other">%d cofres</item>

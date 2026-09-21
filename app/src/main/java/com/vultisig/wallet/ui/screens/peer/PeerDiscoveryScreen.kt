@@ -316,6 +316,7 @@ internal fun PeerDiscoveryScreen(
                         if (state.enableNotification) {
                             ResendNotificationButton(
                                 remainingSeconds = state.resendCooldownSeconds,
+                                isNotificationPending = state.isNotificationPending,
                                 onClick = onResendNotification,
                             )
                         }
@@ -361,7 +362,11 @@ internal fun PeerDiscoveryScreen(
 }
 
 @Composable
-private fun ResendNotificationButton(remainingSeconds: Int, onClick: () -> Unit) {
+private fun ResendNotificationButton(
+    remainingSeconds: Int,
+    isNotificationPending: Boolean,
+    onClick: () -> Unit,
+) {
     val isEnabled = remainingSeconds == 0
     val shape = Theme.v2.radius.md
     val contentColor = if (isEnabled) Theme.v2.colors.alerts.info else Theme.v2.colors.text.tertiary
@@ -386,13 +391,23 @@ private fun ResendNotificationButton(remainingSeconds: Int, onClick: () -> Unit)
 
         Text(
             text =
-                if (isEnabled) stringResource(R.string.resend_notification)
-                else
-                    pluralStringResource(
-                        R.plurals.resend_notification_in_seconds,
-                        remainingSeconds,
-                        remainingSeconds,
-                    ),
+                when {
+                    isEnabled -> stringResource(R.string.resend_notification)
+                    // A network switch inside the cooldown is delivered when it ends, not on a
+                    // tap — say so, or the peers' absence looks like a failure.
+                    isNotificationPending ->
+                        pluralStringResource(
+                            R.plurals.notify_devices_in_seconds,
+                            remainingSeconds,
+                            remainingSeconds,
+                        )
+                    else ->
+                        pluralStringResource(
+                            R.plurals.resend_notification_in_seconds,
+                            remainingSeconds,
+                            remainingSeconds,
+                        )
+                },
             style = Theme.brockmann.supplementary.caption,
             color = contentColor,
         )

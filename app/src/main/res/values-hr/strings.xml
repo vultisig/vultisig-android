@@ -1494,6 +1494,11 @@
         <item quantity="few">Ponovno pošalji obavijest za %d sekunde</item>
         <item quantity="other">Ponovno pošalji obavijest za %d sekundi</item>
     </plurals>
+    <plurals name="notify_devices_in_seconds">
+        <item quantity="one">Ostali uređaji bit će obaviješteni za %d sekundu</item>
+        <item quantity="few">Ostali uređaji bit će obaviješteni za %d sekunde</item>
+        <item quantity="other">Ostali uređaji bit će obaviješteni za %d sekundi</item>
+    </plurals>
     <plurals name="vault_count">
         <item quantity="one">%d trezor</item>
         <item quantity="few">%d trezora</item>
