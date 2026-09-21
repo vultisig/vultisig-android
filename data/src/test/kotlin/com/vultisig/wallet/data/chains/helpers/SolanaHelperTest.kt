@@ -73,7 +73,8 @@ class SolanaHelperTest {
         val message = v0MessageWithLookupTable()
         val tx = base64Of(rawTransaction(signatureCount = 1, message = message))
 
-        val hashes = SolanaHelper("").getPreSignedImageHash(rawTxPayload(tx))
+        val hashes =
+            SolanaHelper("").getPreSignedImageHash(rawTxPayload(tx, hexPublicKey = hex(key(0x11))))
 
         assertEquals(listOf(Numeric.toHexStringNoPrefix(message)), hashes)
     }
@@ -81,10 +82,11 @@ class SolanaHelperTest {
     @Test
     fun `raw legacy transaction hashes the original message verbatim`() {
         // Legacy (non-versioned) message: first byte < 0x80, handled the same way.
-        val message = byteArrayOf(1, 0, 1) + key(0x41) + key(0x42) + key(0x43) + byteArrayOf(0)
+        val message = byteArrayOf(1, 0, 1, 3) + key(0x41) + key(0x42) + key(0x43) + byteArrayOf(0)
         val tx = base64Of(rawTransaction(signatureCount = 1, message = message))
 
-        val hashes = SolanaHelper("").getPreSignedImageHash(rawTxPayload(tx))
+        val hashes =
+            SolanaHelper("").getPreSignedImageHash(rawTxPayload(tx, hexPublicKey = hex(key(0x41))))
 
         assertEquals(listOf(Numeric.toHexStringNoPrefix(message)), hashes)
     }
@@ -93,10 +95,11 @@ class SolanaHelperTest {
     fun `raw transaction message begins after every declared signature slot`() {
         // Two declared signers: the message must start after both 64-byte slots, not just the
         // first.
-        val message = ByteArray(40) { 0xAB.toByte() }
+        val message = byteArrayOf(2, 0, 0, 2) + key(0x41) + key(0x42) + ByteArray(8) { 0xAB.toByte() }
         val tx = base64Of(rawTransaction(signatureCount = 2, message = message))
 
-        val hashes = SolanaHelper("").getPreSignedImageHash(rawTxPayload(tx))
+        val hashes =
+            SolanaHelper("").getPreSignedImageHash(rawTxPayload(tx, hexPublicKey = hex(key(0x42))))
 
         assertEquals(listOf(Numeric.toHexStringNoPrefix(message)), hashes)
     }
@@ -104,14 +107,16 @@ class SolanaHelperTest {
     @Test
     fun `multiple raw transactions produce one hash each in order`() {
         val first = v0MessageWithLookupTable()
-        val second = ByteArray(48) { 0xCD.toByte() }
+        val second = byteArrayOf(1, 0, 1, 2) + key(0x11) + key(0xCD)
         val txs =
             arrayOf(
                 base64Of(rawTransaction(signatureCount = 1, message = first)),
                 base64Of(rawTransaction(signatureCount = 1, message = second)),
             )
 
-        val hashes = SolanaHelper("").getPreSignedImageHash(rawTxPayload(*txs))
+        val hashes =
+            SolanaHelper("")
+                .getPreSignedImageHash(rawTxPayload(*txs, hexPublicKey = hex(key(0x11))))
 
         assertEquals(
             listOf(Numeric.toHexStringNoPrefix(first), Numeric.toHexStringNoPrefix(second)),
@@ -217,7 +222,12 @@ class SolanaHelperTest {
 
     private fun key(fill: Int): ByteArray = ByteArray(32) { fill.toByte() }
 
-    private fun rawTxPayload(vararg rawTransactions: String): KeysignPayload =
+    private fun hex(key: ByteArray): String = Numeric.toHexStringNoPrefix(key)
+
+    private fun rawTxPayload(
+        vararg rawTransactions: String,
+        hexPublicKey: String = "",
+    ): KeysignPayload =
         KeysignPayload(
             coin =
                 Coin(
@@ -226,7 +236,7 @@ class SolanaHelperTest {
                     logo = "",
                     address = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
                     decimal = 9,
-                    hexPublicKey = "",
+                    hexPublicKey = hexPublicKey,
                     priceProviderID = "",
                     contractAddress = "",
                     isNativeToken = true,

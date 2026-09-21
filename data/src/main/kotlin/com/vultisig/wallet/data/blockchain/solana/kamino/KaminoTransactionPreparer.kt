@@ -20,9 +20,9 @@ import wallet.core.jni.proto.Solana
  * that happens to name the wallet first says nothing about who is authorising the transaction.
  *
  * @property requiredSignatures how many signatures the message declares. Carried because the
- *   raw-signing path fills slot 0 and leaves every other slot as it received it, so a second
- *   required signer is a transaction this app would sign and then broadcast incomplete — or
- *   alongside somebody else's signature.
+ *   raw-signing path fills only the wallet's own slot and leaves every other slot as it received
+ *   it, so a second required signer is a transaction this app would sign and then broadcast
+ *   incomplete — or alongside somebody else's signature.
  * @property isUnsigned whether every declared slot is still an all-zero placeholder, which is what
  *   makes that splice safe.
  *
