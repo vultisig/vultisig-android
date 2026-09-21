@@ -16,6 +16,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.clampDstFiatToSrcFiat
 import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
+import com.vultisig.wallet.ui.models.swap.hasSwapNetworkFeeCeiling
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import com.vultisig.wallet.ui.models.swap.swapFeeRow
@@ -212,6 +213,7 @@ constructor(
                 ),
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
+            isNetworkFeeMax = from.srcToken.chain.hasSwapNetworkFeeCeiling,
             // The Swap Fee adds nothing to the total when it is baked into the quoted rate (1inch)
             // or already surfaced as the Network Fee (SwapKit UTXO deposit) — otherwise an
             // aggregator's opaque `estimatedFees` (gas for 1inch, the deposit cost for SwapKit

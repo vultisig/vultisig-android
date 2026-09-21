@@ -956,7 +956,13 @@ constructor(
             is SwapException.SmallSwapAmount,
             is SwapException.InsufficentSwapAmount,
             is SwapException.AmountCannotBeZero,
-            is SwapException.SameAssets -> PRIORITY_AMOUNT
+            is SwapException.SameAssets,
+            // A tolerance rejection is the same kind of verdict as an amount one: the node
+            // simulated the swap on a pool that is trading right now and refused it on a form
+            // value the user can change. It has to sit above the halt tier, or a sibling
+            // protocol's halt (Maya has RUNE→ETH paused) would hide THORChain's "raise your
+            // slippage" behind a "try again later" that never clears.
+            is SwapException.SlippageToleranceTooLow -> PRIORITY_AMOUNT
             // A halt explains the whole outage, and every other provider routing through the
             // paused protocol just stalls until its fetch times out. It sits below the amount
             // errors, which come from a pair that is routable right now, and above everything
@@ -1588,6 +1594,8 @@ constructor(
                 UiText.StringResource(R.string.swap_error_quote_failed)
             is SwapException.HighPriceImpact ->
                 UiText.StringResource(R.string.swap_error_high_price_impact)
+            is SwapException.SlippageToleranceTooLow ->
+                UiText.StringResource(R.string.swap_error_slippage_tolerance_too_low)
             is SwapException.InsufficentSwapAmount ->
                 UiText.StringResource(R.string.swap_error_amount_too_low)
             is SwapException.SwapRouteNotAvailable ->

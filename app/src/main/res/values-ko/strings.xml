@@ -342,6 +342,7 @@
     <string name="swap_form_dst_token_title">받는 토큰</string>
     <string name="transaction_type_button_swap">스왑</string>
     <string name="swap_form_gas_title">네트워크 수수료</string>
+    <string name="swap_max_network_fee">최대 네트워크 수수료</string>
     <string name="swap_form_total_fees_title">총 수수료</string>
     <string name="swap_form_vault">볼트</string>
     <string name="swap_form_min_pay">최소 수령액</string>
@@ -498,6 +499,7 @@
     <string name="deposit_error_invalid_lpunits">LP 유닛이 유효하지 않습니다</string>
     <string name="deposit_error_lpunits_exceeds_available">사용 가능한 LP 유닛을 초과합니다</string>
     <string name="deposit_error_lpunits_exceeds_bonded">이 노드에 본딩된 LP 유닛을 초과합니다</string>
+    <string name="deposit_error_amount_exceeds_bonded">이 노드에 본딩된 RUNE을 초과합니다</string>
     <string name="deposit_error_invalid_assets">자산이 유효하지 않습니다</string>
     <string name="deposit_error_chain_not_enabled">%2$s을(를) 출금하려면 이 볼트에서 %1$s을(를) 활성화하세요</string>
     <string name="deposit_error_has_not_reached_maturity">이 예치는 아직 만기에 도달하지 않았습니다</string>
@@ -541,6 +543,7 @@
     <string name="swap_error_insufficient_gas_fees">가스 수수료를 충당할 %1$s이(가) 부족합니다. 지갑에 자금을 충전해 주세요.</string>
     <string name="swap_error_time_out">스왑 요청 시간이 초과되었습니다. 다시 시도해 주세요</string>
     <string name="swap_error_high_price_impact">가격 영향이 너무 큽니다. 더 적은 금액이나 다른 토큰 쌍을 시도하세요.</string>
+    <string name="swap_error_slippage_tolerance_too_low">이 스왑에 대한 슬리피지 허용 범위가 너무 낮습니다. 값을 높이거나 자동을 사용하세요.</string>
     <string name="swap_error_quote_failed">스왑 견적에 실패했습니다. 다시 시도하거나 금액을 조정하세요.</string>
     <string name="swap_error_rate_limit">요청이 너무 많습니다. 나중에 다시 시도해 주세요.</string>
     <string name="swap_error_trading_halted">이 자산의 거래가 일시적으로 중단되었습니다. 나중에 다시 시도해 주세요.</string>
@@ -1366,6 +1369,20 @@
     <string name="ripple_field_flags">Flags</string>
     <string name="ripple_field_paths">결제 경로</string>
     <string name="ripple_partial_payment_warning">부분 결제: 표시된 금액은 최대값이며 보장되지 않습니다. 더 적게 전달될 수 있습니다.</string>
+    <string name="substrate_dapp_transaction">%1$s 거래</string>
+    <string name="substrate_call_index">호출 %1$s</string>
+    <string name="substrate_signer_payload">서명자 페이로드</string>
+    <string name="substrate_field_call_data">호출 데이터</string>
+    <string name="substrate_field_nonce">논스</string>
+    <string name="substrate_field_tip">팁</string>
+    <string name="substrate_field_era">에라</string>
+    <string name="substrate_field_spec_version">스펙 버전</string>
+    <string name="substrate_field_transaction_version">거래 버전</string>
+    <string name="substrate_field_genesis_hash">제네시스 해시</string>
+    <string name="substrate_field_block_hash">블록 해시</string>
+    <string name="substrate_field_metadata_hash_mode">메타데이터 해시 모드</string>
+    <string name="substrate_field_metadata_hash">메타데이터 해시</string>
+    <string name="substrate_transfer_unreadable">이 Balances 호출을 디코딩할 수 없습니다. 서명하기 전에 호출 데이터를 확인하세요.</string>
     <string name="sui_sender">보내는 주소</string>
     <string name="sui_gas_budget">가스 예산: %1$s SUI</string>
     <string name="sui_gas_price">가스 가격: %1$s MIST</string>

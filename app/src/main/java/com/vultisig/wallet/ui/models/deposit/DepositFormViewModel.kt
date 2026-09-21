@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
+import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -94,6 +95,8 @@ internal data class BondedUnitsCeiling(
     val units: String,
 )
 
+@Immutable internal data class BondedRuneCeiling(val nodeAddress: String, val amount: BigInteger)
+
 /**
  * How far the MayaChain bond-asset fetch behind the Bond / Unbond form has got.
  *
@@ -167,6 +170,7 @@ internal data class DepositFormUiModel(
     // an address-wide surplus. It rides on the load state because it is only meaningful once that
     // load has landed.
     val bondAssetsState: BondAssetsState = BondAssetsState.Idle,
+    val bondedRuneCeiling: BondedRuneCeiling? = null,
     // For Maya: total LP units in the pool. For THORChain remove-LP, this stores the user's own
     // units (the calculator divides by it so that selectedUnits/userUnits gives the redeem
     // fraction).
@@ -225,6 +229,16 @@ internal fun DepositFormUiModel.unbondLpUnitsCeiling(
             ?.takeIf { it.nodeAddress == nodeAddress && it.asset == asset }
             ?.units
             ?.toBigIntegerOrNull()
+
+/** Memo uses the live address field; a previous node's ceiling must not authorise this one. */
+internal fun DepositFormUiModel.unbondRuneCeiling(nodeAddress: String): BigInteger? =
+    if (depositChain != Chain.ThorChain) null
+    else bondedRuneCeiling?.takeIf { it.nodeAddress == nodeAddress }?.amount
+
+internal fun bondedRuneAmountForNode(
+    nodes: List<BondedNodePosition>,
+    nodeAddress: String,
+): BigInteger = nodes.firstOrNull { it.node.address == nodeAddress }?.amount ?: BigInteger.ZERO
 
 @HiltViewModel
 internal class DepositFormViewModel

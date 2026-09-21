@@ -241,6 +241,7 @@
     <string name="swap_form_dst_token_title">В</string>
     <string name="transaction_type_button_swap">Обмен</string>
     <string name="swap_form_gas_title">Сетевой сбор</string>
+    <string name="swap_max_network_fee">Макс. сетевой сбор</string>
     <string name="swap_form_total_fees_title">Общая сумма сборов</string>
     <string name="share_qr_utils_choose_an_app">Выберите приложение</string>
     <string name="verify_swap_agree_receive_amount">Я согласен с минимальной суммой, которую получу</string>
@@ -384,6 +385,7 @@
     <string name="deposit_error_invalid_lpunits">Единицы LP недействительны</string>
     <string name="deposit_error_lpunits_exceeds_available">Превышает доступные единицы LP</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Превышает единицы LP, связанные с этим узлом</string>
+    <string name="deposit_error_amount_exceeds_bonded">Превышает RUNE, связанные с этим узлом</string>
     <string name="deposit_error_invalid_assets">Активы недействительны</string>
     <string name="deposit_error_chain_not_enabled">Включите %1$s в этом хранилище, чтобы вывести %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Срок действия этого депозита еще не наступил.</string>
@@ -427,6 +429,7 @@
     <string name="swap_error_insufficient_gas_fees">Недостаточно %1$s для оплаты комиссии за газ. Пожалуйста, пополните кошелек.</string>
     <string name="swap_error_time_out">Запрос на обмен истек. Попробуйте еще раз</string>
     <string name="swap_error_high_price_impact">Влияние на цену слишком высокое. Попробуйте меньшую сумму или другую пару токенов.</string>
+    <string name="swap_error_slippage_tolerance_too_low">Допустимое проскальзывание слишком низкое для этого обмена. Увеличьте его или используйте Авто.</string>
     <string name="swap_error_quote_failed">Не удалось получить котировку. Попробуйте снова или измените сумму.</string>
     <string name="swap_error_rate_limit">Слишком много запросов. Попробуйте позже.</string>
     <string name="swap_error_trading_halted">Торговля этим активом временно приостановлена. Попробуйте позже.</string>
@@ -1343,6 +1346,20 @@
     <string name="ripple_field_flags">Flags</string>
     <string name="ripple_field_paths">Маршруты платежа</string>
     <string name="ripple_partial_payment_warning">Частичный платёж: показанное количество — это максимум, а не гарантия. Может быть доставлено меньше.</string>
+    <string name="substrate_dapp_transaction">Транзакция %1$s</string>
+    <string name="substrate_call_index">Вызов %1$s</string>
+    <string name="substrate_signer_payload">Payload подписанта</string>
+    <string name="substrate_field_call_data">Данные вызова</string>
+    <string name="substrate_field_nonce">Nonce</string>
+    <string name="substrate_field_tip">Чаевые</string>
+    <string name="substrate_field_era">Эра</string>
+    <string name="substrate_field_spec_version">Версия спецификации</string>
+    <string name="substrate_field_transaction_version">Версия транзакции</string>
+    <string name="substrate_field_genesis_hash">Genesis-хэш</string>
+    <string name="substrate_field_block_hash">Хэш блока</string>
+    <string name="substrate_field_metadata_hash_mode">Режим хэша метаданных</string>
+    <string name="substrate_field_metadata_hash">Хэш метаданных</string>
+    <string name="substrate_transfer_unreadable">Не удалось декодировать этот вызов Balances. Проверьте данные вызова перед подписанием.</string>
     <string name="sui_sender">От</string>
     <string name="sui_gas_budget">Бюджет газа: %1$s SUI</string>
     <string name="sui_gas_price">Цена газа: %1$s MIST</string>

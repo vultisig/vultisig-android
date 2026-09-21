@@ -141,6 +141,7 @@
     <string name="swap_form_from_title">Od</string>
     <string name="swap_form_dst_token_title">Do</string>
     <string name="swap_form_gas_title">Mrežna naknada</string>
+    <string name="swap_max_network_fee">Maks. mrežna naknada</string>
     <string name="swap_form_total_fees_title">Ukupne naknade</string>
     <string name="verify_swap_sign_button">Potpiši Transakciju</string>
     <string name="swap_error_no_amount">Iznos mora biti pozitivan broj. Pokušajte ponovno.</string>
@@ -385,6 +386,7 @@
     <string name="deposit_error_invalid_lpunits">LP jedinice nisu važeće</string>
     <string name="deposit_error_lpunits_exceeds_available">Premašuje dostupne LP jedinice</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Premašuje LP jedinice vezane uz ovaj čvor</string>
+    <string name="deposit_error_amount_exceeds_bonded">Premašuje RUNE vezan uz ovaj čvor</string>
     <string name="deposit_error_invalid_assets">Sredstva su nevažeća</string>
     <string name="deposit_error_chain_not_enabled">Omogućite %1$s u ovom trezoru za povlačenje %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Ovaj depozit još nije dostigao rok dospijeća</string>
@@ -428,6 +430,7 @@
     <string name="swap_error_insufficient_gas_fees">Nema dovoljno %1$s za pokrivanje naknada za gas. Molimo uplatite novčanik.</string>
     <string name="swap_error_time_out">Zahtjev za zamjenu je istekao. Molimo pokušajte ponovno</string>
     <string name="swap_error_high_price_impact">Utjecaj na cijenu je prevelik. Pokušajte s manjim iznosom ili drugim parom tokena.</string>
+    <string name="swap_error_slippage_tolerance_too_low">Tolerancija proklizavanja je preniska za ovu zamjenu. Povećajte je ili koristite Auto.</string>
     <string name="swap_error_quote_failed">Ponuda za zamjenu nije uspjela. Pokušajte ponovno ili prilagodite iznos.</string>
     <string name="swap_error_rate_limit">Previše zahtjeva. Pokušajte ponovno kasnije.</string>
     <string name="swap_error_trading_halted">Trgovanje ovom imovinom privremeno je obustavljeno. Pokušajte ponovno kasnije.</string>
@@ -1342,6 +1345,20 @@
     <string name="ripple_field_flags">Flags</string>
     <string name="ripple_field_paths">Putanje plaćanja</string>
     <string name="ripple_partial_payment_warning">Djelomično plaćanje: prikazani iznos je maksimum, a ne jamstvo. Može biti isporučeno manje.</string>
+    <string name="substrate_dapp_transaction">%1$s transakcija</string>
+    <string name="substrate_call_index">Poziv %1$s</string>
+    <string name="substrate_signer_payload">Payload potpisnika</string>
+    <string name="substrate_field_call_data">Podaci poziva</string>
+    <string name="substrate_field_nonce">Nonce</string>
+    <string name="substrate_field_tip">Napojnica</string>
+    <string name="substrate_field_era">Era</string>
+    <string name="substrate_field_spec_version">Verzija specifikacije</string>
+    <string name="substrate_field_transaction_version">Verzija transakcije</string>
+    <string name="substrate_field_genesis_hash">Genesis hash</string>
+    <string name="substrate_field_block_hash">Hash bloka</string>
+    <string name="substrate_field_metadata_hash_mode">Način rada hasha metapodataka</string>
+    <string name="substrate_field_metadata_hash">Hash metapodataka</string>
+    <string name="substrate_transfer_unreadable">Ovaj Balances poziv nije bilo moguće dekodirati. Provjerite podatke poziva prije potpisivanja.</string>
     <string name="sui_sender">Od</string>
     <string name="sui_gas_budget">Proračun za gas: %1$s SUI</string>
     <string name="sui_gas_price">Cijena gasa: %1$s MIST</string>

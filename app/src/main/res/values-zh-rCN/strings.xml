@@ -403,6 +403,7 @@
     <string name="swap_form_dst_token_title">至</string>
     <string name="transaction_type_button_swap">交换</string>
     <string name="swap_form_gas_title">网络费用</string>
+    <string name="swap_max_network_fee">最大网络费用</string>
     <string name="swap_form_total_fees_title">总费用</string>
     <string name="swap_form_vault">保险库</string>
     <string name="swap_form_min_pay">最低到账</string>
@@ -668,6 +669,7 @@
     <string name="deposit_error_invalid_lpunits">LP 单位无效</string>
     <string name="deposit_error_lpunits_exceeds_available">超出可用 LP 单位</string>
     <string name="deposit_error_lpunits_exceeds_bonded">超出绑定到此节点的 LP 单位</string>
+    <string name="deposit_error_amount_exceeds_bonded">超出绑定到此节点的 RUNE</string>
     <string name="deposit_error_invalid_assets">资产无效</string>
     <string name="deposit_error_chain_not_enabled">请在此保险库中启用 %1$s 以提取 %2$s</string>
 
@@ -740,6 +742,7 @@
     <string name="swap_error_insufficient_gas_fees">没有足够的 %1$s 来支付 Gas 费用。请为钱包充值。</string>
     <string name="swap_error_time_out">交换请求超时。请重试</string>
     <string name="swap_error_high_price_impact">价格影响过高。请尝试较小的金额或不同的代币对。</string>
+    <string name="swap_error_slippage_tolerance_too_low">此兑换的滑点容差过低。请调高或使用自动。</string>
     <string name="swap_error_quote_failed">兑换报价失败。请重试或调整金额。</string>
     <string name="swap_error_rate_limit">请求次数过多。请稍后重试。</string>
     <string name="swap_error_trading_halted">该资产的交易暂时暂停。请稍后重试。</string>
@@ -1668,6 +1671,20 @@
     <string name="ripple_field_flags">Flags</string>
     <string name="ripple_field_paths">支付路径</string>
     <string name="ripple_partial_payment_warning">部分支付：显示的金额为上限，并非保证值。实际交付可能更少。</string>
+    <string name="substrate_dapp_transaction">%1$s 交易</string>
+    <string name="substrate_call_index">调用 %1$s</string>
+    <string name="substrate_signer_payload">签名者负载</string>
+    <string name="substrate_field_call_data">调用数据</string>
+    <string name="substrate_field_nonce">Nonce</string>
+    <string name="substrate_field_tip">小费</string>
+    <string name="substrate_field_era">Era</string>
+    <string name="substrate_field_spec_version">规范版本</string>
+    <string name="substrate_field_transaction_version">交易版本</string>
+    <string name="substrate_field_genesis_hash">创世哈希</string>
+    <string name="substrate_field_block_hash">区块哈希</string>
+    <string name="substrate_field_metadata_hash_mode">元数据哈希模式</string>
+    <string name="substrate_field_metadata_hash">元数据哈希</string>
+    <string name="substrate_transfer_unreadable">无法解码此 Balances 调用。签名前请检查调用数据。</string>
     <string name="sui_sender">从</string>
     <string name="sui_gas_budget">Gas 预算：%1$s SUI</string>
     <string name="sui_gas_price">Gas 价格：%1$s MIST</string>

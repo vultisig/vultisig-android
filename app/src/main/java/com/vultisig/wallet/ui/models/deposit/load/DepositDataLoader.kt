@@ -207,11 +207,10 @@ constructor(
             )
         }
 
-        val coinList =
-            tokensToMerge.let {
-                if (chain == Chain.Osmosis) it.filter { it.ticker.equals("LVN", ignoreCase = true) }
-                else it
-            }
+        val coinList = tokensToMerge.let {
+            if (chain == Chain.Osmosis) it.filter { it.ticker.equals("LVN", ignoreCase = true) }
+            else it
+        }
         state.update { it.copy(selectedCoin = coinList.first(), coinList = coinList) }
 
         loadAddress(vaultId, chain)
@@ -260,7 +259,10 @@ constructor(
                             }
                         }
 
-                    if (depositOption != DepositOption.RemoveLiquidity) {
+                    if (
+                        depositOption != DepositOption.RemoveLiquidity &&
+                            depositOption != DepositOption.Unbond
+                    ) {
                         updateTokenAmount(account, chain, targetTicker, vaultId)
                     }
 

@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.substrateDappPayload
 import com.vultisig.wallet.data.models.tokenLogoRes
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -72,7 +73,9 @@ import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
+import com.vultisig.wallet.ui.models.swap.SwapRetry
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
+import com.vultisig.wallet.ui.models.swap.toSwapRetry
 import com.vultisig.wallet.ui.models.transactiondecoding.DoneTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -406,6 +409,17 @@ constructor(
      * async-loaded [transactionTypeUiModel], which may still be null while signing is in progress.
      */
     @DrawableRes val coinLogoRes: Int? = keysignPayload?.coin?.tokenLogoRes()
+
+    /**
+     * The pair the done screen can offer to try again once this swap fails or is refunded (#5918),
+     * resolved from the history row this keysign records — the same row, by the same rules, that
+     * History later resolves its own button from, so the two never disagree. The initiator builds
+     * that row from the transaction it staged and the co-signer from the payload it signs, so both
+     * devices offer the retry; neither does for a limit order or a pair the vault no longer holds on
+     * both sides.
+     */
+    val swapRetry: SwapRetry? =
+        (transactionHistoryData as? SwapTransactionHistoryData)?.toSwapRetry(vault.coins)
 
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
@@ -838,6 +852,12 @@ constructor(
             // the final signed transaction, so the wallet must never broadcast.
             return true
         }
+        if (payload?.substrateDappPayload != null) {
+            // Substrate `signPayload`: the dApp wraps the raw signature around its own call and
+            // submits it; there is no extrinsic here to compile or broadcast. The extension does
+            // not set the wire flag on this route, so it has to be inferred from the memo shape.
+            return true
+        }
         val flag = payload?.skipBroadcast ?: false
         Timber.d("SkipBroadcastFlag, value: $flag")
         return flag
@@ -1219,6 +1239,22 @@ constructor(
             } else {
                 navigator.navigate(Destination.Back)
             }
+        }
+    }
+
+    /**
+     * Reopens the swap form on the failed trade's pair; the user enters the rest. Everything above
+     * Home is popped — the form, verify sheet and keysign the initiator came through, or the
+     * joiner's scan — so the retry starts from a clean stack rather than stacking a second form
+     * over a finished one.
+     */
+    fun retrySwap() {
+        val retry = swapRetry ?: return
+        viewModelScope.launch {
+            navigator.route(
+                retry.toRoute(vaultId = vault.id),
+                NavigationOptions(popUpToRoute = Route.Home::class),
+            )
         }
     }
 

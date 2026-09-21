@@ -1,9 +1,13 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
+import com.vultisig.wallet.data.chains.helpers.SubstrateCallReading
+import com.vultisig.wallet.data.chains.helpers.SubstrateTransferCallReader
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.payload.substrateDappPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import io.ktor.util.decodeBase64Bytes
 import javax.inject.Inject
@@ -21,9 +25,10 @@ internal sealed interface KeysignTransactionSummary {
      * A dApp-supplied transaction signed verbatim (e.g. an XRPL `signRipple` OfferCreate/Payment),
      * where the native `toAmount` is 0. [summary] is a pre-decoded one-line description of the real
      * operation so the notification banner reads the true terms instead of "Send 0 XRP", or null
-     * when the JSON couldn't be decoded — the caller then supplies a localized fallback label.
+     * when the JSON couldn't be decoded — the caller then supplies a localized fallback label named
+     * for [chain].
      */
-    data class DappTransaction(val summary: String?) : KeysignTransactionSummary
+    data class DappTransaction(val summary: String?, val chain: Chain) : KeysignTransactionSummary
 }
 
 internal interface GetKeysignTransactionSummaryUseCase :
@@ -50,6 +55,7 @@ constructor(
 
                 val swap = payload.swapPayload
                 val signRipple = payload.signRipple
+                val substrateDapp = payload.substrateDappPayload
                 when {
                     swap != null ->
                         KeysignTransactionSummary.Swap(
@@ -63,8 +69,27 @@ constructor(
                     // localized fallback rather than a hardcoded English literal here.
                     signRipple != null ->
                         KeysignTransactionSummary.DappTransaction(
-                            summary = RippleDappTransactionDecoder.summarize(signRipple.rawJson)
+                            summary = RippleDappTransactionDecoder.summarize(signRipple.rawJson),
+                            chain = payload.coin.chain,
                         )
+
+                    // A Substrate dApp call is signed as the bytes in its memo. Only a Balances
+                    // transfer has an amount the banner can name, read from those bytes rather than
+                    // the wire toAmount; any other call falls back to the chain's label.
+                    substrateDapp != null -> {
+                        val reading =
+                            SubstrateTransferCallReader.readForDisplay(substrateDapp.methodBytes())
+                        if (reading is SubstrateCallReading.Transfer) {
+                            KeysignTransactionSummary.Send(
+                                tokenValue = TokenValue(reading.call.amount, payload.coin)
+                            )
+                        } else {
+                            KeysignTransactionSummary.DappTransaction(
+                                summary = null,
+                                chain = payload.coin.chain,
+                            )
+                        }
+                    }
 
                     else ->
                         KeysignTransactionSummary.Send(

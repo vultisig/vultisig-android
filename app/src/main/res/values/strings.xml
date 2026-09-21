@@ -346,6 +346,7 @@
     <string name="swap_form_dst_token_title">To</string>
     <string name="transaction_type_button_swap">Swap</string>
     <string name="swap_form_gas_title">Network Fee</string>
+    <string name="swap_max_network_fee">Max. Network Fee</string>
     <string name="swap_form_total_fees_title">Total Fee</string>
     <string name="swap_form_vault">Vault</string>
     <string name="swap_form_min_pay">min. payout</string>
@@ -509,6 +510,7 @@
     <string name="deposit_error_invalid_lpunits">LP units are invalid</string>
     <string name="deposit_error_lpunits_exceeds_available">Exceeds your available LP units</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Exceeds the LP units bonded to this node</string>
+    <string name="deposit_error_amount_exceeds_bonded">Exceeds the RUNE bonded to this node</string>
     <string name="deposit_error_invalid_assets">Assets are invalid</string>
     <string name="deposit_error_chain_not_enabled">Enable %1$s in this vault to withdraw %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">This deposit has not reached its maturity period yet</string>
@@ -552,6 +554,7 @@
     <string name="swap_error_insufficient_gas_fees">Not enough %1$s to cover gas fees. Please fund the wallet.</string>
     <string name="swap_error_time_out">Swap request timed out. Please try again</string>
     <string name="swap_error_high_price_impact">Price impact is too high. Try a smaller amount or a different token pair.</string>
+    <string name="swap_error_slippage_tolerance_too_low">Slippage tolerance is too low for this swap. Raise it or use Auto.</string>
     <string name="swap_error_quote_failed">Swap quote failed. Please try again or adjust the amount.</string>
     <string name="swap_error_rate_limit">Too many requests. Please try again later.</string>
     <string name="swap_error_trading_halted">Trading for this asset is temporarily halted. Try again later.</string>
@@ -1400,6 +1403,20 @@
     <string name="ripple_field_flags">Flags</string>
     <string name="ripple_field_paths">Routing paths</string>
     <string name="ripple_partial_payment_warning">Partial payment: the amount shown is a maximum, not a guarantee. Less may be delivered.</string>
+    <string name="substrate_dapp_transaction">%1$s Transaction</string>
+    <string name="substrate_call_index">Call %1$s</string>
+    <string name="substrate_signer_payload">Signer payload</string>
+    <string name="substrate_field_call_data">Call data</string>
+    <string name="substrate_field_nonce">Nonce</string>
+    <string name="substrate_field_tip">Tip</string>
+    <string name="substrate_field_era">Era</string>
+    <string name="substrate_field_spec_version">Spec version</string>
+    <string name="substrate_field_transaction_version">Transaction version</string>
+    <string name="substrate_field_genesis_hash">Genesis hash</string>
+    <string name="substrate_field_block_hash">Block hash</string>
+    <string name="substrate_field_metadata_hash_mode">Metadata hash mode</string>
+    <string name="substrate_field_metadata_hash">Metadata hash</string>
+    <string name="substrate_transfer_unreadable">This Balances call could not be decoded. Review the call data before signing.</string>
     <string name="sui_sender">From</string>
     <string name="sui_gas_budget">Gas Budget: %1$s SUI</string>
     <string name="sui_gas_price">Gas Price: %1$s MIST</string>

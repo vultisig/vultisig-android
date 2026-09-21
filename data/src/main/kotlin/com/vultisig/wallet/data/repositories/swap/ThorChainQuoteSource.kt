@@ -155,13 +155,16 @@ constructor(private val thorChainApi: ThorChainApi, private val clock: Clock) : 
      * Whether a rapid-quote rejection would be repeated word for word by the streaming request. A
      * halt belongs to the pool or the chain and a missing route to the pair, so neither is anything
      * the swap interval can change — asking again only spends a second round-trip out of the
-     * caller's quote window before it surfaces the same answer. Amount rejections are excluded on
-     * purpose: streaming splits the swap, so an amount the rapid path refuses can still quote.
+     * caller's quote window before it surfaces the same answer. A tolerance rejection is gated on
+     * the full-size emit whichever interval is asked for, so it repeats too. Amount rejections are
+     * excluded on purpose: streaming splits the swap, so an amount the rapid path refuses can
+     * still quote.
      */
     private fun SwapException.survivesTheInterval(): Boolean =
         this is SwapException.TradingHalted ||
             this is SwapException.SwapRouteNotAvailable ||
-            this is SwapException.SwapIsNotSupported
+            this is SwapException.SwapIsNotSupported ||
+            this is SwapException.SlippageToleranceTooLow
 
     private sealed interface RapidQuote {
         data class Success(val data: THORChainSwapQuote) : RapidQuote {

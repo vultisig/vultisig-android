@@ -227,6 +227,7 @@
     <string name="swap_form_dst_token_title">A</string>
     <string name="transaction_type_button_swap">Intercambiar</string>
     <string name="swap_form_gas_title">Tarifa de red</string>
+    <string name="swap_max_network_fee">Tarifa máxima de red</string>
     <string name="swap_form_total_fees_title">Tarifas totales</string>
     <string name="share_qr_utils_choose_an_app">Elige una aplicación</string>
     <string name="verify_swap_agree_receive_amount">Estoy de acuerdo con la cantidad mínima que recibiré</string>
@@ -385,6 +386,7 @@
     <string name="deposit_error_invalid_lpunits">Las unidades LP no son válidas</string>
     <string name="deposit_error_lpunits_exceeds_available">Supera las unidades LP disponibles</string>
     <string name="deposit_error_lpunits_exceeds_bonded">Supera las unidades LP vinculadas a este nodo</string>
+    <string name="deposit_error_amount_exceeds_bonded">Supera el RUNE vinculado a este nodo</string>
     <string name="deposit_error_invalid_assets">Los activos no son válidos</string>
     <string name="deposit_error_chain_not_enabled">Habilita %1$s en esta bóveda para retirar %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Este depósito aún no ha alcanzado su período de vencimiento.</string>
@@ -428,6 +430,7 @@
     <string name="swap_error_insufficient_gas_fees">No hay suficiente %1$s para cubrir las comisiones de gas. Por favor, cargue la billetera.</string>
     <string name="swap_error_time_out">Se agotó el tiempo de espera de la solicitud de intercambio. Inténtalo de nuevo</string>
     <string name="swap_error_high_price_impact">El impacto en el precio es demasiado alto. Prueba con un monto menor o un par de tokens diferente.</string>
+    <string name="swap_error_slippage_tolerance_too_low">La tolerancia de deslizamiento es demasiado baja para este swap. Auméntala o usa Auto.</string>
     <string name="swap_error_quote_failed">La cotización del swap falló. Inténtalo de nuevo o ajusta el monto.</string>
     <string name="swap_error_rate_limit">Demasiadas solicitudes. Inténtelo de nuevo más tarde.</string>
     <string name="swap_error_trading_halted">El comercio de este activo está temporalmente suspendido. Inténtelo de nuevo más tarde.</string>
@@ -1337,6 +1340,20 @@
     <string name="ripple_field_flags">Flags</string>
     <string name="ripple_field_paths">Rutas de pago</string>
     <string name="ripple_partial_payment_warning">Pago parcial: la cantidad mostrada es un máximo, no una garantía. Se puede entregar menos.</string>
+    <string name="substrate_dapp_transaction">Transacción de %1$s</string>
+    <string name="substrate_call_index">Llamada %1$s</string>
+    <string name="substrate_signer_payload">Payload del firmante</string>
+    <string name="substrate_field_call_data">Datos de la llamada</string>
+    <string name="substrate_field_nonce">Nonce</string>
+    <string name="substrate_field_tip">Propina</string>
+    <string name="substrate_field_era">Era</string>
+    <string name="substrate_field_spec_version">Versión de spec</string>
+    <string name="substrate_field_transaction_version">Versión de transacción</string>
+    <string name="substrate_field_genesis_hash">Hash de génesis</string>
+    <string name="substrate_field_block_hash">Hash del bloque</string>
+    <string name="substrate_field_metadata_hash_mode">Modo de hash de metadatos</string>
+    <string name="substrate_field_metadata_hash">Hash de metadatos</string>
+    <string name="substrate_transfer_unreadable">No se pudo decodificar esta llamada de Balances. Revisa los datos de la llamada antes de firmar.</string>
     <string name="sui_sender">De</string>
     <string name="sui_gas_budget">Presupuesto de gas: %1$s SUI</string>
     <string name="sui_gas_price">Precio del gas: %1$s MIST</string>

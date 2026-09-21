@@ -15,12 +15,14 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.LimitOrderStatus
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
+import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.PendingLimitOrderRepository
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.usecases.RefreshLimitOrdersUseCase
 import com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase
@@ -96,6 +98,7 @@ internal class TransactionHistoryViewModelTest {
     private lateinit var depositTransactionRepository: DepositTransactionRepository
     private lateinit var featureFlagRepository: FeatureFlagRepository
     private lateinit var limitSwapConfig: LimitSwapConfig
+    private lateinit var vaultRepository: VaultRepository
     private lateinit var navigator: Navigator<Destination>
 
     /** Sets up mocks and test dispatcher before each test. */
@@ -120,6 +123,10 @@ internal class TransactionHistoryViewModelTest {
             FeatureFlagJson(isLimitSwapEnabled = true)
         limitSwapConfig = mockk(relaxed = true)
         every { limitSwapConfig.isFeatureEnabled } returns flowOf(true)
+        // Rows are resolved against the vault's coins; a relaxed Flow would never emit and stall
+        // the whole list, so back it with a real (empty) one. The retry cases set their own.
+        vaultRepository = mockk(relaxed = true)
+        every { vaultRepository.getEnabledTokens(any()) } returns flowOf(emptyList())
         navigator = mockk(relaxed = true)
     }
 
@@ -143,6 +150,7 @@ internal class TransactionHistoryViewModelTest {
             depositTransactionRepository = depositTransactionRepository,
             featureFlagRepository = featureFlagRepository,
             limitSwapConfig = limitSwapConfig,
+            vaultRepository = vaultRepository,
             navigator = navigator,
             clock = Clock.System,
         )
@@ -646,6 +654,153 @@ internal class TransactionHistoryViewModelTest {
             fiatValue = "1000",
             provider = null,
             feeEstimate = null,
+        )
+
+    /**
+     * Try again on a history row (#5918): offered only once the swap has terminally failed, and
+     * only for a trade the vault can still place. The row's tickers are resolved against the
+     * vault's live coins so the form reopens on the very coin that was sold.
+     */
+    @Test
+    fun `a failed market swap row offers to try the same pair again`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(listOf(swapEntity(status = TransactionStatus.FAILED)))
+        every { vaultRepository.getEnabledTokens(VAULT_ID) } returns
+            flowOf(listOf(Coins.Ethereum.ETH, Coins.Bitcoin.BTC))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        val retry = swapRow(vm).retry.shouldNotBeNull()
+        retry.srcToken shouldBe Coins.Ethereum.ETH
+        retry.dstToken shouldBe Coins.Bitcoin.BTC
+    }
+
+    @Test
+    fun `a refunded swap row offers to try again too`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(listOf(swapEntity(status = TransactionStatus.REFUNDED)))
+        every { vaultRepository.getEnabledTokens(VAULT_ID) } returns
+            flowOf(listOf(Coins.Ethereum.ETH, Coins.Bitcoin.BTC))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        swapRow(vm).retry.shouldNotBeNull()
+    }
+
+    /** A swap still in flight may yet land; retrying it would sell the same funds twice. */
+    @Test
+    fun `a swap still in flight never offers a retry`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(
+                listOf(
+                    swapEntity(status = TransactionStatus.BROADCASTED, txHash = "0x1"),
+                    swapEntity(status = TransactionStatus.PENDING, txHash = "0x2"),
+                    swapEntity(status = TransactionStatus.CONFIRMED, txHash = "0x3"),
+                )
+            )
+        every { vaultRepository.getEnabledTokens(VAULT_ID) } returns
+            flowOf(listOf(Coins.Ethereum.ETH, Coins.Bitcoin.BTC))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        vm.uiState.value.groups
+            .flatMap { it.transactions }
+            .filterIsInstance<TransactionHistoryItemUiModel.Swap>()
+            .forEach { it.retry.shouldBeNull() }
+    }
+
+    /** The button follows the vault: a token removed since the swap takes its retry with it. */
+    @Test
+    fun `a failed swap whose source the vault no longer holds offers no retry`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(listOf(swapEntity(status = TransactionStatus.FAILED)))
+        every { vaultRepository.getEnabledTokens(VAULT_ID) } returns
+            flowOf(listOf(Coins.Bitcoin.BTC))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        swapRow(vm).retry.shouldBeNull()
+    }
+
+    @Test
+    fun `retrySelectedSwap closes the sheet and reopens the swap form on that pair`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(listOf(swapEntity(status = TransactionStatus.FAILED)))
+        every { vaultRepository.getEnabledTokens(VAULT_ID) } returns
+            flowOf(listOf(Coins.Ethereum.ETH, Coins.Bitcoin.BTC))
+        val vm = createViewModel()
+        testScope.runCurrent()
+        vm.openDetail(swapRow(vm))
+
+        vm.retrySelectedSwap()
+        testScope.runCurrent()
+
+        vm.uiState.value.selectedItem.shouldBeNull()
+        coVerify(exactly = 1) {
+            navigator.route(
+                Route.Swap(
+                    vaultId = VAULT_ID,
+                    chainId = Chain.Ethereum.id,
+                    srcTokenId = Coins.Ethereum.ETH.id,
+                    dstTokenId = Coins.Bitcoin.BTC.id,
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `retrySelectedSwap does nothing for a row without a retry`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(listOf(swapEntity(status = TransactionStatus.CONFIRMED)))
+        every { vaultRepository.getEnabledTokens(VAULT_ID) } returns
+            flowOf(listOf(Coins.Ethereum.ETH, Coins.Bitcoin.BTC))
+        val vm = createViewModel()
+        testScope.runCurrent()
+        vm.openDetail(swapRow(vm))
+
+        vm.retrySelectedSwap()
+        testScope.runCurrent()
+
+        vm.uiState.value.selectedItem.shouldNotBeNull()
+        coVerify(exactly = 0) { navigator.route(any()) }
+    }
+
+    private fun swapRow(vm: TransactionHistoryViewModel) =
+        vm.uiState.value.groups.single().transactions.single() as TransactionHistoryItemUiModel.Swap
+
+    private fun swapEntity(status: TransactionStatus, txHash: String = "0xswap") =
+        TransactionHistoryEntity(
+            id = "Ethereum:$txHash",
+            vaultId = VAULT_ID,
+            type = DbTransactionType.SWAP,
+            status = status,
+            chain = "Ethereum",
+            timestamp = 0L,
+            txHash = txHash,
+            explorerUrl = "",
+            payload =
+                SwapTransactionHistoryData(
+                    fromToken = "ETH",
+                    fromAmount = "0.5",
+                    fromChain = Chain.Ethereum.id,
+                    fromTokenLogo = "",
+                    toToken = "BTC",
+                    toAmount = "0.01",
+                    toChain = Chain.Bitcoin.id,
+                    toTokenLogo = "",
+                    provider = "THORChain",
+                    fiatValue = "$1,000",
+                    toContractAddress = "",
+                    toIsNative = true,
+                    fromContractAddress = "",
+                ),
+            confirmedAt = null,
+            failureReason = null,
+            lastCheckedAt = null,
         )
 
     private fun inFlightEntity() =
