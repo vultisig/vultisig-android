@@ -323,18 +323,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             tronTransferContractPayload = from.tronTransferContractPayload,
             tronTransferAssetContractPayload = from.tronTransferAssetContractPayload,
             tronTriggerSmartContractPayload = from.tronTriggerSmartContractPayload,
-            // Trim whitespace at the boundary so consumers (host derivation, isEmpty gate, UI)
-            // don't have to re-normalize. Empty after trim ⇒ treat the whole banner as absent.
-            dappMetadata =
-                from.dappMetadata
-                    ?.let {
-                        DAppMetadata(
-                            name = it.name.trim(),
-                            url = it.url.trim(),
-                            iconUrl = it.iconUrl.trim(),
-                        )
-                    }
-                    ?.takeUnless { it.isEmpty },
+            dappMetadata = DAppMetadata.fromProto(from.dappMetadata),
         )
     }
 

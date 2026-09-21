@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models.payload
 
 import androidx.compose.runtime.Immutable
 import java.net.URI
+import vultisig.keysign.v1.DAppMetadata as DAppMetadataProto
 
 /**
  * Identity of the dApp that produced a keysign request.
@@ -10,8 +11,8 @@ import java.net.URI
  * Trust decisions stay with Blockaid and the independently-decoded calldata; this is informational
  * only.
  *
- * Mirrors the `DAppMetadata` proto on `KeysignPayload`. Proto strings are non-nullable, so empty
- * strings are treated as missing.
+ * Mirrors the `DAppMetadata` proto carried by both `KeysignPayload` and `CustomMessagePayload`.
+ * Proto strings are non-nullable, so empty strings are treated as missing.
  */
 @Immutable
 data class DAppMetadata(val name: String, val url: String, val iconUrl: String) {
@@ -49,7 +50,24 @@ data class DAppMetadata(val name: String, val url: String, val iconUrl: String) 
     val isEmpty: Boolean
         get() = name.isEmpty() && url.isEmpty()
 
-    private companion object {
-        val HTTP_SCHEMES = setOf("http", "https")
+    companion object {
+        private val HTTP_SCHEMES = setOf("http", "https")
+
+        /**
+         * The one normalisation every wire source goes through: trim whitespace at the boundary so
+         * consumers (host derivation, [isEmpty] gate, UI) don't have to re-normalize, and treat a
+         * banner that is empty after trim as absent. Shared by the `KeysignPayload` mapper and the
+         * custom-message join path so a dApp reads the same on both.
+         */
+        fun fromProto(proto: DAppMetadataProto?): DAppMetadata? =
+            proto
+                ?.let {
+                    DAppMetadata(
+                        name = it.name.trim(),
+                        url = it.url.trim(),
+                        iconUrl = it.iconUrl.trim(),
+                    )
+                }
+                ?.takeUnless { it.isEmpty }
     }
 }

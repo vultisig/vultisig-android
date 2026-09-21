@@ -553,6 +553,8 @@ class PreviewActivity : ComponentActivity() {
                     "dapp_banner_verify_host_only" ->
                         DappBannerVerifyPreview(DappBannerVariant.HOST_ONLY)
                     "dapp_banner_send_done" -> DappBannerSendDonePreview()
+                    "dapp_banner_sign_message_verify" -> DappBannerSignMessageVerifyPreview()
+                    "dapp_banner_sign_message_done" -> DappBannerSignMessageDonePreview()
                     "decoded_function_verify_collapsed" ->
                         VerifyDecodedSendPreview(expanded = false)
                     "decoded_function_verify_expanded_before" ->
@@ -2805,6 +2807,52 @@ private fun DappBannerSendDonePreview() {
                 url = "https://app.uniswap.org/swap",
                 iconUrl = "https://app.uniswap.org/favicon.ico",
             ),
+    )
+}
+
+private fun dappBannerSignMessageModel() =
+    SignMessageTransactionUiModel(
+        method = "personal_sign",
+        message = "app.uniswap.org wants you to sign in with your Ethereum account.",
+        decoded =
+            DecodedCustomMessage.Text(
+                "app.uniswap.org wants you to sign in with your Ethereum account."
+            ),
+    )
+
+private fun dappBannerSignMessageMetadata() =
+    DAppMetadata(
+        name = "Uniswap",
+        url = "https://app.uniswap.org",
+        iconUrl = "https://app.uniswap.org/favicon.ico",
+    )
+
+@Composable
+private fun DappBannerSignMessageVerifyPreview() {
+    VerifySignMessageScreen(
+        state = VerifySignMessageUiModel(model = dappBannerSignMessageModel()),
+        dappMetadata = dappBannerSignMessageMetadata(),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onBackClick = {},
+        onFastSignClick = {},
+        onConfirm = {},
+    )
+}
+
+@Composable
+private fun DappBannerSignMessageDonePreview() {
+    TransactionDoneView(
+        showToolbar = true,
+        transactionHash = "0x8f3a1c2e9b7d4f60a5e1c3b2d4f6a8c0e2b4d6f8a0c2e4b6d8f0a2c4e6b8d0f21b",
+        approveTransactionHash = "",
+        transactionLink = "",
+        approveTransactionLink = "",
+        onComplete = {},
+        onBack = {},
+        onUriClick = {},
+        transactionTypeUiModel = TransactionTypeUiModel.SignMessage(dappBannerSignMessageModel()),
+        dappMetadata = dappBannerSignMessageMetadata(),
     )
 }
 

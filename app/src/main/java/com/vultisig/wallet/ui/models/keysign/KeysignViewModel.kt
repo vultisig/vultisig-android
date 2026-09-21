@@ -396,10 +396,14 @@ constructor(
     }
 
     /**
-     * dApp identity attached to the keysign request, if any. Read by the verify and done banners.
+     * dApp identity attached to the keysign request, if any. Read by the verify and done banners. A
+     * message request carries it on the custom message instead of a KeysignPayload; the payload
+     * still wins when both are present.
      */
     val dappMetadata: DAppMetadata?
-        get() = keysignPayload?.dappMetadata
+        get() =
+            keysignPayload?.dappMetadata
+                ?: DAppMetadata.fromProto(customMessagePayload?.dappMetadata)
 
     /**
      * Logo shown inside the keysign Rive animation ("toToken" image input). Mirrors iOS
