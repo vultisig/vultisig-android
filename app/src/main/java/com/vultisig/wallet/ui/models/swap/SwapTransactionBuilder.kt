@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.swapProviderFromWireId
 import com.vultisig.wallet.data.repositories.AllowanceRepository
+import com.vultisig.wallet.data.repositories.ApprovalRequirement
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -93,14 +94,14 @@ constructor(
                         memo = if (isRouterDeposit) quote.data.memo else null,
                         tokenAmountValue = if (isRouterDeposit) srcTokenValue.value else null,
                     )
-                val allowance =
-                    allowanceRepository.getAllowance(
+                val approval =
+                    allowanceRepository.getApprovalRequirement(
                         chain = srcToken.chain,
                         contractAddress = srcToken.contractAddress,
                         srcAddress = srcAddress,
                         dstAddress = dstAddress,
+                        amount = srcTokenValue.value,
                     )
-                val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
                 val isAffiliate = true
 
@@ -117,7 +118,8 @@ constructor(
                     swapFee = dstToken.convertToTokenValue(quote.data.fees.affiliate),
                     outboundFee = dstToken.convertToTokenValue(quote.data.fees.outbound),
                     gasFees = estimatedNetworkFeeTokenValue ?: gasFee,
-                    isApprovalRequired = isApprovalRequired,
+                    isApprovalRequired = approval != ApprovalRequirement.NotRequired,
+                    resetAllowanceFirst = approval == ApprovalRequirement.ResetThenApprove,
                     memo = quote.data.memo,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
                     externalRecipient = externalRecipient,
@@ -175,14 +177,14 @@ constructor(
                         tokenAmountValue = if (isRouterDeposit) srcTokenValue.value else null,
                     )
 
-                val allowance =
-                    allowanceRepository.getAllowance(
+                val approval =
+                    allowanceRepository.getApprovalRequirement(
                         chain = srcToken.chain,
                         contractAddress = srcToken.contractAddress,
                         srcAddress = srcAddress,
                         dstAddress = dstAddress,
+                        amount = srcTokenValue.value,
                     )
-                val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
                 val isAffiliate = true
 
@@ -200,7 +202,8 @@ constructor(
                     outboundFee = dstToken.convertToTokenValue(quote.data.fees.outbound),
                     gasFees = estimatedNetworkFeeTokenValue ?: gasFee,
                     memo = quote.data.memo,
-                    isApprovalRequired = isApprovalRequired,
+                    isApprovalRequired = approval != ApprovalRequirement.NotRequired,
+                    resetAllowanceFirst = approval == ApprovalRequirement.ResetThenApprove,
                     gasFeeFiatValue = estimatedNetworkFeeFiatValue ?: gasFeeFiatValue,
                     externalRecipient = externalRecipient,
                     swapFeePercent = feeDisplay.swapFeePercent,
@@ -288,14 +291,14 @@ constructor(
                 val specificAndUtxo =
                     swapGasCalculator.getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
-                val allowance =
-                    allowanceRepository.getAllowance(
+                val approval =
+                    allowanceRepository.getApprovalRequirement(
                         chain = srcToken.chain,
                         contractAddress = srcToken.contractAddress,
                         srcAddress = srcAddress,
                         dstAddress = approveSpender,
+                        amount = srcTokenValue.value,
                     )
-                val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
                 val specific = specificAndUtxo.blockChainSpecific
                 // Aggregators can return a non-positive tx.gas; fall back to the standard EVM swap
@@ -373,7 +376,8 @@ constructor(
                     estimatedFees = estimatedFees,
                     gasFees = displayGasFees,
                     memo = null,
-                    isApprovalRequired = isApprovalRequired,
+                    isApprovalRequired = approval != ApprovalRequirement.NotRequired,
+                    resetAllowanceFirst = approval == ApprovalRequirement.ResetThenApprove,
                     gasFeeFiatValue = displayGasFeeFiat,
                     externalRecipient = externalRecipient,
                     swapFeePercent = feeDisplay.swapFeePercent,

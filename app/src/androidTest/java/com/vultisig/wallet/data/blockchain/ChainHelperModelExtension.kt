@@ -121,6 +121,7 @@ fun KeysignPayload.toInternalKeySignPayload():
                 com.vultisig.wallet.data.models.payload.ERC20ApprovePayload(
                     spender = it.spender,
                     amount = it.amount.toBigInteger(),
+                    resetAllowanceFirst = it.resetAllowanceFirst,
                 )
             },
         tronTriggerSmartContractPayload =

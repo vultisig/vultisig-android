@@ -47,7 +47,8 @@ internal sealed interface KeysignBroadcastResult {
      * @property txHash On-chain hash, or null when the broadcast produced no hash.
      * @property txLink Explorer link for [txHash], empty when [txHash] is null.
      * @property swapProgressLink Swap-progress deep link, or null when not a swap.
-     * @property approveTxHash Hash of the preceding approval, empty when not applicable.
+     * @property approveTxHash Hash of the preceding approval — of the `approve(amount)` leg when
+     *   the payload also sent an `approve(0)` reset — empty when not applicable.
      * @property approveTxLink Explorer link for [approveTxHash], empty when not applicable.
      * @property additionalTxHashes Remaining hashes of a Solana batch keysign (issue #5238); empty
      *   otherwise.
@@ -108,58 +109,63 @@ constructor(
         var approveTxHash = ""
         if (approvePayload != null) {
             val (approveKey, approveChainCode) = vault.getEcdsaSigningKey(chain)
-            val signedApproveTransaction =
+            val signedApproveTransactions =
                 THORChainSwaps(approveKey, approveChainCode, vault.getEddsaSigningKey(chain))
-                    .getSignedApproveTransaction(approvePayload, payload, signatures)
+                    .getSignedApproveTransactions(approvePayload, payload, signatures)
 
             val evmApi = evmApiFactory.createEvmApi(chain)
-            approveTxHash =
-                try {
-                    evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    // A joined (losing) co-signer's approve broadcast can be rejected as a
-                    // duplicate. Fall back to the locally computed hash and let
-                    // awaitApprovalConfirmation verify it on-chain, so we surface a proper
-                    // ApprovalNotConfirmed result instead of a generic error screen. This never
-                    // fabricates success — confirmation is still gated below. The initiating
-                    // device re-throws so a genuine broadcast failure is surfaced.
-                    val localHash = signedApproveTransaction.transactionHash
-                    if (!isInitiatingDevice && localHash.isNotBlank()) localHash else throw e
+            // Legs go out in nonce order — the approve(0) reset, when the payload asks for one,
+            // then approve(amount) — and each is confirmed before the transaction that depends on
+            // it, since a later leg is only valid once the earlier one has landed.
+            for (signedApproveTransaction in signedApproveTransactions) {
+                approveTxHash =
+                    try {
+                        evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        // A joined (losing) co-signer's approve broadcast can be rejected as a
+                        // duplicate. Fall back to the locally computed hash and let
+                        // awaitApprovalConfirmation verify it on-chain, so we surface a proper
+                        // ApprovalNotConfirmed result instead of a generic error screen. This never
+                        // fabricates success — confirmation is still gated below. The initiating
+                        // device re-throws so a genuine broadcast failure is surfaced.
+                        val localHash = signedApproveTransaction.transactionHash
+                        if (!isInitiatingDevice && localHash.isNotBlank()) localHash else throw e
+                    }
+
+                Timber.d("Approval tx broadcast: %s, awaiting confirmation", approveTxHash)
+
+                when (awaitApprovalConfirmation(chain, approveTxHash)) {
+                    ApprovalConfirmationResult.Confirmed -> {
+                        Timber.d("Approval tx confirmed: %s", approveTxHash)
+                    }
+                    ApprovalConfirmationResult.TimedOut -> {
+                        Timber.w(
+                            "Approval tx %s timed out waiting for confirmation on %s",
+                            approveTxHash,
+                            chain,
+                        )
+                        return KeysignBroadcastResult.ApprovalNotConfirmed(
+                            approveTxHash = approveTxHash,
+                            approveTxLink =
+                                explorerLinkRepository.getTransactionLink(chain, approveTxHash),
+                            timedOut = true,
+                        )
+                    }
+                    ApprovalConfirmationResult.Failed -> {
+                        Timber.w("Approval tx %s reverted on chain %s", approveTxHash, chain)
+                        return KeysignBroadcastResult.ApprovalNotConfirmed(
+                            approveTxHash = approveTxHash,
+                            approveTxLink =
+                                explorerLinkRepository.getTransactionLink(chain, approveTxHash),
+                            timedOut = false,
+                        )
+                    }
                 }
 
-            Timber.d("Approval tx broadcast: %s, awaiting confirmation", approveTxHash)
-
-            when (awaitApprovalConfirmation(chain, approveTxHash)) {
-                ApprovalConfirmationResult.Confirmed -> {
-                    Timber.d("Approval tx confirmed: %s", approveTxHash)
-                }
-                ApprovalConfirmationResult.TimedOut -> {
-                    Timber.w(
-                        "Approval tx %s timed out waiting for confirmation on %s",
-                        approveTxHash,
-                        chain,
-                    )
-                    return KeysignBroadcastResult.ApprovalNotConfirmed(
-                        approveTxHash = approveTxHash,
-                        approveTxLink =
-                            explorerLinkRepository.getTransactionLink(chain, approveTxHash),
-                        timedOut = true,
-                    )
-                }
-                ApprovalConfirmationResult.Failed -> {
-                    Timber.w("Approval tx %s reverted on chain %s", approveTxHash, chain)
-                    return KeysignBroadcastResult.ApprovalNotConfirmed(
-                        approveTxHash = approveTxHash,
-                        approveTxLink =
-                            explorerLinkRepository.getTransactionLink(chain, approveTxHash),
-                        timedOut = false,
-                    )
-                }
+                nonceAcc++
             }
-
-            nonceAcc++
         }
 
         val signedTxs =

@@ -129,44 +129,56 @@ class THORChainSwaps(
             preImageHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         )
 
-    private fun getPreSignedApproveInputData(
+    /**
+     * One signing input per approve leg, in nonce order: `approve(spender, 0)` at the payload nonce
+     * when [ERC20ApprovePayload.resetAllowanceFirst] asks for it, then `approve(spender, amount)`
+     * one nonce later; a single input at the payload nonce otherwise. Every co-signer derives the
+     * same list from the shared payload, so the leg count and nonces are the cross-device contract.
+     */
+    internal fun getPreSignedApproveInputData(
         approvePayload: ERC20ApprovePayload,
         keysignPayload: KeysignPayload,
-    ): ByteArray {
-        val approveInput =
-            SigningInput.newBuilder()
-                .setTransaction(
-                    Transaction.newBuilder()
-                        .setErc20Approve(
-                            Transaction.ERC20Approve.newBuilder()
-                                .setSpender(approvePayload.spender)
-                                .setAmount(ByteString.copyFrom(approvePayload.amount.toByteArray()))
-                        )
-                )
-                .setToAddress(keysignPayload.coin.contractAddress)
-                .build()
-
-        return EvmHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
-            .getPreSignedInputData(signingInput = approveInput, keysignPayload = keysignPayload)
+    ): List<ByteArray> {
+        val evmHelper = EvmHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
+        return approvePayload.legAmounts.mapIndexed { leg, amount ->
+            val approveInput =
+                SigningInput.newBuilder()
+                    .setTransaction(
+                        Transaction.newBuilder()
+                            .setErc20Approve(
+                                Transaction.ERC20Approve.newBuilder()
+                                    .setSpender(approvePayload.spender)
+                                    .setAmount(ByteString.copyFrom(amount.toByteArray()))
+                            )
+                    )
+                    .setToAddress(keysignPayload.coin.contractAddress)
+                    .build()
+            evmHelper.getPreSignedInputData(
+                signingInput = approveInput,
+                keysignPayload = keysignPayload,
+                nonceIncrement = leg.toBigInteger(),
+            )
+        }
     }
 
     fun getPreSignedApproveImageHash(
         approvePayload: ERC20ApprovePayload,
         keysignPayload: KeysignPayload,
     ): List<String> =
-        getPreSigningOutput(
-            coinType = keysignPayload.coin.coinType,
-            inputData = getPreSignedApproveInputData(approvePayload, keysignPayload),
-        )
+        getPreSignedApproveInputData(approvePayload, keysignPayload).flatMap { inputData ->
+            getPreSigningOutput(coinType = keysignPayload.coin.coinType, inputData = inputData)
+        }
 
-    fun getSignedApproveTransaction(
+    /** The signed approve legs, in the nonce order [getPreSignedApproveInputData] built them. */
+    fun getSignedApproveTransactions(
         approvePayload: ERC20ApprovePayload,
         keysignPayload: KeysignPayload,
         signatures: Map<String, KeysignResponse>,
-    ): SignedTransactionResult {
-        val inputData = getPreSignedApproveInputData(approvePayload, keysignPayload)
-        return EvmHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
-            .getSignedTransaction(inputData, signatures)
+    ): List<SignedTransactionResult> {
+        val evmHelper = EvmHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
+        return getPreSignedApproveInputData(approvePayload, keysignPayload).map { inputData ->
+            evmHelper.getSignedTransaction(inputData, signatures)
+        }
     }
 
     fun getSignedTransaction(

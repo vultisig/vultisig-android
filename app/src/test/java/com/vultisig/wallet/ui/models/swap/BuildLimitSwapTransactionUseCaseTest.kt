@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
+import com.vultisig.wallet.data.repositories.ApprovalRequirement
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.ThorMimirRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
@@ -87,7 +88,9 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         coEvery {
             swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
         } returns mockk(relaxed = true)
-        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+        coEvery {
+            allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+        } returns ApprovalRequirement.NotRequired
 
         val tx = useCase.build(params())
 
@@ -116,7 +119,9 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         coEvery {
             swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
         } returns mockk(relaxed = true)
-        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+        coEvery {
+            allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+        } returns ApprovalRequirement.NotRequired
 
         val tx =
             useCase.build(
@@ -142,7 +147,9 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         coEvery {
             swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
         } returns mockk(relaxed = true)
-        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+        coEvery {
+            allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+        } returns ApprovalRequirement.NotRequired
 
         val tx = useCase.build(usdcParams())
 
@@ -165,7 +172,9 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         coEvery {
             swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
         } returns mockk(relaxed = true)
-        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+        coEvery {
+            allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+        } returns ApprovalRequirement.NotRequired
 
         val error = runCatching { useCase.build(usdcParams()) }.exceptionOrNull()
         assertTrue(error is IllegalStateException)
@@ -182,7 +191,9 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         coEvery {
             swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
         } returns mockk(relaxed = true)
-        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+        coEvery {
+            allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+        } returns ApprovalRequirement.NotRequired
 
         val error = runCatching { useCase.build(usdcParams()) }.exceptionOrNull()
         assertTrue(error is IllegalStateException)
@@ -209,7 +220,9 @@ internal class BuildLimitSwapTransactionUseCaseTest {
                     any(),
                 )
             } returns mockk(relaxed = true)
-            coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+            coEvery {
+                allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+            } returns ApprovalRequirement.NotRequired
 
             val tx = useCase.build(params())
 
@@ -242,7 +255,9 @@ internal class BuildLimitSwapTransactionUseCaseTest {
                     any(),
                 )
             } returns mockk(relaxed = true)
-            coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+            coEvery {
+                allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+            } returns ApprovalRequirement.NotRequired
 
             val tx = useCase.build(params())
 
@@ -263,7 +278,9 @@ internal class BuildLimitSwapTransactionUseCaseTest {
         coEvery {
             swapGasCalculator.getSpecificAndUtxo(any(), any(), any(), any(), any(), any(), any())
         } returns mockk(relaxed = true)
-        coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns null
+        coEvery {
+            allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+        } returns ApprovalRequirement.NotRequired
 
         val error = runCatching { useCase.build(params()) }.exceptionOrNull()
         assertTrue(error is IllegalStateException)

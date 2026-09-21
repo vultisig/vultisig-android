@@ -108,7 +108,8 @@ object SigningHelper {
             messages +=
                 THORChainSwaps(ecdsaKey, ecdsaChainCode, eddsaKey)
                     .getPreSignedApproveImageHash(approvePayload, payload)
-            nonceAcc++
+            // One nonce per approve leg: two when the payload asks for the zero reset first.
+            nonceAcc += approvePayload.legAmounts.size.toBigInteger()
         }
 
         val swapPayload = payload.swapPayload

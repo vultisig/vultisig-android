@@ -39,6 +39,13 @@ sealed interface SwapTransaction {
     val memo: String?
     val payload: SwapPayload
     val isApprovalRequired: Boolean
+    /**
+     * True when the approval has to reset the allowance to zero before setting it: [srcToken]
+     * rejects a non-zero -> non-zero approve while a stale allowance remains (USDT-style). Only
+     * meaningful with [isApprovalRequired]; carried onto the keysign payload so every co-signer
+     * signs the extra `approve(0)` leg.
+     */
+    val resetAllowanceFirst: Boolean
     val gasFeeFiatValue: FiatValue
 
     /**
@@ -82,6 +89,7 @@ sealed interface SwapTransaction {
         override val memo: String?,
         override val payload: SwapPayload,
         override val isApprovalRequired: Boolean,
+        override val resetAllowanceFirst: Boolean = false,
         override val gasFeeFiatValue: FiatValue,
         override val swapFeePercent: String? = null,
         override val swapFeeIncludedInRate: Boolean = false,
