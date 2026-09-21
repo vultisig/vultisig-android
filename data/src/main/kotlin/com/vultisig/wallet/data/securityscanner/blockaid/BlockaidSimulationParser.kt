@@ -61,51 +61,56 @@ internal object BlockaidSimulationParser {
         }
     }
 
+    /**
+     * Nets every Solana balance leg per mint before classifying. Native SOL and WSOL share the
+     * wrapped-SOL mint, so a wrap-then-spend (or an unwrap that closes the temp account) collapses
+     * into the single movement it really is instead of surfacing as a SOL/WSOL "swap". Nothing is
+     * dropped as a presumed fee: neither position, diff count nor magnitude proves a native leg is
+     * gas rather than principal, and a hero that hides or reverses a spend is worse than no hero.
+     * Anything other than one net spend, or one net spend paired with one net receive, returns null
+     * so the caller falls back to the generic title.
+     */
     fun parseSolana(response: BlockaidSolanaSimulationResponseJson): BlockaidSimulationInfo? {
-        val all =
-            response.result?.simulation?.accountSummary?.accountAssetsDiff.orEmpty().filter {
-                it.outgoing != null || it.incoming != null
-            }
-        if (all.isEmpty()) return null
+        val diffs = response.result?.simulation?.accountSummary?.accountAssetsDiff.orEmpty()
+        if (diffs.isEmpty()) return null
+        val balances = solanaMintBalances(diffs) ?: return null
 
-        // When Blockaid returns three diffs, one of them is the native SOL fee. Identify it by
-        // SHAPE (outgoing-only native SOL) rather than by position: a token→SOL swap legitimately
-        // emits two SOL diffs — the fee leg (outgoing-only) and the swap-receive leg
-        // (incoming-only) — so dropping whichever native-SOL entry happens to come first would
-        // silently lose the user's actual swap result. Both `asset.type == "SOL"` and
-        // `assetType == "SOL"` are checked because Blockaid is inconsistent about which field
-        // carries the marker.
-        //
-        // Among outgoing-only native-SOL candidates, the fee is the SMALLEST one, not the first:
-        // a Kamino SOL deposit can emit [big SOL out (real leg), WSOL in (rent residual), tiny SOL
-        // out (fee)] — both the real leg and the fee are outgoing-only native SOL, and
-        // `indexOfFirst`
-        // would drop the real leg instead of the 5000-lamport fee just because it comes first.
-        val relevant: List<BlockaidSolanaSimulationJson.AccountAssetDiff> =
-            if (all.size == 3) {
-                val solFeeIndex =
-                    all.withIndex()
-                        .filter { (_, diff) ->
-                            val isNative = diff.isNativeSol()
-                            val outgoingOnly =
-                                diff.outgoing?.rawValue?.toRawValueString() != null &&
-                                    diff.incoming?.rawValue?.toRawValueString() == null
-                            isNative && outgoingOnly
-                        }
-                        .minByOrNull { (_, diff) ->
-                            diff.outgoing?.rawValue?.toRawValueString()?.let(::parseRawAmount)
-                                ?: BigInteger.ZERO
-                        }
-                        ?.index ?: -1
-                if (solFeeIndex >= 0) all.filterIndexed { idx, _ -> idx != solFeeIndex } else all
-            } else {
-                all
+        val outgoing = mutableListOf<SolanaNetChange>()
+        val incoming = mutableListOf<SolanaNetChange>()
+        for (balance in balances.values) {
+            when {
+                balance.outgoing > balance.incoming ->
+                    outgoing +=
+                        SolanaNetChange(
+                            coin = balance.outgoingCoin ?: return null,
+                            amount = balance.outgoing - balance.incoming,
+                        )
+                balance.incoming > balance.outgoing ->
+                    incoming +=
+                        SolanaNetChange(
+                            coin = balance.incomingCoin ?: return null,
+                            amount = balance.incoming - balance.outgoing,
+                        )
             }
+        }
 
-        return when (relevant.size) {
-            0 -> null
-            1 -> parseSolanaTransfer(relevant[0])
-            else -> parseSolanaMulti(relevant)
+        // Pure-incoming results are intentionally not represented in the hero — it models
+        // outflows the user authorises. A "dApp will airdrop tokens to you" simulation falls back
+        // to the upstream null/Title flow and the user reads the details row instead.
+        return when {
+            outgoing.size == 1 && incoming.isEmpty() ->
+                BlockaidSimulationInfo.Transfer(
+                    fromCoin = outgoing[0].coin,
+                    fromAmount = outgoing[0].amount,
+                )
+            outgoing.size == 1 && incoming.size == 1 ->
+                BlockaidSimulationInfo.Swap(
+                    fromCoin = outgoing[0].coin,
+                    toCoin = incoming[0].coin,
+                    fromAmount = outgoing[0].amount,
+                    toAmount = incoming[0].amount,
+                )
+            else -> null
         }
     }
 
@@ -181,103 +186,59 @@ internal object BlockaidSimulationParser {
         )
     }
 
-    private fun parseSolanaTransfer(
-        diff: BlockaidSolanaSimulationJson.AccountAssetDiff
-    ): BlockaidSimulationInfo? {
-        // Pure-incoming diffs are intentionally not represented in the hero — the hero models
-        // outflows the user authorises. A "dApp will airdrop tokens to you" simulation falls back
-        // to the upstream null/Title flow and the user reads the details row instead.
-        val raw = diff.outgoing?.rawValue?.toRawValueString() ?: return null
-        val amount = parseRawAmount(raw) ?: return null
-        val coin = buildSolanaCoin(diff.asset, diff.assetType) ?: return null
-        return BlockaidSimulationInfo.Transfer(fromCoin = coin, fromAmount = amount)
+    private class SolanaMintBalance(val decimals: Int) {
+        var incoming: BigInteger = BigInteger.ZERO
+        var outgoing: BigInteger = BigInteger.ZERO
+        var incomingCoin: BlockaidSimulationCoin? = null
+        var outgoingCoin: BlockaidSimulationCoin? = null
     }
 
-    private fun parseSolanaMulti(
+    private class SolanaNetChange(val coin: BlockaidSimulationCoin, val amount: BigInteger)
+
+    /**
+     * Sums incoming and outgoing legs per resolved mint. Returns null on any leg that cannot be
+     * trusted (unparsable amount, unresolvable asset, decimals disagreeing across rows of the same
+     * mint) because a partial total would be presented as an authoritative one.
+     *
+     * When native SOL and WSOL rows land in the same bucket, the native row's metadata wins for
+     * whichever direction it moves in, so the hero reads "SOL" with the chain logo rather than
+     * whatever symbol Blockaid attached to the wrapped account.
+     */
+    private fun solanaMintBalances(
         diffs: List<BlockaidSolanaSimulationJson.AccountAssetDiff>
-    ): BlockaidSimulationInfo? {
-        val outSources = diffs.filter { it.outgoing?.rawValue?.toRawValueString() != null }
-        val inSources =
-            diffs.filter {
-                it.incoming?.rawValue?.toRawValueString() != null && !outSources.contains(it)
+    ): Map<String, SolanaMintBalance>? {
+        val balances = LinkedHashMap<String, SolanaMintBalance>()
+        for (diff in diffs) {
+            val incoming = parseSolanaLeg(diff.incoming) ?: return null
+            val outgoing = parseSolanaLeg(diff.outgoing) ?: return null
+            if (incoming.signum() == 0 && outgoing.signum() == 0) continue
+
+            val coin = buildSolanaCoin(diff.asset, diff.assetType) ?: return null
+            val mint = coin.address ?: return null
+            val balance = balances.getOrPut(mint) { SolanaMintBalance(coin.decimals) }
+            if (balance.decimals != coin.decimals) return null
+
+            balance.incoming += incoming
+            balance.outgoing += outgoing
+            val isNative = diff.isNativeSol()
+            if (incoming.signum() > 0 && (balance.incomingCoin == null || isNative)) {
+                balance.incomingCoin = coin
             }
-
-        // Multi-recipient send: every diff is outgoing-only AND every entry references the same
-        // asset (same address + same case-insensitive symbol). The hero must NOT silently take
-        // only the first leg's amount — that under-represents what the user is actually signing.
-        // Aggregate the legs into a single transfer.
-        if (inSources.isEmpty() && outSources.size > 1) {
-            val firstAsset = outSources.first().asset
-            val sameAsset =
-                outSources.all { diff ->
-                    diff.asset.address == firstAsset.address &&
-                        diff.asset.symbol.equals(firstAsset.symbol, ignoreCase = true)
-                }
-            if (!sameAsset) return null
-            val total =
-                outSources.fold(BigInteger.ZERO) { acc, diff ->
-                    val raw = diff.outgoing?.rawValue?.toRawValueString()
-                    val amount = raw?.let(::parseRawAmount) ?: return null
-                    acc + amount
-                }
-            val coin = buildSolanaCoin(firstAsset, outSources.first().assetType) ?: return null
-            return BlockaidSimulationInfo.Transfer(fromCoin = coin, fromAmount = total)
+            if (outgoing.signum() > 0 && (balance.outgoingCoin == null || isNative)) {
+                balance.outgoingCoin = coin
+            }
         }
+        return balances
+    }
 
-        // Regular swap path: pick by amount, not position. Blockaid does not contractually order
-        // diffs, so a batch with a real outgoing leg plus a small network-fee leg (both
-        // outgoing-only native SOL) must not have `firstOrNull` land on whichever happens to come
-        // first — the fee is always far smaller than a genuine outgoing leg. Amounts are compared
-        // decimal-normalised (not raw): Blockaid nets one row per asset, so out rows always carry
-        // different decimals (e.g. a 2,039,280-lamport wSOL rent residual at 9 decimals is only
-        // 0.00203928 SOL, smaller than a 2,000,000-raw USDC leg at 6 decimals, i.e. $2 — but the
-        // raw
-        // integers alone rank the residual first).
-        val outSource =
-            outSources.maxByOrNull { diff ->
-                val raw =
-                    diff.outgoing?.rawValue?.toRawValueString()?.let(::parseRawAmount)
-                        ?: BigInteger.ZERO
-                val decimals = diff.asset.decimals?.clampDecimals() ?: 0
-                raw.toBigDecimal().movePointLeft(decimals)
-            } ?: return null
-        val outRaw = outSource.outgoing?.rawValue?.toRawValueString() ?: return null
-        val outAmount = parseRawAmount(outRaw) ?: return null
-        val fromCoin = buildSolanaCoin(outSource.asset, outSource.assetType) ?: return null
-
-        // Native SOL and wrapped SOL are normalised to the same mint in buildSolanaCoin (the WSOL
-        // address doubles as the native-SOL sentinel), so a same-asset in-leg is wrap/unwrap noise,
-        // not a real swap destination — e.g. a Kamino deposit's wSOL rent-exempt residual nets out
-        // as a small "incoming" diff. Prefer an in-leg that is a genuinely different asset (the
-        // same
-        // search order parseEvmSwap uses), so a batched signAllTransactions that also contains a
-        // real swap doesn't get shadowed by an unrelated SOL/WSOL leg landing first in `inSources`.
-        val inSource =
-            inSources.firstOrNull {
-                val coin = buildSolanaCoin(it.asset, it.assetType)
-                coin != null && !coin.address.equals(fromCoin.address, ignoreCase = true)
-            } ?: inSources.firstOrNull()
-        val inRaw = inSource?.incoming?.rawValue?.toRawValueString()
-        val inAmount = inRaw?.let(::parseRawAmount)
-        val toCoin = inSource?.let { buildSolanaCoin(it.asset, it.assetType) }
-        val sameAsset = toCoin != null && toCoin.address.equals(fromCoin.address, ignoreCase = true)
-
-        return when {
-            inAmount != null && toCoin != null && !sameAsset ->
-                BlockaidSimulationInfo.Swap(
-                    fromCoin = fromCoin,
-                    toCoin = toCoin,
-                    fromAmount = outAmount,
-                    toAmount = inAmount,
-                )
-            // Same asset on both legs with a bigger in-leg is a Kamino-style withdraw: the
-            // "outgoing" leg is just the temp wSOL account being debited before it closes, and the
-            // amount the user actually receives is the in-leg, not the out-leg. Pure-incoming diffs
-            // are intentionally not represented in the hero (see parseSolanaTransfer), so fall back
-            // to the generic title instead of showing a misleading outgoing transfer.
-            sameAsset && inAmount != null && inAmount > outAmount -> null
-            else -> BlockaidSimulationInfo.Transfer(fromCoin = fromCoin, fromAmount = outAmount)
-        }
+    /**
+     * A missing leg is zero; a present leg must decode to a non-negative magnitude because
+     * direction is carried by the `in`/`out` field itself, not by a sign.
+     */
+    private fun parseSolanaLeg(leg: BlockaidSolanaSimulationJson.BalanceChange?): BigInteger? {
+        if (leg == null) return BigInteger.ZERO
+        val raw = leg.rawValue?.toRawValueString() ?: return null
+        return parseRawAmount(raw)
     }
 
     private fun buildSolanaCoin(
