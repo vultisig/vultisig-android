@@ -38,7 +38,6 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.solanastaking.SolanaDelegateUiState
 import com.vultisig.wallet.ui.models.solanastaking.SolanaDelegateViewModel
@@ -140,7 +139,6 @@ internal fun SolanaDelegateContent(
 
         VsButton(
             label = stringResource(R.string.cosmos_staking_continue),
-            variant = VsButtonVariant.CTA,
             state = if (canContinue) VsButtonState.Enabled else VsButtonState.Disabled,
             isLoading = state.isSubmitting,
             onClick = onSubmit,

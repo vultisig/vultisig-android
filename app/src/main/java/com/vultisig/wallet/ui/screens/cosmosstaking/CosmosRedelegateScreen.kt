@@ -26,7 +26,6 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosRedelegationCool
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosRedelegateViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -113,7 +112,6 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
 
             VsButton(
                 label = stringResource(R.string.cosmos_staking_continue),
-                variant = VsButtonVariant.CTA,
                 // Disable while the async cooldown fetch is still in flight — cooldownState
                 // defaults
                 // to Available, so without the isLoadingCooldown guard a fast submit would bypass
@@ -208,7 +206,6 @@ private fun CosmosRedelegateScreenPreview() {
             }
             VsButton(
                 label = "Continue",
-                variant = VsButtonVariant.CTA,
                 state = VsButtonState.Enabled,
                 onClick = {},
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),

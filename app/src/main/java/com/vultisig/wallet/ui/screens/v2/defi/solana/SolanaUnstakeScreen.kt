@@ -23,7 +23,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.solanastaking.SolanaUnstakeUiState
 import com.vultisig.wallet.ui.models.solanastaking.SolanaUnstakeViewModel
@@ -106,7 +105,6 @@ internal fun SolanaUnstakeContent(state: SolanaUnstakeUiState, onContinue: () ->
 
         VsButton(
             label = stringResource(R.string.cosmos_staking_continue),
-            variant = VsButtonVariant.CTA,
             state = if (state.isSubmitting) VsButtonState.Disabled else VsButtonState.Enabled,
             isLoading = state.isSubmitting,
             onClick = onContinue,

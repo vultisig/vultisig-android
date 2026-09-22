@@ -88,7 +88,6 @@ internal fun ErrorView(
 
             buttonUiModel?.let {
                 VsButton(
-                    variant = VsButtonVariant.CTA,
                     label = it.text,
                     modifier = Modifier.fillMaxWidth(),
                     isLoading = it.isLoading,

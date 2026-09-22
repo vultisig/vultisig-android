@@ -37,7 +37,6 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.defi.TonPoolUiModel
 import com.vultisig.wallet.ui.models.defi.TonStakeUiState
@@ -113,7 +112,6 @@ internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
 
             VsButton(
                 label = stringResource(R.string.cosmos_staking_continue),
-                variant = VsButtonVariant.CTA,
                 state = if (canContinue) VsButtonState.Enabled else VsButtonState.Disabled,
                 isLoading = state.isSubmitting,
                 onClick = viewModel::submit,

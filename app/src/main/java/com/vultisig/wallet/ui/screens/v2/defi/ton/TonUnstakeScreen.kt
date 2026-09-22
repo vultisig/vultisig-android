@@ -25,7 +25,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.defi.TonUnstakeViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -92,7 +91,6 @@ internal fun TonUnstakeScreen(viewModel: TonUnstakeViewModel = hiltViewModel()) 
 
             VsButton(
                 label = stringResource(R.string.cosmos_staking_continue),
-                variant = VsButtonVariant.CTA,
                 state =
                     if (!state.isLoading && state.hasSufficientBalance && !state.isSubmitting)
                         VsButtonState.Enabled

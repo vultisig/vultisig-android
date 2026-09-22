@@ -30,7 +30,6 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosWithdrawRewardsC
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosWithdrawRewardsViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -278,7 +277,6 @@ private fun androidx.compose.foundation.layout.BoxScope.FooterSummary(
 
         VsButton(
             label = stringResource(R.string.cosmos_staking_continue),
-            variant = VsButtonVariant.CTA,
             state =
                 if (isSubmitting || !isValidForm) VsButtonState.Disabled else VsButtonState.Enabled,
             isLoading = isSubmitting,

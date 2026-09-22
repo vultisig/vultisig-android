@@ -44,7 +44,6 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
@@ -139,7 +138,6 @@ private fun DelegateContent(
 
         VsButton(
             label = stringResource(R.string.cosmos_staking_continue),
-            variant = VsButtonVariant.CTA,
             state = if (state.isSubmitting) VsButtonState.Disabled else VsButtonState.Enabled,
             isLoading = state.isSubmitting,
             onClick = onSubmit,

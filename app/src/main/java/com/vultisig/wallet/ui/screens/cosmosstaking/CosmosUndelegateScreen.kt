@@ -40,7 +40,6 @@ import com.vultisig.wallet.ui.components.TokenAmountInput
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosUndelegateViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -113,7 +112,6 @@ internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltV
 
             VsButton(
                 label = stringResource(R.string.cosmos_staking_continue),
-                variant = VsButtonVariant.CTA,
                 state =
                     if (state.isSubmitting || state.maxUnbondingEntriesReached)
                         VsButtonState.Disabled
@@ -359,7 +357,6 @@ private fun CosmosUndelegateScreenPreview() {
             }
             VsButton(
                 label = "Continue",
-                variant = VsButtonVariant.CTA,
                 state = VsButtonState.Enabled,
                 onClick = {},
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),

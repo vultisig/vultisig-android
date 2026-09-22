@@ -566,7 +566,6 @@ internal fun SwapScreen(
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
                     VsButton(
                         label = stringResource(R.string.limit_swap_place_order),
-                        variant = VsButtonVariant.CTA,
                         state =
                             if (
                                 state.isLoadingNextScreen ||

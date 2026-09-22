@@ -452,7 +452,6 @@ private fun TotalStakedCard(
 
         VsButton(
             label = stringResource(R.string.cosmos_staking_delegate_new_validator),
-            variant = VsButtonVariant.CTA,
             size = VsButtonSize.Medium,
             state = VsButtonState.Enabled,
             onClick = onDelegateToNewValidator,
@@ -639,7 +638,6 @@ private fun PositionRow(
             )
             VsButton(
                 label = stringResource(R.string.cosmos_staking_action_delegate),
-                variant = VsButtonVariant.CTA,
                 size = VsButtonSize.Small,
                 state = VsButtonState.Enabled,
                 onClick = onStakeMore,

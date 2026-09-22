@@ -42,7 +42,6 @@ fun FastSignPairedButtons(
 
         VsButton(
             label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
-            variant = VsButtonVariant.CTA,
             state = state,
             isLoading = isLoading,
             onClick = onFastSignClick,

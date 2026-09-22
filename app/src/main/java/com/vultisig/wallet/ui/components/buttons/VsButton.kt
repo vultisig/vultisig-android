@@ -15,8 +15,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.innerShadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -39,7 +43,6 @@ enum class VsButtonVariant {
     Primary,
     Secondary,
     Error,
-    CTA,
     Tertiary,
 }
 
@@ -55,6 +58,51 @@ enum class VsButtonSize {
     Mini,
 }
 
+/**
+ * The inset top highlight and bottom shade that give the styleguide button its bevelled look. Both
+ * are inner shadows in the design, so they are drawn as such rather than approximated with a
+ * gradient.
+ */
+private class Bevel(val highlight: Shadow, val shade: Shadow)
+
+private val BevelHighlightColor = Color.White
+private val BevelShadeColor = Color(0xFF0F1C3E)
+
+private val PrimaryBevel =
+    Bevel(
+        highlight =
+            Shadow(
+                radius = 1.9.dp,
+                color = BevelHighlightColor,
+                alpha = 0.24f,
+                offset = DpOffset(x = 0.dp, y = 1.dp),
+            ),
+        shade =
+            Shadow(
+                radius = 1.6.dp,
+                color = BevelShadeColor,
+                alpha = 0.48f,
+                offset = DpOffset(x = 0.dp, y = (-1).dp),
+            ),
+    )
+
+private val SoftBevel =
+    Bevel(
+        highlight =
+            Shadow(
+                radius = 1.dp,
+                color = BevelHighlightColor,
+                alpha = 0.1f,
+                offset = DpOffset(x = 0.dp, y = 1.dp),
+            ),
+        shade =
+            Shadow(
+                radius = 0.5.dp,
+                color = BevelShadeColor,
+                offset = DpOffset(x = 0.dp, y = (-1).dp),
+            ),
+    )
+
 @Composable
 fun VsButton(
     modifier: Modifier = Modifier,
@@ -69,12 +117,12 @@ fun VsButton(
     val backgroundColor by
         animateColorAsState(
             when (state) {
-                Enabled ->
+                Enabled,
+                Default ->
                     when (variant) {
-                        Primary -> colors.buttons.tertiary
+                        Primary -> colors.buttons.ctaPrimary
                         Secondary -> colors.backgrounds.tertiary_2
                         Error -> colors.alerts.error
-                        CTA -> colors.buttons.ctaPrimary
                         Tertiary -> colors.neutrals.n50
                     }
 
@@ -83,17 +131,7 @@ fun VsButton(
                         Primary -> colors.buttons.disabled
                         Secondary -> colors.buttons.ctaDisabled
                         Error -> colors.buttons.disabledError
-                        CTA -> colors.buttons.ctaDisabled
                         Tertiary -> colors.neutrals.n400
-                    }
-
-                Default ->
-                    when (variant) {
-                        Primary -> colors.buttons.tertiary
-                        Secondary -> colors.backgrounds.tertiary
-                        Error -> colors.alerts.error
-                        CTA -> colors.buttons.ctaPrimary
-                        Tertiary -> colors.neutrals.n50
                     }
             },
             label = "VsButton.backgroundColor",
@@ -101,43 +139,35 @@ fun VsButton(
 
     val borderColor by
         animateColorAsState(
-            when (state) {
-                Enabled ->
-                    when (variant) {
-                        Primary -> colors.buttons.tertiary
-                        Secondary -> colors.backgrounds.tertiary_2
-                        Error -> colors.alerts.error
-                        CTA -> colors.buttons.ctaPrimary
-                        Tertiary -> colors.neutrals.n50
-                    }
-
-                Disabled ->
-                    when (variant) {
-                        Primary -> colors.buttons.disabled
-                        Secondary -> colors.backgrounds.tertiary_2
-                        Error -> colors.buttons.disabledError
-                        CTA -> colors.buttons.ctaDisabled
-                        Tertiary -> colors.neutrals.n400
-                    }
-
-                Default ->
-                    when (variant) {
-                        Primary -> colors.buttons.tertiary
-                        Secondary -> colors.backgrounds.tertiary
-                        Error -> colors.alerts.error
-                        CTA -> colors.buttons.ctaPrimary
-                        Tertiary -> colors.neutrals.n50
-                    }
-            },
+            if (variant == Secondary && state != Disabled) colors.variables.bordersExtraLight
+            else Color.Transparent,
             label = "VsButton.borderColor",
         )
+
+    val bevel =
+        when (variant) {
+            Primary -> if (state == Disabled) SoftBevel else PrimaryBevel
+            Secondary -> SoftBevel
+            Error,
+            Tertiary -> null
+        }
+
+    val resolvedShape = shape ?: Theme.v2.radius.pill
 
     Box(
         contentAlignment = Alignment.Center,
         modifier =
             modifier
-                .background(color = backgroundColor, shape = shape ?: Theme.v2.radius.pill)
-                .border(width = 1.dp, color = borderColor, shape = shape ?: Theme.v2.radius.pill)
+                .background(color = backgroundColor, shape = resolvedShape)
+                .border(width = 1.dp, color = borderColor, shape = resolvedShape)
+                .then(
+                    if (bevel != null) {
+                        Modifier.innerShadow(resolvedShape, bevel.highlight)
+                            .innerShadow(resolvedShape, bevel.shade)
+                    } else {
+                        Modifier
+                    }
+                )
                 .clickable(enabled = state != Disabled && !isLoading, onClick = onClick)
                 .then(
                     when (size) {
@@ -218,21 +248,12 @@ fun VsButton(
     ) {
         val contentColor by
             animateColorAsState(
-                when {
-                    variant != Tertiary -> {
-                        when (state) {
-                            Enabled -> colors.text.button.primary
-                            Disabled -> colors.text.button.disabled
-                            Default -> colors.text.button.primary
-                        }
-                    }
-                    else -> {
-                        when (state) {
-                            Enabled -> colors.text.inverse
-                            Disabled -> colors.text.button.disabled
-                            Default -> colors.text.inverse
-                        }
-                    }
+                when (state) {
+                    Enabled,
+                    Default ->
+                        if (variant == Tertiary) colors.text.inverse else colors.text.button.primary
+
+                    Disabled -> colors.text.button.disabled
                 },
                 label = "VsButton.contentColor",
             )
@@ -339,13 +360,9 @@ private fun VsButtonPreview() {
 
         VsButton(label = "Tertiary Mini Small", variant = Tertiary, state = Default, onClick = {})
 
-        VsButton(label = "CTA Enabled", variant = CTA, state = Enabled, onClick = {})
-
-        VsButton(label = "CTA Disabled", variant = CTA, state = Disabled, onClick = {})
-
         VsButton(
-            label = "CTA Loading",
-            variant = CTA,
+            label = "Primary Loading",
+            variant = Primary,
             state = Enabled,
             isLoading = true,
             onClick = {},

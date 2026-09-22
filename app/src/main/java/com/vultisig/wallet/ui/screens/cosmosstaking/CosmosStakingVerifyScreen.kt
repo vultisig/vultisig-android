@@ -35,7 +35,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.hero.HeroContentView
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
@@ -90,7 +89,6 @@ internal fun CosmosStakingVerifyScreen(viewModel: CosmosStakingVerifyViewModel =
         } else {
             VsButton(
                 label = stringResource(R.string.cosmos_staking_verify_sign),
-                variant = VsButtonVariant.CTA,
                 state = signState,
                 onClick = viewModel::confirm,
                 modifier = bottomModifier,

@@ -36,7 +36,6 @@ import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
@@ -216,7 +215,6 @@ private fun StakeCacaoContent(
 
         VsButton(
             label = stringResource(R.string.send_continue_button),
-            variant = VsButtonVariant.CTA,
             state = if (isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
             isLoading = isLoading,
             onClick = onDeposit,

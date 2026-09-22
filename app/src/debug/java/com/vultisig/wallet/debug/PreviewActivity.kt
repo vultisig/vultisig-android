@@ -3624,7 +3624,6 @@ private fun CosmosStakingVerifyCtaPreview(newButtons: Boolean, qbtc: Boolean = f
         } else {
             VsButton(
                 label = stringResource(R.string.cosmos_staking_verify_sign),
-                variant = VsButtonVariant.CTA,
                 onClick = {},
                 modifier = ctaModifier,
             )
@@ -4080,7 +4079,6 @@ private fun LimitSwapFormPreview(expandedSection: LimitFormSection = LimitFormSe
         Spacer(Modifier.weight(1f))
         VsButton(
             label = stringResource(R.string.limit_swap_place_order),
-            variant = VsButtonVariant.CTA,
             onClick = {},
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
         )

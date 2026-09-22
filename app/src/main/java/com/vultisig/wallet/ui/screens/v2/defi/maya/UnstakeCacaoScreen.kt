@@ -34,7 +34,6 @@ import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
@@ -202,7 +201,6 @@ private fun UnstakeCacaoContent(
 
         VsButton(
             label = stringResource(R.string.send_continue_button),
-            variant = VsButtonVariant.CTA,
             modifier = Modifier.fillMaxWidth(),
             onClick = onDeposit,
             isLoading = state.isLoading,

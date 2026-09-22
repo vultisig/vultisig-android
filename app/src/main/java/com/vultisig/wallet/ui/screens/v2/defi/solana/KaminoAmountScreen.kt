@@ -22,7 +22,6 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibili
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawLiquidity
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.solanastaking.KaminoAmountUiState
 import com.vultisig.wallet.ui.models.solanastaking.KaminoAmountViewModel
@@ -160,7 +159,6 @@ internal fun KaminoAmountContent(
 
         VsButton(
             label = stringResource(R.string.cosmos_staking_continue),
-            variant = VsButtonVariant.CTA,
             state = if (canContinue) VsButtonState.Enabled else VsButtonState.Disabled,
             isLoading = state.isSubmitting,
             onClick = onSubmit,
