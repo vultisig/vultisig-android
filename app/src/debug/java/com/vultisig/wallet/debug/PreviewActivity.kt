@@ -486,6 +486,7 @@ class PreviewActivity : ComponentActivity() {
                     "limit_order_cancel_verify" -> LimitOrderCancelVerifyPreview()
                     "withdraw_usdc_circle" -> WithdrawUsdcCirclePreview()
                     "send_form_amount_loading" -> SendFormAmountLoadingPreview()
+                    "send_form_address" -> SendFormAddressPreview()
                     "limit_order_cancel_done" -> LimitOrderCancelDonePreview()
                     "limit_orders_tab_empty" -> LimitOrdersTabPreview(orders = emptyList())
                     "empty_referral" -> EmptyReferralBanner(onClickedCreateReferral = {})
@@ -4548,6 +4549,61 @@ private fun SendFormAmountLoadingPreview() {
         addressFocusRequester = remember { FocusRequester() },
         amountFocusRequester = remember { FocusRequester() },
         tokenAmountFieldState = rememberTextFieldState("9.36"),
+        fiatAmountFieldState = rememberTextFieldState(),
+        memoFieldState = rememberTextFieldState(),
+        destinationTagFieldState = rememberTextFieldState(),
+        onNetworkDragStart = {},
+        onNetworkDrag = {},
+        onNetworkDragEnd = {},
+        onNetworkDragCancel = {},
+        onNetworkLongPressStarted = {},
+        onAssetDragStart = {},
+        onAssetDrag = {},
+        onAssetDragEnd = {},
+        onAssetDragCancel = {},
+        onAssetLongPressStarted = {},
+        slippageFieldState = rememberTextFieldState(),
+    )
+}
+
+/** A plain DASH send with the Address section open and nothing entered yet. */
+@Composable
+private fun SendFormAddressPreview() {
+    val dash = Coins.Dash.DASH
+    val account = Account(token = dash, tokenValue = null, fiatValue = null, price = null)
+    SendFormScreen(
+        state =
+            SendFormUiModel(
+                fiatCurrency = "USD",
+                selectedCoin =
+                    TokenBalanceUiModel(
+                        model =
+                            SendSrc(
+                                address =
+                                    Address(
+                                        chain = Chain.Dash,
+                                        address = "XdN9i1nCqzUcXn1n2pQqCkrwiKRv5vJv4z",
+                                        accounts = listOf(account),
+                                    ),
+                                account = account,
+                            ),
+                        title = "DASH",
+                        balance = "12.4801",
+                        fiatValue = "$318.42",
+                        isNativeToken = true,
+                        isLayer2 = false,
+                        tokenStandard = null,
+                        tokenLogo = dash.logo,
+                        chainLogo = Chain.Dash.logo,
+                    ),
+                srcVaultName = "Main Vault",
+                srcAddress = "XdN9i1nCqzUcXn1n2pQqCkrwiKRv5vJv4z",
+                expandedSection = SendSections.Address,
+            ),
+        addressFieldState = rememberTextFieldState(),
+        addressFocusRequester = remember { FocusRequester() },
+        amountFocusRequester = remember { FocusRequester() },
+        tokenAmountFieldState = rememberTextFieldState(),
         fiatAmountFieldState = rememberTextFieldState(),
         memoFieldState = rememberTextFieldState(),
         destinationTagFieldState = rememberTextFieldState(),

@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Chain
 import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
@@ -220,7 +221,11 @@ internal class BlockaidSimulationParserTest {
     }
 
     @Test
-    fun `solana three diffs filter native SOL fee leaves the swap`() {
+    fun `solana token swap with a separate native SOL row declines`() {
+        // Two mints net-negative (SOL and USDC) plus one net-positive. Nothing in the response says
+        // the 5000-lamport SOL row is the network fee rather than a small principal send batched
+        // with the swap, so the parser must not delete it on size alone — it declines and the user
+        // reads the details row instead of a hero that hides a spend.
         val response =
             solanaResponse(
                 """{
@@ -249,19 +254,16 @@ internal class BlockaidSimulationParserTest {
                     .trimIndent()
             )
 
-        val swap = BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Swap
-        assertEquals("USDC", swap.fromCoin.ticker)
-        assertEquals("BONK", swap.toCoin.ticker)
-        assertEquals(BigInteger("1000000"), swap.fromAmount)
-        assertEquals(BigInteger("9999"), swap.toAmount)
+        assertNull(BlockaidSimulationParser.parseSolana(response))
     }
 
     @Test
     fun `solana SOL-out WSOL-in pair is a transfer, not a swap`() {
         // A Kamino SOL-vault deposit wraps SOL and immediately spends it, leaving only the wSOL
         // account's rent-exempt residual as an "incoming" diff. WSOL's real mint is the same
-        // address the parser uses as the native-SOL sentinel, so this must collapse to a Transfer
-        // of the real 0.059435 SOL leg rather than a misleading "SOL -> 0.00203928 WSOL" swap.
+        // address the parser uses as the native-SOL sentinel, so both rows net into one bucket and
+        // collapse to a Transfer of the net SOL movement rather than a misleading
+        // "SOL -> 0.00203928 WSOL" swap.
         val response =
             solanaResponse(
                 """{
@@ -295,19 +297,15 @@ internal class BlockaidSimulationParserTest {
             BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Transfer
 
         assertEquals("SOL", transfer.fromCoin.ticker)
-        assertEquals(BigInteger("59435000"), transfer.fromAmount)
+        assertEquals(BigInteger("57395720"), transfer.fromAmount)
     }
 
     @Test
-    fun `solana three-diff SOL deposit with a separate fee leg keeps the real out amount`() {
+    fun `solana SOL deposit nets a separate fee row and the wSOL residual into one transfer`() {
         // Same Kamino SOL-deposit shape as above, but Blockaid emits the network fee as its own
-        // outgoing-only native-SOL row, landing the response at exactly 3 diffs: [big SOL out (real
-        // leg), WSOL in (rent residual), tiny SOL out (fee)]. `parseSolana`'s 3-diff pre-filter
-        // must
-        // drop the 5000-lamport fee — the smallest outgoing-only native-SOL diff — not the first
-        // one,
-        // or it discards the real 59435000-lamport leg and the deposit renders as unverifiable
-        // instead of a 0.059435 SOL transfer.
+        // outgoing-only native-SOL row: [big SOL out (real leg), WSOL in (rent residual), tiny SOL
+        // out (fee)]. All three resolve to the same mint, so the hero shows the user's net SOL
+        // outflow — no row is guessed to be "the fee" and dropped.
         val response =
             solanaResponse(
                 """{
@@ -345,16 +343,16 @@ internal class BlockaidSimulationParserTest {
             BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Transfer
 
         assertEquals("SOL", transfer.fromCoin.ticker)
-        assertEquals(BigInteger("59435000"), transfer.fromAmount)
+        assertEquals(BigInteger("57400720"), transfer.fromAmount)
     }
 
     @Test
     fun `solana WSOL-out SOL-in pair with a bigger in-leg is dropped, not a bogus transfer`() {
         // A Kamino SOL-vault withdraw closes the payout wSOL account before returning native SOL to
         // the signer (KaminoComputeBudget.kt:59), so the "outgoing" leg is just that temp account
-        // being debited, not real value the user sent. The in-leg (native SOL) is what the user
-        // actually receives and is bigger than the out-leg, so this must not collapse to a Transfer
-        // of the out-leg — that would misrepresent an incoming withdraw as an outgoing send.
+        // being debited, not real value the user sent. Netted per mint this is a pure receive,
+        // which the hero does not model — it must not collapse to a Transfer of the out-leg, which
+        // would misrepresent an incoming withdraw as an outgoing send.
         val response =
             solanaResponse(
                 """{
@@ -389,9 +387,9 @@ internal class BlockaidSimulationParserTest {
 
     @Test
     fun `solana three-diff withdraw keeps incoming native SOL as the destination`() {
-        // Parity fixture for sdk#2091 / android#5683: native SOL is the principal incoming leg, not
-        // a fee. The three-diff filter must not delete it just because the response contains SOL,
-        // or the hero can fall through to a one-way WSOL residual transfer and reverse direction.
+        // Native SOL is the principal incoming leg, not a fee. Deleting it because the response
+        // happens to contain a SOL row would leave a one-way WSOL residual transfer and reverse the
+        // displayed direction; netting keeps it and subtracts the residual instead.
         val response =
             solanaResponse(
                 """{
@@ -435,20 +433,15 @@ internal class BlockaidSimulationParserTest {
         assertEquals("kSOL", swap.fromCoin.ticker)
         assertEquals("SOL", swap.toCoin.ticker)
         assertEquals(BigInteger("50000000"), swap.fromAmount)
-        assertEquals(BigInteger("59435000"), swap.toAmount)
+        assertEquals(BigInteger("57395720"), swap.toAmount)
     }
 
     @Test
-    fun `solana batch skips the SOL-WSOL leg to find the real swap destination`() {
-        // A signAllTransactions batch scanned as one diff set can contain both a Kamino SOL-wrap
-        // leg (same asset on both sides) and a genuine swap leg. The wrap leg must not be picked as
-        // `inSource` just because it comes first in `inSources` — the real destination asset (USDC)
-        // has to be found instead, or the swap renders as a one-way send. A trailing outgoing-only
-        // native-SOL fee diff is included so the count lands on 4, not the 3-diff shape
-        // `parseSolana`
-        // special-cases as "one of these three is the fee leg" (which would otherwise strip the
-        // real
-        // SOL out-leg here, since it too is outgoing-only native SOL).
+    fun `solana batch nets the wrap residual and fee row into the swap's SOL leg`() {
+        // A signAllTransactions batch scanned as one diff set can contain a Kamino SOL-wrap leg
+        // (same mint on both sides), a genuine swap destination and a separate native-SOL fee row.
+        // Everything SOL-denominated nets into one bucket and USDC is the only other mint, so the
+        // result is a single SOL -> USDC swap with the net SOL outflow.
         val response =
             solanaResponse(
                 """{
@@ -495,116 +488,51 @@ internal class BlockaidSimulationParserTest {
 
         assertEquals("SOL", swap.fromCoin.ticker)
         assertEquals("USDC", swap.toCoin.ticker)
-        assertEquals(BigInteger("59435000"), swap.fromAmount)
+        assertEquals(BigInteger("57400720"), swap.fromAmount)
         assertEquals(BigInteger("10000000"), swap.toAmount)
     }
 
     @Test
-    fun `solana batch picks the real outgoing leg over a fee leg that comes first`() {
-        // Same fixture as above with the tiny fee diff moved to the front. `outSources` must be
-        // picked by amount, not by list position, or the fee's 5000 lamports gets shown as the
-        // swap's fromAmount instead of the real 59435000 lamports leg.
-        val response =
-            solanaResponse(
-                """{
-                    "result": {
-                      "simulation": {
-                        "account_summary": {
-                          "account_assets_diff": [
-                            {
-                              "asset": { "type": "SOL", "decimals": 9, "symbol": "SOL", "address": null },
-                              "out": { "raw_value": "5000" }
-                            },
-                            {
-                              "asset": { "type": "SOL", "decimals": 9, "symbol": "SOL", "address": null },
-                              "out": { "raw_value": "59435000" }
-                            },
-                            {
-                              "asset": {
-                                "type": "TOKEN",
-                                "address": "So11111111111111111111111111111111111111112",
-                                "symbol": "WSOL",
-                                "decimals": 9
-                              },
-                              "in": { "raw_value": "2039280" }
-                            },
-                            {
-                              "asset": {
-                                "type": "TOKEN",
-                                "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-                                "symbol": "USDC",
-                                "decimals": 6
-                              },
-                              "in": { "raw_value": "10000000" }
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                """
-                    .trimIndent()
+    fun `solana batch result does not depend on diff order`() {
+        // Blockaid does not contractually order diffs. Every ordering of the batch above must net
+        // to the same SOL -> USDC swap, including the ones where the tiny fee row comes first.
+        val diffs =
+            listOf(
+                nativeSolDiff(outRaw = "5000"),
+                nativeSolDiff(outRaw = "59435000"),
+                tokenDiff(WSOL_MINT, "WSOL", 9, inRaw = "2039280"),
+                tokenDiff(USDC_MINT, "USDC", 6, inRaw = "10000000"),
             )
 
-        val swap = BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Swap
-
-        assertEquals("SOL", swap.fromCoin.ticker)
-        assertEquals("USDC", swap.toCoin.ticker)
-        assertEquals(BigInteger("59435000"), swap.fromAmount)
-        assertEquals(BigInteger("10000000"), swap.toAmount)
+        for (ordered in permutations(diffs)) {
+            val swap =
+                assertInstanceOf(
+                    BlockaidSimulationInfo.Swap::class.java,
+                    BlockaidSimulationParser.parseSolana(solanaDiffs(ordered)),
+                    ordered.toString(),
+                )
+            assertEquals("SOL", swap.fromCoin.ticker, ordered.toString())
+            assertEquals("USDC", swap.toCoin.ticker, ordered.toString())
+            assertEquals(BigInteger("57400720"), swap.fromAmount, ordered.toString())
+            assertEquals(BigInteger("10000000"), swap.toAmount, ordered.toString())
+        }
     }
 
     @Test
-    fun `solana batch ranks out legs by decimal-normalised amount, not raw integer`() {
-        // A wSOL rent-residual out-leg (2,039,280 raw @ 9 decimals = 0.00203928 SOL) has a bigger
-        // raw integer than a 2 USDC out-leg (2,000,000 raw @ 6 decimals), even though 2 USDC is the
-        // real swap leg and the wSOL row is exactly the noise this PR exists to suppress. Comparing
-        // raw integers across mismatched decimals would rank the residual first; the parser must
-        // normalise by decimals before picking the max.
+    fun `solana two distinct net spends decline regardless of their relative size`() {
+        // A 2 USDC out-leg next to a 0.002 wSOL out-leg with nothing SOL-denominated to net it
+        // against. Picking the "bigger" leg by any ranking would hide the other spend from the
+        // hero, so the parser declines rather than choose.
         val response =
-            solanaResponse(
-                """{
-                    "result": {
-                      "simulation": {
-                        "account_summary": {
-                          "account_assets_diff": [
-                            {
-                              "asset": {
-                                "type": "TOKEN",
-                                "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-                                "symbol": "USDC",
-                                "decimals": 6
-                              },
-                              "out": { "raw_value": "2000000" }
-                            },
-                            {
-                              "asset": {
-                                "type": "TOKEN",
-                                "address": "So11111111111111111111111111111111111111112",
-                                "symbol": "WSOL",
-                                "decimals": 9
-                              },
-                              "out": { "raw_value": "2039280" }
-                            },
-                            {
-                              "asset": { "type": "TOKEN", "address": "MintB", "symbol": "BONK", "decimals": 5 },
-                              "in": { "raw_value": "9999" }
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                """
-                    .trimIndent()
+            solanaDiffs(
+                listOf(
+                    tokenDiff(USDC_MINT, "USDC", 6, outRaw = "2000000"),
+                    tokenDiff(WSOL_MINT, "WSOL", 9, outRaw = "2039280"),
+                    tokenDiff("MintB", "BONK", 5, inRaw = "9999"),
+                )
             )
 
-        val swap = BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Swap
-
-        assertEquals("USDC", swap.fromCoin.ticker)
-        assertEquals("BONK", swap.toCoin.ticker)
-        assertEquals(BigInteger("2000000"), swap.fromAmount)
-        assertEquals(BigInteger("9999"), swap.toAmount)
+        assertNull(BlockaidSimulationParser.parseSolana(response))
     }
 
     @Test
@@ -1059,6 +987,322 @@ internal class BlockaidSimulationParserTest {
         assertEquals(BigInteger("150000000"), transfer.fromAmount)
     }
 
+    // ---------- Solana per-mint netting ------------------------------------
+
+    @Test
+    fun `solana live capture of a dApp-relayed SOL send is a transfer of exactly the transferred lamports`() {
+        // Verbatim `result` of a mainnet `/solana/message/scan` for a 0.001 SOL transfer whose fee
+        // payer was the scanned account (priority fee 0.000105 SOL). Blockaid reports the transfer
+        // only: the fee is neither a separate row nor folded into the SOL row, so nothing about a
+        // native-SOL row identifies it as gas.
+        val response =
+            solanaResponse(
+                """{
+                    "encoding": "base58",
+                    "status": "SUCCESS",
+                    "result": {
+                      "simulation": {
+                        "account_summary": {
+                          "account_assets_diff": [
+                            {
+                              "asset": {
+                                "type": "SOL",
+                                "name": "SOL",
+                                "symbol": "SOL",
+                                "decimals": 9,
+                                "logo": "https://dm8wquhbuh2eq.cloudfront.net/chain/solana-mainnet/sec/fce48409"
+                              },
+                              "in": null,
+                              "out": {
+                                "usd_price": 0.11,
+                                "summary": "Lost approximately 0.11$",
+                                "value": 0.001,
+                                "raw_value": 1000000
+                              },
+                              "asset_type": "SOL"
+                            }
+                          ],
+                          "account_delegations": [],
+                          "account_ownerships_diff": [],
+                          "total_usd_diff": { "in": 0.0, "out": 0.11, "total": -0.11 }
+                        },
+                        "transaction_actions": ["native_transfer"]
+                      },
+                      "validation": { "result_type": "Benign", "reason": "", "features": [] }
+                    }
+                  }
+                """
+                    .trimIndent()
+            )
+
+        val transfer =
+            BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Transfer
+
+        assertEquals("SOL", transfer.fromCoin.ticker)
+        assertEquals(WSOL_MINT, transfer.fromCoin.address)
+        assertEquals("", transfer.fromCoin.logo)
+        assertEquals(BigInteger("1000000"), transfer.fromAmount)
+    }
+
+    @Test
+    fun `solana reversed-send counterexample declines in every order and with either native marker`() {
+        // Principal SOL out, wSOL rent residual in, USDC out in the same direction. Dropping the
+        // SOL
+        // row as a presumed fee would leave "USDC -> WSOL" — a swap that shows SOL being received
+        // on
+        // a transaction that nets to SOL spent. Two mints are net-negative, so the parser declines.
+        for (markerOnDiff in listOf(false, true)) {
+            val diffs =
+                listOf(
+                    nativeSolDiff(outRaw = "1000000000", markerOnDiff = markerOnDiff),
+                    tokenDiff(WSOL_MINT, "WSOL", 9, inRaw = "2039280"),
+                    tokenDiff(USDC_MINT, "USDC", 6, outRaw = "1000000"),
+                )
+            for (ordered in permutations(diffs)) {
+                assertNull(
+                    BlockaidSimulationParser.parseSolana(solanaDiffs(ordered)),
+                    ordered.toString(),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `solana reversed-receive counterexample declines in every order and with either native marker`() {
+        // Mirror image: principal SOL in, wSOL residual out, USDC also in. Dropping the SOL row
+        // would leave a one-way WSOL residual transfer on a net-receive transaction. Netted,
+        // nothing
+        // is spent and two mints are received — the hero has no honest single headline.
+        for (markerOnDiff in listOf(false, true)) {
+            val diffs =
+                listOf(
+                    nativeSolDiff(inRaw = "1000000000", markerOnDiff = markerOnDiff),
+                    tokenDiff(WSOL_MINT, "WSOL", 9, outRaw = "2039280"),
+                    tokenDiff(USDC_MINT, "USDC", 6, inRaw = "1000000"),
+                )
+            for (ordered in permutations(diffs)) {
+                assertNull(
+                    BlockaidSimulationParser.parseSolana(solanaDiffs(ordered)),
+                    ordered.toString(),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `solana withdrawal keeps the principal SOL receive in every order and with either native marker`() {
+        // Principal SOL in, wSOL residual out, USDC out: the user pays USDC and nets SOL. The
+        // native row's metadata must win over the wrapped row's for the SOL side so the hero reads
+        // "SOL" with the chain logo.
+        for (markerOnDiff in listOf(false, true)) {
+            val diffs =
+                listOf(
+                    nativeSolDiff(inRaw = "1000000000", markerOnDiff = markerOnDiff),
+                    tokenDiff(WSOL_MINT, "WSOL", 9, outRaw = "2039280"),
+                    tokenDiff(USDC_MINT, "USDC", 6, outRaw = "1000000"),
+                )
+            for (ordered in permutations(diffs)) {
+                val swap =
+                    assertInstanceOf(
+                        BlockaidSimulationInfo.Swap::class.java,
+                        BlockaidSimulationParser.parseSolana(solanaDiffs(ordered)),
+                        ordered.toString(),
+                    )
+                assertEquals("USDC", swap.fromCoin.ticker, ordered.toString())
+                assertEquals(BigInteger("1000000"), swap.fromAmount, ordered.toString())
+                assertEquals("SOL", swap.toCoin.ticker, ordered.toString())
+                assertEquals(WSOL_MINT, swap.toCoin.address, ordered.toString())
+                assertEquals("", swap.toCoin.logo, ordered.toString())
+                assertEquals(BigInteger("997960720"), swap.toAmount, ordered.toString())
+            }
+        }
+    }
+
+    @Test
+    fun `solana deposit keeps the principal SOL spend in every order and with either native marker`() {
+        // Principal SOL out, wSOL residual in, USDC in: the user pays SOL and nets USDC.
+        for (markerOnDiff in listOf(false, true)) {
+            val diffs =
+                listOf(
+                    nativeSolDiff(outRaw = "1000000000", markerOnDiff = markerOnDiff),
+                    tokenDiff(WSOL_MINT, "WSOL", 9, inRaw = "2039280"),
+                    tokenDiff(USDC_MINT, "USDC", 6, inRaw = "1000000"),
+                )
+            for (ordered in permutations(diffs)) {
+                val swap =
+                    assertInstanceOf(
+                        BlockaidSimulationInfo.Swap::class.java,
+                        BlockaidSimulationParser.parseSolana(solanaDiffs(ordered)),
+                        ordered.toString(),
+                    )
+                assertEquals("SOL", swap.fromCoin.ticker, ordered.toString())
+                assertEquals(BigInteger("997960720"), swap.fromAmount, ordered.toString())
+                assertEquals("USDC", swap.toCoin.ticker, ordered.toString())
+                assertEquals(BigInteger("1000000"), swap.toAmount, ordered.toString())
+            }
+        }
+    }
+
+    @Test
+    fun `solana small native SOL spend next to a token swap is never dropped as a fee`() {
+        // From one lamport up to 0.01 SOL: no magnitude is evidence that the SOL row is gas rather
+        // than a small principal send batched with the swap, so every size declines.
+        for (raw in listOf("1", "5000", "100000", "10000000")) {
+            val diffs =
+                listOf(
+                    nativeSolDiff(outRaw = raw),
+                    tokenDiff(USDC_MINT, "USDC", 6, outRaw = "1000000"),
+                    tokenDiff("AnotherMint", "BONK", 5, inRaw = "2000000"),
+                )
+            for (ordered in permutations(diffs)) {
+                assertNull(
+                    BlockaidSimulationParser.parseSolana(solanaDiffs(ordered)),
+                    ordered.toString(),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `solana same-mint fee row nets into the SOL leg in every order`() {
+        // A fee-sized native SOL row next to a real native SOL out-leg is the same mint, so it is
+        // added to the spend rather than dropped — the user's net SOL outflow includes the fee.
+        val diffs =
+            listOf(
+                nativeSolDiff(outRaw = "5000"),
+                nativeSolDiff(outRaw = "1000000000"),
+                tokenDiff(USDC_MINT, "USDC", 6, inRaw = "150000000"),
+            )
+
+        for (ordered in permutations(diffs)) {
+            val swap =
+                assertInstanceOf(
+                    BlockaidSimulationInfo.Swap::class.java,
+                    BlockaidSimulationParser.parseSolana(solanaDiffs(ordered)),
+                    ordered.toString(),
+                )
+            assertEquals("SOL", swap.fromCoin.ticker, ordered.toString())
+            assertEquals(BigInteger("1000005000"), swap.fromAmount, ordered.toString())
+            assertEquals("USDC", swap.toCoin.ticker, ordered.toString())
+            assertEquals(BigInteger("150000000"), swap.toAmount, ordered.toString())
+        }
+    }
+
+    @Test
+    fun `solana native row metadata wins over the wrapped row for the displayed side`() {
+        // WSOL out first, native SOL out second: same bucket, but the hero should read "SOL" with
+        // the chain-native logo rather than Blockaid's WSOL symbol and per-request logo URL.
+        val response =
+            solanaDiffs(
+                listOf(
+                    tokenDiff(
+                        WSOL_MINT,
+                        "WSOL",
+                        9,
+                        outRaw = "1000000000",
+                        logo = "https://cdn/wsol.png",
+                    ),
+                    nativeSolDiff(outRaw = "5000"),
+                )
+            )
+
+        val transfer =
+            BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Transfer
+
+        assertEquals("SOL", transfer.fromCoin.ticker)
+        assertEquals("", transfer.fromCoin.logo)
+        assertEquals(BigInteger("1000005000"), transfer.fromAmount)
+    }
+
+    @Test
+    fun `solana single incoming diff returns null`() {
+        val response = solanaDiffs(listOf(tokenDiff(USDC_MINT, "USDC", 6, inRaw = "1000000")))
+
+        assertNull(BlockaidSimulationParser.parseSolana(response))
+    }
+
+    @Test
+    fun `solana net-zero wrap returns null`() {
+        // SOL out and WSOL in for the same amount is a wrap with no economic movement.
+        val response =
+            solanaDiffs(
+                listOf(
+                    nativeSolDiff(outRaw = "1000000000"),
+                    tokenDiff(WSOL_MINT, "WSOL", 9, inRaw = "1000000000"),
+                )
+            )
+
+        assertNull(BlockaidSimulationParser.parseSolana(response))
+    }
+
+    @Test
+    fun `solana zero-value rows are ignored`() {
+        val response =
+            solanaDiffs(
+                listOf(
+                    tokenDiff(USDC_MINT, "USDC", 6, outRaw = "0"),
+                    nativeSolDiff(outRaw = "1000000000"),
+                )
+            )
+
+        val transfer =
+            BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Transfer
+
+        assertEquals("SOL", transfer.fromCoin.ticker)
+        assertEquals(BigInteger("1000000000"), transfer.fromAmount)
+    }
+
+    @Test
+    fun `solana malformed leg fails closed instead of netting a partial total`() {
+        // A present leg that does not decode to a non-negative magnitude poisons the whole result:
+        // netting around it would present a partial total as authoritative.
+        val malformedLegs =
+            listOf(
+                """"out": { "raw_value": "not-a-number" }""",
+                """"out": { "raw_value": "-5000" }""",
+                """"out": { }""",
+                """"in": { "raw_value": null }""",
+            )
+
+        for (leg in malformedLegs) {
+            val response =
+                solanaDiffs(
+                    listOf(
+                        nativeSolDiff(outRaw = "1000000000"),
+                        """{ "asset": { "type": "TOKEN", "address": "$USDC_MINT", "symbol": "USDC", "decimals": 6 }, $leg }""",
+                    )
+                )
+
+            assertNull(BlockaidSimulationParser.parseSolana(response), leg)
+        }
+    }
+
+    @Test
+    fun `solana decimals disagreeing across rows of one mint fail closed`() {
+        val response =
+            solanaDiffs(
+                listOf(
+                    nativeSolDiff(outRaw = "1000000000"),
+                    tokenDiff(WSOL_MINT, "WSOL", 6, inRaw = "2039280"),
+                )
+            )
+
+        assertNull(BlockaidSimulationParser.parseSolana(response))
+    }
+
+    @Test
+    fun `solana unresolvable asset on a moving row fails closed`() {
+        val response =
+            solanaDiffs(
+                listOf(
+                    nativeSolDiff(outRaw = "1000000000"),
+                    """{ "asset": { "type": "TOKEN", "symbol": "???", "decimals": 6 }, "in": { "raw_value": "1" } }""",
+                )
+            )
+
+        assertNull(BlockaidSimulationParser.parseSolana(response))
+    }
+
     private fun evmTransferJson(
         symbol: String = "USDC",
         decimals: Int = 6,
@@ -1096,4 +1340,55 @@ internal class BlockaidSimulationParserTest {
 
     private fun solanaResponse(jsonString: String): BlockaidSolanaSimulationResponseJson =
         json.decodeFromString(BlockaidSolanaSimulationResponseJson.serializer(), jsonString)
+
+    private fun solanaDiffs(diffs: List<String>): BlockaidSolanaSimulationResponseJson =
+        solanaResponse(
+            """{ "result": { "simulation": { "account_summary": { "account_assets_diff": [${diffs.joinToString(",")}] } } } }"""
+        )
+
+    /**
+     * Blockaid marks native SOL either on `asset.type` or on the diff-level `asset_type`;
+     * [markerOnDiff] picks the second form with `asset.type` deliberately disagreeing.
+     */
+    private fun nativeSolDiff(
+        inRaw: String? = null,
+        outRaw: String? = null,
+        markerOnDiff: Boolean = false,
+    ): String {
+        val assetType = if (markerOnDiff) "TOKEN" else "SOL"
+        val diffMarker = if (markerOnDiff) """, "asset_type": "SOL"""" else ""
+        return """{ "asset": { "type": "$assetType", "decimals": 9, "symbol": "SOL", "address": null }$diffMarker${legs(inRaw, outRaw)} }"""
+    }
+
+    private fun tokenDiff(
+        address: String,
+        symbol: String,
+        decimals: Int,
+        inRaw: String? = null,
+        outRaw: String? = null,
+        logo: String? = null,
+    ): String {
+        val logoField = logo?.let { """, "logo": "$it"""" } ?: ""
+        return """{ "asset": { "type": "TOKEN", "address": "$address", "symbol": "$symbol", "decimals": $decimals$logoField }${legs(inRaw, outRaw)} }"""
+    }
+
+    private fun legs(inRaw: String?, outRaw: String?): String = buildString {
+        if (inRaw != null) append(""", "in": { "raw_value": "$inRaw" }""")
+        if (outRaw != null) append(""", "out": { "raw_value": "$outRaw" }""")
+    }
+
+    private fun <T> permutations(items: List<T>): List<List<T>> =
+        if (items.size <= 1) {
+            listOf(items)
+        } else {
+            items.indices.flatMap { i ->
+                val rest = items.filterIndexed { j, _ -> j != i }
+                permutations(rest).map { listOf(items[i]) + it }
+            }
+        }
+
+    private companion object {
+        const val WSOL_MINT = "So11111111111111111111111111111111111111112"
+        const val USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    }
 }
