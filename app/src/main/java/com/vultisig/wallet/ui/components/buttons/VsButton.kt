@@ -5,24 +5,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
@@ -39,7 +32,6 @@ enum class VsButtonVariant {
     Primary,
     Secondary,
     Error,
-    CTA,
     Tertiary,
 }
 
@@ -62,38 +54,27 @@ fun VsButton(
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
     shape: Shape? = null,
-    isLoading: Boolean = false,
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     val backgroundColor by
         animateColorAsState(
             when (state) {
-                Enabled ->
+                Enabled,
+                Default ->
                     when (variant) {
-                        Primary -> colors.buttons.tertiary
+                        Primary -> colors.buttons.ctaPrimary
                         Secondary -> colors.backgrounds.tertiary_2
                         Error -> colors.alerts.error
-                        CTA -> colors.buttons.ctaPrimary
                         Tertiary -> colors.neutrals.n50
                     }
 
                 Disabled ->
                     when (variant) {
-                        Primary -> colors.buttons.disabled
-                        Secondary -> colors.buttons.ctaDisabled
+                        Primary,
+                        Secondary -> colors.buttons.disabled
                         Error -> colors.buttons.disabledError
-                        CTA -> colors.buttons.ctaDisabled
                         Tertiary -> colors.neutrals.n400
-                    }
-
-                Default ->
-                    when (variant) {
-                        Primary -> colors.buttons.tertiary
-                        Secondary -> colors.backgrounds.tertiary
-                        Error -> colors.alerts.error
-                        CTA -> colors.buttons.ctaPrimary
-                        Tertiary -> colors.neutrals.n50
                     }
             },
             label = "VsButton.backgroundColor",
@@ -101,44 +82,30 @@ fun VsButton(
 
     val borderColor by
         animateColorAsState(
-            when (state) {
-                Enabled ->
-                    when (variant) {
-                        Primary -> colors.buttons.tertiary
-                        Secondary -> colors.backgrounds.tertiary_2
-                        Error -> colors.alerts.error
-                        CTA -> colors.buttons.ctaPrimary
-                        Tertiary -> colors.neutrals.n50
-                    }
-
-                Disabled ->
-                    when (variant) {
-                        Primary -> colors.buttons.disabled
-                        Secondary -> colors.backgrounds.tertiary_2
-                        Error -> colors.buttons.disabledError
-                        CTA -> colors.buttons.ctaDisabled
-                        Tertiary -> colors.neutrals.n400
-                    }
-
-                Default ->
-                    when (variant) {
-                        Primary -> colors.buttons.tertiary
-                        Secondary -> colors.backgrounds.tertiary
-                        Error -> colors.alerts.error
-                        CTA -> colors.buttons.ctaPrimary
-                        Tertiary -> colors.neutrals.n50
-                    }
-            },
+            if (variant == Secondary && state != Disabled) colors.variables.bordersExtraLight
+            else Color.Transparent,
             label = "VsButton.borderColor",
         )
 
-    Box(
-        contentAlignment = Alignment.Center,
+    val bevel =
+        when (variant) {
+            Primary -> if (state == Disabled) ButtonBevel.Soft else ButtonBevel.Strong
+            Secondary -> ButtonBevel.Soft
+            Error,
+            Tertiary -> null
+        }
+
+    val resolvedShape = shape ?: Theme.v2.radius.pill
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         modifier =
             modifier
-                .background(color = backgroundColor, shape = shape ?: Theme.v2.radius.pill)
-                .border(width = 1.dp, color = borderColor, shape = shape ?: Theme.v2.radius.pill)
-                .clickable(enabled = state != Disabled && !isLoading, onClick = onClick)
+                .background(color = backgroundColor, shape = resolvedShape)
+                .border(width = 1.dp, color = borderColor, shape = resolvedShape)
+                .then(if (bevel != null) Modifier.bevel(resolvedShape, bevel) else Modifier)
+                .clickable(enabled = state != Disabled, onClick = onClick)
                 .then(
                     when (size) {
                         Medium -> Modifier.padding(vertical = 14.dp, horizontal = 24.dp)
@@ -149,49 +116,8 @@ fun VsButton(
                     }
                 ),
     ) {
-        // Keep the content composed and measured while loading so the button retains its
-        // natural size; hide it visually and overlay the loading indicator on top.
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            modifier = if (isLoading) Modifier.alpha(0f) else Modifier,
-        ) {
-            content()
-        }
-
-        if (isLoading) {
-            VsButtonLoadingIndicator(size = size)
-        }
+        content()
     }
-}
-
-/**
- * Looping Lottie loading indicator rendered inside a [VsButton] while an async action is in flight.
- *
- * @param size the button size, used to scale the indicator so the button keeps its normal height.
- */
-@Composable
-private fun VsButtonLoadingIndicator(size: VsButtonSize) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.button_loading))
-
-    val progress by
-        animateLottieCompositionAsState(
-            composition = composition,
-            iterations = LottieConstants.IterateForever,
-        )
-
-    val indicatorSize =
-        when (size) {
-            Medium -> 24.dp
-            Small,
-            Mini -> 20.dp
-        }
-
-    LottieAnimation(
-        composition = composition,
-        progress = { progress },
-        modifier = Modifier.size(indicatorSize),
-    )
 }
 
 @Composable
@@ -204,7 +130,6 @@ fun VsButton(
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
     shape: Shape? = null,
-    isLoading: Boolean = false,
     onClick: () -> Unit,
 ) {
     VsButton(
@@ -213,26 +138,16 @@ fun VsButton(
         state = state,
         size = size,
         shape = shape,
-        isLoading = isLoading,
         onClick = onClick,
     ) {
         val contentColor by
             animateColorAsState(
-                when {
-                    variant != Tertiary -> {
-                        when (state) {
-                            Enabled -> colors.text.button.primary
-                            Disabled -> colors.text.button.disabled
-                            Default -> colors.text.button.primary
-                        }
-                    }
-                    else -> {
-                        when (state) {
-                            Enabled -> colors.text.inverse
-                            Disabled -> colors.text.button.disabled
-                            Default -> colors.text.inverse
-                        }
-                    }
+                when (state) {
+                    Enabled,
+                    Default ->
+                        if (variant == Tertiary) colors.text.inverse else colors.text.button.primary
+
+                    Disabled -> colors.text.button.disabled
                 },
                 label = "VsButton.contentColor",
             )
@@ -338,17 +253,5 @@ private fun VsButtonPreview() {
         VsButton(label = "Tertiary Mini Small", variant = Tertiary, state = Disabled, onClick = {})
 
         VsButton(label = "Tertiary Mini Small", variant = Tertiary, state = Default, onClick = {})
-
-        VsButton(label = "CTA Enabled", variant = CTA, state = Enabled, onClick = {})
-
-        VsButton(label = "CTA Disabled", variant = CTA, state = Disabled, onClick = {})
-
-        VsButton(
-            label = "CTA Loading",
-            variant = CTA,
-            state = Enabled,
-            isLoading = true,
-            onClick = {},
-        )
     }
 }

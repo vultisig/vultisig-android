@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.defi.solana
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +32,7 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
+import com.vultisig.wallet.ui.screens.v2.defi.ActionButtonVariant
 import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
 import com.vultisig.wallet.ui.screens.v2.defi.InfoItem
 import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
@@ -345,25 +345,12 @@ private fun ApyRow(apyDisplay: String?, isLoading: Boolean) {
 private fun VaultActions(hasPosition: Boolean, onDeposit: () -> Unit, onWithdraw: () -> Unit) {
     // Withdraw only appears once there is something to withdraw; an untouched vault offers the one
     // action that makes sense, across the full width.
-    // Both buttons are the design system's DeFi Button, taken from its two Figma variants rather
-    // than styled here: Withdraw is `backgrounds/surface-2` #11284A with a 1dp
-    // `borders/extra-light`
-    // edge, Deposit is `buttons/cta-(primary)` #0B4EFF with a 1dp `primary/accent-3` edge, and both
-    // carry a filled glyph in a white-12% circle. The previous values were why Withdraw had no
-    // visible pill: `backgrounds.tertiary` (#0B1A3A) on a card painted `backgrounds.secondary`
-    // (#061B3A) is a difference the eye cannot find, and the icon's circle was the card colour
-    // exactly.
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         if (hasPosition) {
             ActionButton(
                 title = stringResource(R.string.withdraw),
                 icon = R.drawable.circle_minus_filled,
-                background = Theme.v2.colors.backgrounds.tertiary_2,
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.03f)),
-                contentColor = Theme.v2.colors.text.primary,
-                iconCircleColor = Color.White.copy(alpha = 0.12f),
-                iconCircleSize = 34.dp,
-                iconSize = 16.dp,
+                variant = ActionButtonVariant.Secondary,
                 modifier = Modifier.weight(1f),
                 onClick = onWithdraw,
             )
@@ -372,12 +359,7 @@ private fun VaultActions(hasPosition: Boolean, onDeposit: () -> Unit, onWithdraw
         ActionButton(
             title = stringResource(R.string.kamino_earn_deposit),
             icon = R.drawable.circle_plus_filled,
-            background = Theme.v2.colors.buttons.ctaPrimary,
-            border = BorderStroke(1.dp, Theme.v2.colors.primary.accent3),
-            contentColor = Theme.v2.colors.text.primary,
-            iconCircleColor = Color.White.copy(alpha = 0.12f),
-            iconCircleSize = 34.dp,
-            iconSize = 16.dp,
+            variant = ActionButtonVariant.Primary,
             modifier = Modifier.weight(1f),
             onClick = onDeposit,
         )

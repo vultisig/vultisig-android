@@ -485,6 +485,7 @@ class PreviewActivity : ComponentActivity() {
                     "swaps_tab" -> SwapsTabPreview()
                     "limit_order_cancel_verify" -> LimitOrderCancelVerifyPreview()
                     "withdraw_usdc_circle" -> WithdrawUsdcCirclePreview()
+                    "send_form_amount_loading" -> SendFormAmountLoadingPreview()
                     "send_form_address" -> SendFormAddressPreview()
                     "limit_order_cancel_done" -> LimitOrderCancelDonePreview()
                     "limit_orders_tab_empty" -> LimitOrdersTabPreview(orders = emptyList())
@@ -3626,7 +3627,6 @@ private fun CosmosStakingVerifyCtaPreview(newButtons: Boolean, qbtc: Boolean = f
         } else {
             VsButton(
                 label = stringResource(R.string.cosmos_staking_verify_sign),
-                variant = VsButtonVariant.CTA,
                 onClick = {},
                 modifier = ctaModifier,
             )
@@ -4082,7 +4082,6 @@ private fun LimitSwapFormPreview(expandedSection: LimitFormSection = LimitFormSe
         Spacer(Modifier.weight(1f))
         VsButton(
             label = stringResource(R.string.limit_swap_place_order),
-            variant = VsButtonVariant.CTA,
             onClick = {},
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
         )
@@ -4509,6 +4508,64 @@ private fun LimitOrderCancelDonePreview() {
     )
 }
 
+/** A plain DASH send with 75% just tapped and the amount still being computed. */
+@Composable
+private fun SendFormAmountLoadingPreview() {
+    val dash = Coins.Dash.DASH
+    val account = Account(token = dash, tokenValue = null, fiatValue = null, price = null)
+    SendFormScreen(
+        state =
+            SendFormUiModel(
+                fiatCurrency = "USD",
+                selectedCoin =
+                    TokenBalanceUiModel(
+                        model =
+                            SendSrc(
+                                address =
+                                    Address(
+                                        chain = Chain.Dash,
+                                        address = "XdN9i1nCqzUcXn1n2pQqCkrwiKRv5vJv4z",
+                                        accounts = listOf(account),
+                                    ),
+                                account = account,
+                            ),
+                        title = "DASH",
+                        balance = "12.4801",
+                        fiatValue = "$318.42",
+                        isNativeToken = true,
+                        isLayer2 = false,
+                        tokenStandard = null,
+                        tokenLogo = dash.logo,
+                        chainLogo = Chain.Dash.logo,
+                    ),
+                expandedSection = SendSections.Amount,
+                showGasFee = true,
+                totalGas = UiText.DynamicString("0.0000247 DASH"),
+                estimatedFee = UiText.DynamicString("$0.01"),
+                selectedAmountFraction = AmountFraction.F75,
+                isAmountSelectionLoading = true,
+            ),
+        addressFieldState = rememberTextFieldState("XoAf3bUbwr9d3jd6JcNtsaMgQiJgZKvv1u"),
+        addressFocusRequester = remember { FocusRequester() },
+        amountFocusRequester = remember { FocusRequester() },
+        tokenAmountFieldState = rememberTextFieldState("9.36"),
+        fiatAmountFieldState = rememberTextFieldState(),
+        memoFieldState = rememberTextFieldState(),
+        destinationTagFieldState = rememberTextFieldState(),
+        onNetworkDragStart = {},
+        onNetworkDrag = {},
+        onNetworkDragEnd = {},
+        onNetworkDragCancel = {},
+        onNetworkLongPressStarted = {},
+        onAssetDragStart = {},
+        onAssetDrag = {},
+        onAssetDragEnd = {},
+        onAssetDragCancel = {},
+        onAssetLongPressStarted = {},
+        slippageFieldState = rememberTextFieldState(),
+    )
+}
+
 /** A plain DASH send with the Address section open and nothing entered yet. */
 @Composable
 private fun SendFormAddressPreview() {
@@ -4596,7 +4653,6 @@ private fun WithdrawUsdcCirclePreview() {
                         chainLogo = Chain.Ethereum.logo,
                     ),
                 selectedAmountFraction = AmountFraction.F50,
-                hasAmountInput = true,
                 isGasFeeLoading = true,
             ),
         addressFieldState = rememberTextFieldState(),

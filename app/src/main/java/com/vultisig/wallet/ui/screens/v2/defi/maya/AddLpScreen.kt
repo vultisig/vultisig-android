@@ -38,7 +38,6 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
@@ -255,9 +254,7 @@ private fun AddLpContent(
 
         VsButton(
             label = stringResource(R.string.send_continue_button),
-            variant = VsButtonVariant.CTA,
             state = if (isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
-            isLoading = isLoading,
             onClick = onDeposit,
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
         )

@@ -84,10 +84,6 @@ internal data class SendFormUiModel(
     // Whether the entered token amount is present and valid. Used to gate Continue on the TRON
     // freeze/unfreeze screens, where the network fee is amount-independent and resolves on entry.
     val isAmountValid: Boolean = false,
-    // Whether the amount field holds any text. Separates a fee estimate that is genuinely in
-    // flight from the pre-entry state, where isGasFeeLoading still sits at its initial true and
-    // no estimate has been armed yet.
-    val hasAmountInput: Boolean = false,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isAmountSelectionLoading: Boolean = false,
@@ -150,24 +146,6 @@ internal fun SendFormUiModel.isContinueDisabled(): Boolean =
         isMemoBlocking ||
         (showGasFee && isGasFeeLoading) ||
         (tronResourceType != null && (!isAmountValid || isTronFrozenBalancesLoading))
-
-/**
- * Whether Continue is disabled because work is in flight rather than because the form holds
- * something the user has to fix — the button then shows its loading indicator instead of greying
- * out with no stated reason.
- *
- * Covers the submit itself, the percentage/MAX calculation, and the fee recompute that selection
- * triggers: tapping a percentage is the case the user actually waits on, and on the flows that hide
- * the fee row (Circle withdraw) the shimmering fee is not even on screen to explain the wait.
- *
- * The fee window is additionally gated on [hasAmountInput]: [isGasFeeLoading] also holds its
- * initial true before any amount exists, and no estimate is armed there — nothing is loading, so
- * Continue stays plainly disabled until the user enters an amount.
- *
- * @return true when Continue should render as loading.
- */
-internal fun SendFormUiModel.isContinueLoading(): Boolean =
-    isLoading || isAmountSelectionLoading || (hasAmountInput && showGasFee && isGasFeeLoading)
 
 /**
  * Validates a memo against the chain's published ceiling ([Chain.maxMemoCharacters]).

@@ -225,7 +225,6 @@ private fun ActiveChainsContent(
 
         VsButton(
             label = stringResource(R.string.key_import_chains_continue),
-            variant = VsButtonVariant.CTA,
             onClick = onContinue,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -331,7 +330,6 @@ private fun CustomizeChainsContent(
         VsButton(
             label = stringResource(R.string.key_import_chains_get_started),
             onClick = onContinue,
-            variant = VsButtonVariant.CTA,
             state = if (selectedCount > 0) VsButtonState.Enabled else VsButtonState.Disabled,
             modifier = Modifier.fillMaxWidth(),
         )

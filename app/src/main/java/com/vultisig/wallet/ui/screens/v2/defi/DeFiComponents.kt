@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,8 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,17 +28,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -52,8 +48,10 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.ButtonBevel
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.buttons.bevel
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
@@ -218,101 +216,83 @@ fun InfoItem(
     }
 }
 
+/** The two looks of the design's DeFi Button: the CTA fill and the surface fill with a border. */
+enum class ActionButtonVariant {
+    Primary,
+    Secondary,
+}
+
+private val ActionButtonIconCircleColor = Color.White.copy(alpha = 0.12f)
+
 @Composable
 fun ActionButton(
     title: String,
     icon: Int?,
-    background: Color,
+    variant: ActionButtonVariant,
     modifier: Modifier = Modifier,
-    border: BorderStroke? = null,
-    contentColor: Color,
-    iconCircleColor: Color,
     enabled: Boolean = true,
-    // The DeFi Button component measures these at 34dp and 16dp, which is what the Kamino cards
-    // pass. The defaults are the sizes every other caller was already drawing, left alone
-    // deliberately rather than corrected in passing: they reach screens this change has no business
-    // touching.
-    iconCircleSize: Dp = 30.dp,
-    iconSize: Dp = 12.dp,
     onClick: () -> Unit,
 ) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = background,
-                contentColor = contentColor,
-                disabledContainerColor = background.copy(alpha = 0.5f),
-                disabledContentColor = contentColor.copy(alpha = 0.5f),
-            ),
-        border =
-            if (enabled) {
-                border
-            } else {
-                border?.let {
-                    BorderStroke(
-                        width = it.width,
-                        color =
-                            when (val brush = it.brush) {
-                                is SolidColor -> brush.value.copy(alpha = 0.5f)
-                                else ->
-                                    Color.Gray.copy(alpha = 0.5f) // fallback for gradient brushes
-                            },
-                    )
-                }
-            },
-        shape = Theme.v2.radius.pill,
-        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
-        modifier = modifier.height(42.dp),
+    val shape = Theme.v2.radius.pill
+    val background: Color
+    val border: Color
+    val bevel: ButtonBevel
+    when (variant) {
+        ActionButtonVariant.Primary -> {
+            background = Theme.v2.colors.buttons.ctaPrimary
+            border = Theme.v2.colors.primary.accent3
+            bevel = ButtonBevel.Strong
+        }
+        ActionButtonVariant.Secondary -> {
+            background = Theme.v2.colors.backgrounds.tertiary_2
+            border = Theme.v2.colors.variables.bordersExtraLight
+            bevel = ButtonBevel.Soft
+        }
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier =
+            modifier
+                .height(42.dp)
+                .alpha(if (enabled) 1f else 0.5f)
+                .background(background, shape)
+                .border(width = 1.dp, color = border, shape = shape)
+                .bevel(shape, bevel)
+                .clickable(enabled = enabled, onClick = onClick)
+                .padding(start = if (icon != null) 4.dp else 16.dp, end = 16.dp),
     ) {
-        // Figma docks the icon to the button's leading edge while the label stays centered across
-        // the full width, so the icon is absolutely positioned and the text is centered on top.
-        Box(modifier = Modifier.fillMaxWidth()) {
-            if (icon != null) {
-                Box(
-                    modifier =
-                        Modifier.align(Alignment.CenterStart)
-                            .size(iconCircleSize)
-                            .background(
-                                if (enabled) iconCircleColor
-                                else iconCircleColor.copy(alpha = 0.5f),
-                                Theme.v2.radius.pill,
-                            ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(id = icon),
-                        contentDescription = null,
-                        modifier = Modifier.size(iconSize),
-                        tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
-                    )
-                }
+        if (icon != null) {
+            Box(
+                modifier = Modifier.size(34.dp).background(ActionButtonIconCircleColor, shape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = Theme.v2.colors.text.primary,
+                )
             }
 
-            Text(
-                text = title,
-                style = Theme.brockmann.button.medium.medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                // Three equal-weight buttons leave each label a narrow lane, so a longer word (e.g.
-                // "Unstake", or a translated label) would ellipsize at the base 14sp. Shrink the
-                // font
-                // to fit down to 10sp before ellipsizing; labels that already fit stay at 14sp.
-                autoSize =
-                    TextAutoSize.StepBased(
-                        minFontSize = 10.sp,
-                        maxFontSize = 14.sp,
-                        stepSize = 0.5.sp,
-                    ),
-                // Reserve the icon lane symmetrically so a long (translated) label can never paint
-                // over the docked icon, while keeping the label centered on the button's true
-                // center.
-                modifier =
-                    Modifier.align(Alignment.Center)
-                        .padding(horizontal = if (icon != null) 30.dp else 0.dp),
-            )
+            UiSpacer(5.dp)
         }
+
+        // Figma centers the label in the lane left beside the icon, not across the whole button.
+        Text(
+            text = title,
+            style = Theme.brockmann.button.semibold.medium,
+            color = Theme.v2.colors.text.primary,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            // Three equal-weight buttons leave each label a narrow lane, so a longer word (e.g.
+            // "Unstake", or a translated label) would ellipsize at the base 14sp. Shrink the font
+            // to fit down to 10sp before ellipsizing; labels that already fit stay at 14sp.
+            autoSize =
+                TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 14.sp, stepSize = 0.5.sp),
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -792,10 +772,7 @@ internal fun HeaderDeFiWidget(
             ActionButton(
                 title = buttonFirstActionText,
                 icon = R.drawable.circle_minus,
-                background = Theme.v2.colors.backgrounds.tertiary_2,
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.03f)),
-                contentColor = Theme.v2.colors.text.primary,
-                iconCircleColor = Color.White.copy(alpha = 0.12f),
+                variant = ActionButtonVariant.Secondary,
                 modifier = Modifier.weight(1f),
                 onClick = onClickFirstAction,
             )
@@ -803,10 +780,7 @@ internal fun HeaderDeFiWidget(
             ActionButton(
                 title = buttonSecondActionText,
                 icon = null,
-                background = Theme.v2.colors.buttons.ctaPrimary,
-                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent3),
-                contentColor = Theme.v2.colors.text.primary,
-                iconCircleColor = Color.White.copy(alpha = 0.12f),
+                variant = ActionButtonVariant.Primary,
                 modifier = Modifier.weight(1f),
                 enabled = isSecondActionEnabled,
                 onClick = onClickSecondAction,
@@ -892,9 +866,7 @@ private fun ActionButtonBondEnabledPreview() {
         ActionButton(
             title = "Bond",
             icon = R.drawable.circle_plus,
-            background = Theme.v2.colors.buttons.tertiary,
-            contentColor = Theme.v2.colors.text.primary,
-            iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+            variant = ActionButtonVariant.Primary,
             enabled = true,
             onClick = {},
         )
@@ -908,9 +880,7 @@ private fun ActionButtonBondDisabledPreview() {
         ActionButton(
             title = "Bond",
             icon = R.drawable.circle_plus,
-            background = Theme.v2.colors.buttons.tertiary,
-            contentColor = Theme.v2.colors.text.primary,
-            iconCircleColor = Theme.v2.colors.text.primary,
+            variant = ActionButtonVariant.Primary,
             enabled = false,
             onClick = {},
         )
@@ -924,10 +894,7 @@ private fun ActionButtonUnbondPreview() {
         ActionButton(
             title = "Unbond",
             icon = R.drawable.circle_minus,
-            background = Color.Transparent,
-            border = BorderStroke(1.dp, Theme.v2.colors.buttons.tertiary),
-            contentColor = Theme.v2.colors.buttons.tertiary,
-            iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+            variant = ActionButtonVariant.Secondary,
             onClick = {},
         )
     }
@@ -944,19 +911,14 @@ private fun ActionButtonsRowPreview() {
             ActionButton(
                 title = "Bond",
                 icon = R.drawable.circle_plus,
-                background = Theme.v2.colors.buttons.tertiary,
-                contentColor = Theme.v2.colors.text.primary,
-                iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                variant = ActionButtonVariant.Primary,
                 modifier = Modifier.weight(1f),
                 onClick = {},
             )
             ActionButton(
                 title = "Unbond",
                 icon = R.drawable.circle_minus,
-                background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.v2.colors.buttons.tertiary),
-                contentColor = Theme.v2.colors.buttons.tertiary,
-                iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                variant = ActionButtonVariant.Secondary,
                 modifier = Modifier.weight(1f),
                 onClick = {},
             )
@@ -1020,19 +982,14 @@ private fun CompleteNodeCardMockPreview() {
                 ActionButton(
                     title = "Bond",
                     icon = R.drawable.circle_plus,
-                    background = Theme.v2.colors.buttons.tertiary,
-                    contentColor = Theme.v2.colors.text.primary,
-                    iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                    variant = ActionButtonVariant.Primary,
                     modifier = Modifier.weight(1f),
                     onClick = {},
                 )
                 ActionButton(
                     title = "Unbond",
                     icon = R.drawable.circle_minus,
-                    background = Color.Transparent,
-                    border = BorderStroke(1.dp, Theme.v2.colors.buttons.tertiary),
-                    contentColor = Theme.v2.colors.buttons.tertiary,
-                    iconCircleColor = Theme.v2.colors.buttons.tertiary.copy(alpha = 0.1f),
+                    variant = ActionButtonVariant.Secondary,
                     modifier = Modifier.weight(1f),
                     onClick = {},
                 )

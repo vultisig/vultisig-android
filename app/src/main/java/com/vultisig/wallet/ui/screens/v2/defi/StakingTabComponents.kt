@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -271,13 +269,10 @@ internal fun StakingWidget(
                             else R.string.defi_action_redeem
                         ),
                     icon = R.drawable.ic_circle_minus,
-                    background = Color.Transparent,
-                    border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                    contentColor = Theme.v2.colors.text.primary,
+                    variant = ActionButtonVariant.Secondary,
                     onClick = { onClickUnstake(state.coin.getUnstakeDeFiNavAction()) },
                     modifier = Modifier.weight(1f),
                     enabled = state.canUnstake,
-                    iconCircleColor = Theme.v2.colors.text.tertiary,
                 )
             }
 
@@ -288,12 +283,10 @@ internal fun StakingWidget(
                         else R.string.defi_action_mint
                     ),
                 icon = R.drawable.ic_circle_plus,
-                background = Theme.v2.colors.primary.accent3,
-                contentColor = Theme.v2.colors.text.primary,
+                variant = ActionButtonVariant.Primary,
                 onClick = { onClickStake(state.coin.getStakeDeFiNavAction()) },
                 modifier = Modifier.weight(1f),
                 enabled = state.canStake,
-                iconCircleColor = Theme.v2.colors.primary.accent4,
             )
         }
     }

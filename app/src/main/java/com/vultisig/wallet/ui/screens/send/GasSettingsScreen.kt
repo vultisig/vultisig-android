@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.send.GasSettings
@@ -137,7 +138,7 @@ internal fun GasSettingsScreen(
             // Blocks saving while the eth_gasPrice/base fee fetch is in flight, and keeps
             // blocking on failure too — the fields stay blank either way, and blank would
             // otherwise save as a zero fee (issue #5397).
-            isLoading = state.isLoadingEthFee,
+            state = if (state.isLoadingEthFee) VsButtonState.Disabled else VsButtonState.Enabled,
             modifier = Modifier.fillMaxWidth(),
         )
     }
