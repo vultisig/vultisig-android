@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.defi.solana
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,6 +52,7 @@ import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsUiState
 import com.vultisig.wallet.ui.models.solanastaking.SolanaStakingPositionsViewModel
 import com.vultisig.wallet.ui.screens.cosmosstaking.ValidatorAvatar
 import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
+import com.vultisig.wallet.ui.screens.v2.defi.ActionButtonVariant
 import com.vultisig.wallet.ui.screens.v2.defi.ApyInfoItem
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
@@ -437,23 +437,18 @@ private fun StakeAccountContent(
                     ActionButton(
                         title = stringResource(R.string.solana_staking_withdraw_cta),
                         icon = R.drawable.ic_circle_plus,
-                        background = Color.Transparent,
-                        border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                        contentColor = Theme.v2.colors.text.primary,
+                        variant = ActionButtonVariant.Secondary,
                         onClick = onWithdraw,
                         modifier = Modifier.weight(1f),
-                        iconCircleColor = Theme.v2.colors.text.tertiary,
                     )
                     // A cooled-down account can also finish a move — re-delegate it to a new
                     // validator.
                     ActionButton(
                         title = stringResource(R.string.solana_finish_move_cta),
                         icon = R.drawable.ic_arrow_bottom_top,
-                        background = Theme.v2.colors.primary.accent3,
-                        contentColor = Theme.v2.colors.text.primary,
+                        variant = ActionButtonVariant.Primary,
                         onClick = onFinishMove,
                         modifier = Modifier.weight(1f),
-                        iconCircleColor = Theme.v2.colors.primary.accent4,
                     )
                 }
                 if (row.canManage) {
@@ -463,32 +458,24 @@ private fun StakeAccountContent(
                         ActionButton(
                             title = stringResource(R.string.solana_staking_unstake_cta),
                             icon = R.drawable.ic_circle_minus,
-                            background = Color.Transparent,
-                            border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                            contentColor = Theme.v2.colors.text.primary,
+                            variant = ActionButtonVariant.Secondary,
                             onClick = onDeactivate,
                             modifier = Modifier.weight(1f),
-                            iconCircleColor = Theme.v2.colors.text.tertiary,
                         )
                     }
                     ActionButton(
                         title = stringResource(R.string.solana_staking_move_cta),
                         icon = R.drawable.ic_arrow_bottom_top,
-                        background = Color.Transparent,
-                        border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                        contentColor = Theme.v2.colors.text.primary,
+                        variant = ActionButtonVariant.Secondary,
                         onClick = onMove,
                         modifier = Modifier.weight(1f),
-                        iconCircleColor = Theme.v2.colors.text.tertiary,
                     )
                     ActionButton(
                         title = stringResource(R.string.solana_staking_stake_cta),
                         icon = R.drawable.ic_circle_plus,
-                        background = Theme.v2.colors.primary.accent3,
-                        contentColor = Theme.v2.colors.text.primary,
+                        variant = ActionButtonVariant.Primary,
                         onClick = onStake,
                         modifier = Modifier.weight(1f),
-                        iconCircleColor = Theme.v2.colors.primary.accent4,
                     )
                 }
             }
