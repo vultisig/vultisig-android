@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.cardanoAssetId
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.parseCardanoAssetId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
@@ -22,6 +23,7 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.proto.v1.ThorChainSwapPayloadProto
+import com.vultisig.wallet.data.models.swapProviderFromWireId
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -104,7 +106,11 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                                     },
                                             )
                                         },
-                                    provider = it.provider,
+                                    // Wire carries the lowercase canonical id; the domain
+                                    // model and its consumers key off the display id.
+                                    provider =
+                                        swapProviderFromWireId(it.provider)?.getSwapProviderId()
+                                            ?: it.provider,
                                 )
                             )
                         }
