@@ -95,12 +95,6 @@ internal sealed interface TonDeFiUiState {
         val liquidData: TonLiquidStakingUiModel = TonLiquidStakingUiModel(),
         /** Both cards' fiat values summed for the banner. */
         val totalAmountPrice: String = tonData.totalAmountPrice,
-        /**
-         * A reload is in flight. Mirrors [isActionLocked]'s `loadJob` guard so the card's
-         * Stake/Unstake buttons disable in lockstep — otherwise a resume-triggered refresh would
-         * leave them Enabled over a stale snapshot while a tap silently no-ops.
-         */
-        val isReloading: Boolean = false,
         val isBalanceVisible: Boolean = true,
         val selectedTab: DeFiTab = DeFiTab.STAKED,
         val showPositionSelectionDialog: Boolean = false,
@@ -181,7 +175,6 @@ constructor(
         cachedStakedDisplay = cached.stakedDisplay
         state.value =
             cached.state.copy(
-                isReloading = false,
                 showPositionSelectionDialog = false,
                 tempSelectedPositions = cached.state.selectedPositions,
             )
@@ -208,26 +201,15 @@ constructor(
 
     private fun loadData(vaultId: VaultId) {
         loadJob?.cancel()
-        // Flag the in-flight reload on an already-rendered screen so the buttons disable while the
-        // isActionLocked() guard is closed by the active loadJob.
-        state.update { current ->
-            if (current is TonDeFiUiState.Success) current.copy(isReloading = true) else current
-        }
         loadJob =
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to load TON DeFi data")
                     // Keep a screen that already shows data on a background-refresh failure; only
-                    // surface the error state when there's nothing rendered yet. Clear the reload
-                    // flag so the buttons re-enable once the failed refresh settles.
+                    // surface the error state when there's nothing rendered yet.
                     if (state.value !is TonDeFiUiState.Success) {
                         state.value =
                             TonDeFiUiState.Error(R.string.error_view_default_description.asUiText())
-                    } else {
-                        state.update { current ->
-                            if (current is TonDeFiUiState.Success) current.copy(isReloading = false)
-                            else current
-                        }
                     }
                 }
             ) {
@@ -354,10 +336,10 @@ constructor(
 
     /** Opens the Tonstakers stake screen; no pool to pick, the pool is fixed. */
     fun onLiquidStake() {
-        if (loadJob?.isActive == true) return
         viewModelScope.safeLaunch(
             onError = { e -> Timber.e(e, "Failed to open Tonstakers stake") }
         ) {
+            awaitLoad()
             if (cachedTonCoin == null) {
                 refresh()
                 return@safeLaunch
@@ -367,12 +349,15 @@ constructor(
     }
 
     fun onLiquidUnstake() {
-        if (loadJob?.isActive == true) return
-        val hasPosition = (state.value as? TonDeFiUiState.Success)?.liquidData?.hasPosition ?: false
-        if (!hasPosition) return
         viewModelScope.safeLaunch(
             onError = { e -> Timber.e(e, "Failed to open Tonstakers unstake") }
         ) {
+            awaitLoad()
+            // The liquid position carries no cycle lock — a tsTON burn can be repeated and
+            // partial — so holding tsTON is the whole precondition.
+            val hasPosition =
+                (state.value as? TonDeFiUiState.Success)?.liquidData?.hasPosition ?: false
+            if (!hasPosition) return@safeLaunch
             if (cachedTonCoin == null) {
                 refresh()
                 return@safeLaunch
@@ -493,13 +478,24 @@ constructor(
     }
 
     /**
-     * A pending withdrawal blocks both stake and unstake until the pool releases the balance. Read
-     * the lock from the latest loaded state, and treat an in-flight reload as locked so a
-     * resume-triggered refresh right after a Withdraw can't be raced by a stale unlocked snapshot.
+     * A pending withdrawal blocks both stake and unstake until the pool releases the balance, read
+     * from the latest loaded state. Callers [awaitLoad] first, so this is never asked of a snapshot
+     * a refresh is about to replace — that is what keeps a tap right after a Withdraw from acting
+     * on a stale unlocked reading, without the buttons having to go dead for the length of every
+     * reload.
      */
-    private fun isActionLocked(): Boolean {
-        if (loadJob?.isActive == true) return true
-        return (state.value as? TonDeFiUiState.Success)?.tonData?.isActionLocked ?: false
+    private fun isActionLocked(): Boolean =
+        (state.value as? TonDeFiUiState.Success)?.tonData?.isActionLocked ?: false
+
+    /**
+     * Waits out the reload the screen starts on every resume. The screen is entered from the stake
+     * and unstake forms, so that reload is in flight for about a second each time the user comes
+     * back — long enough that disabling the buttons instead reads as the screen freezing. Waiting
+     * costs the same second only when a tap actually lands inside the window, and the decision that
+     * follows is made against the reading the reload published.
+     */
+    private suspend fun awaitLoad() {
+        loadJob?.join()
     }
 
     /**
@@ -508,8 +504,9 @@ constructor(
      * TON".
      */
     fun onStake() {
-        if (isActionLocked()) return
         viewModelScope.safeLaunch(onError = { e -> Timber.e(e, "Failed to open TON stake") }) {
+            awaitLoad()
+            if (isActionLocked()) return@safeLaunch
             if (cachedTonCoin == null) {
                 refresh()
                 return@safeLaunch
@@ -519,9 +516,10 @@ constructor(
     }
 
     fun onUnstake() {
-        if (isActionLocked()) return
-        val poolAddress = cachedPoolAddress ?: return
         viewModelScope.safeLaunch(onError = { e -> Timber.e(e, "Failed to open TON unstake") }) {
+            awaitLoad()
+            if (isActionLocked()) return@safeLaunch
+            val poolAddress = cachedPoolAddress ?: return@safeLaunch
             if (cachedTonCoin == null) {
                 refresh()
                 return@safeLaunch

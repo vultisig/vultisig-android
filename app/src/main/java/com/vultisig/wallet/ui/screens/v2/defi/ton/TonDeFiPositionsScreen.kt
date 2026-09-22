@@ -248,10 +248,11 @@ private fun TonDeFiPositionsScreenContent(
                                 TonStakingPositionCard(
                                     data = tonData,
                                     isBalanceVisible = state.isBalanceVisible,
-                                    // A reload closes the ViewModel's action guard, so disable
-                                    // the buttons to match rather than let a tap silently
-                                    // no-op.
-                                    areActionsLocked = tonData.isActionLocked || state.isReloading,
+                                    // Only the withdrawal lock closes these. A tap during the
+                                    // reload the screen starts on every resume waits for it in
+                                    // the ViewModel, so the buttons no longer go dead for a
+                                    // second each time the user comes back from a form.
+                                    areActionsLocked = tonData.isActionLocked,
                                     onClickStake = onClickStake,
                                     onClickUnstake = onClickUnstake,
                                 )
@@ -263,7 +264,7 @@ private fun TonDeFiPositionsScreenContent(
                                 TonLiquidPositionCard(
                                     data = state.liquidData,
                                     isBalanceVisible = state.isBalanceVisible,
-                                    areActionsLocked = state.isReloading,
+                                    areActionsLocked = false,
                                     onClickStake = onClickLiquidStake,
                                     onClickUnstake = onClickLiquidUnstake,
                                 )

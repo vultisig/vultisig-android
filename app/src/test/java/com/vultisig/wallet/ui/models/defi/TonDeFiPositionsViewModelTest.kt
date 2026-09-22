@@ -369,6 +369,52 @@ internal class TonDeFiPositionsViewModelTest {
     }
 
     @Test
+    fun `an action tapped during the resume reload waits for it instead of being dropped`() =
+        runTest {
+            coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns emptyList()
+            // Hold the reload open the way the network does for about a second on every resume.
+            val reload = CompletableDeferred<TonLiquidPoolState>()
+            coEvery { liquidStakingService.getPoolState() } coAnswers { reload.await() }
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            vm.onLiquidStake()
+
+            // Nothing yet — but the tap is queued behind the reload, not discarded.
+            coVerify(exactly = 0) { navigator.route(match { it is Route.TonLiquidStake }) }
+
+            reload.complete(POOL_STATE)
+
+            coVerify { navigator.route(Route.TonLiquidStake(vaultId = VAULT_ID)) }
+        }
+
+    @Test
+    fun `an action tapped during a reload that reveals a lock is refused once it lands`() =
+        runTest {
+            // A Withdraw just went through: the reload in flight is the one that will report the
+            // pending withdrawal, and the tap must be judged against that, not the stale reading.
+            val reload = CompletableDeferred<List<TonAccountStakingInfoJson>>()
+            coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } coAnswers { reload.await() }
+            coEvery { tonStakingApi.getStakingPool(POOL) } returns
+                TonStakingPoolInfoJson(name = "Whales", apy = 13.27, cycleEnd = 1_800_000_000L)
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            vm.onUnstake()
+
+            reload.complete(
+                listOf(
+                    TonAccountStakingInfoJson(
+                        pool = POOL,
+                        amount = 50_000_000_000L,
+                        pendingWithdraw = 50_000_000_000L,
+                    )
+                )
+            )
+
+            (vm.state.value as TonDeFiUiState.Success).tonData.isActionLocked.let(::assertTrue)
+            coVerify(exactly = 0) { navigator.route(match { it is Route.TonUnstake }) }
+        }
+
+    @Test
     fun `a failed liquid read surfaces as a refresh failure rather than a crash`() = runTest {
         coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns emptyList()
         coEvery { liquidStakingService.getPoolState() } throws RuntimeException("tonapi down")
