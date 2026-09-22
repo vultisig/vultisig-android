@@ -3,6 +3,9 @@ package com.vultisig.wallet.ui.models.defi
 import com.vultisig.wallet.data.api.chains.ton.TonAccountStakingInfoJson
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.api.chains.ton.TonStakingPoolInfoJson
+import com.vultisig.wallet.data.blockchain.ton.TonLiquidPoolState
+import com.vultisig.wallet.data.blockchain.ton.TonLiquidPosition
+import com.vultisig.wallet.data.blockchain.ton.TonLiquidStakingService
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
@@ -18,6 +21,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.test.assertEquals
@@ -42,6 +46,7 @@ internal class TonDeFiPositionsViewModelTest {
 
     private lateinit var vaultRepository: VaultRepository
     private lateinit var tonStakingApi: TonStakingApi
+    private lateinit var liquidStakingService: TonLiquidStakingService
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
     private lateinit var tokenPriceRepository: TokenPriceRepository
     private lateinit var appCurrencyRepository: AppCurrencyRepository
@@ -54,6 +59,7 @@ internal class TonDeFiPositionsViewModelTest {
         Dispatchers.setMain(testDispatcher)
         vaultRepository = mockk(relaxed = true)
         tonStakingApi = mockk(relaxed = true)
+        liquidStakingService = mockk()
         balanceVisibilityRepository = mockk(relaxed = true)
         tokenPriceRepository = mockk(relaxed = true)
         appCurrencyRepository = mockk(relaxed = true)
@@ -66,6 +72,10 @@ internal class TonDeFiPositionsViewModelTest {
         coEvery { appCurrencyRepository.getCurrencyFormat() } returns
             NumberFormat.getCurrencyInstance(Locale.US)
         coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns BigDecimal.ONE
+        // Default: no Tonstakers position, pool readable. Individual tests override.
+        coEvery { liquidStakingService.getPosition(TON_ADDRESS) } returns
+            TonLiquidPosition(tsTonBalance = BigInteger.ZERO, jettonWalletAddress = null)
+        coEvery { liquidStakingService.getPoolState() } returns POOL_STATE
     }
 
     @AfterEach
@@ -286,10 +296,93 @@ internal class TonDeFiPositionsViewModelTest {
         )
     }
 
+    @Test
+    fun `renders the Tonstakers position priced at the pool rate next to the nominator card`() =
+        runTest {
+            coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns emptyList()
+            coEvery { liquidStakingService.getPosition(TON_ADDRESS) } returns
+                TonLiquidPosition(
+                    tsTonBalance = BigInteger.valueOf(4_300_000_000L),
+                    jettonWalletAddress = "EQjettonWallet",
+                )
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            val state = vm.state.value as TonDeFiUiState.Success
+            val liquid = state.liquidData
+            assertTrue(liquid.hasPosition)
+            assertEquals("4.3 tsTON", liquid.tsTonDisplay)
+            // 4.3 tsTON × 1.16 = 4.988 GRAM, priced at the $1 TON price the test pins.
+            assertEquals("4.988 GRAM", liquid.tonValueDisplay)
+            assertEquals("$4.99", liquid.fiatDisplay)
+            assertEquals("13.36%", liquid.apy)
+            // The banner sums both cards: no nominator stake, so it is the liquid value alone.
+            assertEquals("$4.99", state.totalAmountPrice)
+            assertFalse(state.tonData.hasPosition)
+        }
+
+    @Test
+    fun `banner total adds the nominator stake and the liquid position`() = runTest {
+        coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns
+            listOf(TonAccountStakingInfoJson(pool = POOL, amount = 50_000_000_000L))
+        coEvery { tonStakingApi.getStakingPool(POOL) } returns
+            TonStakingPoolInfoJson(name = "Whales", apy = 13.27)
+        coEvery { liquidStakingService.getPosition(TON_ADDRESS) } returns
+            TonLiquidPosition(
+                tsTonBalance = BigInteger.valueOf(100_000_000_000L),
+                jettonWalletAddress = "EQjettonWallet",
+            )
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val state = vm.state.value as TonDeFiUiState.Success
+        // 50 GRAM staked + 100 tsTON × 1.16 = 166 GRAM, at $1.
+        assertEquals("$166.00", state.totalAmountPrice)
+        assertEquals("$50.00", state.tonData.totalAmountPrice)
+    }
+
+    @Test
+    fun `liquid stake opens the Tonstakers stake screen and unstake needs a position`() = runTest {
+        coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns emptyList()
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onLiquidUnstake()
+        coVerify(exactly = 0) { navigator.route(match { it is Route.TonLiquidUnstake }) }
+
+        vm.onLiquidStake()
+        coVerify { navigator.route(Route.TonLiquidStake(vaultId = VAULT_ID)) }
+    }
+
+    @Test
+    fun `liquid unstake opens the Tonstakers unstake screen when tsTON is held`() = runTest {
+        coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns emptyList()
+        coEvery { liquidStakingService.getPosition(TON_ADDRESS) } returns
+            TonLiquidPosition(
+                tsTonBalance = BigInteger.valueOf(4_300_000_000L),
+                jettonWalletAddress = "EQjettonWallet",
+            )
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onLiquidUnstake()
+
+        coVerify { navigator.route(Route.TonLiquidUnstake(vaultId = VAULT_ID)) }
+    }
+
+    @Test
+    fun `a failed liquid read surfaces as a refresh failure rather than a crash`() = runTest {
+        coEvery { tonStakingApi.getNominatorPools(TON_ADDRESS) } returns emptyList()
+        coEvery { liquidStakingService.getPoolState() } throws RuntimeException("tonapi down")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        assertTrue(vm.state.value is TonDeFiUiState.Error, "expected Error, was ${vm.state.value}")
+    }
+
     private fun createViewModel(): TonDeFiPositionsViewModel =
         TonDeFiPositionsViewModel(
             vaultRepository = vaultRepository,
             tonStakingApi = tonStakingApi,
+            liquidStakingService = liquidStakingService,
             balanceVisibilityRepository = balanceVisibilityRepository,
             tokenPriceRepository = tokenPriceRepository,
             appCurrencyRepository = appCurrencyRepository,
@@ -298,6 +391,17 @@ internal class TonDeFiPositionsViewModelTest {
         )
 
     private companion object {
+        /** tsTON→TON rate of 1.16, as the pool's `total_balance / supply` states it. */
+        val POOL_STATE =
+            TonLiquidPoolState(
+                totalBalance = BigInteger.valueOf(116_000_000_000L),
+                supply = BigInteger.valueOf(100_000_000_000L),
+                apy = 13.36,
+                minStake = BigInteger.valueOf(1_000_000_000L),
+                isDepositOpen = true,
+                isOptimistic = true,
+            )
+
         /** A settled screen, as the cache would have it after the user walked away from one. */
         val LAST_RENDERED =
             TonStakingSnapshot(

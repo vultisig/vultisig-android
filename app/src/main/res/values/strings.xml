@@ -634,6 +634,15 @@
     <string name="ton_unstake_title">Unstake %1$s</string>
     <string name="ton_staking_pool_address">Pool Address</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator pools support full withdrawal only. Your entire staked balance will be returned.</string>
+    <string name="ton_liquid_staking_label">Liquid staking</string>
+    <string name="ton_liquid_deposit_fee">Deposit fee</string>
+    <string name="ton_liquid_you_receive">You\'ll receive</string>
+    <string name="ton_liquid_attached_value">Attached for processing</string>
+    <string name="ton_liquid_stake_fee_notice">Includes the %1$s %2$s deposit fee Tonstakers takes off the top. The part the pool doesn\'t use is refunded.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s is attached to process the withdrawal; the unused part is refunded. You\'re paid out immediately when the pool has liquidity, otherwise at the end of the current validation round.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s is attached to process the withdrawal; the unused part is refunded. You\'re paid out at the end of the current validation round.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers isn\'t accepting deposits right now</string>
+    <string name="ton_liquid_no_position">This vault holds no tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL isn\'t in this vault</string>
     <string name="solana_staking_total_staked_sol">Total Staked SOL</string>
@@ -1591,6 +1600,8 @@
     <string name="ton_op_nft_transfer">NFT Transfer</string>
     <string name="ton_op_excess_gas_refund">Excess Gas Refund</string>
     <string name="ton_op_transfer">Transfer</string>
+    <string name="ton_op_liquid_staking_deposit">Liquid Staking Deposit</string>
+    <string name="ton_op_jetton_burn">Jetton Burn</string>
     <string name="ton_forward_ton_amount">Forward GRAM Amount</string>
     <string name="ton_raw_payload">Raw Payload</string>
     <string name="key_import_error_title">Key Import Failed</string>

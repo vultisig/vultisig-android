@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.chains.ton.TonAccountStakingInfoJson
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
+import com.vultisig.wallet.data.blockchain.ton.TonLiquidStakingService
 import com.vultisig.wallet.data.blockchain.ton.TonNominatorPool
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -33,6 +35,8 @@ import java.text.NumberFormat
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -62,6 +66,21 @@ internal data class TonStakingUiModel(
     val unlockEpochMs: Long? = null,
 )
 
+/**
+ * UI model for the Tonstakers liquid-staking position: the vault's tsTON, priced in TON at the
+ * pool's rate and in fiat at the TON price. Rendered zeroed (Unstake disabled) when the vault holds
+ * none, like the nominator card.
+ */
+@Immutable
+internal data class TonLiquidStakingUiModel(
+    val ticker: String = Coins.Ton.TSTON.ticker,
+    val tsTonDisplay: String = "",
+    val tonValueDisplay: String = "",
+    val fiatDisplay: String = "",
+    val apy: String? = null,
+    val hasPosition: Boolean = false,
+)
+
 /** UI state for the TON DeFi positions screen. */
 @Immutable
 internal sealed interface TonDeFiUiState {
@@ -73,6 +92,9 @@ internal sealed interface TonDeFiUiState {
     @Immutable
     data class Success(
         val tonData: TonStakingUiModel,
+        val liquidData: TonLiquidStakingUiModel = TonLiquidStakingUiModel(),
+        /** Both cards' fiat values summed for the banner. */
+        val totalAmountPrice: String = tonData.totalAmountPrice,
         /**
          * A reload is in flight. Mirrors [isActionLocked]'s `loadJob` guard so the card's
          * Stake/Unstake buttons disable in lockstep — otherwise a resume-triggered refresh would
@@ -117,6 +139,7 @@ internal class TonDeFiPositionsViewModel
 constructor(
     private val vaultRepository: VaultRepository,
     private val tonStakingApi: TonStakingApi,
+    private val liquidStakingService: TonLiquidStakingService,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -230,9 +253,21 @@ constructor(
                         )
                     )
 
-                val primary =
-                    tonStakingApi.getNominatorPools(tonCoin.address).maxByOrNull {
-                        it.stakedTotal()
+                // The liquid position is read alongside the nominator one; neither waits on the
+                // other. The scope makes a failure in either surface through onError like any
+                // other refresh failure instead of cancelling the ViewModel's scope.
+                val (primary, liquid) =
+                    coroutineScope {
+                        val nominator = async {
+                            tonStakingApi.getNominatorPools(tonCoin.address).maxByOrNull {
+                                it.stakedTotal()
+                            }
+                        }
+                        val liquidRead = async {
+                            liquidStakingService.getPosition(tonCoin.address) to
+                                liquidStakingService.getPoolState()
+                        }
+                        nominator.await() to liquidRead.await()
                     }
 
                 val staked = primary?.stakedTotal() ?: BigInteger.ZERO
@@ -279,13 +314,71 @@ constructor(
                         )
                     }
 
+                val (liquidPosition, poolState) = liquid
+                val liquidTon =
+                    poolState
+                        ?.tonValueOf(liquidPosition.tsTonBalance)
+                        ?.toBigDecimal()
+                        ?.movePointLeft(tonCoin.decimal) ?: BigDecimal.ZERO
+                val liquidFiat = liquidTon.multiply(price)
+                val liquidData =
+                    TonLiquidStakingUiModel(
+                        tsTonDisplay =
+                            liquidPosition.tsTonBalance
+                                .toBigDecimal()
+                                .movePointLeft(Coins.Ton.TSTON.decimal)
+                                .stripTrailingZeros()
+                                .formatTokenAmount(Coins.Ton.TSTON.ticker),
+                        tonValueDisplay =
+                            liquidTon.stripTrailingZeros().formatTokenAmount(tonCoin.ticker),
+                        fiatDisplay = currencyFormat.format(liquidFiat),
+                        apy = poolState?.apy?.let { (it / 100).formatPercentage() },
+                        hasPosition = liquidPosition.hasPosition,
+                    )
+
+                val nominatorFiat =
+                    (position?.let { staked.toBigDecimal().movePointLeft(tonCoin.decimal) }
+                            ?: BigDecimal.ZERO)
+                        .multiply(price)
+
                 state.value =
                     TonDeFiUiState.Success(
                         tonData = tonData,
+                        liquidData = liquidData,
+                        totalAmountPrice = currencyFormat.format(nominatorFiat + liquidFiat),
                         isBalanceVisible = isBalanceVisible,
                         stakePositionsDialog = positionDialog,
                     )
             }
+    }
+
+    /** Opens the Tonstakers stake screen; no pool to pick, the pool is fixed. */
+    fun onLiquidStake() {
+        if (loadJob?.isActive == true) return
+        viewModelScope.safeLaunch(
+            onError = { e -> Timber.e(e, "Failed to open Tonstakers stake") }
+        ) {
+            if (cachedTonCoin == null) {
+                refresh()
+                return@safeLaunch
+            }
+            navigator.route(Route.TonLiquidStake(vaultId = vaultId))
+        }
+    }
+
+    fun onLiquidUnstake() {
+        if (loadJob?.isActive == true) return
+        val hasPosition = (state.value as? TonDeFiUiState.Success)?.liquidData?.hasPosition ?: false
+        if (!hasPosition) return
+        viewModelScope.safeLaunch(
+            onError = { e -> Timber.e(e, "Failed to open Tonstakers unstake") }
+        ) {
+            if (cachedTonCoin == null) {
+                refresh()
+                return@safeLaunch
+            }
+            navigator.route(Route.TonLiquidUnstake(vaultId = vaultId))
+        }
     }
 
     private suspend fun buildPositionUiModel(

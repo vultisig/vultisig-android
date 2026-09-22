@@ -199,12 +199,28 @@ constructor(
 
         this@KeysignShareViewModel.vault = vault
 
+        // A TON message batch signs from the chain's native coin whatever the deposit names for
+        // display: its value is TON, the vault's ed25519 key is read off that coin, and every
+        // co-signer builds the transfer from the batch only when the payload coin is the fee coin.
+        // The amount echoes the first message so the sidecar and the signed bytes agree.
+        val signTon = transaction.signTon
+        val payloadCoin =
+            if (signTon != null && !srcToken.isNativeToken) {
+                vault.coins.firstOrNull { it.chain == srcToken.chain && it.isNativeToken }
+                    ?: error("Native ${srcToken.chain} coin not found for a TON message batch")
+            } else {
+                srcToken
+            }
+        val toAmount =
+            signTon?.tonMessages?.firstOrNull()?.amount?.toBigIntegerOrNull()
+                ?: transaction.srcTokenValue.value
+
         customMessagePayload = null
         keysignPayload =
             KeysignPayload(
-                coin = srcToken,
+                coin = payloadCoin,
                 toAddress = transaction.dstAddress,
-                toAmount = transaction.srcTokenValue.value,
+                toAmount = toAmount,
                 blockChainSpecific = specific,
                 vaultPublicKeyECDSA = pubKeyECDSA,
                 utxos = transaction.utxos,
@@ -214,6 +230,7 @@ constructor(
                 wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
                 signDirect = transaction.signDirect,
                 signSolana = transaction.signSolana,
+                signTon = signTon,
                 defiAction =
                     if (transaction.operation == OPERATION_CIRCLE_WITHDRAW) {
                         DeFiAction.CIRCLE_USDC_WITHDRAW

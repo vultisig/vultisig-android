@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import com.vultisig.wallet.data.blockchain.ton.Tonstakers
 import com.vultisig.wallet.data.crypto.ton.TonMessageBodyDecoder
 import com.vultisig.wallet.data.crypto.ton.TonMessageBodyIntent
 import com.vultisig.wallet.data.models.Chain
@@ -106,6 +107,39 @@ internal fun mapTonMessages(
                     hasStateInit = hasStateInit,
                 )
 
+            // The op alone earns nothing: any contract could claim it. Only a message addressed
+            // to the Tonstakers pool is a liquid-staking deposit; elsewhere it stays a transfer.
+            is TonMessageBodyIntent.LiquidStakingDeposit ->
+                TonMessageUiModel(
+                    operation =
+                        if (Tonstakers.isPool(message.to)) TonMessageOperation.LiquidStakingDeposit
+                        else TonMessageOperation.Transfer,
+                    recipient = message.to.takeIf { it.isNotEmpty() },
+                    amount =
+                        message.amount
+                            .toBigIntegerOrNull()
+                            ?.takeIf { it.signum() >= 0 }
+                            ?.let(::formatTon),
+                    rawPayload = rawPayload,
+                    hasStateInit = hasStateInit,
+                )
+
+            // A burn is sent to the signer's own jetton wallet, which stands in for the recipient
+            // row; the attached TON is what the message carries, the jetton quantity what leaves.
+            is TonMessageBodyIntent.JettonBurn ->
+                TonMessageUiModel(
+                    operation = TonMessageOperation.JettonBurn,
+                    recipient = message.to.takeIf { it.isNotEmpty() },
+                    amount =
+                        message.amount
+                            .toBigIntegerOrNull()
+                            ?.takeIf { it.signum() >= 0 }
+                            ?.let(::formatTon),
+                    tokenAmount = formatJettonQuantity(intent.amount, jettonCoins[message.to]),
+                    rawPayload = rawPayload,
+                    hasStateInit = hasStateInit,
+                )
+
             null ->
                 TonMessageUiModel(
                     operation = TonMessageOperation.Transfer,
@@ -154,9 +188,14 @@ internal suspend fun resolveTonJettonHero(
     resolveJettonMaster: suspend (jettonWalletAddress: String) -> String?,
 ): HeroCoinAmount? {
     for (message in messages) {
-        val transfer =
-            TonMessageBodyDecoder.decode(message.payload) as? TonMessageBodyIntent.JettonTransfer
-                ?: continue
+        // A transfer and a burn both name the jetton by the sender's wallet and the quantity in
+        // its base units; the burn just has no destination.
+        val amount =
+            when (val intent = TonMessageBodyDecoder.decode(message.payload)) {
+                is TonMessageBodyIntent.JettonTransfer -> intent.amount
+                is TonMessageBodyIntent.JettonBurn -> intent.amount
+                else -> continue
+            }
         val master = resolveJettonMaster(message.to) ?: continue
         val coin =
             vaultCoins.firstOrNull {
@@ -164,7 +203,7 @@ internal suspend fun resolveTonJettonHero(
                 it.chain == Chain.Ton && !it.isNativeToken && it.contractAddress == master
             } ?: continue
         return HeroCoinAmount(
-            amount = formatJettonAmount(transfer.amount, coin.decimal),
+            amount = formatJettonAmount(amount, coin.decimal),
             ticker = coin.ticker,
             logo = coin.logo,
         )

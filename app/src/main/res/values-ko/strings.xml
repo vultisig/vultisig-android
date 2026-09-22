@@ -621,6 +621,15 @@
     <string name="ton_unstake_title">%1$s 언스테이킹</string>
     <string name="ton_staking_pool_address">풀 주소</string>
     <string name="ton_unstake_full_withdrawal_notice">노미네이터 풀은 전액 인출만 지원합니다. 스테이킹한 잔액 전체가 반환됩니다.</string>
+    <string name="ton_liquid_staking_label">유동성 스테이킹</string>
+    <string name="ton_liquid_deposit_fee">예치 수수료</string>
+    <string name="ton_liquid_you_receive">수령 예정</string>
+    <string name="ton_liquid_attached_value">처리용 첨부 금액</string>
+    <string name="ton_liquid_stake_fee_notice">Tonstakers가 선공제하는 %1$s %2$s 예치 수수료가 포함되어 있습니다. 풀이 사용하지 않은 부분은 환불됩니다.</string>
+    <string name="ton_liquid_unstake_notice">인출 처리를 위해 %1$s %2$s이(가) 첨부되며, 사용되지 않은 부분은 환불됩니다. 풀에 유동성이 있으면 즉시 지급되고, 그렇지 않으면 현재 검증 라운드가 끝날 때 지급됩니다.</string>
+    <string name="ton_liquid_unstake_notice_round_end">인출 처리를 위해 %1$s %2$s이(가) 첨부되며, 사용되지 않은 부분은 환불됩니다. 현재 검증 라운드가 끝날 때 지급됩니다.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers가 현재 예치를 받지 않습니다</string>
+    <string name="ton_liquid_no_position">이 볼트에는 tsTON이 없습니다</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">이 볼트에 SOL이 없습니다</string>
     <string name="solana_staking_total_staked_sol">총 스테이킹 SOL</string>
@@ -1534,6 +1543,8 @@
     <string name="ton_op_nft_transfer">NFT 전송</string>
     <string name="ton_op_excess_gas_refund">초과 가스 환불</string>
     <string name="ton_op_transfer">전송</string>
+    <string name="ton_op_liquid_staking_deposit">유동성 스테이킹 예치</string>
+    <string name="ton_op_jetton_burn">Jetton 소각</string>
     <string name="ton_forward_ton_amount">전달된 GRAM 금액</string>
     <string name="ton_raw_payload">원시 Payload</string>
 

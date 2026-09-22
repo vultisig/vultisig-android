@@ -1073,6 +1073,15 @@
     <string name="ton_unstake_title">Povuci %1$s</string>
     <string name="ton_staking_pool_address">Adresa poola</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator poolovi podržavaju samo potpuno povlačenje. Vraća se cijeli stakirani saldo.</string>
+    <string name="ton_liquid_staking_label">Likvidni staking</string>
+    <string name="ton_liquid_deposit_fee">Naknada za polog</string>
+    <string name="ton_liquid_you_receive">Primit ćete</string>
+    <string name="ton_liquid_attached_value">Priloženo za obradu</string>
+    <string name="ton_liquid_stake_fee_notice">Uključuje naknadu za polog od %1$s %2$s koju Tonstakers unaprijed odbija. Dio koji pool ne iskoristi vraća se.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s prilaže se za obradu povlačenja; neiskorišteni dio se vraća. Isplata je trenutačna kada pool ima likvidnost, inače na kraju trenutačne runde validacije.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s prilaže se za obradu povlačenja; neiskorišteni dio se vraća. Isplata se vrši na kraju trenutačne runde validacije.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers trenutačno ne prima pologe</string>
+    <string name="ton_liquid_no_position">Ovaj trezor nema tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL nije u ovom trezoru</string>
     <string name="solana_staking_total_staked_sol">Ukupno stakirano SOL</string>
@@ -1522,6 +1531,8 @@
     <string name="ton_op_nft_transfer">NFT prijenos</string>
     <string name="ton_op_excess_gas_refund">Povrat viška plina</string>
     <string name="ton_op_transfer">Prijenos</string>
+    <string name="ton_op_liquid_staking_deposit">Polog za likvidni staking</string>
+    <string name="ton_op_jetton_burn">Jetton burn</string>
     <string name="ton_forward_ton_amount">Proslijeđeni iznos GRAM-a</string>
     <string name="ton_raw_payload">Neobrađeni payload</string>
 

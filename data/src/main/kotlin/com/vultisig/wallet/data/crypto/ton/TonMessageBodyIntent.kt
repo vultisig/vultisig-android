@@ -32,6 +32,30 @@ sealed interface TonMessageBodyIntent {
     data class Excesses(val queryId: BigInteger) : TonMessageBodyIntent
 
     /**
+     * `pool::deposit` (`0x47d54391`) of the `ton-blockchain/liquid-staking-contract` pool family
+     * (Tonstakers). Names only the body: whether the destination is a pool this app trusts is gated
+     * by the runtime layer, the same way a swap is.
+     */
+    data class LiquidStakingDeposit(val queryId: BigInteger) : TonMessageBodyIntent
+
+    /**
+     * TEP-74 jetton burn (`0x595f07bc`), sent to the signer's own jetton wallet. [amount] is in the
+     * jetton's base units; the jetton itself is identified by the wallet, which only a chain lookup
+     * can resolve. [liquidStakingWithdrawal] is set when the custom payload is the two-flag cell
+     * the liquid-staking pool reads, which is what makes the burn a withdrawal request rather than
+     * a plain burn.
+     */
+    data class JettonBurn(
+        val queryId: BigInteger,
+        val amount: BigInteger,
+        val responseDestination: String?,
+        val liquidStakingWithdrawal: LiquidStakingWithdrawal?,
+    ) : TonMessageBodyIntent
+
+    /** The pool's withdrawal flags, as `pool::withdraw` reads them after the burn notification. */
+    data class LiquidStakingWithdrawal(val waitTillRoundEnd: Boolean, val fillOrKill: Boolean)
+
+    /**
      * A DEX swap decoded from a STON.fi v2 (`0x6664de2a`) or DeDust native (`0xea06185d`) body.
      *
      * This decoder classifies the swap purely from the signed bytes; it does NOT apply the

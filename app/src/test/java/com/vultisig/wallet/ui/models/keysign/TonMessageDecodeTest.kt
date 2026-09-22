@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import com.vultisig.wallet.data.blockchain.ton.Tonstakers
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import kotlin.test.assertEquals
@@ -110,6 +111,82 @@ internal class TonMessageDecodeTest {
         assertNull(row.recipient)
         assertNull(row.amount)
         assertNull(row.tokenAmount)
+    }
+
+    @Test
+    fun `maps a pool deposit addressed to Tonstakers to a liquid-staking deposit row`() {
+        val row =
+            mapTonMessages(
+                    SignTon(
+                        tonMessages =
+                            listOf(
+                                TonMessage(
+                                    to = Tonstakers.POOL_ADDRESS,
+                                    amount = "6000000000",
+                                    payload = Tonstakers.depositBody(),
+                                )
+                            )
+                    ),
+                    fromAddress = null,
+                    formatAddress = { it },
+                )
+                .single()
+        assertEquals(TonMessageOperation.LiquidStakingDeposit, row.operation)
+        assertEquals(Tonstakers.POOL_ADDRESS, row.recipient)
+        assertEquals("6 GRAM", row.amount)
+        assertNull(row.tokenAmount)
+    }
+
+    @Test
+    fun `keeps a pool deposit op addressed elsewhere as a plain transfer`() {
+        val row =
+            mapTonMessages(
+                    SignTon(
+                        tonMessages =
+                            listOf(
+                                TonMessage(
+                                    to = "EQsomeContract",
+                                    amount = "6000000000",
+                                    payload = Tonstakers.depositBody(),
+                                )
+                            )
+                    ),
+                    fromAddress = null,
+                    formatAddress = { it },
+                )
+                .single()
+        assertEquals(TonMessageOperation.Transfer, row.operation)
+        assertEquals("EQsomeContract", row.recipient)
+    }
+
+    @Test
+    fun `maps a tsTON burn to a jetton burn row with the attached value and the burned quantity`() {
+        val burn =
+            Tonstakers.burnBody(
+                amount = java.math.BigInteger.valueOf(4_300_000_000L),
+                responseAddress = "EQBfwesEQte6-OnnVoRroXg2Fhs5kKQtfIITGP22CG98-SSR",
+            )
+        val row =
+            mapTonMessages(
+                    SignTon(
+                        tonMessages =
+                            listOf(
+                                TonMessage(
+                                    to = "EQjettonWallet",
+                                    amount = "1050000000",
+                                    payload = burn,
+                                )
+                            )
+                    ),
+                    fromAddress = null,
+                    jettonCoins = mapOf("EQjettonWallet" to TonHeroCoin("tsTON", 9, "tston")),
+                    formatAddress = { it },
+                )
+                .single()
+        assertEquals(TonMessageOperation.JettonBurn, row.operation)
+        assertEquals("EQjettonWallet", row.recipient)
+        assertEquals("1.05 GRAM", row.amount)
+        assertEquals("4.3 tsTON", row.tokenAmount)
     }
 
     @Test

@@ -114,7 +114,11 @@ internal class TonDappHeroResolver @Inject constructor(private val tonApi: TonAp
     ): Map<String, TonHeroCoin> =
         messages
             .filter {
-                TonMessageBodyDecoder.decode(it.payload) is TonMessageBodyIntent.JettonTransfer
+                when (TonMessageBodyDecoder.decode(it.payload)) {
+                    is TonMessageBodyIntent.JettonTransfer,
+                    is TonMessageBodyIntent.JettonBurn -> true
+                    else -> false
+                }
             }
             .mapNotNull { it.to.takeIf(String::isNotEmpty) }
             .distinct()

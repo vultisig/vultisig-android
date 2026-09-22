@@ -1073,6 +1073,15 @@
     <string name="ton_unstake_title">Вывести %1$s из стейкинга</string>
     <string name="ton_staking_pool_address">Адрес пула</string>
     <string name="ton_unstake_full_withdrawal_notice">Пулы номинаторов поддерживают только полный вывод. Весь застейканный баланс будет возвращён.</string>
+    <string name="ton_liquid_staking_label">Ликвидный стейкинг</string>
+    <string name="ton_liquid_deposit_fee">Комиссия за депозит</string>
+    <string name="ton_liquid_you_receive">Вы получите</string>
+    <string name="ton_liquid_attached_value">Прикреплено для обработки</string>
+    <string name="ton_liquid_stake_fee_notice">Включает комиссию за депозит %1$s %2$s, которую Tonstakers удерживает заранее. Неиспользованная пулом часть возвращается.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s прикрепляются для обработки вывода; неиспользованная часть возвращается. Выплата производится сразу, если у пула есть ликвидность, иначе — в конце текущего раунда валидации.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s прикрепляются для обработки вывода; неиспользованная часть возвращается. Выплата производится в конце текущего раунда валидации.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers сейчас не принимает депозиты</string>
+    <string name="ton_liquid_no_position">В этом хранилище нет tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL отсутствует в этом хранилище</string>
     <string name="solana_staking_total_staked_sol">Всего в стейкинге SOL</string>
@@ -1527,6 +1536,8 @@
     <string name="ton_op_nft_transfer">Перевод NFT</string>
     <string name="ton_op_excess_gas_refund">Возврат излишка газа</string>
     <string name="ton_op_transfer">Перевод</string>
+    <string name="ton_op_liquid_staking_deposit">Депозит в ликвидный стейкинг</string>
+    <string name="ton_op_jetton_burn">Сжигание Jetton</string>
     <string name="ton_forward_ton_amount">Пересылаемая сумма GRAM</string>
     <string name="ton_raw_payload">Необработанный payload</string>
 
