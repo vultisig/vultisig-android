@@ -22,6 +22,24 @@ fun SwapProvider.getSwapProviderId(): String {
     }
 }
 
+/**
+ * Canonical id carried in `OneInchSwapPayload.provider` on the wire. Lowercase, matching what iOS
+ * (`SwapProviderId.rawValue`) and the SDK/extension (`generalSwapProviders`) emit — and what the
+ * extension's co-signer guard enforces with an exact, case-sensitive match against a closed set.
+ * [getSwapProviderId] is the display id and must never reach the wire: a peer receiving `"SwapKit"`
+ * refuses to sign it as an unrecognized provider.
+ */
+fun SwapProvider.getWireId(): String =
+    when (this) {
+        SwapProvider.JUPITER -> "jupiter"
+        SwapProvider.KYBER -> "kyber"
+        SwapProvider.LIFI -> "li.fi"
+        SwapProvider.MAYA -> "mayachain"
+        SwapProvider.ONEINCH -> "1inch"
+        SwapProvider.SWAPKIT -> "swapkit"
+        SwapProvider.THORCHAIN -> "thorchain"
+    }
+
 fun swapProviderFromWireId(wireId: String): SwapProvider? =
     when (wireId.lowercase().trim()) {
         "thorchain" -> SwapProvider.THORCHAIN

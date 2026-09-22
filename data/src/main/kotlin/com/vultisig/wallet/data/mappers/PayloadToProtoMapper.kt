@@ -1,12 +1,14 @@
 package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.getWireId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
+import com.vultisig.wallet.data.models.swapProviderFromWireId
 import com.vultisig.wallet.data.models.toProtoString
 import javax.inject.Inject
 import vultisig.keysign.v1.CardanoChainSpecific
@@ -247,7 +249,10 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                                         },
                                 )
                             },
-                        provider = from.provider,
+                        // The domain model holds the display id ("SwapKit"); peers match the
+                        // wire value case-sensitively, so send the canonical lowercase id.
+                        provider =
+                            swapProviderFromWireId(from.provider)?.getWireId() ?: from.provider,
                     )
                 } else null,
             // EVM/Solana SwapKit ride oneinchSwapPayload above with provider="swapkit"; this
