@@ -196,10 +196,15 @@ constructor(
     }
 
     fun refresh() {
-        if (vaultId.isNotEmpty()) loadData(vaultId)
+        if (vaultId.isNotEmpty()) loadData(vaultId, forceRefresh = true)
     }
 
-    private fun loadData(vaultId: VaultId) {
+    /**
+     * [forceRefresh] goes past the service caches. Only a pull to refresh sets it: the reload a
+     * resume starts is there to catch up with a change the user made elsewhere, and answering it
+     * from a cache a few seconds old is the whole point of having one.
+     */
+    private fun loadData(vaultId: VaultId, forceRefresh: Boolean = false) {
         loadJob?.cancel()
         loadJob =
             viewModelScope.safeLaunch(
@@ -246,8 +251,8 @@ constructor(
                             }
                         }
                         val liquidRead = async {
-                            liquidStakingService.getPosition(tonCoin.address) to
-                                liquidStakingService.getPoolState()
+                            liquidStakingService.getPosition(tonCoin.address, forceRefresh) to
+                                liquidStakingService.getPoolState(forceRefresh)
                         }
                         nominator.await() to liquidRead.await()
                     }

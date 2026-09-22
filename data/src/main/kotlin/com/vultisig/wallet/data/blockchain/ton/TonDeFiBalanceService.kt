@@ -100,6 +100,11 @@ class TonDeFiBalanceService(
         return tonDeFiBalances(cached?.stakeAmount ?: BigInteger.ZERO, BigInteger.ZERO)
     }
 
+    /** Drops the cached Tonstakers position, so the next read goes to the chain. */
+    suspend fun invalidateLiquidPosition(address: String) {
+        liquidStakingService.invalidate(address)
+    }
+
     /**
      * The vault's tsTON balance, or zero when it holds none. Best-effort: a lookup failure must not
      * cost the nominator position its row, and an absent liquid position is indistinguishable from
