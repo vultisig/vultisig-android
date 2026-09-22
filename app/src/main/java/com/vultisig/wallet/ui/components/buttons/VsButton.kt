@@ -12,12 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.innerShadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
@@ -49,51 +46,6 @@ enum class VsButtonSize {
     Small,
     Mini,
 }
-
-/**
- * The inset top highlight and bottom shade that give the styleguide button its bevelled look. Both
- * are inner shadows in the design, so they are drawn as such rather than approximated with a
- * gradient.
- */
-private class Bevel(val highlight: Shadow, val shade: Shadow)
-
-private val BevelHighlightColor = Color.White
-private val BevelShadeColor = Color(0xFF0F1C3E)
-
-private val PrimaryBevel =
-    Bevel(
-        highlight =
-            Shadow(
-                radius = 1.9.dp,
-                color = BevelHighlightColor,
-                alpha = 0.24f,
-                offset = DpOffset(x = 0.dp, y = 1.dp),
-            ),
-        shade =
-            Shadow(
-                radius = 1.6.dp,
-                color = BevelShadeColor,
-                alpha = 0.48f,
-                offset = DpOffset(x = 0.dp, y = (-1).dp),
-            ),
-    )
-
-private val SoftBevel =
-    Bevel(
-        highlight =
-            Shadow(
-                radius = 1.dp,
-                color = BevelHighlightColor,
-                alpha = 0.1f,
-                offset = DpOffset(x = 0.dp, y = 1.dp),
-            ),
-        shade =
-            Shadow(
-                radius = 0.5.dp,
-                color = BevelShadeColor,
-                offset = DpOffset(x = 0.dp, y = (-1).dp),
-            ),
-    )
 
 @Composable
 fun VsButton(
@@ -137,8 +89,8 @@ fun VsButton(
 
     val bevel =
         when (variant) {
-            Primary -> if (state == Disabled) SoftBevel else PrimaryBevel
-            Secondary -> SoftBevel
+            Primary -> if (state == Disabled) ButtonBevel.Soft else ButtonBevel.Strong
+            Secondary -> ButtonBevel.Soft
             Error,
             Tertiary -> null
         }
@@ -152,14 +104,7 @@ fun VsButton(
             modifier
                 .background(color = backgroundColor, shape = resolvedShape)
                 .border(width = 1.dp, color = borderColor, shape = resolvedShape)
-                .then(
-                    if (bevel != null) {
-                        Modifier.innerShadow(resolvedShape, bevel.highlight)
-                            .innerShadow(resolvedShape, bevel.shade)
-                    } else {
-                        Modifier
-                    }
-                )
+                .then(if (bevel != null) Modifier.bevel(resolvedShape, bevel) else Modifier)
                 .clickable(enabled = state != Disabled, onClick = onClick)
                 .then(
                     when (size) {
