@@ -16,16 +16,78 @@ import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class TonDeFiBalanceServiceTest {
 
     private val api: TonStakingApi = mockk(relaxed = true)
+    private val liquid: TonLiquidStakingService = mockk()
     private val repo: StakingDetailsRepository = mockk(relaxed = true)
-    private val service = TonDeFiBalanceService(api, repo)
+    private val service = TonDeFiBalanceService(api, liquid, repo)
 
     private val address = "EQself"
     private val vaultId = "vault-1"
+
+    @BeforeEach
+    fun setUp() {
+        // Default: no Tonstakers position. Individual tests override.
+        coEvery { liquid.getPosition(address) } returns
+            TonLiquidPosition(tsTonBalance = BigInteger.ZERO, jettonWalletAddress = null)
+    }
+
+    @Test
+    fun `a Tonstakers position is its own balance alongside the nominator stake`() = runTest {
+        coEvery { api.getNominatorPools(address) } returns
+            listOf(position(pool = "0:big", amount = 50_000_000_000, pendingDeposit = 0))
+        coEvery { api.getStakingPool("0:big") } returns TonStakingPoolInfoJson(apy = 5.0)
+        coEvery { liquid.getPosition(address) } returns
+            TonLiquidPosition(
+                tsTonBalance = BigInteger.valueOf(4_300_000_000),
+                jettonWalletAddress = "EQjettonWallet",
+            )
+
+        val balances = service.getRemoteDeFiBalance(address, vaultId).single().balances
+
+        assertEquals(2, balances.size)
+        assertEquals(
+            BigInteger.valueOf(50_000_000_000),
+            balances.first { it.coin == Coins.Ton.TON }.amount,
+        )
+        // Reported in tsTON, so the row prices it against the tsTON rate rather than TON's.
+        assertEquals(
+            BigInteger.valueOf(4_300_000_000),
+            balances.first { it.coin == Coins.Ton.TSTON }.amount,
+        )
+    }
+
+    @Test
+    fun `a liquid-only holder still gets a position`() = runTest {
+        coEvery { api.getNominatorPools(address) } returns emptyList()
+        coEvery { liquid.getPosition(address) } returns
+            TonLiquidPosition(
+                tsTonBalance = BigInteger.valueOf(4_300_000_000),
+                jettonWalletAddress = "EQjettonWallet",
+            )
+
+        val balance = service.getRemoteDeFiBalance(address, vaultId).single().balances.single()
+
+        assertEquals(Coins.Ton.TSTON, balance.coin)
+        assertEquals(BigInteger.valueOf(4_300_000_000), balance.amount)
+    }
+
+    @Test
+    fun `a failed Tonstakers read does not cost the nominator position its row`() = runTest {
+        coEvery { api.getNominatorPools(address) } returns
+            listOf(position(pool = "0:big", amount = 50_000_000_000, pendingDeposit = 0))
+        coEvery { api.getStakingPool("0:big") } returns TonStakingPoolInfoJson(apy = 5.0)
+        coEvery { liquid.getPosition(address) } throws RuntimeException("tonapi down")
+
+        val balance = service.getRemoteDeFiBalance(address, vaultId).single().balances.single()
+
+        assertEquals(Coins.Ton.TON, balance.coin)
+        assertEquals(BigInteger.valueOf(50_000_000_000), balance.amount)
+    }
 
     @Test
     fun `staked balance is the largest pool's amount plus pending deposit`() = runTest {
