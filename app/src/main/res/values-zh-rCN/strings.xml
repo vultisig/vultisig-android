@@ -1984,6 +1984,15 @@
     <string name="decoded_function_amount_out">转出金额</string>
     <string name="decoded_function_swap_title">交换</string>
     <string name="decoded_function_truncated">更多参数未显示</string>
+    <string name="typed_data_action">操作</string>
+    <string name="typed_data_token_approval">代币授权</string>
+    <string name="typed_data_token">代币</string>
+    <string name="typed_data_approval_amount">授权金额</string>
+    <string name="typed_data_approval_expires">授权到期</string>
+    <string name="typed_data_no_expiry">永不过期</string>
+    <string name="typed_data_domain">域</string>
+    <string name="typed_data_chain_id">链 ID</string>
+    <string name="typed_data_primary_type">主类型</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">提取 QBTC</string>
     <string name="qbtc_claim_loading">正在检查资格…</string>

@@ -1666,6 +1666,15 @@
     <string name="decoded_function_amount_out">Importo in uscita</string>
     <string name="decoded_function_swap_title">Scambio</string>
     <string name="decoded_function_truncated">Altri parametri non mostrati</string>
+    <string name="typed_data_action">Azione</string>
+    <string name="typed_data_token_approval">Approvazione token</string>
+    <string name="typed_data_token">Token</string>
+    <string name="typed_data_approval_amount">Importo approvazione</string>
+    <string name="typed_data_approval_expires">Scadenza approvazione</string>
+    <string name="typed_data_no_expiry">Nessuna scadenza</string>
+    <string name="typed_data_domain">Dominio</string>
+    <string name="typed_data_chain_id">ID catena</string>
+    <string name="typed_data_primary_type">Tipo principale</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Preleva QBTC</string>
     <string name="qbtc_claim_loading">Verifica dell\'idoneità…</string>

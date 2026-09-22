@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -25,6 +26,18 @@ internal fun SignMessageCard(
     value: String,
     modifier: Modifier = Modifier,
     valueColor: Color = Theme.v2.colors.text.primary,
+) {
+    SignMessageCard(title = title, modifier = modifier) {
+        Text(text = value, color = valueColor, style = Theme.brockmann.body.s.regular)
+    }
+}
+
+/** The same card with [content] under the caption, for values that are not one string. */
+@Composable
+internal fun SignMessageCard(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
         modifier =
@@ -48,6 +61,6 @@ internal fun SignMessageCard(
             style = Theme.brockmann.supplementary.caption,
         )
 
-        Text(text = value, color = valueColor, style = Theme.brockmann.body.s.regular)
+        content()
     }
 }

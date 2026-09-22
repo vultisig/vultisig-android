@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.models.sign.DecodedCustomMessage
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageViewModel
+import com.vultisig.wallet.ui.screens.send.DecodedFunctionParamRows
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -177,6 +178,16 @@ private fun VerifySignMessageScreen(
                         )
                     }
                 }
+
+                is DecodedCustomMessage.TypedData ->
+                    SignMessageCard(
+                        title = stringResource(R.string.verify_sign_message_decoded_message)
+                    ) {
+                        DecodedFunctionParamRows(
+                            params = decoded.rows,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
 
                 // A digest is named by the card below rather than described by one of its own.
                 DecodedCustomMessage.Hash,

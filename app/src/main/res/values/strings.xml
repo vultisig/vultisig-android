@@ -1719,6 +1719,15 @@
     <string name="decoded_function_amount_out">Amount out</string>
     <string name="decoded_function_swap_title">Swap</string>
     <string name="decoded_function_truncated">More parameters not shown</string>
+    <string name="typed_data_action">Action</string>
+    <string name="typed_data_token_approval">Token Approval</string>
+    <string name="typed_data_token">Token</string>
+    <string name="typed_data_approval_amount">Approval amount</string>
+    <string name="typed_data_approval_expires">Approval expires</string>
+    <string name="typed_data_no_expiry">No expiry</string>
+    <string name="typed_data_domain">Domain</string>
+    <string name="typed_data_chain_id">Chain ID</string>
+    <string name="typed_data_primary_type">Primary type</string>
 
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Claim QBTC</string>
