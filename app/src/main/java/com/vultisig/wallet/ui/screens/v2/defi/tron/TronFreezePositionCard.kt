@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.defi.tron
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -19,11 +18,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
+import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
+import com.vultisig.wallet.ui.screens.v2.defi.ActionButtonVariant
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
@@ -115,24 +115,18 @@ internal fun TronFreezePositionCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                TronDeFiActionButton(
+                ActionButton(
                     title = stringResource(R.string.tron_defi_unfreeze),
                     icon = R.drawable.circle_minus,
-                    background = Theme.v2.colors.backgrounds.tertiary_2,
-                    border = BorderStroke(Dp.Hairline, Color.White.copy(alpha = 0.03f)),
-                    contentColor = Theme.v2.colors.text.primary,
-                    iconCircleColor = TronDeFiActionButtonIconCircleColor,
+                    variant = ActionButtonVariant.Secondary,
                     enabled = !isLoading && isUnfreezeEnabled,
                     modifier = Modifier.weight(1f),
                     onClick = onClickUnfreeze,
                 )
-                TronDeFiActionButton(
+                ActionButton(
                     title = stringResource(R.string.tron_defi_freeze),
                     icon = R.drawable.circle_plus,
-                    background = Theme.v2.colors.buttons.ctaPrimary,
-                    border = BorderStroke(Dp.Hairline, Theme.v2.colors.primary.accent3),
-                    contentColor = Theme.v2.colors.text.primary,
-                    iconCircleColor = TronDeFiActionButtonIconCircleColor,
+                    variant = ActionButtonVariant.Primary,
                     enabled = isFreezeEnabled && !isLoading,
                     modifier = Modifier.weight(1f),
                     onClick = onClickFreeze,

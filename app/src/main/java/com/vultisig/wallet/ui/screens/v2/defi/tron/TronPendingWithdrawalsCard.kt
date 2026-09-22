@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.defi.tron
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -20,13 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
 import com.vultisig.wallet.ui.models.defi.sunToTrx
+import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
+import com.vultisig.wallet.ui.screens.v2.defi.ActionButtonVariant
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.formatTokenAmount
 import kotlinx.coroutines.delay
@@ -125,13 +125,10 @@ internal fun TronPendingWithdrawalsCard(
                 } else {
                     HIDE_BALANCE_CHARS
                 }
-            TronDeFiActionButton(
+            ActionButton(
                 title = stringResource(R.string.tron_defi_claim_button, claimableText),
                 icon = R.drawable.ic_arrow_down,
-                background = Theme.v2.colors.buttons.ctaPrimary,
-                border = BorderStroke(Dp.Hairline, Theme.v2.colors.primary.accent3),
-                contentColor = Theme.v2.colors.text.primary,
-                iconCircleColor = TronDeFiActionButtonIconCircleColor,
+                variant = ActionButtonVariant.Primary,
                 enabled = !isClaiming,
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onClaim,
