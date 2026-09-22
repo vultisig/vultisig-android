@@ -341,7 +341,7 @@ private fun MayaBondFormContent(
                         onClick = onScan,
                     )
                     UiIcon(
-                        drawableResId = R.drawable.ic_bookmark,
+                        drawableResId = R.drawable.book_bookmark_filled,
                         size = 20.dp,
                         modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                         onClick = onAddressBookClick,
