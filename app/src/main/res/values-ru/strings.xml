@@ -1498,6 +1498,11 @@
         <item quantity="many">Повторно отправить уведомление через %d секунд</item>
         <item quantity="other">Повторно отправить уведомление через %d секунд</item>
     </plurals>
+    <plurals name="notify_devices_in_seconds">
+        <item quantity="one">Другие устройства получат уведомление через %d секунду</item>
+        <item quantity="few">Другие устройства получат уведомление через %d секунды</item>
+        <item quantity="many">Другие устройства получат уведомление через %d секунд</item>
+    </plurals>
     <plurals name="vault_count">
         <item quantity="one">%d хранилище</item>
         <item quantity="few">%d хранилища</item>

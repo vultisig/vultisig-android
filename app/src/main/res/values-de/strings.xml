@@ -1487,6 +1487,10 @@
         <item quantity="one">Benachrichtigung in %d Sekunde erneut senden</item>
         <item quantity="other">Benachrichtigung in %d Sekunden erneut senden</item>
     </plurals>
+    <plurals name="notify_devices_in_seconds">
+        <item quantity="one">Andere Geräte werden in %d Sekunde benachrichtigt</item>
+        <item quantity="other">Andere Geräte werden in %d Sekunden benachrichtigt</item>
+    </plurals>
     <plurals name="vault_count">
         <item quantity="one">%d Tresor</item>
         <item quantity="other">%d Tresore</item>

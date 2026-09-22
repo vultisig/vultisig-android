@@ -1814,6 +1814,9 @@
     <plurals name="resend_notification_in_seconds">
         <item quantity="other">%d 秒后重新发送通知</item>
     </plurals>
+    <plurals name="notify_devices_in_seconds">
+        <item quantity="other">%d 秒后通知其他设备</item>
+    </plurals>
     <plurals name="vault_count">
         <item quantity="other">%d 个保险库</item>
     </plurals>

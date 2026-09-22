@@ -99,6 +99,7 @@ data class PeerDiscoveryUiModel(
     val warning: ErrorUiModel? = null,
     val enableNotification: Boolean,
     val resendCooldownSeconds: Int = 0,
+    val isNotificationPending: Boolean = false,
 )
 
 data class ConnectingToServerUiModel(val isSuccess: Boolean = false)
