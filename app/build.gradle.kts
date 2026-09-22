@@ -19,8 +19,8 @@ android {
         applicationId = "com.vultisig.wallet"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 36
-        versionCode = 119
-        versionName = "1.0.119"
+        versionCode = 120
+        versionName = "1.0.120"
 
         testInstrumentationRunner = "com.vultisig.wallet.util.HiltTestRunner"
 
