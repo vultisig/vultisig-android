@@ -279,7 +279,6 @@ private fun androidx.compose.foundation.layout.BoxScope.FooterSummary(
             label = stringResource(R.string.cosmos_staking_continue),
             state =
                 if (isSubmitting || !isValidForm) VsButtonState.Disabled else VsButtonState.Enabled,
-            isLoading = isSubmitting,
             onClick = onSubmit,
             modifier = Modifier.fillMaxWidth(),
         )

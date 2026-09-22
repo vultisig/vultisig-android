@@ -106,7 +106,6 @@ internal fun SolanaUnstakeContent(state: SolanaUnstakeUiState, onContinue: () ->
         VsButton(
             label = stringResource(R.string.cosmos_staking_continue),
             state = if (state.isSubmitting) VsButtonState.Disabled else VsButtonState.Enabled,
-            isLoading = state.isSubmitting,
             onClick = onContinue,
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
         )

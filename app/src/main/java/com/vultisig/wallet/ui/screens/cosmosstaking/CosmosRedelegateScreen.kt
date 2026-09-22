@@ -122,7 +122,6 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
                     if (state.isSubmitting || state.isLoadingCooldown || !state.validForm)
                         VsButtonState.Disabled
                     else VsButtonState.Enabled,
-                isLoading = state.isSubmitting,
                 onClick = viewModel::submit,
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
             )

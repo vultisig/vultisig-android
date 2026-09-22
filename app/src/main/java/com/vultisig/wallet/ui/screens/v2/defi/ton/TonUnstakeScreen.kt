@@ -95,7 +95,6 @@ internal fun TonUnstakeScreen(viewModel: TonUnstakeViewModel = hiltViewModel()) 
                     if (!state.isLoading && state.hasSufficientBalance && !state.isSubmitting)
                         VsButtonState.Enabled
                     else VsButtonState.Disabled,
-                isLoading = state.isSubmitting,
                 onClick = viewModel::submit,
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
             )

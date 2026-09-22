@@ -22,7 +22,6 @@ fun FastSignPairedButtons(
     onPairedSignClick: () -> Unit,
     modifier: Modifier = Modifier,
     state: VsButtonState = VsButtonState.Enabled,
-    isLoading: Boolean = false,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -36,14 +35,12 @@ fun FastSignPairedButtons(
             iconLeft = R.drawable.ic_paired_devices,
             variant = VsButtonVariant.Secondary,
             state = state,
-            isLoading = isLoading,
             onClick = onPairedSignClick,
         )
 
         VsButton(
             label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
             state = state,
-            isLoading = isLoading,
             onClick = onFastSignClick,
             modifier = Modifier.weight(1f),
         )

@@ -113,7 +113,6 @@ internal fun TonStakeScreen(viewModel: TonStakeViewModel = hiltViewModel()) {
             VsButton(
                 label = stringResource(R.string.cosmos_staking_continue),
                 state = if (canContinue) VsButtonState.Enabled else VsButtonState.Disabled,
-                isLoading = state.isSubmitting,
                 onClick = viewModel::submit,
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
             )

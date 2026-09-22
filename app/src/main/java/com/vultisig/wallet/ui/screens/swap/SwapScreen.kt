@@ -544,12 +544,15 @@ internal fun SwapScreen(
                                     },
                                 variant = VsButtonVariant.Primary,
                                 state =
-                                    if (state.isSwapDisabled || state.isLoading) {
+                                    if (
+                                        state.isSwapDisabled ||
+                                            state.isLoading ||
+                                            state.isLoadingNextScreen
+                                    ) {
                                         VsButtonState.Disabled
                                     } else {
                                         VsButtonState.Enabled
                                     },
-                                isLoading = state.isLoadingNextScreen,
                                 onClick = {
                                     focusManager.clearFocus(true)
                                     onSwap()
@@ -575,7 +578,6 @@ internal fun SwapScreen(
                             } else {
                                 VsButtonState.Enabled
                             },
-                        isLoading = state.isLoadingNextScreen,
                         onClick = {
                             focusManager.clearFocus(true)
                             onPlaceLimitOrder()

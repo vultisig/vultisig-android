@@ -160,7 +160,6 @@ internal fun KaminoAmountContent(
         VsButton(
             label = stringResource(R.string.cosmos_staking_continue),
             state = if (canContinue) VsButtonState.Enabled else VsButtonState.Disabled,
-            isLoading = state.isSubmitting,
             onClick = onSubmit,
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
         )

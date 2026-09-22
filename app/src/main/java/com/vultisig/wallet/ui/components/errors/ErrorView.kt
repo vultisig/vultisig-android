@@ -32,6 +32,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
@@ -42,7 +43,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal data class ErrorViewButtonUiModel(
     val text: String,
     val onClick: () -> Unit,
-    val isLoading: Boolean = false,
+    val isEnabled: Boolean = true,
 )
 
 @Composable
@@ -80,7 +81,7 @@ internal fun ErrorView(
                     variant = VsButtonVariant.Secondary,
                     label = it.text,
                     modifier = Modifier.fillMaxWidth(),
-                    isLoading = it.isLoading,
+                    state = if (it.isEnabled) VsButtonState.Enabled else VsButtonState.Disabled,
                     onClick = it.onClick,
                 )
                 UiSpacer(12.dp)
@@ -90,7 +91,7 @@ internal fun ErrorView(
                 VsButton(
                     label = it.text,
                     modifier = Modifier.fillMaxWidth(),
-                    isLoading = it.isLoading,
+                    state = if (it.isEnabled) VsButtonState.Enabled else VsButtonState.Disabled,
                     onClick = it.onClick,
                 )
             }

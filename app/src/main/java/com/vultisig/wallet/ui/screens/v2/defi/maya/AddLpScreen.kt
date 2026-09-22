@@ -255,7 +255,6 @@ private fun AddLpContent(
         VsButton(
             label = stringResource(R.string.send_continue_button),
             state = if (isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
-            isLoading = isLoading,
             onClick = onDeposit,
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
         )

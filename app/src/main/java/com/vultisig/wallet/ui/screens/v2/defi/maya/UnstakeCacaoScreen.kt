@@ -203,7 +203,6 @@ private fun UnstakeCacaoContent(
             label = stringResource(R.string.send_continue_button),
             modifier = Modifier.fillMaxWidth(),
             onClick = onDeposit,
-            isLoading = state.isLoading,
             state =
                 if (
                     (tokenAmountFieldState.text.toString().toIntOrNull() ?: 0) > 0 &&
