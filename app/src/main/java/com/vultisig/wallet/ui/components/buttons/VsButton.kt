@@ -128,8 +128,8 @@ fun VsButton(
 
                 Disabled ->
                     when (variant) {
-                        Primary -> colors.buttons.disabled
-                        Secondary -> colors.buttons.ctaDisabled
+                        Primary,
+                        Secondary -> colors.buttons.disabled
                         Error -> colors.buttons.disabledError
                         Tertiary -> colors.neutrals.n400
                     }
