@@ -10,8 +10,9 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 
 /**
- * The parts of an `eth_signTypedData_v4` payload the verify screen reads. The `types` block is
- * left alone: it only matters to the hasher, which takes the raw JSON anyway.
+ * The parts of an `eth_signTypedData_v4` payload the verify screen reads, reduced to what is
+ * actually signed. The hashers only encode the fields `types` declares, so an undeclared key in
+ * `domain` or `message` is dropped here rather than shown as if it were part of the signature.
  */
 internal data class Eip712TypedData(
     val domainName: String?,
@@ -31,8 +32,17 @@ internal data class Eip712TypedData(
                 runCatching { json.parseToJsonElement(raw) }.getOrNull() as? JsonObject
                     ?: return null
             val primaryType = root["primaryType"]?.stringOrNull() ?: return null
-            val message = root["message"] as? JsonObject ?: return null
-            val domain = root["domain"] as? JsonObject
+            val types = root["types"] as? JsonObject ?: return null
+            val message =
+                (root["message"] as? JsonObject)?.declaredOnly(primaryType, types, depth = 0)
+                    ?: return null
+            // ethers derives the domain type from the domain's own keys when it is not declared,
+            // so the domain is only narrowed when `EIP712Domain` is.
+            val domain =
+                (root["domain"] as? JsonObject)?.let { domain ->
+                    if (DOMAIN_TYPE in types) domain.declaredOnly(DOMAIN_TYPE, types, depth = 0)
+                    else domain
+                }
             return Eip712TypedData(
                 domainName = domain?.get("name")?.stringOrNull(),
                 domainChainId = domain?.get("chainId")?.bigIntegerOrNull(),
@@ -42,6 +52,35 @@ internal data class Eip712TypedData(
             )
         }
     }
+}
+
+/**
+ * [this] struct value with only the fields [type] declares, in declared order, and each nested
+ * struct narrowed the same way. Null when [type] is not a declared struct or nesting runs past
+ * [MAX_TYPE_DEPTH], which self-referencing types would otherwise allow.
+ */
+private fun JsonObject.declaredOnly(type: String, types: JsonObject, depth: Int): JsonObject? {
+    if (depth > MAX_TYPE_DEPTH) return null
+    val fields = types[type] as? JsonArray ?: return null
+    val narrowed = LinkedHashMap<String, JsonElement>()
+    for (field in fields) {
+        val name = (field as? JsonObject)?.get("name")?.stringOrNull() ?: return null
+        val fieldType = field["type"]?.stringOrNull() ?: return null
+        val value = this[name] ?: continue
+        narrowed[name] = value.declaredOnlyAs(fieldType, types, depth + 1) ?: return null
+    }
+    return JsonObject(narrowed)
+}
+
+/** [this] value narrowed per [type]: structs and arrays of them recurse, anything else is kept. */
+private fun JsonElement.declaredOnlyAs(type: String, types: JsonObject, depth: Int): JsonElement? {
+    if (type.endsWith("]")) {
+        val elementType = type.substringBeforeLast("[")
+        val array = this as? JsonArray ?: return this
+        return JsonArray(array.map { it.declaredOnlyAs(elementType, types, depth) ?: return null })
+    }
+    if (type !in types) return this
+    return (this as? JsonObject)?.declaredOnly(type, types, depth)
 }
 
 /** One token a permit grants an allowance on. [expiration] is only carried by Permit2. */
@@ -102,6 +141,11 @@ private const val MAX_TYPED_DATA_LENGTH = 64 * 1024
 
 /** Uniswap's Permit2, deployed at the same address on every chain it supports. */
 private const val PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+
+private const val DOMAIN_TYPE = "EIP712Domain"
+
+/** Deeper than any real typed data nests; bounds the recursion in [declaredOnly]. */
+private const val MAX_TYPE_DEPTH = 16
 
 private val EVM_ADDRESS = Regex("^0x[0-9a-fA-F]{40}$")
 
