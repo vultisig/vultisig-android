@@ -38,11 +38,12 @@ class TonDeFiBalanceService(
 ) : DeFiService {
 
     override suspend fun getRemoteDeFiBalance(address: String, vaultId: String): List<DeFiBalance> {
-        return try {
-            // Read first and independently of the nominator position: a vault can hold one, the
-            // other, or both, and a liquid-only holder must not be answered with an empty list.
-            val liquid = fetchLiquidBalance(address)
+        // Read first, independently of the nominator position and outside the fallback: a vault can
+        // hold one, the other, or both, a liquid-only holder must not be answered with an empty
+        // list, and a nominator read that fails afterwards must not cost this answer its row.
+        val liquid = fetchLiquidBalance(address)
 
+        return try {
             val primary =
                 tonStakingApi.getNominatorPools(address).maxByOrNull { it.stakedTotal() }
                     ?: return persistAndEmpty(vaultId, liquid)
@@ -68,11 +69,13 @@ class TonDeFiBalanceService(
         } catch (e: NetworkException) {
             Timber.w(e, "TonDeFiBalanceService: Network error fetching nominator-pool balance")
             // Keep the last-known stake rather than erasing it; the empty result would otherwise be
-            // cached by BalanceRepository and hide the position until the next invalidation.
-            getCacheDeFiBalance(address, vaultId)
+            // cached by BalanceRepository and hide the position until the next invalidation. The
+            // liquid balance is the one this read did get, so it is carried through rather than
+            // dropped to zero.
+            deFiBalancesFromCache(vaultId, liquid)
         } catch (e: IOException) {
             Timber.w(e, "TonDeFiBalanceService: Network error fetching nominator-pool balance")
-            getCacheDeFiBalance(address, vaultId)
+            deFiBalancesFromCache(vaultId, liquid)
         }
     }
 
@@ -93,11 +96,18 @@ class TonDeFiBalanceService(
             null
         }
 
-    override suspend fun getCacheDeFiBalance(address: String, vaultId: String): List<DeFiBalance> {
+    override suspend fun getCacheDeFiBalance(address: String, vaultId: String): List<DeFiBalance> =
+        // Only the nominator stake is persisted; the liquid position is a jetton balance, which the
+        // wallet's own token cache already answers for offline.
+        deFiBalancesFromCache(vaultId, BigInteger.ZERO)
+
+    /** The persisted nominator stake, paired with whatever the liquid read produced. */
+    private suspend fun deFiBalancesFromCache(
+        vaultId: String,
+        liquid: BigInteger,
+    ): List<DeFiBalance> {
         val cached = stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Ton.TON.id)
-        // Only the nominator stake is persisted; the liquid position is a jetton balance, which
-        // the wallet's own token cache already answers for offline.
-        return tonDeFiBalances(cached?.stakeAmount ?: BigInteger.ZERO, BigInteger.ZERO)
+        return tonDeFiBalances(cached?.stakeAmount ?: BigInteger.ZERO, liquid)
     }
 
     /** Drops the cached Tonstakers position, so the next read goes to the chain. */

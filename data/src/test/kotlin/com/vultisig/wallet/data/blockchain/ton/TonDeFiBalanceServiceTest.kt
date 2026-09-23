@@ -137,6 +137,30 @@ internal class TonDeFiBalanceServiceTest {
     }
 
     @Test
+    fun `a failed nominator read keeps the Tonstakers position it already had`() = runTest {
+        coEvery { api.getNominatorPools(address) } throws NetworkException(503, "down")
+        coEvery { repo.getStakingDetailsByCoindId(vaultId, Coins.Ton.TON.id) } returns
+            stakingDetails(BigInteger.valueOf(42_000_000_000))
+        coEvery { liquid.getPosition(address) } returns
+            TonLiquidPosition(
+                tsTonBalance = BigInteger.valueOf(4_300_000_000),
+                jettonWalletAddress = "EQjettonWallet",
+            )
+
+        val balances = service.getRemoteDeFiBalance(address, vaultId).single().balances
+
+        assertEquals(2, balances.size)
+        assertEquals(
+            BigInteger.valueOf(42_000_000_000),
+            balances.first { it.coin == Coins.Ton.TON }.amount,
+        )
+        assertEquals(
+            BigInteger.valueOf(4_300_000_000),
+            balances.first { it.coin == Coins.Ton.TSTON }.amount,
+        )
+    }
+
+    @Test
     fun `liquid-staking position is excluded and persisted as zero`() = runTest {
         coEvery { api.getNominatorPools(address) } returns
             listOf(position(pool = "0:tonstakers", amount = 50_000_000_000, pendingDeposit = 0))
