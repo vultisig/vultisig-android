@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keysign
 
 import androidx.compose.runtime.Immutable
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.repositories.AbiParam
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
@@ -29,6 +30,8 @@ import kotlinx.serialization.json.jsonArray
  * - [secondary] supplements the trailing text — used for the friendly contract label that
  *   [com.vultisig.wallet.data.repositories.KnownEvmContracts] returns for known DEX routers.
  * - [isWarning] flips the row into the warning colour, mirroring the unlimited-approval banner.
+ * - [logo] is drawn ahead of the value when the row names a token, so a permit's token reads the
+ *   way it does everywhere else in the app.
  */
 @Immutable
 internal data class DecodedFunctionParam(
@@ -37,6 +40,7 @@ internal data class DecodedFunctionParam(
     val copyableValue: String? = null,
     val secondary: String? = null,
     val isWarning: Boolean = false,
+    val logo: ImageModel? = null,
 )
 
 /**
@@ -335,7 +339,7 @@ private class RowSink {
 }
 
 /** Trailing warning row shown when the leaf list was capped at [MAX_PARAM_ROWS]. */
-private fun truncatedRow(): DecodedFunctionParam =
+internal fun truncatedRow(): DecodedFunctionParam =
     DecodedFunctionParam(
         label = R.string.decoded_function_truncated.asUiText(),
         value = UiText.DynamicString("…"),
@@ -502,7 +506,7 @@ private fun sanitizedName(abi: AbiParam?): String? =
  * already applies to names so a hostile `string` param can't smuggle reordering, invisible content,
  * or an unbounded blob onto the signing screen.
  */
-private fun sanitizedValue(raw: String): String {
+internal fun sanitizedValue(raw: String): String {
     val stripped = sanitizeDisplayString(raw)
     return if (stripped.length > MAX_PARAM_VALUE_LENGTH) {
         stripped.take(MAX_PARAM_VALUE_LENGTH) + "…"
@@ -524,7 +528,7 @@ private val SOLIDITY_IDENTIFIER = Regex("[A-Za-z_][A-Za-z0-9_]*")
 private const val MAX_PARAM_NAME_LENGTH = 40
 private const val MAX_PARAM_VALUE_LENGTH = 256
 private const val MAX_PARAM_DEPTH = 8
-private const val MAX_PARAM_ROWS = 64
+internal const val MAX_PARAM_ROWS = 64
 
 private fun addressRow(
     label: UiText,

@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
+import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -70,6 +71,10 @@ private fun DecodedFunctionParamRow(param: DecodedFunctionParam, onCopy: (String
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                param.logo?.let { logo ->
+                    TokenCircle(logo = logo, ticker = param.value.asString(), size = 20)
+                }
+
                 Text(
                     text = param.value.asString(),
                     style = Theme.brockmann.body.s.medium,

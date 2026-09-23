@@ -479,6 +479,12 @@ class PreviewActivity : ComponentActivity() {
                                             "{\"name\":\"amount\",\"value\":\"125000000\"}]",
                                 ),
                         )
+                    "sign_message_typed_data" ->
+                        SignMessageDecodedPreview(
+                            method = "eth_signTypedData_v4",
+                            message = SIGN_MESSAGE_PERMIT_SINGLE,
+                            decoded = DecodedCustomMessage.TypedData(permitSingleRows()),
+                        )
                     "deposit_mint_done" -> DepositMintDonePreview()
                     "transaction_history_empty" -> TransactionHistoryEmptyState()
                     "limit_orders_tab" -> LimitOrdersTabPreview()
@@ -1924,6 +1930,46 @@ private fun VerifyDecodedSendHeroPreview(hero: HeroContent?) {
 private const val SIGN_MESSAGE_DIGEST =
     "0xfc2e852f3d6effd607b325d140a32237c00ef518b06e0b02c420ba62f9964bd8"
 
+/** The Permit2 `PermitSingle` Uniswap asks for before a USDT swap, as the extension forwards it. */
+private const val SIGN_MESSAGE_PERMIT_SINGLE =
+    """{"domain":{"chainId":"1","name":"Permit2","verifyingContract":"0x000000000022d473030f116ddee9f6b43ac78ba3"},""" +
+        """"message":{"details":{"amount":"1461501637330902918203684832716283019655932542975","expiration":"1792662996","nonce":"0","token":"0xdac17f958d2ee523a2206206994597c13d831ec7"},""" +
+        """"sigDeadline":"1790072796","spender":"0x23617e59a5925b2a4bf75d73ff6711cd0b29de85"},"primaryType":"PermitSingle"}"""
+
+/** The rows [SIGN_MESSAGE_PERMIT_SINGLE] decodes to once USDT has been resolved. */
+private fun permitSingleRows(): List<DecodedFunctionParam> =
+    listOf(
+        DecodedFunctionParam(
+            label = UiText.StringResource(R.string.typed_data_action),
+            value = UiText.StringResource(R.string.typed_data_token_approval),
+        ),
+        DecodedFunctionParam(
+            label = UiText.StringResource(R.string.typed_data_token),
+            value = UiText.DynamicString("USDT"),
+            copyableValue = "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            secondary = "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            logo = R.drawable.usdt,
+        ),
+        DecodedFunctionParam(
+            label = UiText.StringResource(R.string.typed_data_approval_amount),
+            value = UiText.FormattedText(R.string.decoded_function_unlimited_amount, listOf("USDT")),
+            isWarning = true,
+        ),
+        DecodedFunctionParam(
+            label = UiText.StringResource(R.string.typed_data_approval_expires),
+            value = UiText.DynamicString("Oct 22, 2026, 1:26:36 PM"),
+        ),
+        DecodedFunctionParam(
+            label = UiText.StringResource(R.string.erc20_approval_spender),
+            value = UiText.DynamicString("0x23617e59a5925b2a4bf75d73ff6711cd0b29de85"),
+            copyableValue = "0x23617e59a5925b2a4bf75d73ff6711cd0b29de85",
+        ),
+        DecodedFunctionParam(
+            label = UiText.StringResource(R.string.decoded_function_deadline),
+            value = UiText.DynamicString("Sep 22, 2026, 1:56:36 PM"),
+        ),
+    )
+
 /** Real `transfer(address,uint256)` calldata: a 4-byte selector plus two 32-byte words. */
 private const val SIGN_MESSAGE_CALLDATA =
     "0xa9059cbb0000000000000000000000009876543210fedcba9876543210fedcba98765432" +
@@ -1943,13 +1989,14 @@ private const val SIGN_MESSAGE_CALLDATA =
 private fun SignMessageDecodedPreview(
     decoded: DecodedCustomMessage?,
     message: String = SIGN_MESSAGE_DIGEST,
+    method: String = "sign_message",
 ) {
     VerifySignMessageScreen(
         state =
             VerifySignMessageUiModel(
                 model =
                     SignMessageTransactionUiModel(
-                        method = "sign_message",
+                        method = method,
                         message = message,
                         decoded = decoded,
                     )
