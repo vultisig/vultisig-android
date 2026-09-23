@@ -217,7 +217,6 @@ internal fun FoldableAmountWidget(
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        isLoading = state.isAmountSelectionLoading,
                     )
                 }
             }

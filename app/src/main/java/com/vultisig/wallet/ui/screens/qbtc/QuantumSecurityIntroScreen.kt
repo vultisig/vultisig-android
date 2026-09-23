@@ -25,7 +25,6 @@ import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.util.dashedBorder
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
@@ -49,7 +48,6 @@ internal fun QuantumSecurityIntroScreenContent(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.qbtc_intro_get_started),
-                variant = VsButtonVariant.CTA,
                 onClick = onGetStarted,
                 modifier =
                     Modifier.fillMaxWidth()

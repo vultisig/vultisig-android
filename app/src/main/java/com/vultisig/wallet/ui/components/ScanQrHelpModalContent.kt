@@ -28,7 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,7 +82,6 @@ private fun ScanQrHelpModalContent(onGotItClick: () -> Unit) {
             UiSpacer(32.dp)
             VsButton(
                 label = stringResource(id = R.string.scan_qr_code_modal_next),
-                variant = VsButtonVariant.CTA,
                 onClick = onGotItClick,
             )
         }

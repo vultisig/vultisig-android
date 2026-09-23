@@ -84,7 +84,7 @@ private fun KeyshareRecoveryScreen(
             ErrorViewButtonUiModel(
                 text = stringResource(R.string.passcode_key_unavailable_restore),
                 onClick = onRestoreClick,
-                isLoading = state.isRestoring,
+                isEnabled = !state.isRestoring,
             ),
         // Drawn above the restore button: a keystore that came back costs the user nothing.
         secondaryButtonUiModel =

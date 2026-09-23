@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v2.defi
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -319,24 +318,19 @@ internal fun LpWidget(
             ActionButton(
                 title = stringResource(R.string.remove),
                 icon = R.drawable.ic_circle_minus,
-                background = Color.Transparent,
-                border = BorderStroke(1.dp, Theme.v2.colors.primary.accent4),
-                contentColor = Theme.v2.colors.text.primary,
+                variant = ActionButtonVariant.Secondary,
                 onClick = onClickRemove,
                 modifier = Modifier.weight(1f),
                 enabled = state.canRemove,
-                iconCircleColor = Theme.v2.colors.text.tertiary,
             )
 
             ActionButton(
                 title = stringResource(R.string.add),
                 icon = R.drawable.ic_circle_plus,
-                background = Theme.v2.colors.primary.accent3,
-                contentColor = Theme.v2.colors.text.primary,
+                variant = ActionButtonVariant.Primary,
                 onClick = onClickAdd,
                 modifier = Modifier.weight(1f),
                 enabled = true,
-                iconCircleColor = Theme.v2.colors.primary.accent4,
             )
         }
     }

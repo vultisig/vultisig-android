@@ -28,7 +28,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesEvent
@@ -61,7 +60,6 @@ internal fun ReviewVaultDevicesScreen(
                 ) {
                     VsButton(
                         label = stringResource(R.string.review_vault_devices_looks_good),
-                        variant = VsButtonVariant.CTA,
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { onEvent(ReviewVaultDevicesEvent.LooksGood) },
                     )

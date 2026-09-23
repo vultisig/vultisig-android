@@ -80,7 +80,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
@@ -431,7 +430,6 @@ private fun ScanQrBottomBar(onUploadQr: () -> Unit) {
             modifier = Modifier.padding(horizontal = 32.dp, vertical = 14.dp),
             onClick = onUploadQr,
             label = stringResource(R.string.scan_qr_upload_qr_code),
-            variant = VsButtonVariant.CTA,
         )
     }
 }

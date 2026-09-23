@@ -94,7 +94,6 @@ internal fun NotificationsIntroBottomSheetContent(onEnable: () -> Unit, onNotNow
             )
             VsButton(
                 label = stringResource(R.string.notifications_intro_enable),
-                variant = VsButtonVariant.CTA,
                 onClick = onEnable,
                 modifier = Modifier.weight(1f),
             )
@@ -228,7 +227,6 @@ internal fun VaultNotificationOptInBottomSheetContent(
 
         VsButton(
             label = stringResource(R.string.address_book_edit_mode_done),
-            variant = VsButtonVariant.CTA,
             onClick = onConfirm,
             modifier = Modifier.fillMaxWidth(),
         )

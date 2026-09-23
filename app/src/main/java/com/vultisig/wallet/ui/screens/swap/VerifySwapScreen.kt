@@ -176,7 +176,6 @@ internal fun VerifySwapSheet(
             VerifySwapActions(
                 hasFastSign = state.hasFastSign,
                 isSignEnabled = state.hasAllConsents && !state.isSigning,
-                isSigning = state.isSigning,
                 confirmTitle = stringResource(R.string.verify_swap_sign_button),
                 onConfirm = onConfirm,
                 onFastSignClick = onFastSignClick,
@@ -423,7 +422,6 @@ private fun VerifySwapConsents(
 private fun VerifySwapActions(
     hasFastSign: Boolean,
     isSignEnabled: Boolean,
-    isSigning: Boolean,
     confirmTitle: String,
     onConfirm: () -> Unit,
     onFastSignClick: () -> Unit,
@@ -435,14 +433,12 @@ private fun VerifySwapActions(
             onFastSignClick = onFastSignClick,
             onPairedSignClick = onConfirm,
             state = buttonState,
-            isLoading = isSigning,
         )
     } else {
         VsButton(
             label = confirmTitle,
             modifier = Modifier.fillMaxWidth(),
             state = buttonState,
-            isLoading = isSigning,
             onClick = onConfirm,
         )
     }
@@ -785,7 +781,6 @@ private fun VerifySwapScreen(
                             } else {
                                 VsButtonState.Enabled
                             },
-                        isLoading = isSigning,
                     )
                 } else {
                     VsButton(
@@ -793,7 +788,6 @@ private fun VerifySwapScreen(
                         modifier = Modifier.fillMaxWidth(),
                         state =
                             if (!isSignEnabled) VsButtonState.Disabled else VsButtonState.Enabled,
-                        isLoading = isSigning,
                         onClick = onConfirm,
                     )
                 }
