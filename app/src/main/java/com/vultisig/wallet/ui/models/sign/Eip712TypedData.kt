@@ -21,8 +21,12 @@ internal data class Eip712TypedData(
     val message: JsonObject,
 ) {
     companion object {
-        /** Reads [raw] as EIP-712 typed data, or null when it is not a JSON object shaped like one. */
+        /**
+         * Reads [raw] as EIP-712 typed data, or null when it is not a JSON object shaped like one.
+         * A payload over [MAX_TYPED_DATA_LENGTH] is not read at all and is left to the raw view.
+         */
         fun parse(json: Json, raw: String): Eip712TypedData? {
+            if (raw.length > MAX_TYPED_DATA_LENGTH) return null
             val root =
                 runCatching { json.parseToJsonElement(raw) }.getOrNull() as? JsonObject
                     ?: return null
@@ -32,7 +36,7 @@ internal data class Eip712TypedData(
             return Eip712TypedData(
                 domainName = domain?.get("name")?.stringOrNull(),
                 domainChainId = domain?.get("chainId")?.bigIntegerOrNull(),
-                verifyingContract = domain?.get("verifyingContract")?.stringOrNull(),
+                verifyingContract = domain?.get("verifyingContract")?.addressOrNull(),
                 primaryType = primaryType,
                 message = message,
             )
@@ -93,16 +97,30 @@ private val MAX_UINT160: BigInteger = BigInteger.ONE.shiftLeft(160) - BigInteger
  */
 private const val MAX_PERMIT_TOKENS = 16
 
-/** The permit this typed data carries, or null when its primary type is not a known permit. */
+/** Real typed data is a few KB; anything far past that is not worth parsing for display. */
+private const val MAX_TYPED_DATA_LENGTH = 64 * 1024
+
+/** Uniswap's Permit2, deployed at the same address on every chain it supports. */
+private const val PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+
+private val EVM_ADDRESS = Regex("^0x[0-9a-fA-F]{40}$")
+
+/**
+ * The permit this typed data carries, or null when its primary type is not a known permit. The
+ * Permit2 shapes are only read as such when signed for the Permit2 contract itself; any other
+ * contract reusing those type names gets the generic rows rather than Permit2's semantics.
+ */
 internal fun Eip712TypedData.permitOrNull(): Eip712Permit? {
-    val spender = message["spender"]?.stringOrNull() ?: return null
+    val spender = message["spender"]?.addressOrNull() ?: return null
+    val isPermit2 = verifyingContract.equals(PERMIT2_ADDRESS, ignoreCase = true)
     val parsed =
         when (primaryType) {
             Eip712Permit.PERMIT -> eip2612Permit()
-            Eip712Permit.PERMIT_SINGLE -> permit2Single()
-            Eip712Permit.PERMIT_BATCH -> permit2Batch()
-            Eip712Permit.PERMIT_TRANSFER_FROM -> permit2TransferFrom()
-            Eip712Permit.PERMIT_BATCH_TRANSFER_FROM -> permit2BatchTransferFrom()
+            Eip712Permit.PERMIT_SINGLE -> if (isPermit2) permit2Single() else null
+            Eip712Permit.PERMIT_BATCH -> if (isPermit2) permit2Batch() else null
+            Eip712Permit.PERMIT_TRANSFER_FROM -> if (isPermit2) permit2TransferFrom() else null
+            Eip712Permit.PERMIT_BATCH_TRANSFER_FROM ->
+                if (isPermit2) permit2BatchTransferFrom() else null
             else -> null
         } ?: return null
     return Eip712Permit(
@@ -164,13 +182,19 @@ private fun JsonObject.allowanceToken(): PermitToken? =
 
 /** Permit2 `TokenPermissions`: token and amount only. */
 private fun JsonObject.transferToken(): PermitToken? {
-    val address = this["token"]?.stringOrNull() ?: return null
+    val address = this["token"]?.addressOrNull() ?: return null
     val amount = this["amount"]?.bigIntegerOrNull() ?: return null
     return PermitToken(address, amount, expiration = null)
 }
 
 private fun JsonElement.stringOrNull(): String? =
     (this as? JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotBlank() }
+
+/**
+ * A 20-byte hex address, or null. Typed data can declare these fields as `string`, so anything
+ * else is refused rather than shown and copied as an address.
+ */
+private fun JsonElement.addressOrNull(): String? = stringOrNull()?.takeIf { EVM_ADDRESS.matches(it) }
 
 /**
  * Reads a JSON number, a decimal string, or a `0x` hex string — all three show up in typed data
