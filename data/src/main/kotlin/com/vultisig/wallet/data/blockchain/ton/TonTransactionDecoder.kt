@@ -85,10 +85,12 @@ class TonTransactionDecoder @Inject constructor() : TransactionContentDecoder {
      * A single-message batch is a Tonstakers operation when its body says so — and, for a deposit,
      * when it is addressed to the pool, since `pool::deposit` is an op any contract could claim. A
      * burn is named an unstake only when it carries the pool's withdrawal-flags cell, which is what
-     * turns a TEP-74 burn into a withdrawal request; the jetton it burns is identified by a wallet
-     * only chain state can resolve, so the amount is left unstated rather than labelled with a
-     * ticker the bytes never name. A multi-message batch is a dApp request this reader has no
-     * grammar for.
+     * turns a TEP-74 burn into a withdrawal request, AND rides on the fixed TON value this app
+     * attaches to one: a flagged burn carrying any other value is not a request this app made, and
+     * naming it an unstake would hide that value behind the burn. The burned jetton is addressed by
+     * a wallet only chain state can resolve, but that shape is only ever built for tsTON, so its
+     * amount is stated in tsTON — a partial unstake must never read as the whole position. A
+     * multi-message batch is a dApp request this reader has no grammar for.
      */
     private fun decodeLiquidStaking(signTon: SignTon): DecodedTransaction? {
         val message = signTon.tonMessages.filterNotNull().singleOrNull() ?: return null
@@ -106,9 +108,16 @@ class TonTransactionDecoder @Inject constructor() : TransactionContentDecoder {
 
             is TonMessageBodyIntent.JettonBurn -> {
                 if (body.liquidStakingWithdrawal == null) return null
+                if (message.amount.toBigIntegerOrNull() != Tonstakers.UNSTAKE_ATTACHED_VALUE) {
+                    return null
+                }
                 DecodedTransaction(
                     operation = DecodedOperation.Unstake,
-                    amount = DecodedAmount.Unstated,
+                    amount =
+                        DecodedAmount.Units(
+                            body.amount,
+                            DecodedAsset.Denom(Tonstakers.TSTON_MASTER_ADDRESS),
+                        ),
                     counterparty = DecodedCounterparty.Contract(message.to),
                     evidence = DecodedEvidence.SignedData,
                 )

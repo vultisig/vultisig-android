@@ -101,20 +101,47 @@ internal class TonTransactionDecoderTest {
     }
 
     @Test
-    fun `a burn carrying the withdrawal flags reads as an unstake with no stated amount`() {
+    fun `a burn carrying the withdrawal flags reads as an unstake of the burned tsTON`() {
         val decoded = decoder.decode(payload(burnMessage).asSignedTransactionContent())
 
         assertEquals(
             DecodedTransaction(
                 operation = DecodedOperation.Unstake,
-                // The burn names its jetton only by wallet, which the bytes cannot resolve to a
-                // ticker, so the figure is left to the surface that can look the wallet up.
-                amount = DecodedAmount.Unstated,
+                amount =
+                    DecodedAmount.Units(
+                        BigInteger.valueOf(4_300_000_000L),
+                        DecodedAsset.Denom(Tonstakers.TSTON_MASTER_ADDRESS),
+                    ),
                 counterparty = DecodedCounterparty.Contract(jettonWallet),
                 evidence = DecodedEvidence.SignedData,
             ),
             decoded,
         )
+    }
+
+    @Test
+    fun `a partial unstake states its own amount rather than the whole position`() {
+        val partial =
+            burnMessage.copy(
+                payload = Tonstakers.burnBody(BigInteger.valueOf(25_000_000_000L), owner)
+            )
+
+        val decoded = decoder.decode(payload(partial).asSignedTransactionContent())
+
+        assertEquals(
+            DecodedAmount.Units(
+                BigInteger.valueOf(25_000_000_000L),
+                DecodedAsset.Denom(Tonstakers.TSTON_MASTER_ADDRESS),
+            ),
+            decoded?.amount,
+        )
+    }
+
+    @Test
+    fun `a flagged burn carrying any other TON value is not an unstake`() {
+        val heavy = burnMessage.copy(amount = "500000000000")
+
+        assertNull(decoder.decode(payload(heavy).asSignedTransactionContent()))
     }
 
     @Test
