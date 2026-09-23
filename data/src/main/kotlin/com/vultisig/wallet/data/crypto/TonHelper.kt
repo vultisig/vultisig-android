@@ -3,6 +3,8 @@ package com.vultisig.wallet.data.crypto
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.blockchain.ton.TonNominatorPool
 import com.vultisig.wallet.data.common.toHexByteArray
+import com.vultisig.wallet.data.crypto.ton.TonAddressFlags
+import com.vultisig.wallet.data.crypto.ton.TonBounceability
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -61,7 +63,7 @@ object TonHelper {
             messages.forEach { msg ->
                 val amount = msg.amount.toLongOrNull() ?: 0L
                 require(amount > 0) { "TonMessage amount must be positive, got ${msg.amount}" }
-                builder.addMessages(buildTonConnectTransfer(msg, tonSpecific))
+                builder.addMessages(buildTonConnectTransfer(msg))
             }
         }
             ?: run {
@@ -75,32 +77,34 @@ object TonHelper {
             }
     }
 
-    private fun buildTonConnectTransfer(
-        msg: TonMessage,
-        tonSpecific: BlockChainSpecific.Ton,
-    ): TheOpenNetwork.Transfer {
+    private fun buildTonConnectTransfer(msg: TonMessage): TheOpenNetwork.Transfer {
         val toAddress = AnyAddress(msg.to, CoinType.TON)
         val amount = msg.amount.toLongOrNull() ?: 0L
-        // Apply the wallet-level bounceable flag from tonSpecific to every TonConnect message,
-        // matching the initiating device (browser extension / desktop) which builds the setup
-        // message that all co-signers must reproduce. It does NOT derive bounceability per-address
-        // from the EQ/UQ friendly-address tag. Deriving it per-address here diverged the pre-image
-        // hash from the initiator whenever a message targeted a UQ (non-bounceable) address — e.g.
-        // STON.fi's self/peer message in a swap — so the md5 message-id differed, the joiner 404'd
-        // on the setup message, and co-signing never completed.
-        val bounceable = tonSpecific.bounceable
-
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
             .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
             .setMode(SEND_MODE)
-            .setBounceable(bounceable)
+            .setBounceable(msg.isBounceable())
             .apply {
                 msg.payload?.takeIf { it.isNotEmpty() }?.let { setCustomPayload(it) }
                 msg.stateInit?.takeIf { it.isNotEmpty() }?.let { setStateInit(it) }
             }
             .build()
     }
+
+    /**
+     * The bounce flag a dApp message declares through its own destination, never the wallet-level
+     * `tonSpecific.bounceable`. The flag is part of the signed body, so this must match the
+     * initiator (SDK `getTonMessageBounceable`): `EQ` bounceable, `UQ` not, and a raw `wc:hex`
+     * address — the only form `AnyAddress` accepts without a tag — bounceable unless the message
+     * deploys the destination via `stateInit`.
+     */
+    private fun TonMessage.isBounceable(): Boolean =
+        when (TonAddressFlags.bounceabilityOf(to)) {
+            TonBounceability.BOUNCEABLE -> true
+            TonBounceability.NON_BOUNCEABLE -> false
+            TonBounceability.UNSPECIFIED -> stateInit.isNullOrEmpty()
+        }
 
     private fun buildNativeTransfer(
         payload: KeysignPayload,

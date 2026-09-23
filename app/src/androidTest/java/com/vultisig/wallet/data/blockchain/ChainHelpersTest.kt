@@ -361,16 +361,14 @@ class ChainHelpersTest {
     }
 
     /**
-     * Regression for the STON.fi swap that never finished co-signing: every TonConnect message must
-     * carry the wallet-level `tonSpecific.bounceable` flag, NOT a per-address value derived from
-     * the EQ/UQ friendly-address tag. The initiating device (browser extension / desktop) applies
-     * the global flag when it builds the DKLS setup message, so a co-signer that derived
-     * bounceability per-address produced a different pre-image hash — and therefore a different md5
-     * message-id — for any message sent to a UQ (non-bounceable) address, 404ing on the setup
-     * message forever.
+     * Regression for the STON.fi swap that failed co-signing with the extension: each TonConnect
+     * message carries the bounce flag its own destination declares (EQ bounceable, UQ not), never
+     * the wallet-level `tonSpecific.bounceable`. The extension (SDK `getTonMessageBounceable`)
+     * derives it per message, so applying the wallet flag to STON.fi's UQ self-message signed a
+     * different pre-image and the swap failed.
      */
     @Test
-    fun tonConnectBounceableFollowsWalletFlagNotAddressPrefix() {
+    fun tonConnectBounceableFollowsEachMessageAddressNotWalletFlag() {
         val coin =
             Coin(
                 chain = "Ton",
@@ -392,8 +390,8 @@ class ChainHelpersTest {
                         bounceable = true,
                     )
             )
-        // First goes to an EQ (bounceable) address, second to a UQ (non-bounceable) address — the
-        // per-address logic would have flagged these true/false; the wallet flag makes both true.
+        // First goes to an EQ (bounceable) address, second to a UQ (non-bounceable) address. The
+        // wallet flag is true, but only the EQ message may be signed bounceable.
         val destEq = "EQDa4VOnTYlLvDJ0gZjNYm5PXfSmmtL6Vs6A_CZEtXCNICq_"
         val destUq = "UQCmBAnvlatV6yLWm391BEFTWP7jZX5mUFJ4Dc5TJAnvVgYi"
 
@@ -424,7 +422,7 @@ class ChainHelpersTest {
 
         assertEquals(2, signingInput.messagesCount)
         assertEquals(true, signingInput.getMessages(0).bounceable)
-        assertEquals(true, signingInput.getMessages(1).bounceable)
+        assertEquals(false, signingInput.getMessages(1).bounceable)
     }
 
     @Test
