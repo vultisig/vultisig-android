@@ -105,6 +105,17 @@ class ExplorerLinkRepositoryImplTest {
     }
 
     @Test
+    fun `KyberSwap EVM route Track link uses the chain explorer`() {
+        val hash = "0xdeadbeef"
+        val link =
+            repository.getSwapProgressLink(
+                hash,
+                evmPayload(Chain.Ethereum, SwapProvider.KYBER.getSwapProviderId()),
+            )
+        assertEquals("https://etherscan.io/tx/$hash", link)
+    }
+
+    @Test
     fun `SwapKit-routed HyperEVM tracks on SwapKit under chain 999`() {
         // HyperEVM used to fall through to the source-chain link because `/track` carried a
         // hand-written chain list it was missing from. EVM ids are derived now, so it tracks on
