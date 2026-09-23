@@ -1681,6 +1681,8 @@
     <string name="typed_data_token_approval">토큰 승인</string>
     <string name="typed_data_token">토큰</string>
     <string name="typed_data_approval_amount">승인 금액</string>
+    <string name="typed_data_token_transfer">토큰 전송</string>
+    <string name="typed_data_transfer_amount">전송 금액</string>
     <string name="typed_data_approval_expires">승인 만료</string>
     <string name="typed_data_no_expiry">만료 없음</string>
     <string name="typed_data_domain">도메인</string>

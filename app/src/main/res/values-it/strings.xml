@@ -1670,6 +1670,8 @@
     <string name="typed_data_token_approval">Approvazione token</string>
     <string name="typed_data_token">Token</string>
     <string name="typed_data_approval_amount">Importo approvazione</string>
+    <string name="typed_data_token_transfer">Trasferimento token</string>
+    <string name="typed_data_transfer_amount">Importo trasferimento</string>
     <string name="typed_data_approval_expires">Scadenza approvazione</string>
     <string name="typed_data_no_expiry">Nessuna scadenza</string>
     <string name="typed_data_domain">Dominio</string>

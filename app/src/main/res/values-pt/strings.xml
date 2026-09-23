@@ -1664,6 +1664,8 @@
     <string name="typed_data_token_approval">Aprovação de token</string>
     <string name="typed_data_token">Token</string>
     <string name="typed_data_approval_amount">Valor da aprovação</string>
+    <string name="typed_data_token_transfer">Transferência de token</string>
+    <string name="typed_data_transfer_amount">Valor da transferência</string>
     <string name="typed_data_approval_expires">Aprovação expira</string>
     <string name="typed_data_no_expiry">Sem expiração</string>
     <string name="typed_data_domain">Domínio</string>

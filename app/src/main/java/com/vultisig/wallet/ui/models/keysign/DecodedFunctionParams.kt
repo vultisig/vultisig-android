@@ -339,7 +339,7 @@ private class RowSink {
 }
 
 /** Trailing warning row shown when the leaf list was capped at [MAX_PARAM_ROWS]. */
-private fun truncatedRow(): DecodedFunctionParam =
+internal fun truncatedRow(): DecodedFunctionParam =
     DecodedFunctionParam(
         label = R.string.decoded_function_truncated.asUiText(),
         value = UiText.DynamicString("…"),
@@ -506,7 +506,7 @@ private fun sanitizedName(abi: AbiParam?): String? =
  * already applies to names so a hostile `string` param can't smuggle reordering, invisible content,
  * or an unbounded blob onto the signing screen.
  */
-private fun sanitizedValue(raw: String): String {
+internal fun sanitizedValue(raw: String): String {
     val stripped = sanitizeDisplayString(raw)
     return if (stripped.length > MAX_PARAM_VALUE_LENGTH) {
         stripped.take(MAX_PARAM_VALUE_LENGTH) + "…"
@@ -528,7 +528,7 @@ private val SOLIDITY_IDENTIFIER = Regex("[A-Za-z_][A-Za-z0-9_]*")
 private const val MAX_PARAM_NAME_LENGTH = 40
 private const val MAX_PARAM_VALUE_LENGTH = 256
 private const val MAX_PARAM_DEPTH = 8
-private const val MAX_PARAM_ROWS = 64
+internal const val MAX_PARAM_ROWS = 64
 
 private fun addressRow(
     label: UiText,

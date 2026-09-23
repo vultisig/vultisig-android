@@ -1988,6 +1988,8 @@
     <string name="typed_data_token_approval">代币授权</string>
     <string name="typed_data_token">代币</string>
     <string name="typed_data_approval_amount">授权金额</string>
+    <string name="typed_data_token_transfer">代币转账</string>
+    <string name="typed_data_transfer_amount">转账金额</string>
     <string name="typed_data_approval_expires">授权到期</string>
     <string name="typed_data_no_expiry">永不过期</string>
     <string name="typed_data_domain">域</string>

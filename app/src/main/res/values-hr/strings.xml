@@ -1677,6 +1677,8 @@
     <string name="typed_data_token_approval">Odobrenje tokena</string>
     <string name="typed_data_token">Token</string>
     <string name="typed_data_approval_amount">Iznos odobrenja</string>
+    <string name="typed_data_token_transfer">Prijenos tokena</string>
+    <string name="typed_data_transfer_amount">Iznos prijenosa</string>
     <string name="typed_data_approval_expires">Odobrenje istječe</string>
     <string name="typed_data_no_expiry">Bez isteka</string>
     <string name="typed_data_domain">Domena</string>

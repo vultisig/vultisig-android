@@ -3,6 +3,9 @@ package com.vultisig.wallet.ui.models.sign
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
+import com.vultisig.wallet.ui.models.keysign.MAX_PARAM_ROWS
+import com.vultisig.wallet.ui.models.keysign.sanitizedValue
+import com.vultisig.wallet.ui.models.keysign.truncatedRow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
@@ -31,7 +34,9 @@ internal fun permitRows(
     add(
         DecodedFunctionParam(
             label = R.string.typed_data_action.asUiText(),
-            value = R.string.typed_data_token_approval.asUiText(),
+            value =
+                if (permit.isTransfer) R.string.typed_data_token_transfer.asUiText()
+                else R.string.typed_data_token_approval.asUiText(),
         )
     )
 
@@ -71,14 +76,15 @@ internal fun permitRows(
 /**
  * The rows for typed data that is not a known permit: where it comes from, what it is, and each
  * top-level field of the message as written. Nested values are shown as their JSON, since a
- * generic reading cannot say what they mean.
+ * generic reading cannot say what they mean. Keys and values come straight from the dApp, so they
+ * are sanitized and length-capped, and the field count is capped at [MAX_PARAM_ROWS].
  */
 internal fun typedDataRows(data: Eip712TypedData): List<DecodedFunctionParam> = buildList {
     data.domainName?.let { name ->
         add(
             DecodedFunctionParam(
                 label = R.string.typed_data_domain.asUiText(),
-                value = name.asUiText(),
+                value = sanitizedValue(name).asUiText(),
             )
         )
     }
@@ -93,12 +99,18 @@ internal fun typedDataRows(data: Eip712TypedData): List<DecodedFunctionParam> = 
     add(
         DecodedFunctionParam(
             label = R.string.typed_data_primary_type.asUiText(),
-            value = data.primaryType.asUiText(),
+            value = sanitizedValue(data.primaryType).asUiText(),
         )
     )
-    data.message.forEach { (key, value) ->
-        add(DecodedFunctionParam(label = key.asUiText(), value = value.flatString().asUiText()))
+    data.message.entries.take(MAX_PARAM_ROWS).forEach { (key, value) ->
+        add(
+            DecodedFunctionParam(
+                label = sanitizedValue(key).asUiText(),
+                value = sanitizedValue(value.flatString()).asUiText(),
+            )
+        )
     }
+    if (data.message.size > MAX_PARAM_ROWS) add(truncatedRow())
 }
 
 private fun tokenRow(token: PermitToken, info: PermitTokenInfo?): DecodedFunctionParam =
@@ -134,7 +146,9 @@ private fun amountRow(
             else -> token.amount.toString().asUiText()
         }
     return DecodedFunctionParam(
-        label = R.string.typed_data_approval_amount.asUiText(),
+        label =
+            if (permit.isTransfer) R.string.typed_data_transfer_amount.asUiText()
+            else R.string.typed_data_approval_amount.asUiText(),
         value = value,
         isWarning = isUnlimited,
     )

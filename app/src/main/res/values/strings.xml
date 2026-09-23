@@ -1723,6 +1723,8 @@
     <string name="typed_data_token_approval">Token Approval</string>
     <string name="typed_data_token">Token</string>
     <string name="typed_data_approval_amount">Approval amount</string>
+    <string name="typed_data_token_transfer">Token Transfer</string>
+    <string name="typed_data_transfer_amount">Transfer amount</string>
     <string name="typed_data_approval_expires">Approval expires</string>
     <string name="typed_data_no_expiry">No expiry</string>
     <string name="typed_data_domain">Domain</string>

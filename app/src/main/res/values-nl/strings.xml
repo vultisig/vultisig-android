@@ -1659,6 +1659,8 @@
     <string name="typed_data_token_approval">Tokengoedkeuring</string>
     <string name="typed_data_token">Token</string>
     <string name="typed_data_approval_amount">Goedkeuringsbedrag</string>
+    <string name="typed_data_token_transfer">Tokenoverdracht</string>
+    <string name="typed_data_transfer_amount">Overdrachtsbedrag</string>
     <string name="typed_data_approval_expires">Goedkeuring verloopt</string>
     <string name="typed_data_no_expiry">Geen vervaldatum</string>
     <string name="typed_data_domain">Domein</string>

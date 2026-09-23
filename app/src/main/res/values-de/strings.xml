@@ -1667,6 +1667,8 @@
     <string name="typed_data_token_approval">Token-Freigabe</string>
     <string name="typed_data_token">Token</string>
     <string name="typed_data_approval_amount">Freigabebetrag</string>
+    <string name="typed_data_token_transfer">Token-Überweisung</string>
+    <string name="typed_data_transfer_amount">Überweisungsbetrag</string>
     <string name="typed_data_approval_expires">Freigabe läuft ab</string>
     <string name="typed_data_no_expiry">Kein Ablauf</string>
     <string name="typed_data_domain">Domain</string>

@@ -71,6 +71,10 @@ internal data class Eip712Permit(
             else -> false
         }
 
+    /** Permit2 `PermitTransferFrom` shapes sign a one-time transfer rather than an allowance. */
+    val isTransfer: Boolean
+        get() = primaryType == PERMIT_TRANSFER_FROM || primaryType == PERMIT_BATCH_TRANSFER_FROM
+
     companion object {
         const val PERMIT = "Permit"
         const val PERMIT_SINGLE = "PermitSingle"
@@ -82,6 +86,12 @@ internal data class Eip712Permit(
 
 private val MAX_UINT256: BigInteger = BigInteger.ONE.shiftLeft(256) - BigInteger.ONE
 private val MAX_UINT160: BigInteger = BigInteger.ONE.shiftLeft(160) - BigInteger.ONE
+
+/**
+ * The most tokens a batch permit is read into rows for. Each one can cost a metadata lookup, so a
+ * larger batch falls back to the generic typed-data rows instead.
+ */
+private const val MAX_PERMIT_TOKENS = 16
 
 /** The permit this typed data carries, or null when its primary type is not a known permit. */
 internal fun Eip712TypedData.permitOrNull(): Eip712Permit? {
@@ -130,6 +140,7 @@ private fun Eip712TypedData.permit2Single(): ParsedPermit? {
 
 private fun Eip712TypedData.permit2Batch(): ParsedPermit? {
     val details = message["details"] as? JsonArray ?: return null
+    if (details.size > MAX_PERMIT_TOKENS) return null
     val tokens = details.map { (it as? JsonObject)?.allowanceToken() ?: return null }
     return tokens to message["sigDeadline"]?.bigIntegerOrNull()
 }
@@ -142,6 +153,7 @@ private fun Eip712TypedData.permit2TransferFrom(): ParsedPermit? {
 
 private fun Eip712TypedData.permit2BatchTransferFrom(): ParsedPermit? {
     val permitted = message["permitted"] as? JsonArray ?: return null
+    if (permitted.size > MAX_PERMIT_TOKENS) return null
     val tokens = permitted.map { (it as? JsonObject)?.transferToken() ?: return null }
     return tokens to message["deadline"]?.bigIntegerOrNull()
 }

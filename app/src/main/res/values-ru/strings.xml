@@ -1680,6 +1680,8 @@
     <string name="typed_data_token_approval">Одобрение токена</string>
     <string name="typed_data_token">Токен</string>
     <string name="typed_data_approval_amount">Сумма одобрения</string>
+    <string name="typed_data_token_transfer">Перевод токена</string>
+    <string name="typed_data_transfer_amount">Сумма перевода</string>
     <string name="typed_data_approval_expires">Одобрение истекает</string>
     <string name="typed_data_no_expiry">Бессрочно</string>
     <string name="typed_data_domain">Домен</string>
