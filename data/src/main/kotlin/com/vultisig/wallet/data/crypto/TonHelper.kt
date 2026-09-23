@@ -80,13 +80,11 @@ object TonHelper {
     private fun buildTonConnectTransfer(msg: TonMessage): TheOpenNetwork.Transfer {
         val toAddress = AnyAddress(msg.to, CoinType.TON)
         val amount = msg.amount.toLongOrNull() ?: 0L
-        val bounceable = isTonConnectMessageBounceable(msg.to, !msg.stateInit.isNullOrEmpty())
-
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
             .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
             .setMode(SEND_MODE)
-            .setBounceable(bounceable)
+            .setBounceable(msg.isBounceable())
             .apply {
                 msg.payload?.takeIf { it.isNotEmpty() }?.let { setCustomPayload(it) }
                 msg.stateInit?.takeIf { it.isNotEmpty() }?.let { setStateInit(it) }
@@ -96,18 +94,17 @@ object TonHelper {
 
     /**
      * The bounce flag a dApp message declares through its own destination, never the wallet-level
-     * `tonSpecific.bounceable` (which only describes `toAddress`, the first message). The flag is
-     * part of the signed body, so this must match the initiator (SDK `getTonMessageBounceable`):
-     * a friendly address carries it in its tag (`EQ` bounceable, `UQ` not); a raw `wc:hex` address
-     * carries none, so it is bounceable unless the message deploys the destination via stateInit.
-     * Applying the wallet-level flag to every message signed a bounceable bit on STON.fi's `UQ`
-     * self-message, diverging the pre-image hash from the extension and failing the swap.
+     * `tonSpecific.bounceable`. The flag is part of the signed body, so this must match the
+     * initiator (SDK `getTonMessageBounceable`): `EQ` bounceable, `UQ` not, and a raw `wc:hex`
+     * address — the only form `AnyAddress` accepts without a tag — bounceable unless the message
+     * deploys the destination via `stateInit`.
      */
-    private fun isTonConnectMessageBounceable(address: String, hasStateInit: Boolean): Boolean {
-        val trimmed = address.trim()
-        if (TON_RAW_ADDRESS.matches(trimmed)) return !hasStateInit
-        return TonAddressFlags.bounceabilityOf(trimmed) == TonBounceability.BOUNCEABLE
-    }
+    private fun TonMessage.isBounceable(): Boolean =
+        when (TonAddressFlags.bounceabilityOf(to)) {
+            TonBounceability.BOUNCEABLE -> true
+            TonBounceability.NON_BOUNCEABLE -> false
+            TonBounceability.UNSPECIFIED -> stateInit.isNullOrEmpty()
+        }
 
     private fun buildNativeTransfer(
         payload: KeysignPayload,
@@ -264,7 +261,4 @@ object TonHelper {
     private const val SEND_MODE = TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
 
     private const val MAX_TON_MESSAGES = 4
-
-    /** Any raw `workchain:hash` spelling WalletCore accepts (`0:`, `00:`, `-1:`, `0x…`). */
-    private val TON_RAW_ADDRESS = Regex("^[+-]?\\d+:(?:0x)?[0-9a-fA-F]{64}$")
 }
