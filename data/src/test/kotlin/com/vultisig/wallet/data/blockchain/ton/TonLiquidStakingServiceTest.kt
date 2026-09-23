@@ -129,6 +129,30 @@ internal class TonLiquidStakingServiceTest {
     }
 
     @Test
+    fun `a pool payload with no rate in it is a failed read`() = runTest {
+        // What a tonapi field rename looks like: the call succeeds, every field decodes absent.
+        coEvery { tonStakingApi.getLiquidPoolData(any()) } returns TonLiquidPoolDataJson()
+        coEvery { tonStakingApi.getStakingPool(any()) } returns null
+
+        assertNull(service.getPoolState())
+    }
+
+    @Test
+    fun `an unreadable deposit gate on a priced pool stays open`() = runTest {
+        // Deliberate: the gate is a governance flag, the contract refuses a closed deposit anyway,
+        // and failing closed would turn a decoder drift into a dead stake form.
+        coEvery { tonStakingApi.getLiquidPoolData(any()) } returns
+            TonLiquidPoolDataJson(
+                totalBalance = 116_000_000_000L,
+                supply = 100_000_000_000L,
+                depositsOpen = null,
+            )
+        coEvery { tonStakingApi.getStakingPool(any()) } returns null
+
+        assertEquals(true, service.getPoolState()?.isDepositOpen)
+    }
+
+    @Test
     fun `the pool state outlives a position window`() = runTest {
         givenJettonWallet(balance = "4300000000")
         givenPool()

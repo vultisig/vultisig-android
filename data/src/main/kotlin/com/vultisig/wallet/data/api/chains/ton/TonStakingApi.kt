@@ -176,7 +176,22 @@ data class TonLiquidPoolDataJson(
     @SerialName("optimistic_deposit_withdrawals")
     val optimisticDepositWithdrawals: JsonPrimitive? = null,
 ) {
-    /** Whether the pool currently accepts deposits; an unreadable flag is treated as open. */
+    /**
+     * Whether the decoded payload carries a rate. tonapi decodes the get-method output by field
+     * name, so a rename or a shape drift reads as every field absent: zero balances and flags left
+     * to their fallbacks. A pool holding nothing and having minted nothing is not a state the live
+     * pool can be in, so that payload is a failed read rather than a rate-less pool — which is what
+     * lets the two flags below fall back permissively.
+     */
+    val hasRate: Boolean
+        get() = totalBalance > 0 && supply > 0
+
+    /**
+     * Whether the pool currently accepts deposits. An unreadable flag on a payload that does carry
+     * a rate is treated as open: the gate is a governance flag that has been open for the life of
+     * the pool, a closed deposit is refused by the contract anyway (the message bounces), and
+     * failing closed here would turn a tonapi field rename into a permanently dead stake form.
+     */
     val isDepositOpen: Boolean
         get() = depositsOpen.asFlag() ?: true
 

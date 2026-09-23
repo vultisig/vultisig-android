@@ -148,7 +148,9 @@ internal constructor(
                 null
             }
         }
-        val data = fullData.await() ?: return@coroutineScope null
+        // A payload with no rate in it is a failed read, not a pool worth zero: without the rate
+        // there is no position value and no stake preview, and its flags would be fallbacks.
+        val data = fullData.await()?.takeIf { it.hasRate } ?: return@coroutineScope null
         val info = listing.await()
         TonLiquidPoolState(
             totalBalance = BigInteger.valueOf(data.totalBalance),
