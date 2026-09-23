@@ -18,10 +18,10 @@ import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Route
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigInteger
-import kotlin.test.assertIs
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -74,7 +74,7 @@ internal class BuildKeysignTransactionUiModelDepositTest {
                     transactionId = TX_ID,
                 )
 
-            assertIs<TransactionTypeUiModel.Deposit>(result?.transactionTypeUiModel)
+            result?.transactionTypeUiModel.shouldBeInstanceOf<TransactionTypeUiModel.Deposit>()
         }
 
     @Test
@@ -92,7 +92,7 @@ internal class BuildKeysignTransactionUiModelDepositTest {
                 transactionId = TX_ID,
             )
 
-        assertIs<TransactionTypeUiModel.Send>(result?.transactionTypeUiModel)
+        result?.transactionTypeUiModel.shouldBeInstanceOf<TransactionTypeUiModel.Send>()
     }
 
     private fun tonstakersPayload() =
