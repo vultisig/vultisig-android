@@ -5,7 +5,6 @@ import com.vultisig.wallet.data.models.Chain
 import java.math.BigInteger
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -34,13 +33,8 @@ data class SubstrateSignerPayload(
     val blockNumber: String,
     val address: String,
     /**
-     * The runtime's signed extensions as polkadot.js lists them. Only `CheckMetadataHash` changes
-     * the signed bytes; every other relay / Bittensor extension is either byte-less or already
-     * covered by the fixed fields above.
-     */
-    val signedExtensions: List<String>,
-    /**
-     * `CheckMetadataHash` mode (`u8`, 0 = disabled), present only when that extension is listed.
+     * `CheckMetadataHash` mode (`u8`, 0 = disabled, 1 = enabled), or empty when the dApp omitted
+     * it.
      */
     val mode: String,
     /** `CheckMetadataHash` hash, or empty for polkadot.js's `null`. */
@@ -79,27 +73,28 @@ data class SubstrateSignerPayload(
     }
 
     /**
-     * True when the runtime signs `CheckMetadataHash` (Polkadot relay since spec 1_002_000,
-     * Bittensor likewise). polkadot.js then puts `mode` after the tip and `Option<metadataHash>`
-     * after the block hash — see [modeByte] and [metadataHashOption].
+     * The `CheckMetadataHash` `mode` as a `u8`; an absent mode is 0 (disabled). The runtime decodes
+     * only 0 and 1, so anything else is refused, as the extension does.
      */
-    val hasCheckMetadataHash: Boolean
-        get() = CHECK_METADATA_HASH in signedExtensions
-
-    /** The `CheckMetadataHash` `mode` as a `u8`; an absent mode is 0 (disabled). */
     fun modeByte(): Byte {
         if (mode.isEmpty()) return 0
         val value =
-            mode.toIntOrNull()?.takeIf { it in 0..U8_MAX }
+            mode.toIntOrNull()?.takeIf { it == MODE_DISABLED || it == MODE_ENABLED }
                 ?: error("Substrate signer payload has a malformed mode")
         return value.toByte()
     }
 
     /**
      * The `CheckMetadataHash` additional-signed bytes: SCALE `Option<[u8;32]>`, `0x00` for
-     * polkadot.js's `null` and `0x01` followed by the hash otherwise.
+     * polkadot.js's `null` and `0x01` followed by the hash otherwise. The runtime derives it as
+     * `mode == 1 ? Some(hash) : None`, so a hash that disagrees with the mode is refused, as the
+     * extension does — its signature could never verify on-chain.
      */
     fun metadataHashOption(): ByteArray {
+        val enabled = modeByte().toInt() == MODE_ENABLED
+        check(enabled == metadataHash.isNotEmpty()) {
+            "Substrate signer payload metadataHash does not match its mode"
+        }
         if (metadataHash.isEmpty()) return byteArrayOf(OPTION_NONE)
         val hash = hexBytes("metadataHash", metadataHash)
         check(hash.size == HASH_LENGTH) { "Substrate signer payload metadataHash is not 32 bytes" }
@@ -134,11 +129,11 @@ data class SubstrateSignerPayload(
     companion object {
         private const val HEX_PREFIX = "0x"
         private const val U32_MAX = 0xFFFF_FFFFL
-        private const val U8_MAX = 0xFF
+        private const val MODE_DISABLED = 0
+        private const val MODE_ENABLED = 1
         private const val HASH_LENGTH = 32
         private const val OPTION_NONE: Byte = 0x00
         private const val OPTION_SOME: Byte = 0x01
-        private const val CHECK_METADATA_HASH = "CheckMetadataHash"
 
         /**
          * Reads a signer payload out of a keysign memo under the extension's rule: the memo parses
@@ -168,10 +163,6 @@ data class SubstrateSignerPayload(
                 blockHash = obj.string("blockHash"),
                 blockNumber = obj.string("blockNumber"),
                 address = obj.string("address"),
-                signedExtensions =
-                    (obj["signedExtensions"] as? JsonArray)
-                        ?.mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content }
-                        .orEmpty(),
                 // polkadot.js sends `mode` as a JSON number, so it is read as a scalar of any kind.
                 mode = (obj["mode"] as? JsonPrimitive)?.contentOrNull ?: "",
                 metadataHash = obj.string("metadataHash"),
