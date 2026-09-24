@@ -360,7 +360,9 @@ class ThorChainHelper(
                     Cosmos.Message.THORChainDeposit.newBuilder()
                         .apply {
                             this.signer = ByteString.copyFrom(fromAddress)
-                            this.memo = memo
+                            // dApp deposits (e.g. from the extension) can arrive without a memo;
+                            // the proto setter rejects null, and "" encodes the same as unset.
+                            this.memo = memo.orEmpty()
                             this.addCoins(coin)
                         }
                         .build()
