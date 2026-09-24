@@ -29,7 +29,6 @@ internal class ParseCosmosMessageUseCaseImpl(
     override fun invoke(signDirect: SignDirectProto): CosmosMessage {
         require(signDirect.chainId.isNotBlank()) { "Chain ID cannot be blank" }
         require(signDirect.accountNumber.isNotBlank()) { "Account number cannot be blank" }
-        require(signDirect.bodyBytes.isNotBlank()) { "Body bytes cannot be blank" }
         require(signDirect.authInfoBytes.isNotBlank()) { "Auth info bytes cannot be blank" }
 
         return try {
@@ -55,7 +54,10 @@ internal class ParseCosmosMessageUseCaseImpl(
     }
 
     internal fun decodeTxBodySafe(input: String): TxBody {
-        require(input.isNotBlank()) { "TxBody input cannot be blank" }
+        // A SignDoc with no messages and no memo serialises its body to zero bytes. dApps send
+        // these (e.g. the playground's empty Direct Sign), and the extension and iOS both sign
+        // them, so an empty body reads as an empty TxBody rather than a malformed payload.
+        if (input.isEmpty()) return TxBody()
 
         val decodedBytes =
             try {
@@ -64,16 +66,11 @@ internal class ParseCosmosMessageUseCaseImpl(
                 throw IllegalArgumentException("Invalid base64 encoding in TxBody", e)
             }
 
-        val txBody =
-            try {
-                protoBuf.decodeFromByteArray<TxBody>(decodedBytes)
-            } catch (e: Exception) {
-                throw IllegalArgumentException("Failed to decode TxBody: ${e.message}", e)
-            }
-
-        require(txBody.messages.isNotEmpty()) { "TxBody must contain at least one message" }
-
-        return txBody
+        return try {
+            protoBuf.decodeFromByteArray<TxBody>(decodedBytes)
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Failed to decode TxBody: ${e.message}", e)
+        }
     }
 
     internal fun decodeAuthInfoSafe(input: String): AuthInfo {
