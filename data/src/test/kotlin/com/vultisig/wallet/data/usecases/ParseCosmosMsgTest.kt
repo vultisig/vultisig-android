@@ -318,7 +318,7 @@ class ParseCosmosMessageTest {
     }
 
     @Test
-    fun `parseCosmosMessage should throw when bodyBytes is blank`() {
+    fun `parseCosmosMessage should read blank bodyBytes as an empty body`() {
         val authInfo = createValidAuthInfo()
 
         val signDirect =
@@ -329,7 +329,9 @@ class ParseCosmosMessageTest {
                 authInfoBytes = encodeAuthInfo(authInfo),
             )
 
-        assertFailsWith<IllegalArgumentException> { parseCosmosMessage(signDirect) }
+        val result = parseCosmosMessage(signDirect)
+        assertEquals(emptyList(), result.messages)
+        assertEquals("", result.memo)
     }
 
     @Test
@@ -372,9 +374,11 @@ class ParseCosmosMessageTest {
     }
 
     @Test
-    fun `decodeTxBodySafe should throw when TxBody has no messages`() {
+    fun `decodeTxBodySafe should accept a TxBody with no messages`() {
         val emptyTxBody = TxBody(messages = emptyList(), memo = "no messages")
-        assertFailsWith<IllegalArgumentException> { decodeTxBodySafe(encodeTxBody(emptyTxBody)) }
+        val result = decodeTxBodySafe(encodeTxBody(emptyTxBody))
+        assertEquals(emptyList(), result.messages)
+        assertEquals("no messages", result.memo)
     }
 
     @Test
