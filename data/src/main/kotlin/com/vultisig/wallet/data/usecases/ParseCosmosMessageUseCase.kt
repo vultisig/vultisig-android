@@ -57,7 +57,7 @@ internal class ParseCosmosMessageUseCaseImpl(
         // A SignDoc with no messages and no memo serialises its body to zero bytes. dApps send
         // these (e.g. the playground's empty Direct Sign), and the extension and iOS both sign
         // them, so an empty body reads as an empty TxBody rather than a malformed payload.
-        if (input.isBlank()) return TxBody()
+        if (input.isEmpty()) return TxBody()
 
         val decodedBytes =
             try {
