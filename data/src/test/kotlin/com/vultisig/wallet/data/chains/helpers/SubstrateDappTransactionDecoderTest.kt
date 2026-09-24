@@ -96,6 +96,7 @@ class SubstrateDappTransactionDecoderTest {
                 SubstrateDappTxFieldKey.TRANSACTION_VERSION to "26",
                 SubstrateDappTxFieldKey.GENESIS_HASH to GENESIS,
                 SubstrateDappTxFieldKey.BLOCK_HASH to BLOCK_HASH,
+                SubstrateDappTxFieldKey.METADATA_HASH_MODE to "0",
             )
     }
 
@@ -128,28 +129,6 @@ class SubstrateDappTransactionDecoderTest {
         tx.fields.last().key shouldBe SubstrateDappTxFieldKey.METADATA_HASH_MODE
         tx.fields.last().value shouldBe "0"
         tx.fields.none { it.key == SubstrateDappTxFieldKey.METADATA_HASH } shouldBe true
-    }
-
-    @Test
-    fun `a CheckMetadataHash mode above 127 is listed unsigned`() {
-        val tx =
-            decode(
-                "0x0000",
-                extensions =
-                    ""","signedExtensions":["CheckMetadataHash"],"mode":255,"metadataHash":null""",
-            )
-
-        tx.fields.last().value shouldBe "255"
-    }
-
-    @Test
-    fun `a payload without the extension lists neither`() {
-        val tx = decode("0x0000", extensions = ""","signedExtensions":["CheckMortality"]""")
-
-        tx.fields.none {
-            it.key == SubstrateDappTxFieldKey.METADATA_HASH_MODE ||
-                it.key == SubstrateDappTxFieldKey.METADATA_HASH
-        } shouldBe true
     }
 
     private companion object {

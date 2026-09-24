@@ -51,10 +51,12 @@ class SubstrateDappSignerTest {
                 "0000" + // era
                 "00" + // compact(nonce = 0)
                 "00" + // compact(tip = 0)
+                "00" + // mode = 0
                 "00000000" + // specVersion
                 "00000000" + // transactionVersion
                 GENESIS.removePrefix("0x") +
-                "00".repeat(32)
+                "00".repeat(32) +
+                "00" // Option<metadataHash> = None
     }
 
     @Test
@@ -64,10 +66,12 @@ class SubstrateDappSignerTest {
                 "f502" + // era
                 "1d01" + // compact(0x47 = 71): two-byte mode
                 "1e5a4b00" + // compact(1_234_567): four-byte mode
+                "00" + // CheckMetadataHash mode = 0
                 "f84e0f00" + // specVersion 1_003_256 LE
                 "1a000000" + // transactionVersion 26 LE
                 GENESIS.removePrefix("0x") +
-                BLOCK_HASH.removePrefix("0x")
+                BLOCK_HASH.removePrefix("0x") +
+                "00" // Option<metadataHash> = None
     }
 
     @Test
@@ -85,10 +89,12 @@ class SubstrateDappSignerTest {
                 "f502" +
                 "0104" + // compact(256)
                 "0b000000000001" + // compact(2^40): (5 bytes - 4) << 2 | 0b11, then LE magnitude
+                "00" +
                 "f84e0f00" +
                 "1a000000" +
                 GENESIS.removePrefix("0x") +
-                BLOCK_HASH.removePrefix("0x")
+                BLOCK_HASH.removePrefix("0x") +
+                "00"
     }
 
     @Test
@@ -97,7 +103,7 @@ class SubstrateDappSignerTest {
             SubstrateDappSigner.signingBytes(payload("method" to "0x0700" + "ab".repeat(300)))
 
         bytes.size shouldBe 32
-        hex(bytes) shouldBe "a9d2d11c8c7cb30008df8f2b6fab7f7a40d3171708a9b50874545c69c2875850"
+        hex(bytes) shouldBe "6b59d26a37914c7bd362b8dee98e2790b5643d1867cda84d5b28c093d1da634f"
     }
 
     @Test
@@ -114,7 +120,7 @@ class SubstrateDappSignerTest {
 
     // Vectors from `@polkadot/types` 16.5.6 `ExtrinsicPayload.toU8a({ method: true })` with the
     // relay chain's signed extensions. `mode` sits after the tip, `Option<metadataHash>` after the
-    // block hash; neither exists when the payload does not list CheckMetadataHash.
+    // block hash.
     @Test
     fun `CheckMetadataHash adds the mode byte and a None metadata hash`() {
         val bytes =
@@ -160,20 +166,28 @@ class SubstrateDappSignerTest {
     }
 
     @Test
-    fun `a payload without CheckMetadataHash signs the legacy layout even if mode is present`() {
-        val legacy = SubstrateDappSigner.signingBytes(payload())
-        val withStrayMode =
+    fun `the metadata hash bytes are signed whatever signedExtensions lists`() {
+        val unlisted = SubstrateDappSigner.signingBytes(payload())
+        val listed =
             SubstrateDappSigner.signingBytes(
-                payload(extras = "\"signedExtensions\":[\"CheckMortality\"],\"mode\":0")
+                payload(extras = "$RELAY_EXTENSIONS,\"mode\":0,\"metadataHash\":null")
             )
 
-        hex(withStrayMode) shouldBe hex(legacy)
+        hex(unlisted) shouldBe hex(listed)
     }
 
     @Test
     fun `a malformed mode or metadata hash is refused`() {
         shouldThrow<IllegalStateException> {
-            SubstrateDappSigner.signingBytes(payload(extras = "$RELAY_EXTENSIONS,\"mode\":256"))
+            SubstrateDappSigner.signingBytes(payload(extras = "$RELAY_EXTENSIONS,\"mode\":2"))
+        }
+        shouldThrow<IllegalStateException> {
+            SubstrateDappSigner.signingBytes(payload(extras = "$RELAY_EXTENSIONS,\"mode\":1"))
+        }
+        shouldThrow<IllegalStateException> {
+            SubstrateDappSigner.signingBytes(
+                payload(extras = "$RELAY_EXTENSIONS,\"mode\":0,\"metadataHash\":\"0x${"ab".repeat(32)}\"")
+            )
         }
         shouldThrow<IllegalStateException> {
             SubstrateDappSigner.signingBytes(

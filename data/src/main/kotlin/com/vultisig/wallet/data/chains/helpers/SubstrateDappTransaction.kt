@@ -19,7 +19,7 @@ enum class SubstrateDappTxFieldKey {
     TRANSACTION_VERSION,
     GENESIS_HASH,
     BLOCK_HASH,
-    /** `CheckMetadataHash` mode, listed only when the runtime signs that extension. */
+    /** `CheckMetadataHash` mode, always signed. */
     METADATA_HASH_MODE,
     /** The `CheckMetadataHash` hash, listed only when the payload carries one. */
     METADATA_HASH,
@@ -62,9 +62,9 @@ object SubstrateDappTransactionDecoder {
      * Reads the transfer (if the call is one) and the fields of [payload]. A transfer whose bytes
      * the reader cannot follow is flagged, not thrown — see [SubstrateTransferCallReader].
      *
-     * The fields are every value [SubstrateDappSigner] signs, so the two `CheckMetadataHash` values
-     * appear exactly when the signer includes them: the mode whenever the extension is listed, the
-     * hash when the payload carries one (polkadot.js sends `null` under mode 0).
+     * The fields are every value [SubstrateDappSigner] signs, so the `CheckMetadataHash` mode is
+     * always listed and the hash when the payload carries one (polkadot.js sends `null` under mode
+     * 0).
      */
     fun decode(
         payload: SubstrateSignerPayload,
@@ -107,21 +107,14 @@ object SubstrateDappTransactionDecoder {
             )
             add(SubstrateDappTxField(SubstrateDappTxFieldKey.GENESIS_HASH, payload.genesisHash))
             add(SubstrateDappTxField(SubstrateDappTxFieldKey.BLOCK_HASH, payload.blockHash))
-            if (payload.hasCheckMetadataHash) {
-                add(
-                    SubstrateDappTxField(
-                        SubstrateDappTxFieldKey.METADATA_HASH_MODE,
-                        payload.modeByte().toUByte().toString(),
-                    )
+            add(
+                SubstrateDappTxField(
+                    SubstrateDappTxFieldKey.METADATA_HASH_MODE,
+                    payload.modeByte().toString(),
                 )
-                if (payload.metadataHash.isNotEmpty()) {
-                    add(
-                        SubstrateDappTxField(
-                            SubstrateDappTxFieldKey.METADATA_HASH,
-                            payload.metadataHash,
-                        )
-                    )
-                }
+            )
+            if (payload.metadataHash.isNotEmpty()) {
+                add(SubstrateDappTxField(SubstrateDappTxFieldKey.METADATA_HASH, payload.metadataHash))
             }
         }
         return SubstrateDappTx(
