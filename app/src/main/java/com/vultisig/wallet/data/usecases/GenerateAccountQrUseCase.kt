@@ -29,50 +29,41 @@ constructor(
     private val generateQrBitmap: GenerateQrBitmap,
     @param:ApplicationContext private val context: Context,
 ) : GenerateAccountQrUseCase {
-    override suspend fun invoke(address: String, logo: Int?): QrBitmapData {
+    override suspend fun invoke(address: String, logo: Int?): QrBitmapData =
+        withContext(Dispatchers.Default) { generateQr(address, renderLogo(logo)) }
 
-        val bitmap =
-            logo
-                ?.let { AppCompatResources.getDrawable(context, logo) }
-                ?.let { drawable ->
-                    val desiredSize =
-                        TypedValue.applyDimension(
-                                TypedValue.COMPLEX_UNIT_DIP,
-                                LOGO_SIZE_DP.toFloat(),
-                                context.resources.displayMetrics,
-                            )
-                            .toInt()
-                    val bitmap = createBitmap(desiredSize, desiredSize)
-                    val canvas = Canvas(bitmap)
-                    val path = Path()
-                    val radius = minOf(canvas.width, canvas.height) / LOGO_RADIUS_DIVISOR
+    private fun renderLogo(logo: Int?): Bitmap? =
+        logo
+            ?.let { AppCompatResources.getDrawable(context, logo) }
+            ?.let { drawable ->
+                val desiredSize =
+                    TypedValue.applyDimension(
+                            TypedValue.COMPLEX_UNIT_DIP,
+                            LOGO_SIZE_DP.toFloat(),
+                            context.resources.displayMetrics,
+                        )
+                        .toInt()
+                val bitmap = createBitmap(desiredSize, desiredSize)
+                val canvas = Canvas(bitmap)
+                val path = Path()
+                val radius = minOf(canvas.width, canvas.height) / LOGO_RADIUS_DIVISOR
 
-                    path.addCircle(
-                        canvas.width / 2f,
-                        canvas.height / 2f,
-                        radius,
-                        Path.Direction.CCW,
-                    )
-                    canvas.clipPath(path)
-                    canvas.drawColor(V2.colors.backgrounds.secondary.toArgb())
-                    drawable.setBounds(0, 0, canvas.width, canvas.height)
-                    drawable.draw(canvas)
-                    bitmap
-                }
-
-        return generateQr(address, bitmap)
-    }
-
-    private suspend fun generateQr(address: String, logo: Bitmap?): QrBitmapData {
-        val qrBitmap =
-            withContext(Dispatchers.IO) {
-                generateQrBitmap(
-                    address,
-                    colors.neutrals.n50.toArgb(),
-                    Color.Transparent.toArgb(),
-                    logo,
-                )
+                path.addCircle(canvas.width / 2f, canvas.height / 2f, radius, Path.Direction.CCW)
+                canvas.clipPath(path)
+                canvas.drawColor(V2.colors.backgrounds.secondary.toArgb())
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                bitmap
             }
+
+    private fun generateQr(address: String, logo: Bitmap?): QrBitmapData {
+        val qrBitmap =
+            generateQrBitmap(
+                address,
+                colors.neutrals.n50.toArgb(),
+                Color.Transparent.toArgb(),
+                logo,
+            )
 
         val bitmapPainter =
             BitmapPainter(image = qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None)

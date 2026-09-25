@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.usecases
 
 import android.graphics.Bitmap
 import androidx.annotation.ColorInt
-import androidx.core.graphics.scale
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
@@ -41,38 +40,33 @@ class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         val qrCodeWriter = QRCodeWriter()
         val bitmapMatrix = qrCodeWriter.encode(qrCodeContent, BarcodeFormat.QR_CODE, 0, 0, hintMap)
 
+        // Expand each module to a QR_CODE_SCALE_FACTOR square straight into one pixel buffer, so
+        // the full-resolution bitmap is written in a single call instead of pixel by pixel and
+        // then upscaled into a second copy.
         val matrixWidth = bitmapMatrix.width
         val matrixHeight = bitmapMatrix.height
+        val scaledWidth = matrixWidth * QR_CODE_SCALE_FACTOR
+        val scaledHeight = matrixHeight * QR_CODE_SCALE_FACTOR
 
-        val bitmap = Bitmap.createBitmap(matrixWidth, matrixHeight, Bitmap.Config.ARGB_8888)
-
-        if (bitmapMatrix == null) {
-            return bitmap
-        }
-
-        for (x in 0 until matrixWidth) {
-            for (y in 0 until matrixHeight) {
-                val shouldColorPixel = bitmapMatrix.get(x, y)
-                val pixelColor = if (shouldColorPixel) mainColor else backgroundColor
-
-                bitmap.setPixel(x, y, pixelColor)
+        val pixels = IntArray(scaledWidth * scaledHeight)
+        val row = IntArray(scaledWidth)
+        for (y in 0 until matrixHeight) {
+            for (x in 0 until matrixWidth) {
+                val pixelColor = if (bitmapMatrix.get(x, y)) mainColor else backgroundColor
+                row.fill(pixelColor, x * QR_CODE_SCALE_FACTOR, (x + 1) * QR_CODE_SCALE_FACTOR)
+            }
+            for (dy in 0 until QR_CODE_SCALE_FACTOR) {
+                row.copyInto(pixels, (y * QR_CODE_SCALE_FACTOR + dy) * scaledWidth)
             }
         }
+
+        val scaledBitmap = Bitmap.createBitmap(scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888)
+        scaledBitmap.setPixels(pixels, 0, scaledWidth, 0, 0, scaledWidth, scaledHeight)
 
         if (logo == null) {
-            // Upscale module-resolution matrix with nearest-neighbor so the shared/exported
-            // image is full-resolution instead of the raw module-resolution bitmap.
-            val noLogoWidth = bitmap.width * QR_CODE_SCALE_FACTOR
-            val noLogoHeight = bitmap.height * QR_CODE_SCALE_FACTOR
-            val scaledNoLogoBitmap = bitmap.scale(noLogoWidth, noLogoHeight, false)
-            if (bitmap != scaledNoLogoBitmap) {
-                bitmap.recycle()
-            }
-            return scaledNoLogoBitmap
+            return scaledBitmap
         }
 
-        val scaledWidth = bitmap.width * QR_CODE_SCALE_FACTOR
-        val scaledHeight = bitmap.height * QR_CODE_SCALE_FACTOR
         val scaledLogoWidthTemp = scaledWidth / QR_CODE_VS_LOGO_SCALE_FACTOR
         val scaledLogoHeightTemp = scaledHeight / QR_CODE_VS_LOGO_SCALE_FACTOR
         val scaledLogoWidth = if (scaledLogoWidthTemp == 0) 1 else scaledLogoWidthTemp
@@ -81,18 +75,12 @@ class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         // with a null color space, which raw `scale` rejects. Use the color-space-safe scale so a
         // shared/exported QR can never crash on this input.
         val scaledLogo = logo.scaleWithColorSpace(scaledLogoWidth, scaledLogoHeight)
-        val scaledBitmap = bitmap.scale(scaledWidth, scaledHeight, false)
-
         val canvas = android.graphics.Canvas(scaledBitmap)
 
         val xLogo = (scaledBitmap.width - scaledLogo.width) / 2f
         val yLogo = (scaledBitmap.height - scaledLogo.height) / 2f
 
         canvas.drawBitmap(scaledLogo, xLogo, yLogo, null)
-        if (bitmap != scaledBitmap) {
-            bitmap.recycle()
-        }
-
         if (scaledLogo != logo) {
             scaledLogo.recycle()
         }
