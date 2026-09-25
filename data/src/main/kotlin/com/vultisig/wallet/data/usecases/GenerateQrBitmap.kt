@@ -40,15 +40,15 @@ class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         val qrCodeWriter = QRCodeWriter()
         val bitmapMatrix = qrCodeWriter.encode(qrCodeContent, BarcodeFormat.QR_CODE, 0, 0, hintMap)
 
-        // Expand each module to a QR_CODE_SCALE_FACTOR square straight into one pixel buffer, so
-        // the full-resolution bitmap is written in a single call instead of pixel by pixel and
-        // then upscaled into a second copy.
+        // Expand each module row into one scaled pixel row and write it straight into the
+        // full-resolution bitmap QR_CODE_SCALE_FACTOR times, so no module-resolution bitmap or
+        // full-size pixel buffer is allocated alongside the output.
         val matrixWidth = bitmapMatrix.width
         val matrixHeight = bitmapMatrix.height
         val scaledWidth = matrixWidth * QR_CODE_SCALE_FACTOR
         val scaledHeight = matrixHeight * QR_CODE_SCALE_FACTOR
 
-        val pixels = IntArray(scaledWidth * scaledHeight)
+        val scaledBitmap = Bitmap.createBitmap(scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888)
         val row = IntArray(scaledWidth)
         for (y in 0 until matrixHeight) {
             for (x in 0 until matrixWidth) {
@@ -56,12 +56,17 @@ class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
                 row.fill(pixelColor, x * QR_CODE_SCALE_FACTOR, (x + 1) * QR_CODE_SCALE_FACTOR)
             }
             for (dy in 0 until QR_CODE_SCALE_FACTOR) {
-                row.copyInto(pixels, (y * QR_CODE_SCALE_FACTOR + dy) * scaledWidth)
+                scaledBitmap.setPixels(
+                    row,
+                    0,
+                    scaledWidth,
+                    0,
+                    y * QR_CODE_SCALE_FACTOR + dy,
+                    scaledWidth,
+                    1,
+                )
             }
         }
-
-        val scaledBitmap = Bitmap.createBitmap(scaledWidth, scaledHeight, Bitmap.Config.ARGB_8888)
-        scaledBitmap.setPixels(pixels, 0, scaledWidth, 0, 0, scaledWidth, scaledHeight)
 
         if (logo == null) {
             return scaledBitmap
