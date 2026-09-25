@@ -105,7 +105,7 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
                 parameter("vs_currencies", fiats)
                 header("Content-Type", "application/json")
             }
-            .body()
+            .bodyOrThrow()
 
     private suspend fun fetchContractPrices(
         chainId: String,
@@ -118,7 +118,7 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
                 parameter("vs_currencies", fiats)
                 header("Content-Type", "application/json")
             }
-            .body()
+            .bodyOrThrow()
 
     override suspend fun getMarketChart(
         id: String,

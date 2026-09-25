@@ -74,4 +74,35 @@ class CoinGeckoApiContractPriceChainTest {
             assertFalse(requestAttempted, "an unmapped chain must not reach the network")
             assertEquals(emptyMap<String, CurrencyToPrice>(), result)
         }
+
+    @Test
+    fun `getContractsPrice retries a non-success body that deserializes as an empty quote`() =
+        runTest {
+            var calls = 0
+            val engine = MockEngine {
+                calls += 1
+                respond(content = "{}", status = HttpStatusCode.BadGateway)
+            }
+            val api =
+                CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
+
+            val result = api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
+
+            assertEquals(2, calls)
+            assertEquals(emptyMap<String, CurrencyToPrice>(), result)
+        }
+
+    @Test
+    fun `getContractsPrice does not retry an empty success`() = runTest {
+        var calls = 0
+        val engine = MockEngine {
+            calls += 1
+            respond(content = "{}", status = HttpStatusCode.OK)
+        }
+        val api = CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
+
+        api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
+
+        assertEquals(1, calls)
+    }
 }
