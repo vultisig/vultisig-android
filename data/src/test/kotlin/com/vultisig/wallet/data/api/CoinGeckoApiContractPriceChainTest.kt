@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.utils.BigDecimalSerializerImpl
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -10,8 +11,11 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import java.math.BigDecimal
 import kotlin.test.assertContains
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
@@ -107,10 +111,27 @@ class CoinGeckoApiContractPriceChainTest {
                     headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
             )
         }
-        val api = CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
+        val api =
+            CoinGeckoApiImpl(
+                HttpClient(engine) {
+                    install(ContentNegotiation) {
+                        json(
+                            Json {
+                                ignoreUnknownKeys = true
+                                explicitNulls = false
+                                serializersModule =
+                                    SerializersModule {
+                                        contextual(BigDecimal::class, BigDecimalSerializerImpl())
+                                    }
+                            }
+                        )
+                    }
+                }
+            )
 
-        api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
+        val result = api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
 
         assertEquals(1, calls)
+        assertEquals(emptyMap<String, CurrencyToPrice>(), result)
     }
 }
