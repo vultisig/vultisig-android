@@ -48,7 +48,6 @@ internal fun TokenAddressQrBottomSheet(viewModel: TokenAddressQrViewModel = hilt
         qrBitmapPainter = uiState.qrCode,
         graphicsLayer = graphicsLayer,
         onDismiss = viewModel::back,
-        onBottomSheetExpanded = viewModel::loadData,
         onShareQrClick = { viewModel.shareQRCode(graphicsLayer = graphicsLayer) },
         onCopyAddressClick = {
             VsClipboardService.copy(context, uiState.chainAddress)
@@ -64,13 +63,12 @@ private fun TokenAddressQrBottomSheet(
     chainAddress: String,
     qrBitmapPainter: BitmapPainter?,
     graphicsLayer: GraphicsLayer,
-    onBottomSheetExpanded: () -> Unit = {},
     onDismiss: () -> Unit = {},
     onShareQrClick: () -> Unit = {},
     onCopyAddressClick: () -> Unit = {},
 ) {
 
-    DottyBottomSheet(onExpand = onBottomSheetExpanded, onDismiss = onDismiss) {
+    DottyBottomSheet(onDismiss = onDismiss) {
         TokenAddressQrContent(
             chainName = chainName,
             qrBitmapPainter = qrBitmapPainter,

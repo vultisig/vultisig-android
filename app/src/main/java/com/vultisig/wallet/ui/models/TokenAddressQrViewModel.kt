@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateAccountQrUseCase
-import com.vultisig.wallet.data.usecases.QrBitmapData
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -45,19 +44,19 @@ constructor(
     private val shareBitmap: ShareBitmapUseCase,
 ) : ViewModel() {
     val args = savedStateHandle.toRoute<Route.AddressQr>()
-    val uiState = MutableStateFlow(TokenAddressQr())
-    lateinit var qrBitmapData: QrBitmapData
+    val uiState =
+        MutableStateFlow(TokenAddressQr(chainName = args.name, chainAddress = args.address))
 
-    fun loadData() {
+    init {
+        // The address is already on the route, so build the code while the sheet slides in rather
+        // than after it settles.
+        loadData()
+    }
+
+    private fun loadData() {
         viewModelScope.launch {
-            qrBitmapData = generateAccountQrUseCase(args.address, args.logo)
-            uiState.update {
-                it.copy(
-                    chainName = args.name,
-                    chainAddress = args.address,
-                    qrCode = qrBitmapData.bitmapPainter,
-                )
-            }
+            val qrBitmapData = generateAccountQrUseCase(args.address, args.logo)
+            uiState.update { it.copy(qrCode = qrBitmapData.bitmapPainter) }
         }
     }
 
