@@ -31,6 +31,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 
+/** One over-long contract query used to fail the whole chain and leave every last-saved price in place. */
+internal const val CONTRACT_PRICE_BATCH_SIZE = 25
+
 interface TokenPriceRepository {
 
     suspend fun getCachedPrice(tokenId: String, appCurrency: AppCurrency): BigDecimal?
@@ -417,56 +420,82 @@ constructor(
         contractAddresses: List<String>,
         currencies: List<String>,
     ): Map<String, CurrencyToPrice> {
-        return coroutineScope {
-            val coinGeckoContractsPrice =
-                coinGeckoApi.getContractsPrice(
-                    chain = chain,
-                    contractAddresses = contractAddresses,
-                    currencies = currencies,
-                )
-            val notInCoinGeckoTokens =
-                contractAddresses.filterNot { address ->
-                    coinGeckoContractsPrice.keys.any { key -> key.equals(address, false) }
-                }
+        val coinGeckoContractsPrice =
+            fetchContractPricesInChunks(chain, contractAddresses, currencies)
+        val lifiContractsPrice =
+            lifiPricesForMissingContracts(
+                chain,
+                contractAddresses,
+                currencies,
+                coinGeckoContractsPrice,
+            )
+        return coinGeckoContractsPrice + lifiContractsPrice
+    }
 
-            // LI.FI only indexes EVM chains, so asking it about a THORChain/Maya/Cosmos contract
-            // could only ever fail. Skip it rather than fan out calls whose one possible answer is
-            // a miss. THORChain and Maya have their own route in nativeChainContractPrice; the
-            // Cosmos chains have none, so a contract there stays unpriced — but unpriced and
-            // unrecorded, rather than the zero this used to write down as a real quote.
-            if (notInCoinGeckoTokens.isEmpty() || chain.evmChainId() == null) {
-                return@coroutineScope coinGeckoContractsPrice
+    // LI.FI only indexes EVM chains. A miss is left unpriced, never written as zero.
+    private suspend fun lifiPricesForMissingContracts(
+        chain: Chain,
+        contractAddresses: List<String>,
+        currencies: List<String>,
+        found: Map<String, CurrencyToPrice>,
+    ): Map<String, CurrencyToPrice> {
+        val missing =
+            contractAddresses.filterNot { address ->
+                found.keys.any { key -> key.equals(address, ignoreCase = true) }
             }
+        if (missing.isEmpty() || chain.evmChainId() == null) return emptyMap()
 
-            val currency = currencies.first()
-            // LI.FI quotes in USD and every price below is multiplied by this rate, so a ZERO from
-            // a CoinGecko miss would cache a good quote as $0.00. Hand back what CoinGecko already
-            // resolved and leave the rest unpriced rather than recorded wrong.
-            val tetherPrice = tetherPriceFor(currency)
-            if (tetherPrice.signum() <= 0) {
-                Timber.w("No %s/USD rate available, skipping the LI.FI leg for %s", currency, chain)
-                return@coroutineScope coinGeckoContractsPrice
-            }
-            val lifiContractsPrice =
-                notInCoinGeckoTokens
-                    .map { contractAddress ->
-                        async {
-                            contractAddress to getLifiContractPriceInUsd(chain, contractAddress)
-                        }
-                    }
-                    .awaitAll()
-                    // Lifi quotes in USD, so convert with USDT into the local currency. A contract
-                    // it can't price is dropped, not recorded as zero: a zero is indistinguishable
-                    // from a real "worth nothing" quote, and callers persist what they are handed.
-                    // A quote of literal 0 from Lifi is treated the same way, for the same reason.
-                    .mapNotNull { (contractAddress, priceInUsd) ->
-                        priceInUsd
-                            ?.takeIf { it.signum() > 0 }
-                            ?.let { contractAddress to mapOf(currency to it * tetherPrice) }
-                    }
-                    .toMap()
-            coinGeckoContractsPrice + lifiContractsPrice
+        val currency = currencies.first()
+        // A zero USDT rate would turn a real USD quote into a cached $0.00.
+        val tetherPrice = tetherPriceFor(currency)
+        if (tetherPrice.signum() <= 0) {
+            Timber.w("No %s/USD rate available, skipping the LI.FI leg for %s", currency, chain)
+            return emptyMap()
         }
+
+        return coroutineScope {
+            missing
+                .map { contractAddress ->
+                    async { contractAddress to getLifiContractPriceInUsd(chain, contractAddress) }
+                }
+                .awaitAll()
+                .mapNotNull { (contractAddress, priceInUsd) ->
+                    priceInUsd
+                        ?.takeIf { it.signum() > 0 }
+                        ?.let { contractAddress to mapOf(currency to it * tetherPrice) }
+                }
+                .toMap()
+        }
+    }
+
+    /** A failed chunk must not discard prices the other chunks already returned. */
+    private suspend fun fetchContractPricesInChunks(
+        chain: Chain,
+        contractAddresses: List<String>,
+        currencies: List<String>,
+    ): Map<String, CurrencyToPrice> {
+        val merged = linkedMapOf<String, CurrencyToPrice>()
+        for (batch in contractAddresses.distinct().chunked(CONTRACT_PRICE_BATCH_SIZE)) {
+            try {
+                merged.putAll(
+                    coinGeckoApi.getContractsPrice(
+                        chain = chain,
+                        contractAddresses = batch,
+                        currencies = currencies,
+                    )
+                )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(
+                    e,
+                    "Contract price chunk failed for %s (%d addresses)",
+                    chain,
+                    batch.size,
+                )
+            }
+        }
+        return merged
     }
 
     private suspend fun getLifiContractPriceInUsd(chain: Chain, contract: String): BigDecimal? =

@@ -141,6 +141,7 @@ dependencies {
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.mockk)
+    testImplementation(libs.sqlite.jdbc)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.androidx.work.testing)

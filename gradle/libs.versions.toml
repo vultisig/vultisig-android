@@ -24,6 +24,7 @@ junitJupiter = "5.11.4"
 junitPlatform = "1.11.4"
 kotest = "5.9.1"
 mockk = "1.13.16"
+sqliteJdbc = "3.45.3.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 kotlin = "2.4.20"
@@ -84,6 +85,7 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesCore" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqliteJdbc" }
 androidx-security = { module = "androidx.security:security-crypto", version.ref = "security" }
 
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
