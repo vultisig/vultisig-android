@@ -64,6 +64,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
+import com.vultisig.wallet.ui.screens.keysign.KeysignShareQrSheet
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
@@ -78,6 +79,7 @@ internal fun BondFormScreen(navController: NavController, vaultId: String, chain
     val bondNavHostController = rememberNavController()
     val context = LocalContext.current
     val keysignShareViewModel: KeysignShareViewModel = hiltViewModel(context as MainActivity)
+    var showShareSheet by remember { mutableStateOf(false) }
 
     val depositViewModel: com.vultisig.wallet.ui.models.deposit.DepositViewModel = hiltViewModel()
     val isKeysignFinished by depositViewModel.isKeysignFinished.collectAsState()
@@ -104,7 +106,7 @@ internal fun BondFormScreen(navController: NavController, vaultId: String, chain
                 { topBarNavController.popBackStack() }
             } else null,
         rightIcon = qr?.let { R.drawable.qr_share },
-        onRightIconClick = qr?.let { { keysignShareViewModel.shareQRCode(context) } } ?: {},
+        onRightIconClick = qr?.let { { showShareSheet = true } } ?: {},
     ) {
         NavHost(
             navController = bondNavHostController,
@@ -124,6 +126,13 @@ internal fun BondFormScreen(navController: NavController, vaultId: String, chain
                 VerifyDepositScreen(onDismissRequest = { bondNavHostController.popBackStack() })
             }
         }
+    }
+
+    if (showShareSheet) {
+        KeysignShareQrSheet(
+            viewModel = keysignShareViewModel,
+            onDismiss = { showShareSheet = false },
+        )
     }
 }
 

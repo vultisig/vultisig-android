@@ -374,6 +374,10 @@
     <string name="qr_share_label_to">Para</string>
     <string name="qr_share_label_from">De</string>
     <string name="qr_share_label_type">Tipo</string>
+    <string name="keysign_share_qr_title">Compartilhar QR Code</string>
+    <string name="keysign_share_qr_copy_link">Copiar link</string>
+    <string name="keysign_share_qr_share_image">Compartilhar imagem do QR</string>
+    <string name="keysign_share_qr_link_copied">Link copiado</string>
     <string name="qr_share_type_fast_vault">Cofre rápido</string>
     <string name="qr_share_type_secure_vault">Cofre seguro</string>
     <string name="error_folder_must_have_at_least_one_vault">A pasta necessita de pelo menos um cofre selecionado</string>

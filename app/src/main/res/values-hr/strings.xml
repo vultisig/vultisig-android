@@ -374,6 +374,10 @@
     <string name="qr_share_label_to">Za</string>
     <string name="qr_share_label_from">Od</string>
     <string name="qr_share_label_type">Vrsta</string>
+    <string name="keysign_share_qr_title">Podijeli QR kod</string>
+    <string name="keysign_share_qr_copy_link">Kopiraj poveznicu</string>
+    <string name="keysign_share_qr_share_image">Podijeli QR sliku</string>
+    <string name="keysign_share_qr_link_copied">Poveznica kopirana</string>
     <string name="qr_share_type_fast_vault">Brzi trezor</string>
     <string name="qr_share_type_secure_vault">Sigurni trezor</string>
     <string name="error_folder_must_have_at_least_one_vault">Za mapu je potreban barem jedan odabrani trezor</string>

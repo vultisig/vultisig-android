@@ -498,6 +498,10 @@
     <string name="qr_share_label_to">To</string>
     <string name="qr_share_label_from">From</string>
     <string name="qr_share_label_type">Type</string>
+    <string name="keysign_share_qr_title">Share QR Code</string>
+    <string name="keysign_share_qr_copy_link">Copy Link</string>
+    <string name="keysign_share_qr_share_image">Share QR Image</string>
+    <string name="keysign_share_qr_link_copied">Link copied</string>
     <string name="qr_share_type_fast_vault">Fast Vault</string>
     <string name="qr_share_type_secure_vault">Secure Vault</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>

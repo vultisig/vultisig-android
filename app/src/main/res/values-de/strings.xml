@@ -374,6 +374,10 @@
     <string name="qr_share_label_to">Zu</string>
     <string name="qr_share_label_from">Von</string>
     <string name="qr_share_label_type">Typ</string>
+    <string name="keysign_share_qr_title">QR-Code teilen</string>
+    <string name="keysign_share_qr_copy_link">Link kopieren</string>
+    <string name="keysign_share_qr_share_image">QR-Bild teilen</string>
+    <string name="keysign_share_qr_link_copied">Link kopiert</string>
     <string name="qr_share_type_fast_vault">Schneller Tresor</string>
     <string name="qr_share_type_secure_vault">Sicherer Tresor</string>
     <string name="error_folder_must_have_at_least_one_vault">Für den Ordner ist mindestens ein ausgewählter Tresor erforderlich</string>

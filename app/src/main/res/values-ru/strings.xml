@@ -373,6 +373,10 @@
     <string name="qr_share_label_to">Кому</string>
     <string name="qr_share_label_from">От</string>
     <string name="qr_share_label_type">Тип</string>
+    <string name="keysign_share_qr_title">Поделиться QR-кодом</string>
+    <string name="keysign_share_qr_copy_link">Копировать ссылку</string>
+    <string name="keysign_share_qr_share_image">Поделиться изображением QR</string>
+    <string name="keysign_share_qr_link_copied">Ссылка скопирована</string>
     <string name="qr_share_type_fast_vault">Быстрое хранилище</string>
     <string name="qr_share_type_secure_vault">Защищённое хранилище</string>
     <string name="error_folder_must_have_at_least_one_vault">Папке необходимо выбрать хотя бы одно хранилище</string>

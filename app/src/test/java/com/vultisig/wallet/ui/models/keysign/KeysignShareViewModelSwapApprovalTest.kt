@@ -84,6 +84,7 @@ internal class KeysignShareViewModelSwapApprovalTest {
             customMessagePayloadRepo = customMessagePayloadRepo,
             makeQrCodeBitmapShareFormat = makeQrCodeBitmapShareFormat,
             generateQrBitmap = generateQrBitmap,
+            snackbarFlow = mockk(relaxed = true),
         )
 
     @Test

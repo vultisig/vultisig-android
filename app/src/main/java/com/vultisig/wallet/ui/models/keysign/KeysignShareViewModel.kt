@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
@@ -30,6 +31,9 @@ import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -56,6 +60,7 @@ constructor(
     private val customMessagePayloadRepo: CustomMessagePayloadRepo,
     private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
     private val generateQrBitmap: GenerateQrBitmap,
+    private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
     var vault: Vault? = null
     var keysignPayload: KeysignPayload? = null
@@ -69,6 +74,7 @@ constructor(
 
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
     private var qrBitmap: Bitmap? = null
+    private var qrLink: String? = null
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
     private var saveShareQrBitmapJob: Job? = null
 
@@ -223,8 +229,9 @@ constructor(
             )
     }
 
-    fun loadQrPainter(address: String) =
-        viewModelScope.launch {
+    fun loadQrPainter(address: String): Job {
+        qrLink = address
+        return viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val qrBitmap =
                     generateQrBitmap(
@@ -239,10 +246,20 @@ constructor(
                 qrBitmapPainter.value = bitmapPainter
             }
         }
+    }
 
     internal fun shareQRCode(activity: Context) {
         val qrBitmap = shareQrBitmap.value ?: return
         activity.share(qrBitmap, shareFileName(requireNotNull(vault), ShareType.SEND))
+    }
+
+    /** Copies the join link the QR encodes, so another device can open it without scanning. */
+    internal fun copyQrLink(context: Context) {
+        val link = qrLink ?: return
+        VsClipboardService.copy(context, link)
+        viewModelScope.launch {
+            snackbarFlow.showMessage(UiText.StringResource(R.string.keysign_share_qr_link_copied))
+        }
     }
 
     internal fun saveShareQrBitmap(context: Context, color: Int, info: QrShareInfo, logo: Bitmap) {
