@@ -101,57 +101,31 @@ class SecurityScannerTransactionFactory(
                     srcToken = transaction.srcToken,
                     from = payload.data.quote.tx.from,
                     to = payload.data.quote.tx.to,
-                    // Scan the approval against the real allowance target (SwapKit's token-transfer
-                    // proxy), which can differ from the swap `to`; fall back to `to` for providers
-                    // where they coincide (1inch/Kyber/LiFi).
-                    approveSpender =
-                        payload.data.quote.tx.allowanceTarget ?: payload.data.quote.tx.to,
-                    // The approval the user actually signs is for the swap input amount
-                    // (KeysignShareViewModel uses transaction.srcTokenValue.value), not tx.value —
-                    // which is 0 for an ERC20 swap. Scan the real approve amount so the preview
-                    // matches the signed approve(spender, amount).
-                    approveAmount = transaction.srcTokenValue.value,
                     amount = payload.data.quote.tx.value,
                     data = payload.data.quote.tx.data,
-                    isApprovalRequired = transaction.isApprovalRequired,
                 )
 
             else -> throw SecurityScannerException("Not supported provider for EVM")
         }
     }
 
+    // Always screen the swap calldata (SDK/Windows parity), never the approve: the approve only
+    // grants an allowance, the swap tx is what moves funds. Signed transactions are unchanged.
     private fun buildSwapSecurityScannerTransaction(
         srcToken: Coin,
         from: String,
         to: String,
-        approveSpender: String,
-        approveAmount: BigInteger,
         amount: String,
         data: String,
-        isApprovalRequired: Boolean,
-    ): SecurityScannerTransaction {
-        val chain = srcToken.chain
-
-        return if (isApprovalRequired) {
-            SecurityScannerTransaction(
-                chain = chain,
-                type = SecurityTransactionType.SWAP,
-                from = from,
-                to = srcToken.contractAddress,
-                amount = BigInteger.ZERO,
-                data = EthereumFunction.approvalErc20Encoder(approveSpender, approveAmount),
-            )
-        } else {
-            SecurityScannerTransaction(
-                chain = chain,
-                type = SecurityTransactionType.SWAP,
-                from = from,
-                to = to,
-                amount = amount.toBigInteger(),
-                data = data,
-            )
-        }
-    }
+    ) =
+        SecurityScannerTransaction(
+            chain = srcToken.chain,
+            type = SecurityTransactionType.SWAP,
+            from = from,
+            to = to,
+            amount = amount.toBigInteger(),
+            data = data,
+        )
 
     private fun createEVMSecurityScannerTransaction(
         transaction: Transaction
