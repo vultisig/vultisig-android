@@ -73,7 +73,9 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
             check(responses.size == transactions.size) {
                 "Expected ${transactions.size} bulk scan results, got ${responses.size}"
             }
-            responses.map { it.toSecurityScannerResult(PROVIDER_NAME) }.maxBy { it.riskLevel }
+            val results = responses.map { it.toSecurityScannerResult(PROVIDER_NAME) }
+            // reversed so a tie resolves to the swap (last entry), not the approve
+            results.asReversed().maxBy { it.riskLevel }.copy(warnings = results.flatMap { it.warnings })
         }
     }
 
