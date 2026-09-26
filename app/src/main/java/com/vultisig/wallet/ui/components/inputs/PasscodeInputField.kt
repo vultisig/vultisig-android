@@ -71,7 +71,7 @@ internal fun PasscodeInputField(
 
     LaunchedEffect(enabled) { if (enabled) focusRequester.requestFocus() }
 
-    Box(modifier = modifier) {
+    Box(contentAlignment = Alignment.Center, modifier = modifier) {
         BasicTextField(
             state = textFieldState,
             enabled = enabled,
@@ -113,8 +113,7 @@ internal fun PasscodeInputField(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier =
-                        Modifier.weight(1f)
-                            .height(PASSCODE_CELL_HEIGHT)
+                        Modifier.size(PASSCODE_CELL_WIDTH, PASSCODE_CELL_HEIGHT)
                             .background(
                                 color = Theme.v2.colors.backgrounds.surface1,
                                 shape = PasscodeCellShape,
@@ -162,6 +161,7 @@ internal fun PasscodeInputField(
 }
 
 private val PASSCODE_CELL_HEIGHT = 51.dp
+private val PASSCODE_CELL_WIDTH = 36.dp
 private val PasscodeCellShape = V2.radius.md
 
 /** Figma uses a flat 10% white hairline on the idle cells rather than a theme border token. */
