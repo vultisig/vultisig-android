@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import vultisig.keysign.v1.SignSolana
+import vultisig.keysign.v1.SignTon
 import vultisig.keysign.v1.WasmExecuteContractPayload
 
 data class DepositTransaction(
@@ -80,6 +81,13 @@ data class DepositTransaction(
      * flows.
      */
     val signSolana: SignSolana? = null,
+    /**
+     * Pre-built TON message batch for an app-built contract call — a Tonstakers deposit or tsTON
+     * burn — forwarded to the keysign payload the way a TonConnect request's messages are. Signed
+     * from the chain's native coin whatever [srcToken] names for display. Null for every other TON
+     * deposit, which carries a text comment instead.
+     */
+    val signTon: SignTon? = null,
 )
 
 const val OPERATION_MINT = "Mint"
@@ -97,3 +105,10 @@ const val OPERATION_CIRCLE_WITHDRAW = "DepositUSDCCircle"
  */
 const val OPERATION_KAMINO_DEPOSIT = "KaminoDeposit"
 const val OPERATION_KAMINO_WITHDRAW = "KaminoWithdraw"
+
+/**
+ * Tonstakers liquid staking. Distinguished so the verify screen can title the direction and show
+ * the tsTON leaving on an unstake, which the payload — signed from the native coin — does not name.
+ */
+const val OPERATION_TONSTAKERS_STAKE = "TonstakersStake"
+const val OPERATION_TONSTAKERS_UNSTAKE = "TonstakersUnstake"

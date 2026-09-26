@@ -1069,6 +1069,15 @@
     <string name="ton_unstake_title">%1$s unstaken</string>
     <string name="ton_staking_pool_address">Pooladres</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator-pools ondersteunen alleen volledige opname. Je volledige gestakete saldo wordt teruggestort.</string>
+    <string name="ton_liquid_staking_label">Liquid staking</string>
+    <string name="ton_liquid_deposit_fee">Stortingskosten</string>
+    <string name="ton_liquid_you_receive">Je ontvangt</string>
+    <string name="ton_liquid_attached_value">Bijgevoegd voor verwerking</string>
+    <string name="ton_liquid_stake_fee_notice">Inclusief de stortingskosten van %1$s %2$s die Tonstakers vooraf inhoudt. Het deel dat de pool niet gebruikt, wordt terugbetaald.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s wordt bijgevoegd om de opname te verwerken; het ongebruikte deel wordt terugbetaald. Je wordt direct uitbetaald als de pool liquiditeit heeft, anders aan het einde van de huidige validatieronde.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s wordt bijgevoegd om de opname te verwerken; het ongebruikte deel wordt terugbetaald. Je wordt uitbetaald aan het einde van de huidige validatieronde.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers accepteert momenteel geen stortingen</string>
+    <string name="ton_liquid_no_position">Deze vault bevat geen tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL staat niet in deze kluis</string>
     <string name="solana_staking_total_staked_sol">Totaal gestaket SOL</string>
@@ -1512,6 +1521,8 @@
     <string name="ton_op_nft_transfer">NFT-overdracht</string>
     <string name="ton_op_excess_gas_refund">Terugbetaling overtollig gas</string>
     <string name="ton_op_transfer">Overdracht</string>
+    <string name="ton_op_liquid_staking_deposit">Liquid staking-storting</string>
+    <string name="ton_op_jetton_burn">Jetton-burn</string>
     <string name="ton_forward_ton_amount">Doorgestuurd GRAM-bedrag</string>
     <string name="ton_raw_payload">Ruwe payload</string>
 

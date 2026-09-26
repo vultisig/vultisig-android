@@ -209,6 +209,10 @@ constructor(
     }
 
     override suspend fun invalidateDeFiBalance(address: String, chain: Chain, vaultId: String) {
+        // The Tonstakers position is cached inside its own service rather than in this one's DeFi
+        // cache, so clearing only the entry below would leave a just-signed stake reading its
+        // pre-broadcast balance for the rest of that service's window.
+        if (chain == Chain.Ton) tonDeFiBalanceService.invalidateLiquidPosition(address)
         val key = deFiCacheKey(address, chain, vaultId) ?: return
         val mutex = lockFor(key)
         mutex.withLock { defiBalanceCache.remove(key) }

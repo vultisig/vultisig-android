@@ -1071,6 +1071,15 @@
     <string name="ton_unstake_title">Remover stake de %1$s</string>
     <string name="ton_staking_pool_address">Endereço do pool</string>
     <string name="ton_unstake_full_withdrawal_notice">Os pools de nominadores só permitem retirada total. Todo o seu saldo em stake será devolvido.</string>
+    <string name="ton_liquid_staking_label">Staking líquido</string>
+    <string name="ton_liquid_deposit_fee">Taxa de depósito</string>
+    <string name="ton_liquid_you_receive">Você receberá</string>
+    <string name="ton_liquid_attached_value">Anexado para processamento</string>
+    <string name="ton_liquid_stake_fee_notice">Inclui a taxa de depósito de %1$s %2$s que a Tonstakers desconta antecipadamente. A parte que o pool não usar é reembolsada.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s são anexados para processar a retirada; a parte não utilizada é reembolsada. O pagamento é imediato quando o pool tem liquidez; caso contrário, ocorre no fim da rodada de validação atual.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s são anexados para processar a retirada; a parte não utilizada é reembolsada. O pagamento ocorre no fim da rodada de validação atual.</string>
+    <string name="ton_liquid_deposits_closed">A Tonstakers não está aceitando depósitos no momento</string>
+    <string name="ton_liquid_no_position">Este cofre não possui tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL não está neste cofre</string>
     <string name="solana_staking_total_staked_sol">Total em stake de SOL</string>
@@ -1517,6 +1526,8 @@
     <string name="ton_op_nft_transfer">Transferência de NFT</string>
     <string name="ton_op_excess_gas_refund">Reembolso de gás excedente</string>
     <string name="ton_op_transfer">Transferência</string>
+    <string name="ton_op_liquid_staking_deposit">Depósito de staking líquido</string>
+    <string name="ton_op_jetton_burn">Queima de Jetton</string>
     <string name="ton_forward_ton_amount">Montante de GRAM encaminhado</string>
     <string name="ton_raw_payload">Payload bruto</string>
 

@@ -1403,6 +1403,15 @@
     <string name="ton_unstake_title">解除质押 %1$s</string>
     <string name="ton_staking_pool_address">质押池地址</string>
     <string name="ton_unstake_full_withdrawal_notice">提名池仅支持全额提取。您的全部质押余额将被返还。</string>
+    <string name="ton_liquid_staking_label">流动性质押</string>
+    <string name="ton_liquid_deposit_fee">存入费用</string>
+    <string name="ton_liquid_you_receive">您将收到</string>
+    <string name="ton_liquid_attached_value">附加的处理金额</string>
+    <string name="ton_liquid_stake_fee_notice">包含 Tonstakers 预先扣除的 %1$s %2$s 存入费用。质押池未使用的部分将退还。</string>
+    <string name="ton_liquid_unstake_notice">将附加 %1$s %2$s 用于处理提取，未使用的部分将退还。质押池有流动性时立即支付，否则在当前验证轮次结束时支付。</string>
+    <string name="ton_liquid_unstake_notice_round_end">将附加 %1$s %2$s 用于处理提取，未使用的部分将退还。将在当前验证轮次结束时支付。</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers 目前不接受存入</string>
+    <string name="ton_liquid_no_position">此金库没有 tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">此保险库中没有 SOL</string>
     <string name="solana_staking_total_staked_sol">质押 SOL 总额</string>
@@ -1842,6 +1851,8 @@
     <string name="ton_op_nft_transfer">NFT 转账</string>
     <string name="ton_op_excess_gas_refund">超额燃料退款</string>
     <string name="ton_op_transfer">转账</string>
+    <string name="ton_op_liquid_staking_deposit">流动性质押存入</string>
+    <string name="ton_op_jetton_burn">Jetton 销毁</string>
     <string name="ton_forward_ton_amount">转发的 GRAM 金额</string>
     <string name="ton_raw_payload">原始 Payload</string>
 

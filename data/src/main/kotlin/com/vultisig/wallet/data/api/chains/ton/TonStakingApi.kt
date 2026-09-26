@@ -9,6 +9,9 @@ import io.ktor.http.HttpStatusCode
 import javax.inject.Inject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.longOrNull
 
 /**
  * Client for tonapi.io nominator-pool staking endpoints.
@@ -39,6 +42,15 @@ interface TonStakingApi {
      * participation returns an empty list.
      */
     suspend fun getNominatorPools(address: String): List<TonAccountStakingInfoJson>
+
+    /**
+     * The liquid-staking pool's `get_pool_full_data` get-method, run through tonapi. Carries the
+     * tsTON→TON rate (`total_balance / supply`, the figure the `tonstakers-sdk` prices a position
+     * with) and the deposit gate. The nominator endpoints never list a liquid position — a tsTON
+     * holder reads as no pools — so this and the jetton balance are the only position source.
+     * Returns `null` when the method did not execute cleanly.
+     */
+    suspend fun getLiquidPoolData(poolAddress: String): TonLiquidPoolDataJson?
 }
 
 internal class TonStakingApiImpl @Inject constructor(private val http: HttpClient) : TonStakingApi {
@@ -70,6 +82,13 @@ internal class TonStakingApiImpl @Inject constructor(private val http: HttpClien
             .get("$BASE_URL/v2/staking/nominator/$address/pools")
             .bodyOrThrow<TonAccountStakingResponseJson>()
             .pools
+
+    override suspend fun getLiquidPoolData(poolAddress: String): TonLiquidPoolDataJson? =
+        http
+            .get("$BASE_URL/v2/blockchain/accounts/$poolAddress/methods/get_pool_full_data")
+            .bodyOrThrow<TonGetMethodResponseJson>()
+            .takeIf { it.success && it.exitCode == 0 }
+            ?.decoded
 
     private companion object {
         const val BASE_URL = "https://tonapi.io"
@@ -134,3 +153,61 @@ data class TonAccountStakingInfoJson(
     @SerialName("pending_withdraw") val pendingWithdraw: Long = 0,
     @SerialName("ready_withdraw") val readyWithdraw: Long = 0,
 )
+
+/** tonapi's envelope for a run get-method call; [decoded] is only meaningful on success. */
+@Serializable
+data class TonGetMethodResponseJson(
+    @SerialName("success") val success: Boolean = false,
+    @SerialName("exit_code") val exitCode: Int = -1,
+    @SerialName("decoded") val decoded: TonLiquidPoolDataJson? = null,
+)
+
+/**
+ * The fields of `get_pool_full_data` a position read needs. Balances are nanotons and tsTON base
+ * units as the contract holds them (TON's supply keeps both inside a `Long`); the two flags arrive
+ * as either a JSON boolean or a FunC `-1`/`0` integer depending on tonapi's decoder, so they are
+ * read through [asFlag].
+ */
+@Serializable
+data class TonLiquidPoolDataJson(
+    @SerialName("total_balance") val totalBalance: Long = 0,
+    @SerialName("supply") val supply: Long = 0,
+    @SerialName("deposits_open") val depositsOpen: JsonPrimitive? = null,
+    @SerialName("optimistic_deposit_withdrawals")
+    val optimisticDepositWithdrawals: JsonPrimitive? = null,
+) {
+    /**
+     * Whether the decoded payload carries a rate. tonapi decodes the get-method output by field
+     * name, so a rename or a shape drift reads as every field absent: zero balances and flags left
+     * to their fallbacks. A pool holding nothing and having minted nothing is not a state the live
+     * pool can be in, so that payload is a failed read rather than a rate-less pool — which is what
+     * lets the two flags below fall back permissively.
+     */
+    val hasRate: Boolean
+        get() = totalBalance > 0 && supply > 0
+
+    /**
+     * Whether the pool currently accepts deposits. An unreadable flag on a payload that does carry
+     * a rate is treated as open: the gate is a governance flag that has been open for the life of
+     * the pool, a closed deposit is refused by the contract anyway (the message bounces), and
+     * failing closed here would turn a tonapi field rename into a permanently dead stake form.
+     */
+    val isDepositOpen: Boolean
+        get() = depositsOpen.asFlag() ?: true
+
+    /**
+     * Whether deposits mint and withdrawals pay out immediately when liquidity allows, rather than
+     * at round end; an unreadable flag is treated as round-end, the conservative reading.
+     */
+    val isOptimistic: Boolean
+        get() = optimisticDepositWithdrawals.asFlag() ?: false
+}
+
+/** A FunC boolean as tonapi decodes it: a JSON boolean, or an integer where non-zero is true. */
+private fun JsonPrimitive?.asFlag(): Boolean? {
+    val primitive = this ?: return null
+    primitive.booleanOrNull?.let {
+        return it
+    }
+    return primitive.longOrNull?.let { it != 0L }
+}

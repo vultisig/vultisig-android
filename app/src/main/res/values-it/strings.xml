@@ -1072,6 +1072,15 @@
     <string name="ton_unstake_title">Rimuovi lo stake di %1$s</string>
     <string name="ton_staking_pool_address">Indirizzo del pool</string>
     <string name="ton_unstake_full_withdrawal_notice">I pool di nominator supportano solo il prelievo completo. L\'intero saldo in staking verrà restituito.</string>
+    <string name="ton_liquid_staking_label">Staking liquido</string>
+    <string name="ton_liquid_deposit_fee">Commissione di deposito</string>
+    <string name="ton_liquid_you_receive">Riceverai</string>
+    <string name="ton_liquid_attached_value">Allegato per l\'elaborazione</string>
+    <string name="ton_liquid_stake_fee_notice">Include la commissione di deposito di %1$s %2$s che Tonstakers trattiene in anticipo. La parte non utilizzata dal pool viene rimborsata.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s vengono allegati per elaborare il prelievo; la parte non utilizzata viene rimborsata. Il pagamento è immediato quando il pool ha liquidità, altrimenti avviene alla fine del round di validazione corrente.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s vengono allegati per elaborare il prelievo; la parte non utilizzata viene rimborsata. Il pagamento avviene alla fine del round di validazione corrente.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers al momento non accetta depositi</string>
+    <string name="ton_liquid_no_position">Questo vault non contiene tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL non è in questa cassaforte</string>
     <string name="solana_staking_total_staked_sol">Totale in staking SOL</string>
@@ -1520,6 +1529,8 @@
     <string name="ton_op_nft_transfer">Trasferimento NFT</string>
     <string name="ton_op_excess_gas_refund">Rimborso del gas in eccesso</string>
     <string name="ton_op_transfer">Trasferimento</string>
+    <string name="ton_op_liquid_staking_deposit">Deposito di staking liquido</string>
+    <string name="ton_op_jetton_burn">Burn di Jetton</string>
     <string name="ton_forward_ton_amount">Quantità di GRAM inoltrata</string>
     <string name="ton_raw_payload">Payload grezzo</string>
 
