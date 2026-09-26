@@ -1,13 +1,11 @@
 package com.vultisig.wallet.ui.screens.peer
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,7 +15,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -25,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -43,7 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
@@ -97,11 +92,6 @@ import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-
-// Gradient border that wraps the QR card (Figma: top #4879FD -> bottom #0D39B1). Not a theme token
-// because this exact pairing is unique to the keygen QR frame.
-private val QrFrameGradient =
-    Brush.verticalGradient(colors = listOf(Color(0xFF4879FD), Color(0xFF0D39B1)))
 
 // "∞" badge label for vaults that let the initiator add more devices than the threshold (4+).
 private const val UNBOUNDED_DEVICES_LABEL = "∞"
@@ -478,40 +468,8 @@ private fun QrCodeContainer(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Off the scale by construction, not by drift: these two trace a frame drawn around the QR
-    // bitmap, so the inner corner has to sit a fixed inset inside the outer one. Rounding either to
-    // a step would break the concentricity the frame depends on.
-    val outerShape = RoundedCornerShape(24.75.dp)
-    val innerShape = RoundedCornerShape(18.56.dp)
-
     Box(modifier = modifier.fillMaxWidth()) {
-        Box(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .clip(outerShape)
-                    .background(brush = QrFrameGradient, shape = outerShape)
-                    .clickable(onClick = onClick)
-                    .padding(6.19.dp)
-        ) {
-            Box(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .background(
-                            color = Theme.v2.colors.backgrounds.surface1,
-                            shape = innerShape,
-                        )
-                        .border(
-                            width = 0.77.dp,
-                            color = Theme.v2.colors.border.normal,
-                            shape = innerShape,
-                        )
-                        .padding(12.38.dp)
-            ) {
-                // Reserve the QR footprint so the framed card keeps its size while the bitmap is
-                // still being generated, then fade the QR in once it is ready.
-                QrCodeImage(qrCode = qrCode)
-            }
-        }
+        PairingQrFrame(qrCode = qrCode, onClick = onClick)
 
         // Sit the expand affordance on the card's top-right corner so it reads as part of the QR
         // instead of a stray, detached button. The small outward offset lands the visual on the
@@ -523,30 +481,6 @@ private fun QrCodeContainer(
                 onClick = onClick,
                 modifier = Modifier.align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp),
             )
-        }
-    }
-}
-
-/**
- * Reserves the QR footprint and fades the generated QR bitmap in once it is ready.
- *
- * Kept as a standalone composable so [AnimatedVisibility] resolves to the non-scoped overload
- * instead of the enclosing [Column]'s [ColumnScope] extension.
- *
- * @param qrCode the QR painter, or null while it is still being generated.
- */
-@Composable
-private fun QrCodeImage(qrCode: BitmapPainter?, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxWidth().aspectRatio(1f), contentAlignment = Alignment.Center) {
-        AnimatedVisibility(visible = qrCode != null, enter = fadeIn()) {
-            if (qrCode != null) {
-                Image(
-                    painter = qrCode,
-                    contentDescription = null,
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
         }
     }
 }

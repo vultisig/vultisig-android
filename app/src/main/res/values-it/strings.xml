@@ -374,6 +374,10 @@
     <string name="qr_share_label_to">A</string>
     <string name="qr_share_label_from">Da</string>
     <string name="qr_share_label_type">Tipo</string>
+    <string name="keysign_share_qr_title">Condividi codice QR</string>
+    <string name="keysign_share_qr_copy_link">Copia link</string>
+    <string name="keysign_share_qr_share_image">Condividi immagine QR</string>
+    <string name="keysign_share_qr_link_copied">Link copiato</string>
     <string name="qr_share_type_fast_vault">Cassaforte rapida</string>
     <string name="qr_share_type_secure_vault">Cassaforte sicura</string>
     <string name="error_folder_must_have_at_least_one_vault">La cartella necessita di almeno un vault selezionato</string>

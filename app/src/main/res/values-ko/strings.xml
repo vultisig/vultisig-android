@@ -487,6 +487,10 @@
     <string name="qr_share_label_to">받는</string>
     <string name="qr_share_label_from">보내는</string>
     <string name="qr_share_label_type">유형</string>
+    <string name="keysign_share_qr_title">QR 코드 공유</string>
+    <string name="keysign_share_qr_copy_link">링크 복사</string>
+    <string name="keysign_share_qr_share_image">QR 이미지 공유</string>
+    <string name="keysign_share_qr_link_copied">링크가 복사됨</string>
     <string name="qr_share_type_fast_vault">빠른 볼트</string>
     <string name="qr_share_type_secure_vault">보안 볼트</string>
     <string name="error_folder_must_have_at_least_one_vault">폴더에는 최소 하나의 볼트가 선택되어야 합니다</string>

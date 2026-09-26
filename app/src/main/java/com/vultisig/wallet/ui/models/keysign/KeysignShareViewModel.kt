@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
@@ -30,6 +31,9 @@ import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,6 +42,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -56,6 +61,7 @@ constructor(
     private val customMessagePayloadRepo: CustomMessagePayloadRepo,
     private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
     private val generateQrBitmap: GenerateQrBitmap,
+    private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
     var vault: Vault? = null
     var keysignPayload: KeysignPayload? = null
@@ -69,7 +75,13 @@ constructor(
 
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
     private var qrBitmap: Bitmap? = null
-    private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
+    internal val qrLink: StateFlow<String?>
+        field = MutableStateFlow<String?>(null)
+
+    internal val shareQrBitmap: StateFlow<Bitmap?>
+        field = MutableStateFlow<Bitmap?>(null)
+
+    private var loadQrPainterJob: Job? = null
     private var saveShareQrBitmapJob: Job? = null
 
     suspend fun loadTransaction(transactionId: TransactionId) {
@@ -223,26 +235,49 @@ constructor(
             )
     }
 
-    fun loadQrPainter(address: String) =
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val qrBitmap =
-                    generateQrBitmap(
-                        address,
-                        Color.White.toArgb(),
-                        Color.Transparent.toArgb(),
-                        null,
-                    )
-                this@KeysignShareViewModel.qrBitmap = qrBitmap
-                val bitmapPainter =
-                    BitmapPainter(qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None)
-                qrBitmapPainter.value = bitmapPainter
+    fun loadQrPainter(address: String): Job {
+        // Drop everything built for the previous QR before rendering the new one, so the link, the
+        // painter and the share image never describe different sessions. Cancelling on the main
+        // thread is enough: `withContext` discards a result whose job was cancelled meanwhile.
+        loadQrPainterJob?.cancel()
+        saveShareQrBitmapJob?.cancel()
+        qrLink.value = null
+        qrBitmap = null
+        qrBitmapPainter.value = null
+        shareQrBitmap.value?.recycle()
+        shareQrBitmap.value = null
+
+        return viewModelScope
+            .launch {
+                val bitmap =
+                    withContext(Dispatchers.IO) {
+                        generateQrBitmap(
+                            address,
+                            Color.White.toArgb(),
+                            Color.Transparent.toArgb(),
+                            null,
+                        )
+                    }
+                qrBitmap = bitmap
+                qrBitmapPainter.value =
+                    BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
+                qrLink.value = address
             }
-        }
+            .also { loadQrPainterJob = it }
+    }
 
     internal fun shareQRCode(activity: Context) {
         val qrBitmap = shareQrBitmap.value ?: return
         activity.share(qrBitmap, shareFileName(requireNotNull(vault), ShareType.SEND))
+    }
+
+    /** Copies the join link the QR encodes, so another device can open it without scanning. */
+    internal fun copyQrLink(context: Context) {
+        val link = qrLink.value ?: return
+        VsClipboardService.copy(context, link)
+        viewModelScope.launch {
+            snackbarFlow.showMessage(UiText.StringResource(R.string.keysign_share_qr_link_copied))
+        }
     }
 
     internal fun saveShareQrBitmap(context: Context, color: Int, info: QrShareInfo, logo: Bitmap) {

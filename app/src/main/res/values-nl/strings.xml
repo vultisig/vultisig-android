@@ -373,6 +373,10 @@
     <string name="qr_share_label_to">Aan</string>
     <string name="qr_share_label_from">Van</string>
     <string name="qr_share_label_type">Type</string>
+    <string name="keysign_share_qr_title">QR-code delen</string>
+    <string name="keysign_share_qr_copy_link">Link kopiëren</string>
+    <string name="keysign_share_qr_share_image">QR-afbeelding delen</string>
+    <string name="keysign_share_qr_link_copied">Link gekopieerd</string>
     <string name="qr_share_type_fast_vault">Snelle kluis</string>
     <string name="qr_share_type_secure_vault">Beveiligde kluis</string>
     <string name="error_folder_must_have_at_least_one_vault">Map heeft minimaal één geselecteerde kluis nodig</string>

@@ -647,6 +647,10 @@
     <string name="qr_share_label_to">至</string>
     <string name="qr_share_label_from">从</string>
     <string name="qr_share_label_type">类型</string>
+    <string name="keysign_share_qr_title">分享二维码</string>
+    <string name="keysign_share_qr_copy_link">复制链接</string>
+    <string name="keysign_share_qr_share_image">分享二维码图片</string>
+    <string name="keysign_share_qr_link_copied">链接已复制</string>
     <string name="qr_share_type_fast_vault">快速保险库</string>
     <string name="qr_share_type_secure_vault">安全保险库</string>
 
