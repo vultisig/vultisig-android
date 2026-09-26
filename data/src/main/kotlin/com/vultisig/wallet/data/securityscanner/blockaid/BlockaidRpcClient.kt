@@ -44,6 +44,28 @@ internal class BlockaidRpcClient(private val httpClient: HttpClient) : BlockaidR
             .bodyOrThrow<BlockaidTransactionScanResponseJson>()
     }
 
+    override suspend fun scanEVMTransactionBulk(
+        chain: Chain,
+        transactions: List<EthereumScanTransactionRequestJson.DataJson>,
+    ): List<BlockaidTransactionScanResponseJson> {
+        val request =
+            EthereumBulkScanTransactionRequestJson(
+                chain = chain.toName(),
+                metadata =
+                    EthereumScanTransactionRequestJson.MetadataJson(domain = VULTISIG_DOMAIN),
+                options = listOf(BlockaidSimulationOptions.VALIDATION),
+                data = transactions,
+            )
+
+        return httpClient
+            .post(BLOCKAID_BASE_URL) {
+                url { appendPathSegments("/evm/transaction-bulk/scan") }
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+            .bodyOrThrow<List<BlockaidTransactionScanResponseJson>>()
+    }
+
     override suspend fun scanSolanaTransaction(
         address: String,
         serializedMessage: String,
