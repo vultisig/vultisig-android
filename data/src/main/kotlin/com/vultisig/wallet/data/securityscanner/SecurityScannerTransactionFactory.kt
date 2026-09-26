@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
@@ -103,20 +104,48 @@ class SecurityScannerTransactionFactory(
                     to = payload.data.quote.tx.to,
                     amount = payload.data.quote.tx.value,
                     data = payload.data.quote.tx.data,
+                    precedingTransactions = approveScanTransactions(transaction),
                 )
 
             else -> throw SecurityScannerException("Not supported provider for EVM")
         }
     }
 
-    // Always screen the swap calldata (SDK/Windows parity), never the approve: the approve only
-    // grants an allowance, the swap tx is what moves funds. Signed transactions are unchanged.
+    /**
+     * The approve legs the swap signs ahead of itself, built from the same fields keysign uses
+     * (KeysignShareViewModel): spender, the swap input amount, and the optional zero reset. Without
+     * them Blockaid simulates the swap with no allowance and reverts with TRANSFER_FROM_FAILED.
+     */
+    private fun approveScanTransactions(
+        transaction: SwapTransaction
+    ): List<SecurityScannerTransaction> {
+        if (!transaction.isApprovalRequired) return emptyList()
+        val payload =
+            ERC20ApprovePayload(
+                amount = transaction.srcTokenValue.value,
+                spender = transaction.approveSpender,
+                resetAllowanceFirst = transaction.resetAllowanceFirst,
+            )
+        val src = transaction.srcToken
+        return payload.legAmounts.map { legAmount ->
+            SecurityScannerTransaction(
+                chain = src.chain,
+                type = SecurityTransactionType.APPROVAL,
+                from = src.address,
+                to = src.contractAddress,
+                data = EthereumFunction.approvalErc20Encoder(payload.spender, legAmount),
+            )
+        }
+    }
+
+    // Always scans the swap calldata (the tx that moves funds), with any approve legs preceding it.
     private fun buildSwapSecurityScannerTransaction(
         srcToken: Coin,
         from: String,
         to: String,
         amount: String,
         data: String,
+        precedingTransactions: List<SecurityScannerTransaction>,
     ) =
         SecurityScannerTransaction(
             chain = srcToken.chain,
@@ -125,6 +154,7 @@ class SecurityScannerTransactionFactory(
             to = to,
             amount = amount.toBigInteger(),
             data = data,
+            precedingTransactions = precedingTransactions,
         )
 
     private fun createEVMSecurityScannerTransaction(

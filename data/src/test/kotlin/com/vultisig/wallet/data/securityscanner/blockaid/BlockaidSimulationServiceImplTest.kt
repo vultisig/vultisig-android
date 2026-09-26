@@ -368,6 +368,11 @@ internal class BlockaidSimulationServiceImplTest {
         var solanaCalls: Int = 0
             private set
 
+        override suspend fun scanEVMTransactionBulk(
+            chain: Chain,
+            transactions: List<EthereumScanTransactionRequestJson.DataJson>,
+        ): List<BlockaidTransactionScanResponseJson> = error("not used")
+
         override suspend fun simulateEvmTransaction(
             chain: Chain,
             from: String,
