@@ -1,14 +1,21 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.utils.BigDecimalSerializerImpl
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import java.math.BigDecimal
 import kotlin.test.assertContains
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
@@ -74,4 +81,57 @@ class CoinGeckoApiContractPriceChainTest {
             assertFalse(requestAttempted, "an unmapped chain must not reach the network")
             assertEquals(emptyMap<String, CurrencyToPrice>(), result)
         }
+
+    @Test
+    fun `getContractsPrice retries a non-success body that deserializes as an empty quote`() =
+        runTest {
+            var calls = 0
+            val engine = MockEngine {
+                calls += 1
+                respond(content = "{}", status = HttpStatusCode.BadGateway)
+            }
+            val api =
+                CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
+
+            val result = api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
+
+            assertEquals(2, calls)
+            assertEquals(emptyMap<String, CurrencyToPrice>(), result)
+        }
+
+    @Test
+    fun `getContractsPrice does not retry an empty success`() = runTest {
+        var calls = 0
+        val engine = MockEngine {
+            calls += 1
+            respond(
+                content = "{}",
+                status = HttpStatusCode.OK,
+                headers =
+                    headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
+        }
+        val api =
+            CoinGeckoApiImpl(
+                HttpClient(engine) {
+                    install(ContentNegotiation) {
+                        json(
+                            Json {
+                                ignoreUnknownKeys = true
+                                explicitNulls = false
+                                serializersModule =
+                                    SerializersModule {
+                                        contextual(BigDecimal::class, BigDecimalSerializerImpl())
+                                    }
+                            }
+                        )
+                    }
+                }
+            )
+
+        val result = api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
+
+        assertEquals(1, calls)
+        assertEquals(emptyMap<String, CurrencyToPrice>(), result)
+    }
 }

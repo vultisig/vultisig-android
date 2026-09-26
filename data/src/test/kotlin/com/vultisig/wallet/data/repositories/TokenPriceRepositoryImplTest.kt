@@ -629,6 +629,40 @@ internal class TokenPriceRepositoryImplTest {
     }
 
     @Test
+    fun `a failed contract-price chunk does not drop the other chunk`() = runTest {
+        val tokens = List(CONTRACT_PRICE_BATCH_SIZE + 1) { index -> contractPricedToken(index) }
+        var calls = 0
+        coEvery { tokenPriceDao.getTokenPrice(any(), any()) } returns null
+        coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
+        coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } answers {
+            calls += 1
+            if (calls == 1) throw RuntimeException("contract price batch failed")
+            @Suppress("UNCHECKED_CAST")
+            val addresses = invocation.args[1] as List<String>
+            addresses.associateWith { mapOf("usd" to BigDecimal("2.74")) }
+        }
+
+        repository.refresh(tokens)
+
+        coVerify(exactly = 2) { coinGeckoApi.getContractsPrice(any(), any(), any()) }
+        assertPriceEquals("0", repository.getPrice(tokens.first(), AppCurrency.USD).first())
+        assertPriceEquals("2.74", repository.getPrice(tokens.last(), AppCurrency.USD).first())
+    }
+
+    private fun contractPricedToken(index: Int) =
+        Coin(
+            chain = Chain.Ethereum,
+            ticker = "T$index",
+            logo = "",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x" + index.toString(16).padStart(40, 'a'),
+            isNativeToken = false,
+        )
+
+    @Test
     fun `VaultRedemption response maps the liquid bond JSON fields`() = runTest {
         // Pins the @SerialName mapping for the {"status":{}} contract query: a renamed field would
         // otherwise deserialize to the empty-string default and silently price ybRUNE at parity.

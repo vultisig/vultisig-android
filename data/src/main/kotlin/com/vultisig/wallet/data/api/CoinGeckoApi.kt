@@ -13,6 +13,7 @@ import io.ktor.client.request.parameter
 import io.ktor.http.appendPathSegments
 import java.math.BigDecimal
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 typealias CurrencyToPrice = Map<String, BigDecimal>
@@ -56,13 +57,9 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
     ): Map<String, CurrencyToPrice> {
         val priceProviderIdsParam = priceProviderIds.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-        return try {
+        return attemptTwice("CoinGecko price lookup") {
             fetchPrices(priceProviderIdsParam, currenciesParam)
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.d(e, "error occurred in getCryptoPrices")
-            emptyMap()
-        }
+        } ?: emptyMap()
     }
 
     override suspend fun getContractsPrice(
@@ -77,12 +74,27 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
         val platformId = chain.coinGeckoAssetPlatformId() ?: return emptyMap()
         val priceProviderIdsParam = contractAddresses.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-        return try {
+        return attemptTwice("CoinGecko contract price lookup for $chain") {
             fetchContractPrices(platformId, priceProviderIdsParam, currenciesParam)
+        } ?: emptyMap()
+    }
+
+    /** A dropped connection used to be stored as "no price" and the old row stayed up. An empty 2xx is a miss, not a retry. */
+    private suspend fun <T> attemptTwice(label: String, fetch: suspend () -> T): T? {
+        try {
+            return fetch()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.d(e, "error occurred in getContractsPrice")
-            emptyMap()
+            Timber.w(e, "%s failed, retrying once", label)
+        }
+        return try {
+            fetch()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "%s failed", label)
+            null
         }
     }
 
@@ -93,7 +105,7 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
                 parameter("vs_currencies", fiats)
                 header("Content-Type", "application/json")
             }
-            .body()
+            .bodyOrThrow()
 
     private suspend fun fetchContractPrices(
         chainId: String,
@@ -106,7 +118,7 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
                 parameter("vs_currencies", fiats)
                 header("Content-Type", "application/json")
             }
-            .body()
+            .bodyOrThrow()
 
     override suspend fun getMarketChart(
         id: String,
