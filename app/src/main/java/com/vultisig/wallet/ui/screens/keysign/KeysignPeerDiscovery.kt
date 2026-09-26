@@ -29,7 +29,6 @@ import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.peer.ConnectingToServer
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.forCanvasMinify
@@ -139,10 +138,13 @@ internal fun KeysignPeerDiscovery(
             vultisigLogoBitmap,
         )
     }
+    // Until setData lands, the vault is an empty placeholder whose threshold is 0; a Fast Sign
+    // route must not fall through to the QR in that window.
     val isLookingForVultiServer =
-        viewModel.isFastSign && Utils.getThreshold(vault.signers.size) == 2
+        viewModel.isFastSign &&
+            (vault.signers.isEmpty() || Utils.getThreshold(vault.signers.size) == 2)
     if (isLookingForVultiServer) {
-        ConnectingToServer(false)
+        KeysignLoadingScreen()
     } else {
         val minimumDevices = Utils.getThreshold(vault.signers.size)
         PeerDiscoveryScreen(
