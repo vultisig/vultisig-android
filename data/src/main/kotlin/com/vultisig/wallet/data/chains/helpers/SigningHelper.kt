@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
@@ -21,11 +22,13 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.carriesDappCosmosTx
 import com.vultisig.wallet.data.models.payload.substrateDappPayload
 import com.vultisig.wallet.data.models.payload.zcashBranchId
+import com.vultisig.wallet.data.models.swapProviderFromWireId
 import java.math.BigInteger
 import vultisig.keysign.v1.CustomMessagePayload
 import wallet.core.jni.EthereumAbi
@@ -95,6 +98,54 @@ object SigningHelper {
         return listOf(hash.toHexString())
     }
 
+    /**
+     * The co-signer never shows an approve leg, so it must only sign one that is implied by the swap
+     * it does show: the same token, no more than the swap's input, and granted to that swap's own
+     * router. Anything else lets an initiator slip an arbitrary allowance past the Verify screen.
+     *
+     * A SwapKit EVM route approves a token-transfer proxy (`allowanceTarget`) that the keysign
+     * proto doesn't carry, so a joiner can't bind its spender; the token and amount bounds still
+     * hold, which caps the grant at the swap input the user approved.
+     */
+    internal fun requireApproveBoundToSwap(
+        approvePayload: ERC20ApprovePayload,
+        payload: KeysignPayload,
+    ) {
+        val swapPayload =
+            requireNotNull(payload.swapPayload) { "ERC20 approve is only signed alongside a swap" }
+        val coin = payload.coin
+        val srcToken = swapPayload.srcToken
+        require(
+            coin.contractAddress.isNotEmpty() &&
+                srcToken.chain == coin.chain &&
+                srcToken.contractAddress.equals(coin.contractAddress, ignoreCase = true)
+        ) {
+            "ERC20 approve token doesn't match the swap source token"
+        }
+        require(approvePayload.amount <= swapPayload.srcTokenValue.value) {
+            "ERC20 approve amount exceeds the swap amount"
+        }
+
+        val expectedSpender =
+            when (swapPayload) {
+                is SwapPayload.ThorChain -> swapPayload.data.routerAddress
+                is SwapPayload.MayaChain -> swapPayload.data.routerAddress
+                is SwapPayload.EVM -> {
+                    val tx = swapPayload.data.quote.tx
+                    val isSwapKit =
+                        swapProviderFromWireId(swapPayload.data.provider) == SwapProvider.SWAPKIT
+                    tx.allowanceTarget ?: if (isSwapKit) return else tx.to
+                }
+                is SwapPayload.SwapKit -> error("SwapKit ${swapPayload.data.txType} carries no approve")
+            }
+        require(
+            !expectedSpender.isNullOrEmpty() &&
+                approvePayload.spender.equals(expectedSpender, ignoreCase = true)
+        ) {
+            "ERC20 approve spender doesn't match the swap router"
+        }
+    }
+
     fun getKeysignMessages(payload: KeysignPayload, vault: Vault): List<String> {
         val messages = mutableListOf<String>()
         val chain = payload.coin.chain
@@ -105,6 +156,7 @@ object SigningHelper {
 
         val approvePayload = payload.approvePayload
         if (approvePayload != null) {
+            requireApproveBoundToSwap(approvePayload, payload)
             messages +=
                 THORChainSwaps(ecdsaKey, ecdsaChainCode, eddsaKey)
                     .getPreSignedApproveImageHash(approvePayload, payload)
