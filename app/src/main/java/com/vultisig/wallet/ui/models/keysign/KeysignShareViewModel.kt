@@ -42,6 +42,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -74,8 +75,13 @@ constructor(
 
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
     private var qrBitmap: Bitmap? = null
-    private var qrLink: String? = null
-    private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
+    internal val qrLink: StateFlow<String?>
+        field = MutableStateFlow<String?>(null)
+
+    internal val shareQrBitmap: StateFlow<Bitmap?>
+        field = MutableStateFlow<Bitmap?>(null)
+
+    private var loadQrPainterJob: Job? = null
     private var saveShareQrBitmapJob: Job? = null
 
     suspend fun loadTransaction(transactionId: TransactionId) {
@@ -230,22 +236,34 @@ constructor(
     }
 
     fun loadQrPainter(address: String): Job {
-        qrLink = address
-        return viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val qrBitmap =
-                    generateQrBitmap(
-                        address,
-                        Color.White.toArgb(),
-                        Color.Transparent.toArgb(),
-                        null,
-                    )
-                this@KeysignShareViewModel.qrBitmap = qrBitmap
-                val bitmapPainter =
-                    BitmapPainter(qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None)
-                qrBitmapPainter.value = bitmapPainter
+        // Drop everything built for the previous QR before rendering the new one, so the link, the
+        // painter and the share image never describe different sessions. Cancelling on the main
+        // thread is enough: `withContext` discards a result whose job was cancelled meanwhile.
+        loadQrPainterJob?.cancel()
+        saveShareQrBitmapJob?.cancel()
+        qrLink.value = null
+        qrBitmap = null
+        qrBitmapPainter.value = null
+        shareQrBitmap.value?.recycle()
+        shareQrBitmap.value = null
+
+        return viewModelScope
+            .launch {
+                val bitmap =
+                    withContext(Dispatchers.IO) {
+                        generateQrBitmap(
+                            address,
+                            Color.White.toArgb(),
+                            Color.Transparent.toArgb(),
+                            null,
+                        )
+                    }
+                qrBitmap = bitmap
+                qrBitmapPainter.value =
+                    BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
+                qrLink.value = address
             }
-        }
+            .also { loadQrPainterJob = it }
     }
 
     internal fun shareQRCode(activity: Context) {
@@ -255,7 +273,7 @@ constructor(
 
     /** Copies the join link the QR encodes, so another device can open it without scanning. */
     internal fun copyQrLink(context: Context) {
-        val link = qrLink ?: return
+        val link = qrLink.value ?: return
         VsClipboardService.copy(context, link)
         viewModelScope.launch {
             snackbarFlow.showMessage(UiText.StringResource(R.string.keysign_share_qr_link_copied))

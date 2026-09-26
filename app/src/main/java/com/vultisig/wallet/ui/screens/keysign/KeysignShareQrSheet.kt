@@ -27,6 +27,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.usecases.GenerateQrBitmapImpl
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.bottomsheets.DottyBottomSheet
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
@@ -43,9 +44,13 @@ internal fun KeysignShareQrSheet(viewModel: KeysignShareViewModel, onDismiss: ()
     // has to be started from the activity.
     val context = LocalContext.current
     val qrCode by viewModel.qrBitmapPainter.collectAsState()
+    val qrLink by viewModel.qrLink.collectAsState()
+    val shareQrBitmap by viewModel.shareQrBitmap.collectAsState()
 
     KeysignShareQrSheet(
         qrCode = qrCode,
+        isLinkReady = qrLink != null,
+        isImageReady = shareQrBitmap != null,
         onDismiss = onDismiss,
         onCopyLinkClick = {
             viewModel.copyQrLink(context)
@@ -61,6 +66,8 @@ internal fun KeysignShareQrSheet(viewModel: KeysignShareViewModel, onDismiss: ()
 @Composable
 private fun KeysignShareQrSheet(
     qrCode: BitmapPainter?,
+    isLinkReady: Boolean,
+    isImageReady: Boolean,
     onDismiss: () -> Unit,
     onCopyLinkClick: () -> Unit,
     onShareImageClick: () -> Unit,
@@ -68,6 +75,8 @@ private fun KeysignShareQrSheet(
     DottyBottomSheet(onDismiss = onDismiss) {
         KeysignShareQrContent(
             qrCode = qrCode,
+            isLinkReady = isLinkReady,
+            isImageReady = isImageReady,
             onCopyLinkClick = onCopyLinkClick,
             onShareImageClick = onShareImageClick,
         )
@@ -77,6 +86,8 @@ private fun KeysignShareQrSheet(
 @Composable
 private fun KeysignShareQrContent(
     qrCode: BitmapPainter?,
+    isLinkReady: Boolean,
+    isImageReady: Boolean,
     onCopyLinkClick: () -> Unit,
     onShareImageClick: () -> Unit,
 ) {
@@ -102,6 +113,7 @@ private fun KeysignShareQrContent(
         ) {
             VsButton(
                 variant = VsButtonVariant.Secondary,
+                state = if (isLinkReady) VsButtonState.Enabled else VsButtonState.Disabled,
                 size = VsButtonSize.Medium,
                 label = stringResource(R.string.keysign_share_qr_copy_link),
                 onClick = onCopyLinkClick,
@@ -109,6 +121,7 @@ private fun KeysignShareQrContent(
             )
             VsButton(
                 variant = VsButtonVariant.Primary,
+                state = if (isImageReady) VsButtonState.Enabled else VsButtonState.Disabled,
                 size = VsButtonSize.Medium,
                 label = stringResource(R.string.keysign_share_qr_share_image),
                 onClick = onShareImageClick,
@@ -130,6 +143,8 @@ private fun KeysignShareQrContentPreview() {
         )
     KeysignShareQrContent(
         qrCode = BitmapPainter(qr.asImageBitmap(), filterQuality = FilterQuality.None),
+        isLinkReady = true,
+        isImageReady = true,
         onCopyLinkClick = {},
         onShareImageClick = {},
     )
