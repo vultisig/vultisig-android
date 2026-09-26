@@ -14,6 +14,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -36,6 +38,7 @@ import app.rive.Result
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
+import com.vultisig.wallet.app.isRiveInitialized
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.hero.HeroContent
@@ -52,6 +55,7 @@ import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
@@ -229,7 +233,16 @@ internal fun KeysignView(
 private fun KeysignRiveProgress(progress: Float, @DrawableRes coinLogoRes: Int?) {
     val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keysign).value
     if (riveFile == null) {
-        VsSigningProgressIndicator(text = stringResource(R.string.keysign_screen_preparing_vault))
+        // The file loads asynchronously; showing the text fallback while it inflates flashes
+        // "Preparing vault" between the connecting animation and this one. Keep the fallback for
+        // builds where Rive never initialised.
+        if (isRiveInitialized) {
+            Box(Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary))
+        } else {
+            VsSigningProgressIndicator(
+                text = stringResource(R.string.keysign_screen_preparing_vault)
+            )
+        }
         return
     }
     val vmi =
