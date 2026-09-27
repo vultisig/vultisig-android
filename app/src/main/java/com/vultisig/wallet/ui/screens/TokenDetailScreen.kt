@@ -88,11 +88,15 @@ internal fun TokenDetailScreen(
     onTokenExplorer: () -> Unit = {},
     onChartRangeSelected: (ChartRange) -> Unit = {},
 ) {
-    // The sheet opens on the balance and the actions and nothing else, which is what keeps it to
-    // the third of the screen the design asks for and cheap to glance at and swipe away again.
-    // Everything below that fold — the price row, the chart, the stats — is what scrolling expands
-    // the sheet to reach.
-    var restHeight by remember { mutableIntStateOf(0) }
+    // The sheet opens on the balance, the actions and the top of the chart, so it is cheap to
+    // glance at and swipe away again yet visibly has more below. The rest of the chart and the
+    // stats are what scrolling expands the sheet to reach.
+    var actionsBottom by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    // Added here rather than inside the measurement: the chart arrives after the block above it
+    // has been measured, and without a size change that measurement is never taken again.
+    val chartPeek = if (uiModel.chart != null) ChartGap + ChartPeek else 0.dp
+    val restHeight = actionsBottom + with(density) { chartPeek.roundToPx() }
 
     ExpandingBottomSheet(onDismiss = onDismiss, restHeight = restHeight) {
         TokenDetailsContent(
@@ -105,7 +109,7 @@ internal fun TokenDetailScreen(
             onExplorer = onExplorer,
             onTokenExplorer = onTokenExplorer,
             onChartRangeSelected = onChartRangeSelected,
-            onRestHeightMeasured = { restHeight = it },
+            onActionsBottomMeasured = { actionsBottom = it },
         )
     }
 }
@@ -121,7 +125,7 @@ internal fun TokenDetailsContent(
     onExplorer: () -> Unit,
     onTokenExplorer: () -> Unit,
     onChartRangeSelected: (ChartRange) -> Unit,
-    onRestHeightMeasured: (Int) -> Unit = {},
+    onActionsBottomMeasured: (Int) -> Unit = {},
 ) {
     val density = LocalDensity.current
 
@@ -133,12 +137,14 @@ internal fun TokenDetailsContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Column(
-            // What the sheet must show before the reader does anything. Its own top padding is
-            // added back, since the sheet measures its resting height from its top edge; the sheet
-            // keeps this block clear of the fade at its bottom edge on its own.
+            // What the sheet must show before the reader does anything, above the top of the chart
+            // when there is one. Its own top padding is added back, since the sheet measures its
+            // resting height from its top edge; the sheet fades whatever lies past that height.
             modifier =
                 Modifier.fillMaxWidth().onSizeChanged { size ->
-                    onRestHeightMeasured(size.height + with(density) { ContentPadding.roundToPx() })
+                    onActionsBottomMeasured(
+                        size.height + with(density) { ContentPadding.roundToPx() }
+                    )
                 },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -215,7 +221,7 @@ internal fun TokenDetailsContent(
             )
         }
 
-        UiSpacer(size = 40.dp)
+        UiSpacer(size = ChartGap)
 
         uiModel.chart?.let { chart ->
             PriceChartSection(
@@ -255,6 +261,12 @@ internal fun TokenDetailsContent(
 }
 
 private val ContentPadding = 24.dp
+private val ChartGap = 40.dp
+
+// How far into the chart card the resting sheet reaches: the card's padding and its price header,
+// so that the fade falls across the top of the chart line itself. With nothing showing under the
+// actions the sheet would not read as scrollable.
+private val ChartPeek = 72.dp
 
 @Preview
 @Composable
