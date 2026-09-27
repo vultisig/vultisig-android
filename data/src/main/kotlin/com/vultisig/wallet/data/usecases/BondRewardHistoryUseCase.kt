@@ -21,7 +21,8 @@ data class BondChurnReward(val churnHeight: Long, val date: Date, val amount: Bi
  * Provider rewards never reach the wallet as a transfer: the node accrues an award every block, and
  * each churn pays the operator fee and compounds the rest into the providers' bonds. So the history
  * is read off the node one block before each churn, while the award about to be paid is still on
- * its ledger, and split by the provider's bond share at that same block.
+ * its ledger. THORNode reports only the node's award, so it is split by the provider's bond share
+ * at that same block; MAYANode reports each provider's payout directly.
  */
 interface BondRewardHistoryUseCase {
 
@@ -60,8 +61,8 @@ constructor(
     private val mayachainBondRepository: MayachainBondRepository,
 ) : BondRewardHistoryUseCase {
 
-    // A node at a past height never changes, so a snapshot is kept for the life of the process.
-    private val snapshots = ConcurrentHashMap<String, NodeRewardSnapshot>()
+    // A node at a past height never changes, so its payouts are kept for the life of the process.
+    private val providerRewards = ConcurrentHashMap<String, Map<String, BigInteger>>()
 
     override suspend fun getLastReward(
         chain: Chain,
@@ -99,51 +100,48 @@ constructor(
         bondAddress: String,
         churn: ParsedChurn,
     ): BondChurnReward? {
-        val snapshot = snapshotBefore(chain, nodeAddress, churn.height)
-        val amount = snapshot.providerShare(bondAddress) ?: return null
+        val amount =
+            providerRewardsBefore(chain, nodeAddress, churn.height)[bondAddress] ?: return null
         return BondChurnReward(churnHeight = churn.height, date = churn.date, amount = amount)
     }
 
-    private suspend fun snapshotBefore(
+    private suspend fun providerRewardsBefore(
         chain: Chain,
         nodeAddress: String,
         churnHeight: Long,
-    ): NodeRewardSnapshot {
+    ): Map<String, BigInteger> {
         val height = churnHeight - 1
         val key = "${chain.raw}:$nodeAddress:$height"
-        snapshots[key]?.let {
+        providerRewards[key]?.let {
             return it
         }
-        val snapshot =
+        val rewards =
             when (chain) {
                 Chain.ThorChain -> {
                     val node = thorchainBondRepository.getNodeDetailsAtHeight(nodeAddress, height)
                     NodeRewardSnapshot(
-                        award = node.currentAward.toBigIntegerOrZero(),
-                        operatorFeeBps = node.bondProviders.nodeOperatorFee.toBigIntegerOrZero(),
-                        providerBonds =
-                            node.bondProviders.providers.associate {
-                                it.bondAddress to it.bond.toBigIntegerOrZero()
-                            },
-                    )
+                            award = node.currentAward.toBigIntegerOrZero(),
+                            operatorFeeBps =
+                                node.bondProviders.nodeOperatorFee.toBigIntegerOrZero(),
+                            providerBonds =
+                                node.bondProviders.providers.associate {
+                                    it.bondAddress to it.bond.toBigIntegerOrZero()
+                                },
+                        )
+                        .providerShares()
                 }
-                Chain.MayaChain -> {
-                    val node = mayachainBondRepository.getNodeDetailsAtHeight(nodeAddress, height)
-                    NodeRewardSnapshot(
-                        award = node.reward.toBigIntegerOrZero(),
-                        operatorFeeBps = node.bondProviders.nodeOperatorFee.toBigIntegerOrZero(),
-                        // Maya bonds LP units, weighed the way MayachainBondUseCase weighs them.
-                        providerBonds =
-                            node.bondProviders.providers.associate { provider ->
-                                provider.bondAddress to
-                                    provider.pools.values.sumOf { it.toBigIntegerOrZero() }
-                            },
-                    )
-                }
+                // MAYANode splits the award itself, weighing each provider's CACAO-valued `bond`
+                // and paying the operator fee into the operator's own row.
+                Chain.MayaChain ->
+                    mayachainBondRepository
+                        .getNodeDetailsAtHeight(nodeAddress, height)
+                        .bondProviders
+                        .providers
+                        .associate { it.bondAddress to it.reward.toBigIntegerOrZero() }
                 else -> error("Bond rewards are not supported on ${chain.raw}")
             }
-        snapshots[key] = snapshot
-        return snapshot
+        providerRewards[key] = rewards
+        return rewards
     }
 
     private suspend fun fetchChurns(chain: Chain): List<ParsedChurn> {
@@ -177,6 +175,10 @@ internal data class NodeRewardSnapshot(
         val providersPart = (FEE_DENOMINATOR - operatorFeeBps).max(BigInteger.ZERO)
         return award * providersPart * myBond / (FEE_DENOMINATOR * totalBond)
     }
+
+    /** [providerShare] for every provider on the node. */
+    fun providerShares(): Map<String, BigInteger> =
+        providerBonds.keys.associateWith { providerShare(it) ?: BigInteger.ZERO }
 
     private companion object {
         val FEE_DENOMINATOR: BigInteger = BigInteger.valueOf(10_000)

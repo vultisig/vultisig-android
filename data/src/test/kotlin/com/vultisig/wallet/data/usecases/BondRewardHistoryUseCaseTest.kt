@@ -130,37 +130,40 @@ internal class BondRewardHistoryUseCaseTest {
     }
 
     @Test
-    fun `maya reads the node's reward field and weighs providers by bonded LP units`() = runTest {
-        coEvery { mayachainBondRepository.getChurns() } returns listOf(churn(height = 17_904_023))
-        // Live MAYANode reading one block before churn 17904023: a 5000 bps operator fee, and the
-        // vault bonding BTC LP units against a provider holding 3 RUNE LP units.
-        coEvery { mayachainBondRepository.getNodeDetailsAtHeight(NODE, 17_904_022) } returns
-            MayaNodeInfo(
-                nodeAddress = NODE,
-                status = "Active",
-                reward = "7021264386631",
-                bondProviders =
-                    MayaBondProviders(
-                        nodeOperatorFee = "5000",
-                        providers =
-                            listOf(
-                                MayaBondProvider(
-                                    bondAddress = OTHERS,
-                                    pools = mapOf("THOR.RUNE" to "3"),
+    fun `maya takes the provider's own reward row, not an LP-unit share of the node award`() =
+        runTest {
+            coEvery { mayachainBondRepository.getChurns() } returns
+                listOf(churn(height = 17_904_023))
+            // Live MAYANode reading one block before churn 17904023. LP units in different pools
+            // are not proportional to `bond`, so weighing by `pools` would pay 5948869444332.
+            coEvery { mayachainBondRepository.getNodeDetailsAtHeight(NODE, 17_904_022) } returns
+                MayaNodeInfo(
+                    nodeAddress = NODE,
+                    status = "Active",
+                    reward = "7000694276124",
+                    bondProviders =
+                        MayaBondProviders(
+                            nodeOperatorFee = "1500",
+                            providers =
+                                listOf(
+                                    MayaBondProvider(
+                                        bondAddress = OTHERS,
+                                        reward = "1050300962182",
+                                        pools = mapOf("THOR.RUNE" to "100999092998"),
+                                    ),
+                                    MayaBondProvider(
+                                        bondAddress = ME,
+                                        reward = "5950393313942",
+                                        pools = mapOf("ARB.USDT" to "349179856971119"),
+                                    ),
                                 ),
-                                MayaBondProvider(
-                                    bondAddress = ME,
-                                    pools = mapOf("BTC.BTC" to "3634299242418724"),
-                                ),
-                            ),
-                    ),
-            )
+                        ),
+                )
 
-        val reward = useCase.getLastReward(Chain.MayaChain, NODE, ME)
+            val reward = useCase.getLastReward(Chain.MayaChain, NODE, ME)
 
-        // The same figure MAYANode reports as this provider's own `reward` at that height.
-        assertEquals(BigInteger("3510632193315"), reward?.amount)
-    }
+            assertEquals(BigInteger("5950393313942"), reward?.amount)
+        }
 
     @Test
     fun `a zero-bond node pays nothing instead of dividing by zero`() {

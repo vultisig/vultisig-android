@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 import java.util.Date
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -141,37 +140,14 @@ constructor(
         myBondAddress: String,
         networkApy: Double,
     ): MayaBondMetrics {
-        val bondProviders = node.bondProviders.providers
-
-        var myBond = BigInteger.ZERO
-        var totalBond = BigInteger.ZERO
-        for (provider in bondProviders) {
-            val providerBond =
-                provider.pools.values.sumOf { it.toBigIntegerOrNull() ?: BigInteger.ZERO }
-            if (provider.bondAddress == myBondAddress) {
-                myBond = providerBond
-            }
-            totalBond += providerBond
-        }
-
-        val myBondOwnershipPercentage =
-            if (totalBond > BigInteger.ZERO) {
-                myBond.toBigDecimal().divide(totalBond.toBigDecimal(), 8, RoundingMode.DOWN)
-            } else {
-                BigDecimal.ZERO
-            }
-
-        val nodeOperatorFee =
-            (node.bondProviders.nodeOperatorFee.toBigDecimalOrNull() ?: BigDecimal.ZERO).divide(
-                BigDecimal(10_000),
-                8,
-                RoundingMode.DOWN,
-            )
-
-        val currentAward =
-            (node.reward.toBigDecimalOrNull() ?: BigDecimal.ZERO) *
-                (BigDecimal.ONE - nodeOperatorFee)
-        val myAward = myBondOwnershipPercentage * currentAward
+        val myProvider =
+            node.bondProviders.providers.firstOrNull { it.bondAddress == myBondAddress }
+        val myBond =
+            myProvider?.pools?.values?.sumOf { it.toBigIntegerOrNull() ?: BigInteger.ZERO }
+                ?: BigInteger.ZERO
+        // MAYANode already splits the accruing award per provider, by CACAO-valued bond and with
+        // the operator fee paid into the operator's row; LP units are not comparable across pools.
+        val myAward = myProvider?.reward?.toBigDecimalOrNull() ?: BigDecimal.ZERO
 
         return MayaBondMetrics(
             myBond = myBond,

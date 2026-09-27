@@ -48,6 +48,7 @@ import java.math.BigInteger
 import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -99,10 +100,13 @@ internal class ThorchainDefiPositionsViewModelTest {
     // The real cache, not a mock: these tests assert the round trip a nav pop and a re-entry make.
     private lateinit var snapshotCache: DeFiPositionsSnapshotCache
     private lateinit var bondRewardHistoryUseCase: BondRewardHistoryUseCase
+    private val defaultTimeZone: TimeZone = TimeZone.getDefault()
 
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        // Churn dates format in the device's zone; pin it so the date assertions hold anywhere.
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
         mockkStatic("com.vultisig.wallet.data.utils.CoinTypeKt")
         every { any<CoinType>().symbol } returns "RUNE"
         every { any<CoinType>().decimals } returns 8
@@ -147,6 +151,7 @@ internal class ThorchainDefiPositionsViewModelTest {
     fun tearDown() {
         unmockkStatic("com.vultisig.wallet.data.utils.CoinTypeKt")
         Dispatchers.resetMain()
+        TimeZone.setDefault(defaultTimeZone)
     }
 
     @Test
@@ -1781,7 +1786,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         const val RUJI_ADDRESS = "thor1rujiaddress"
         const val NODE_ADDRESS = "thor1nodeaddress"
 
-        // Noon UTC, so the churn date formats the same in every time zone the tests run in.
+        // Noon UTC, formatted under the UTC default zone pinned in setUp.
         val SEP_20_NOON_UTC = Date(1_789_905_600_000L)
         val SEP_17_NOON_UTC = Date(1_789_646_400_000L)
         const val BTC_POOL = "BTC.BTC"

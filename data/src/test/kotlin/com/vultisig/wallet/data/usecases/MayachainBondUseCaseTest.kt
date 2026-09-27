@@ -97,20 +97,46 @@ internal class MayachainBondUseCaseTest {
     }
 
     @Test
-    fun `next reward is read from the node's reward field`() = runTest {
-        coEvery { repository.getMidgardNetworkData() } returns
-            MayaMidgardNetworkData(bondingAPY = "0.1", nextChurnHeight = "0")
-        coEvery { repository.getMidgardHealthData() } returns
-            MayaMidgardHealth(
-                lastMayaNode = MayaMidgardHealth.MayaHeightInfo(height = 1, timestamp = 0)
-            )
-        coEvery { repository.getAllNodes() } returns
-            listOf(nodeWithProvider(MY_ADDRESS, reward = "567911856519686"))
+    fun `next reward is the provider's own reward row, not an LP-unit share of the node award`() =
+        runTest {
+            coEvery { repository.getMidgardNetworkData() } returns
+                MayaMidgardNetworkData(bondingAPY = "0.1", nextChurnHeight = "0")
+            coEvery { repository.getMidgardHealthData() } returns
+                MayaMidgardHealth(
+                    lastMayaNode = MayaMidgardHealth.MayaHeightInfo(height = 1, timestamp = 0)
+                )
+            // Live MAYANode reading at block 17904022: LP units in different pools are not
+            // proportional to `bond`, so weighing by `pools` would pay 5948869444332 instead.
+            coEvery { repository.getAllNodes() } returns
+                listOf(
+                    MayaNodeInfo(
+                        nodeAddress = NODE_ADDRESS,
+                        status = "Active",
+                        reward = "7000694276124",
+                        bondProviders =
+                            MayaBondProviders(
+                                nodeOperatorFee = "1500",
+                                providers =
+                                    listOf(
+                                        MayaBondProvider(
+                                            bondAddress = OTHER_ADDRESS,
+                                            reward = "1050300962182",
+                                            pools = mapOf("THOR.RUNE" to "100999092998"),
+                                        ),
+                                        MayaBondProvider(
+                                            bondAddress = MY_ADDRESS,
+                                            reward = "5950393313942",
+                                            pools = mapOf("ARB.USDT" to "349179856971119"),
+                                        ),
+                                    ),
+                            ),
+                    )
+                )
 
-        val node = useCase.getActiveNodesRemote(MY_ADDRESS).single()
+            val node = useCase.getActiveNodesRemote(MY_ADDRESS).single()
 
-        assertEquals(567_911_856_519_686.0, node.nextReward)
-    }
+            assertEquals(5_950_393_313_942.0, node.nextReward)
+        }
 
     @Test
     fun `a MAYANode node decodes its accruing award from the reward key`() {
@@ -127,11 +153,10 @@ internal class MayachainBondUseCaseTest {
         assertEquals("567911856519686", node.reward)
     }
 
-    private fun nodeWithProvider(address: String, reward: String = "0") =
+    private fun nodeWithProvider(address: String) =
         MayaNodeInfo(
             nodeAddress = NODE_ADDRESS,
             status = "Active",
-            reward = reward,
             bondProviders =
                 MayaBondProviders(
                     nodeOperatorFee = "0",
@@ -147,6 +172,7 @@ internal class MayachainBondUseCaseTest {
 
     private companion object {
         const val MY_ADDRESS = "maya1testaddress"
+        const val OTHER_ADDRESS = "maya1otheraddress"
         const val NODE_ADDRESS = "maya1nodeaddress"
 
         // Must match avgBlockTime in MayachainBondUseCase.estimateNextChurnETA
