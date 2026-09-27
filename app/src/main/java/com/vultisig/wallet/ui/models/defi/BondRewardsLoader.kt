@@ -24,15 +24,21 @@ constructor(private val bondRewardHistoryUseCase: BondRewardHistoryUseCase) {
 
     private val lastRewards = mutableMapOf<String, LastRewardUiModel>()
     private val lastRewardsInFlight = mutableSetOf<String>()
+    private var lastRewardsGeneration = 0
 
     fun knownLastReward(nodeAddress: String): LastRewardUiModel? = lastRewards[nodeAddress]
 
     /**
      * Makes the next [claimLastRewardLoads] read every node again, so a refresh picks up a churn
      * that happened while the screen was open. The screen keeps showing the old value meanwhile.
+     *
+     * Loads claimed before this call no longer block a new claim for their node, and their results
+     * stay out of the memory: cancel them along with the refresh they belong to.
      */
     fun forgetLastRewards() {
+        lastRewardsGeneration++
         lastRewards.clear()
+        lastRewardsInFlight.clear()
     }
 
     /** The nodes among [nodeAddresses] with no Last Reward yet and no load running for it. */
@@ -43,8 +49,12 @@ constructor(private val bondRewardHistoryUseCase: BondRewardHistoryUseCase) {
         chain: Chain,
         nodeAddress: String,
         bondAddress: String,
-    ): LastRewardUiModel =
-        try {
+    ): LastRewardUiModel {
+        val generation = lastRewardsGeneration
+        fun remember(reward: LastRewardUiModel) {
+            if (generation == lastRewardsGeneration) lastRewards[nodeAddress] = reward
+        }
+        return try {
             val reward =
                 bondRewardHistoryUseCase
                     .getLastReward(
@@ -54,16 +64,17 @@ constructor(private val bondRewardHistoryUseCase: BondRewardHistoryUseCase) {
                     )
                     ?.let { LastRewardUiModel.Paid(it.amount.formatReward(chain)) }
                     ?: LastRewardUiModel.Unavailable
-            lastRewards[nodeAddress] = reward
+            remember(reward)
             reward
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Timber.e(e, "Failed to load the last bond reward for %s", nodeAddress)
-            LastRewardUiModel.Unavailable.also { lastRewards[nodeAddress] = it }
+            LastRewardUiModel.Unavailable.also { remember(it) }
         } finally {
-            lastRewardsInFlight.remove(nodeAddress)
+            if (generation == lastRewardsGeneration) lastRewardsInFlight.remove(nodeAddress)
         }
+    }
 
     /** Fills [sheet] with the node's churn history, or flags it as failed. */
     suspend fun loadHistory(

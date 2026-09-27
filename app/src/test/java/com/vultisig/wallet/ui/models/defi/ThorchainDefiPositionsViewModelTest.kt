@@ -52,6 +52,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -1582,6 +1583,30 @@ internal class ThorchainDefiPositionsViewModelTest {
             vm.state.value.bonded.nodes.single().lastReward,
         )
     }
+
+    @Test
+    fun `a refresh during a pending last reward reads it again and drops the old answer`() =
+        runTest {
+            selectPositions("RUNE")
+            coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+                flowOf(listOf(bondedNode(BigInteger("1000000000"))))
+            val staleReward = CompletableDeferred<BondChurnReward?>()
+            var reads = 0
+            coEvery { bondRewardHistoryUseCase.getLastReward(any(), any(), any()) } coAnswers
+                {
+                    if (reads++ == 0) staleReward.await() else churnReward(BigInteger("2172412345"))
+                }
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            vm.setData(VAULT_ID)
+            staleReward.complete(churnReward(BigInteger.ZERO))
+
+            assertEquals(2, reads)
+            assertEquals(
+                LastRewardUiModel.Paid("21.7241 RUNE"),
+                vm.state.value.bonded.nodes.single().lastReward,
+            )
+        }
 
     @Test
     fun `a failed last reward reading keeps the bonded list and shows no amount`() = runTest {

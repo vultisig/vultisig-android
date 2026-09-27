@@ -49,10 +49,12 @@ import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -518,9 +520,11 @@ constructor(
         }
     }
 
-    private fun loadLastRewards(nodeAddresses: List<String>, bondAddress: String) {
+    /** Runs as children of the bonded load, so the refresh that replaces it cancels them too. */
+    private suspend fun loadLastRewards(nodeAddresses: List<String>, bondAddress: String) {
+        val bondedLoad = CoroutineScope(currentCoroutineContext())
         for (nodeAddress in bondRewardsLoader.claimLastRewardLoads(nodeAddresses)) {
-            viewModelScope.launch {
+            bondedLoad.launch {
                 val reward =
                     bondRewardsLoader.loadLastReward(Chain.MayaChain, nodeAddress, bondAddress)
                 updateModel {
