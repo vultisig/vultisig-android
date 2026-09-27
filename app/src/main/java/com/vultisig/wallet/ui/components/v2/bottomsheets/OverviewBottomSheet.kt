@@ -113,7 +113,11 @@ internal fun OverviewBottomSheet(
                     .clip(OverviewSheetShape)
                     .background(Theme.v2.colors.backgrounds.surface1)
                     .border(width = 1.dp, color = OverviewSheetBorder, shape = OverviewSheetShape)
-                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+                    .windowInsetsPadding(
+                        WindowInsets.safeDrawing.only(
+                            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom,
+                        ),
+                    )
                     .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 32.dp),
         ) {
             DragHandler(color = Theme.v2.colors.vibrant.primary)
