@@ -237,7 +237,7 @@ class SwapKitLegacyP2PKHSignerTest {
     }
 
     @Test
-    fun `getPreSignedImageHash - DOGE happy path returns one sighash per input (WITNESS_UTXO)`() {
+    fun `getPreSignedImageHash - DOGE happy path returns one sighash per input (NON_WITNESS_UTXO)`() {
         try {
             val psbt =
                 encodeLegacyPsbt(
@@ -249,6 +249,7 @@ class SwapKitLegacyP2PKHSignerTest {
                                 sequence = 0xFFFFFFFFL,
                                 amount = 100_000,
                                 prevScriptHex = p2pkh("11".repeat(20)),
+                                useNonWitnessUtxo = true,
                             )
                         ),
                     outputs =
@@ -328,6 +329,7 @@ class SwapKitLegacyP2PKHSignerTest {
                                 sequence = 0xFFFFFFFEL,
                                 amount = 100_000,
                                 prevScriptHex = p2pkh(changeHash),
+                                useNonWitnessUtxo = true,
                             )
                         ),
                     outputs =
@@ -359,7 +361,7 @@ class SwapKitLegacyP2PKHSignerTest {
             assertEquals(1, input.utxoCount)
             val utxo = input.getUtxo(0)
             assertArrayEquals(
-                Numeric.hexStringToByteArray(TXID_ONE).reversedArray(),
+                sha256d(encodePrevTx(3, 100_000, p2pkh(changeHash))),
                 utxo.outPoint.hash.toByteArray(),
             )
             assertEquals(3, utxo.outPoint.index)

@@ -106,7 +106,8 @@ internal class SwapKitLegacyP2PKHSigner(
 
         // 3. Resolve per-input scriptPubKey + amount + keyHash. SwapKit ships either
         // NON_WITNESS_UTXO (full prev-tx, key 0x00 — BIP-174's recommendation for legacy P2PKH;
-        // DOGE confirmed) or WITNESS_UTXO (key 0x01, BTC-style compact). Accept both.
+        // DOGE confirmed) or WITNESS_UTXO (key 0x01, BTC-style compact). Both parse here;
+        // requireCommittedInputAmounts then rejects WITNESS_UTXO on DOGE / DASH.
         val inputs =
             parsedTx.inputs.mapIndexed { index, parsedInput ->
                 val (amount, scriptPubKey) =
@@ -124,6 +125,7 @@ internal class SwapKitLegacyP2PKHSigner(
                     amount = amount,
                     scriptPubKey = scriptPubKey,
                     keyHash = keyHash,
+                    hasPrevTx = inputMaps[index].containsKey(KEY_NON_WITNESS_UTXO),
                 )
             }
 
@@ -185,6 +187,7 @@ internal class SwapKitLegacyP2PKHSigner(
                     "to sign"
             )
         }
+        requireCommittedInputAmounts(inputs)
         verifyVaultBinding(inputs, outputs, fromAmount)
 
         val depositAmount = outputs[0].amount
@@ -261,6 +264,25 @@ internal class SwapKitLegacyP2PKHSigner(
         }
 
         return signingInput.build().toByteArray()
+    }
+
+    /**
+     * DOGE and DASH sign with the pre-segwit sighash, which doesn't commit to input amounts, so a
+     * WITNESS_UTXO amount is unverifiable: understating it passes the fee ceiling above while the
+     * real surplus goes to the miner. Require the full previous transaction, which
+     * [parseNonWitnessUtxo] hashes against the outpoint. BCH's SIGHASH_FORKID commits the amount,
+     * so a wrong value there only makes the signature invalid.
+     */
+    private fun requireCommittedInputAmounts(inputs: List<LegacyP2PKHInput>) {
+        if (coinType == CoinType.BITCOINCASH) return
+        inputs.forEachIndexed { index, input ->
+            if (!input.hasPrevTx) {
+                throw SwapKitLegacyP2PKHSignerException(
+                    "SwapKit PSBT input #$index carries no NON_WITNESS_UTXO; $coinType sighashes " +
+                        "don't commit to input amounts, so the previous transaction is required"
+                )
+            }
+        }
     }
 
     /**
@@ -389,6 +411,8 @@ internal class SwapKitLegacyP2PKHSigner(
         val amount: Long,
         val scriptPubKey: ByteArray,
         val keyHash: ByteArray,
+        /** Whether the amount came from a NON_WITNESS_UTXO already hashed against the outpoint. */
+        val hasPrevTx: Boolean,
     )
 
     private data class LegacyP2PKHOutput(val amount: Long, val scriptPubKey: ByteArray)
