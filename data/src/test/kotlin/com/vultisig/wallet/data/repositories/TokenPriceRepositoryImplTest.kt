@@ -12,9 +12,11 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.settings.AppCurrency
+import com.vultisig.wallet.data.utils.NetworkException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.neq
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
@@ -632,11 +634,13 @@ internal class TokenPriceRepositoryImplTest {
     fun `a failed contract-price chunk does not drop the other chunk`() = runTest {
         val tokens = List(CONTRACT_PRICE_BATCH_SIZE + 1) { index -> contractPricedToken(index) }
         var calls = 0
-        coEvery { tokenPriceDao.getTokenPrice(any(), any()) } returns null
+        val failed = tokens.first()
+        coEvery { tokenPriceDao.getTokenPrice(failed.id, any()) } returns "1.5"
+        coEvery { tokenPriceDao.getTokenPrice(neq(failed.id), any()) } returns null
         coEvery { coinGeckoApi.getCryptoPrices(any(), any()) } returns emptyMap()
         coEvery { coinGeckoApi.getContractsPrice(any(), any(), any()) } answers {
             calls += 1
-            if (calls == 1) throw RuntimeException("contract price batch failed")
+            if (calls == 1) throw NetworkException(502, "contract price batch failed")
             @Suppress("UNCHECKED_CAST")
             val addresses = invocation.args[1] as List<String>
             addresses.associateWith { mapOf("usd" to BigDecimal("2.74")) }
@@ -645,7 +649,9 @@ internal class TokenPriceRepositoryImplTest {
         repository.refresh(tokens)
 
         coVerify(exactly = 2) { coinGeckoApi.getContractsPrice(any(), any(), any()) }
-        assertPriceEquals("0", repository.getPrice(tokens.first(), AppCurrency.USD).first())
+        coVerify(exactly = 0) { liQuestApi.getLifiContractPriceUsd(any(), any()) }
+        coVerify(exactly = 0) { tokenPriceDao.insertTokenPrice(match { it.tokenId == failed.id }) }
+        assertPriceEquals("1.5", repository.getPrice(failed, AppCurrency.USD).first())
         assertPriceEquals("2.74", repository.getPrice(tokens.last(), AppCurrency.USD).first())
     }
 

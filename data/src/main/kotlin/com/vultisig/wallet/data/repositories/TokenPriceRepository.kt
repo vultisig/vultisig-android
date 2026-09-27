@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.evmChainId
 import com.vultisig.wallet.data.models.settings.AppCurrency
+import com.vultisig.wallet.data.utils.NetworkException
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
@@ -427,9 +428,10 @@ constructor(
                 chain,
                 contractAddresses,
                 currencies,
-                coinGeckoContractsPrice,
+                coinGeckoContractsPrice.prices,
+                coinGeckoContractsPrice.failedAddresses,
             )
-        return coinGeckoContractsPrice + lifiContractsPrice
+        return coinGeckoContractsPrice.prices + lifiContractsPrice
     }
 
     // LI.FI only indexes EVM chains. A miss is left unpriced, never written as zero.
@@ -438,10 +440,12 @@ constructor(
         contractAddresses: List<String>,
         currencies: List<String>,
         found: Map<String, CurrencyToPrice>,
+        failedAddresses: Set<String>,
     ): Map<String, CurrencyToPrice> {
         val missing =
             contractAddresses.filterNot { address ->
-                found.keys.any { key -> key.equals(address, ignoreCase = true) }
+                address.lowercase() in failedAddresses ||
+                    found.keys.any { key -> key.equals(address, ignoreCase = true) }
             }
         if (missing.isEmpty() || chain.evmChainId() == null) return emptyMap()
 
@@ -468,13 +472,19 @@ constructor(
         }
     }
 
+    private data class ChunkedContractPrices(
+        val prices: Map<String, CurrencyToPrice>,
+        val failedAddresses: Set<String>,
+    )
+
     /** A failed chunk must not discard prices the other chunks already returned. */
     private suspend fun fetchContractPricesInChunks(
         chain: Chain,
         contractAddresses: List<String>,
         currencies: List<String>,
-    ): Map<String, CurrencyToPrice> {
+    ): ChunkedContractPrices {
         val merged = linkedMapOf<String, CurrencyToPrice>()
+        val failed = mutableSetOf<String>()
         for (batch in contractAddresses.distinct().chunked(CONTRACT_PRICE_BATCH_SIZE)) {
             try {
                 merged.putAll(
@@ -484,18 +494,17 @@ constructor(
                         currencies = currencies,
                     )
                 )
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
+            } catch (e: NetworkException) {
                 Timber.w(
                     e,
                     "Contract price chunk failed for %s (%d addresses)",
                     chain,
                     batch.size,
                 )
+                failed += batch.map { it.lowercase() }
             }
         }
-        return merged
+        return ChunkedContractPrices(merged, failed)
     }
 
     private suspend fun getLifiContractPriceInUsd(chain: Chain, contract: String): BigDecimal? =

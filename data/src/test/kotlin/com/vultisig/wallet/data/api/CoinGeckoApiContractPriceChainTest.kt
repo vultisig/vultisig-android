@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.BigDecimalSerializerImpl
+import com.vultisig.wallet.data.utils.NetworkException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -13,11 +14,13 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import java.math.BigDecimal
 import kotlin.test.assertContains
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -83,21 +86,40 @@ class CoinGeckoApiContractPriceChainTest {
         }
 
     @Test
-    fun `getContractsPrice retries a non-success body that deserializes as an empty quote`() =
-        runTest {
-            var calls = 0
-            val engine = MockEngine {
-                calls += 1
-                respond(content = "{}", status = HttpStatusCode.BadGateway)
-            }
-            val api =
-                CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
-
-            val result = api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
-
-            assertEquals(2, calls)
-            assertEquals(emptyMap<String, CurrencyToPrice>(), result)
+    fun `getContractsPrice retries a server error once after a delay`() = runTest {
+        var calls = 0
+        var secondAt = 0L
+        val engine = MockEngine {
+            calls += 1
+            if (calls == 2) secondAt = testScheduler.currentTime
+            respond(content = "{}", status = HttpStatusCode.BadGateway)
         }
+        val api = CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
+
+        assertFailsWith<NetworkException> {
+            api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
+        }
+
+        assertEquals(2, calls)
+        assertTrue(secondAt >= coinGeckoPriceRetryDelay.inWholeMilliseconds)
+    }
+
+    @Test
+    fun `getContractsPrice does not retry a permanent client error`() = runTest {
+        var calls = 0
+        val engine = MockEngine {
+            calls += 1
+            respond(content = "{}", status = HttpStatusCode.NotFound)
+        }
+        val api = CoinGeckoApiImpl(HttpClient(engine))
+
+        assertFailsWith<NetworkException> {
+            api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
+        }
+
+        assertEquals(1, calls)
+        assertEquals(0L, testScheduler.currentTime)
+    }
 
     @Test
     fun `getContractsPrice does not retry an empty success`() = runTest {

@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.models.CoinMarketStatsJson
 import com.vultisig.wallet.data.api.models.MarketChartResponseJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.coinGeckoAssetPlatformId
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -13,8 +14,11 @@ import io.ktor.client.request.parameter
 import io.ktor.http.appendPathSegments
 import java.math.BigDecimal
 import javax.inject.Inject
-import kotlinx.coroutines.CancellationException
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
 import timber.log.Timber
+
+internal val coinGeckoPriceRetryDelay = 1.seconds
 
 typealias CurrencyToPrice = Map<String, BigDecimal>
 
@@ -57,9 +61,14 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
     ): Map<String, CurrencyToPrice> {
         val priceProviderIdsParam = priceProviderIds.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-        return attemptTwice("CoinGecko price lookup") {
-            fetchPrices(priceProviderIdsParam, currenciesParam)
-        } ?: emptyMap()
+        return try {
+            retryOnce("CoinGecko price lookup") {
+                fetchPrices(priceProviderIdsParam, currenciesParam)
+            }
+        } catch (e: NetworkException) {
+            Timber.w(e, "%s failed", "CoinGecko price lookup")
+            emptyMap()
+        }
     }
 
     override suspend fun getContractsPrice(
@@ -74,29 +83,23 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
         val platformId = chain.coinGeckoAssetPlatformId() ?: return emptyMap()
         val priceProviderIdsParam = contractAddresses.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-        return attemptTwice("CoinGecko contract price lookup for $chain") {
+        return retryOnce("CoinGecko contract price lookup for $chain") {
             fetchContractPrices(platformId, priceProviderIdsParam, currenciesParam)
-        } ?: emptyMap()
+        }
     }
 
-    /** A dropped connection used to be stored as "no price" and the old row stayed up. An empty 2xx is a miss, not a retry. */
-    private suspend fun <T> attemptTwice(label: String, fetch: suspend () -> T): T? {
+    private suspend fun <T> retryOnce(label: String, fetch: suspend () -> T): T =
         try {
-            return fetch()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.w(e, "%s failed, retrying once", label)
-        }
-        return try {
             fetch()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.w(e, "%s failed", label)
-            null
+        } catch (e: NetworkException) {
+            if (e.isPermanentClientError) throw e
+            Timber.w(e, "%s failed, retrying once", label)
+            delay(coinGeckoPriceRetryDelay)
+            fetch()
         }
-    }
+
+    private val NetworkException.isPermanentClientError
+        get() = httpStatusCode in 400..499 && httpStatusCode != 408 && httpStatusCode != 429
 
     private suspend fun fetchPrices(coins: String, fiats: String): Map<String, CurrencyToPrice> =
         http
