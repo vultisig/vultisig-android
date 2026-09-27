@@ -420,13 +420,12 @@ internal class SwapKitLegacyP2PKHSigner(
         // to
         // a different tx_id and silently break NEAR route tracking — so reject it loudly, mirroring
         // the ZEC expiryHeight guard.
-        // TEMP (local manual testing only, do not commit): version guard disabled.
-        // if (version != WALLETCORE_LEGACY_TX_VERSION) {
-        //     throw SwapKitLegacyP2PKHSignerException(
-        //         "SwapKit PSBT unsigned-tx version $version is unsupported; WalletCore reproduces " +
-        //             "only version $WALLETCORE_LEGACY_TX_VERSION on the legacy P2PKH path"
-        //     )
-        // }
+        if (version != WALLETCORE_LEGACY_TX_VERSION) {
+            throw SwapKitLegacyP2PKHSignerException(
+                "SwapKit PSBT unsigned-tx version $version is unsupported; WalletCore reproduces " +
+                    "only version $WALLETCORE_LEGACY_TX_VERSION on the legacy P2PKH path"
+            )
+        }
         val inCount = cursor.readCompactSize()
         val inputs =
             (0L until inCount).map {
