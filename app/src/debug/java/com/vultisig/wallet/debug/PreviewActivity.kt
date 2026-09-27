@@ -58,6 +58,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.logo
@@ -206,7 +207,6 @@ import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectAssetUiModel
 import com.vultisig.wallet.ui.screens.send.GasSettingsScreen
 import com.vultisig.wallet.ui.screens.send.SendFormScreen
-import com.vultisig.wallet.ui.screens.send.VerifySendSheet
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendSheet
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
@@ -252,6 +252,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionScr
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
+import com.vultisig.wallet.ui.screens.v2.home.components.BottomNavigatorOverlay
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePager
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
@@ -592,6 +593,7 @@ class PreviewActivity : ComponentActivity() {
                     "circle_usdc_widget" -> CircleUsdcWidgetPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
+                    "eth_detail_tokens" -> EthDetailTokensPreview()
                     "governance" -> GovernancePreview()
                     "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
                     "keysign_devices_plus_after" -> KeysignDevicesCountPreview(allowsMore = false)
@@ -622,7 +624,8 @@ class PreviewActivity : ComponentActivity() {
                     "overview_scan_mark_safe" -> OverviewScanMarkPreview(risk = null)
                     "overview_scan_mark_medium" ->
                         OverviewScanMarkPreview(risk = SecurityRiskLevel.MEDIUM)
-                    "overview_scan_mark_high" -> OverviewScanMarkPreview(risk = SecurityRiskLevel.HIGH)
+                    "overview_scan_mark_high" ->
+                        OverviewScanMarkPreview(risk = SecurityRiskLevel.HIGH)
                     "unbond_verify_before" -> UnbondVerifyPreview(after = false)
                     "unbond_verify_after" -> UnbondVerifyPreview(after = true)
                     "edit_folder" -> EditFolderPreview()
@@ -2833,7 +2836,9 @@ private fun blockaidHeroUnverifiedDetails(): TransactionDetailsUiModel {
     )
 }
 
-/** The Send overview sheet with a finished scan, where tapping the header's mark opens the result. */
+/**
+ * The Send overview sheet with a finished scan, where tapping the header's mark opens the result.
+ */
 @Composable
 private fun OverviewScanMarkPreview(risk: SecurityRiskLevel?) {
     var state by remember {
@@ -3477,6 +3482,66 @@ private fun BtcDetailClaimPreview() {
         onTokenClick = {},
         onClaimQbtc = {},
     )
+}
+
+/** An Ethereum chain-detail list long enough to scroll under the floating Wallet/DeFi bar. */
+@Composable
+private fun EthDetailTokensPreview() {
+    val tokens =
+        listOf(
+            "ETH" to R.drawable.ethereum,
+            "USDC" to R.drawable.usdc,
+            "USDT" to R.drawable.usdt,
+            "DAI" to R.drawable.dai,
+            "WBTC" to R.drawable.wbtc,
+            "WETH" to R.drawable.weth,
+            "LINK" to R.drawable.link,
+            "UNI" to R.drawable.uni,
+            "AAVE" to R.drawable.aave,
+            "PEPE" to R.drawable.pepe,
+            "SHIB" to R.drawable.shib,
+        )
+    BottomNavigatorOverlay(
+        isNavigatorVisible = true,
+        activeType = CryptoConnectionType.Wallet,
+        onTypeClick = {},
+        onCameraClick = {},
+    ) {
+        ChainTokensScreen(
+            uiModel =
+                ChainTokensUiModel(
+                    chainName = "Ethereum",
+                    chainAddress = "0x14f6a2b9c0e1f2a3b4c5d6e7f8a9b0c1d2e389b6",
+                    totalBalance = "$4,210.55",
+                    chainLogo = R.drawable.ethereum,
+                    explorerURL = "https://etherscan.io/",
+                    tokens =
+                        tokens.map { (symbol, logo) ->
+                            ChainTokenUiModel(
+                                id = "$symbol-Ethereum",
+                                name = symbol,
+                                balance = "12.5 $symbol",
+                                fiatBalance = "$382.78",
+                                price = "$30.62",
+                                tokenLogo = logo,
+                                chainLogo = R.drawable.ethereum,
+                            )
+                        },
+                ),
+            onBackClick = {},
+            onRefresh = {},
+            onShowSearchBar = {},
+            onHideSearchBar = {},
+            onSend = {},
+            onSwap = {},
+            onBuy = {},
+            onDeposit = {},
+            onReceive = {},
+            onHistory = {},
+            onSelectTokens = {},
+            onTokenClick = {},
+        )
+    }
 }
 
 /**

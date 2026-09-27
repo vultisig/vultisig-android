@@ -1,20 +1,23 @@
 package com.vultisig.wallet.ui.screens.v2.home.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.data.models.CryptoConnectionType
-import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
+import com.vultisig.wallet.ui.theme.Theme
 
 /**
  * Height of the floating navigator: the 64dp Wallet/DeFi pill plus the 1dp gradient ring drawn
@@ -61,9 +64,10 @@ internal fun BottomNavigatorOverlay(
         }
 
         if (isNavigatorVisible) {
-            BottomFadeEffect(
-                height = NavigatorHeight + NavigatorContentSpacing,
-                modifier = Modifier.align(Alignment.BottomCenter),
+            NavigatorFade(
+                modifier =
+                    Modifier.align(Alignment.BottomCenter)
+                        .height(NavigatorHeight + NavigatorContentSpacing)
             )
             Row(
                 modifier =
@@ -83,3 +87,28 @@ internal fun BottomNavigatorOverlay(
         }
     }
 }
+
+/**
+ * The scrim behind the navigator, mirroring iOS `VultiTabBar.bottomGradient`: solid over the lower
+ * half, easing out towards the top, and never fully opaque, so content passing underneath still
+ * shows through.
+ */
+@Composable
+private fun NavigatorFade(modifier: Modifier = Modifier) {
+    val background = Theme.v2.colors.backgrounds.primary
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        0f to background.copy(alpha = 0f),
+                        0.15f to background.copy(alpha = NavigatorFadeMaxAlpha / 2),
+                        0.5f to background.copy(alpha = NavigatorFadeMaxAlpha),
+                        1f to background.copy(alpha = NavigatorFadeMaxAlpha),
+                    )
+                )
+    )
+}
+
+private const val NavigatorFadeMaxAlpha = 0.7f
