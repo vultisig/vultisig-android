@@ -185,6 +185,7 @@ internal class SwapKitLegacyP2PKHSigner(
                     "to sign"
             )
         }
+        verifyVaultBinding(inputs, outputs, fromAmount)
 
         val depositAmount = outputs[0].amount
         val changeAmount = outputs.drop(1).sumOf { it.amount }
@@ -260,6 +261,39 @@ internal class SwapKitLegacyP2PKHSigner(
         }
 
         return signingInput.build().toByteArray()
+    }
+
+    /**
+     * Ties the PSBT to the vault before signing. The Verify screen only shows the quoted amount, so
+     * every input must spend from the vault, the change output must pay back to it, and the deposit
+     * may not exceed the quoted amount. Otherwise a PSBT could spend the whole UTXO set and route
+     * the remainder to a foreign "change" address. The deposit recipient itself isn't pinned:
+     * SwapKit's on-chain deposit address can differ from its declared `targetAddress`.
+     */
+    private fun verifyVaultBinding(
+        inputs: List<LegacyP2PKHInput>,
+        outputs: List<LegacyP2PKHOutput>,
+        fromAmount: BigInteger,
+    ) {
+        val vaultScript = utxo.vaultP2pkhLockScript()
+        inputs.forEachIndexed { index, input ->
+            if (!input.scriptPubKey.contentEquals(vaultScript)) {
+                throw SwapKitLegacyP2PKHSignerException(
+                    "SwapKit PSBT input #$index does not spend from this vault"
+                )
+            }
+        }
+        if (outputs.size == 2 && !outputs[1].scriptPubKey.contentEquals(vaultScript)) {
+            throw SwapKitLegacyP2PKHSignerException(
+                "SwapKit PSBT change output does not pay back to this vault"
+            )
+        }
+        if (BigInteger.valueOf(outputs[0].amount) > fromAmount) {
+            throw SwapKitLegacyP2PKHSignerException(
+                "SwapKit PSBT deposit ${outputs[0].amount} exceeds the quoted swap amount " +
+                    "$fromAmount; refusing to sign"
+            )
+        }
     }
 
     /**

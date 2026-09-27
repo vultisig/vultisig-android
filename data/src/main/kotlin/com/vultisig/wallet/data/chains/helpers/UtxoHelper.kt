@@ -880,6 +880,15 @@ class UtxoHelper(
         return PublicKey(Numeric.hexStringToByteArray(derivedPublicKey), PublicKeyType.SECP256K1)
     }
 
+    /**
+     * P2PKH lock script of the vault's derived key: the only script a legacy-P2PKH input or change
+     * output of this vault can carry. Built from the key hash rather than an address string so it
+     * is independent of per-chain address formats (BCH CashAddr, ZEC `t1`).
+     */
+    internal fun vaultP2pkhLockScript(): ByteArray =
+        BitcoinScript.buildPayToPublicKeyHash(Hash.sha256RIPEMD(deriveVaultPublicKey().data()))
+            .data()
+
     private fun deriveVaultAddress(): String =
         coinType.deriveAddressFromPublicKey(deriveVaultPublicKey())
 

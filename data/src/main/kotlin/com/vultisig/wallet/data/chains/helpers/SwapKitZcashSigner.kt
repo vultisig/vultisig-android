@@ -180,6 +180,7 @@ internal class SwapKitZcashSigner(
                     "refusing to sign"
             )
         }
+        verifyVaultBinding(inputs, outputs, fromAmount)
 
         val depositAmount = outputs[0].amount
         val changeAmount = outputs.drop(1).sumOf { it.amount }
@@ -246,6 +247,38 @@ internal class SwapKitZcashSigner(
         }
 
         return signingInput.build().toByteArray()
+    }
+
+    /**
+     * Ties the PSBT to the vault before signing: every input spends from the vault, the change
+     * output pays back to it, and the deposit doesn't exceed the quoted amount. Mirrors the legacy
+     * signer. The deposit recipient isn't pinned: the ZEC route's on-chain deposit address differs
+     * from SwapKit's declared `targetAddress`.
+     */
+    private fun verifyVaultBinding(
+        inputs: List<SaplingInput>,
+        outputs: List<SaplingOutput>,
+        fromAmount: BigInteger,
+    ) {
+        val vaultScript = utxo.vaultP2pkhLockScript()
+        inputs.forEachIndexed { index, input ->
+            if (!input.scriptPubKey.contentEquals(vaultScript)) {
+                throw SwapKitZcashSignerException(
+                    "SwapKit ZEC PSBT input #$index does not spend from this vault"
+                )
+            }
+        }
+        if (outputs.size == 2 && !outputs[1].scriptPubKey.contentEquals(vaultScript)) {
+            throw SwapKitZcashSignerException(
+                "SwapKit ZEC PSBT change output does not pay back to this vault"
+            )
+        }
+        if (BigInteger.valueOf(outputs[0].amount) > fromAmount) {
+            throw SwapKitZcashSignerException(
+                "SwapKit ZEC PSBT deposit ${outputs[0].amount} exceeds the quoted swap amount " +
+                    "$fromAmount; refusing to sign"
+            )
+        }
     }
 
     private fun resolvePrevUtxo(
