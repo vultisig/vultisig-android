@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
@@ -28,10 +31,12 @@ import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
+import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.components.TokenAndChainLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetContent
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerSafeContent
 import com.vultisig.wallet.ui.components.securityscanner.getSecurityScannerBottomSheetStyle
 import com.vultisig.wallet.ui.components.v2.bottomsheets.OverviewBottomSheet
 import com.vultisig.wallet.ui.components.v2.bottomsheets.OverviewSheetControlSize
@@ -41,12 +46,18 @@ import com.vultisig.wallet.ui.theme.Theme
 
 /**
  * The overview sheet the Send, Swap and Deposit reviews share: the floating card, the scan-status
- * control at the title's left, and the Blockaid verdict that takes the card over when a flagged
- * transaction is signed anyway.
+ * control at the title's left, and the Blockaid result that takes the card over when a flagged
+ * transaction is signed anyway or when the control is tapped.
  *
- * The verdict replaces [content] and [footer] together rather than opening a second sheet, so "Go
- * back" returns to the figures in place and "Continue anyway" carries on from where the sign tap
- * left off. A clean scan never interrupts: it only turns the control's ring green.
+ * The result replaces [content] and [footer] together rather than opening a second sheet, so "Go
+ * back" and "Continue" return to the figures in place and "Continue anyway" carries on signing. A
+ * clean scan never interrupts on its own: it turns the control's ring green, and only a tap on the
+ * control shows that it was scanned.
+ *
+ * @param onScanMarkClick opens the scan result; the control stays inert when it is null or when the
+ *   scan has no result yet.
+ * @param isContinueAnywayEnabled mirrors whether the sign buttons are, so the override cannot sign
+ *   something they would refuse.
  */
 @Composable
 internal fun VerifyOverviewSheet(
@@ -57,41 +68,70 @@ internal fun VerifyOverviewSheet(
     onContinueAnyway: () -> Unit,
     onDismissWarning: () -> Unit,
     footer: @Composable ColumnScope.() -> Unit,
+    onScanMarkClick: (() -> Unit)? = null,
+    isContinueAnywayEnabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val warning = (scanStatus as? TransactionScanStatus.Scanned)?.takeIf { showScanningWarning }
+    val scanResult = overviewScanResult(scanStatus, showScanningWarning)
 
     OverviewBottomSheet(
         title = title,
         onDismissRequest = onDismissRequest,
-        leadingControl = { ScanStatusControl(status = scanStatus) },
-        footer = footer.takeIf { warning == null },
+        leadingControl = {
+            ScanStatusControl(
+                status = scanStatus,
+                onClick = onScanMarkClick.takeIf { scanStatus is TransactionScanStatus.Scanned },
+            )
+        },
+        footer = footer.takeIf { scanResult == null },
     ) {
-        // Back from the verdict returns to the figures, as "Go back" does; only the figures' own
+        // Back from the result returns to the figures, as "Go back" does; only the figures' own
         // back closes the sheet. Registered inside the sheet, whose window is the one that gets
         // the key.
-        BackHandler(enabled = warning != null, onBack = onDismissWarning)
+        BackHandler(enabled = scanResult != null, onBack = onDismissWarning)
 
-        if (warning != null) {
-            SecurityScannerBottomSheetContent(
-                contentStyle = warning.result.getSecurityScannerBottomSheetStyle(),
-                // The provider is already named by the control in the header.
-                securityScannerProvider = null,
-                onDismissRequest = onDismissWarning,
-                onContinueAnyway = onContinueAnyway,
-            )
-        } else {
-            content()
+        when (scanResult) {
+            OverviewScanResult.Safe -> SecurityScannerSafeContent(onContinue = onDismissWarning)
+            is OverviewScanResult.Verdict ->
+                SecurityScannerBottomSheetContent(
+                    contentStyle = scanResult.result.getSecurityScannerBottomSheetStyle(),
+                    // The provider is already named by the control in the header.
+                    securityScannerProvider = null,
+                    onDismissRequest = onDismissWarning,
+                    onContinueAnyway = onContinueAnyway,
+                    isContinueAnywayEnabled = isContinueAnywayEnabled,
+                )
+            null -> content()
         }
     }
 }
 
+/** What the sheet shows in place of its figures while a scan result is open. */
+internal sealed interface OverviewScanResult {
+    data object Safe : OverviewScanResult
+
+    data class Verdict(val result: SecurityScannerResult) : OverviewScanResult
+}
+
+/**
+ * Picks the result from the scan alone, whichever way it was opened, so a secure scan never renders
+ * the risk verdict. Nothing is open until there is a finished scan to show.
+ */
+internal fun overviewScanResult(
+    scanStatus: TransactionScanStatus,
+    showScanningWarning: Boolean,
+): OverviewScanResult? {
+    if (!showScanningWarning || scanStatus !is TransactionScanStatus.Scanned) return null
+    return if (scanStatus.result.isSecure) OverviewScanResult.Safe
+    else OverviewScanResult.Verdict(scanStatus.result)
+}
+
 /**
  * The scanner's mark, ringed in the colour of its verdict once there is one. Scanning, a scan that
- * failed and a scan not yet started all show the bare mark.
+ * failed and a scan not yet started all show the bare mark. With an [onClick] it opens the result.
  */
 @Composable
-private fun ScanStatusControl(status: TransactionScanStatus) {
+private fun ScanStatusControl(status: TransactionScanStatus, onClick: (() -> Unit)?) {
     val ring =
         when (status) {
             is TransactionScanStatus.Scanned ->
@@ -111,8 +151,13 @@ private fun ScanStatusControl(status: TransactionScanStatus) {
         contentAlignment = Alignment.Center,
         modifier =
             Modifier.size(OverviewSheetControlSize)
+                .clip(CircleShape)
                 .background(color = ScanControlBackground, shape = CircleShape)
-                .border(width = 1.dp, color = ring, shape = CircleShape),
+                .border(width = 1.dp, color = ring, shape = CircleShape)
+                .then(
+                    if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick)
+                    else Modifier
+                ),
     ) {
         UiIcon(
             drawableResId = R.drawable.ic_blockaid_mark,

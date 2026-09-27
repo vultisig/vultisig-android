@@ -206,6 +206,7 @@ import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
 import com.vultisig.wallet.ui.screens.select.SelectAssetUiModel
 import com.vultisig.wallet.ui.screens.send.GasSettingsScreen
 import com.vultisig.wallet.ui.screens.send.SendFormScreen
+import com.vultisig.wallet.ui.screens.send.VerifySendSheet
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
@@ -614,6 +615,10 @@ class PreviewActivity : ComponentActivity() {
                     "chain_selection" -> ChainSelectionClipPreview()
                     "verify_send_empty_memo" -> VerifySendEmptyMemoPreview()
                     "verify_send_allow_death" -> VerifySendAllowDeathPreview()
+                    "overview_scan_mark_safe" -> OverviewScanMarkPreview(risk = null)
+                    "overview_scan_mark_medium" ->
+                        OverviewScanMarkPreview(risk = SecurityRiskLevel.MEDIUM)
+                    "overview_scan_mark_high" -> OverviewScanMarkPreview(risk = SecurityRiskLevel.HIGH)
                     "unbond_verify_before" -> UnbondVerifyPreview(after = false)
                     "unbond_verify_after" -> UnbondVerifyPreview(after = true)
                     "edit_folder" -> EditFolderPreview()
@@ -2739,6 +2744,39 @@ private fun blockaidHeroUnverifiedDetails(): TransactionDetailsUiModel {
         networkFeeTokenValue = "0.00025 ETH",
         heroContent = HeroContent.Unverified,
     )
+}
+
+/** The Send overview sheet with a finished scan, where tapping the header's mark opens the result. */
+@Composable
+private fun OverviewScanMarkPreview(risk: SecurityRiskLevel?) {
+    var state by remember {
+        mutableStateOf(
+            blockaidHeroSendState()
+                .copy(
+                    txScanStatus =
+                        TransactionScanStatus.Scanned(
+                            SecurityScannerResult(
+                                provider = "blockaid",
+                                isSecure = risk == null,
+                                riskLevel = risk ?: SecurityRiskLevel.NONE,
+                                warnings = emptyList(),
+                                description = null,
+                                recommendations = "",
+                            )
+                        )
+                )
+        )
+    }
+    Box(Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+        VerifySendSheet(
+            state = state,
+            onDismissRequest = {},
+            onFastSignClick = {},
+            onConfirm = {},
+            onDismissScanning = { state = state.copy(showScanningWarning = false) },
+            onScanMarkClick = { state = state.copy(showScanningWarning = true) },
+        )
+    }
 }
 
 private fun blockaidHeroSendState() =

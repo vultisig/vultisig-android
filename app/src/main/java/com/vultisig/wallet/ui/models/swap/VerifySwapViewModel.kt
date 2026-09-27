@@ -398,6 +398,16 @@ constructor(
         state.update { it.copy(showScanningWarning = false) }
     }
 
+    /**
+     * Opens the finished scan from the header's mark. "Continue anyway" then signs the way the wide
+     * sign button does: Fast Sign when the vault has it, the paired devices otherwise.
+     */
+    fun openScanResult() {
+        if (state.value.txScanStatus !is TransactionScanStatus.Scanned) return
+        _fastSign = state.value.hasFastSign
+        state.update { it.copy(showScanningWarning = true) }
+    }
+
     fun joinKeySign() {
         _fastSign = false
         handleSigningFlowCommon(

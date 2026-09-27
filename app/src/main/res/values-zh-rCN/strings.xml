@@ -840,6 +840,9 @@
     <string name="security_scanner_transaction_scanned_by">交易已扫描</string>
     <string name="security_scanner_transaction_scanning">扫描中…</string>
     <string name="security_scanner_transaction_not_scanned">交易未扫描</string>
+    <string name="security_scanner_safe_title">已通过 Blockaid 扫描</string>
+    <string name="security_scanner_safe_description">未检测到恶意活动。此交易可以安全签署。</string>
+    <string name="security_scanner_safe_continue">继续</string>
 
 
     <!-- Swap Error -->

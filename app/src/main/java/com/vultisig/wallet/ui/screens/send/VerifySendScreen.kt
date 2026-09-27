@@ -117,6 +117,7 @@ internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewMo
         onFastSignClick = viewModel::fastSign,
         onConfirmScanning = viewModel::onConfirmScanning,
         onDismissScanning = viewModel::dismissScanningWarning,
+        onScanMarkClick = viewModel::openScanResult,
     )
 }
 
@@ -137,6 +138,7 @@ internal fun VerifySendSheet(
     onConsentLimit: (Boolean) -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
+    onScanMarkClick: () -> Unit = {},
     initiallyExpandedDetails: Boolean = false,
 ) {
     VerifyOverviewSheet(
@@ -146,6 +148,8 @@ internal fun VerifySendSheet(
         onDismissRequest = onDismissRequest,
         onContinueAnyway = onConfirmScanning,
         onDismissWarning = onDismissScanning,
+        onScanMarkClick = onScanMarkClick,
+        isContinueAnywayEnabled = state.hasAllConsents,
         footer = {
             VerifySendConsents(
                 state = state,
