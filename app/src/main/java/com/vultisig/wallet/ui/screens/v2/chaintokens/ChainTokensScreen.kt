@@ -4,12 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,7 +43,6 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.containers.ExpandedTopbarContainer
-import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
@@ -51,6 +52,7 @@ import com.vultisig.wallet.ui.models.ChainTokensViewModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.qbtc.ClaimQbtcBottomCta
 import com.vultisig.wallet.ui.screens.qbtc.ClaimQbtcPromoBanner
+import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
@@ -97,6 +99,8 @@ internal fun ChainTokensScreen(
 }
 
 internal const val TokenListTestTag = "chain_token_list"
+
+private const val QbtcClaimBannerKey = "qbtc_claim_banner"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -256,15 +260,12 @@ internal fun ChainTokensScreen(
             }
         },
         content = { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-                // Reserved on the column, not inside the card: the token list wraps its
-                // content, so bottom padding there would inflate the card with dead space when
-                // it holds a single token.
+            Box(
+                modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding())
+            ) {
                 Column(
                     modifier =
-                        Modifier.background(Theme.v2.colors.backgrounds.primary)
-                            .fillMaxSize()
-                            .padding(bottom = LocalBottomNavigatorPadding.current)
+                        Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize()
                 ) {
                     ChainTokensTabMenuAndSearchBar(
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -277,50 +278,59 @@ internal fun ChainTokensScreen(
                         canSelectTokens = uiModel.canSelectTokens,
                     )
 
-                    TopShineContainer(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp).testTag(TokenListTestTag)
+                    // The list runs behind the floating navigator; the room it covers is scroll
+                    // padding, so the last row can still be scrolled clear of the pill. The card is
+                    // drawn per row rather than around the list, so it always hugs its rows.
+                    LazyColumn(
+                        contentPadding =
+                            PaddingValues(
+                                top = 16.dp,
+                                bottom = 16.dp + LocalBottomNavigatorPadding.current,
+                            ),
+                        modifier = Modifier.fillMaxSize().testTag(TokenListTestTag),
                     ) {
-                        LazyColumn {
-                            itemsIndexed(items = uiModel.tokens, key = { _, token -> token.id }) {
-                                index,
-                                token ->
-                                Column {
-                                    ChainAccount(
-                                        title = token.name,
-                                        isBalanceVisible = uiModel.isBalanceVisible,
-                                        balance = token.balance,
-                                        fiatBalance = token.fiatBalance,
-                                        tokenLogo = token.tokenLogo,
-                                        chainLogo = token.chainLogo,
-                                        monoToneChainLogo = token.monotoneChainLogo,
-                                        price = token.price,
-                                        onClick = clickOnce { onTokenClick(token) },
-                                        mergedBalance = token.mergeBalance,
-                                        modifier =
-                                            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                                        trailingContent =
-                                            if (token.canActivateTrustLine) {
-                                                {
-                                                    ActivateTrustLineButton {
-                                                        onActivateTrustLine(token)
-                                                    }
+                        itemsIndexed(items = uiModel.tokens, key = { _, token -> token.id }) {
+                            index,
+                            token ->
+                            TokenCardRow(
+                                isFirst = index == 0,
+                                isLast = index == uiModel.tokens.lastIndex,
+                            ) {
+                                ChainAccount(
+                                    title = token.name,
+                                    isBalanceVisible = uiModel.isBalanceVisible,
+                                    balance = token.balance,
+                                    fiatBalance = token.fiatBalance,
+                                    tokenLogo = token.tokenLogo,
+                                    chainLogo = token.chainLogo,
+                                    monoToneChainLogo = token.monotoneChainLogo,
+                                    price = token.price,
+                                    onClick = clickOnce { onTokenClick(token) },
+                                    mergedBalance = token.mergeBalance,
+                                    modifier =
+                                        Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                    trailingContent =
+                                        if (token.canActivateTrustLine) {
+                                            {
+                                                ActivateTrustLineButton {
+                                                    onActivateTrustLine(token)
                                                 }
-                                            } else null,
-                                    )
-                                    if (index != uiModel.tokens.lastIndex) {
-                                        UiHorizontalDivider()
-                                    }
-                                }
+                                            }
+                                        } else null,
+                                )
                             }
                         }
-                    }
 
-                    if (uiModel.showQbtcClaimBanner) {
-                        ClaimQbtcPromoBanner(
-                            onClaim = onClaimQbtc,
-                            onDismiss = onDismissQbtcBanner,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        )
+                        if (uiModel.showQbtcClaimBanner) {
+                            item(key = QbtcClaimBannerKey) {
+                                ClaimQbtcPromoBanner(
+                                    onClaim = onClaimQbtc,
+                                    onDismiss = onDismissQbtcBanner,
+                                    modifier =
+                                        Modifier.padding(horizontal = 16.dp).padding(top = 24.dp),
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -337,6 +347,39 @@ internal fun ChainTokensScreen(
             }
         },
     )
+}
+
+/**
+ * One row of the token card. The card is split across the list's items so it scrolls with them: the
+ * first row carries the top corners and the shine, the last the bottom corners, and every row but
+ * the last a divider.
+ */
+@Composable
+private fun TokenCardRow(isFirst: Boolean, isLast: Boolean, content: @Composable () -> Unit) {
+    val radius = Theme.v2.radius.xl.shape
+    val square = CornerSize(0.dp)
+    val shape =
+        radius.copy(
+            topStart = if (isFirst) radius.topStart else square,
+            topEnd = if (isFirst) radius.topEnd else square,
+            bottomStart = if (isLast) radius.bottomStart else square,
+            bottomEnd = if (isLast) radius.bottomEnd else square,
+        )
+    Column(
+        modifier =
+            Modifier.padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .clip(shape)
+                .background(Theme.v2.colors.backgrounds.secondary)
+    ) {
+        if (isFirst) {
+            FadingHorizontalDivider()
+        }
+        content()
+        if (!isLast) {
+            UiHorizontalDivider()
+        }
+    }
 }
 
 @Composable
