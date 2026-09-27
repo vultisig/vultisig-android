@@ -38,13 +38,13 @@ import app.rive.Result
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.isRiveInitialized
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
+import com.vultisig.wallet.ui.components.rive.RiveResourceLoad
+import com.vultisig.wallet.ui.components.rive.rememberRiveResourceLoad
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
@@ -231,20 +231,22 @@ internal fun KeysignView(
 
 @Composable
 private fun KeysignRiveProgress(progress: Float, @DrawableRes coinLogoRes: Int?) {
-    val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keysign).value
-    if (riveFile == null) {
-        // The file loads asynchronously; showing the text fallback while it inflates flashes
-        // "Preparing vault" between the connecting animation and this one. Keep the fallback for
-        // builds where Rive never initialised.
-        if (isRiveInitialized) {
-            Box(Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary))
-        } else {
-            VsSigningProgressIndicator(
-                text = stringResource(R.string.keysign_screen_preparing_vault)
-            )
+    val riveFile =
+        when (val load = rememberRiveResourceLoad(resId = R.raw.riv_keysign).value) {
+            // Showing the text fallback while the file inflates flashes "Preparing vault" between
+            // the connecting animation and this one.
+            RiveResourceLoad.Loading -> {
+                Box(Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary))
+                return
+            }
+            RiveResourceLoad.Unavailable -> {
+                VsSigningProgressIndicator(
+                    text = stringResource(R.string.keysign_screen_preparing_vault)
+                )
+                return
+            }
+            is RiveResourceLoad.Ready -> load.file
         }
-        return
-    }
     val vmi =
         rememberViewModelInstance(
             file = riveFile,

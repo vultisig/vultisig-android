@@ -114,8 +114,25 @@ fun RiveAnimation(
 
 @Composable
 fun rememberRiveResourceFile(@RawRes resId: Int): State<RiveFile?> {
+    val load = rememberRiveResourceLoad(resId)
+    return remember(load) { derivedStateOf { (load.value as? RiveResourceLoad.Ready)?.file } }
+}
+
+/**
+ * Load state of a bundled `.riv`, telling a file still inflating apart from one that never will.
+ */
+sealed interface RiveResourceLoad {
+    data object Loading : RiveResourceLoad
+
+    data class Ready(val file: RiveFile) : RiveResourceLoad
+
+    data object Unavailable : RiveResourceLoad
+}
+
+@Composable
+fun rememberRiveResourceLoad(@RawRes resId: Int): State<RiveResourceLoad> {
     if (!isRiveInitialized) {
-        return remember { mutableStateOf(null) }
+        return remember { mutableStateOf(RiveResourceLoad.Unavailable) }
     }
 
     val riveWorker = rememberRiveWorkerOrNull()
@@ -123,7 +140,11 @@ fun rememberRiveResourceFile(@RawRes resId: Int): State<RiveFile?> {
     val riveFileResult =
         riveWorker?.let { rememberRiveFile(RiveFileSource.RawRes.from(resId), riveWorker) }
 
-    return remember(riveFileResult) {
-        derivedStateOf { (riveFileResult as? Result.Success)?.value }
-    }
+    return rememberUpdatedState(
+        when (riveFileResult) {
+            is Result.Success -> RiveResourceLoad.Ready(riveFileResult.value)
+            is Result.Loading -> RiveResourceLoad.Loading
+            else -> RiveResourceLoad.Unavailable
+        }
+    )
 }
