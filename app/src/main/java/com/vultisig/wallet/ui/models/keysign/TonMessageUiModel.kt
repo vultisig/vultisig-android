@@ -8,6 +8,10 @@ internal enum class TonMessageOperation {
     JettonTransfer,
     NftTransfer,
     ExcessGasRefund,
+    /** `pool::deposit` addressed to the Tonstakers pool. */
+    LiquidStakingDeposit,
+    /** TEP-74 burn at the signer's own jetton wallet; an unstake when it carries the pool flags. */
+    JettonBurn,
     Transfer,
 }
 

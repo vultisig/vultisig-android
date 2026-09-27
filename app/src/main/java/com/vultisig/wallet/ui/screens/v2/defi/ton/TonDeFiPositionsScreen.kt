@@ -49,7 +49,9 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.TON_KEY
 import com.vultisig.wallet.ui.models.defi.TonDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TonDeFiUiState
+import com.vultisig.wallet.ui.models.defi.TonLiquidStakingUiModel
 import com.vultisig.wallet.ui.models.defi.TonStakingUiModel
+import com.vultisig.wallet.ui.models.deposit.submit.TONSTAKERS_POOL_NAME
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
@@ -114,6 +116,8 @@ internal fun TonDeFiPositionsScreen(
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
         onClickStake = viewModel::onStake,
         onClickUnstake = viewModel::onUnstake,
+        onClickLiquidStake = viewModel::onLiquidStake,
+        onClickLiquidUnstake = viewModel::onLiquidUnstake,
     )
 }
 
@@ -131,6 +135,8 @@ private fun TonDeFiPositionsScreenContent(
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onClickStake: () -> Unit = {},
     onClickUnstake: () -> Unit = {},
+    onClickLiquidStake: () -> Unit = {},
+    onClickLiquidUnstake: () -> Unit = {},
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -164,7 +170,7 @@ private fun TonDeFiPositionsScreenContent(
                         is TonDeFiUiState.Success ->
                             TonDeFiBanner(
                                 isLoading = false,
-                                totalValue = state.tonData.totalAmountPrice,
+                                totalValue = state.totalAmountPrice,
                                 isBalanceVisible = state.isBalanceVisible,
                             )
                     }
@@ -209,6 +215,16 @@ private fun TonDeFiPositionsScreenContent(
                                 onClickUnstake = {},
                             )
                         }
+                        item {
+                            TonLiquidPositionCard(
+                                data = TonLiquidStakingUiModel(),
+                                isBalanceVisible = false,
+                                isLoading = true,
+                                areActionsLocked = true,
+                                onClickStake = {},
+                                onClickUnstake = {},
+                            )
+                        }
                     }
                     is TonDeFiUiState.Error -> {
                         item {
@@ -232,12 +248,25 @@ private fun TonDeFiPositionsScreenContent(
                                 TonStakingPositionCard(
                                     data = tonData,
                                     isBalanceVisible = state.isBalanceVisible,
-                                    // A reload closes the ViewModel's action guard, so disable
-                                    // the buttons to match rather than let a tap silently
-                                    // no-op.
-                                    areActionsLocked = tonData.isActionLocked || state.isReloading,
+                                    // Only the withdrawal lock closes these. A tap during the
+                                    // reload the screen starts on every resume waits for it in
+                                    // the ViewModel, so the buttons no longer go dead for a
+                                    // second each time the user comes back from a form.
+                                    areActionsLocked = tonData.isActionLocked,
                                     onClickStake = onClickStake,
                                     onClickUnstake = onClickUnstake,
+                                )
+                            }
+                            // Tonstakers is a separate mechanism (a liquid tsTON jetton, not a
+                            // nominator deposit), so it gets its own card and its own actions;
+                            // the nominator's withdrawal lock does not apply to it.
+                            item {
+                                TonLiquidPositionCard(
+                                    data = state.liquidData,
+                                    isBalanceVisible = state.isBalanceVisible,
+                                    areActionsLocked = false,
+                                    onClickStake = onClickLiquidStake,
+                                    onClickUnstake = onClickLiquidUnstake,
                                 )
                             }
                         }
@@ -402,6 +431,109 @@ private fun TonStakingPositionCard(
     }
 }
 
+/** Card showing the Tonstakers liquid position (tsTON, its TON value, APY) with stake/unstake. */
+@Composable
+private fun TonLiquidPositionCard(
+    data: TonLiquidStakingUiModel,
+    isBalanceVisible: Boolean,
+    isLoading: Boolean = false,
+    areActionsLocked: Boolean,
+    onClickStake: () -> Unit,
+    onClickUnstake: () -> Unit,
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(Theme.v2.radius.xl)
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(1.dp, Theme.v2.colors.border.light, Theme.v2.radius.xl)
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = TONSTAKERS_POOL_NAME,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                Text(
+                    text = stringResource(R.string.ton_liquid_staking_label),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+            }
+            if (isLoading) {
+                UiPlaceholderLoader(modifier = Modifier.width(140.dp).height(28.dp))
+            } else {
+                Text(
+                    text = if (isBalanceVisible) data.tsTonDisplay else HIDE_BALANCE_CHARS,
+                    style = Theme.brockmann.headings.title1,
+                    color = Theme.v2.colors.text.primary,
+                )
+                val secondary =
+                    listOf(data.tonValueDisplay, data.fiatDisplay)
+                        .filter { it.isNotEmpty() }
+                        .joinToString(" · ")
+                if (secondary.isNotEmpty()) {
+                    Text(
+                        text = if (isBalanceVisible) "≈ $secondary" else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.tertiary,
+                    )
+                }
+            }
+        }
+
+        if (!isLoading && data.apy != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.apy),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                Text(
+                    text = data.apy,
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.v2.colors.alerts.success,
+                )
+            }
+        }
+
+        if (!isLoading) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                VsButton(
+                    label = stringResource(R.string.defi_action_stake),
+                    variant = VsButtonVariant.Secondary,
+                    state = if (areActionsLocked) VsButtonState.Disabled else VsButtonState.Enabled,
+                    onClick = onClickStake,
+                    modifier = Modifier.weight(1f),
+                )
+                VsButton(
+                    label = stringResource(R.string.defi_action_unstake),
+                    variant = VsButtonVariant.Secondary,
+                    state =
+                        if (data.hasPosition && !areActionsLocked) VsButtonState.Enabled
+                        else VsButtonState.Disabled,
+                    onClick = onClickUnstake,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
 /**
  * Pending-withdrawal notice with a live unlock countdown, shown while a withdrawal is in flight.
  */
@@ -483,7 +615,16 @@ private fun TonDeFiPositionsScreenPositionPreview() {
                         stakedFiatDisplay = "$152.40",
                         apy = "13.27%",
                         hasPosition = true,
-                    )
+                    ),
+                liquidData =
+                    TonLiquidStakingUiModel(
+                        tsTonDisplay = "4.3 tsTON",
+                        tonValueDisplay = "4.98 GRAM",
+                        fiatDisplay = "$14.94",
+                        apy = "13.36%",
+                        hasPosition = true,
+                    ),
+                totalAmountPrice = "$167.34",
             )
     )
 }

@@ -203,9 +203,9 @@ internal object TonBocParser {
     /**
      * CRC-32C (Castagnoli) over the first [length] bytes, init/xor-out `0xFFFFFFFF`. Hand-rolled
      * rather than `java.util.zip.CRC32C`, which is only available from API 34 (this module's min is
-     * 26).
+     * 26). Shared with [TonBocSerializer], which writes the same trailer this reader verifies.
      */
-    private fun crc32c(bytes: ByteArray, length: Int): Int {
+    internal fun crc32c(bytes: ByteArray, length: Int): Int {
         var crc = -1 // 0xFFFFFFFF
         for (i in 0 until length) {
             crc = crc xor (bytes[i].toInt() and 0xFF)

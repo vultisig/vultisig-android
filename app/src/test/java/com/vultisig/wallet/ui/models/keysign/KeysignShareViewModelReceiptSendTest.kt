@@ -125,6 +125,7 @@ internal class KeysignShareViewModelReceiptSendTest {
             customMessagePayloadRepo = customMessagePayloadRepo,
             makeQrCodeBitmapShareFormat = makeQrCodeBitmapShareFormat,
             generateQrBitmap = generateQrBitmap,
+            snackbarFlow = mockk(relaxed = true),
         )
 
     private fun rune(): Coin =

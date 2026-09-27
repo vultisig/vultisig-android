@@ -217,6 +217,8 @@ private val TonMessageOperation.titleRes: Int
             TonMessageOperation.JettonTransfer -> R.string.ton_op_jetton_transfer
             TonMessageOperation.NftTransfer -> R.string.ton_op_nft_transfer
             TonMessageOperation.ExcessGasRefund -> R.string.ton_op_excess_gas_refund
+            TonMessageOperation.LiquidStakingDeposit -> R.string.ton_op_liquid_staking_deposit
+            TonMessageOperation.JettonBurn -> R.string.ton_op_jetton_burn
             TonMessageOperation.Transfer -> R.string.ton_op_transfer
         }
 
@@ -225,8 +227,11 @@ private val TonMessageOperation.amountLabelRes: Int
         when (this) {
             TonMessageOperation.JettonTransfer,
             TonMessageOperation.NftTransfer -> R.string.ton_forward_ton_amount
+            // The TON a burn carries is processing value, refunded past what the pool spends.
+            TonMessageOperation.JettonBurn -> R.string.ton_liquid_attached_value
             TonMessageOperation.Swap,
             TonMessageOperation.ExcessGasRefund,
+            TonMessageOperation.LiquidStakingDeposit,
             TonMessageOperation.Transfer -> R.string.verify_transaction_amount_title
         }
 

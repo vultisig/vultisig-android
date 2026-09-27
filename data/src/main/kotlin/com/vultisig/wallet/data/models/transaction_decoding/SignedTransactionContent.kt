@@ -362,17 +362,27 @@ data class InitiatingTransactionContent(
     override val rawWasmPayload: WasmExecuteContractPayload?,
     override val stakingIntent: SolanaStakingPayload?,
     override val cosmosStakingIntent: CosmosStakingPayload?,
+    /**
+     * A TON message batch the initiator built itself (Tonstakers). Unlike the staking intents it is
+     * already the signed form, so it is exposed as signed data here exactly as a co-signer sees it,
+     * and both devices read the same bodies.
+     */
+    val signTon: SignTon? = null,
 ) : SignedTransactionContent {
 
     override val rawSwap: SwapPayload? = null
 
     override val rawApprove: ERC20ApprovePayload? = null
 
-    override val signedData: OpaqueSignedContent? = null
+    override val signedData: OpaqueSignedContent?
+        get() = signTon?.let { OpaqueSignedContent.TonTransaction(it) }
+
+    override val signedDataBodyIsActive: Boolean
+        get() = signTon != null
 
     /** Staking intents become opaque signed content when the payload is built. */
     override val hasOpaqueSignedContent: Boolean
-        get() = cosmosStakingIntent != null || stakingIntent != null
+        get() = cosmosStakingIntent != null || stakingIntent != null || signTon != null
 }
 
 /**
@@ -421,4 +431,5 @@ fun DepositTransaction.asSignedTransactionContent(): SignedTransactionContent =
         rawWasmPayload = wasmExecuteContractPayload,
         stakingIntent = solanaStakingPayload,
         cosmosStakingIntent = cosmosStakingPayload,
+        signTon = signTon,
     )

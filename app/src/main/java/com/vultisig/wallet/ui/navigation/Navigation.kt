@@ -523,6 +523,12 @@ internal sealed class Route {
     @Serializable
     data class TonUnstake(val vaultId: String, val poolAddress: String, val stakedDisplay: String)
 
+    /** Tonstakers liquid stake: a TON amount deposited into the pool for tsTON. */
+    @Serializable data class TonLiquidStake(val vaultId: String)
+
+    /** Tonstakers liquid unstake: a tsTON amount burned at the vault's jetton wallet for TON. */
+    @Serializable data class TonLiquidUnstake(val vaultId: String)
+
     /**
      * LUNA / LUNC delegate entry point. Opens
      * [com.vultisig.wallet.ui.screens.cosmosstaking .CosmosDelegateScreen], which collects amount +

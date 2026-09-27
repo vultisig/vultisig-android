@@ -374,6 +374,10 @@
     <string name="qr_share_label_to">Zu</string>
     <string name="qr_share_label_from">Von</string>
     <string name="qr_share_label_type">Typ</string>
+    <string name="keysign_share_qr_title">QR-Code teilen</string>
+    <string name="keysign_share_qr_copy_link">Link kopieren</string>
+    <string name="keysign_share_qr_share_image">QR-Bild teilen</string>
+    <string name="keysign_share_qr_link_copied">Link kopiert</string>
     <string name="qr_share_type_fast_vault">Schneller Tresor</string>
     <string name="qr_share_type_secure_vault">Sicherer Tresor</string>
     <string name="error_folder_must_have_at_least_one_vault">Für den Ordner ist mindestens ein ausgewählter Tresor erforderlich</string>
@@ -526,6 +530,9 @@
     <string name="security_scanner_transaction_scanned_by">Transaktion gescannt von</string>
     <string name="security_scanner_transaction_scanning">Wird gescannt…</string>
     <string name="security_scanner_transaction_not_scanned">Transaktion nicht gescannt von</string>
+    <string name="security_scanner_safe_title">Von Blockaid gescannt</string>
+    <string name="security_scanner_safe_description">Keine böswillige Aktivität erkannt. Diese Transaktion kann sicher signiert werden.</string>
+    <string name="security_scanner_safe_continue">Fortfahren</string>
     <string name="keygen_step_preparing_vault">Tresor wird vorbereitet</string>
     <string name="keygen_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
     <string name="reshare_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
@@ -1070,6 +1077,15 @@
     <string name="ton_unstake_title">Unstaken %1$s</string>
     <string name="ton_staking_pool_address">Pool-Adresse</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator-Pools unterstützen nur die vollständige Abhebung. Dein gesamtes gestaktes Guthaben wird zurückgezahlt.</string>
+    <string name="ton_liquid_staking_label">Liquid Staking</string>
+    <string name="ton_liquid_deposit_fee">Einzahlungsgebühr</string>
+    <string name="ton_liquid_you_receive">Du erhältst</string>
+    <string name="ton_liquid_attached_value">Beigefügt für die Verarbeitung</string>
+    <string name="ton_liquid_stake_fee_notice">Enthält die Einzahlungsgebühr von %1$s %2$s, die Tonstakers vorab abzieht. Der vom Pool nicht genutzte Teil wird erstattet.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s werden zur Verarbeitung der Abhebung beigefügt; der ungenutzte Teil wird erstattet. Die Auszahlung erfolgt sofort, wenn der Pool über Liquidität verfügt, andernfalls am Ende der aktuellen Validierungsrunde.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s werden zur Verarbeitung der Abhebung beigefügt; der ungenutzte Teil wird erstattet. Die Auszahlung erfolgt am Ende der aktuellen Validierungsrunde.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers nimmt derzeit keine Einzahlungen an</string>
+    <string name="ton_liquid_no_position">Dieser Vault hält kein tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL ist nicht in diesem Tresor</string>
     <string name="solana_staking_total_staked_sol">Insgesamt gestaked SOL</string>
@@ -1513,6 +1529,8 @@
     <string name="ton_op_nft_transfer">NFT-Überweisung</string>
     <string name="ton_op_excess_gas_refund">Erstattung überschüssiger Gasgebühren</string>
     <string name="ton_op_transfer">Überweisung</string>
+    <string name="ton_op_liquid_staking_deposit">Liquid-Staking-Einzahlung</string>
+    <string name="ton_op_jetton_burn">Jetton-Burn</string>
     <string name="ton_forward_ton_amount">Weitergeleiteter GRAM-Betrag</string>
     <string name="ton_raw_payload">Rohes Payload</string>
 

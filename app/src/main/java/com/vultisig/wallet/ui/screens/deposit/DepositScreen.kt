@@ -4,7 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,6 +24,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
+import com.vultisig.wallet.ui.screens.keysign.KeysignShareQrSheet
 import com.vultisig.wallet.ui.screens.v2.defi.maya.AddLpScreen
 import com.vultisig.wallet.ui.screens.v2.defi.maya.RemoveLpScreen
 import com.vultisig.wallet.ui.screens.v2.defi.maya.StakeCacaoScreen
@@ -44,6 +47,7 @@ internal fun DepositScreen(
     val depositNavHostController = rememberNavController()
     val context = LocalContext.current
     val keysignShareViewModel: KeysignShareViewModel = hiltViewModel(context as MainActivity)
+    var showShareSheet by remember { mutableStateOf(false) }
 
     val isKeysignFinished by viewModel.isKeysignFinished.collectAsState()
 
@@ -79,12 +83,19 @@ internal fun DepositScreen(
         title = title,
         showStartIcon = !isKeysignFinished,
         endIcon = qr?.let { R.drawable.qr_share },
-        endIconClick = qr?.let { { keysignShareViewModel.shareQRCode(context) } } ?: {},
+        endIconClick = qr?.let { { showShareSheet = true } } ?: {},
         onKeysignFinished = { viewModel.navigateToHome(shouldUseMainNavigator) },
         depositType = depositType,
         bondAddress = bondAddress,
         poolId = poolId,
     )
+
+    if (showShareSheet) {
+        KeysignShareQrSheet(
+            viewModel = keysignShareViewModel,
+            onDismiss = { showShareSheet = false },
+        )
+    }
 }
 
 @Composable

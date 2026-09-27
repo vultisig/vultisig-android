@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
@@ -101,57 +102,60 @@ class SecurityScannerTransactionFactory(
                     srcToken = transaction.srcToken,
                     from = payload.data.quote.tx.from,
                     to = payload.data.quote.tx.to,
-                    // Scan the approval against the real allowance target (SwapKit's token-transfer
-                    // proxy), which can differ from the swap `to`; fall back to `to` for providers
-                    // where they coincide (1inch/Kyber/LiFi).
-                    approveSpender =
-                        payload.data.quote.tx.allowanceTarget ?: payload.data.quote.tx.to,
-                    // The approval the user actually signs is for the swap input amount
-                    // (KeysignShareViewModel uses transaction.srcTokenValue.value), not tx.value —
-                    // which is 0 for an ERC20 swap. Scan the real approve amount so the preview
-                    // matches the signed approve(spender, amount).
-                    approveAmount = transaction.srcTokenValue.value,
                     amount = payload.data.quote.tx.value,
                     data = payload.data.quote.tx.data,
-                    isApprovalRequired = transaction.isApprovalRequired,
+                    precedingTransactions = approveScanTransactions(transaction),
                 )
 
             else -> throw SecurityScannerException("Not supported provider for EVM")
         }
     }
 
+    /**
+     * The approve legs the swap signs ahead of itself, built from the same fields keysign uses
+     * (KeysignShareViewModel): spender, the swap input amount, and the optional zero reset. Without
+     * them Blockaid simulates the swap with no allowance and reverts with TRANSFER_FROM_FAILED.
+     */
+    private fun approveScanTransactions(
+        transaction: SwapTransaction
+    ): List<SecurityScannerTransaction> {
+        if (!transaction.isApprovalRequired) return emptyList()
+        val payload =
+            ERC20ApprovePayload(
+                amount = transaction.srcTokenValue.value,
+                spender = transaction.approveSpender,
+                resetAllowanceFirst = transaction.resetAllowanceFirst,
+            )
+        val src = transaction.srcToken
+        return payload.legAmounts.map { legAmount ->
+            SecurityScannerTransaction(
+                chain = src.chain,
+                type = SecurityTransactionType.APPROVAL,
+                from = src.address,
+                to = src.contractAddress,
+                data = EthereumFunction.approvalErc20Encoder(payload.spender, legAmount),
+            )
+        }
+    }
+
+    // Always scans the swap calldata (the tx that moves funds), with any approve legs preceding it.
     private fun buildSwapSecurityScannerTransaction(
         srcToken: Coin,
         from: String,
         to: String,
-        approveSpender: String,
-        approveAmount: BigInteger,
         amount: String,
         data: String,
-        isApprovalRequired: Boolean,
-    ): SecurityScannerTransaction {
-        val chain = srcToken.chain
-
-        return if (isApprovalRequired) {
-            SecurityScannerTransaction(
-                chain = chain,
-                type = SecurityTransactionType.SWAP,
-                from = from,
-                to = srcToken.contractAddress,
-                amount = BigInteger.ZERO,
-                data = EthereumFunction.approvalErc20Encoder(approveSpender, approveAmount),
-            )
-        } else {
-            SecurityScannerTransaction(
-                chain = chain,
-                type = SecurityTransactionType.SWAP,
-                from = from,
-                to = to,
-                amount = amount.toBigInteger(),
-                data = data,
-            )
-        }
-    }
+        precedingTransactions: List<SecurityScannerTransaction>,
+    ) =
+        SecurityScannerTransaction(
+            chain = srcToken.chain,
+            type = SecurityTransactionType.SWAP,
+            from = from,
+            to = to,
+            amount = amount.toBigInteger(),
+            data = data,
+            precedingTransactions = precedingTransactions,
+        )
 
     private fun createEVMSecurityScannerTransaction(
         transaction: Transaction

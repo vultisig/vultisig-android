@@ -10,7 +10,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
@@ -46,7 +48,6 @@ internal fun KeysignPeerDiscovery(
 ) {
     KeepScreenOn()
 
-    val activity = LocalContext.current
     val uiModel by viewModel.uiState.collectAsState()
 
     val selectionState by viewModel.selection.collectAsState()
@@ -55,6 +56,7 @@ internal fun KeysignPeerDiscovery(
     val keysignMessage by viewModel.keysignMessage.collectAsState()
     val networkOption by viewModel.networkOption.collectAsState()
     val context = LocalContext.current.applicationContext
+    var showShareSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(txType) {
         viewModel.setData(shareViewModel = sharedViewModel, context = context, txType = txType)
@@ -180,7 +182,7 @@ internal fun KeysignPeerDiscovery(
             onBackClick = viewModel::back,
             showHelp = false,
             onHelpClick = {},
-            onShareQrClick = { sharedViewModel.shareQRCode(activity) },
+            onShareQrClick = { showShareSheet = true },
             onDismissQrHelpModal = {},
             onSwitchModeClick = {
                 viewModel.changeNetworkPromptOption(
@@ -195,6 +197,10 @@ internal fun KeysignPeerDiscovery(
             onNextClick = viewModel::moveToKeysignState,
             onResendNotification = viewModel::sendNotification,
         )
+
+        if (showShareSheet) {
+            KeysignShareQrSheet(viewModel = sharedViewModel, onDismiss = { showShareSheet = false })
+        }
     }
 }
 

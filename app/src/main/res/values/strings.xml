@@ -498,6 +498,10 @@
     <string name="qr_share_label_to">To</string>
     <string name="qr_share_label_from">From</string>
     <string name="qr_share_label_type">Type</string>
+    <string name="keysign_share_qr_title">Share QR Code</string>
+    <string name="keysign_share_qr_copy_link">Copy Link</string>
+    <string name="keysign_share_qr_share_image">Share QR Image</string>
+    <string name="keysign_share_qr_link_copied">Link copied</string>
     <string name="qr_share_type_fast_vault">Fast Vault</string>
     <string name="qr_share_type_secure_vault">Secure Vault</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
@@ -634,6 +638,15 @@
     <string name="ton_unstake_title">Unstake %1$s</string>
     <string name="ton_staking_pool_address">Pool Address</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator pools support full withdrawal only. Your entire staked balance will be returned.</string>
+    <string name="ton_liquid_staking_label">Liquid staking</string>
+    <string name="ton_liquid_deposit_fee">Deposit fee</string>
+    <string name="ton_liquid_you_receive">You\'ll receive</string>
+    <string name="ton_liquid_attached_value">Attached for processing</string>
+    <string name="ton_liquid_stake_fee_notice">Includes the %1$s %2$s deposit fee Tonstakers takes off the top. The part the pool doesn\'t use is refunded.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s is attached to process the withdrawal; the unused part is refunded. You\'re paid out immediately when the pool has liquidity, otherwise at the end of the current validation round.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s is attached to process the withdrawal; the unused part is refunded. You\'re paid out at the end of the current validation round.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers isn\'t accepting deposits right now</string>
+    <string name="ton_liquid_no_position">This vault holds no tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL isn\'t in this vault</string>
     <string name="solana_staking_total_staked_sol">Total Staked SOL</string>
@@ -901,6 +914,9 @@
     <string name="security_scanner_transaction_scanned_by">Transaction scanned by</string>
     <string name="security_scanner_transaction_scanning">Scanning…</string>
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
+    <string name="security_scanner_safe_title">Scanned by Blockaid</string>
+    <string name="security_scanner_safe_description">No malicious activity detected. This transaction is safe to sign.</string>
+    <string name="security_scanner_safe_continue">Continue</string>
 
     <string name="tx_transaction_successful_screen_title">Transaction successful</string>
     <string name="tx_overview_screen_tx_hash">Transaction Hash</string>
@@ -1591,6 +1607,8 @@
     <string name="ton_op_nft_transfer">NFT Transfer</string>
     <string name="ton_op_excess_gas_refund">Excess Gas Refund</string>
     <string name="ton_op_transfer">Transfer</string>
+    <string name="ton_op_liquid_staking_deposit">Liquid Staking Deposit</string>
+    <string name="ton_op_jetton_burn">Jetton Burn</string>
     <string name="ton_forward_ton_amount">Forward GRAM Amount</string>
     <string name="ton_raw_payload">Raw Payload</string>
     <string name="key_import_error_title">Key Import Failed</string>
