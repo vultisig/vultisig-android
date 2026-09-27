@@ -207,6 +207,7 @@ import com.vultisig.wallet.ui.screens.select.SelectAssetUiModel
 import com.vultisig.wallet.ui.screens.send.GasSettingsScreen
 import com.vultisig.wallet.ui.screens.send.SendFormScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
+import com.vultisig.wallet.ui.screens.send.VerifySendSheet
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
@@ -214,6 +215,7 @@ import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscou
 import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.swap.VerifySwapSheet
 import com.vultisig.wallet.ui.screens.swap.components.LimitSwapForm
 import com.vultisig.wallet.ui.screens.swap.components.SwapAdvancedSettingsLockedSheet
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedExternalRecipientPreview
@@ -430,6 +432,8 @@ class PreviewActivity : ComponentActivity() {
                     "kamino_deposit_form" -> KaminoAmountPreview(isWithdraw = false)
                     "kamino_withdraw_form" -> KaminoAmountPreview(isWithdraw = true)
                     "swap_confirm" -> SwapConfirmPreview()
+                    "swap_overview_sheet" -> SwapOverviewSheetPreview()
+                    "send_overview_sheet" -> SendOverviewSheetPreview()
                     "swap_confirm_chain" -> SwapChainIndicatorPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
                     "swap_confirm_external_recipient" ->
@@ -1144,6 +1148,88 @@ private fun SwapConfirmPreview(allConsents: Boolean = true, externalRecipient: S
         onConfirm = {},
         onBackClick = {},
     )
+}
+
+/** The initiator's swap review: the sheet over the form that produced it. */
+@Composable
+private fun SwapOverviewSheetPreview() {
+    val ethCoin = Coins.Ethereum.ETH
+    val btcCoin = Coins.Bitcoin.BTC
+    Box(modifier = Modifier.fillMaxSize()) {
+        SwapScreen(state = SwapFormUiModel(), srcAmountTextFieldState = TextFieldState("1.5"))
+        VerifySwapSheet(
+            state =
+                VerifySwapUiModel(
+                    tx =
+                        SwapTransactionUiModel(
+                            src =
+                                ValuedToken(
+                                    token = ethCoin,
+                                    value = "1.5",
+                                    fiatValue = "$3,847.50",
+                                ),
+                            dst =
+                                ValuedToken(
+                                    token = btcCoin,
+                                    value = "0.0589",
+                                    fiatValue = "$3,820.00",
+                                ),
+                            networkFee =
+                                ValuedToken(token = ethCoin, value = "0.0024", fiatValue = "$6.15"),
+                            providerFee =
+                                ValuedToken(
+                                    token = ethCoin,
+                                    value = "0.0045",
+                                    fiatValue = "$11.52",
+                                ),
+                            totalFee = "$17.67",
+                            networkFeeFormatted = "0.0024 ETH ($6.15)",
+                            providerFeeFormatted = "0.0045 ETH ($11.52)",
+                            hasConsentAllowance = false,
+                        ),
+                    consentAmount = true,
+                    consentReceiveAmount = true,
+                    hasFastSign = true,
+                    vaultName = "Main Vault",
+                ),
+            onDismissRequest = {},
+            onFastSignClick = {},
+            onConfirm = {},
+        )
+    }
+}
+
+/** The initiator's send review: the sheet over the form that produced it. */
+@Composable
+private fun SendOverviewSheetPreview() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        SendFormAddressPreview()
+        VerifySendSheet(
+            state =
+                VerifyTransactionUiModel(
+                    transaction =
+                        TransactionDetailsUiModel(
+                            token =
+                                ValuedToken(
+                                    token = Coins.Dash.DASH,
+                                    value = "2.5",
+                                    fiatValue = "$63.78",
+                                ),
+                            srcAddress = "XdN9i1nCqzUcXn1n2pQqCkrwiKRv5vJv4z",
+                            srcVaultName = "Main Vault",
+                            dstAddress = "XuYfMXLt4k5NQqVZ7eGo9PSYtQbtiNd1Rg",
+                            networkFeeTokenValue = "0.00000226 DASH",
+                            networkFeeFiatValue = "$0.01",
+                        ),
+                    consentAddress = true,
+                    consentAmount = true,
+                    hasFastSign = true,
+                ),
+            onDismissRequest = {},
+            onFastSignClick = {},
+            onConfirm = {},
+        )
+    }
 }
 
 @Composable
@@ -1952,7 +2038,8 @@ private fun permitSingleRows(): List<DecodedFunctionParam> =
         ),
         DecodedFunctionParam(
             label = UiText.StringResource(R.string.typed_data_approval_amount),
-            value = UiText.FormattedText(R.string.decoded_function_unlimited_amount, listOf("USDT")),
+            value =
+                UiText.FormattedText(R.string.decoded_function_unlimited_amount, listOf("USDT")),
             isWarning = true,
         ),
         DecodedFunctionParam(
