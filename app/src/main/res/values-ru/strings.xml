@@ -500,6 +500,13 @@
     <string name="active_nodes">Активные узлы</string>
     <string name="next_churn">Следующая ротация</string>
     <string name="next_award">Следующая награда</string>
+    <string name="next_reward">Следующая награда</string>
+    <string name="last_reward">Последняя награда</string>
+    <string name="last_reward_unavailable">Н/Д</string>
+    <string name="total_rewards_earned">Всего получено наград</string>
+    <string name="reward_history_node">Узел: %s</string>
+    <string name="reward_history_upcoming">Ожидается</string>
+    <string name="reward_history_error">Не удалось загрузить историю наград</string>
     <string name="next_payout">Следующая выплата</string>
     <string name="wait_until_node_churned_out">Подождите, пока узел не будет исключен</string>
     <string name="deposit_option_leave">Покинуть</string>

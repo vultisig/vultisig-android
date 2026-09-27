@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
 import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STREAMING_INTERVAL
@@ -71,6 +72,11 @@ interface MayaChainApi {
 
     suspend fun getNodeDetails(nodeAddress: String): MayaNodeInfo
 
+    /** The node as MAYANode saw it at block [height], for reading a reward before a churn. */
+    suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): MayaNodeInfo
+
+    suspend fun getChurns(): List<ChurnEntry>
+
     suspend fun getMidgardNetworkData(): MayaMidgardNetworkData
 
     suspend fun getMidgardHealth(): MayaMidgardHealth
@@ -85,7 +91,8 @@ data class MayaNodeInfo(
     @SerialName("node_address") val nodeAddress: String,
     @SerialName("status") val status: String,
     @SerialName("bond") val bond: String = "0",
-    @SerialName("current_award") val currentAward: String = "0",
+    // MAYANode names the accruing award `reward`; THORNode calls the same thing `current_award`.
+    @SerialName("reward") val reward: String = "0",
     @SerialName("bond_providers") val bondProviders: MayaBondProviders,
 )
 
@@ -329,6 +336,19 @@ constructor(
                 header(xClientID, xClientIDValue)
             }
             .bodyOrThrow<MayaNodeInfo>()
+
+    override suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): MayaNodeInfo =
+        httpClient
+            .get("$MAYA_NODE_BASE/mayachain/node/$nodeAddress") {
+                header(xClientID, xClientIDValue)
+                parameter("height", height)
+            }
+            .bodyOrThrow<MayaNodeInfo>()
+
+    override suspend fun getChurns(): List<ChurnEntry> =
+        httpClient
+            .get("$MAYA_MIDGARD_BASE/churns") { header(xClientID, xClientIDValue) }
+            .bodyOrThrow<List<ChurnEntry>>()
 
     override suspend fun getMidgardNetworkData(): MayaMidgardNetworkData =
         httpClient

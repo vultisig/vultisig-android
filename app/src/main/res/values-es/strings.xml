@@ -499,6 +499,13 @@
     <string name="active_nodes">Nodos Activos</string>
     <string name="next_churn">Próxima Rotación</string>
     <string name="next_award">Próxima recompensa</string>
+    <string name="next_reward">Próxima recompensa</string>
+    <string name="last_reward">Última recompensa</string>
+    <string name="last_reward_unavailable">N/D</string>
+    <string name="total_rewards_earned">Recompensas totales obtenidas</string>
+    <string name="reward_history_node">Nodo: %s</string>
+    <string name="reward_history_upcoming">Próxima</string>
+    <string name="reward_history_error">No se pudo cargar el historial de recompensas</string>
     <string name="next_payout">Próximo Pago</string>
     <string name="wait_until_node_churned_out">Espere hasta que el nodo sea expulsado</string>
     <string name="deposit_option_leave">Salir</string>

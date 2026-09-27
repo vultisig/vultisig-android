@@ -499,6 +499,13 @@
     <string name="active_nodes">Nodi Attivi</string>
     <string name="next_churn">Prossima Rotazione</string>
     <string name="next_award">Prossimo premio</string>
+    <string name="next_reward">Prossimo premio</string>
+    <string name="last_reward">Ultimo premio</string>
+    <string name="last_reward_unavailable">N/D</string>
+    <string name="total_rewards_earned">Premi totali guadagnati</string>
+    <string name="reward_history_node">Nodo: %s</string>
+    <string name="reward_history_upcoming">In arrivo</string>
+    <string name="reward_history_error">Impossibile caricare la cronologia dei premi</string>
     <string name="next_payout">Prossimo pagamento</string>
     <string name="wait_until_node_churned_out">Attendi fino a quando il nodo viene espulso</string>
     <string name="deposit_option_leave">Esci</string>

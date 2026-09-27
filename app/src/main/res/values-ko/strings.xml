@@ -46,6 +46,13 @@
     <string name="active_nodes">활성 노드</string>
     <string name="next_churn">다음 교체</string>
     <string name="next_award">다음 보상</string>
+    <string name="next_reward">다음 보상</string>
+    <string name="last_reward">최근 보상</string>
+    <string name="last_reward_unavailable">없음</string>
+    <string name="total_rewards_earned">총 획득 보상</string>
+    <string name="reward_history_node">노드: %s</string>
+    <string name="reward_history_upcoming">예정</string>
+    <string name="reward_history_error">보상 내역을 불러올 수 없습니다</string>
     <string name="next_payout">다음 지급</string>
     <string name="wait_until_node_churned_out">노드가 교체될 때까지 기다려 주세요</string>
     <string name="deposit_option_leave">탈퇴</string>

@@ -465,6 +465,14 @@ internal data class SatoshiPriceTypography(
             letterSpacing = (0.2).sp,
             fontFamily = satoshiFontFamily,
         ),
+    val footnote: TextStyle =
+        TextStyle(
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            letterSpacing = (0.2).sp,
+            fontFamily = satoshiFontFamily,
+        ),
     val caption: TextStyle =
         TextStyle(
             fontWeight = FontWeight(550),
