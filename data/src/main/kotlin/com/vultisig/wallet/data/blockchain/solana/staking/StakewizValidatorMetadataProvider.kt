@@ -180,9 +180,10 @@ constructor(
     private fun isFresh(fetchedAt: TimeMark): Boolean = fetchedAt.elapsedNow() < ttl
 
     /**
-     * Stakewiz reports `apy_estimate` as a percentage (e.g. `5.72`). Store it as a fraction to
-     * match [ValidatorMetadata.apyEstimate] (e.g. `0.0572`). Non-positive / non-finite values
-     * collapse to null.
+     * Stakewiz reports `total_apy` (staking + Jito MEV; `apy_estimate` overstates realized yield)
+     * as a percentage (e.g. `5.72`). Store it as a fraction to match
+     * [ValidatorMetadata.apyEstimate] (e.g. `0.0572`). Non-positive / non-finite values collapse to
+     * null.
      */
     private fun apyFraction(percent: Double?): BigDecimal? {
         if (percent == null || !percent.isFinite() || percent <= 0.0) return null
@@ -204,7 +205,7 @@ internal data class StakewizValidatorJson(
     @SerialName("name") val name: String? = null,
     @SerialName("image") val image: String? = null,
     @SerialName("keybase") val keybase: String? = null,
-    @SerialName("apy_estimate") val apyEstimate: Double? = null,
+    @SerialName("total_apy") val apyEstimate: Double? = null,
     @SerialName("commission") val commission: Int? = null,
     @SerialName("wiz_score") val wizScore: Double? = null,
     @SerialName("delinquent") val delinquent: Boolean? = null,
