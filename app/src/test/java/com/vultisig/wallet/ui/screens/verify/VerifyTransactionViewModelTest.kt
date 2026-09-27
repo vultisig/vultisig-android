@@ -489,6 +489,111 @@ internal class VerifyTransactionViewModelTest {
                 "1 DAI"
         }
 
+    /** A finished risky scan opens from the mark without signing anything. */
+    @Test
+    fun `openScanResult shows a finished scan without starting keysign`() =
+        runTest(testDispatcher) {
+            givenScannedTransaction(isSecure = false)
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.openScanResult()
+
+            vm.uiState.value.showScanningWarning.shouldBeTrue()
+            coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /** A clean scan opens too; the sheet, not the VM, decides it reads as safe. */
+    @Test
+    fun `openScanResult shows a clean scan`() =
+        runTest(testDispatcher) {
+            givenScannedTransaction(isSecure = true)
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.openScanResult()
+
+            vm.uiState.value.showScanningWarning.shouldBeTrue()
+        }
+
+    /** With no finished scan there is nothing to show, so the tap is ignored. */
+    @Test
+    fun `openScanResult does nothing before the scan has a result`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.txScanStatus shouldBe TransactionScanStatus.NotStarted
+
+            vm.openScanResult()
+
+            vm.uiState.value.showScanningWarning.shouldBeFalse()
+        }
+
+    /** Without Fast Sign, "Continue anyway" from the mark signs with the paired devices. */
+    @Test
+    fun `continue anyway after openScanResult signs with paired devices`() =
+        runTest(testDispatcher) {
+            givenScannedTransaction(isSecure = false)
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.checkConsentAddress(true)
+            vm.checkConsentAmount(true)
+
+            vm.openScanResult()
+            vm.onConfirmScanning()
+
+            vm.uiState.value.showScanningWarning.shouldBeFalse()
+            coVerify { launchKeysign(KeysignInitType.QR_CODE, TX_ID, any(), any(), VAULT_ID) }
+        }
+
+    /** On a Fast Sign vault, "Continue anyway" from the mark follows the Fast Sign button. */
+    @Test
+    fun `continue anyway after openScanResult fast signs on a fast vault`() =
+        runTest(testDispatcher) {
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+            givenScannedTransaction(isSecure = false)
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.checkConsentAddress(true)
+            vm.checkConsentAmount(true)
+
+            vm.openScanResult()
+            vm.onConfirmScanning()
+
+            vm.uiState.value.showScanningWarning.shouldBeFalse()
+            coVerify(exactly = 0) {
+                launchKeysign(KeysignInitType.QR_CODE, any(), any(), any(), any())
+            }
+        }
+
+    private fun givenScannedTransaction(isSecure: Boolean) {
+        val coin = mockk<Coin>(relaxed = true)
+        every { coin.chain } returns Chain.Ethereum
+        val tx = mockk<Transaction>(relaxed = true)
+        every { tx.token } returns coin
+        coEvery { transactionRepository.getTransaction(TX_ID) } returns tx
+
+        val support =
+            SecurityScannerSupport(
+                provider = "test",
+                feature =
+                    listOf(
+                        SecurityScannerSupport.Feature(
+                            chains = listOf(Chain.Ethereum),
+                            featureType = SecurityScannerFeaturesType.SCAN_TRANSACTION,
+                        )
+                    ),
+            )
+        every { securityScannerService.getSupportedChainsByFeature() } returns listOf(support)
+        coEvery { securityScannerService.isSecurityServiceEnabled() } returns true
+        coEvery {
+            securityScannerService.createSecurityScannerTransaction(any<Transaction>())
+        } returns mockk<SecurityScannerTransaction>(relaxed = true)
+        val scanResult = mockk<SecurityScannerResult>()
+        every { scanResult.isSecure } returns isSecure
+        coEvery { securityScannerService.scanTransaction(any()) } returns scanResult
+    }
+
     private companion object {
         const val VAULT_ID = "vault-1"
         const val TX_ID = "tx-1"

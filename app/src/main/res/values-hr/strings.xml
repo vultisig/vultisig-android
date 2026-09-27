@@ -531,6 +531,9 @@
     <string name="security_scanner_transaction_scanned_by">Transakcija skenirana od</string>
     <string name="security_scanner_transaction_scanning">Skeniranje…</string>
     <string name="security_scanner_transaction_not_scanned">Transakcija nije skenirana od</string>
+    <string name="security_scanner_safe_title">Skenirao Blockaid</string>
+    <string name="security_scanner_safe_description">Nije otkrivena zlonamjerna aktivnost. Ova transakcija je sigurna za potpisivanje.</string>
+    <string name="security_scanner_safe_continue">Nastavi</string>
     <string name="keygen_step_preparing_vault">Priprema trezora</string>
     <string name="keygen_step_generating_ecdsa">Generiranje ECDSA ključa</string>
     <string name="reshare_step_generating_eddsa">Generiranje EDDSA ključa</string>

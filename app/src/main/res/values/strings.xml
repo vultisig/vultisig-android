@@ -914,6 +914,9 @@
     <string name="security_scanner_transaction_scanned_by">Transaction scanned by</string>
     <string name="security_scanner_transaction_scanning">Scanning…</string>
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
+    <string name="security_scanner_safe_title">Scanned by Blockaid</string>
+    <string name="security_scanner_safe_description">No malicious activity detected. This transaction is safe to sign.</string>
+    <string name="security_scanner_safe_continue">Continue</string>
 
     <string name="tx_transaction_successful_screen_title">Transaction successful</string>
     <string name="tx_overview_screen_tx_hash">Transaction Hash</string>

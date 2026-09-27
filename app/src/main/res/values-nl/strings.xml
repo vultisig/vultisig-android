@@ -527,6 +527,9 @@
     <string name="security_scanner_transaction_scanned_by">Transactie gescand door</string>
     <string name="security_scanner_transaction_scanning">Scannen…</string>
     <string name="security_scanner_transaction_not_scanned">Transactie niet gescand door</string>
+    <string name="security_scanner_safe_title">Gescand door Blockaid</string>
+    <string name="security_scanner_safe_description">Geen kwaadaardige activiteit gedetecteerd. Deze transactie is veilig om te ondertekenen.</string>
+    <string name="security_scanner_safe_continue">Doorgaan</string>
     <string name="keygen_step_preparing_vault">Kluis voorbereiden</string>
     <string name="keygen_step_generating_ecdsa">ECDSA-sleutel genereren</string>
     <string name="reshare_step_generating_eddsa">EdDSA-sleutel genereren</string>

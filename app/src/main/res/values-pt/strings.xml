@@ -528,6 +528,9 @@
     <string name="security_scanner_transaction_scanned_by">Transação verificada por</string>
     <string name="security_scanner_transaction_scanning">Verificando…</string>
     <string name="security_scanner_transaction_not_scanned">Transação não verificada por</string>
+    <string name="security_scanner_safe_title">Verificado pela Blockaid</string>
+    <string name="security_scanner_safe_description">Nenhuma atividade maliciosa detectada. Esta transação é segura para assinar.</string>
+    <string name="security_scanner_safe_continue">Continuar</string>
     <string name="keygen_step_preparing_vault">Preparar o cofre</string>
     <string name="keygen_step_generating_ecdsa">Gerando chave ECDSA</string>
     <string name="reshare_step_generating_eddsa">Gerando chave EdDSA</string>

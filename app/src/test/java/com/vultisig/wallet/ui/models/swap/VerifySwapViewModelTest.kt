@@ -359,6 +359,62 @@ internal class VerifySwapViewModelTest {
             }
         }
 
+    /** A finished risky scan opens from the mark without signing anything. */
+    @Test
+    fun `openScanResult shows a finished scan without starting keysign`() =
+        runTest(testDispatcher) {
+            givenEvmSwap()
+            coEvery { securityScannerService.scanTransaction(any()) } returns
+                mockk<SecurityScannerResult>(relaxed = true) { every { isSecure } returns false }
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.openScanResult()
+
+            vm.state.value.showScanningWarning shouldBe true
+            coVerify(exactly = 0) { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /** With no finished scan there is nothing to show, so the tap is ignored. */
+    @Test
+    fun `openScanResult does nothing before the scan has a result`() =
+        runTest(testDispatcher) {
+            givenSwap(approvalRequired = false)
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.openScanResult()
+
+            vm.state.value.showScanningWarning shouldBe false
+        }
+
+    /** Without Fast Sign, "Continue anyway" from the mark signs with the paired devices. */
+    @Test
+    fun `continue anyway after openScanResult signs with paired devices`() =
+        runTest(testDispatcher) {
+            givenEvmSwap()
+            coEvery { securityScannerService.scanTransaction(any()) } returns
+                mockk<SecurityScannerResult>(relaxed = true) { every { isSecure } returns false }
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.consentAmount(true)
+            vm.consentReceiveAmount(true)
+
+            vm.openScanResult()
+            vm.onConfirmScanning()
+
+            vm.state.value.showScanningWarning shouldBe false
+            coVerify {
+                launchKeysign(
+                    KeysignInitType.QR_CODE,
+                    TX_ID,
+                    any(),
+                    Route.Keysign.Keysign.TxType.Swap,
+                    VAULT_ID,
+                )
+            }
+        }
+
     /** Drives `init` with an EVM-to-EVM swap so the full-transaction scan path runs. */
     private fun givenEvmSwap() {
         val tx =

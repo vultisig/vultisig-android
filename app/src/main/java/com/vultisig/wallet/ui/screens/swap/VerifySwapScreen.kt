@@ -130,6 +130,7 @@ internal fun VerifySwapScreen(viewModel: VerifySwapViewModel = hiltViewModel()) 
         onFastSignClick = viewModel::fastSign,
         onContinueAnyway = viewModel::onConfirmScanning,
         onDismissWarning = viewModel::onDismissSecurityScanner,
+        onScanMarkClick = viewModel::openScanResult,
     )
 }
 
@@ -149,8 +150,10 @@ internal fun VerifySwapSheet(
     onConsentAllowance: (Boolean) -> Unit = {},
     onContinueAnyway: () -> Unit = {},
     onDismissWarning: () -> Unit = {},
+    onScanMarkClick: () -> Unit = {},
 ) {
     val tx = state.tx
+    val isSignEnabled = state.hasAllConsents && !state.isSigning
 
     VerifyOverviewSheet(
         title = stringResource(R.string.verify_swap_swap_overview),
@@ -159,6 +162,8 @@ internal fun VerifySwapSheet(
         onDismissRequest = onDismissRequest,
         onContinueAnyway = onContinueAnyway,
         onDismissWarning = onDismissWarning,
+        onScanMarkClick = onScanMarkClick,
+        isContinueAnywayEnabled = isSignEnabled,
         footer = {
             VerifySwapConsents(
                 tx = tx,
@@ -175,7 +180,7 @@ internal fun VerifySwapSheet(
 
             VerifySwapActions(
                 hasFastSign = state.hasFastSign,
-                isSignEnabled = state.hasAllConsents && !state.isSigning,
+                isSignEnabled = isSignEnabled,
                 confirmTitle = stringResource(R.string.verify_swap_sign_button),
                 onConfirm = onConfirm,
                 onFastSignClick = onFastSignClick,
