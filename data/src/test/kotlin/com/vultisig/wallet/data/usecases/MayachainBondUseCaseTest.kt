@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -95,11 +96,42 @@ internal class MayachainBondUseCaseTest {
         assertNull(nodes.single().nextChurn)
     }
 
-    private fun nodeWithProvider(address: String) =
+    @Test
+    fun `next reward is read from the node's reward field`() = runTest {
+        coEvery { repository.getMidgardNetworkData() } returns
+            MayaMidgardNetworkData(bondingAPY = "0.1", nextChurnHeight = "0")
+        coEvery { repository.getMidgardHealthData() } returns
+            MayaMidgardHealth(
+                lastMayaNode = MayaMidgardHealth.MayaHeightInfo(height = 1, timestamp = 0)
+            )
+        coEvery { repository.getAllNodes() } returns
+            listOf(nodeWithProvider(MY_ADDRESS, reward = "567911856519686"))
+
+        val node = useCase.getActiveNodesRemote(MY_ADDRESS).single()
+
+        assertEquals(567_911_856_519_686.0, node.nextReward)
+    }
+
+    @Test
+    fun `a MAYANode node decodes its accruing award from the reward key`() {
+        val node =
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString<MayaNodeInfo>(
+                    """
+                    {"node_address":"$NODE_ADDRESS","status":"Active","bond":"1",
+                     "reward":"567911856519686",
+                     "bond_providers":{"node_operator_fee":"5000","providers":[]}}
+                    """
+                )
+
+        assertEquals("567911856519686", node.reward)
+    }
+
+    private fun nodeWithProvider(address: String, reward: String = "0") =
         MayaNodeInfo(
             nodeAddress = NODE_ADDRESS,
             status = "Active",
-            currentAward = "0",
+            reward = reward,
             bondProviders =
                 MayaBondProviders(
                     nodeOperatorFee = "0",

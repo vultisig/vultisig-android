@@ -159,6 +159,9 @@ interface ThorChainApi {
 
     suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse
 
+    /** The node as THORNode saw it at block [height], for reading an award before a churn. */
+    suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): NodeDetailsResponse
+
     suspend fun getChurns(): List<ChurnEntry>
 
     suspend fun getChurnInterval(): Long
@@ -750,6 +753,20 @@ constructor(
 
         return httpClient
             .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow<NodeDetailsResponse>()
+    }
+
+    override suspend fun getNodeDetailsAtHeight(
+        nodeAddress: String,
+        height: Long,
+    ): NodeDetailsResponse {
+        val url = "$THORNODE_BASE/thorchain/node/$nodeAddress"
+
+        return httpClient
+            .get(url) {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+                parameter("height", height)
+            }
             .bodyOrThrow<NodeDetailsResponse>()
     }
 

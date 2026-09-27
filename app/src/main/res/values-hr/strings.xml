@@ -500,6 +500,13 @@
     <string name="active_nodes">Aktivni čvorovi</string>
     <string name="next_churn">Sljedeća rotacija</string>
     <string name="next_award">Sljedeća nagrada</string>
+    <string name="next_reward">Sljedeća nagrada</string>
+    <string name="last_reward">Zadnja nagrada</string>
+    <string name="last_reward_unavailable">N/D</string>
+    <string name="total_rewards_earned">Ukupno zarađene nagrade</string>
+    <string name="reward_history_node">Čvor: %s</string>
+    <string name="reward_history_upcoming">Nadolazeća</string>
+    <string name="reward_history_error">Povijest nagrada nije moguće učitati</string>
     <string name="next_payout">Sljedeća isplata</string>
     <string name="wait_until_node_churned_out">Pričekajte dok čvor ne bude izbačen</string>
     <string name="deposit_option_leave">Napusti</string>

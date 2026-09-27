@@ -169,7 +169,7 @@ constructor(
             )
 
         val currentAward =
-            (node.currentAward.toBigDecimalOrNull() ?: BigDecimal.ZERO) *
+            (node.reward.toBigDecimalOrNull() ?: BigDecimal.ZERO) *
                 (BigDecimal.ONE - nodeOperatorFee)
         val myAward = myBondOwnershipPercentage * currentAward
 

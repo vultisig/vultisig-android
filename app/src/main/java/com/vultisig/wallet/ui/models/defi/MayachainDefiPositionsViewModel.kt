@@ -119,6 +119,8 @@ internal data class MayachainDefiPositionsUiModel(
     val lp: LpTabUiModel = LpTabUiModel(),
     val isTotalAmountLoading: Boolean = true,
     val isBalanceVisible: Boolean = true,
+    // Total Rewards Earned sheet for one bonded node, open while non-null
+    val rewardHistory: BondRewardHistoryUiModel? = null,
     val selectedTab: Int = DeFiTab.BONDED.displayNameRes,
     val showPositionSelectionDialog: Boolean = false,
     val bondPositionsDialog: List<PositionUiModelDialog> = MAYA_BOND_POSITIONS_DIALOG,
@@ -147,6 +149,7 @@ constructor(
     private val defiPositionsRepository: DefiPositionsRepository,
     private val fiatValueCalculator: DefiFiatValueCalculator,
     private val snapshotCache: DeFiPositionsSnapshotCache,
+    private val bondRewardsLoader: BondRewardsLoader,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -174,6 +177,11 @@ constructor(
     private var loadBondedJob: Job? = null
     private var loadStakingJob: Job? = null
     private var loadLpJob: Job? = null
+    private var rewardHistoryJob: Job? = null
+
+    // The vault's CACAO address the bonded list was last loaded for; reward readings are this
+    // address's share of each node.
+    private var bondAddress: String? = null
 
     private val currentModel: MayachainDefiPositionsUiModel
         get() =
@@ -217,6 +225,7 @@ constructor(
         return cached.copy(
             showPositionSelectionDialog = false,
             tempSelectedPositions = cached.selectedPositions,
+            rewardHistory = null,
         )
     }
 
@@ -409,6 +418,7 @@ constructor(
         updateModel {
             it.copy(bonded = it.bonded.copy(isLoading = it.bonded.totalBondedPrice == null))
         }
+        bondRewardsLoader.forgetLastRewards()
 
         try {
             val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
@@ -428,6 +438,7 @@ constructor(
                 }
                 return
             }
+            bondAddress = cacaoCoin.address
 
             bondedNodesRefreshTrigger
                 .flatMapLatest {
@@ -453,8 +464,10 @@ constructor(
                 .collect { activeNodes ->
                     val cacaoSymbol = Coins.MayaChain.CACAO.ticker
 
+                    val shownNodes = currentModel.bonded.nodes
                     val nodeUiModels =
                         activeNodes.map { node ->
+                            val nodeAddress = node.node.address
                             BondedNodeUiModel(
                                 address = node.node.address.formatAddress(),
                                 fullAddress = node.node.address,
@@ -463,6 +476,12 @@ constructor(
                                 bondedAmount = node.amount.formatAmount(10, cacaoSymbol),
                                 nextAward = formatCacaoReward(node.nextReward),
                                 nextChurn = node.nextChurn.formatDate(),
+                                lastReward =
+                                    bondRewardsLoader.knownLastReward(nodeAddress)
+                                        ?: shownNodes
+                                            .find { it.fullAddress == nodeAddress }
+                                            ?.lastReward
+                                        ?: LastRewardUiModel.Loading,
                             )
                         }
 
@@ -485,6 +504,8 @@ constructor(
                     }
 
                     _totalBondedRaw.value = totalBondedRaw
+
+                    loadLastRewards(activeNodes.map { it.node.address }, cacaoCoin.address)
                 }
         } catch (t: Throwable) {
             if (t is CancellationException) throw t
@@ -495,6 +516,48 @@ constructor(
                 it.copy(bonded = it.bonded.copy(isLoading = false, totalBondedPrice = zero))
             }
         }
+    }
+
+    private fun loadLastRewards(nodeAddresses: List<String>, bondAddress: String) {
+        for (nodeAddress in bondRewardsLoader.claimLastRewardLoads(nodeAddresses)) {
+            viewModelScope.launch {
+                val reward =
+                    bondRewardsLoader.loadLastReward(Chain.MayaChain, nodeAddress, bondAddress)
+                updateModel {
+                    it.copy(
+                        bonded =
+                            it.bonded.copy(
+                                nodes = it.bonded.nodes.withLastReward(nodeAddress, reward)
+                            )
+                    )
+                }
+            }
+        }
+    }
+
+    fun onClickLastReward(nodeAddress: String) {
+        val bondAddress = bondAddress ?: return
+        val node = currentModel.bonded.nodes.find { it.fullAddress == nodeAddress } ?: return
+        val sheet = BondRewardHistoryUiModel(nodeAddress = nodeAddress, upcoming = node.nextAward)
+        updateModel { it.copy(rewardHistory = sheet) }
+        rewardHistoryJob?.cancel()
+        rewardHistoryJob =
+            viewModelScope.launch {
+                val loaded = bondRewardsLoader.loadHistory(Chain.MayaChain, sheet, bondAddress)
+                // A sheet closed, or reopened on another node, while this ran is left alone.
+                updateModel {
+                    if (it.rewardHistory?.nodeAddress == nodeAddress) {
+                        it.copy(rewardHistory = loaded)
+                    } else {
+                        it
+                    }
+                }
+            }
+    }
+
+    fun onDismissRewardHistory() {
+        rewardHistoryJob?.cancel()
+        updateModel { it.copy(rewardHistory = null) }
     }
 
     private suspend fun loadStakingPosition() {

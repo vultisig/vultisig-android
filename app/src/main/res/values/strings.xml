@@ -49,6 +49,13 @@
     <string name="active_nodes">Active Nodes</string>
     <string name="next_churn">Next Churn</string>
     <string name="next_award">Next Award</string>
+    <string name="next_reward">Next Reward</string>
+    <string name="last_reward">Last Reward</string>
+    <string name="last_reward_unavailable">N/A</string>
+    <string name="total_rewards_earned">Total Rewards Earned</string>
+    <string name="reward_history_node">Node: %s</string>
+    <string name="reward_history_upcoming">Upcoming</string>
+    <string name="reward_history_error">Couldn\'t load reward history</string>
     <string name="next_payout">Next Payout</string>
     <string name="wait_until_node_churned_out">Wait until node is churned out</string>
     <string name="deposit_option_leave">Leave</string>

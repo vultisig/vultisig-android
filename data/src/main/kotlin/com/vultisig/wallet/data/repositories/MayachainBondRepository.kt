@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.MayaMidgardHealth
 import com.vultisig.wallet.data.api.MayaMidgardNetworkData
 import com.vultisig.wallet.data.api.MayaNodeInfo
 import com.vultisig.wallet.data.api.MayaNodePool
+import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
 import com.vultisig.wallet.data.utils.SimpleCache
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -23,6 +24,10 @@ interface MayachainBondRepository {
     suspend fun getAllNodes(): List<MayaNodeInfo>
 
     suspend fun getNodeDetails(nodeAddress: String): MayaNodeInfo
+
+    suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): MayaNodeInfo
+
+    suspend fun getChurns(): List<ChurnEntry>
 
     suspend fun getMidgardNetworkData(): MayaMidgardNetworkData
 
@@ -62,11 +67,13 @@ constructor(private val mayaChainApi: MayaChainApi, timeSource: TimeSource) :
     companion object {
         private const val MIDGARD_NETWORK_KEY = "maya_midgard_network"
         private const val MIDGARD_HEALTH_KEY = "maya_midgard_health"
+        private const val CHURNS_KEY = "maya_churns"
     }
 
     private val midgardNetworkCache =
         SimpleCache<String, MayaMidgardNetworkData>(timeSource = timeSource)
     private val midgardHealthCache = SimpleCache<String, MayaMidgardHealth>(timeSource = timeSource)
+    private val churnsCache = SimpleCache<String, List<ChurnEntry>>(timeSource = timeSource)
 
     override suspend fun getAllNodes(): List<MayaNodeInfo> {
         return try {
@@ -84,6 +91,26 @@ constructor(private val mayaChainApi: MayaChainApi, timeSource: TimeSource) :
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching Maya node details for: $nodeAddress")
+            throw e
+        }
+    }
+
+    override suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): MayaNodeInfo {
+        return try {
+            mayaChainApi.getNodeDetailsAtHeight(nodeAddress, height)
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e(e, "Error fetching Maya node details for %s at height %d", nodeAddress, height)
+            throw e
+        }
+    }
+
+    override suspend fun getChurns(): List<ChurnEntry> {
+        return try {
+            churnsCache.getOrPut(CHURNS_KEY) { mayaChainApi.getChurns() }
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e(e, "Error fetching Maya churns")
             throw e
         }
     }
@@ -248,5 +275,6 @@ constructor(private val mayaChainApi: MayaChainApi, timeSource: TimeSource) :
         Timber.d("Clearing all MayachainBond caches")
         midgardNetworkCache.clear()
         midgardHealthCache.clear()
+        churnsCache.clear()
     }
 }

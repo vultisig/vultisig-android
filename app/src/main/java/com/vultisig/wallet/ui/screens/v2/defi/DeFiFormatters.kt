@@ -62,6 +62,12 @@ internal fun Double.formatRuneReward(): String {
     return runeAmount.formatTokenAmount(Chain.ThorChain.coinType.symbol)
 }
 
+internal fun BigInteger.formatBondReward(decimals: Int, symbol: String): String =
+    toValue(decimals).setScale(4, RoundingMode.DOWN).formatTokenAmount(symbol)
+
+internal fun Date.formatChurnDate(): String =
+    SimpleDateFormat("MMM d, yyyy", Locale.US).format(this)
+
 internal fun Double.formatToString(): String {
     val value = BigDecimal.valueOf(this).setScale(6, RoundingMode.DOWN)
     return value.formatTokenAmount(Chain.ThorChain.coinType.symbol)

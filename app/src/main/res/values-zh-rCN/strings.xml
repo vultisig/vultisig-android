@@ -42,6 +42,13 @@
     <string name="active_nodes">活跃节点</string>
     <string name="next_churn">下次轮换</string>
     <string name="next_award">下次奖励</string>
+    <string name="next_reward">下次奖励</string>
+    <string name="last_reward">上次奖励</string>
+    <string name="last_reward_unavailable">无</string>
+    <string name="total_rewards_earned">累计获得奖励</string>
+    <string name="reward_history_node">节点：%s</string>
+    <string name="reward_history_upcoming">即将发放</string>
+    <string name="reward_history_error">无法加载奖励记录</string>
     <string name="next_payout">下次支付</string>
     <string name="wait_until_node_churned_out">等待节点被淘汰</string>
     <string name="deposit_option_leave">离开</string>

@@ -17,6 +17,8 @@ interface ThorchainBondRepository {
 
     suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse
 
+    suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): NodeDetailsResponse
+
     suspend fun getChurns(): List<ChurnEntry>
 
     suspend fun getChurnInterval(): Long
@@ -65,6 +67,19 @@ constructor(private val thorChainApi: ThorChainApi, timeSource: TimeSource) :
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching node details for: $nodeAddress")
+            throw e
+        }
+    }
+
+    override suspend fun getNodeDetailsAtHeight(
+        nodeAddress: String,
+        height: Long,
+    ): NodeDetailsResponse {
+        return try {
+            thorChainApi.getNodeDetailsAtHeight(nodeAddress, height)
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e(e, "Error fetching node details for %s at height %d", nodeAddress, height)
             throw e
         }
     }

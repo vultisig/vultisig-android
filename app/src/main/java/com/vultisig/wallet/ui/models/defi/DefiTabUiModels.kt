@@ -168,4 +168,30 @@ internal data class BondedNodeUiModel(
     val bondedAmount: String,
     val nextAward: String,
     val nextChurn: String,
+    val lastReward: LastRewardUiModel = LastRewardUiModel.Loading,
 )
+
+/** What the latest churn paid this vault on a bonded node. */
+internal sealed interface LastRewardUiModel {
+    data object Loading : LastRewardUiModel
+
+    /** No churn paid this vault yet, or the reading failed; the card shows no amount. */
+    data object Unavailable : LastRewardUiModel
+
+    data class Paid(val amount: String) : LastRewardUiModel
+}
+
+/** The Total Rewards Earned sheet for one bonded node. */
+internal data class BondRewardHistoryUiModel(
+    val nodeAddress: String,
+    /** The live accruing share, paid at the next churn; already carries its ticker. */
+    val upcoming: String,
+    val isLoading: Boolean = true,
+    val isError: Boolean = false,
+    /** Sum of [rows], null until the history has loaded. */
+    val totalEarned: String? = null,
+    /** Newest churn first. */
+    val rows: List<BondRewardRowUiModel> = emptyList(),
+)
+
+internal data class BondRewardRowUiModel(val amount: String, val date: String)
