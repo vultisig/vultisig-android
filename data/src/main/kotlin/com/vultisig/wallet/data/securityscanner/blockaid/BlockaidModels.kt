@@ -53,6 +53,14 @@ data class EthereumScanTransactionRequestJson(
 }
 
 @Serializable
+data class EthereumBulkScanTransactionRequestJson(
+    @SerialName("chain") val chain: String,
+    @SerialName("metadata") val metadata: EthereumScanTransactionRequestJson.MetadataJson,
+    @SerialName("options") val options: List<String>,
+    @SerialName("data") val data: List<EthereumScanTransactionRequestJson.DataJson>,
+)
+
+@Serializable
 data class CommonMetadataJson(
     @SerialName("type") val type: String = "wallet",
     @SerialName("url") val url: String,
