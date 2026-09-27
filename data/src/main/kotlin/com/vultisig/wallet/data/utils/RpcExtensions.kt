@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.utils
 
+import io.ktor.client.call.NoTransformationFoundException
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -18,9 +19,9 @@ import timber.log.Timber
 
 /**
  * Deserializes a successful HTTP response body to [T], or throws [NetworkException] on failure.
- * - **2xx response**: attempts `body<T>()`. If deserialization fails (e.g. unexpected JSON shape),
- *   wraps the error in a [NetworkException] with the original HTTP status code and an error message
- *   extracted from the response body using [errorKey].
+ * - **2xx response**: attempts `body<T>()`. If the body cannot be converted, wraps the error in a
+ *   [NetworkException] with the original HTTP status code and an error message extracted from the
+ *   response body using [errorKey].
  * - **Non-2xx response**: throws [NetworkException] with the HTTP status code and the raw body
  *   text.
  *
@@ -28,7 +29,7 @@ import timber.log.Timber
  *
  * @param errorKey JSON key to look for when extracting a human-readable error message from error
  *   responses. Defaults to `"message"`.
- * @throws NetworkException always on non-2xx responses, or on 2xx deserialization failure.
+ * @throws NetworkException always on non-2xx responses, or on a 2xx body that cannot be converted.
  */
 suspend inline fun <reified T> HttpResponse.bodyOrThrow(errorKey: String = "message"): T {
     return if (status.isSuccess()) {
@@ -41,6 +42,8 @@ suspend inline fun <reified T> HttpResponse.bodyOrThrow(errorKey: String = "mess
         } catch (t: WebsocketDeserializeException) {
             throw NetworkException(status.value, extractError(this, errorKey), t)
         } catch (t: WebsocketContentConvertException) {
+            throw NetworkException(status.value, extractError(this, errorKey), t)
+        } catch (t: NoTransformationFoundException) {
             throw NetworkException(status.value, extractError(this, errorKey), t)
         }
     } else {

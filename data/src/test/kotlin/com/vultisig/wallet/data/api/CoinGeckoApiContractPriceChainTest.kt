@@ -156,4 +156,35 @@ class CoinGeckoApiContractPriceChainTest {
         assertEquals(1, calls)
         assertEquals(emptyMap<String, CurrencyToPrice>(), result)
     }
+
+    @Test
+    fun `getContractsPrice wraps a success it cannot convert`() = runTest {
+        var calls = 0
+        val engine = MockEngine {
+            calls += 1
+            respond(content = "{}", status = HttpStatusCode.OK)
+        }
+        val api =
+            CoinGeckoApiImpl(
+                HttpClient(engine) {
+                    install(ContentNegotiation) {
+                        json(
+                            Json {
+                                ignoreUnknownKeys = true
+                                explicitNulls = false
+                                serializersModule =
+                                    SerializersModule {
+                                        contextual(BigDecimal::class, BigDecimalSerializerImpl())
+                                    }
+                            }
+                        )
+                    }
+                }
+            )
+
+        assertFailsWith<NetworkException> {
+            api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
+        }
+        assertEquals(2, calls)
+    }
 }
