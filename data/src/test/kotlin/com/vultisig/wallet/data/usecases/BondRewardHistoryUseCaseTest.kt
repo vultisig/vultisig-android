@@ -130,6 +130,21 @@ internal class BondRewardHistoryUseCaseTest {
     }
 
     @Test
+    fun `a failed read older than the end of the walk does not fail the history`() = runTest {
+        // One batch: 199 ends the walk, so 99's failure belongs to a position the vault has left.
+        coEvery { thorchainBondRepository.getChurns() } returns
+            listOf(churn(300), churn(200), churn(100))
+        stubThorNode(height = 299, award = "1000", myBond = "1", othersBond = "1")
+        stubThorNode(height = 199, award = "1000", myBond = null, othersBond = "1")
+        coEvery { thorchainBondRepository.getNodeDetailsAtHeight(NODE, 99) } throws
+            IllegalStateException("No archive nodes configured for this chain")
+
+        val history = useCase.getRewardHistory(Chain.ThorChain, NODE, ME)
+
+        assertEquals(listOf(300L), history.map { it.churnHeight })
+    }
+
+    @Test
     fun `maya takes the provider's own reward row, not an LP-unit share of the node award`() =
         runTest {
             coEvery { mayachainBondRepository.getChurns() } returns

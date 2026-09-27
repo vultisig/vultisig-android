@@ -9,8 +9,7 @@ import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
 
 /** What one churn paid a bond provider, in the chain's base units. */
 data class BondChurnReward(val churnHeight: Long, val date: Date, val amount: BigInteger)
@@ -81,15 +80,24 @@ constructor(
         val churns = fetchChurns(chain).take(BondRewardHistoryUseCase.MAX_CHURNS)
         val rewards = mutableListOf<BondChurnReward>()
         for (batch in churns.chunked(PARALLEL_REQUESTS)) {
-            val batchRewards = coroutineScope {
-                batch
-                    .map { churn -> async { rewardAt(chain, nodeAddress, bondAddress, churn) } }
-                    .awaitAll()
+            // Supervised and awaited in order, so a read older than the churn that ends the walk
+            // can fail without failing the history it no longer belongs to.
+            val reachedEnd = supervisorScope {
+                val pending =
+                    batch.map { churn ->
+                        async { rewardAt(chain, nodeAddress, bondAddress, churn) }
+                    }
+                for (deferred in pending) {
+                    val reward = deferred.await()
+                    if (reward == null) {
+                        pending.forEach { it.cancel() }
+                        return@supervisorScope true
+                    }
+                    if (reward.amount > BigInteger.ZERO) rewards += reward
+                }
+                false
             }
-            for (reward in batchRewards) {
-                if (reward == null) return rewards
-                if (reward.amount > BigInteger.ZERO) rewards += reward
-            }
+            if (reachedEnd) break
         }
         return rewards
     }
