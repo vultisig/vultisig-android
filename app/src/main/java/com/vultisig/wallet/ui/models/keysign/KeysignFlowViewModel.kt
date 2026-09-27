@@ -74,7 +74,7 @@ internal sealed class KeysignFlowState {
 
 @Immutable
 data class KeysignFlowUiState(
-    val vault: Vault = Vault(id = "", name = ""),
+    val vault: Vault? = null,
     val amount: String = "",
     val toAmount: String = "",
     val toAddress: String = "",

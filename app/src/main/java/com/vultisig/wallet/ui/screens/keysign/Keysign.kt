@@ -14,6 +14,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -41,7 +43,8 @@ import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
+import com.vultisig.wallet.ui.components.rive.RiveResourceLoad
+import com.vultisig.wallet.ui.components.rive.rememberRiveResourceLoad
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
@@ -52,6 +55,7 @@ import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
@@ -227,11 +231,22 @@ internal fun KeysignView(
 
 @Composable
 private fun KeysignRiveProgress(progress: Float, @DrawableRes coinLogoRes: Int?) {
-    val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keysign).value
-    if (riveFile == null) {
-        VsSigningProgressIndicator(text = stringResource(R.string.keysign_screen_preparing_vault))
-        return
-    }
+    val riveFile =
+        when (val load = rememberRiveResourceLoad(resId = R.raw.riv_keysign).value) {
+            // Showing the text fallback while the file inflates flashes "Preparing vault" between
+            // the connecting animation and this one.
+            RiveResourceLoad.Loading -> {
+                Box(Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary))
+                return
+            }
+            RiveResourceLoad.Unavailable -> {
+                VsSigningProgressIndicator(
+                    text = stringResource(R.string.keysign_screen_preparing_vault)
+                )
+                return
+            }
+            is RiveResourceLoad.Ready -> load.file
+        }
     val vmi =
         rememberViewModelInstance(
             file = riveFile,

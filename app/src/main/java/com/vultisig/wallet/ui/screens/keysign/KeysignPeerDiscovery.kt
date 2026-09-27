@@ -2,6 +2,9 @@ package com.vultisig.wallet.ui.screens.keysign
 
 import android.graphics.BitmapFactory
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -10,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -31,7 +35,6 @@ import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.peer.ConnectingToServer
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.forCanvasMinify
@@ -59,6 +62,38 @@ internal fun KeysignPeerDiscovery(
         viewModel.setData(shareViewModel = sharedViewModel, context = context, txType = txType)
     }
 
+    LaunchedEffect(key1 = viewModel.participants) {
+        viewModel.participants.collect { newList ->
+            // add all participants to the selection
+            for (participant in newList) {
+                viewModel.addParticipant(participant)
+            }
+        }
+    }
+
+    LaunchedEffect(keysignMessage) {
+        if (keysignMessage.isNotEmpty()) {
+            sharedViewModel.loadQrPainter(keysignMessage)
+        }
+    }
+
+    DisposableEffect(Unit) { onDispose { viewModel.stopParticipantDiscovery() } }
+
+    val vault = uiModel.vault
+    // One call site for both the vault-load wait and the server wait, so the animation isn't
+    // remounted when the vault lands.
+    val isLookingForVultiServer =
+        viewModel.isFastSign && (vault == null || Utils.getThreshold(vault.signers.size) == 2)
+    if (isLookingForVultiServer) {
+        KeysignLoadingScreen()
+    }
+    if (vault == null) {
+        if (!isLookingForVultiServer) {
+            Box(Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary))
+        }
+        return
+    }
+
     val isSwap = uiModel.isSwap
     val qrShareTitle =
         if (isSwap) stringResource(R.string.qr_title_join_swap_keysign)
@@ -66,7 +101,6 @@ internal fun KeysignPeerDiscovery(
 
     val qrShareBackground = Theme.v2.colors.backgrounds.primary
 
-    val vault = uiModel.vault
     val labelVault = stringResource(R.string.qr_share_label_vault)
     val labelAmount = stringResource(R.string.qr_share_label_amount)
     val labelTo = stringResource(R.string.qr_share_label_to)
@@ -103,14 +137,6 @@ internal fun KeysignPeerDiscovery(
                     ),
         )
 
-    LaunchedEffect(key1 = viewModel.participants) {
-        viewModel.participants.collect { newList ->
-            // add all participants to the selection
-            for (participant in newList) {
-                viewModel.addParticipant(participant)
-            }
-        }
-    }
     LaunchedEffect(key1 = viewModel.selection, vault, isDataLoaded) {
         viewModel.selection.collect { newList ->
             if (!isDataLoaded) return@collect
@@ -125,14 +151,6 @@ internal fun KeysignPeerDiscovery(
         }
     }
 
-    LaunchedEffect(keysignMessage) {
-        if (keysignMessage.isNotEmpty()) {
-            sharedViewModel.loadQrPainter(keysignMessage)
-        }
-    }
-
-    DisposableEffect(Unit) { onDispose { viewModel.stopParticipantDiscovery() } }
-
     LaunchedEffect(uiModel.qrBitmapPainter, qrShareInfo) {
         sharedViewModel.saveShareQrBitmap(
             context,
@@ -141,11 +159,7 @@ internal fun KeysignPeerDiscovery(
             vultisigLogoBitmap,
         )
     }
-    val isLookingForVultiServer =
-        viewModel.isFastSign && Utils.getThreshold(vault.signers.size) == 2
-    if (isLookingForVultiServer) {
-        ConnectingToServer(false)
-    } else {
+    if (!isLookingForVultiServer) {
         val minimumDevices = Utils.getThreshold(vault.signers.size)
         PeerDiscoveryScreen(
             state =
