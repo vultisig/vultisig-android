@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
 import com.vultisig.wallet.R
@@ -92,6 +93,10 @@ internal fun OverviewBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         modifier = modifier.statusBarsPadding(),
+        // Past the Material3 default sheetMaxWidth (640.dp) the sheet itself would stop at that
+        // cap regardless of the card's own fillMaxWidth(), leaving it short of the edges on
+        // tablets/large screens.
+        sheetMaxWidth = Dp.Unspecified,
         containerColor = Color.Transparent,
         contentColor = Theme.v2.colors.text.primary,
         shape = RectangleShape,
