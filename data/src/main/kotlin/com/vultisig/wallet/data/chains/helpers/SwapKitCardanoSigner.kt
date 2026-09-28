@@ -318,14 +318,21 @@ internal class SwapKitCardanoSigner(private val vaultHexPublicKey: String) {
         fun readUInt(): Long = readHead(MAJOR_UINT)
 
         fun readBytes(): ByteArray {
-            val length = readHead(MAJOR_BYTES).toInt()
-            if (offset + length > data.size) throw SwapKitCardanoSignerException("CBOR truncated")
+            val length = readCount(MAJOR_BYTES)
+            if (length > data.size - offset) throw SwapKitCardanoSignerException("CBOR truncated")
             return data.copyOfRange(offset, offset + length).also { offset += length }
         }
 
-        fun readArraySize(): Int = readHead(MAJOR_ARRAY).toInt()
+        fun readArraySize(): Int = readCount(MAJOR_ARRAY)
 
-        fun readMapSize(): Int = readHead(MAJOR_MAP).toInt()
+        fun readMapSize(): Int = readCount(MAJOR_MAP)
+
+        // Every counted element takes at least one byte, so a count beyond the buffer is truncation.
+        private fun readCount(expectedMajorType: Int): Int {
+            val count = readHead(expectedMajorType)
+            if (count > data.size) throw SwapKitCardanoSignerException("CBOR truncated")
+            return count.toInt()
+        }
 
         fun skip() {
             offset += cborItemLength(data, offset)
@@ -400,6 +407,9 @@ internal class SwapKitCardanoSigner(private val vaultHexPublicKey: String) {
                     )
             }
 
+        if (majorType in 2..5 && (argument < 0 || argument > data.size))
+            throw SwapKitCardanoSignerException("CBOR truncated")
+
         return when (majorType) {
             // unsigned int / negative int / simple-or-float — header only.
             0,
@@ -408,10 +418,9 @@ internal class SwapKitCardanoSigner(private val vaultHexPublicKey: String) {
             // byte string / text string — header + `argument` bytes payload.
             2,
             3 -> {
-                val payload = argument.toInt()
-                if (cursor + payload > data.size)
+                if (argument > data.size - cursor)
                     throw SwapKitCardanoSignerException("CBOR truncated")
-                (cursor - start) + payload
+                (cursor - start) + argument.toInt()
             }
             // array: `argument` items follow.
             4 -> {
