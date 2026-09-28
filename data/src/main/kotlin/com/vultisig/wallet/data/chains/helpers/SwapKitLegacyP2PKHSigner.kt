@@ -287,10 +287,10 @@ internal class SwapKitLegacyP2PKHSigner(
 
     /**
      * Ties the PSBT to the vault before signing. The Verify screen only shows the quoted amount, so
-     * every input must spend from the vault, the change output must pay back to it, and the deposit
-     * may not exceed the quoted amount. Otherwise a PSBT could spend the whole UTXO set and route
-     * the remainder to a foreign "change" address. The deposit recipient itself isn't pinned:
-     * SwapKit's on-chain deposit address can differ from its declared `targetAddress`.
+     * every input must spend from the vault and the outputs not paying back to it may not total
+     * more than the quoted amount. Otherwise a PSBT could spend the whole UTXO set and route the
+     * remainder to a foreign "change" address. The deposit recipient itself isn't pinned: SwapKit's
+     * on-chain deposit address can differ from its declared `targetAddress`.
      */
     private fun verifyVaultBinding(
         inputs: List<LegacyP2PKHInput>,
@@ -305,15 +305,17 @@ internal class SwapKitLegacyP2PKHSigner(
                 )
             }
         }
-        if (outputs.size == 2 && !outputs[1].scriptPubKey.contentEquals(vaultScript)) {
+        // Outputs paying the vault are change, wherever they sit; everything else leaves the vault.
+        // SwapKit doesn't fix the output order or require a change output, so only the value
+        // leaving the vault is bounded, not which index carries the deposit.
+        val leavingVault =
+            outputs
+                .filterNot { it.scriptPubKey.contentEquals(vaultScript) }
+                .sumOf { BigInteger.valueOf(it.amount) }
+        if (leavingVault > fromAmount) {
             throw SwapKitLegacyP2PKHSignerException(
-                "SwapKit PSBT change output does not pay back to this vault"
-            )
-        }
-        if (BigInteger.valueOf(outputs[0].amount) > fromAmount) {
-            throw SwapKitLegacyP2PKHSignerException(
-                "SwapKit PSBT deposit ${outputs[0].amount} exceeds the quoted swap amount " +
-                    "$fromAmount; refusing to sign"
+                "SwapKit PSBT sends $leavingVault out of the vault, more than the quoted swap " +
+                    "amount $fromAmount; refusing to sign"
             )
         }
     }
