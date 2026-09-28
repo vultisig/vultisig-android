@@ -50,10 +50,10 @@ fun EvmTxStatusJson.paidFeeWei(): BigInteger? {
     return used.multiply(price)
 }
 
+private val EVM_QUANTITY = Regex("0x[0-9a-fA-F]+")
+
 private fun String?.parseHexOrNull(): BigInteger? =
-    this?.removePrefix("0x")
-        ?.takeIf { it.isNotBlank() }
-        ?.let { runCatching { BigInteger(it, 16) }.getOrNull() }
+    this?.takeIf { EVM_QUANTITY.matches(it) }?.let { BigInteger(it.substring(2), 16) }
 
 @Serializable
 data class EvmRpcResponseJson<T>(

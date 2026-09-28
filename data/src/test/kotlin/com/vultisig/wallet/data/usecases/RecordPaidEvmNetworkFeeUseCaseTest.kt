@@ -13,6 +13,8 @@ import io.mockk.mockk
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 internal class RecordPaidEvmNetworkFeeUseCaseTest {
 
@@ -46,6 +48,21 @@ internal class RecordPaidEvmNetworkFeeUseCaseTest {
     fun `a receipt without effectiveGasPrice writes nothing`() = runTest {
         coEvery { evmApi.getTxStatus(TX_HASH) } returns
             EvmRpcResponseJson(id = 1, result = EvmTxStatusJson(status = "0x1", gasUsed = "0x5208"))
+
+        useCase(Chain.Ethereum, TX_HASH)
+
+        coVerify(exactly = 0) { historyRepository.recordPaidNetworkFee(any(), any(), any()) }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["0x-1", "5208", "0x", "-0x5208", "0x52g8"])
+    fun `a malformed gasUsed quantity writes nothing`(gasUsed: String) = runTest {
+        coEvery { evmApi.getTxStatus(TX_HASH) } returns
+            EvmRpcResponseJson(
+                id = 1,
+                result =
+                    EvmTxStatusJson(status = "0x1", gasUsed = gasUsed, effectiveGasPrice = "0x1"),
+            )
 
         useCase(Chain.Ethereum, TX_HASH)
 
