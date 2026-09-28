@@ -106,7 +106,8 @@ internal class SwapKitLegacyP2PKHSigner(
 
         // 3. Resolve per-input scriptPubKey + amount + keyHash. SwapKit ships either
         // NON_WITNESS_UTXO (full prev-tx, key 0x00 — BIP-174's recommendation for legacy P2PKH;
-        // DOGE confirmed) or WITNESS_UTXO (key 0x01, BTC-style compact). Accept both.
+        // DOGE confirmed) or WITNESS_UTXO (key 0x01, BTC-style compact). Both parse here;
+        // requireCommittedInputAmounts then rejects WITNESS_UTXO on DOGE / DASH.
         val inputs =
             parsedTx.inputs.mapIndexed { index, parsedInput ->
                 val (amount, scriptPubKey) =
@@ -124,6 +125,7 @@ internal class SwapKitLegacyP2PKHSigner(
                     amount = amount,
                     scriptPubKey = scriptPubKey,
                     keyHash = keyHash,
+                    hasPrevTx = inputMaps[index].containsKey(KEY_NON_WITNESS_UTXO),
                 )
             }
 
@@ -185,6 +187,8 @@ internal class SwapKitLegacyP2PKHSigner(
                     "to sign"
             )
         }
+        requireCommittedInputAmounts(inputs)
+        verifyVaultBinding(inputs, outputs, fromAmount)
 
         val depositAmount = outputs[0].amount
         val changeAmount = outputs.drop(1).sumOf { it.amount }
@@ -260,6 +264,60 @@ internal class SwapKitLegacyP2PKHSigner(
         }
 
         return signingInput.build().toByteArray()
+    }
+
+    /**
+     * DOGE and DASH sign with the pre-segwit sighash, which doesn't commit to input amounts, so a
+     * WITNESS_UTXO amount is unverifiable: understating it passes the fee ceiling above while the
+     * real surplus goes to the miner. Require the full previous transaction, which
+     * [parseNonWitnessUtxo] hashes against the outpoint. BCH's SIGHASH_FORKID commits the amount,
+     * so a wrong value there only makes the signature invalid.
+     */
+    private fun requireCommittedInputAmounts(inputs: List<LegacyP2PKHInput>) {
+        if (coinType == CoinType.BITCOINCASH) return
+        inputs.forEachIndexed { index, input ->
+            if (!input.hasPrevTx) {
+                throw SwapKitLegacyP2PKHSignerException(
+                    "SwapKit PSBT input #$index carries no NON_WITNESS_UTXO; $coinType sighashes " +
+                        "don't commit to input amounts, so the previous transaction is required"
+                )
+            }
+        }
+    }
+
+    /**
+     * Ties the PSBT to the vault before signing. The Verify screen only shows the quoted amount, so
+     * every input must spend from the vault and the outputs not paying back to it may not total
+     * more than the quoted amount. Otherwise a PSBT could spend the whole UTXO set and route the
+     * remainder to a foreign "change" address. The deposit recipient itself isn't pinned: SwapKit's
+     * on-chain deposit address can differ from its declared `targetAddress`.
+     */
+    private fun verifyVaultBinding(
+        inputs: List<LegacyP2PKHInput>,
+        outputs: List<LegacyP2PKHOutput>,
+        fromAmount: BigInteger,
+    ) {
+        val vaultScript = utxo.vaultP2pkhLockScript()
+        inputs.forEachIndexed { index, input ->
+            if (!input.scriptPubKey.contentEquals(vaultScript)) {
+                throw SwapKitLegacyP2PKHSignerException(
+                    "SwapKit PSBT input #$index does not spend from this vault"
+                )
+            }
+        }
+        // Outputs paying the vault are change, wherever they sit; everything else leaves the vault.
+        // SwapKit doesn't fix the output order or require a change output, so only the value
+        // leaving the vault is bounded, not which index carries the deposit.
+        val leavingVault =
+            outputs
+                .filterNot { it.scriptPubKey.contentEquals(vaultScript) }
+                .sumOf { BigInteger.valueOf(it.amount) }
+        if (leavingVault > fromAmount) {
+            throw SwapKitLegacyP2PKHSignerException(
+                "SwapKit PSBT sends $leavingVault out of the vault, more than the quoted swap " +
+                    "amount $fromAmount; refusing to sign"
+            )
+        }
     }
 
     /**
@@ -355,6 +413,8 @@ internal class SwapKitLegacyP2PKHSigner(
         val amount: Long,
         val scriptPubKey: ByteArray,
         val keyHash: ByteArray,
+        /** Whether the amount came from a NON_WITNESS_UTXO already hashed against the outpoint. */
+        val hasPrevTx: Boolean,
     )
 
     private data class LegacyP2PKHOutput(val amount: Long, val scriptPubKey: ByteArray)

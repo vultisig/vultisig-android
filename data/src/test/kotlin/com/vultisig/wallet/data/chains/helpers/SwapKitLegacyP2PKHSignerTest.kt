@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import wallet.core.jni.CoinType
+import wallet.core.jni.Hash
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
@@ -24,7 +25,14 @@ import wallet.core.jni.proto.Common.SigningError
  */
 class SwapKitLegacyP2PKHSignerTest {
 
-    private fun signer(coin: CoinType = CoinType.DOGECOIN) = SwapKitLegacyP2PKHSigner("", "", coin)
+    // An empty chain code makes the signer use the key as-is, so its vault script is the P2PKH of
+    // VAULT_PUB_KEY's hash160 on every chain.
+    private fun signer(coin: CoinType = CoinType.DOGECOIN) =
+        SwapKitLegacyP2PKHSigner(VAULT_PUB_KEY, "", coin)
+
+    /** hash160 of the vault key; needs the WalletCore JNI, so only call it inside JNI tests. */
+    private fun vaultKeyHash(): String =
+        Numeric.toHexStringNoPrefix(Hash.sha256RIPEMD(Numeric.hexStringToByteArray(VAULT_PUB_KEY)))
 
     @Test
     fun `rejects empty payload`() {
@@ -237,7 +245,7 @@ class SwapKitLegacyP2PKHSignerTest {
     }
 
     @Test
-    fun `getPreSignedImageHash - DOGE happy path returns one sighash per input (WITNESS_UTXO)`() {
+    fun `getPreSignedImageHash - DOGE happy path returns one sighash per input (NON_WITNESS_UTXO)`() {
         try {
             val psbt =
                 encodeLegacyPsbt(
@@ -248,13 +256,14 @@ class SwapKitLegacyP2PKHSignerTest {
                                 vout = 0,
                                 sequence = 0xFFFFFFFFL,
                                 amount = 100_000,
-                                prevScriptHex = p2pkh("11".repeat(20)),
+                                prevScriptHex = p2pkh(vaultKeyHash()),
+                                useNonWitnessUtxo = true,
                             )
                         ),
                     outputs =
                         listOf(
                             LegacyOut(amount = 60_000, scriptHex = p2pkh("22".repeat(20))),
-                            LegacyOut(amount = 39_000, scriptHex = p2pkh("11".repeat(20))),
+                            LegacyOut(amount = 39_000, scriptHex = p2pkh(vaultKeyHash())),
                         ),
                 )
             val hashes = signer(CoinType.DOGECOIN).getPreSignedImageHash(psbt, "", FROM_AMOUNT)
@@ -268,7 +277,7 @@ class SwapKitLegacyP2PKHSignerTest {
     @Test
     fun `getPreSignedImageHash - DASH happy path with two inputs (NON_WITNESS_UTXO)`() {
         try {
-            val prevScript = p2pkh("11".repeat(20))
+            val prevScript = p2pkh(vaultKeyHash())
             val psbt =
                 encodeLegacyPsbt(
                     inputs =
@@ -317,7 +326,7 @@ class SwapKitLegacyP2PKHSignerTest {
             // is pure, and the expectations are derived from the PSBT — no precomputed golden
             // needed.
             val depositHash = "22".repeat(20)
-            val changeHash = "11".repeat(20)
+            val changeHash = vaultKeyHash()
             val psbt =
                 encodeLegacyPsbt(
                     inputs =
@@ -328,6 +337,7 @@ class SwapKitLegacyP2PKHSignerTest {
                                 sequence = 0xFFFFFFFEL,
                                 amount = 100_000,
                                 prevScriptHex = p2pkh(changeHash),
+                                useNonWitnessUtxo = true,
                             )
                         ),
                     outputs =
@@ -359,7 +369,7 @@ class SwapKitLegacyP2PKHSignerTest {
             assertEquals(1, input.utxoCount)
             val utxo = input.getUtxo(0)
             assertArrayEquals(
-                Numeric.hexStringToByteArray(TXID_ONE).reversedArray(),
+                sha256d(encodePrevTx(3, 100_000, p2pkh(changeHash))),
                 utxo.outPoint.hash.toByteArray(),
             )
             assertEquals(3, utxo.outPoint.index)
@@ -383,7 +393,7 @@ class SwapKitLegacyP2PKHSignerTest {
             // the sighash to SIGHASH_ALL | SIGHASH_FORKID (0x41). Pin both the reconstruction and
             // that FORKID selection so the BCH-specific branch is covered.
             val depositHash = "22".repeat(20)
-            val changeHash = "11".repeat(20)
+            val changeHash = vaultKeyHash()
             val psbt =
                 encodeLegacyPsbt(
                     inputs =
@@ -659,6 +669,8 @@ class SwapKitLegacyP2PKHSignerTest {
         // Generous quoted swap amount — well above every fixture's fee so the fee-ceiling bound
         // never trips except in the dedicated rejection test (which passes its own small value).
         private val FROM_AMOUNT = BigInteger.valueOf(1_000_000)
+        private const val VAULT_PUB_KEY =
+            "025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357"
         private const val TXID_ONE =
             "0000000000000000000000000000000000000000000000000000000000000001"
         private const val TXID_TWO =
