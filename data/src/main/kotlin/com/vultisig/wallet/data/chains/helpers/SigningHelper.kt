@@ -104,8 +104,9 @@ object SigningHelper {
      * router. Anything else lets an initiator slip an arbitrary allowance past the Verify screen.
      *
      * A SwapKit EVM route approves a token-transfer proxy (`allowanceTarget`) that the keysign
-     * proto doesn't carry, so a joiner can't bind its spender; the token and amount bounds still
-     * hold, which caps the grant at the swap input the user approved.
+     * proto doesn't carry yet (vultisig/commondata#116). Without it the spender can't be bound, so
+     * this fails closed: a SwapKit approve is only signed when its spender is the known
+     * `allowanceTarget` or, lacking one, the swap's own `to`.
      */
     internal fun requireApproveBoundToSwap(
         approvePayload: ERC20ApprovePayload,
@@ -134,7 +135,14 @@ object SigningHelper {
                     val tx = swapPayload.data.quote.tx
                     val isSwapKit =
                         swapProviderFromWireId(swapPayload.data.provider) == SwapProvider.SWAPKIT
-                    tx.allowanceTarget ?: if (isSwapKit) return else tx.to
+                    require(
+                        !isSwapKit ||
+                            tx.allowanceTarget != null ||
+                            approvePayload.spender.equals(tx.to, ignoreCase = true)
+                    ) {
+                        "SwapKit approve spender can't be verified: the swap carries no allowanceTarget"
+                    }
+                    tx.allowanceTarget ?: tx.to
                 }
                 is SwapPayload.SwapKit -> error("SwapKit ${swapPayload.data.txType} carries no approve")
             }
