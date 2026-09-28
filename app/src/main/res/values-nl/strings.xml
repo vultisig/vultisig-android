@@ -349,6 +349,7 @@
     <string name="signing_error_account_not_funded">Dit account bestaat nog niet on-chain.\nVul de wallet eerst aan.</string>
     <string name="signing_error_broadcast_rejected">Transactie geweigerd door het netwerk.</string>
     <string name="signing_error_broadcast_rejected_s">Transactie geweigerd door het netwerk: %s</string>
+    <string name="signing_error_swap_tx_unsignable">De swap-leverancier gaf een transactie terug die niet veilig kan worden ondertekend. Opnieuw proberen helpt niet — ga terug en vraag een nieuwe offerte aan.</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
     <string name="verify_transaction_paired_btn_title">Gekoppeld</string>
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>

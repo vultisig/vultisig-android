@@ -30,10 +30,11 @@ internal class SwapKitLegacyP2PKHSignerException(message: String) : Exception(me
  * `BitcoinScript.hashTypeForCoin(BITCOINCASH)`.
  *
  * The "frozen plan" pattern is load-bearing: if we let WalletCore replan UTXO selection it would
- * compute a different tx and a different `tx_id`. NEAR Intents tracks the route by the tx_id
- * SwapKit baked into the PSBT — we sign verbatim or we break tracking. So we build the
+ * spend different inputs, change and fee from the transaction SwapKit quoted. So we build the
  * [Bitcoin.SigningInput] with a frozen [Bitcoin.TransactionPlan] derived directly from the PSBT
- * bytes instead of calling `AnySigner.plan`.
+ * bytes instead of calling `AnySigner.plan`. The tx_id itself can't be pinned: a legacy tx_id
+ * hashes the scriptSigs, so nobody knows it before signing, and route tracking uses the hash we
+ * broadcast.
  *
  * PSBT framing primitives live in [SwapKitPsbtParser]; the legacy (non-witness) unsigned-tx body
  * parser stays here.
@@ -143,9 +144,8 @@ internal class SwapKitLegacyP2PKHSigner(
      * from `toAddress` + `changeAddress` (it does NOT consume per-output scripts from the plan), so
      * we assert every output is a P2PKH we can faithfully re-emit through the address-only API,
      * then derive both addresses from the PSBT's actual output hash160s — making the rebuilt tx
-     * byte-identical to the PSBT's intended outputs (preserves the NEAR Intents route `tx_id` and
-     * the deposit destination). Anything other than 1 deposit + optional 1 change P2PKH output is
-     * hard-rejected.
+     * byte-identical to the PSBT's intended outputs (preserves the deposit destination and amount).
+     * Anything other than 1 deposit + optional 1 change P2PKH output is hard-rejected.
      */
     private fun assembleSigningInput(
         inputs: List<LegacyP2PKHInput>,
@@ -226,8 +226,8 @@ internal class SwapKitLegacyP2PKHSigner(
                     .build()
             }
 
-        // Frozen plan. Critical: do NOT replan — the replanner would re-select UTXOs and could
-        // produce a different on-chain tx_id, breaking NEAR Intents route tracking.
+        // Frozen plan. Critical: do NOT replan — the replanner would re-select UTXOs and sign a
+        // different transaction from the one SwapKit quoted.
         val plan =
             Bitcoin.TransactionPlan.newBuilder()
                 .setAmount(depositAmount)
@@ -245,8 +245,7 @@ internal class SwapKitLegacyP2PKHSigner(
                 .setUseMaxAmount(false)
                 .setAmount(depositAmount)
                 .setCoinType(coinType.value())
-                // Reproduce the PSBT's lockTime so the rebuilt tx_id matches the one the NEAR route
-                // tracks; WalletCore otherwise defaults it to 0.
+                // Reproduce the PSBT's lockTime; WalletCore otherwise defaults it to 0.
                 .setLockTime(lockTime.toInt())
                 .setToAddress(depositAddress)
                 .setChangeAddress(changeAddress)
@@ -438,20 +437,6 @@ internal class SwapKitLegacyP2PKHSigner(
     private fun parseLegacyUnsignedTx(data: ByteArray): ParsedLegacyTx {
         val cursor = PsbtCursor(data)
         val version = cursor.readUInt32LE()
-        // WalletCore's legacy Bitcoin compiler takes no tx-version input and emits version 1 on
-        // this
-        // path (confirmed against the DOGE / BCH / DASH mainnet broadcasts, whose tx_ids matched
-        // the
-        // quoted PSBT). A PSBT declaring any other version can't be reproduced — it would rebuild
-        // to
-        // a different tx_id and silently break NEAR route tracking — so reject it loudly, mirroring
-        // the ZEC expiryHeight guard.
-        if (version != WALLETCORE_LEGACY_TX_VERSION) {
-            throw SwapKitLegacyP2PKHSignerException(
-                "SwapKit PSBT unsigned-tx version $version is unsupported; WalletCore reproduces " +
-                    "only version $WALLETCORE_LEGACY_TX_VERSION on the legacy P2PKH path"
-            )
-        }
         val inCount = cursor.readCompactSize()
         val inputs =
             (0L until inCount).map {
@@ -459,7 +444,7 @@ internal class SwapKitLegacyP2PKHSigner(
                 val prevIndex = cursor.readUInt32LE()
                 // A PSBT's unsigned tx must carry empty scriptSigs. Reject a non-empty one rather
                 // than silently skip it — the frozen plan rebuilds the tx from these parsed fields,
-                // so dropped bytes would change the broadcast tx_id the route is tracked by.
+                // so dropped bytes would diverge the signed tx from the PSBT body.
                 val scriptSigLen = cursor.readCompactSize()
                 if (scriptSigLen != 0L) {
                     throw SwapKitLegacyP2PKHSignerException(
@@ -469,6 +454,7 @@ internal class SwapKitLegacyP2PKHSigner(
                 val sequence = cursor.readUInt32LE()
                 ParsedLegacyTxInput(prevBytes, prevIndex, sequence)
             }
+        SwapKitLegacyPsbtVersion.requireSignableAsV1(version, inputs.map { it.sequence })
         val outCount = cursor.readCompactSize()
         val outputs =
             (0L until outCount).map {
@@ -545,10 +531,68 @@ internal class SwapKitLegacyP2PKHSigner(
     private companion object {
         private const val KEY_NON_WITNESS_UTXO = "00"
         private const val KEY_WITNESS_UTXO = "01"
+    }
+}
 
-        /**
-         * Tx version WalletCore emits (and thus can reproduce) on the legacy P2PKH compile path.
-         */
-        private const val WALLETCORE_LEGACY_TX_VERSION = 1L
+/**
+ * The tx version rule for DOGE / BCH / DASH SwapKit PSBTs. WalletCore's legacy compiler takes no
+ * version input and always emits version 1, while SwapKit now ships version 2. Version 2 differs
+ * from 1 only by enabling BIP68 relative locktimes, so a version-2 PSBT whose inputs all set the
+ * BIP68 disable flag signs to the same spend as version 1. Anything else is refused.
+ *
+ * Every co-signer must hash the same transaction, so the initiator rewrites the PSBT to version 1
+ * before sending it ([normalizeToV1]). Older builds that only accept version 1 can then co-sign,
+ * and a client that preserves the PSBT's version agrees with one that signs as version 1. The
+ * signer still accepts version 2 from initiators that don't normalize.
+ */
+internal object SwapKitLegacyPsbtVersion {
+
+    private const val V1 = 1L
+    private const val V2 = 2L
+    private const val BIP68_DISABLE_FLAG = 1L shl 31
+
+    fun requireSignableAsV1(version: Long, sequences: List<Long>) {
+        when (version) {
+            V1 -> Unit
+            V2 ->
+                sequences.forEachIndexed { index, sequence ->
+                    if (sequence and BIP68_DISABLE_FLAG == 0L) {
+                        throw SwapKitLegacyP2PKHSignerException(
+                            "SwapKit PSBT unsigned-tx version 2 input #$index sequence " +
+                                "0x${sequence.toString(16)} enables a BIP68 relative locktime, " +
+                                "which a version-1 rebuild would drop"
+                        )
+                    }
+                }
+            else ->
+                throw SwapKitLegacyP2PKHSignerException(
+                    "SwapKit PSBT unsigned-tx version $version is unsupported on the legacy " +
+                        "P2PKH path"
+                )
+        }
+    }
+
+    /**
+     * Returns [psbtBytes] with its unsigned-tx version rewritten to 1, or unchanged if it already
+     * is. Throws if the version can't be signed as version 1 (see [requireSignableAsV1]).
+     */
+    fun normalizeToV1(psbtBytes: ByteArray): ByteArray {
+        val offset = SwapKitPsbtParser.unsignedTxOffset(psbtBytes)
+        val cursor = PsbtCursor(psbtBytes.copyOfRange(offset, psbtBytes.size))
+        val version = cursor.readUInt32LE()
+        val sequences =
+            List(cursor.asLength(cursor.readCompactSize())) {
+                cursor.readBytes(36) // outpoint
+                cursor.readBytes(cursor.asLength(cursor.readCompactSize())) // scriptSig
+                cursor.readUInt32LE()
+            }
+        requireSignableAsV1(version, sequences)
+        if (version == V1) return psbtBytes
+        return psbtBytes.copyOf().also {
+            it[offset] = V1.toByte()
+            it[offset + 1] = 0
+            it[offset + 2] = 0
+            it[offset + 3] = 0
+        }
     }
 }

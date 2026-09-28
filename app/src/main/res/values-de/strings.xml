@@ -350,6 +350,7 @@
     <string name="signing_error_account_not_funded">Dieses Konto existiert noch nicht on-chain.\nBitte füllen Sie zuerst das Wallet auf.</string>
     <string name="signing_error_broadcast_rejected">Transaktion vom Netzwerk abgelehnt.</string>
     <string name="signing_error_broadcast_rejected_s">Transaktion vom Netzwerk abgelehnt: %s</string>
+    <string name="signing_error_swap_tx_unsignable">Der Swap-Anbieter hat eine Transaktion geliefert, die nicht sicher signiert werden kann. Ein erneuter Versuch hilft nicht – geh zurück und fordere ein neues Swap-Angebot an.</string>
     <string name="verify_transaction_fast_sign_btn_title">Schnelle Signatur</string>
     <string name="verify_transaction_paired_btn_title">Gekoppelt</string>
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>

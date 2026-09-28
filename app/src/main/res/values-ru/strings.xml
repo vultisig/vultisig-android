@@ -349,6 +349,7 @@
     <string name="signing_error_account_not_funded">Этот аккаунт ещё не существует в сети.\nПожалуйста, сначала пополните кошелек.</string>
     <string name="signing_error_broadcast_rejected">Транзакция отклонена сетью.</string>
     <string name="signing_error_broadcast_rejected_s">Транзакция отклонена сетью: %s</string>
+    <string name="signing_error_swap_tx_unsignable">Провайдер свопа вернул транзакцию, которую нельзя безопасно подписать. Повторная попытка не поможет — вернитесь и запросите новую котировку.</string>
     <string name="verify_transaction_fast_sign_btn_title">Быстрая подпись</string>
     <string name="verify_transaction_paired_btn_title">Парное</string>
     <string name="keysign_sign_transaction">Подписать транзакцию</string>

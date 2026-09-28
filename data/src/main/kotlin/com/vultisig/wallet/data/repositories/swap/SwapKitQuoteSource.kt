@@ -13,6 +13,9 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
+import com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSignerException
+import com.vultisig.wallet.data.chains.helpers.SwapKitLegacyPsbtVersion
+import com.vultisig.wallet.data.chains.helpers.SwapKitPsbtException
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
@@ -611,7 +614,7 @@ constructor(
                 // would make the signing-side gate reject those routes. Mirrors iOS, which
                 // normalises the payload txType in its buildSwapKit*Payload builders.
                 txType = canonicalTxType(response, srcToken.chain),
-                txPayload = encodeNativeTxPayload(response),
+                txPayload = encodeNativeTxPayload(response, srcToken.chain),
                 targetAddress = targetAddress,
                 memo = memo,
                 subProvider = subProvider.orEmpty(),
@@ -640,7 +643,9 @@ constructor(
     /**
      * Encode `tx` into the raw [SwapKitSwapPayloadJson.txPayload] bytes the per-chain signer
      * consumes. The wire shape depends on `meta.txType`:
-     * - PSBT → a top-level base64 string ([decodeBinaryTx]).
+     * - PSBT → a top-level base64 string ([decodeBinaryTx]). DOGE / BCH / DASH PSBTs are rewritten
+     *   to tx version 1 ([SwapKitLegacyPsbtVersion.normalizeToV1]) so every co-signer build hashes
+     *   the same transaction.
      * - TRON → a TronWeb-shaped JSON object (`{txID, raw_data, raw_data_hex, …}`). We UTF-8 encode
      *   the object verbatim so the cosigning peer reconstructs it and [SwapKitTronSigner] can pull
      *   `raw_data_hex`. Matches iOS' `buildSwapKitTronPayload`.
@@ -648,8 +653,16 @@ constructor(
      *   integer (so a malformed transfer is rejected at quote time, not keysign), then re-encode
      *   the validated transfers canonically. Matches iOS' `buildSwapKitTonPayload` byte-for-byte.
      */
-    private fun encodeNativeTxPayload(response: SwapKitSwapResponseJson): ByteArray =
+    private fun encodeNativeTxPayload(
+        response: SwapKitSwapResponseJson,
+        srcChain: Chain,
+    ): ByteArray =
         when (txTypeOf(response)) {
+            TxKind.PSBT ->
+                decodeBinaryTx(response.tx).let { psbt ->
+                    if (srcChain in LEGACY_P2PKH_PSBT_CHAINS) normalizeLegacyPsbtVersion(psbt)
+                    else psbt
+                }
             TxKind.TRON -> {
                 val obj =
                     response.tx as? JsonObject
@@ -692,6 +705,19 @@ constructor(
             // nothing to carry here.
             TxKind.XRP -> ByteArray(0)
             else -> decodeBinaryTx(response.tx)
+        }
+
+    /**
+     * Rewrite a legacy P2PKH PSBT to tx version 1, rejecting one that can't be signed as version 1
+     * here so quote selection falls back to another provider instead of failing at keysign.
+     */
+    private fun normalizeLegacyPsbtVersion(psbt: ByteArray): ByteArray =
+        try {
+            SwapKitLegacyPsbtVersion.normalizeToV1(psbt)
+        } catch (e: SwapKitPsbtException) {
+            throw SwapKitError.Decoding(e.message ?: "SwapKit PSBT is malformed", e)
+        } catch (e: SwapKitLegacyP2PKHSignerException) {
+            throw SwapKitError.Decoding(e.message ?: "SwapKit PSBT version is unsupported", e)
         }
 
     /**
@@ -926,6 +952,9 @@ constructor(
             Chain.Dash,
             Chain.Zcash,
         )
+
+    /** PSBT chains signed by `SwapKitLegacyP2PKHSigner`, whose tx version is normalized. */
+    private val LEGACY_P2PKH_PSBT_CHAINS = setOf(Chain.BitcoinCash, Chain.Dogecoin, Chain.Dash)
 
     private enum class TxKind {
         EVM,
