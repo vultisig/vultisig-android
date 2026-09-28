@@ -140,7 +140,6 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
 
     // animation
-    implementation(libs.lottie.compose)
     implementation(libs.rive)
 
     // test
