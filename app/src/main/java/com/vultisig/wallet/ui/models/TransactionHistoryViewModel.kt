@@ -11,6 +11,9 @@ import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
 import com.vultisig.wallet.data.db.models.isInFlight
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.nativeToken
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
@@ -234,6 +237,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>,
     private val clock: Clock,
+    private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
 ) : ViewModel() {
 
     private val route: Route.TransactionHistory = savedStateHandle.toRoute()
@@ -698,6 +702,23 @@ constructor(
             TransactionHistoryTab.LIMIT -> null
         }
 
+    /**
+     * The gas this row's receipt says it paid, in its chain's native coin, or null until a receipt
+     * has been read. Replaces the pre-sign ceiling the row was recorded with.
+     */
+    private fun TransactionHistoryEntity.paidNetworkFee(feeWei: String?): String? {
+        val wei = feeWei?.toBigIntegerOrNull() ?: return null
+        val nativeToken =
+            try {
+                Chain.fromRaw(chain).nativeToken
+            } catch (_: NoSuchElementException) {
+                return null
+            }
+        return mapTokenValueToStringWithUnit(
+            TokenValue(value = wei, unit = nativeToken.ticker, decimals = nativeToken.decimal)
+        )
+    }
+
     private fun TransactionHistoryEntity.toUiModel(
         vaultCoins: List<Coin>
     ): TransactionHistoryItemUiModel? {
@@ -734,7 +755,7 @@ constructor(
                     tokenLogo = getCoinLogo(p.tokenLogo),
                     fiatValue = p.fiatValue,
                     provider = null,
-                    feeEstimate = p.feeEstimate,
+                    feeEstimate = paidNetworkFee(p.paidNetworkFeeWei) ?: p.feeEstimate,
                     dappSummary = p.dappSummary,
                 )
 
@@ -759,7 +780,7 @@ constructor(
                     fiatValue = p.fiatValue,
                     fromAddress = null,
                     toAddress = null,
-                    feeEstimate = null,
+                    feeEstimate = paidNetworkFee(p.paidNetworkFeeWei),
                     isLimitOrder = p.isLimitOrder,
                     // Only a terminal failure: a swap still in flight may yet land, and retrying
                     // it would sell the same funds twice (#5918).

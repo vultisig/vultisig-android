@@ -39,12 +39,14 @@ class RefreshPendingTransactionsUseCaseSwapKitGateTest {
     private val historyRepository: TransactionHistoryRepository = mockk(relaxed = true)
     private val statusRepository: TransactionStatusRepository = mockk()
     private val trackingService: SwapKitTrackingService = mockk()
+    private val recordPaidFee: RecordPaidEvmNetworkFeeUseCase = mockk(relaxed = true)
 
     private fun useCase(): RefreshPendingTransactionsUseCase =
         RefreshPendingTransactionsUseCaseImpl(
             transactionHistoryRepository = historyRepository,
             transactionStatusRepository = statusRepository,
             swapKitTrackingService = trackingService,
+            recordPaidEvmNetworkFee = recordPaidFee,
             dispatcher = UnconfinedTestDispatcher(),
             clock = Clock.System,
         )

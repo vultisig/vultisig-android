@@ -51,6 +51,13 @@ data class SendTransactionHistoryData(
      * migration.
      */
     val dappSummary: String? = null,
+    /**
+     * Wei the transaction actually paid for gas, read from its EVM receipt once it settled. Only
+     * this transaction's own gas: an approval broadcast before it is a separate transaction and is
+     * never folded in. Null until the receipt is known, and for non-EVM chains. Default-valued so
+     * legacy rows stay readable (no Room migration).
+     */
+    val paidNetworkFeeWei: String? = null,
 ) : TransactionHistoryData
 
 @Serializable
@@ -124,6 +131,10 @@ data class SwapTransactionHistoryData(
      * alone and offers a retry only when that match is unique.
      */
     val fromContractAddress: String = "",
+    /**
+     * Wei the swap transaction actually paid for gas; see [SendTransactionHistoryData.paidNetworkFeeWei].
+     */
+    val paidNetworkFeeWei: String? = null,
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(

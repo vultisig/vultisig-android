@@ -20,6 +20,7 @@ import com.vultisig.wallet.ui.models.swap.hasSwapNetworkFeeCeiling
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import com.vultisig.wallet.ui.models.swap.swapFeeRow
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -182,6 +183,17 @@ constructor(
             signedMinimumOutput(payload = from.payload, memo = from.memo, dstToken = from.dstToken)
                 ?.let { mapTokenValueToDecimalUiString(it) }
 
+        // The Swap Fee adds nothing to the total when it is baked into the quoted rate (1inch) or
+        // already surfaced as the Network Fee (SwapKit UTXO deposit) — otherwise an aggregator's
+        // opaque `estimatedFees` (gas for 1inch, the deposit cost for SwapKit UTXO) would be
+        // counted a second time on top of the Network Fee (#5358, #5334, #5335, #5321).
+        val totalFeeExcludingNetwork =
+            if (from.swapFeeIncludedInRate || isSwapKitUtxoSwap) {
+                from.gasFeeFiatValue.copy(value = BigDecimal.ZERO)
+            } else {
+                feesFiatForTotal
+            }
+
         return SwapTransactionUiModel(
             src =
                 ValuedToken(
@@ -214,18 +226,12 @@ constructor(
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
             isNetworkFeeMax = from.srcToken.chain.hasSwapNetworkFeeCeiling,
-            // The Swap Fee adds nothing to the total when it is baked into the quoted rate (1inch)
-            // or already surfaced as the Network Fee (SwapKit UTXO deposit) — otherwise an
-            // aggregator's opaque `estimatedFees` (gas for 1inch, the deposit cost for SwapKit
-            // UTXO)
-            // would be counted a second time on top of the Network Fee (#5358, #5334, #5335,
-            // #5321).
             totalFee =
                 fiatValueToStringMapper(
-                    if (from.swapFeeIncludedInRate || isSwapKitUtxoSwap) from.gasFeeFiatValue
-                    else feesFiatForTotal + from.gasFeeFiatValue,
+                    totalFeeExcludingNetwork + from.gasFeeFiatValue,
                     asFee = true,
                 ),
+            totalFeeExcludingNetwork = totalFeeExcludingNetwork,
             provider = provider.getSwapProviderId(),
             providerLabel = providerLabel,
             swapId = swapId,
