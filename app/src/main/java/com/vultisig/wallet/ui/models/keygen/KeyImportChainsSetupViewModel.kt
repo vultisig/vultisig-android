@@ -117,7 +117,9 @@ constructor(
             val mnemonic = keyImportRepository.get()?.mnemonic ?: error("No mnemonic found")
 
             val results = withContext(Dispatchers.IO) { scanChainBalances(mnemonic) }
-            val activeResults = results.filter { it.hasBalance }
+            // Solana is scanned on both Default and Phantom paths, but only one path per chain
+            // can be imported and the chain is the list key, so keep the first funded result.
+            val activeResults = results.filter { it.hasBalance }.distinctBy { it.chain }
 
             // Build the full chain list for CustomizeChains screen, pre-selecting
             // chains that have balance. Use the active result's derivation path
@@ -128,9 +130,8 @@ constructor(
                     ChainItemUiModel(
                         chain = chain,
                         derivationPath =
-                            results
-                                .firstOrNull { it.chain == chain && it.hasBalance }
-                                ?.derivationPath ?: DerivationPath.Default,
+                            activeResults.firstOrNull { it.chain == chain }?.derivationPath
+                                ?: DerivationPath.Default,
                         isSelected = hasBalance,
                     )
                 }
