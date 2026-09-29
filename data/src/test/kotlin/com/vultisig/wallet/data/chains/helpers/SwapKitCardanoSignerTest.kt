@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import java.math.BigInteger
 import org.bouncycastle.crypto.digests.Blake2bDigest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -69,8 +70,20 @@ class SwapKitCardanoSignerTest {
 
     @Test
     fun `pre-signed image hash is a single entry equal to the digest`() {
-        val envelope = "84a0a0f5f6".hexToByteArray()
-        val hashes = signer.getPreSignedImageHash(envelope)
+        val vaultKey = "11".repeat(32)
+        val vaultKeyHash =
+            Blake2bDigest(224).run {
+                update(vaultKey.hexToByteArray(), 0, 32)
+                ByteArray(digestSize).also { doFinal(it, 0) }
+            }
+        // { 0: [[<tx hash>, 0]], 1: [[<vault enterprise addr>, 1_000_000]], 2: 170_000 }
+        val body =
+            "a3" + "00" + "81" + "82" + "5820" + "22".repeat(32) + "00" + "01" + "81" + "82" +
+                "581d61" + vaultKeyHash.toHexString() + "1a000f4240" + "02" + "1a00029810"
+        val envelope = ("84" + body + "a0f5f6").hexToByteArray()
+        val signer = SwapKitCardanoSigner(vaultHexPublicKey = vaultKey)
+
+        val hashes = signer.getPreSignedImageHash(envelope, fromAmount = BigInteger.ZERO)
         assertEquals(1, hashes.size)
         assertEquals(signer.digest(envelope).toHexString(), hashes[0])
     }

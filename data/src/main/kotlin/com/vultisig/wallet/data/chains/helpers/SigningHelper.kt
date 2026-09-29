@@ -245,7 +245,10 @@ object SigningHelper {
                                         .getPreSignedImageHash(swapPayload.data.txPayload)
                                 SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
                                     SwapKitCardanoSigner(eddsaKey)
-                                        .getPreSignedImageHash(swapPayload.data.txPayload)
+                                        .getPreSignedImageHash(
+                                            cborBytes = swapPayload.data.txPayload,
+                                            fromAmount = swapPayload.data.fromAmount,
+                                        )
                                 // Deposit-only Cardano: no CBOR to sign — hash a plain ADA send to
                                 // targetAddress built from the blockChainSpecific, via the native
                                 // path.
@@ -538,7 +541,11 @@ object SigningHelper {
                                     .getSignedTransaction(swapPayload.data.txPayload, signatures)
                             SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
                                 SwapKitCardanoSigner(eddsaKey)
-                                    .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                                    .getSignedTransaction(
+                                        cborBytes = swapPayload.data.txPayload,
+                                        fromAmount = swapPayload.data.fromAmount,
+                                        signatures = signatures,
+                                    )
                             // Deposit-only Cardano: build & sign a plain ADA send to targetAddress
                             // via the native Cardano path (same as a non-swap send).
                             SwapKitSwapPayloadJson.TX_TYPE_CARDANO ->
