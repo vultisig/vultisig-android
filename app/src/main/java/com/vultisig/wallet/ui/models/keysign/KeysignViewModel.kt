@@ -24,7 +24,6 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.EstimatedGasFee
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
@@ -59,10 +58,11 @@ import com.vultisig.wallet.data.usecases.AwaitApprovalConfirmationUseCase
 import com.vultisig.wallet.data.usecases.BroadcastKeysignUseCase
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.usecases.FetchPaidNetworkFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.KeysignBroadcastResult
 import com.vultisig.wallet.data.usecases.SaveKeysignTransactionHistoryUseCase
-import com.vultisig.wallet.data.usecases.UpdateEvmActualFeeUseCase
+import com.vultisig.wallet.data.usecases.UpdateActualNetworkFeeUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
@@ -355,6 +355,7 @@ constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val fetchPaidNetworkFee: FetchPaidNetworkFeeUseCase,
     private val fiatValueToString: FiatValueToStringMapper,
     private val inAppReviewRepository: InAppReviewRepository,
     private val pendingLimitOrderRepository: PendingLimitOrderRepository,
@@ -440,7 +441,8 @@ constructor(
 
     private val saveKeysignTransactionHistory =
         SaveKeysignTransactionHistoryUseCase(transactionHistoryRepository)
-    private val updateEvmActualFee = UpdateEvmActualFeeUseCase(evmApiFactory, gasFeeToEstimatedFee)
+    private val updateActualNetworkFee =
+        UpdateActualNetworkFeeUseCase(fetchPaidNetworkFee, gasFeeToEstimatedFee)
     private val broadcastKeysign =
         BroadcastKeysignUseCase(
             broadcastTx = broadcastTx,
@@ -1160,7 +1162,7 @@ constructor(
     /**
      * Starts foreground transaction-status polling, delegating the status-service / SwapKit polling
      * strategies to [txStatusPoller]. Mirrors each observed status into [state] and, once a
-     * terminal status is reached, replaces the estimated EVM fee with the actual burned fee.
+     * terminal status is reached, replaces the estimated network fee with the fee actually paid.
      */
     private fun startForegroundPolling(txHash: String, chain: Chain) {
         pollingTxStatusJob?.cancel()
@@ -1178,7 +1180,7 @@ constructor(
                         }
                     }
                 when (outcome) {
-                    TxStatusPollOutcome.Terminal -> tryUpdateEvmActualFee(txHash, chain)
+                    TxStatusPollOutcome.Terminal -> tryUpdateActualNetworkFee(txHash, chain)
                     // The done screen has no watcher left, so it must not keep advertising a
                     // status that can never advance — land where a broadcast with nothing to poll
                     // lands. The history row is still settled by the tx-history poller (#5510).
@@ -1201,18 +1203,18 @@ constructor(
             SwapProvider.SWAPKIT.getSwapProviderId()
 
     /**
-     * After confirmation, fetches this transaction's receipt and replaces the estimated fee with
-     * the fee actually paid (`gasUsed × effectiveGasPrice`) on the done screen and the history row.
-     * An approval broadcast before a swap is a separate transaction and is not added in. Falls back
-     * silently to the estimate on any error.
+     * After confirmation, replaces the estimated fee with the fee actually paid on the done screen
+     * and the history row: `gasUsed × effectiveGasPrice` from the EVM receipt, the wallet
+     * transaction's `total_fees` on TON. An approval broadcast before a swap is a separate
+     * transaction and is not added in. Falls back silently to the estimate on any error.
      */
-    internal fun tryUpdateEvmActualFee(txHash: String, chain: Chain) {
-        if (chain.standard != TokenStandard.EVM) return
+    internal fun tryUpdateActualNetworkFee(txHash: String, chain: Chain) {
+        if (!fetchPaidNetworkFee.supports(chain)) return
 
         viewModelScope.safeLaunch(
-            onError = { e -> Timber.w(e, "Failed to update EVM actual fee for %s", txHash) }
+            onError = { e -> Timber.w(e, "Failed to update the paid network fee for %s", txHash) }
         ) {
-            val paidFee = updateEvmActualFee(txHash, chain) ?: return@safeLaunch
+            val paidFee = updateActualNetworkFee(txHash, chain) ?: return@safeLaunch
             transactionHistoryRepository.recordPaidNetworkFee(
                 chain = chain.raw,
                 txHash = txHash,
@@ -1333,7 +1335,13 @@ private fun TransactionTypeUiModel.withPaidNetworkFee(
                     totalFee = totalFee ?: swapTransactionUiModel.totalFee,
                 )
             )
-        is TransactionTypeUiModel.Deposit,
+        is TransactionTypeUiModel.Deposit ->
+            TransactionTypeUiModel.Deposit(
+                depositTransactionUiModel.copy(
+                    networkFeeTokenValue = fee.formattedTokenValue,
+                    networkFeeFiatValue = fee.formattedFiatValue,
+                )
+            )
         is TransactionTypeUiModel.SignMessage -> this
     }
 

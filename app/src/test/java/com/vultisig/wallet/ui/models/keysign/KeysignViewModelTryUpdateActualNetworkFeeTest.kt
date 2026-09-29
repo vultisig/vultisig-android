@@ -4,6 +4,9 @@ package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.chains.ton.TonApi
+import com.vultisig.wallet.data.api.chains.ton.TonStatusResult
+import com.vultisig.wallet.data.api.chains.ton.TransactionJson
 import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
 import com.vultisig.wallet.data.api.models.EvmTxStatusJson
 import com.vultisig.wallet.data.models.Chain
@@ -16,9 +19,11 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.usecases.FetchPaidNetworkFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -44,12 +49,13 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class KeysignViewModelTryUpdateEvmActualFeeTest {
+internal class KeysignViewModelTryUpdateActualNetworkFeeTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var evmApiFactory: EvmApiFactory
     private lateinit var evmApi: EvmApi
+    private lateinit var tonApi: TonApi
     private lateinit var gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase
     private lateinit var fiatValueToString: FiatValueToStringMapper
     private lateinit var transactionHistoryRepository: TransactionHistoryRepository
@@ -114,6 +120,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
         Dispatchers.setMain(testDispatcher)
         evmApiFactory = mockk(relaxed = true)
         evmApi = mockk(relaxed = true)
+        tonApi = mockk(relaxed = true)
         gasFeeToEstimatedFee = mockk(relaxed = true)
         fiatValueToString = mockk()
         transactionHistoryRepository = mockk(relaxed = true)
@@ -157,6 +164,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             balanceRepository = mockk(relaxed = true),
             inAppReviewRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
+            fetchPaidNetworkFee = FetchPaidNetworkFeeUseCaseImpl(evmApiFactory, tonApi),
             fiatValueToString = fiatValueToString,
             pendingLimitOrderRepository = mockk(relaxed = true),
             utxoInFlightRepository = mockk(relaxed = true),
@@ -198,7 +206,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
                     fiatValue = FiatValue(value = BigDecimal("1.50"), currency = "USD"),
                 )
 
-            vm.tryUpdateEvmActualFee("0xabc", Chain.Ethereum)
+            vm.tryUpdateActualNetworkFee("0xabc", Chain.Ethereum)
             advanceUntilIdle()
 
             val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
@@ -228,7 +236,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             coEvery { gasFeeToEstimatedFee(any()) } returns paidSwapFee
             coEvery { fiatValueToString(usd("2.42"), true, false) } returns "$2.42"
 
-            vm.tryUpdateEvmActualFee("0xabc", Chain.Ethereum)
+            vm.tryUpdateActualNetworkFee("0xabc", Chain.Ethereum)
             advanceUntilIdle()
 
             val model =
@@ -247,7 +255,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             receipt(gasUsed = "0xfc2f6", effectiveGasPrice = "0x342edf18")
             coEvery { gasFeeToEstimatedFee(any()) } returns paidSwapFee
 
-            vm.tryUpdateEvmActualFee("0xabc", Chain.Ethereum)
+            vm.tryUpdateActualNetworkFee("0xabc", Chain.Ethereum)
             advanceUntilIdle()
 
             coVerify(exactly = 1) {
@@ -272,7 +280,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             val params = slot<GasFeeParams>()
             coEvery { gasFeeToEstimatedFee(capture(params)) } returns paidSwapFee
 
-            vm.tryUpdateEvmActualFee("0xabc", Chain.Ethereum)
+            vm.tryUpdateActualNetworkFee("0xabc", Chain.Ethereum)
             advanceUntilIdle()
 
             assertEquals(18, params.captured.gasFee.decimals)
@@ -280,8 +288,100 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             assertEquals("ETH", params.captured.selectedToken.ticker)
         }
 
+    /**
+     * The STON stake from the issue: the done screen showed the fixed 0.05 GRAM reservation, the
+     * chain charged 0.000483935 GRAM.
+     */
     @Test
-    fun `non-EVM chain skips RPC call entirely`() =
+    fun `TON send done screen shows the wallet transaction's total_fees`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel(null)
+            vm.updateUiStateForTesting {
+                it.copy(
+                    transactionUiModel =
+                        TransactionTypeUiModel.Send(
+                            TransactionDetailsUiModel(
+                                networkFeeTokenValue = "0.05 GRAM",
+                                networkFeeFiatValue = "$0.07",
+                            )
+                        )
+                )
+            }
+            tonTotalFees("483935")
+            val params = slot<GasFeeParams>()
+            coEvery { gasFeeToEstimatedFee(capture(params)) } returns paidTonFee
+
+            vm.tryUpdateActualNetworkFee(TON_MSG_HASH, Chain.Ton)
+            advanceUntilIdle()
+
+            assertEquals(BigInteger("483935"), params.captured.gasFee.value)
+            assertEquals(9, params.captured.gasFee.decimals)
+            assertEquals(Chain.Ton, params.captured.selectedToken.chain)
+            val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
+            assertEquals("0.000483935 GRAM", model.tx.networkFeeTokenValue)
+            assertEquals("$0.0006872", model.tx.networkFeeFiatValue)
+            coVerify(exactly = 1) {
+                transactionHistoryRepository.recordPaidNetworkFee(
+                    "Ton",
+                    TON_MSG_HASH,
+                    BigInteger("483935"),
+                )
+            }
+        }
+
+    /** A Tonstakers stake started on this device lands on the deposit done screen. */
+    @Test
+    fun `TON deposit done screen shows the paid fee`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel(null)
+            vm.updateUiStateForTesting {
+                it.copy(
+                    transactionUiModel =
+                        TransactionTypeUiModel.Deposit(
+                            DepositTransactionUiModel(
+                                networkFeeTokenValue = "0.05 GRAM",
+                                networkFeeFiatValue = "$0.07",
+                            )
+                        )
+                )
+            }
+            tonTotalFees("483935")
+            coEvery { gasFeeToEstimatedFee(any()) } returns paidTonFee
+
+            vm.tryUpdateActualNetworkFee(TON_MSG_HASH, Chain.Ton)
+            advanceUntilIdle()
+
+            val model =
+                (vm.state.value.transactionUiModel as TransactionTypeUiModel.Deposit)
+                    .depositTransactionUiModel
+            assertEquals("0.000483935 GRAM", model.networkFeeTokenValue)
+            assertEquals("$0.0006872", model.networkFeeFiatValue)
+        }
+
+    @Test
+    fun `TON message never indexed keeps the estimate`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel(null)
+            vm.updateUiStateForTesting {
+                it.copy(
+                    transactionUiModel =
+                        TransactionTypeUiModel.Send(
+                            TransactionDetailsUiModel(networkFeeTokenValue = "0.05 GRAM")
+                        )
+                )
+            }
+            coEvery { tonApi.getTsStatus(TON_MSG_HASH) } returns TonStatusResult()
+
+            vm.tryUpdateActualNetworkFee(TON_MSG_HASH, Chain.Ton)
+            advanceUntilIdle()
+
+            val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
+            assertEquals("0.05 GRAM", model.tx.networkFeeTokenValue)
+            coVerify(exactly = 0) { transactionHistoryRepository.recordPaidNetworkFee(any(), any(), any()) }
+        }
+
+    @Test
+    fun `chain without a readable paid fee skips the lookup entirely`() =
         runTest(testDispatcher) {
             val vm = createViewModel(btcKeysignPayload)
             vm.updateUiStateForTesting {
@@ -293,10 +393,11 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
                 )
             }
 
-            vm.tryUpdateEvmActualFee("0xabc", Chain.Bitcoin)
+            vm.tryUpdateActualNetworkFee("0xabc", Chain.Bitcoin)
             advanceUntilIdle()
 
             coVerify(exactly = 0) { evmApiFactory.createEvmApi(any()) }
+            coVerify(exactly = 0) { tonApi.getTsStatus(any()) }
             val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
             assertEquals("0.0001 BTC", model.tx.networkFeeTokenValue)
         }
@@ -327,7 +428,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
                         ),
                 )
 
-            vm.tryUpdateEvmActualFee("0xabc", Chain.Ethereum)
+            vm.tryUpdateActualNetworkFee("0xabc", Chain.Ethereum)
             advanceUntilIdle()
 
             val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
@@ -348,6 +449,11 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             )
     }
 
+    private fun tonTotalFees(totalFees: String) {
+        coEvery { tonApi.getTsStatus(TON_MSG_HASH) } returns
+            TonStatusResult(listOf(TransactionJson(totalFees = totalFees)))
+    }
+
     private fun usd(value: String) = FiatValue(value = BigDecimal(value), currency = "USD")
 
     private val paidSwapFee =
@@ -358,4 +464,16 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
                 TokenValue(value = BigInteger("904334296650000"), unit = "ETH", decimals = 18),
             fiatValue = usd("2.42"),
         )
+
+    private val paidTonFee =
+        EstimatedGasFee(
+            formattedTokenValue = "0.000483935 GRAM",
+            formattedFiatValue = "$0.0006872",
+            tokenValue = TokenValue(value = BigInteger("483935"), unit = "GRAM", decimals = 9),
+            fiatValue = usd("0.0006872"),
+        )
+
+    private companion object {
+        const val TON_MSG_HASH = "5245f57f61788555d07204028fdb2dfa756c13feaff9a237d5cdcdec7c9debd6"
+    }
 }
