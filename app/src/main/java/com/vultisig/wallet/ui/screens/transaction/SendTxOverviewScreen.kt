@@ -12,7 +12,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -316,11 +331,7 @@ internal fun SendTxOverviewScreen(
                 if (tx.memo.isNotEmpty()) {
                     VerifyCardDivider(size = 1.dp)
 
-                    TextDetails(
-                        title = stringResource(R.string.tx_overview_screen_tx_memo),
-                        subtitle = tx.memo,
-                        showAllContent = true,
-                    )
+                    MemoDetails(memo = tx.memo)
                 }
 
                 if (tx.isUnlimitedApproval) {
@@ -549,6 +560,78 @@ private fun AddToAddressBookButton(modifier: Modifier = Modifier, onClick: () ->
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.alerts.success,
         )
+    }
+}
+
+/**
+ * Memo row in the Figma layout: label and value on one line, cut in the middle when it does not
+ * fit. A cut value shows a chevron, and tapping the row reveals the full memo below the label.
+ */
+@Composable
+private fun MemoDetails(memo: String) {
+    var isExpanded by rememberSaveable(memo) { mutableStateOf(false) }
+    var isTruncated by remember(memo) { mutableStateOf(false) }
+    val isExpandable = isTruncated || isExpanded
+    val chevronRotation by
+        animateFloatAsState(targetValue = if (isExpanded) 180f else 0f, label = "memoChevron")
+    val inlineValueAlpha by
+        animateFloatAsState(targetValue = if (isExpanded) 0f else 1f, label = "memoInlineValue")
+
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .then(
+                    if (isExpandable) Modifier.clickable { isExpanded = !isExpanded }
+                    else Modifier
+                )
+                .padding(vertical = 12.dp),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                text = stringResource(R.string.tx_overview_screen_tx_memo),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.tertiary,
+            )
+            // Kept in the layout while expanded, only faded out, so the chevron stays anchored to
+            // the end of the row and the truncation check keeps running.
+            Text(
+                text = memo,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.primary,
+                maxLines = 1,
+                overflow = TextOverflow.MiddleEllipsis,
+                textAlign = TextAlign.End,
+                onTextLayout = { isTruncated = it.hasVisualOverflow },
+                modifier =
+                    Modifier.weight(1f)
+                        .graphicsLayer { alpha = inlineValueAlpha }
+                        .then(if (isExpanded) Modifier.clearAndSetSemantics {} else Modifier),
+            )
+            if (isExpandable) {
+                UiIcon(
+                    drawableResId = R.drawable.ic_chevron_down_small,
+                    size = 16.dp,
+                    tint = Theme.v2.colors.text.tertiary,
+                    modifier = Modifier.rotate(chevronRotation),
+                )
+            }
+        }
+        AnimatedVisibility(
+            visible = isExpanded,
+            enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+            exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+        ) {
+            Text(
+                text = memo,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.primary,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            )
+        }
     }
 }
 
