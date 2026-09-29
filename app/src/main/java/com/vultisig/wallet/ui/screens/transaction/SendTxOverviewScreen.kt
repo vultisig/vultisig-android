@@ -27,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -605,7 +606,10 @@ private fun MemoDetails(memo: String) {
                 overflow = TextOverflow.MiddleEllipsis,
                 textAlign = TextAlign.End,
                 onTextLayout = { isTruncated = it.hasVisualOverflow },
-                modifier = Modifier.weight(1f).graphicsLayer { alpha = inlineValueAlpha },
+                modifier =
+                    Modifier.weight(1f)
+                        .graphicsLayer { alpha = inlineValueAlpha }
+                        .then(if (isExpanded) Modifier.clearAndSetSemantics {} else Modifier),
             )
             if (isExpandable) {
                 UiIcon(
