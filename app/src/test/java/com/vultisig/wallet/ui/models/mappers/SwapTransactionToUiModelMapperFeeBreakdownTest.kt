@@ -504,8 +504,8 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
     fun `never grosses a SwapKit fee, which is an inbound cost no discount came off`() = runTest {
         // SwapKit reports the source-chain inbound (deposit) cost as its fee and bakes the
         // affiliate fee into the quoted destination amount. Adding a Gold tier's 20 bps onto that
-        // would invent a discount on a network cost — and the row below it would subtract from a
-        // fee it was never added to.
+        // would invent a discount on a network cost. The discount itself still came off the
+        // affiliate bps, so it is itemized off the source notional.
         every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
         every { mapTokenValueToDecimalUiString(any()) } returns "0"
         coEvery { fiatValueToStringMapper(any(), any()) } answers
@@ -522,7 +522,7 @@ internal class SwapTransactionToUiModelMapperFeeBreakdownTest {
 
         uiModel.providerFee.fiatValue shouldBe "0.60"
         uiModel.swapFeePercent shouldBe null
-        uiModel.vultBpsDiscountFiatValue shouldBe null
+        uiModel.vultBpsDiscountFiatValue shouldBe "0.800"
     }
 
     @Test

@@ -247,10 +247,9 @@ constructor(
             swapFeeHidden = isSwapKitUtxoSwap,
             vultBpsDiscount = from.vultBpsDiscount,
             // Priced by [swapFeeRow] off the same snapshot as the fee above, and non-null only when
-            // that fee was grossed to the list rate — a row that subtracts from a fee it was never
-            // added to cannot be reconciled against the total. Never falls back to the amount the
-            // form recorded either: that one was priced at quote time while the fee row is
-            // re-valued here, so pairing them is what let a price move unbalance the panel.
+            // that fee was grossed to the list rate or the route is SwapKit's. Never falls back to
+            // the amount the form recorded either: that one was priced at quote time while the fee
+            // row is re-valued here, so pairing them is what let a price move unbalance the panel.
             vultBpsDiscountFiatValue =
                 feeRow.vultDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
             referralBpsDiscount = from.referralBpsDiscount,
