@@ -46,10 +46,9 @@ data class JettonWalletsJson(
     @SerialName("address_book") val addressBook: Map<String, AddressEntryJson> = emptyMap(),
 ) {
     /**
-     * Find the jetton wallet whose master matches [master]. The indexer's `jetton_master_address`
-     * filter is not honored, so the response may contain wallets for other masters; matching
-     * compares both the raw `jetton` field and its user-friendly form from the address book.
-     * Returns `null` when no wallet matches.
+     * Find the jetton wallet whose master matches [master]. Matching compares both the raw `jetton`
+     * field and its user-friendly form from the address book. Returns `null` when no wallet
+     * matches.
      *
      * TON addresses have multiple equal-but-non-identical encodings (bounceable `EQ…` vs
      * non-bounceable `UQ…`, URL-safe base64, raw `0:hex`), so both sides are routed through
