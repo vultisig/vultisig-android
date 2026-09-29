@@ -1,11 +1,13 @@
 package com.vultisig.wallet.data.repositories.swap
 
 import androidx.annotation.VisibleForTesting
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitEvmTx
 import com.vultisig.wallet.data.api.models.quotes.SwapKitFee
+import com.vultisig.wallet.data.api.models.quotes.SwapKitProviderError
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitRoute
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSolanaTx
@@ -91,6 +93,8 @@ constructor(
             throw e
         } catch (e: SwapKitError) {
             throw e
+        } catch (e: SwapException) {
+            throw e
         } catch (e: Exception) {
             Timber.w(e, "SwapKit quote fetch failed")
             throw SwapKitError.Network(
@@ -174,11 +178,19 @@ constructor(
         // Distinguish "upstream returned zero routes" (NoRoutes) from "client filtering dropped
         // every candidate" (RouteFiltered). iOS produces RouteFiltered at SwapService.swift:386
         // for the same client-side gate, and the two surface different localized copies.
+        // Either way, a provider that refused only because the amount is under its minimum is the
+        // actionable answer: raising the amount would get a route.
         if (quoteResponse.routes.isEmpty()) {
+            throwIfBelowProviderMinimum(quoteResponse.providerErrors, request.tokenValue)
             throw SwapKitError.NoRoutes("SwapKit returned no routes for this pair")
         }
 
-        val best = pickBestRoute(quoteResponse.routes) ?: throw SwapKitError.RouteFiltered
+        val best =
+            pickBestRoute(quoteResponse.routes)
+                ?: run {
+                    throwIfBelowProviderMinimum(quoteResponse.providerErrors, request.tokenValue)
+                    throw SwapKitError.RouteFiltered
+                }
 
         // Defense-in-depth: independently reject a route whose expected buy amount has slipped
         // below
@@ -319,6 +331,31 @@ constructor(
     private suspend fun assertChainsEnabled(srcChain: Chain, dstChain: Chain) {
         if (!providerCache.isEnabled(srcChain) || !providerCache.isEnabled(dstChain)) {
             throw SwapKitError.ProviderNotEnabled
+        }
+    }
+
+    /**
+     * Throws [SwapException.SmallSwapAmount] carrying the lowest `sellAssetAmountTooSmall` minimum
+     * among the providers this client would route through, when [sellAmount] is below it. Thor/Maya
+     * minimums are skipped: those routes are filtered out, so meeting their minimum would still
+     * yield no SwapKit route. The message is the bare decimal amount, which the swap form renders
+     * as "Recommended amount <amount> <ticker>".
+     */
+    private fun throwIfBelowProviderMinimum(
+        providerErrors: List<SwapKitProviderError>,
+        sellAmount: TokenValue,
+    ) {
+        val minimum =
+            providerErrors
+                .filter { error ->
+                    error.errorCode?.lowercase(Locale.ROOT) == SELL_AMOUNT_TOO_SMALL &&
+                        error.provider?.lowercase(Locale.ROOT) !in FILTERED_PROVIDERS
+                }
+                .mapNotNull { error -> error.minAmount?.toBigDecimalOrNull() }
+                .filter { it.signum() > 0 }
+                .minOrNull() ?: return
+        if (sellAmount.decimal < minimum) {
+            throw SwapException.SmallSwapAmount(minimum.stripTrailingZeros().toPlainString())
         }
     }
 
@@ -1083,6 +1120,9 @@ constructor(
          */
         private val FILTERED_PROVIDERS: Set<String> =
             setOf("thorchain", "thorchain_streaming", "mayachain", "mayachain_streaming")
+
+        /** `providerErrors[].errorCode`, lower-cased, for a sell amount under the provider minimum. */
+        private const val SELL_AMOUNT_TOO_SMALL = "sellassetamounttoosmall"
 
         /**
          * Render [TokenValue] as a dot-separated decimal string suitable for
