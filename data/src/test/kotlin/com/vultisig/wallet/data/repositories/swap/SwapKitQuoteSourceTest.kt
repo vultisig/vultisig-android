@@ -295,6 +295,17 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch ignores a minimum that names no provider`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors = listOf(tooSmall(provider = null, minAmount = "10"))
+            )
+
+        assertThrows<SwapKitError.NoRoutes> { source().fetch(request(tokenValue = ethAmount("1"))) }
+    }
+
+    @Test
     fun `fetch keeps NoRoutes when the amount already meets the reported minimum`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
@@ -2296,7 +2307,7 @@ internal class SwapKitQuoteSourceTest {
 
     // ---- helpers ----
 
-    private fun tooSmall(provider: String, minAmount: String?) =
+    private fun tooSmall(provider: String?, minAmount: String?) =
         SwapKitProviderError(
             provider = provider,
             errorCode = "sellAssetAmountTooSmall",

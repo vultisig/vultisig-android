@@ -338,7 +338,8 @@ constructor(
      * Throws [SwapException.SmallSwapAmount] carrying the lowest `sellAssetAmountTooSmall` minimum
      * among the providers this client would route through, when [sellAmount] is below it. Thor/Maya
      * minimums are skipped: those routes are filtered out, so meeting their minimum would still
-     * yield no SwapKit route. The message is the bare decimal amount, which the swap form renders
+     * yield no SwapKit route. Minimums with no provider are skipped for the same reason, since
+     * provider-less routes are dropped too. The message is the bare decimal amount, which the swap form renders
      * as "Recommended amount <amount> <ticker>".
      */
     private fun throwIfBelowProviderMinimum(
@@ -348,8 +349,10 @@ constructor(
         val minimum =
             providerErrors
                 .filter { error ->
+                    val provider = error.provider?.lowercase(Locale.ROOT)
                     error.errorCode?.lowercase(Locale.ROOT) == SELL_AMOUNT_TOO_SMALL &&
-                        error.provider?.lowercase(Locale.ROOT) !in FILTERED_PROVIDERS
+                        provider != null &&
+                        provider !in FILTERED_PROVIDERS
                 }
                 .mapNotNull { error -> error.minAmount?.toBigDecimalOrNull() }
                 .filter { it.signum() > 0 }
