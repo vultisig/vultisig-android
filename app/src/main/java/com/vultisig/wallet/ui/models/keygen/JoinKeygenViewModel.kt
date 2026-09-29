@@ -294,6 +294,7 @@ constructor(
                                 oldCommittee = emptyList(),
                                 oldResharePrefix = "",
                                 vaultId = existingVault.id,
+                                requiredCommittee = existingVault.signers,
                             )
                         }
 
@@ -389,6 +390,19 @@ constructor(
                     }
 
                 if (session.localPartyId in keygenCommittee) {
+                    // A SingleKeygen adds a key to an existing vault, so it must run with exactly
+                    // that vault's signers; the committee comes from the relay session, which the
+                    // initiator controls, and anyone else in it would co-own the new key.
+                    session.requiredCommittee?.let { signers ->
+                        if (keygenCommittee.toSet() != signers.toSet()) {
+                            error(
+                                UnknownError(
+                                    "Keygen committee doesn't match this vault's signers; " +
+                                        "refusing to join"
+                                )
+                            )
+                        }
+                    }
                     state.update { it.copy(isSuccess = true) }
 
                     delay(1.5.seconds)
@@ -451,6 +465,8 @@ constructor(
         val chains: List<String> = emptyList(),
         // Mirrors the initiator's QR opt-in for batched ECDSA + EdDSA reshare.
         val isTssBatch: Boolean = false,
+        // For SingleKeygen: the vault's signers, which the relay committee must match exactly.
+        val requiredCommittee: List<String>? = null,
     )
 }
 

@@ -9,7 +9,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.activity.MainActivity
+import com.vultisig.wallet.app.activity.PushNotificationTapActivity
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
@@ -63,11 +63,8 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         val tapIntent =
-            Intent(this, MainActivity::class.java).apply {
-                flags =
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+            Intent(this, PushNotificationTapActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 putExtra(QR_CODE_DATA, qrCodeData)
             }
         val notificationId = notificationIdCounter.incrementAndGet()
