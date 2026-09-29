@@ -33,12 +33,14 @@ class RefreshPendingTransactionsUseCaseRefreshOneTest {
     private val historyRepository: TransactionHistoryRepository = mockk(relaxed = true)
     private val statusRepository: TransactionStatusRepository = mockk()
     private val trackingService: SwapKitTrackingService = mockk()
+    private val recordPaidFee: RecordPaidEvmNetworkFeeUseCase = mockk(relaxed = true)
 
     private fun useCase(): RefreshPendingTransactionsUseCase =
         RefreshPendingTransactionsUseCaseImpl(
             transactionHistoryRepository = historyRepository,
             transactionStatusRepository = statusRepository,
             swapKitTrackingService = trackingService,
+            recordPaidEvmNetworkFee = recordPaidFee,
             dispatcher = UnconfinedTestDispatcher(),
             clock = Clock.System,
         )
@@ -67,6 +69,43 @@ class RefreshPendingTransactionsUseCaseRefreshOneTest {
 
         coVerify(exactly = 0) { statusRepository.checkTransactionStatus(any(), any()) }
         coVerify(exactly = 0) { historyRepository.updateTransactionStatus(any(), any(), any()) }
+    }
+
+    @Test
+    fun `a settled row records the gas its receipt paid`() = runTest {
+        coEvery { historyRepository.getTransaction(CHAIN, TX_HASH) } returns entity()
+        coEvery { statusRepository.checkTransactionStatus(TX_HASH, Chain.Ethereum) } returns
+            TransactionResult.Failed("execution reverted")
+
+        useCase().refreshOne(CHAIN, TX_HASH)
+
+        coVerify(exactly = 1) { recordPaidFee(Chain.Ethereum, TX_HASH) }
+    }
+
+    @Test
+    fun `a row still in flight records no fee`() = runTest {
+        coEvery { historyRepository.getTransaction(CHAIN, TX_HASH) } returns entity()
+        coEvery { statusRepository.checkTransactionStatus(TX_HASH, Chain.Ethereum) } returns
+            TransactionResult.Pending
+
+        useCase().refreshOne(CHAIN, TX_HASH)
+
+        coVerify(exactly = 0) { recordPaidFee(any(), any()) }
+    }
+
+    @Test
+    fun `a failed receipt read keeps the settled status and its retry count`() = runTest {
+        coEvery { historyRepository.getTransaction(CHAIN, TX_HASH) } returns entity()
+        coEvery { statusRepository.checkTransactionStatus(TX_HASH, Chain.Ethereum) } returns
+            TransactionResult.Confirmed
+        coEvery { recordPaidFee(any(), any()) } throws IllegalStateException("rpc down")
+
+        useCase().refreshOne(CHAIN, TX_HASH)
+
+        coVerify(exactly = 1) {
+            historyRepository.updateTransactionStatus(CHAIN, TX_HASH, TransactionResult.Confirmed)
+        }
+        coVerify(exactly = 0) { historyRepository.incrementRetryCount(any(), any()) }
     }
 
     @Test

@@ -40,6 +40,21 @@ data class EvmTxStatusJson(
     @SerialName("effectiveGasPrice") val effectiveGasPrice: String? = null,
 )
 
+/**
+ * Wei the transaction actually paid for gas (`gasUsed × effectiveGasPrice`), or null when the
+ * receipt lacks either field or carries a malformed one. Paid on a revert as well as a success.
+ */
+fun EvmTxStatusJson.paidFeeWei(): BigInteger? {
+    val used = gasUsed.parseHexOrNull() ?: return null
+    val price = effectiveGasPrice.parseHexOrNull() ?: return null
+    return used.multiply(price)
+}
+
+private val EVM_QUANTITY = Regex("0x[0-9a-fA-F]+")
+
+private fun String?.parseHexOrNull(): BigInteger? =
+    this?.takeIf { EVM_QUANTITY.matches(it) }?.let { BigInteger(it.substring(2), 16) }
+
 @Serializable
 data class EvmRpcResponseJson<T>(
     @SerialName("id") val id: Int,
