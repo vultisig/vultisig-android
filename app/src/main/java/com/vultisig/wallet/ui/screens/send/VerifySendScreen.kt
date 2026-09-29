@@ -58,12 +58,12 @@ import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
-import com.vultisig.wallet.ui.models.TransactionScanStatus
-import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
-import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
+import com.vultisig.wallet.ui.models.transaction.VerifyTransactionUiModel
+import com.vultisig.wallet.ui.models.transaction.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.verify.VerifyAccountCards

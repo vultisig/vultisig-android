@@ -36,9 +36,9 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.util.dashedBorder
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.FILE_ALLOWED_MIME_TYPES
-import com.vultisig.wallet.ui.models.ImportFileState
-import com.vultisig.wallet.ui.models.ImportFileViewModel
+import com.vultisig.wallet.ui.models.importfile.FILE_ALLOWED_MIME_TYPES
+import com.vultisig.wallet.ui.models.importfile.ImportFileState
+import com.vultisig.wallet.ui.models.importfile.ImportFileViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordBottomSheet
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordSheetContent

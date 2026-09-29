@@ -13,7 +13,7 @@ import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.models.NetworkUiModel
+import com.vultisig.wallet.ui.models.vault.NetworkUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route

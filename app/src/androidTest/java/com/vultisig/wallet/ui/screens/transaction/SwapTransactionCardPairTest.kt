@@ -9,9 +9,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.width
 import androidx.test.platform.app.InstrumentationRegistry
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.models.TransactionFailureExplanation
-import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
-import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionFailureExplanation
+import com.vultisig.wallet.ui.models.transaction.TransactionHistoryItemUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionStatusUiModel
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.testing.HiltAndroidRule

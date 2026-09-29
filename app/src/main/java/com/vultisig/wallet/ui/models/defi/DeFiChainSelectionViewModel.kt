@@ -1,0 +1,146 @@
+package com.vultisig.wallet.ui.models.defi
+
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.DefiChainUiModel
+import com.vultisig.wallet.data.models.isDeFiSupported
+import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.mappers.ChainToDefiChainUiMapper
+import com.vultisig.wallet.ui.models.vault.VaultAccountsViewModel.Companion.REFRESH_CHAIN_DATA
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.textAsFlow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+internal data class DeFiChainSelectionUiModel(
+    val defiChains: List<SelectableDefiChainUiModel> = emptyList(),
+    val isLoading: Boolean = true,
+)
+
+internal data class SelectableDefiChainUiModel(
+    val defiChain: DefiChainUiModel,
+    val isSelected: Boolean,
+)
+
+@HiltViewModel
+internal class DeFiChainSelectionViewModel
+@Inject
+constructor(
+    savedStateHandle: SavedStateHandle,
+    private val vaultRepository: VaultRepository,
+    private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
+    private val hasCircleAccount: HasCircleAccountUseCase,
+    private val mapChainDefi: ChainToDefiChainUiMapper,
+    private val navigator: Navigator<Destination>,
+    private val requestResultRepository: RequestResultRepository,
+) : ViewModel() {
+
+    private val args = savedStateHandle.toRoute<Route.AddDeFiChainAccount>()
+    private val vaultId: String = args.vaultId
+
+    val uiState: StateFlow<DeFiChainSelectionUiModel>
+        field = MutableStateFlow(DeFiChainSelectionUiModel())
+    private val allChains = MutableStateFlow<List<SelectableDefiChainUiModel>>(emptyList())
+
+    val searchTextFieldState = TextFieldState()
+
+    init {
+        loadChains()
+        observeSearchQuery()
+    }
+
+    private fun loadChains() {
+        viewModelScope.safeLaunch {
+            val vault = vaultRepository.get(vaultId)
+
+            uiState.update { it.copy(isLoading = true) }
+
+            if (vault == null) {
+                uiState.update { it.copy(defiChains = emptyList(), isLoading = false) }
+                return@safeLaunch
+            }
+
+            // New Circle (USDC yield) deposits are disabled: only offer the Circle (Ethereum
+            // DeFi) entry to vaults that already opened an account, so they can still withdraw.
+            val hasCircle = hasCircleAccount(vaultId)
+            val availableChains =
+                vault.coins
+                    .map { it.chain }
+                    .distinct()
+                    .filter { it.isDeFiSupported && (it != Chain.Ethereum || hasCircle) }
+
+            val savedDeFiChains = defaultDeFiChainsRepository.getDefaultChains(vaultId).first()
+
+            val chains =
+                availableChains.map { mapChainDefi(it).toSelectable(it in savedDeFiChains) }
+            allChains.update { chains }
+            uiState.update { it.copy(defiChains = chains, isLoading = false) }
+        }
+    }
+
+    private fun observeSearchQuery() {
+        viewModelScope.launch {
+            combine(allChains, searchTextFieldState.textAsFlow()) { allChains, query ->
+                    allChains.filter { chain ->
+                        query.isBlank() ||
+                            chain.defiChain.raw.contains(other = query, ignoreCase = true)
+                    }
+                }
+                .collect { filtered ->
+                    uiState.update { state -> state.copy(defiChains = filtered) }
+                }
+        }
+    }
+
+    fun toggleChain(checked: Boolean, chain: SelectableDefiChainUiModel) {
+        val chains =
+            uiState.value.defiChains.map {
+                if (it.defiChain.chain == chain.defiChain.chain) {
+                    it.copy(isSelected = checked)
+                } else {
+                    it
+                }
+            }
+
+        uiState.update { state -> state.copy(defiChains = chains) }
+    }
+
+    fun saveSelection() {
+        viewModelScope.launch {
+            val chains =
+                uiState.value.defiChains.filter { it.isSelected }.map { it.defiChain.chain }.toSet()
+            defaultDeFiChainsRepository.setDefaultChains(vaultId, chains)
+            requestResultRepository.respond(REFRESH_CHAIN_DATA, Unit)
+            navigator.back()
+        }
+    }
+
+    fun navigateBack() {
+        viewModelScope.launch { navigator.back() }
+    }
+
+    fun onSearch(text: String) {
+        searchTextFieldState.setTextAndPlaceCursorAtEnd(text)
+    }
+
+    private fun DefiChainUiModel.toSelectable(isSelected: Boolean) =
+        SelectableDefiChainUiModel(defiChain = this, isSelected = isSelected)
+}

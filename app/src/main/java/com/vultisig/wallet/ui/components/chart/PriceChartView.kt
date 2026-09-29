@@ -41,8 +41,8 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ChartRange
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.models.ChartPointUiModel
-import com.vultisig.wallet.ui.models.ChartUiModel
+import com.vultisig.wallet.ui.models.token.ChartPointUiModel
+import com.vultisig.wallet.ui.models.token.ChartUiModel
 import com.vultisig.wallet.ui.theme.Theme
 import java.time.Instant
 import java.time.ZoneId

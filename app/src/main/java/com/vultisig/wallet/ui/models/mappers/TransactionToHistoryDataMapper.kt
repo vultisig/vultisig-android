@@ -4,7 +4,7 @@ import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.RippleDappTxFieldKey
 import com.vultisig.wallet.data.mappers.MapperFunc
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
-import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import javax.inject.Inject
 
 internal interface SendTransactionHistoryDataMapper :

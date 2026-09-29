@@ -9,7 +9,6 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
-import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
@@ -17,6 +16,7 @@ import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.navigation.Route
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery

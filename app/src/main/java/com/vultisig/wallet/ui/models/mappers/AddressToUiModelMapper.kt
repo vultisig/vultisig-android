@@ -5,7 +5,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.calculateAccountsPartialFiatValue
 import com.vultisig.wallet.data.models.calculateActiveDefiPositionsCount
 import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.vault.AccountUiModel
 import javax.inject.Inject
 
 internal interface AddressToUiModelMapper : SuspendMapperFunc<Address, AccountUiModel>

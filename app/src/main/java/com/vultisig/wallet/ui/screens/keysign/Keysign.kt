@@ -45,12 +45,12 @@ import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.RiveResourceLoad
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceLoad
-import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.keysign.progress
 import com.vultisig.wallet.ui.models.limitorder.isLimitOrderCancel
+import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
