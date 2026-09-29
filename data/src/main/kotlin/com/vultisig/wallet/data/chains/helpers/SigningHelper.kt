@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
@@ -21,11 +22,13 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.carriesDappCosmosTx
 import com.vultisig.wallet.data.models.payload.substrateDappPayload
 import com.vultisig.wallet.data.models.payload.zcashBranchId
+import com.vultisig.wallet.data.models.swapProviderFromWireId
 import java.math.BigInteger
 import vultisig.keysign.v1.CustomMessagePayload
 import wallet.core.jni.EthereumAbi
@@ -95,6 +98,62 @@ object SigningHelper {
         return listOf(hash.toHexString())
     }
 
+    /**
+     * The co-signer never shows an approve leg, so it must only sign one that is implied by the swap
+     * it does show: the same token, no more than the swap's input, and granted to that swap's own
+     * router. Anything else lets an initiator slip an arbitrary allowance past the Verify screen.
+     *
+     * A SwapKit EVM route approves a token-transfer proxy (`allowanceTarget`) that the keysign
+     * proto doesn't carry yet (vultisig/commondata#116). Without it the spender can't be bound, so
+     * this fails closed: a SwapKit approve is only signed when its spender is the known
+     * `allowanceTarget` or, lacking one, the swap's own `to`.
+     */
+    internal fun requireApproveBoundToSwap(
+        approvePayload: ERC20ApprovePayload,
+        payload: KeysignPayload,
+    ) {
+        val swapPayload =
+            requireNotNull(payload.swapPayload) { "ERC20 approve is only signed alongside a swap" }
+        val coin = payload.coin
+        val srcToken = swapPayload.srcToken
+        require(
+            coin.contractAddress.isNotEmpty() &&
+                srcToken.chain == coin.chain &&
+                srcToken.contractAddress.equals(coin.contractAddress, ignoreCase = true)
+        ) {
+            "ERC20 approve token doesn't match the swap source token"
+        }
+        require(approvePayload.amount <= swapPayload.srcTokenValue.value) {
+            "ERC20 approve amount exceeds the swap amount"
+        }
+
+        val expectedSpender =
+            when (swapPayload) {
+                is SwapPayload.ThorChain -> swapPayload.data.routerAddress
+                is SwapPayload.MayaChain -> swapPayload.data.routerAddress
+                is SwapPayload.EVM -> {
+                    val tx = swapPayload.data.quote.tx
+                    val isSwapKit =
+                        swapProviderFromWireId(swapPayload.data.provider) == SwapProvider.SWAPKIT
+                    require(
+                        !isSwapKit ||
+                            tx.allowanceTarget != null ||
+                            approvePayload.spender.equals(tx.to, ignoreCase = true)
+                    ) {
+                        "SwapKit approve spender can't be verified: the swap carries no allowanceTarget"
+                    }
+                    tx.allowanceTarget ?: tx.to
+                }
+                is SwapPayload.SwapKit -> error("SwapKit ${swapPayload.data.txType} carries no approve")
+            }
+        require(
+            !expectedSpender.isNullOrEmpty() &&
+                approvePayload.spender.equals(expectedSpender, ignoreCase = true)
+        ) {
+            "ERC20 approve spender doesn't match the swap router"
+        }
+    }
+
     fun getKeysignMessages(payload: KeysignPayload, vault: Vault): List<String> {
         val messages = mutableListOf<String>()
         val chain = payload.coin.chain
@@ -105,6 +164,7 @@ object SigningHelper {
 
         val approvePayload = payload.approvePayload
         if (approvePayload != null) {
+            requireApproveBoundToSwap(approvePayload, payload)
             messages +=
                 THORChainSwaps(ecdsaKey, ecdsaChainCode, eddsaKey)
                     .getPreSignedApproveImageHash(approvePayload, payload)
@@ -136,44 +196,46 @@ object SigningHelper {
                     // off `chain` rather than `txType`.
                     messages +=
                         if (SwapKitSwapPayloadJson.isUtxoPsbtTxType(txType)) {
-                            when (chain) {
-                                // Segwit PSBT (BTC + LTC). CoinType is picked from the source
-                                // chain; the BIP-143 sighash + segwit serialization are otherwise
-                                // identical.
-                                Chain.Bitcoin,
-                                Chain.Litecoin ->
-                                    SwapKitBtcSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
-                                        .getPreSignedImageHash(
-                                            psbtBytes = swapPayload.data.txPayload,
-                                            targetAddress = swapPayload.data.targetAddress,
-                                            fromAmount = swapPayload.data.fromAmount,
-                                        )
-                                // Legacy P2PKH UTXO chains (DOGE / BCH / DASH). DOGE/DASH use
-                                // classic ECDSA sighashing; BCH adds SIGHASH_FORKID via its
-                                // CoinType.
-                                Chain.BitcoinCash,
-                                Chain.Dogecoin,
-                                Chain.Dash ->
-                                    SwapKitLegacyP2PKHSigner(
-                                            ecdsaKey,
-                                            ecdsaChainCode,
-                                            chain.coinType,
-                                        )
-                                        .getPreSignedImageHash(
-                                            psbtBytes = swapPayload.data.txPayload,
-                                            targetAddress = swapPayload.data.targetAddress,
-                                            fromAmount = swapPayload.data.fromAmount,
-                                        )
-                                // Transparent ZEC (Sapling-v4 body, ZIP-243 sighash).
-                                Chain.Zcash ->
-                                    SwapKitZcashSigner(ecdsaKey, ecdsaChainCode)
-                                        .getPreSignedImageHash(
-                                            psbtBytes = swapPayload.data.txPayload,
-                                            targetAddress = swapPayload.data.targetAddress,
-                                            fromAmount = swapPayload.data.fromAmount,
-                                            zcashBranchId = payload.zcashBranchId,
-                                        )
-                                else -> error("Unsupported SwapKit txType for signing: $txType")
+                            rejectingSwapKitPsbt {
+                                when (chain) {
+                                    // Segwit PSBT (BTC + LTC). CoinType is picked from the source
+                                    // chain; the BIP-143 sighash + segwit serialization are
+                                    // otherwise identical.
+                                    Chain.Bitcoin,
+                                    Chain.Litecoin ->
+                                        SwapKitBtcSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
+                                            .getPreSignedImageHash(
+                                                psbtBytes = swapPayload.data.txPayload,
+                                                targetAddress = swapPayload.data.targetAddress,
+                                                fromAmount = swapPayload.data.fromAmount,
+                                            )
+                                    // Legacy P2PKH UTXO chains (DOGE / BCH / DASH). DOGE/DASH use
+                                    // classic ECDSA sighashing; BCH adds SIGHASH_FORKID via its
+                                    // CoinType.
+                                    Chain.BitcoinCash,
+                                    Chain.Dogecoin,
+                                    Chain.Dash ->
+                                        SwapKitLegacyP2PKHSigner(
+                                                ecdsaKey,
+                                                ecdsaChainCode,
+                                                chain.coinType,
+                                            )
+                                            .getPreSignedImageHash(
+                                                psbtBytes = swapPayload.data.txPayload,
+                                                targetAddress = swapPayload.data.targetAddress,
+                                                fromAmount = swapPayload.data.fromAmount,
+                                            )
+                                    // Transparent ZEC (Sapling-v4 body, ZIP-243 sighash).
+                                    Chain.Zcash ->
+                                        SwapKitZcashSigner(ecdsaKey, ecdsaChainCode)
+                                            .getPreSignedImageHash(
+                                                psbtBytes = swapPayload.data.txPayload,
+                                                targetAddress = swapPayload.data.targetAddress,
+                                                fromAmount = swapPayload.data.fromAmount,
+                                                zcashBranchId = payload.zcashBranchId,
+                                            )
+                                    else -> error("Unsupported SwapKit txType for signing: $txType")
+                                }
                             }
                         } else {
                             when (txType) {
@@ -185,7 +247,10 @@ object SigningHelper {
                                         .getPreSignedImageHash(swapPayload.data.txPayload)
                                 SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
                                     SwapKitCardanoSigner(eddsaKey)
-                                        .getPreSignedImageHash(swapPayload.data.txPayload)
+                                        .getPreSignedImageHash(
+                                            cborBytes = swapPayload.data.txPayload,
+                                            fromAmount = swapPayload.data.fromAmount,
+                                        )
                                 // Deposit-only Cardano: no CBOR to sign — hash a plain ADA send to
                                 // targetAddress built from the blockChainSpecific, via the native
                                 // path.
@@ -376,6 +441,23 @@ object SigningHelper {
     }
 
     /**
+     * Re-raises a SwapKit UTXO signer's refusal of its PSBT as [SwapKitPsbtRejectedException]. The
+     * refusal happens before any device signs, so it is a build failure that retrying can't fix.
+     */
+    private inline fun <T> rejectingSwapKitPsbt(block: () -> T): T =
+        try {
+            block()
+        } catch (e: SwapKitPsbtException) {
+            throw SwapKitPsbtRejectedException(e)
+        } catch (e: SwapKitBtcSignerException) {
+            throw SwapKitPsbtRejectedException(e)
+        } catch (e: SwapKitLegacyP2PKHSignerException) {
+            throw SwapKitPsbtRejectedException(e)
+        } catch (e: SwapKitZcashSignerException) {
+            throw SwapKitPsbtRejectedException(e)
+        }
+
+    /**
      * Assembles every signed tx (>=1 entry); only a Solana dApp batch yields more than one
      * (issue #5238).
      */
@@ -478,7 +560,11 @@ object SigningHelper {
                                     .getSignedTransaction(swapPayload.data.txPayload, signatures)
                             SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
                                 SwapKitCardanoSigner(eddsaKey)
-                                    .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                                    .getSignedTransaction(
+                                        cborBytes = swapPayload.data.txPayload,
+                                        fromAmount = swapPayload.data.fromAmount,
+                                        signatures = signatures,
+                                    )
                             // Deposit-only Cardano: build & sign a plain ADA send to targetAddress
                             // via the native Cardano path (same as a non-swap send).
                             SwapKitSwapPayloadJson.TX_TYPE_CARDANO ->

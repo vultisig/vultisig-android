@@ -4,7 +4,6 @@ package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,9 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -41,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VultisigBrandMark
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
@@ -88,23 +85,7 @@ private fun StartScreen(
     V3Scaffold(onBackClick = if (hasBackButton) onBackClick else null) {
         OnboardingResponsiveContainer {
             Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = CenterHorizontally) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = CenterHorizontally,
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "vultisig",
-                        modifier = Modifier.width(74.5.dp).scale(logoScale.value),
-                    )
-                    UiSpacer(12.dp)
-                    Text(
-                        text = stringResource(R.string.create_new_vault_screen_vultisig),
-                        color = Theme.v2.colors.text.primary,
-                        style = Theme.brockmann.headings.title1,
-                    )
-                }
+                VultisigBrandMark(modifier = Modifier.weight(1f), logoScale = logoScale.value)
 
                 Row {
                     VsButton(

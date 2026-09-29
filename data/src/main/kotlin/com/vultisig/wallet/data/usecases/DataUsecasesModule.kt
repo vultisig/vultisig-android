@@ -272,6 +272,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindRecordPaidEvmNetworkFeeUseCase(
+        impl: RecordPaidEvmNetworkFeeUseCaseImpl
+    ): RecordPaidEvmNetworkFeeUseCase
+
+    @Binds
+    @Singleton
     fun bindGetThorChainLpPositionsUseCase(
         impl: GetThorChainLpPositionsUseCaseImpl
     ): GetThorChainLpPositionsUseCase

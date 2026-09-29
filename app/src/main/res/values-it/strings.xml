@@ -350,6 +350,7 @@
     <string name="signing_error_account_not_funded">Questo account non esiste ancora on-chain.\nSi prega di finanziare prima il portafoglio.</string>
     <string name="signing_error_broadcast_rejected">Transazione rifiutata dalla rete.</string>
     <string name="signing_error_broadcast_rejected_s">Transazione rifiutata dalla rete: %s</string>
+    <string name="signing_error_swap_tx_unsignable">Il fornitore dello swap ha restituito una transazione che non può essere firmata in sicurezza. Riprovare non servirà: torna indietro e richiedi un nuovo preventivo.</string>
     <string name="verify_transaction_fast_sign_btn_title">Firma rapida</string>
     <string name="verify_transaction_paired_btn_title">Abbinato</string>
     <string name="keysign_sign_transaction">Firma transazione</string>

@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.models.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionHistoryTab
 import com.vultisig.wallet.ui.models.TransactionHistoryViewModel
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapperImpl
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
 import com.vultisig.wallet.ui.models.limitorder.BuildLimitOrderCancelTransactionUseCase
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelException
@@ -153,6 +154,8 @@ internal class TransactionHistoryViewModelTest {
             vaultRepository = vaultRepository,
             navigator = navigator,
             clock = Clock.System,
+            mapTokenValueToStringWithUnit =
+                TokenValueToStringWithUnitMapperImpl(TokenValueToDecimalUiStringMapperImpl()),
         )
 
     /** Verifies selectTab updates selectedTab and re-enters the loading state. */
@@ -769,10 +772,61 @@ internal class TransactionHistoryViewModelTest {
         coVerify(exactly = 0) { navigator.route(any()) }
     }
 
+    /**
+     * A row is recorded with the pre-sign ceiling (`maxFeePerGas × gasLimit`); once its receipt is
+     * read the gas it actually paid replaces it — its own gas only, never an approval's.
+     */
+    @Test
+    fun `a send row shows the gas its receipt paid instead of the ceiling`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(listOf(inFlightEntity(paidNetworkFeeWei = PAID_FEE_WEI)))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        sendRow(vm).feeEstimate shouldBe "0.00090433 ETH"
+    }
+
+    @Test
+    fun `a send row keeps its recorded estimate until a receipt is read`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(listOf(inFlightEntity()))
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        sendRow(vm).feeEstimate shouldBe CEILING_FEE
+    }
+
+    @Test
+    fun `a swap row shows the gas its receipt paid`() {
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
+            flowOf(
+                listOf(
+                    swapEntity(
+                        status = TransactionStatus.CONFIRMED,
+                        paidNetworkFeeWei = PAID_FEE_WEI,
+                    )
+                )
+            )
+
+        val vm = createViewModel()
+        testScope.runCurrent()
+
+        swapRow(vm).feeEstimate shouldBe "0.00090433 ETH"
+    }
+
+    private fun sendRow(vm: TransactionHistoryViewModel) =
+        vm.uiState.value.groups.single().transactions.single() as TransactionHistoryItemUiModel.Send
+
     private fun swapRow(vm: TransactionHistoryViewModel) =
         vm.uiState.value.groups.single().transactions.single() as TransactionHistoryItemUiModel.Swap
 
-    private fun swapEntity(status: TransactionStatus, txHash: String = "0xswap") =
+    private fun swapEntity(
+        status: TransactionStatus,
+        txHash: String = "0xswap",
+        paidNetworkFeeWei: String? = null,
+    ) =
         TransactionHistoryEntity(
             id = "Ethereum:$txHash",
             vaultId = VAULT_ID,
@@ -797,13 +851,14 @@ internal class TransactionHistoryViewModelTest {
                     toContractAddress = "",
                     toIsNative = true,
                     fromContractAddress = "",
+                    paidNetworkFeeWei = paidNetworkFeeWei,
                 ),
             confirmedAt = null,
             failureReason = null,
             lastCheckedAt = null,
         )
 
-    private fun inFlightEntity() =
+    private fun inFlightEntity(paidNetworkFeeWei: String? = null) =
         TransactionHistoryEntity(
             id = "Ethereum:0xabc",
             vaultId = VAULT_ID,
@@ -820,9 +875,10 @@ internal class TransactionHistoryViewModelTest {
                     amount = "1.0",
                     token = "ETH",
                     tokenLogo = "",
-                    feeEstimate = "",
+                    feeEstimate = CEILING_FEE,
                     memo = "",
                     fiatValue = "",
+                    paidNetworkFeeWei = paidNetworkFeeWei,
                 ),
             confirmedAt = null,
             failureReason = null,
@@ -834,5 +890,7 @@ internal class TransactionHistoryViewModelTest {
         const val ORDER_HASH = "HASH"
         const val CANCEL_TX_ID = "cancel-tx"
         const val POLL_INTERVAL_MS = 15_000L
+        const val CEILING_FEE = "0.00239107 ETH"
+        const val PAID_FEE_WEI = "904334296650000"
     }
 }

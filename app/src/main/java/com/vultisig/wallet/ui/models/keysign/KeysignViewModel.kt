@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
+import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
@@ -69,6 +70,7 @@ import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.hero.retitled
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
@@ -353,6 +355,7 @@ constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val fiatValueToString: FiatValueToStringMapper,
     private val inAppReviewRepository: InAppReviewRepository,
     private val pendingLimitOrderRepository: PendingLimitOrderRepository,
     private val utxoInFlightRepository: UtxoInFlightRepository,
@@ -1198,29 +1201,32 @@ constructor(
             SwapProvider.SWAPKIT.getSwapProviderId()
 
     /**
-     * After confirmation, fetches the receipt and replaces the estimated fee with the actual burned
-     * fee (`gasUsed × effectiveGasPrice`). Falls back silently to the estimate on any error.
+     * After confirmation, fetches this transaction's receipt and replaces the estimated fee with
+     * the fee actually paid (`gasUsed × effectiveGasPrice`) on the done screen and the history row.
+     * An approval broadcast before a swap is a separate transaction and is not added in. Falls back
+     * silently to the estimate on any error.
      */
     internal fun tryUpdateEvmActualFee(txHash: String, chain: Chain) {
         if (chain.standard != TokenStandard.EVM) return
-        val coin = keysignPayload?.coin ?: return
 
         viewModelScope.safeLaunch(
             onError = { e -> Timber.w(e, "Failed to update EVM actual fee for %s", txHash) }
         ) {
-            val estimatedFee = updateEvmActualFee(txHash, chain, coin) ?: return@safeLaunch
+            val paidFee = updateEvmActualFee(txHash, chain) ?: return@safeLaunch
+            transactionHistoryRepository.recordPaidNetworkFee(
+                chain = chain.raw,
+                txHash = txHash,
+                feeWei = paidFee.tokenValue.value,
+            )
+            val paidTotalFee =
+                (state.value.transactionUiModel as? TransactionTypeUiModel.Swap)
+                    ?.swapTransactionUiModel
+                    ?.totalFeeExcludingNetwork
+                    ?.let { fiatValueToString(it + paidFee.fiatValue, asFee = true) }
             state.update { current ->
-                val sendTx =
-                    current.transactionUiModel as? TransactionTypeUiModel.Send
-                        ?: return@update current
                 current.copy(
                     transactionUiModel =
-                        TransactionTypeUiModel.Send(
-                            sendTx.tx.copy(
-                                networkFeeTokenValue = estimatedFee.formattedTokenValue,
-                                networkFeeFiatValue = estimatedFee.formattedFiatValue,
-                            )
-                        )
+                        current.transactionUiModel?.withPaidNetworkFee(paidFee, paidTotalFee)
                 )
             }
         }
@@ -1297,6 +1303,39 @@ constructor(
         super.onCleared()
     }
 }
+
+/**
+ * Replaces the network fee with the [fee] actually paid. A swap also drops its "max" label and
+ * takes [totalFee], the total rebuilt around the paid gas; without one its total is kept.
+ */
+private fun TransactionTypeUiModel.withPaidNetworkFee(
+    fee: EstimatedGasFee,
+    totalFee: String?,
+): TransactionTypeUiModel =
+    when (this) {
+        is TransactionTypeUiModel.Send ->
+            TransactionTypeUiModel.Send(
+                tx.copy(
+                    networkFeeTokenValue = fee.formattedTokenValue,
+                    networkFeeFiatValue = fee.formattedFiatValue,
+                )
+            )
+        is TransactionTypeUiModel.Swap ->
+            TransactionTypeUiModel.Swap(
+                swapTransactionUiModel.copy(
+                    networkFee =
+                        swapTransactionUiModel.networkFee.copy(
+                            value = fee.tokenValue.decimal.stripTrailingZeros().toPlainString(),
+                            fiatValue = fee.formattedFiatValue,
+                        ),
+                    networkFeeFormatted = fee.formattedTokenValue,
+                    isNetworkFeeMax = false,
+                    totalFee = totalFee ?: swapTransactionUiModel.totalFee,
+                )
+            )
+        is TransactionTypeUiModel.Deposit,
+        is TransactionTypeUiModel.SignMessage -> this
+    }
 
 /** The (chain, destination) pair whose address-book labels the done screen resolves. */
 private data class AddressBookTarget(val chain: Chain, val dstAddress: String)

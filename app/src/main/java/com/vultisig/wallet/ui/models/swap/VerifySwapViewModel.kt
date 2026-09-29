@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SwapTransaction
@@ -53,6 +54,9 @@ internal data class SwapTransactionUiModel(
     // form's breakdown instead of folding the outbound fee into "Swap Fee" (#5061).
     val outboundFee: String? = null,
     val totalFee: String = "",
+    // The part of [totalFee] that is not network gas, so the total can be rebuilt once the gas
+    // actually paid replaces the estimate. Null when unknown; the total is then left as built.
+    val totalFeeExcludingNetwork: FiatValue? = null,
     val networkFeeFormatted: String = "",
     // True when [networkFee] is the most the transaction can cost rather than what it will (EVM
     // gas is quoted at maxFeePerGas × limit); the row is then labelled as a maximum.

@@ -618,6 +618,7 @@
     <string name="signing_error_account_not_funded">此账户尚未在链上存在。\n请先为钱包充值。</string>
     <string name="signing_error_broadcast_rejected">交易被网络拒绝。</string>
     <string name="signing_error_broadcast_rejected_s">交易被网络拒绝：%s</string>
+    <string name="signing_error_swap_tx_unsignable">兑换提供商返回了无法安全签名的交易。重试无济于事，请返回并获取新的报价。</string>
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_fast_sign_btn_title">快速签名</string>

@@ -204,6 +204,24 @@ abstract class TransactionHistoryDao {
         explorerUrl: String,
     )
 
+    @Query("UPDATE transaction_history SET payload = :payload WHERE id = :id")
+    abstract suspend fun updatePayload(id: String, payload: TransactionHistoryData)
+
+    /**
+     * Rewrites only the payload column of [id] with [transform]'s result; a null result, or a
+     * missing row, writes nothing. Status columns are untouched, so a concurrent status writer is
+     * never overwritten.
+     */
+    @Transaction
+    open suspend fun transformPayload(
+        id: String,
+        transform: (TransactionHistoryData) -> TransactionHistoryData?,
+    ) {
+        val existing = getById(id) ?: return
+        val updated = transform(existing.payload) ?: return
+        updatePayload(id, updated)
+    }
+
     /** Merges backfill data with existing rows, preserving terminal status and local metadata. */
     @Transaction
     open suspend fun upsertFromBackfill(entity: TransactionHistoryEntity) {

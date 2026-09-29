@@ -44,6 +44,7 @@ constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val transactionStatusRepository: TransactionStatusRepository,
     private val swapKitTrackingService: SwapKitTrackingService,
+    private val recordPaidEvmNetworkFee: RecordPaidEvmNetworkFeeUseCase,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val clock: Clock,
 ) : RefreshPendingTransactionsUseCase {
@@ -82,6 +83,9 @@ constructor(
         try {
             val result = checkStatus(tx, chain)
             transactionHistoryRepository.updateTransactionStatus(tx.chain, tx.txHash, result)
+            // A reverted or refunded transaction burned its gas too. Best-effort: a missing
+            // receipt leaves the recorded estimate, never the settled status, behind.
+            if (result.isTerminal) runSafeCatching { recordPaidEvmNetworkFee(chain, tx.txHash) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -150,6 +154,12 @@ constructor(
         const val MAX_SHIFT = 13
     }
 }
+
+private val TransactionResult.isTerminal: Boolean
+    get() =
+        this == TransactionResult.Confirmed ||
+            this is TransactionResult.Failed ||
+            this is TransactionResult.Refunded
 
 /** Like [runCatching] but rethrows [CancellationException] to preserve structured concurrency. */
 private inline fun runSafeCatching(block: () -> Unit) {

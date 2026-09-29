@@ -33,6 +33,7 @@ import io.mockk.unmockkStatic
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -231,6 +232,77 @@ internal class SelectAssetViewModelTest {
             val found = vm.state.value.assets.single()
             found.token.id shouldBe usdc.id
             found.isDisabled.shouldBeTrue()
+        }
+
+    @Test
+    fun `a search with no built-in match stays loading until the longtail catalog arrives`() =
+        runTest(testDispatcher) {
+            val vault = Vault(id = VAULT_ID, name = "Main")
+            val eth = Coins.Base.ETH
+            val usdc = Coins.Base.USDC
+            val longtailArrived = CompletableDeferred<Unit>()
+            coEvery { vaultRepository.get(VAULT_ID) } returns vault
+            every { accountRepository.loadAddress(VAULT_ID, Chain.Base) } returns
+                flowOf(Address(chain = Chain.Base, address = "0xabc", accounts = accountsOf(eth)))
+            every { getChainTokens(Chain.Base, vault) } returns
+                flow {
+                    emit(emptyList())
+                    longtailArrived.await()
+                    emit(listOf(usdc))
+                }
+            val vm = createViewModel(preselectedChain = Chain.Base)
+
+            vm.searchFieldState.setTextAndPlaceCursorAtEnd("usd coin")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            vm.state.value.assets shouldBe emptyList()
+            vm.state.value.isLoadingTokens.shouldBeTrue()
+
+            longtailArrived.complete(Unit)
+            advanceUntilIdle()
+
+            vm.state.value.assets.single().token.id shouldBe usdc.id
+            vm.state.value.isLoadingTokens.shouldBeFalse()
+        }
+
+    @Test
+    fun `a query that matches nothing is no longer loading once the catalog completes`() =
+        runTest(testDispatcher) {
+            val vault = Vault(id = VAULT_ID, name = "Main")
+            coEvery { vaultRepository.get(VAULT_ID) } returns vault
+            every { accountRepository.loadAddress(VAULT_ID, Chain.Base) } returns
+                flowOf(
+                    Address(
+                        chain = Chain.Base,
+                        address = "0xabc",
+                        accounts = accountsOf(Coins.Base.ETH),
+                    )
+                )
+            every { getChainTokens(Chain.Base, vault) } returns flowOf(listOf(Coins.Base.USDC))
+            val vm = createViewModel(preselectedChain = Chain.Base)
+
+            vm.searchFieldState.setTextAndPlaceCursorAtEnd("zcat")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            vm.state.value.assets shouldBe emptyList()
+            vm.state.value.isLoadingTokens.shouldBeFalse()
+        }
+
+    @Test
+    fun `a failed catalog fetch ends the loading state`() =
+        runTest(testDispatcher) {
+            val vault = Vault(id = VAULT_ID, name = "Main")
+            coEvery { vaultRepository.get(VAULT_ID) } returns vault
+            every { accountRepository.loadAddress(VAULT_ID, Chain.Base) } returns
+                flowOf(Address(chain = Chain.Base, address = "0xabc", accounts = emptyList()))
+            every { getChainTokens(Chain.Base, vault) } returns flow { error("boom") }
+            val vm = createViewModel(preselectedChain = Chain.Base)
+
+            advanceUntilIdle()
+
+            vm.state.value.isLoadingTokens.shouldBeFalse()
         }
 
     private fun accountsOf(vararg coins: Coin) =
