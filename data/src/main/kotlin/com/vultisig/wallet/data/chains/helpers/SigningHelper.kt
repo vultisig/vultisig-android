@@ -196,44 +196,46 @@ object SigningHelper {
                     // off `chain` rather than `txType`.
                     messages +=
                         if (SwapKitSwapPayloadJson.isUtxoPsbtTxType(txType)) {
-                            when (chain) {
-                                // Segwit PSBT (BTC + LTC). CoinType is picked from the source
-                                // chain; the BIP-143 sighash + segwit serialization are otherwise
-                                // identical.
-                                Chain.Bitcoin,
-                                Chain.Litecoin ->
-                                    SwapKitBtcSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
-                                        .getPreSignedImageHash(
-                                            psbtBytes = swapPayload.data.txPayload,
-                                            targetAddress = swapPayload.data.targetAddress,
-                                            fromAmount = swapPayload.data.fromAmount,
-                                        )
-                                // Legacy P2PKH UTXO chains (DOGE / BCH / DASH). DOGE/DASH use
-                                // classic ECDSA sighashing; BCH adds SIGHASH_FORKID via its
-                                // CoinType.
-                                Chain.BitcoinCash,
-                                Chain.Dogecoin,
-                                Chain.Dash ->
-                                    SwapKitLegacyP2PKHSigner(
-                                            ecdsaKey,
-                                            ecdsaChainCode,
-                                            chain.coinType,
-                                        )
-                                        .getPreSignedImageHash(
-                                            psbtBytes = swapPayload.data.txPayload,
-                                            targetAddress = swapPayload.data.targetAddress,
-                                            fromAmount = swapPayload.data.fromAmount,
-                                        )
-                                // Transparent ZEC (Sapling-v4 body, ZIP-243 sighash).
-                                Chain.Zcash ->
-                                    SwapKitZcashSigner(ecdsaKey, ecdsaChainCode)
-                                        .getPreSignedImageHash(
-                                            psbtBytes = swapPayload.data.txPayload,
-                                            targetAddress = swapPayload.data.targetAddress,
-                                            fromAmount = swapPayload.data.fromAmount,
-                                            zcashBranchId = payload.zcashBranchId,
-                                        )
-                                else -> error("Unsupported SwapKit txType for signing: $txType")
+                            rejectingSwapKitPsbt {
+                                when (chain) {
+                                    // Segwit PSBT (BTC + LTC). CoinType is picked from the source
+                                    // chain; the BIP-143 sighash + segwit serialization are
+                                    // otherwise identical.
+                                    Chain.Bitcoin,
+                                    Chain.Litecoin ->
+                                        SwapKitBtcSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
+                                            .getPreSignedImageHash(
+                                                psbtBytes = swapPayload.data.txPayload,
+                                                targetAddress = swapPayload.data.targetAddress,
+                                                fromAmount = swapPayload.data.fromAmount,
+                                            )
+                                    // Legacy P2PKH UTXO chains (DOGE / BCH / DASH). DOGE/DASH use
+                                    // classic ECDSA sighashing; BCH adds SIGHASH_FORKID via its
+                                    // CoinType.
+                                    Chain.BitcoinCash,
+                                    Chain.Dogecoin,
+                                    Chain.Dash ->
+                                        SwapKitLegacyP2PKHSigner(
+                                                ecdsaKey,
+                                                ecdsaChainCode,
+                                                chain.coinType,
+                                            )
+                                            .getPreSignedImageHash(
+                                                psbtBytes = swapPayload.data.txPayload,
+                                                targetAddress = swapPayload.data.targetAddress,
+                                                fromAmount = swapPayload.data.fromAmount,
+                                            )
+                                    // Transparent ZEC (Sapling-v4 body, ZIP-243 sighash).
+                                    Chain.Zcash ->
+                                        SwapKitZcashSigner(ecdsaKey, ecdsaChainCode)
+                                            .getPreSignedImageHash(
+                                                psbtBytes = swapPayload.data.txPayload,
+                                                targetAddress = swapPayload.data.targetAddress,
+                                                fromAmount = swapPayload.data.fromAmount,
+                                                zcashBranchId = payload.zcashBranchId,
+                                            )
+                                    else -> error("Unsupported SwapKit txType for signing: $txType")
+                                }
                             }
                         } else {
                             when (txType) {
@@ -437,6 +439,23 @@ object SigningHelper {
 
         return messages.sorted()
     }
+
+    /**
+     * Re-raises a SwapKit UTXO signer's refusal of its PSBT as [SwapKitPsbtRejectedException]. The
+     * refusal happens before any device signs, so it is a build failure that retrying can't fix.
+     */
+    private inline fun <T> rejectingSwapKitPsbt(block: () -> T): T =
+        try {
+            block()
+        } catch (e: SwapKitPsbtException) {
+            throw SwapKitPsbtRejectedException(e)
+        } catch (e: SwapKitBtcSignerException) {
+            throw SwapKitPsbtRejectedException(e)
+        } catch (e: SwapKitLegacyP2PKHSignerException) {
+            throw SwapKitPsbtRejectedException(e)
+        } catch (e: SwapKitZcashSignerException) {
+            throw SwapKitPsbtRejectedException(e)
+        }
 
     /**
      * Assembles every signed tx (>=1 entry); only a Solana dApp batch yields more than one

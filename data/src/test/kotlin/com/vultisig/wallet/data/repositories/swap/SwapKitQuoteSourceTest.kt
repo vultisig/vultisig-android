@@ -11,6 +11,8 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTxMeta
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
+import com.vultisig.wallet.data.chains.helpers.SwapKitLegacyPsbtVersion
+import com.vultisig.wallet.data.chains.helpers.SwapKitPsbtParser
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
@@ -35,6 +37,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -1710,6 +1713,65 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch rewrites a live version-2 DOGE PSBT to version 1 before staging it`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        val livePsbt = liveV2Psbt("DOGE")
+        stubDogePsbtRoute(livePsbt)
+
+        val result =
+            source().fetch(request(srcToken = dogeCoin(), dstToken = ethCoin()))
+                as SwapQuoteResult.Native
+        val payload = (result.quote as SwapQuote.SwapKit).data
+
+        assertEquals(SwapKitSwapPayloadJson.TX_TYPE_PSBT_DOGE, payload.txType)
+        val offset = SwapKitPsbtParser.unsignedTxOffset(payload.txPayload)
+        assertEquals(1, payload.txPayload[offset].toInt())
+        assertTrue(
+            SwapKitLegacyPsbtVersion.normalizeToV1(livePsbt).contentEquals(payload.txPayload)
+        )
+    }
+
+    @Test
+    fun `fetch throws Decoding for a DOGE PSBT that can't be signed as version 1`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        // Live v2 PSBT with its single input's sequence lowered to 10: BIP68 is now enabled.
+        val psbt = liveV2Psbt("DOGE")
+        val sequenceOffset = SwapKitPsbtParser.unsignedTxOffset(psbt) + 4 + 1 + 36 + 1
+        byteArrayOf(0x0A, 0, 0, 0).copyInto(psbt, sequenceOffset)
+        stubDogePsbtRoute(psbt)
+
+        assertThrows<SwapKitError.Decoding> {
+            source().fetch(request(srcToken = dogeCoin(), dstToken = ethCoin()))
+        }
+    }
+
+    private fun stubDogePsbtRoute(psbt: ByteArray) {
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-doge", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive(Base64.getEncoder().encodeToString(psbt)),
+                meta = SwapKitTxMeta(txType = "PSBT"),
+                targetAddress = "DtargetAddress",
+                expectedBuyAmount = "1",
+                providers = listOf("NEAR"),
+            )
+    }
+
+    private fun liveV2Psbt(chain: String): ByteArray {
+        val text =
+            requireNotNull(javaClass.getResourceAsStream("/swapkit/legacy-psbt-v2.json")) {
+                    "missing /swapkit/legacy-psbt-v2.json"
+                }
+                .bufferedReader()
+                .use { it.readText() }
+        return Base64.getDecoder()
+            .decode(Json.parseToJsonElement(text).jsonObject.getValue(chain).jsonPrimitive.content)
+    }
+
+    @Test
     fun `fetch throws Decoding when a non-EVM response has no targetAddress`() = runTest {
         // Deposit-only chains (Cardano / XRP) route entirely on `targetAddress`, so a null value
         // would stage an unspendable quote. The tx itself is valid base64 here, so this pins the
@@ -2269,6 +2331,19 @@ internal class SwapKitQuoteSourceTest {
             decimal = 8,
             hexPublicKey = "pub",
             priceProviderID = "bitcoin",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    private fun dogeCoin() =
+        Coin(
+            chain = Chain.Dogecoin,
+            ticker = "DOGE",
+            logo = "",
+            address = "DH5yaieqoZN36fDVciNyRueRGvGLR3mr7L",
+            decimal = 8,
+            hexPublicKey = "pub",
+            priceProviderID = "dogecoin",
             contractAddress = "",
             isNativeToken = true,
         )

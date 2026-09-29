@@ -6,6 +6,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.chains.helpers.SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX
+import com.vultisig.wallet.data.chains.helpers.SWAPKIT_PSBT_REJECTED_PREFIX
 import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
@@ -65,6 +66,13 @@ internal fun resolveSigningError(rawMessage: String): SigningError {
                 errorState = ErrorState.CRITICAL,
             )
         }
+        // A SwapKit PSBT the signer refused, before any device signed: the same PSBT fails again.
+        rawMessage.contains(SWAPKIT_PSBT_REJECTED_PREFIX) ->
+            SigningError(
+                title = stringResource(R.string.signing_error_transaction_failed_title),
+                description = stringResource(R.string.signing_error_swap_tx_unsignable),
+                errorState = ErrorState.CRITICAL,
+            )
         rawMessage.contains("failed to calculate bob mid and bob_mic_mc") ->
             SigningError(
                 title = stringResource(R.string.signing_error_transaction_failed_title),

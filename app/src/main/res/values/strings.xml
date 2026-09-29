@@ -481,6 +481,7 @@
     <string name="signing_error_account_not_funded">This account doesn\'t exist on-chain yet.\nPlease fund the wallet first.</string>
     <string name="signing_error_broadcast_rejected">Transaction rejected by the network.</string>
     <string name="signing_error_broadcast_rejected_s">Transaction rejected by the network: %s</string>
+    <string name="signing_error_swap_tx_unsignable">The swap provider returned a transaction that can\'t be signed safely. Trying again won\'t help — go back and request a new quote.</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
     <string name="verify_transaction_paired_btn_title">Paired</string>
     <string name="keysign_sign_transaction">Sign transaction</string>

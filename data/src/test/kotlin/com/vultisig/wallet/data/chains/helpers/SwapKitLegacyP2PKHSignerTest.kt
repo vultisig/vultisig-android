@@ -3,6 +3,10 @@ package com.vultisig.wallet.data.chains.helpers
 import com.vultisig.wallet.data.utils.Numeric
 import java.io.ByteArrayOutputStream
 import java.math.BigInteger
+import java.util.Base64
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -195,29 +199,93 @@ class SwapKitLegacyP2PKHSignerTest {
     }
 
     @Test
-    fun `rejects an unsigned-tx version other than 1`() {
-        // WalletCore emits version 1 on the legacy path and can't be told otherwise, so a v2 PSBT
-        // would rebuild to a different tx_id — reject it up front rather than mistrack.
-        val psbt =
-            encodeLegacyPsbt(
-                inputs =
-                    listOf(
-                        LegacyIn(
-                            prevTxIdDisplay = TXID_ONE,
-                            vout = 0,
-                            sequence = 0xFFFFFFFFL,
-                            amount = 100_000,
-                            prevScriptHex = p2pkh("11".repeat(20)),
-                        )
-                    ),
-                outputs = listOf(LegacyOut(amount = 99_000, scriptHex = p2pkh("33".repeat(20)))),
-                version = 2,
-            )
+    fun `rejects a version-2 unsigned tx whose input enables a BIP68 relative locktime`() {
+        // WalletCore rebuilds as version 1, which would silently drop the relative locktime.
+        val psbt = singleInputPsbt(version = 2, sequence = 0x0000000AL)
         val e =
             assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
                 signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
-        assertTrue(e.message!!.contains("version 2 is unsupported"))
+        assertTrue(e.message!!.contains("BIP68"))
+    }
+
+    @Test
+    fun `rejects an unsigned-tx version other than 1 or 2`() {
+        val psbt = singleInputPsbt(version = 3, sequence = 0xFFFFFFFFL)
+        val e =
+            assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+            }
+        assertTrue(e.message!!.contains("version 3 is unsupported"))
+    }
+
+    @Test
+    fun `version rule accepts v1 with any sequence and v2 only with BIP68 disabled`() {
+        SwapKitLegacyPsbtVersion.requireSignableAsV1(1, listOf(0L, 0xFFFFFFFFL))
+        SwapKitLegacyPsbtVersion.requireSignableAsV1(2, listOf(0xFFFFFFFFL, 0xFFFFFFFEL, 1L shl 31))
+        assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+            SwapKitLegacyPsbtVersion.requireSignableAsV1(2, listOf(0xFFFFFFFFL, 0x7FFFFFFFL))
+        }
+        assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+            SwapKitLegacyPsbtVersion.requireSignableAsV1(0, emptyList())
+        }
+    }
+
+    @Test
+    fun `normalizeToV1 rewrites only the version bytes of a version-2 PSBT`() {
+        val v2 = singleInputPsbt(version = 2, sequence = 0xFFFFFFFEL, lockTime = 770_000)
+        val normalized = SwapKitLegacyPsbtVersion.normalizeToV1(v2)
+        // Same PSBT built as version 1 from the start: nothing else may differ.
+        assertArrayEquals(
+            singleInputPsbt(version = 1, sequence = 0xFFFFFFFEL, lockTime = 770_000),
+            normalized,
+        )
+        assertEquals(1, v2.indices.count { v2[it] != normalized[it] })
+    }
+
+    @Test
+    fun `normalizeToV1 leaves a version-1 PSBT unchanged`() {
+        val v1 = singleInputPsbt(version = 1, sequence = 0x0000000AL)
+        assertArrayEquals(v1, SwapKitLegacyPsbtVersion.normalizeToV1(v1))
+    }
+
+    @Test
+    fun `normalizeToV1 refuses a PSBT it can't sign as version 1`() {
+        assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+            SwapKitLegacyPsbtVersion.normalizeToV1(
+                singleInputPsbt(version = 2, sequence = 0x0000000AL)
+            )
+        }
+        assertThrows(SwapKitPsbtException::class.java) {
+            SwapKitLegacyPsbtVersion.normalizeToV1(byteArrayOf(0x70, 0x73, 0x62, 0x74))
+        }
+    }
+
+    @Test
+    fun `normalizeToV1 turns live SwapKit version-2 PSBTs into version 1 (DOGE, BCH, DASH)`() {
+        val fixtures = loadLiveV2Psbts()
+        assertEquals(setOf("DOGE", "BCH", "DASH"), fixtures.keys)
+        fixtures.forEach { (chain, psbt) ->
+            val offset = SwapKitPsbtParser.unsignedTxOffset(psbt)
+            assertEquals(
+                "02000000",
+                Numeric.toHexStringNoPrefix(psbt.copyOfRange(offset, offset + 4)),
+            )
+
+            val normalized = SwapKitLegacyPsbtVersion.normalizeToV1(psbt)
+
+            assertEquals(
+                "01000000",
+                Numeric.toHexStringNoPrefix(normalized.copyOfRange(offset, offset + 4)),
+                chain,
+            )
+            assertArrayEquals(
+                psbt.copyOfRange(offset + 4, psbt.size),
+                normalized.copyOfRange(offset + 4, normalized.size),
+                chain,
+            )
+            assertArrayEquals(psbt.copyOfRange(0, offset), normalized.copyOfRange(0, offset), chain)
+        }
     }
 
     @Test
@@ -500,6 +568,38 @@ class SwapKitLegacyP2PKHSignerTest {
                 signer().buildSigningInputData(psbt, "", BigInteger.valueOf(1_000))
             }
         assertTrue(e.message!!.contains("exceeds the quoted swap amount"))
+    }
+
+    private fun singleInputPsbt(version: Long, sequence: Long, lockTime: Long = 0) =
+        encodeLegacyPsbt(
+            inputs =
+                listOf(
+                    LegacyIn(
+                        prevTxIdDisplay = TXID_ONE,
+                        vout = 0,
+                        sequence = sequence,
+                        amount = 100_000,
+                        prevScriptHex = p2pkh("11".repeat(20)),
+                        useNonWitnessUtxo = true,
+                    )
+                ),
+            outputs = listOf(LegacyOut(amount = 99_000, scriptHex = p2pkh("33".repeat(20)))),
+            lockTime = lockTime,
+            version = version,
+        )
+
+    /** Unsigned version-2 PSBTs SwapKit returned for DOGE / BCH / DASH, captured live. */
+    private fun loadLiveV2Psbts(): Map<String, ByteArray> {
+        val text =
+            requireNotNull(javaClass.getResourceAsStream("/swapkit/legacy-psbt-v2.json")) {
+                    "missing /swapkit/legacy-psbt-v2.json"
+                }
+                .bufferedReader()
+                .use { it.readText() }
+        return Json.parseToJsonElement(text)
+            .jsonObject
+            .filterKeys { !it.startsWith("_") }
+            .mapValues { (_, value) -> Base64.getDecoder().decode(value.jsonPrimitive.content) }
     }
 
     private data class LegacyIn(

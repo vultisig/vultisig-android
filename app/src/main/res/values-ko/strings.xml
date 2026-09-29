@@ -470,6 +470,7 @@
     <string name="signing_error_account_not_funded">이 계정은 아직 온체인에 존재하지 않습니다.\n먼저 지갑에 자금을 충전해 주세요.</string>
     <string name="signing_error_broadcast_rejected">네트워크가 거래를 거부했습니다.</string>
     <string name="signing_error_broadcast_rejected_s">네트워크가 거래를 거부했습니다: %s</string>
+    <string name="signing_error_swap_tx_unsignable">스왑 제공자가 안전하게 서명할 수 없는 거래를 반환했습니다. 다시 시도해도 해결되지 않습니다. 돌아가서 새 견적을 요청하세요.</string>
     <string name="verify_transaction_fast_sign_btn_title">빠른 서명</string>
     <string name="verify_transaction_paired_btn_title">페어링</string>
     <string name="keysign_sign_transaction">거래 서명</string>

@@ -350,6 +350,7 @@
     <string name="signing_error_account_not_funded">Esta conta ainda não existe on-chain.\nPor favor, financie a carteira primeiro.</string>
     <string name="signing_error_broadcast_rejected">Transação rejeitada pela rede.</string>
     <string name="signing_error_broadcast_rejected_s">Transação rejeitada pela rede: %s</string>
+    <string name="signing_error_swap_tx_unsignable">O provedor do swap retornou uma transação que não pode ser assinada com segurança. Tentar novamente não vai ajudar — volte e solicite uma nova cotação.</string>
     <string name="verify_transaction_fast_sign_btn_title">Sinal rápido</string>
     <string name="verify_transaction_paired_btn_title">Emparelhado</string>
     <string name="keysign_sign_transaction">Assinar transação</string>
