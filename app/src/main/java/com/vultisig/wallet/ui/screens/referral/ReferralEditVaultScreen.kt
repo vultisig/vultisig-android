@@ -1,8 +1,5 @@
 package com.vultisig.wallet.ui.screens.referral
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -49,14 +46,14 @@ import com.vultisig.wallet.ui.models.referral.EditVaultReferralViewModel
 import com.vultisig.wallet.ui.models.referral.PayoutAssetUiModel
 import com.vultisig.wallet.ui.models.referral.ReferralError
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsClipboardService
 
 @Composable
 internal fun ReferralEditVaultScreen(
     navController: NavController,
     model: EditVaultReferralViewModel = hiltViewModel(),
 ) {
-    val clipboardManager =
-        LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+    val context = LocalContext.current
     val state by model.state.collectAsStateWithLifecycle()
 
     ReferralEditVaultScreen(
@@ -68,10 +65,7 @@ internal fun ReferralEditVaultScreen(
         onIncrementCounter = model::onIncrementCounter,
         onSelectPayoutAsset = model::onSelectPayoutAsset,
         onDismissError = model::onDismissError,
-        onCopyReferralCode = {
-            val clip = ClipData.newPlainText("ReferralCode", it)
-            clipboardManager?.setPrimaryClip(clip)
-        },
+        onCopyReferralCode = { VsClipboardService.copy(context, it) },
     )
 }
 

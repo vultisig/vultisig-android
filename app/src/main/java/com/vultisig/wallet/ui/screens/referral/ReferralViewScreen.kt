@@ -1,8 +1,5 @@
 package com.vultisig.wallet.ui.screens.referral
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -62,6 +59,7 @@ import com.vultisig.wallet.ui.models.referral.ReferralViewUiState
 import com.vultisig.wallet.ui.models.referral.ViewReferralViewModel
 import com.vultisig.wallet.ui.screens.transaction.shadeCircle
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsClipboardService
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
@@ -71,8 +69,7 @@ internal fun ReferralViewScreen(
 ) {
     val state by model.state.collectAsState()
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
-    val clipboardManager =
-        LocalContext.current.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+    val context = LocalContext.current
 
     LaunchedEffect(savedStateHandle) {
         savedStateHandle?.let { handle ->
@@ -101,10 +98,7 @@ internal fun ReferralViewScreen(
         onClickEditReferral = model::onClickedEditReferral,
         onVaultClicked = model::onVaultClicked,
         onCreateReferral = model::onCreateReferralClicked,
-        onCopyReferralCode = {
-            val clip = ClipData.newPlainText("ReferralCode", it)
-            clipboardManager?.setPrimaryClip(clip)
-        },
+        onCopyReferralCode = { VsClipboardService.copy(context, it) },
     )
 }
 
