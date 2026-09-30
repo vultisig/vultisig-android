@@ -22,10 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getCoinLogo
@@ -274,14 +276,26 @@ private val PairNotchSize = 40.dp
 /**
  * A pair card's outline with a half-disc cut from the edge facing its partner, so the two cutouts
  * form the hole [VerifyPairNotch] sits in.
+ *
+ * [CutoutPosition.Start] and [CutoutPosition.End] follow the layout direction here, the way a `Row`
+ * places the cards; [RoundedWithCutoutShape] itself reads them as physical left and right.
  */
 @Composable
 internal fun verifyPairCardShape(cutoutPosition: CutoutPosition): RoundedWithCutoutShape {
     val corner = Theme.v2.radius.lg.size
     val offset = -PairCardGap / 2
+    val physicalPosition =
+        if (LocalLayoutDirection.current == LayoutDirection.Ltr) cutoutPosition
+        else
+            when (cutoutPosition) {
+                CutoutPosition.Start -> CutoutPosition.End
+                CutoutPosition.End -> CutoutPosition.Start
+                CutoutPosition.Top,
+                CutoutPosition.Bottom -> cutoutPosition
+            }
     val isVertical = cutoutPosition == CutoutPosition.Top || cutoutPosition == CutoutPosition.Bottom
     return RoundedWithCutoutShape(
-        cutoutPosition = cutoutPosition,
+        cutoutPosition = physicalPosition,
         top = corner,
         bottom = corner,
         cutoutRadius = PairNotchSize / 2,
