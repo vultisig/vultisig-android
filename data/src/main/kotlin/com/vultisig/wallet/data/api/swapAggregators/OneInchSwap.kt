@@ -22,6 +22,7 @@ class OneInchSwap(private val vaultHexPublicKey: String, private val vaultHexCha
         keysignPayload: KeysignPayload,
         nonceIncrement: BigInteger,
     ): List<String> {
+        EvmSwapTxGuard.check(swapPayload)
         val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload, nonceIncrement)
 
         val chain = swapPayload.fromCoin.chain
@@ -36,6 +37,7 @@ class OneInchSwap(private val vaultHexPublicKey: String, private val vaultHexCha
         signatures: Map<String, KeysignResponse>,
         nonceIncrement: BigInteger,
     ): SignedTransactionResult {
+        EvmSwapTxGuard.check(swapPayload)
         val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload, nonceIncrement)
         val helper = EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
         return helper.getSignedTransaction(inputData, signatures)
