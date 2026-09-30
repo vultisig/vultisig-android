@@ -194,8 +194,19 @@ data class TonStatusResult(
 
 @Serializable
 data class TransactionJson(
-    @SerialName("description") val description: TonTransactionDescriptionJson? = null
+    @SerialName("description") val description: TonTransactionDescriptionJson? = null,
+    /** Nanotons the transaction was charged, as a decimal string; what tonviewer shows as its fee. */
+    @SerialName("total_fees") val totalFees: String? = null,
 )
+
+/**
+ * Nanotons the wallet transaction for this message actually paid, or null when it isn't indexed yet
+ * or the indexer returned a malformed `total_fees`. Charged on an aborted transaction as well.
+ */
+fun TonStatusResult.paidFeeNanoton(): BigInteger? =
+    transactions.firstOrNull()?.totalFees?.takeIf { TON_COINS.matches(it) }?.toBigInteger()
+
+private val TON_COINS = Regex("[0-9]+")
 
 @Serializable
 data class TonTransactionDescriptionJson(
