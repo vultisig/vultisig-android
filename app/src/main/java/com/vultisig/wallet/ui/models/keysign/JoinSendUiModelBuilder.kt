@@ -186,7 +186,12 @@ constructor(
                     selectedToken = payload.coin,
                 )
             )
-        val functionInfo = feeResolver.getTransactionFunctionInfo(payload.memo, chain)
+        // A Tron dApp contract call is signed from its `data`, not from the memo, so that is what
+        // gets decoded; otherwise an `approve` would render as a plain 0 TRX send to the contract.
+        val calldata =
+            if (chain == Chain.Tron) payload.tronTriggerSmartContractPayload?.data
+            else payload.memo
+        val functionInfo = feeResolver.getTransactionFunctionInfo(calldata, chain)
         val normalizedSignAminoJson =
             kotlinx.serialization.json.buildJsonArray {
                 payload.signAmino?.msgs?.forEach { cosmosMsg ->
@@ -229,7 +234,10 @@ constructor(
                 gasFee = gasFee,
                 // A Substrate signer payload is the signed content, rendered by its own card, not
                 // a memo.
-                memo = payload.memo.takeIf { functionInfo == null && substrateDapp == null },
+                memo =
+                    payload.memo.takeIf {
+                        (functionInfo == null || chain == Chain.Tron) && substrateDapp == null
+                    },
                 estimatedFee = totalGasAndFee.formattedFiatValue,
                 blockChainSpecific = payload.blockChainSpecific,
                 totalGas = totalGasAndFee.formattedTokenValue,
@@ -281,7 +289,8 @@ constructor(
             enrichDecodedCall(
                 chain = chain,
                 dstAddress = dstAddress,
-                functionInfo = functionInfo,
+                // Token, label and ABI lookups are EVM-only.
+                functionInfo = functionInfo?.takeIf { chain.standard == TokenStandard.EVM },
                 allVaults = allVaults,
                 isUnlimitedApproval = isUnlimitedApproval,
                 json = json,
