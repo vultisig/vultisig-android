@@ -86,7 +86,7 @@ internal fun VerifySignMessageScreen(
     val transactionUiModel = state.model
     VerifySignMessageScreen(
         method = transactionUiModel.method,
-        message = transactionUiModel.message,
+        message = transactionUiModel.displayMessage,
         decoded = transactionUiModel.decoded,
         dappMetadata = dappMetadata,
         confirmTitle = confirmTitle,

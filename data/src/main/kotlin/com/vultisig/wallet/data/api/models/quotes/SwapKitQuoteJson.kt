@@ -37,7 +37,8 @@ data class SwapKitQuoteRequest(
 /**
  * Response envelope returned by `POST /v3/quote`. Each [SwapKitRoute] is a candidate path; the
  * client filters out THORChain/Maya, drops multi-hop, then ranks the survivors by
- * [SwapKitRoute.expectedBuyAmount]. Phase 2+ may surface [providerErrors] in the UI.
+ * [SwapKitRoute.expectedBuyAmount]. When no route survives, a `sellAssetAmountTooSmall` entry in
+ * [providerErrors] is surfaced as the provider's minimum sell amount.
  */
 @Serializable
 data class SwapKitQuoteResponseJson(
@@ -54,6 +55,11 @@ data class SwapKitProviderError(
     @SerialName("provider") val provider: String? = null,
     @SerialName("errorCode") val errorCode: String? = null,
     @SerialName("message") val message: String? = null,
+    /**
+     * Minimum sell amount in human-readable source-asset units (e.g. `"73.40788248"` DOGE), sent
+     * alongside `sellAssetAmountTooSmall`.
+     */
+    @SerialName("minAmount") val minAmount: String? = null,
 )
 
 /**

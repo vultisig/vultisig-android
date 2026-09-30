@@ -83,6 +83,61 @@ private fun JsonElement.declaredOnlyAs(type: String, types: JsonObject, depth: I
     return (this as? JsonObject)?.declaredOnly(type, types, depth)
 }
 
+/**
+ * [message] laid out for reading when [method] is `eth_signTypedData_v4` and it is a JSON object:
+ * indented, one key per line, as the extension's raw-message panel shows it. Keys keep their order
+ * and every value keeps its exact literal, so this is the same payload, only spaced out. Anything
+ * else — another method, a `0x` digest, text that is not JSON — is returned unchanged.
+ */
+internal fun typedDataForDisplay(method: String, message: String): String {
+    if (!method.equals(ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) return message
+    if (message.length > MAX_TYPED_DATA_LENGTH) return message
+    val root =
+        runCatching { Json.parseToJsonElement(message) }.getOrNull() as? JsonObject
+            ?: return message
+    val pretty = StringBuilder()
+    return if (pretty.appendPretty(root, indent = "", depth = 0)) pretty.toString() else message
+}
+
+/**
+ * Written by hand rather than by a pretty-printing [Json]: its encoder re-reads numeric literals as
+ * `Long` or `Double`, which turns a uint256 into `1.157920892373162E77`. [JsonPrimitive.toString]
+ * is the literal exactly as parsed, quoted and escaped when it is a string.
+ *
+ * Returns false once nesting passes [MAX_PRETTY_DEPTH], so a payload built to be deep cannot run
+ * the recursion out of stack; the caller then shows it as received.
+ */
+private fun StringBuilder.appendPretty(element: JsonElement, indent: String, depth: Int): Boolean {
+    if (depth > MAX_PRETTY_DEPTH) return false
+    val inner = indent + PRETTY_INDENT
+    when (element) {
+        is JsonObject ->
+            if (element.isEmpty()) append("{}")
+            else {
+                append("{\n")
+                element.entries.forEachIndexed { index, (key, value) ->
+                    append(inner).append(JsonPrimitive(key)).append(": ")
+                    if (!appendPretty(value, inner, depth + 1)) return false
+                    append(if (index < element.size - 1) ",\n" else "\n")
+                }
+                append(indent).append('}')
+            }
+        is JsonArray ->
+            if (element.isEmpty()) append("[]")
+            else {
+                append("[\n")
+                element.forEachIndexed { index, value ->
+                    append(inner)
+                    if (!appendPretty(value, inner, depth + 1)) return false
+                    append(if (index < element.size - 1) ",\n" else "\n")
+                }
+                append(indent).append(']')
+            }
+        is JsonPrimitive -> append(element.toString())
+    }
+    return true
+}
+
 /** One token a permit grants an allowance on. [expiration] is only carried by Permit2. */
 internal data class PermitToken(
     val address: String,
@@ -143,6 +198,13 @@ private const val MAX_TYPED_DATA_LENGTH = 64 * 1024
 private const val PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3"
 
 private const val DOMAIN_TYPE = "EIP712Domain"
+
+private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
+
+private const val PRETTY_INDENT = "  "
+
+/** Far deeper than typed data nests, far shallower than the stack allows. */
+private const val MAX_PRETTY_DEPTH = 64
 
 /** Deeper than any real typed data nests; bounds the recursion in [declaredOnly]. */
 private const val MAX_TYPE_DEPTH = 16

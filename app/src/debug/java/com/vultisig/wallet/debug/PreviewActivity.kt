@@ -436,6 +436,24 @@ class PreviewActivity : ComponentActivity() {
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_overview_sheet" -> SwapOverviewSheetPreview()
                     "send_overview_sheet" -> SendOverviewSheetPreview()
+                    "send_overview_sheet_zec" ->
+                        SendOverviewSheetPreview(
+                            token = Coins.Zcash.ZEC,
+                            value = "0.42",
+                            srcAddress = "t1QJUBegwn5JV8iXw2kR3bqYarPm3na37YF",
+                            dstAddress = "t1PDkaBubLUuN7Ac9Fq2Z7tAkHLeJnNWw7h",
+                            networkFee = "0.0001 ZEC",
+                        )
+                    "send_overview_sheet_ada" ->
+                        SendOverviewSheetPreview(
+                            token = Coins.Cardano.ADA,
+                            value = "120",
+                            srcAddress =
+                                "addr1qxy8m4k2tqfh0z3w5a9c7n6v4sjr2e8lpg3kd5f7h9j0m2n4p6r8t0v2x4z6b8d0f2h4j6l8n0p2r4t6v8x0z2b4d6f8h0j2l4",
+                            dstAddress =
+                                "addr1q9dz8w7v6u5t4s3r2q1p0o9n8m7l6k5j4h3g2f1e0d9c8b7a6z5y4x3w2v1u0t9s8r7q6p5o4n3m2l1k0j9h8g7f6e5d4c3b2a",
+                            networkFee = "0.17 ADA",
+                        )
                     "swap_confirm_chain" -> SwapChainIndicatorPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
                     "swap_confirm_external_recipient" ->
@@ -1209,7 +1227,13 @@ private fun SwapOverviewSheetPreview() {
 
 /** The initiator's send review: the sheet over the form that produced it. */
 @Composable
-private fun SendOverviewSheetPreview() {
+private fun SendOverviewSheetPreview(
+    token: Coin = Coins.Dash.DASH,
+    value: String = "2.5",
+    srcAddress: String = "XdN9i1nCqzUcXn1n2pQqCkrwiKRv5vJv4z",
+    dstAddress: String = "XuYfMXLt4k5NQqVZ7eGo9PSYtQbtiNd1Rg",
+    networkFee: String = "0.00000226 DASH",
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         SendFormAddressPreview()
         VerifySendSheet(
@@ -1217,16 +1241,11 @@ private fun SendOverviewSheetPreview() {
                 VerifyTransactionUiModel(
                     transaction =
                         TransactionDetailsUiModel(
-                            token =
-                                ValuedToken(
-                                    token = Coins.Dash.DASH,
-                                    value = "2.5",
-                                    fiatValue = "$63.78",
-                                ),
-                            srcAddress = "XdN9i1nCqzUcXn1n2pQqCkrwiKRv5vJv4z",
+                            token = ValuedToken(token = token, value = value, fiatValue = "$63.78"),
+                            srcAddress = srcAddress,
                             srcVaultName = "Main Vault",
-                            dstAddress = "XuYfMXLt4k5NQqVZ7eGo9PSYtQbtiNd1Rg",
-                            networkFeeTokenValue = "0.00000226 DASH",
+                            dstAddress = dstAddress,
+                            networkFeeTokenValue = networkFee,
                             networkFeeFiatValue = "$0.01",
                         ),
                     consentAddress = true,

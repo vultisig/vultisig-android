@@ -467,10 +467,9 @@ internal class SwapQuotePipeline(
             )
         // The rows are valued by [swapFeeRow] off the very snapshot it grossed the fee from, and
         // never priced a second time here: a later price read can land on a different tick, and
-        // then the rows no longer subtract to the fee above them. They are non-null exactly when
-        // that fee was grossed — a row taken off a fee it was never added to states a saving the
-        // panel cannot reconcile: an unpriced source values every discount at "-$0.00", and
-        // SwapKit's itemized amount is an inbound deposit cost no affiliate discount came off.
+        // then the rows no longer subtract to the fee above them. They are non-null when that fee
+        // was grossed, or for SwapKit's VULT row, whose discount came off an affiliate fee baked
+        // into the quote rather than the inbound deposit cost shown above it.
         discountInfo =
             discountInfo.copy(
                 vultBpsDiscountFiatValue =

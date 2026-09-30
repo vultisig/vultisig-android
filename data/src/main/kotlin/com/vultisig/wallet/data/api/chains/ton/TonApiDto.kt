@@ -46,10 +46,9 @@ data class JettonWalletsJson(
     @SerialName("address_book") val addressBook: Map<String, AddressEntryJson> = emptyMap(),
 ) {
     /**
-     * Find the jetton wallet whose master matches [master]. The indexer's `jetton_master_address`
-     * filter is not honored, so the response may contain wallets for other masters; matching
-     * compares both the raw `jetton` field and its user-friendly form from the address book.
-     * Returns `null` when no wallet matches.
+     * Find the jetton wallet whose master matches [master]. Matching compares both the raw `jetton`
+     * field and its user-friendly form from the address book. Returns `null` when no wallet
+     * matches.
      *
      * TON addresses have multiple equal-but-non-identical encodings (bounceable `EQ…` vs
      * non-bounceable `UQ…`, URL-safe base64, raw `0:hex`), so both sides are routed through
@@ -195,8 +194,19 @@ data class TonStatusResult(
 
 @Serializable
 data class TransactionJson(
-    @SerialName("description") val description: TonTransactionDescriptionJson? = null
+    @SerialName("description") val description: TonTransactionDescriptionJson? = null,
+    /** Nanotons the transaction was charged, as a decimal string; what tonviewer shows as its fee. */
+    @SerialName("total_fees") val totalFees: String? = null,
 )
+
+/**
+ * Nanotons the wallet transaction for this message actually paid, or null when it isn't indexed yet
+ * or the indexer returned a malformed `total_fees`. Charged on an aborted transaction as well.
+ */
+fun TonStatusResult.paidFeeNanoton(): BigInteger? =
+    transactions.firstOrNull()?.totalFees?.takeIf { TON_COINS.matches(it) }?.toBigInteger()
+
+private val TON_COINS = Regex("[0-9]+")
 
 @Serializable
 data class TonTransactionDescriptionJson(

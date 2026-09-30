@@ -484,7 +484,7 @@ private fun CustomMessageDetail(signMessage: SignMessageTransactionUiModel?, sig
 
     SignMessageCard(
         title = stringResource(R.string.verify_sign_message_message_sign),
-        value = signMessage.message,
+        value = signMessage.displayMessage,
     )
 
     SignMessageCard(

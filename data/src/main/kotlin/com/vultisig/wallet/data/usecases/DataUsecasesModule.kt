@@ -272,9 +272,15 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
-    fun bindRecordPaidEvmNetworkFeeUseCase(
-        impl: RecordPaidEvmNetworkFeeUseCaseImpl
-    ): RecordPaidEvmNetworkFeeUseCase
+    fun bindRecordPaidNetworkFeeUseCase(
+        impl: RecordPaidNetworkFeeUseCaseImpl
+    ): RecordPaidNetworkFeeUseCase
+
+    @Binds
+    @Singleton
+    fun bindFetchPaidNetworkFeeUseCase(
+        impl: FetchPaidNetworkFeeUseCaseImpl
+    ): FetchPaidNetworkFeeUseCase
 
     @Binds
     @Singleton
