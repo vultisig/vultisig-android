@@ -14,8 +14,10 @@ import java.math.BigInteger
  * compromised initiator) put there.
  * - `tx.to` must be the provider's router on that chain. SwapKit is exempt: its entry contract is
  *   chosen per route, so there's no fixed address to pin.
- * - A native-source swap can't send more native value than the quoted amount; a 1inch / Kyber
- *   ERC-20-source swap sends none.
+ * - A 1inch / Kyber swap (or a provider-less one aimed at their routers) can't send more native
+ *   value than the quoted amount, and sends none from an ERC-20 source. LI.FI and SwapKit are
+ *   exempt: bridge routes add native messaging fees on top of the quoted amount, so `tx.value`
+ *   can legitimately exceed it. LI.FI stays bound by its router pin.
  *
  * Router addresses mirror vultisig-sdk's `knownAggregatorRouters.ts`, which were confirmed against
  * each provider's live API and deployment registry.
@@ -46,16 +48,27 @@ internal object EvmSwapTxGuard {
             }
         }
 
+        val boundsValue =
+            when (provider) {
+                SwapProvider.ONEINCH,
+                SwapProvider.KYBER -> true
+                null -> tx.to.lowercase() in exactValueRouters(chain)
+                else -> false
+            }
+        if (!boundsValue) return
         if (swapPayload.fromCoin.isNativeToken) {
             require(value <= swapPayload.fromAmount) {
                 "EVM swap sends $value native units, more than the quoted ${swapPayload.fromAmount}"
             }
-        } else if (provider == SwapProvider.ONEINCH || provider == SwapProvider.KYBER) {
+        } else {
             require(value.signum() == 0) {
                 "EVM swap from an ERC-20 source must not send native value, got $value"
             }
         }
     }
+
+    private fun exactValueRouters(chain: Chain): Set<String> =
+        routersFor(SwapProvider.ONEINCH, chain) + routersFor(SwapProvider.KYBER, chain)
 
     private fun routersFor(provider: SwapProvider, chain: Chain): Set<String> =
         when (provider) {
