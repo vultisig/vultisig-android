@@ -39,9 +39,9 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
-import com.vultisig.wallet.ui.models.DeviceMeta
-import com.vultisig.wallet.ui.models.VaultDetailUiModel
-import com.vultisig.wallet.ui.models.VaultDetailViewModel
+import com.vultisig.wallet.ui.models.vault.DeviceMeta
+import com.vultisig.wallet.ui.models.vault.VaultDetailUiModel
+import com.vultisig.wallet.ui.models.vault.VaultDetailViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
 

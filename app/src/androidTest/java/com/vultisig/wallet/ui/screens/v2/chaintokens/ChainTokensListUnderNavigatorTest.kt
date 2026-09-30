@@ -6,8 +6,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollToIndex
 import com.vultisig.wallet.data.models.CryptoConnectionType
-import com.vultisig.wallet.ui.models.ChainTokenUiModel
-import com.vultisig.wallet.ui.models.ChainTokensUiModel
+import com.vultisig.wallet.ui.models.vault.ChainTokenUiModel
+import com.vultisig.wallet.ui.models.vault.ChainTokensUiModel
 import com.vultisig.wallet.ui.screens.v2.home.components.BottomNavigatorOverlay
 import com.vultisig.wallet.ui.screens.v2.home.components.BottomNavigatorTestTag
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme

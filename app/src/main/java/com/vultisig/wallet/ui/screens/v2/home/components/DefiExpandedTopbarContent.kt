@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.models.VaultAccountsUiModel
+import com.vultisig.wallet.ui.models.vault.VaultAccountsUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable

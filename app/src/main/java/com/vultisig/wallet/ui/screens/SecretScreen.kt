@@ -16,8 +16,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.SelectionItem
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.SecretUiModel
-import com.vultisig.wallet.ui.models.SecretViewModel
+import com.vultisig.wallet.ui.models.auth.SecretUiModel
+import com.vultisig.wallet.ui.models.auth.SecretViewModel
 
 @Composable
 internal fun SecretScreen(model: SecretViewModel = hiltViewModel()) {

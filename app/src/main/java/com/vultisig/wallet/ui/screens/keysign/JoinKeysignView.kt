@@ -37,7 +37,6 @@ import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignError
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoverService
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoveringSessionID
@@ -48,6 +47,7 @@ import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.QbtcClaim
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.QbtcClaimConsent
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.WaitingForKeysignStart
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
+import com.vultisig.wallet.ui.models.keysign.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen

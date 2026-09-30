@@ -1,0 +1,105 @@
+package com.vultisig.wallet.ui.models.token
+
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.GenerateAccountQrUseCase
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.usecases.ShareBitmapUseCase
+import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.VsClipboardService
+import com.vultisig.wallet.ui.utils.shareFileName
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
+
+internal data class TokenAddressQr(
+    val chainName: String = "",
+    val chainAddress: String = "",
+    val qrCode: BitmapPainter? = null,
+)
+
+@HiltViewModel
+internal class TokenAddressQrViewModel
+@Inject
+constructor(
+    savedStateHandle: SavedStateHandle,
+    private val generateAccountQrUseCase: GenerateAccountQrUseCase,
+    private val vaultRepository: VaultRepository,
+    private val navigator: Navigator<Destination>,
+    private val snackbarFlow: SnackbarFlow,
+    private val shareBitmap: ShareBitmapUseCase,
+) : ViewModel() {
+    val args = savedStateHandle.toRoute<Route.AddressQr>()
+    val uiState =
+        MutableStateFlow(TokenAddressQr(chainName = args.name, chainAddress = args.address))
+
+    init {
+        // The address is already on the route, so build the code while the sheet slides in rather
+        // than after it settles.
+        loadData()
+    }
+
+    private fun loadData() {
+        viewModelScope.launch {
+            val qrBitmapData = generateAccountQrUseCase(args.address, args.logo)
+            uiState.update { it.copy(qrCode = qrBitmapData.bitmapPainter) }
+        }
+    }
+
+    fun shareQRCode(graphicsLayer: GraphicsLayer) {
+        viewModelScope.launch {
+            var shared = false
+            try {
+                val bitmap =
+                    withContext(Dispatchers.Default) {
+                        graphicsLayer.toImageBitmap().asAndroidBitmap()
+                    }
+                try {
+                    shareBitmap(
+                        bitmap = bitmap,
+                        fileName =
+                            shareFileName(
+                                requireNotNull(vaultRepository.get(args.vaultId)),
+                                ShareType.TOKENADDRESS,
+                            ),
+                    )
+                    shared = true
+                } finally {
+                    bitmap.recycle()
+                }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.e(e, "Failed to capture and share qr address screenshot")
+            }
+
+            if (shared) back()
+        }
+    }
+
+    fun copy(addressCopiedMessage: String) {
+        viewModelScope.launch {
+            back()
+            if (VsClipboardService.needsCopyConfirmation())
+                snackbarFlow.showMessage(addressCopiedMessage)
+        }
+    }
+
+    fun back() {
+        viewModelScope.launch { navigator.back() }
+    }
+}

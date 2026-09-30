@@ -29,7 +29,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.bottomsheets.DottyBottomSheet
-import com.vultisig.wallet.ui.models.TokenAddressQrViewModel
+import com.vultisig.wallet.ui.models.token.TokenAddressQrViewModel
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.QrContainer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService

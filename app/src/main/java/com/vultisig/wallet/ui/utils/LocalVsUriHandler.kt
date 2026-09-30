@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.core.net.toUri
-import com.vultisig.wallet.ui.models.OnRampViewModel.Companion.BANXA_URL
+import com.vultisig.wallet.ui.models.onramp.OnRampViewModel.Companion.BANXA_URL
 import timber.log.Timber
 
 @SuppressLint("ComposableNaming")

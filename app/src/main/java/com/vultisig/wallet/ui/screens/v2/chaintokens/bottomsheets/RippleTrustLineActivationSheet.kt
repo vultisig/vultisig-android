@@ -35,8 +35,8 @@ import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.loading.V2Loading
-import com.vultisig.wallet.ui.models.RippleTrustLineActivationUiModel
-import com.vultisig.wallet.ui.models.RippleTrustLineActivationViewModel
+import com.vultisig.wallet.ui.models.token.RippleTrustLineActivationUiModel
+import com.vultisig.wallet.ui.models.token.RippleTrustLineActivationViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 

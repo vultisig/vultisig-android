@@ -46,8 +46,8 @@ import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.components.v2.bottomsheets.OverviewBottomSheet
 import com.vultisig.wallet.ui.components.v2.bottomsheets.OverviewSheetControlSize
-import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
