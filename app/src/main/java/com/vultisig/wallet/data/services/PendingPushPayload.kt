@@ -15,6 +15,9 @@ internal object PendingPushPayload {
 
     fun set(qrCodeData: String) = payload.set(qrCodeData)
 
+    /** Drops a pending payload when its handoff to [MainActivity] failed. */
+    fun clear() = payload.set(null)
+
     /** Returns the pending payload once and clears it. */
     fun take(): String? = payload.getAndSet(null)
 }
