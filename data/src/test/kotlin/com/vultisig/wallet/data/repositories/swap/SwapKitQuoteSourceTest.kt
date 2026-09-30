@@ -1,8 +1,10 @@
 package com.vultisig.wallet.data.repositories.swap
 
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.SwapKitApprovalTx
 import com.vultisig.wallet.data.api.models.quotes.SwapKitFee
+import com.vultisig.wallet.data.api.models.quotes.SwapKitProviderError
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitRoute
@@ -240,6 +242,112 @@ internal class SwapKitQuoteSourceTest {
 
             assertThrows<SwapKitError.RouteFiltered> { source().fetch(request()) }
         }
+
+    @Test
+    fun `fetch surfaces the provider minimum when no route comes back for a too-small amount`() =
+        runTest {
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    providerErrors = listOf(tooSmall(provider = "NEAR", minAmount = "73.40788248"))
+                )
+
+            val error =
+                assertThrows<SwapException.SmallSwapAmount> {
+                    source().fetch(request(tokenValue = ethAmount("38.99636006")))
+                }
+            assertEquals("73.40788248", error.message)
+        }
+
+    @Test
+    fun `fetch surfaces the lowest provider minimum`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors =
+                    listOf(
+                        tooSmall(provider = "NEAR", minAmount = "73.40788248"),
+                        tooSmall(provider = "CHAINFLIP", minAmount = "50.000"),
+                        SwapKitProviderError(provider = "GARDEN", errorCode = "noRoutesFound"),
+                    )
+            )
+
+        val error =
+            assertThrows<SwapException.SmallSwapAmount> {
+                source().fetch(request(tokenValue = ethAmount("1")))
+            }
+        assertEquals("50", error.message)
+    }
+
+    @Test
+    fun `fetch ignores a Thor or Maya minimum since those routes are filtered out`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors =
+                    listOf(
+                        tooSmall(provider = "THORCHAIN_STREAMING", minAmount = "10"),
+                        tooSmall(provider = "MAYACHAIN", minAmount = "10"),
+                    )
+            )
+
+        assertThrows<SwapKitError.NoRoutes> { source().fetch(request(tokenValue = ethAmount("1"))) }
+    }
+
+    @Test
+    fun `fetch ignores a minimum that names no provider`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors = listOf(tooSmall(provider = null, minAmount = "10"))
+            )
+
+        assertThrows<SwapKitError.NoRoutes> { source().fetch(request(tokenValue = ethAmount("1"))) }
+    }
+
+    @Test
+    fun `fetch keeps NoRoutes when the amount already meets the reported minimum`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors = listOf(tooSmall(provider = "NEAR", minAmount = "73.40788248"))
+            )
+
+        assertThrows<SwapKitError.NoRoutes> {
+            source().fetch(request(tokenValue = ethAmount("73.40788248")))
+        }
+    }
+
+    @Test
+    fun `fetch keeps NoRoutes when the too-small error carries no usable minimum`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors =
+                    listOf(
+                        tooSmall(provider = "NEAR", minAmount = null),
+                        tooSmall(provider = "CHAINFLIP", minAmount = "n/a"),
+                    )
+            )
+
+        assertThrows<SwapKitError.NoRoutes> { source().fetch(request(tokenValue = ethAmount("1"))) }
+    }
+
+    @Test
+    fun `fetch surfaces the provider minimum when the only routes are filtered out`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "thor", providers = listOf("THORCHAIN"))),
+                providerErrors = listOf(tooSmall(provider = "NEAR", minAmount = "73.40788248")),
+            )
+
+        val error =
+            assertThrows<SwapException.SmallSwapAmount> {
+                source().fetch(request(tokenValue = ethAmount("1")))
+            }
+        assertEquals("73.40788248", error.message)
+    }
 
     @Test
     fun `fetch maps EVM tx response and surfaces sub-provider from swap response`() = runTest {
@@ -2198,6 +2306,18 @@ internal class SwapKitQuoteSourceTest {
         }
 
     // ---- helpers ----
+
+    private fun tooSmall(provider: String?, minAmount: String?) =
+        SwapKitProviderError(
+            provider = provider,
+            errorCode = "sellAssetAmountTooSmall",
+            minAmount = minAmount,
+        )
+
+    private fun ethAmount(decimal: String): TokenValue {
+        val eth = ethCoin()
+        return TokenValue(value = BigDecimal(decimal).movePointRight(eth.decimal).toBigIntegerExact(), token = eth)
+    }
 
     private fun request(
         srcToken: Coin = ethCoin(),
