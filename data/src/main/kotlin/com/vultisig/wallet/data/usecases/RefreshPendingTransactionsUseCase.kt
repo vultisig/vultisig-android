@@ -44,7 +44,7 @@ constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val transactionStatusRepository: TransactionStatusRepository,
     private val swapKitTrackingService: SwapKitTrackingService,
-    private val recordPaidEvmNetworkFee: RecordPaidEvmNetworkFeeUseCase,
+    private val recordPaidNetworkFee: RecordPaidNetworkFeeUseCase,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val clock: Clock,
 ) : RefreshPendingTransactionsUseCase {
@@ -85,7 +85,7 @@ constructor(
             transactionHistoryRepository.updateTransactionStatus(tx.chain, tx.txHash, result)
             // A reverted or refunded transaction burned its gas too. Best-effort: a missing
             // receipt leaves the recorded estimate, never the settled status, behind.
-            if (result.isTerminal) runSafeCatching { recordPaidEvmNetworkFee(chain, tx.txHash) }
+            if (result.isTerminal) runSafeCatching { recordPaidNetworkFee(chain, tx.txHash) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
