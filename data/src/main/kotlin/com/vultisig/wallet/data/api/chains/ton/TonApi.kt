@@ -170,7 +170,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
         http
             .get("$BASE_URL/v3/jetton/wallets") {
                 parameter("owner_address", address)
-                parameter("jetton_master_address", contract)
+                parameter("jetton_address", contract)
             }
             .bodyOrThrow<JettonWalletsJson>()
 

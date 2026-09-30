@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -21,6 +22,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOLD_DISCOUNT_BPS
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
@@ -84,6 +86,31 @@ internal class JoinSwapSwapKitFeeTest {
         // 1.30 swap fee + 0.11 gas.
         tx.totalFee shouldBe "1.41"
         coVerify(exactly = 0) { swapQuoteRepository.getSwapKitInboundFee(any()) }
+    }
+
+    @Test
+    fun `itemizes the vault's VULT discount off the source notional`() = runTest {
+        stub(vultBps = GOLD_DISCOUNT_BPS)
+
+        val tx = join(payload(swapFee = "13000000", swapFeeChain = "Tron", swapFeeDecimals = 6))
+
+        // 2000 TRX at $0.10 is $200; Gold's 20 bps of it is $0.40. The fee row stays the charged
+        // figure with no rate, and the total is untouched.
+        tx.vultBpsDiscount shouldBe GOLD_DISCOUNT_BPS
+        tx.vultBpsDiscountFiatValue shouldBe "0.40"
+        tx.providerFee.fiatValue shouldBe "1.30"
+        tx.swapFeePercent shouldBe null
+        tx.totalFee shouldBe "1.41"
+    }
+
+    @Test
+    fun `itemizes no discount for a vault without a tier`() = runTest {
+        stub()
+
+        val tx = join(payload(swapFee = "13000000", swapFeeChain = "Tron", swapFeeDecimals = 6))
+
+        tx.vultBpsDiscount shouldBe null
+        tx.vultBpsDiscountFiatValue shouldBe null
     }
 
     @Test
@@ -216,7 +243,8 @@ internal class JoinSwapSwapKitFeeTest {
         return (result.transactionTypeUiModel as TransactionTypeUiModel.Swap).swapTransactionUiModel
     }
 
-    private fun stub() {
+    private fun stub(vultBps: Int = 0) {
+        coEvery { getDiscountBps(vault.id, SwapProvider.SWAPKIT) } returns vultBps
         every { mapTokenValueToDecimalUiString(any()) } returns "0"
         every { mapSwapTransactionToHistoryData(any()) } returns mockk(relaxed = true)
         coEvery { tokenRepository.getNativeToken(Chain.Tron.id) } returns trx

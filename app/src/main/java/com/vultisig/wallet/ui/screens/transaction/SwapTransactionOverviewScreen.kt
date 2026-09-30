@@ -295,16 +295,15 @@ internal fun SwapTransactionOverviewScreen(
 }
 
 @Composable
-internal fun TextDetails(title: String, subtitle: String, showAllContent: Boolean = false) {
+internal fun TextDetails(title: String, subtitle: String) {
     Details(title = title, modifier = Modifier.padding(vertical = 12.dp)) {
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.primary,
-            overflow = if (showAllContent) TextOverflow.Visible else TextOverflow.MiddleEllipsis,
+            overflow = TextOverflow.MiddleEllipsis,
             textAlign = TextAlign.End,
-            modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier,
-            maxLines = if (showAllContent) 5 else 1,
+            maxLines = 1,
         )
     }
 }

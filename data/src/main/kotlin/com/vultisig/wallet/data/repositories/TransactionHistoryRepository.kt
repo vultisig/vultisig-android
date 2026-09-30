@@ -30,7 +30,7 @@ interface TransactionHistoryRepository {
     suspend fun getTransaction(chain: String, txHash: String): TransactionHistoryEntity?
 
     /**
-     * Stores the gas [txHash] actually paid, replacing the pre-sign ceiling the row shows. A no-op
+     * Stores the network fee [txHash] actually paid, replacing the pre-sign estimate the row shows. A no-op
      * for a missing row or one whose payload carries no network fee.
      */
     suspend fun recordPaidNetworkFee(chain: String, txHash: String, feeWei: BigInteger)

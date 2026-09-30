@@ -35,6 +35,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.components.TokenAndChainLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetContent
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerSafeContent
 import com.vultisig.wallet.ui.components.securityscanner.getSecurityScannerBottomSheetStyle
@@ -303,14 +304,11 @@ private fun VerifyAccountCard(name: String?, address: String) {
             )
         }
 
-        Text(
+        AutoSizingText(
             text = address,
             style = Theme.brockmann.body.s.medium,
             color =
                 if (name != null) Theme.v2.colors.text.tertiary else Theme.v2.colors.text.secondary,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.MiddleEllipsis,
         )
     }
 }

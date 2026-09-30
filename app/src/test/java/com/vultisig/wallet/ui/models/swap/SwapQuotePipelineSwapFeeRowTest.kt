@@ -106,8 +106,8 @@ internal class SwapQuotePipelineSwapFeeRowTest {
 
         result.feeText shouldBe "$0.59"
         result.swapFeePercent shouldBe null
-        // And no discount row either: it would subtract from a fee it was never added to.
-        result.discountInfo.vultBpsDiscountFiatValue shouldBe null
+        // The tier still came off the affiliate bps SwapKit was sent, so its row shows.
+        result.discountInfo.vultBpsDiscountFiatValue shouldBe "$0.40"
     }
 
     @Test

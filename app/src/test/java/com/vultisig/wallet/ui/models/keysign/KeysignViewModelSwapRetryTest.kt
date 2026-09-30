@@ -132,6 +132,7 @@ internal class KeysignViewModelSwapRetryTest {
             balanceRepository = mockk(relaxed = true),
             inAppReviewRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),
+            fetchPaidNetworkFee = mockk(relaxed = true),
             fiatValueToString = mockk(relaxed = true),
             pendingLimitOrderRepository = mockk(relaxed = true),
             utxoInFlightRepository = mockk(relaxed = true),
