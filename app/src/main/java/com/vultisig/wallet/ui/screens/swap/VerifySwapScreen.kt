@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -66,6 +67,7 @@ import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
+import com.vultisig.wallet.ui.components.util.CutoutPosition
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.swap.DiscountInfo
@@ -80,9 +82,11 @@ import com.vultisig.wallet.ui.screens.swap.components.PriceImpactRow
 import com.vultisig.wallet.ui.screens.swap.components.ReferralDiscountRow
 import com.vultisig.wallet.ui.screens.swap.components.SwapFeeBreakdown
 import com.vultisig.wallet.ui.screens.swap.components.VultDiscountRow
+import com.vultisig.wallet.ui.screens.verify.PairCardGap
 import com.vultisig.wallet.ui.screens.verify.VerifyOverviewSheet
 import com.vultisig.wallet.ui.screens.verify.VerifyPairNotch
 import com.vultisig.wallet.ui.screens.verify.VerifyVaultRow
+import com.vultisig.wallet.ui.screens.verify.verifyPairCardShape
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -293,13 +297,18 @@ private fun VerifySwapSheetDetails(tx: SwapTransactionUiModel, vaultName: String
 private fun SwapPairCards(tx: SwapTransactionUiModel) {
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(PairCardGap),
             modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
         ) {
-            SwapPairCard(valuedToken = tx.src, modifier = Modifier.weight(1f).fillMaxHeight())
+            SwapPairCard(
+                valuedToken = tx.src,
+                shape = verifyPairCardShape(CutoutPosition.End),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            )
 
             SwapPairCard(
                 valuedToken = tx.dst,
+                shape = verifyPairCardShape(CutoutPosition.Start),
                 // A market swap's amount is the quote's *expected* output — the memo's floor, when
                 // there is one, sits below it and gets its own line — so calling it the minimum
                 // overstates what the signature guarantees. A limit order is the opposite case: its
@@ -327,6 +336,7 @@ private fun SwapPairCards(tx: SwapTransactionUiModel) {
 @Composable
 private fun SwapPairCard(
     valuedToken: ValuedToken,
+    shape: Shape,
     modifier: Modifier = Modifier,
     caption: String? = null,
     footnote: String? = null,
@@ -338,10 +348,7 @@ private fun SwapPairCard(
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         modifier =
             modifier
-                .background(
-                    color = Theme.v2.colors.backgrounds.surface2,
-                    shape = Theme.v2.radius.lg,
-                )
+                .background(color = Theme.v2.colors.backgrounds.surface2, shape = shape)
                 .padding(16.dp),
     ) {
         TokenAndChainLogo(
