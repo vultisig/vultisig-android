@@ -51,9 +51,9 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.banners.ForegroundNotificationBanner
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
-import com.vultisig.wallet.ui.models.AccountUiModel
-import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.passcode.PasscodeGuardViewModel
+import com.vultisig.wallet.ui.models.vault.AccountUiModel
+import com.vultisig.wallet.ui.models.vault.VaultAccountsUiModel
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route

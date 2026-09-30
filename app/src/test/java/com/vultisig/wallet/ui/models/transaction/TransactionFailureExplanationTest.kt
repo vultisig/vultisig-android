@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.models.transaction
 
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.models.TransactionFailureExplanation
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test

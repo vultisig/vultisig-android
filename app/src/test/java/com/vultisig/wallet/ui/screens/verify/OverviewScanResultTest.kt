@@ -2,7 +2,7 @@ package com.vultisig.wallet.ui.screens.verify
 
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
-import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test

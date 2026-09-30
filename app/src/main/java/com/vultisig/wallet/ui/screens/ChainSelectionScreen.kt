@@ -22,9 +22,9 @@ import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
-import com.vultisig.wallet.ui.models.ChainSelectionUiModel
-import com.vultisig.wallet.ui.models.ChainSelectionViewModel
-import com.vultisig.wallet.ui.models.ChainUiModel
+import com.vultisig.wallet.ui.models.vault.ChainSelectionUiModel
+import com.vultisig.wallet.ui.models.vault.ChainSelectionViewModel
+import com.vultisig.wallet.ui.models.vault.ChainUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable

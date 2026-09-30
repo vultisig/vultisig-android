@@ -27,9 +27,9 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
-import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.transaction.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import java.math.BigInteger
 import javax.inject.Inject

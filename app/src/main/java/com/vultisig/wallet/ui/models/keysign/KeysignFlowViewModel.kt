@@ -30,10 +30,10 @@ import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
-import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
+import com.vultisig.wallet.ui.models.token.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator

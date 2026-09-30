@@ -45,8 +45,6 @@ import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
-import com.vultisig.wallet.ui.models.TransactionScanStatus
-import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.ui.models.limitorder.LimitOrderCancelPresentation
@@ -55,6 +53,8 @@ import com.vultisig.wallet.ui.models.sign.CustomMessageDecoder
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
+import com.vultisig.wallet.ui.models.transaction.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.transactiondecoding.VerifyHero
 import com.vultisig.wallet.ui.models.transactiondecoding.VerifyTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Destination
