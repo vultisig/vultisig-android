@@ -16,6 +16,7 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.usecases.ShareBitmapUseCase
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -93,7 +94,8 @@ constructor(
     fun copy(addressCopiedMessage: String) {
         viewModelScope.launch {
             back()
-            snackbarFlow.showMessage(addressCopiedMessage)
+            if (VsClipboardService.needsCopyConfirmation())
+                snackbarFlow.showMessage(addressCopiedMessage)
         }
     }
 
