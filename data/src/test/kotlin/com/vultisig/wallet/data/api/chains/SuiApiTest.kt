@@ -287,8 +287,7 @@ class SuiApiTest {
     fun `getAllCoins rejects a coin object missing its version digest id or balance`() = runTest {
         val missingVersion =
             assertFailsWith<SuiRpcException> {
-                api(coinNode(version = "null", balance = "1", coinBalance = "1"))
-                    .getAllCoins("0xabc")
+                api(coinNode(version = "null", coinBalance = "1")).getAllCoins("0xabc")
             }
         assertTrue(
             missingVersion.errorMessage.contains("missing its version"),
@@ -297,8 +296,7 @@ class SuiApiTest {
 
         val missingDigest =
             assertFailsWith<SuiRpcException> {
-                api(coinNode(digest = "null", balance = "1", coinBalance = "1"))
-                    .getAllCoins("0xabc")
+                api(coinNode(digest = "null", coinBalance = "1")).getAllCoins("0xabc")
             }
         assertTrue(
             missingDigest.errorMessage.contains("missing its digest"),
