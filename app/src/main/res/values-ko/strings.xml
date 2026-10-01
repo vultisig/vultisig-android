@@ -372,6 +372,7 @@
     <string name="verify_transaction_memo_title">메모</string>
     <string name="verify_transaction_allow_death_warning">이 전송은 보내는 계정을 비울 수 있습니다. 남은 잔액이 최소 예치금 아래로 떨어지면 계정이 비활성화(수확)되고 남은 %1$s은(는) 손실됩니다.</string>
     <string name="join_keysign_wrong_reshare">잘못된 재공유</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">QBTC 키가 있는 볼트는 재공유를 지원하지 않습니다</string>
     <string name="swap_screen_provider_title">제공자</string>
     <string name="swap_form_minimum_amount">"스왑 금액이 너무 적습니다. 권장 금액 %1$s %2$s "</string>
     <string name="backup_password_screen_title">백업</string>

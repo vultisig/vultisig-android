@@ -264,6 +264,7 @@
     <string name="verify_transaction_memo_title">Мемо</string>
     <string name="verify_transaction_allow_death_warning">Этот перевод может опустошить счет отправителя. Если оставшийся баланс опустится ниже экзистенциального депозита, счет будет деактивирован (изъят), а все оставшиеся %1$s будут потеряны.</string>
     <string name="join_keysign_wrong_reshare">Неправильный ReShare</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">Повторное совместное использование не поддерживается для хранилищ с ключом QBTC</string>
     <string name="swap_screen_provider_title">Провайдер</string>
     <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %1$s %2$s</string>
     <string name="backup_password_screen_title">Резервное копирование</string>
