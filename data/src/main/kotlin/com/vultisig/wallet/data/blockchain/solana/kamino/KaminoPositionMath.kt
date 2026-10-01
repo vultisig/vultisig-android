@@ -42,6 +42,17 @@ object KaminoPositionMath {
     ): BigDecimal = shares.multiply(tokensPerShare).setScale(tokenDecimals, RoundingMode.DOWN)
 
     /**
+     * What the owner deposited: the position's current [value] less its lifetime [pnl], at the
+     * token's own precision. The value already contains the interest, so showing it as the deposit
+     * beside the PnL counts the interest twice.
+     *
+     * Not Kamino's `totalCostBasis`, which reads zero for shares received by transfer and falls far
+     * below what is still invested after a partial withdrawal.
+     */
+    fun principal(value: BigDecimal, pnl: BigDecimal, tokenDecimals: Int): BigDecimal =
+        value.subtract(pnl).setScale(tokenDecimals, RoundingMode.DOWN)
+
+    /**
      * Turns Kamino's APY fraction into a percentage. `0.039967…` becomes `4.00`.
      *
      * Every `apy*` field is a fraction; rendering one straight into a `%` slot would report a 4%

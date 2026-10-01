@@ -24,6 +24,7 @@ import com.vultisig.wallet.ui.models.defi.clearForTest
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.DefiFiatTotal
+import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
 import io.kotest.assertions.withClue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -336,10 +337,35 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        row.depositedDisplay shouldBe "1,054.427822 USDC"
+        // The value already holds the interest, so the deposit is the value less the PnL; the card
+        // used to print the value here and the interest again beneath it.
+        row.depositedDisplay shouldBe "1,000 USDC"
         row.pnlDisplay shouldBe "54.427822 USDC"
         row.pnlDirection shouldBe KaminoEarnRow.PnlDirection.UP
-        row.depositedFiat.shouldNotBeNull()
+        row.depositedFiat shouldBe "$1,000.00"
+        // What the position is worth, which is what the totals add up, still includes the interest.
+        row.fiatValue.shouldNotBeNull().compareTo(BigDecimal("1054.42")) shouldBe 0
+    }
+
+    @Test
+    fun `a position whose PnL failed to load claims no deposit rather than its value`() = runTest {
+        coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
+            flowOf(setOf(STEAKHOUSE.address))
+        coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returns
+            listOf(KaminoUserPositionJson(vaultAddress = STEAKHOUSE.address, totalShares = "100"))
+        coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
+        coEvery { kaminoApi.getVaultMetrics(any()) } returns
+            KaminoVaultMetricsJson(tokensPerShare = "1.05")
+        coEvery { kaminoApi.getPositionPnl(any(), any()) } throws RuntimeException("503")
+
+        val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
+
+        // Without the PnL there is no telling how much of the value is interest; the value under
+        // the "Deposited" label is the double count this replaced.
+        row.depositedDisplay shouldBe FIAT_VALUE_UNAVAILABLE
+        row.depositedFiat.shouldBeNull()
+        row.fiatValue.shouldNotBeNull().compareTo(BigDecimal("105")) shouldBe 0
+        row.hasPosition shouldBe true
     }
 
     @Test
@@ -367,7 +393,7 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        row.depositedDisplay shouldBe "1\u00A0054,427822 USDC"
+        row.depositedDisplay shouldBe "1\u00A0000 USDC"
         row.pnlDisplay shouldBe "54,427822 USDC"
         row.apyDisplay shouldBe "4,00%"
     }
@@ -801,6 +827,8 @@ internal class KaminoEarnViewModelTest {
         coEvery { kaminoApi.getVaultState(any()) } returns stubVault("Steakhouse USDC")
         coEvery { kaminoApi.getVaultMetrics(any()) } returns
             KaminoVaultMetricsJson(tokensPerShare = "1.0")
+        coEvery { kaminoApi.getPositionPnl(any(), any()) } returns
+            KaminoPnlJson(totalPnl = KaminoPnlJson.Amounts(token = "5"))
 
         val state = viewModel().apply { setData(VAULT_ID) }.state.value
 

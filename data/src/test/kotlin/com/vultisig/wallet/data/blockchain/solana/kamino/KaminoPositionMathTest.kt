@@ -70,6 +70,32 @@ class KaminoPositionMathTest {
     }
 
     @Test
+    fun `deposited is the current value less the interest it already contains`() {
+        // Live Steakhouse USDC holder, deposits only: cost basis 3358.882, PnL 103.763, so the
+        // value alone as "deposited" would count the interest twice.
+        assertSameValue(
+            "3358.878500",
+            KaminoPositionMath.principal(
+                value = BigDecimal("3462.641228"),
+                pnl = BigDecimal("103.7627279929606516"),
+                tokenDecimals = 6,
+            ),
+        )
+    }
+
+    @Test
+    fun `a loss is added back onto the value to recover the deposit`() {
+        assertSameValue(
+            "100",
+            KaminoPositionMath.principal(
+                value = BigDecimal("97"),
+                pnl = BigDecimal("-3"),
+                tokenDecimals = 6,
+            ),
+        )
+    }
+
+    @Test
     fun `token amount rounds down so a balance is never shown larger than it is`() {
         // 0.9999995 at 6 decimals must not become 1.000000 — the extra would not be withdrawable.
         assertSameValue(

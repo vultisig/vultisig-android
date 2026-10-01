@@ -45,8 +45,9 @@ data class KaminoEarnRow(
     val tokenLogo: String,
     val tokenTicker: String,
     /**
-     * Deposited amount with its ticker. Always present — a position of zero is a real value, so
-     * this is never placeheld the way [apyDisplay] and [pnlDisplay] are.
+     * What was deposited — the position's value less its lifetime PnL — with its ticker. Never
+     * placeheld the way [apyDisplay] and [pnlDisplay] are: a position of zero is a real value, and
+     * an unresolved one reads as unavailable.
      */
     val depositedDisplay: String,
     val depositedFiat: String?,
