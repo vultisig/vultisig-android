@@ -62,6 +62,7 @@ internal data class RippleTrustLineActivationUiModel(
     val isLoading: Boolean = true,
     val isActivating: Boolean = false,
     val error: UiText? = null,
+    val activationError: UiText? = null,
 )
 
 @HiltViewModel
@@ -172,9 +173,9 @@ constructor(
     fun activate() {
         val (token, issuer, gasFee) = quoted ?: return
         if (uiState.value.isActivating) return
-        uiState.update { it.copy(isActivating = true) }
+        uiState.update { it.copy(isActivating = true, activationError = null) }
 
-        viewModelScope.safeLaunch(onError = { showError() }) {
+        viewModelScope.safeLaunch(onError = { onActivateFailed() }) {
             val specific =
                 withContext(Dispatchers.IO) {
                     blockChainSpecificRepository.getSpecific(
@@ -225,9 +226,14 @@ constructor(
         }
     }
 
+    // Keeps the quote on screen so the user can retry; `error` would replace it.
     private fun onActivateFailed() {
-        uiState.update { it.copy(isActivating = false) }
-        showError()
+        uiState.update {
+            it.copy(
+                isActivating = false,
+                activationError = UiText.StringResource(R.string.error_view_default_description),
+            )
+        }
     }
 
     fun dismiss() {
