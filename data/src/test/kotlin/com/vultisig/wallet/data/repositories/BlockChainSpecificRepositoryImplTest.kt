@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.SuiRpcException
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.models.BlockChairAddress
 import com.vultisig.wallet.data.api.models.BlockChairInfo
@@ -1086,10 +1087,141 @@ internal class BlockChainSpecificRepositoryImplTest {
         }
     }
 
-    private fun suiApi(referenceGasPrice: BigInteger, coins: List<SuiCoin> = emptyList()): SuiApi =
+    @Test
+    fun `SUI specific refuses a positive send when no coin objects loaded`() = runTest {
+        val error =
+            assertFailsWith<IllegalStateException> {
+                repository(
+                        suiApi = suiApi(referenceGasPrice = BigInteger("500")),
+                        suiFeeService = failingFeeService(),
+                    )
+                    .getSpecific(
+                        chain = Chain.Sui,
+                        address = SOURCE_ADDRESS,
+                        token = suiCoin(),
+                        gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                        tokenAmountValue = BigInteger("1000000000"),
+                    )
+            }
+
+        val message = checkNotNull(error.message)
+        assertTrue(message.contains("selected coin objects total 0"), message)
+        assertTrue(message.contains("1003450000"), message)
+    }
+
+    @Test
+    fun `SUI specific refuses a send the loaded objects cannot cover`() = runTest {
+        val error =
+            assertFailsWith<IllegalStateException> {
+                repository(
+                        suiApi =
+                            suiApi(
+                                referenceGasPrice = BigInteger("100"),
+                                coins = fragmentedNativeCoins(count = 1, balance = "1000000000"),
+                            ),
+                        suiFeeService =
+                            suiFeeService(limit = BigInteger("3450000"), price = BigInteger("100")),
+                    )
+                    .getSpecific(
+                        chain = Chain.Sui,
+                        address = SOURCE_ADDRESS,
+                        token = suiCoin(),
+                        gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                        tokenAmountValue = BigInteger("1000000000"),
+                    )
+            }
+
+        val message = checkNotNull(error.message)
+        assertTrue(message.contains("total 1000000000"), message)
+        assertTrue(message.contains("needs 1003450000"), message)
+    }
+
+    @Test
+    fun `SUI specific does not build a payload when the coin read fails`() = runTest {
+        val error =
+            assertFailsWith<SuiRpcException> {
+                repository(
+                        suiApi =
+                            suiApi(
+                                referenceGasPrice = BigInteger("500"),
+                                coinsError =
+                                    SuiRpcException(
+                                        "SUI coin balance is 1000000000 but no spendable " +
+                                            "coin objects loaded"
+                                    ),
+                            ),
+                        suiFeeService =
+                            suiFeeService(limit = BigInteger("3450000"), price = BigInteger("100")),
+                    )
+                    .getSpecific(
+                        chain = Chain.Sui,
+                        address = SOURCE_ADDRESS,
+                        token = suiCoin(),
+                        gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                        tokenAmountValue = BigInteger("1000000000"),
+                    )
+            }
+
+        assertTrue(error.errorMessage.contains("no spendable coin objects"), error.errorMessage)
+    }
+
+    @Test
+    fun `SUI specific refuses a token send with no token objects`() = runTest {
+        val token =
+            suiCoin()
+                .copy(
+                    ticker = "USDC",
+                    decimal = 6,
+                    contractAddress = "0x2::usdc::USDC",
+                    isNativeToken = false,
+                )
+        val error =
+            assertFailsWith<IllegalStateException> {
+                repository(
+                        suiApi =
+                            suiApi(
+                                referenceGasPrice = BigInteger.ONE,
+                                coins = fragmentedNativeCoins(count = 1, balance = "5000000"),
+                            ),
+                        suiFeeService =
+                            suiFeeService(limit = BigInteger("3000000"), price = BigInteger.ONE),
+                    )
+                    .getSpecific(
+                        chain = Chain.Sui,
+                        address = SOURCE_ADDRESS,
+                        token = token,
+                        gasFee = TokenValue(BigInteger.ONE, token),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                        tokenAmountValue = BigInteger("100"),
+                    )
+            }
+
+        assertTrue(checkNotNull(error.message).contains("No USDC coin objects"), error.message)
+    }
+
+    private fun suiApi(
+        referenceGasPrice: BigInteger,
+        coins: List<SuiCoin> = emptyList(),
+        coinsError: Throwable? = null,
+    ): SuiApi =
         mockk {
             coEvery { getReferenceGasPrice() } returns referenceGasPrice
-            coEvery { getAllCoins(any()) } returns coins
+            if (coinsError == null) {
+                coEvery { getAllCoins(any()) } returns coins
+            } else {
+                coEvery { getAllCoins(any()) } throws coinsError
+            }
         }
 
     /** Native SUI objects of [balance] MIST each, so a send has to accumulate several of them. */

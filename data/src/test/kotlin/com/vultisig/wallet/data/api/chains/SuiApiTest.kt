@@ -5,6 +5,7 @@ import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
@@ -146,7 +147,7 @@ class SuiApiTest {
         val api =
             api(
                 """
-                {"data":{"address":{"objects":{
+                {"data":{"address":{"balance":{"coinBalance":"1"},"objects":{
                   "pageInfo":{"hasNextPage":false,"endCursor":null},
                   "nodes":[{
                     "address":"0xcoin1","version":1,"digest":"d","previousTransaction":{"digest":"p"},
@@ -168,7 +169,7 @@ class SuiApiTest {
         val api =
             api(
                 """
-                {"data":{"address":{"objects":{
+                {"data":{"address":{"balance":{"coinBalance":"0"},"objects":{
                   "pageInfo":{"hasNextPage":false,"endCursor":null},
                   "nodes":[{
                     "address":"0xcoin1","version":1,"digest":"d","previousTransaction":{"digest":"p"},
@@ -257,7 +258,7 @@ class SuiApiTest {
         val nested =
             "$PADDED_TWO::coin::Coin<$PADDED_TWO::spot_dex::LP<$PADDED_TWO::sui::SUI," +
                 "$paddedTwoB::coin::COIN>>"
-        val api = api(coinsPage(hasNextPage = false, repr = nested))
+        val api = api(coinsPage(hasNextPage = false, repr = nested, coinBalance = "0"))
 
         assertEquals(
             "0x2::spot_dex::LP<0x2::sui::SUI,0x2b::coin::COIN>",
@@ -274,47 +275,205 @@ class SuiApiTest {
                 coinsPage(
                     hasNextPage = false,
                     repr = "$PADDED_TWO::coin::Coin<$PADDED_TWO::table::Table<u64,bool>>",
+                    coinBalance = "0",
                 )
             )
 
         assertEquals("0x2::table::Table<u64,bool>", api.getAllCoins("0xabc").single().coinType)
     }
 
-    // objectId, version and digest are exactly the fields that become the signed Sui.ObjectRef.
-    // Substituting a blank for a missing one commits every device in the ceremony to bytes the
-    // network rejects at broadcast; a blank version does not even get that far, throwing on the
-    // toLong() inside SuiHelper.
+    // A coin missing its id, version, digest, or balance is an incomplete read, not a zero coin.
     @Test
-    fun `getAllCoins drops a coin object missing its version or digest`() = runTest {
-        val api =
-            api(
-                """
-                {"data":{"address":{"objects":{
-                  "pageInfo":{"hasNextPage":false,"endCursor":null},
-                  "nodes":[
-                    {"address":"0xcoin1","version":null,"digest":"d",
-                     "previousTransaction":{"digest":"p"},
-                     "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
-                     "json":{"balance":"1"}}},
-                    {"address":"0xcoin2","version":1,"digest":null,
-                     "previousTransaction":{"digest":"p"},
-                     "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
-                     "json":{"balance":"1"}}},
-                    {"address":null,"version":1,"digest":"d",
-                     "previousTransaction":{"digest":"p"},
-                     "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
-                     "json":{"balance":"1"}}},
-                    {"address":"0xcoin4","version":4,"digest":"d4",
-                     "previousTransaction":{"digest":"p"},
-                     "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
-                     "json":{"balance":"1"}}}
-                  ]
-                }}}}
-                """
-                    .trimIndent()
+    fun `getAllCoins rejects a coin object missing its version digest id or balance`() = runTest {
+        val missingVersion =
+            assertFailsWith<SuiRpcException> {
+                api(coinNode(version = "null", balance = "1", coinBalance = "1"))
+                    .getAllCoins("0xabc")
+            }
+        assertTrue(
+            missingVersion.errorMessage.contains("missing its version"),
+            missingVersion.errorMessage,
+        )
+
+        val missingDigest =
+            assertFailsWith<SuiRpcException> {
+                api(coinNode(digest = "null", balance = "1", coinBalance = "1"))
+                    .getAllCoins("0xabc")
+            }
+        assertTrue(
+            missingDigest.errorMessage.contains("missing its digest"),
+            missingDigest.errorMessage,
+        )
+
+        val missingBalance =
+            assertFailsWith<SuiRpcException> {
+                api(coinNode(balance = "null", coinBalance = "1")).getAllCoins("0xabc")
+            }
+        assertTrue(
+            missingBalance.errorMessage.contains("missing its balance"),
+            missingBalance.errorMessage,
+        )
+
+        val missingId =
+            assertFailsWith<SuiRpcException> {
+                api(coinNode(address = "null", coinBalance = "1")).getAllCoins("0xabc")
+            }
+        assertTrue(missingId.errorMessage.contains("missing its id"), missingId.errorMessage)
+    }
+
+    @Test
+    fun `getAllCoins rejects objects that arrived without the coin balance`() = runTest {
+        val error =
+            assertFailsWith<SuiRpcException> {
+                api(
+                        """
+                        {"data":{"address":{"objects":{
+                          "pageInfo":{"hasNextPage":false,"endCursor":null},
+                          "nodes":[{
+                            "address":"0xcoin1","version":1,"digest":"d",
+                            "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
+                              "json":{"balance":"1"}}
+                          }]
+                        }}}}
+                        """
+                            .trimIndent()
+                    )
+                    .getAllCoins("0xabc")
+            }
+        assertTrue(error.errorMessage.contains("did not load"), error.errorMessage)
+    }
+
+    @Test
+    fun `getAllCoins waits until the last page before judging a funded balance`() = runTest {
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to
+                    coinsPage(
+                        hasNextPage = true,
+                        objectId = "0xtoken",
+                        endCursor = "page-1",
+                        repr = "0x2::coin::Coin<0x2::usdc::USDC>",
+                        coinBalance = "1000000000",
+                    ),
+                HttpStatusCode.OK to
+                    coinsPage(
+                        hasNextPage = false,
+                        objectId = "0xnative",
+                        repr = "0x2::coin::Coin<0x2::sui::SUI>",
+                        coinBalance = "1000000000",
+                    ),
             )
 
-        assertEquals(listOf("0xcoin4"), api.getAllCoins("0xabc").map { it.coinObjectId })
+        val coins = SuiApiImpl(client, json).getAllCoins("0xabc")
+
+        assertEquals(listOf("0xtoken", "0xnative"), coins.map { it.coinObjectId })
+    }
+
+    @Test
+    fun `getAllCoins requests the coin balance beside the coin objects`() = runTest {
+        val capture = MockHttpClient.RequestCapture()
+        val client =
+            MockHttpClient.capturingRequest(
+                HttpStatusCode.OK,
+                coinsPage(hasNextPage = false),
+                capture,
+            )
+
+        SuiApiImpl(client, json).getAllCoins("0xabc")
+
+        assertTrue(capture.lastBody.contains("coinBalance"), capture.lastBody)
+        assertFalse(capture.lastBody.contains("totalBalance"), capture.lastBody)
+        assertTrue(capture.lastBody.contains("0x2::sui::SUI"), capture.lastBody)
+        assertTrue(capture.lastBody.contains("objects("), capture.lastBody)
+    }
+
+    @Test
+    fun `getAllCoins rejects a positive coin balance with no spendable native coin objects`() =
+        runTest {
+            val e =
+                assertFailsWith<SuiRpcException> {
+                    api(
+                            """
+                            {"data":{"address":{"balance":{
+                              "coinBalance":"1000000000",
+                              "totalBalance":"1000000000"
+                            },"objects":{
+                              "pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]
+                            }}}}
+                            """
+                                .trimIndent()
+                        )
+                        .getAllCoins("0xabc")
+                }
+            assertTrue(e.errorMessage.contains("no spendable coin objects"), e.errorMessage)
+            assertTrue(e.errorMessage.contains("1000000000"), e.errorMessage)
+        }
+
+    @Test
+    fun `getAllCoins returns empty when the coin balance and the objects are zero`() = runTest {
+        val coins =
+            api(
+                    """
+                    {"data":{"address":{"balance":{"coinBalance":"0","totalBalance":"0"},"objects":{
+                      "pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]
+                    }}}}
+                    """
+                        .trimIndent()
+                )
+                .getAllCoins("0xabc")
+
+        assertEquals(emptyList(), coins)
+    }
+
+    // Address-accumulator SUI sits in totalBalance and is not a coin object.
+    @Test
+    fun `getAllCoins returns empty when SUI is only an address balance`() = runTest {
+        val coins =
+            api(
+                    """
+                    {"data":{"address":{"balance":{
+                      "coinBalance":"0",
+                      "addressBalance":"1000000000",
+                      "totalBalance":"1000000000"
+                    },"objects":{
+                      "pageInfo":{"hasNextPage":false,"endCursor":null},"nodes":[]
+                    }}}}
+                    """
+                        .trimIndent()
+                )
+                .getAllCoins("0xabc")
+
+        assertEquals(emptyList(), coins)
+    }
+
+    @Test
+    fun `getAllCoins keeps token objects when SUI is only an address balance`() = runTest {
+        val coins =
+            api(
+                    """
+                    {"data":{"address":{"balance":{
+                      "coinBalance":"0",
+                      "addressBalance":"1000000000",
+                      "totalBalance":"1000000000"
+                    },"objects":{
+                      "pageInfo":{"hasNextPage":false,"endCursor":null},
+                      "nodes":[{
+                        "address":"0xtoken",
+                        "version":1,
+                        "digest":"d",
+                        "previousTransaction":{"digest":"p"},
+                        "contents":{
+                          "type":{"repr":"0x2::coin::Coin<0x2::usdc::USDC>"},
+                          "json":{"balance":"5"}
+                        }
+                      }]
+                    }}}}
+                    """
+                        .trimIndent()
+                )
+                .getAllCoins("0xabc")
+
+        assertEquals(listOf("0xtoken"), coins.map { it.coinObjectId })
     }
 
     // A connection whose non-null pageInfo/nodes are absent is a malformed response, not an empty
@@ -583,9 +742,10 @@ class SuiApiTest {
         objectId: String = "0xcoin1",
         endCursor: String = "cursor-1",
         repr: String = "0x2::coin::Coin<0x2::sui::SUI>",
+        coinBalance: String = "600",
     ) =
         """
-        {"data":{"address":{"objects":{
+        {"data":{"address":{"balance":{"coinBalance":"$coinBalance"},"objects":{
           "pageInfo":{"hasNextPage":$hasNextPage,"endCursor":"$endCursor"},
           "nodes":[{
             "address":"$objectId",
@@ -593,6 +753,26 @@ class SuiApiTest {
             "digest":"digest-1",
             "previousTransaction":{"digest":"prev-1"},
             "contents":{"type":{"repr":"$repr"},"json":{"balance":"600"}}
+          }]
+        }}}}
+        """
+            .trimIndent()
+
+    private fun coinNode(
+        version: String = "1",
+        digest: String = "\"d\"",
+        balance: String = "\"1\"",
+        address: String = "\"0xcoin1\"",
+        coinBalance: String,
+    ) =
+        """
+        {"data":{"address":{"balance":{"coinBalance":"$coinBalance"},"objects":{
+          "pageInfo":{"hasNextPage":false,"endCursor":null},
+          "nodes":[{
+            "address":$address,"version":$version,"digest":$digest,
+            "previousTransaction":{"digest":"p"},
+            "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
+              "json":{"balance":$balance}}
           }]
         }}}}
         """

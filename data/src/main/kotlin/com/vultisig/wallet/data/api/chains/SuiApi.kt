@@ -101,75 +101,92 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
 
     override suspend fun getAllCoins(address: String): List<SuiCoin> {
         val allCoins = mutableListOf<SuiCoin>()
-        var cursor: String? = null
-        var pagesFetched = 0
-
+        val firstOwner = fetchCoinOwner(address, cursor = null)
+        // The coin balance is not paginated, so the first page is the whole reading.
+        val coinBalance = firstOwner.requireCoinBalance()
+        var pagesFetched = 1
+        var cursor =
+            firstOwner.recordCoinPage(
+                into = allCoins,
+                pagesFetched = pagesFetched,
+                previousCursor = null,
+            )
         // The object connection is paginated. Follow hasNextPage/endCursor so a wallet whose
         // objects span multiple pages doesn't return a truncated set — otherwise a token whose
         // objects all land on a later page is invisible here and a token send gets silently
         // misclassified as a native SUI transfer.
-        do {
-            val objects =
-                graphQl
-                    .query(
-                        ALL_COINS_QUERY,
-                        buildJsonObject {
-                            put("owner", address)
-                            put("cursor", cursor)
-                        },
-                    )
-                    .decode<AllCoinsResponse>()
-                    .address
-                    ?.objects ?: throw SuiRpcException("failed to fetch all coins for sui")
-
-            objects.nodes.forEach { node ->
-                val coinType = node.contents?.type?.repr?.let(::unwrapCoinType) ?: return@forEach
-                // The three fields that make up the signed `Sui.ObjectRef` are dropped with the
-                // coin when any is absent, the same way an undescribable coin type is. Defaulting
-                // them would be worse than losing the object: a blank digest is signed into the
-                // bytes every device in the ceremony commits to and is only rejected at broadcast,
-                // and a blank version throws NumberFormatException inside SuiHelper instead.
-                val coinObjectId = node.address ?: return@forEach
-                val version = node.version ?: return@forEach
-                val digest = node.digest ?: return@forEach
-                allCoins.add(
-                    SuiCoin(
-                        coinObjectId = coinObjectId,
-                        version = version.toString(),
-                        digest = digest,
-                        balance = node.contents.json?.balance.orEmpty(),
-                        previousTransaction = node.previousTransaction?.digest.orEmpty(),
-                        coinType = coinType,
-                    )
+        while (cursor != null) {
+            val previousCursor = cursor
+            pagesFetched += 1
+            val owner = fetchCoinOwner(address, previousCursor)
+            cursor =
+                owner.recordCoinPage(
+                    into = allCoins,
+                    pagesFetched = pagesFetched,
+                    previousCursor = previousCursor,
                 )
-            }
-
-            pagesFetched++
-
-            // Termination cannot rest on the node alone: a `hasNextPage` that never flips, or an
-            // `endCursor` that never advances, would spin here forever while `allCoins` grows
-            // without bound. Both bounds raise rather than return what was collected — a partial
-            // coin list is not a smaller wallet. Coin selection would read it as one, and the
-            // caller gets an "insufficient balance" rejection with nothing pointing at the walk;
-            // the log that used to carry that detail is compiled out of release builds, where the
-            // only planted Timber tree is the debug one.
-            val nextCursor = objects.pageInfo.endCursor.takeIf { objects.pageInfo.hasNextPage }
-            if (nextCursor != null && nextCursor == cursor) {
-                throw SuiRpcException(
-                    "coin pagination stalled: the node reported more pages but returned the same " +
-                        "cursor after $pagesFetched pages"
-                )
-            }
-            if (nextCursor != null && pagesFetched >= SUI_MAX_COIN_PAGES) {
-                throw SuiRpcException(
-                    "coin pagination exceeded the $SUI_MAX_COIN_PAGES page budget with more pages " +
-                        "still reported after ${allCoins.size} coin objects"
-                )
-            }
-            cursor = nextCursor
-        } while (cursor != null)
-
+        }
+        rejectBalanceWithoutCoins(coinBalance, allCoins)
         return allCoins
+    }
+
+    private suspend fun fetchCoinOwner(address: String, cursor: String?): CoinObjectOwner =
+        graphQl
+            .query(
+                ALL_COINS_QUERY,
+                buildJsonObject {
+                    put("owner", address)
+                    put("cursor", cursor)
+                },
+            )
+            .decode<AllCoinsResponse>()
+            .address ?: throw SuiRpcException("failed to fetch all coins for sui")
+
+    private fun CoinObjectOwner.requireCoinBalance(): BigInteger {
+        // totalBalance also counts address-accumulator SUI, which Pay cannot spend.
+        val raw =
+            balance?.coinBalance
+                ?: throw SuiRpcException("SUI coin balance did not load with the coin objects")
+        return raw.toBigIntegerOrNull() ?: throw SuiRpcException("unparsable SUI balance: $raw")
+    }
+
+    private fun CoinObjectOwner.recordCoinPage(
+        into: MutableList<SuiCoin>,
+        pagesFetched: Int,
+        previousCursor: String?,
+    ): String? {
+        val connection = objects ?: throw SuiRpcException("failed to fetch all coins for sui")
+        // A listed coin missing its id, version, digest, or balance is an incomplete read.
+        connection.nodes.forEach { into.add(it.toSpendableCoin()) }
+
+        // A stalled or over-budget cursor throws. A partial coin list is not a smaller wallet.
+        val nextCursor = connection.pageInfo.endCursor.takeIf { connection.pageInfo.hasNextPage }
+        if (nextCursor != null && nextCursor == previousCursor) {
+            throw SuiRpcException(
+                "coin pagination stalled: the node reported more pages but returned the same " +
+                    "cursor after $pagesFetched pages"
+            )
+        }
+        if (nextCursor != null && pagesFetched >= SUI_MAX_COIN_PAGES) {
+            throw SuiRpcException(
+                "coin pagination exceeded the $SUI_MAX_COIN_PAGES page budget with more pages " +
+                    "still reported after ${into.size} coin objects"
+            )
+        }
+        return nextCursor
+    }
+
+    private fun rejectBalanceWithoutCoins(coinBalance: BigInteger, coins: List<SuiCoin>) {
+        if (coinBalance <= BigInteger.ZERO) return
+        val nativeSum =
+            coins
+                .filter { SuiHelper.isNativeSuiCoinType(it.coinType) }
+                .fold(BigInteger.ZERO) { acc, coin -> acc + coin.balance.toBigInteger() }
+        if (nativeSum == BigInteger.ZERO) {
+            throw SuiRpcException(
+                "SUI coin balance is $coinBalance but no spendable coin objects loaded"
+            )
+        }
     }
 
     override suspend fun getCoinMetadata(coinType: String): SuiCoinMetadata? {
@@ -333,6 +350,7 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
             """
             query getAllCoins(${'$'}owner: SuiAddress!, ${'$'}cursor: String) {
               address(address: ${'$'}owner) {
+                balance(coinType: "$NATIVE_SUI_COIN_TYPE") { coinBalance }
                 objects(first: $COIN_PAGE_SIZE, after: ${'$'}cursor, filter: { type: "0x2::coin::Coin" }) {
                   pageInfo { hasNextPage endCursor }
                   nodes {
@@ -419,7 +437,11 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
 
 @Serializable private data class BalanceAddress(val balance: BalanceAmount? = null)
 
-@Serializable private data class BalanceAmount(val totalBalance: String? = null)
+@Serializable
+private data class BalanceAmount(
+    val totalBalance: String? = null,
+    val coinBalance: String? = null,
+)
 
 @Serializable private data class EpochResponse(val epoch: EpochData? = null)
 
@@ -427,7 +449,11 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
 
 @Serializable private data class AllCoinsResponse(val address: CoinObjectOwner? = null)
 
-@Serializable private data class CoinObjectOwner(val objects: CoinObjectConnection? = null)
+@Serializable
+private data class CoinObjectOwner(
+    val balance: BalanceAmount? = null,
+    val objects: CoinObjectConnection? = null,
+)
 
 @Serializable
 private data class CoinObjectConnection(val pageInfo: PageInfo, val nodes: List<CoinObjectNode>)
@@ -525,6 +551,35 @@ private fun TransactionEffectsFields.errorMessage(): String =
     executionError?.let {
         it.message ?: it.identifier ?: it.abortCode?.let { code -> "aborted with code $code" }
     } ?: ""
+
+private fun CoinObjectNode.toSpendableCoin(): SuiCoin {
+    val loaded = contents
+    val repr = loaded?.type?.repr
+    if (loaded == null || repr == null) {
+        throw SuiRpcException("coin object is missing its type")
+    }
+    val coinType =
+        unwrapCoinType(repr) ?: throw SuiRpcException("coin object type is not a Coin: $repr")
+    val coinObjectId =
+        address?.takeIf { it.isNotEmpty() }
+            ?: throw SuiRpcException("coin object is missing its id")
+    val objectVersion =
+        version ?: throw SuiRpcException("coin object $coinObjectId is missing its version")
+    val objectDigest =
+        digest?.takeIf { it.isNotEmpty() }
+            ?: throw SuiRpcException("coin object $coinObjectId is missing its digest")
+    val objectBalance =
+        loaded.json?.balance?.takeIf { it.toBigIntegerOrNull() != null }
+            ?: throw SuiRpcException("coin object $coinObjectId is missing its balance")
+    return SuiCoin(
+        coinObjectId = coinObjectId,
+        version = objectVersion.toString(),
+        digest = objectDigest,
+        balance = objectBalance,
+        previousTransaction = previousTransaction?.digest.orEmpty(),
+        coinType = coinType,
+    )
+}
 
 /**
  * The coin type a `0x2::coin::Coin<T>` object holds, in the same spelling JSON-RPC returned.
