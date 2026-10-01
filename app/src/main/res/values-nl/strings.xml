@@ -399,6 +399,7 @@
     <string name="deposit_error_thorchain_chain_halted">Stortingen op %1$s zijn momenteel stilgelegd op THORChain. Probeer het later opnieuw.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">Kon THORChain niet bereiken om de inkomende vault te verifiëren. Probeer het opnieuw.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s is momenteel niet beschikbaar voor stortingen.</string>
+    <string name="deposit_error_pool_staged_unpaired">Pool %1$s staat op „staged” en accepteert alleen stortingen die gekoppeld zijn aan de andere kant. THORChain zou deze transactie terugbetalen.</string>
     <string name="deposit_form_screen_assets">Activa</string>
     <string name="deposit_form_screen_asset_selection">Activaselectie</string>
     <string name="deposit_form_screen_lpunits">LP-eenheden</string>

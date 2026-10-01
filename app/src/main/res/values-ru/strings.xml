@@ -399,6 +399,7 @@
     <string name="deposit_error_thorchain_chain_halted">Депозиты в сети %1$s сейчас остановлены в THORChain. Повторите попытку позже.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">Не удалось связаться с THORChain для проверки входящего хранилища. Повторите попытку.</string>
     <string name="deposit_error_pool_not_available">Пул %1$s в настоящее время недоступен для депозитов.</string>
+    <string name="deposit_error_pool_staged_unpaired">Пул %1$s находится в статусе «staged» и принимает только парные депозиты с другой стороной. THORChain вернёт эту транзакцию.</string>
     <string name="deposit_form_screen_assets">Актив</string>
     <string name="deposit_form_screen_asset_selection">Выбор актива</string>
     <string name="deposit_form_screen_lpunits">Единицы LP</string>

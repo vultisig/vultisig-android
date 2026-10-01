@@ -400,6 +400,7 @@
     <string name="deposit_error_thorchain_chain_halted">Pologi na %1$s su trenutno zaustavljeni na THORChain-u. Pokušajte ponovno kasnije.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">Nije moguće dohvatiti THORChain radi provjere dolaznog trezora. Pokušajte ponovno.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s trenutno nije dostupan za depozite.</string>
+    <string name="deposit_error_pool_staged_unpaired">Pool %1$s je u stanju „staged“ i prihvaća samo uparene depozite s drugom stranom. THORChain bi vratio ovu transakciju.</string>
     <string name="deposit_form_screen_assets">Imovina</string>
     <string name="deposit_form_screen_asset_selection">Odabir imovine</string>
     <string name="deposit_form_screen_lpunits">LP jedinice</string>

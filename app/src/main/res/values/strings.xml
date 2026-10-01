@@ -531,6 +531,7 @@
     <string name="deposit_error_thorchain_chain_halted">Deposits on %1$s are currently halted on THORChain. Please try again later.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">Could not reach THORChain to verify the inbound vault. Please try again.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s is not currently available for deposits.</string>
+    <string name="deposit_error_pool_staged_unpaired">Pool %1$s is staged and only accepts adds paired with the other side. THORChain would refund this transaction.</string>
     <string name="deposit_form_screen_assets">Asset</string>
     <string name="deposit_form_screen_asset_selection">Asset selection</string>
     <string name="deposit_form_screen_lpunits">LP Units</string>

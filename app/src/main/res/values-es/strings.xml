@@ -400,6 +400,7 @@
     <string name="deposit_error_thorchain_chain_halted">Los depósitos en %1$s están actualmente detenidos en THORChain. Por favor, inténtelo de nuevo más tarde.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">No se pudo conectar con THORChain para verificar la bóveda de entrada. Por favor, inténtelo de nuevo.</string>
     <string name="deposit_error_pool_not_available">El pool %1$s no está disponible actualmente para depósitos.</string>
+    <string name="deposit_error_pool_staged_unpaired">El pool %1$s está en estado «staged» y solo acepta depósitos emparejados con el otro lado. THORChain reembolsaría esta transacción.</string>
     <string name="deposit_form_screen_assets">Activo</string>
     <string name="deposit_form_screen_asset_selection">Selección de activos</string>
     <string name="deposit_form_screen_lpunits">Unidades LP</string>
