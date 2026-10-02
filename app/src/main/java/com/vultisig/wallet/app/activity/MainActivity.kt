@@ -48,6 +48,7 @@ import com.vultisig.wallet.app.activity.components.LaunchSplash
 import com.vultisig.wallet.app.activity.components.MainActivityContent
 import com.vultisig.wallet.app.passcode.PasscodeAutoLock
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
+import com.vultisig.wallet.data.services.PendingPushPayload
 import com.vultisig.wallet.data.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
@@ -95,8 +96,9 @@ class MainActivity : AppCompatActivity() {
         // Handle notification tap when app was killed — ViewModel awaits navigation readiness.
         // Track whether this cold start was launched by a keysign notification, so we can skip
         // the branded LaunchSplash and make the cold path match the warm onNewIntent path.
+        // The payload comes from PendingPushPayload, never from this exported activity's extras.
         val launchedFromKeysignNotification =
-            intent?.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)?.let {
+            PendingPushPayload.take()?.let {
                 mainViewModel.onPushNotificationReceived(it)
                 true
             } ?: false
@@ -180,8 +182,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val qrCodeData =
-            intent.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA) ?: return
+        val qrCodeData = PendingPushPayload.take() ?: return
         mainViewModel.onPushNotificationReceived(qrCodeData)
     }
 
