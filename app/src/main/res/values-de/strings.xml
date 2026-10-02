@@ -265,6 +265,7 @@
     <string name="verify_transaction_allow_death_warning">Diese Überweisung kann das Konto des Absenders leeren. Fällt der verbleibende Kontostand unter das Existential Deposit, wird das Konto deaktiviert (geerntet) und alle verbleibenden %1$s gehen verloren.</string>
     <string name="vault_settings_delete_vault_value">Vault Wert:</string>
     <string name="join_keysign_wrong_reshare">Falsches ReShare</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">Erneutes Teilen wird für Tresore mit einem QBTC-Schlüssel nicht unterstützt</string>
     <string name="swap_screen_provider_title">Anbieter</string>
     <string name="swap_form_minimum_amount">Swap-Betrag zu klein. Empfohlener Betrag %1$s %2$s</string>
     <string name="backup_password_screen_title">Sicherung</string>

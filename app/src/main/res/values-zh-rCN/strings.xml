@@ -457,6 +457,7 @@
 
     <!-- Join Keysign -->
     <string name="join_keysign_wrong_reshare">错误的重新分享</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">带有 QBTC 密钥的保险库不支持重新分享</string>
 
     <!-- Swap Screen -->
     <string name="swap_screen_provider_title">提供商</string>

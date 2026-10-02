@@ -265,6 +265,7 @@
     <string name="verify_transaction_allow_death_warning">Esta transferência pode esvaziar a conta do remetente. Se o saldo remanescente cair abaixo do Depósito Existencial, a conta será desativada (recolhida) e quaisquer %1$s remanescentes serão perdidos.</string>
     <string name="vault_settings_delete_vault_value">Valor do Cofre:</string>
     <string name="join_keysign_wrong_reshare">ReShare errado</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">Recompartilhar não é suportado para cofres com uma chave QBTC</string>
     <string name="swap_screen_provider_title">Provedor</string>
     <string name="swap_form_minimum_amount">Valor de swap muito pequeno. Quantidade recomendada %1$s %2$s</string>
     <string name="backup_password_screen_title">Backup</string>
