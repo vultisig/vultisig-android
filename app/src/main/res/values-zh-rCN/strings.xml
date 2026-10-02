@@ -693,6 +693,7 @@
     <string name="deposit_error_thorchain_chain_halted">%1$s 上的存款目前已在 THORChain 上停止。请稍后再试。</string>
     <string name="deposit_error_thorchain_inbound_unavailable">无法连接到 THORChain 以验证入站金库。请重试。</string>
     <string name="deposit_error_pool_not_available">池 %1$s 目前不可用于存款。</string>
+    <string name="deposit_error_pool_staged_unpaired">池 %1$s 处于预备（staged）状态，仅接受与另一侧配对的添加。THORChain 将退回此交易。</string>
     <string name="deposit_form_screen_assets">资产</string>
     <string name="deposit_form_screen_asset_selection">选择资产</string>
     <string name="deposit_form_screen_lpunits">LP 单位</string>

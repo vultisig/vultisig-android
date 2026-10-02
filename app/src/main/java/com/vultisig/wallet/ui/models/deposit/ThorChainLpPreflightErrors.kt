@@ -19,4 +19,8 @@ internal fun ThorChainLpPreflightBlock.toError(): InvalidTransactionDataExceptio
             InvalidTransactionDataException(
                 UiText.FormattedText(R.string.deposit_error_pool_not_available, listOf(pool))
             )
+        is ThorChainLpPreflightBlock.StagedPoolRequiresPairedAdd ->
+            InvalidTransactionDataException(
+                UiText.FormattedText(R.string.deposit_error_pool_staged_unpaired, listOf(pool))
+            )
     }

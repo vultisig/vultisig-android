@@ -521,6 +521,7 @@
     <string name="deposit_error_thorchain_chain_halted">%1$s의 입금이 현재 THORChain에서 중단되었습니다. 나중에 다시 시도해 주세요.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">수신 볼트를 확인하기 위해 THORChain에 연결할 수 없습니다. 다시 시도해 주세요.</string>
     <string name="deposit_error_pool_not_available">풀 %1$s은(는) 현재 입금에 사용할 수 없습니다.</string>
+    <string name="deposit_error_pool_staged_unpaired">풀 %1$s은(는) 준비(staged) 상태이며 반대쪽과 짝을 이룬 추가만 허용합니다. THORChain이 이 거래를 환불합니다.</string>
     <string name="deposit_form_screen_assets">자산</string>
     <string name="deposit_form_screen_asset_selection">자산 선택</string>
     <string name="deposit_form_screen_lpunits">LP 유닛</string>

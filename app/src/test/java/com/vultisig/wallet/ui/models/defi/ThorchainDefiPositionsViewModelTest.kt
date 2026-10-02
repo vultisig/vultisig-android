@@ -141,7 +141,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { defaultStakingPositionService.getStakingDetails(any(), any()) } returns flowOf()
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns emptyList()
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns emptyList()
         coEvery { getThorChainPendingLpDepositsUseCase(any()) } returns emptyList()
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions()
@@ -540,7 +540,7 @@ internal class ThorchainDefiPositionsViewModelTest {
     @Test
     fun `a failed available-pool fetch still settles the LP tab`() = runTest {
         selectPositions("RUNE")
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } throws
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } throws
             RuntimeException("midgard down")
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
@@ -549,14 +549,14 @@ internal class ThorchainDefiPositionsViewModelTest {
         // no retry can clear, while a pending half-deposit still renders through it. Settled, the
         // tab falls through to its no-positions container and its Manage Positions retry.
         vm.state.value.lpDialogLoaded shouldBe true
-        // availablePools stays null so the next interaction re-fetches instead of soft-locking.
+        // lpPools stays null so the next interaction re-fetches instead of soft-locking.
         vm.state.value.lpPositionsDialog.isEmpty() shouldBe true
     }
 
     @Test
     fun `a selected pool with no liquidity still renders a placeholder card`() = runTest {
         selectPositions(BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
@@ -577,7 +577,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // A vault holding only LP used to read $0.00 in the header while the LP cards below it
         // showed real money: the total summed bond and stake but never LP.
         selectPositions(BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions(
@@ -766,7 +766,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // before it can report, which is exactly the window the old code published a total in.
         selectPositions("RUNE", BTC_POOL)
         val heldPools = MutableStateFlow<List<ThorChainPoolStatsJson>?>(null)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } coAnswers
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } coAnswers
             {
                 heldPools.filterNotNull().first()
             }
@@ -814,7 +814,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // The placeholder used to snapshot a zero still being resolved on another coroutine, and a
         // failed load then froze that null in as the terminal state.
         selectPositions(BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } throws
             RuntimeException("midgard down")
@@ -835,7 +835,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         selectPositions("RUNE", BTC_POOL)
         val currency = MutableStateFlow(AppCurrencyUsd)
         coEvery { appCurrencyRepository.currency } returns currency
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions(
@@ -870,7 +870,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         selectPositions("RUNE", BTC_POOL)
         val currency = MutableStateFlow(AppCurrencyUsd)
         coEvery { appCurrencyRepository.currency } returns currency
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         val heldPositions =
             MutableStateFlow<ThorChainLpPositions?>(
@@ -1048,7 +1048,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             // liquidity. Folding that in produced a header total that looked as settled as a
             // correct one while silently understating what the vault holds.
             selectPositions("RUNE", BTC_POOL)
-            coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
                 listOf(poolStats(BTC_POOL))
             coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
                 ThorChainLpPositions(positions = emptyList(), failedPools = setOf(BTC_POOL))
@@ -1066,7 +1066,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // The use case queries every available pool, so an unrelated pool erroring must not blank
         // a total the user's own positions priced perfectly well.
         selectPositions("RUNE", BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL), poolStats(ETH_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions(
@@ -1232,7 +1232,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // legs holding their pre-selection values, so the header read as a settled total — short by
         // the pool just added — for the whole refetch.
         selectPositions("RUNE", BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL), poolStats(ETH_POOL))
         val bothPools =
             ThorChainLpPositions(
@@ -1275,7 +1275,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // Done is reachable without touching a checkbox, and reloading for it would blank a settled
         // header to a spinner and refetch all three legs for an identical selection.
         selectPositions("RUNE", BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         val heldPositions =
             MutableStateFlow<ThorChainLpPositions?>(
@@ -1375,7 +1375,7 @@ internal class ThorchainDefiPositionsViewModelTest {
     @Test
     fun `a refresh leaves the settled LP cards up instead of blanking them`() = runTest {
         selectPositions(BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions(
@@ -1436,7 +1436,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             // next reload as though they were settled would present a figure nothing confirmed and
             // hide the fact that a read is in flight.
             selectPositions(BTC_POOL)
-            coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
                 listOf(poolStats(BTC_POOL))
             coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } throws
                 RuntimeException("midgard down")
@@ -1459,7 +1459,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // reload rejected every restored card and put the tab back on the shimmer the cache exists
         // to remove.
         selectPositions(BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions(
