@@ -48,9 +48,13 @@ object KaminoPositionMath {
      *
      * Not Kamino's `totalCostBasis`, which reads zero for shares received by transfer and falls far
      * below what is still invested after a partial withdrawal.
+     *
+     * Lifetime PnL includes withdrawn profit, so after a large withdrawal the difference can reach
+     * zero or go negative. That is not a deposit, so fall back to [value], as when PnL is missing.
      */
     fun principal(value: BigDecimal, pnl: BigDecimal, tokenDecimals: Int): BigDecimal =
-        value.subtract(pnl).setScale(tokenDecimals, RoundingMode.DOWN)
+        value.subtract(pnl).takeIf { it.signum() > 0 }?.setScale(tokenDecimals, RoundingMode.DOWN)
+            ?: value
 
     /**
      * Turns Kamino's APY fraction into a percentage. `0.039967…` becomes `4.00`.

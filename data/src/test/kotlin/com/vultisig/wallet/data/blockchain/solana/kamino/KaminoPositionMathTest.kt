@@ -96,6 +96,18 @@ class KaminoPositionMathTest {
     }
 
     @Test
+    fun `principal falls back to the value when withdrawals push it below zero`() {
+        assertSameValue(
+            "100",
+            KaminoPositionMath.principal(
+                value = BigDecimal("100"),
+                pnl = BigDecimal("600"),
+                tokenDecimals = 6,
+            ),
+        )
+    }
+
+    @Test
     fun `token amount rounds down so a balance is never shown larger than it is`() {
         // 0.9999995 at 6 decimals must not become 1.000000 — the extra would not be withdrawable.
         assertSameValue(
