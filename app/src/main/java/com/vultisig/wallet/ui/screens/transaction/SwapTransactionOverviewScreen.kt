@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.swap.components.PriceImpactRow
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
@@ -156,7 +157,9 @@ internal fun SwapTransactionOverviewScreen(
                         hash = approveTransactionHash,
                         link = approveTransactionLink,
                         modifier = Modifier.padding(vertical = 12.dp),
-                        onTxHashCopied = { tx -> copiedApprovalTx = tx },
+                        onTxHashCopied = { tx ->
+                            if (VsClipboardService.needsCopyConfirmation()) copiedApprovalTx = tx
+                        },
                     )
 
                     VerifyCardDivider(size = 1.dp)

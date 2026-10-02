@@ -30,7 +30,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
-import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.vault.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable

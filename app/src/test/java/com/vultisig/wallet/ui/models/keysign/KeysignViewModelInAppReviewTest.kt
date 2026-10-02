@@ -5,8 +5,8 @@ package com.vultisig.wallet.ui.models.keysign
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.InAppReviewRepository
-import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.asUiText

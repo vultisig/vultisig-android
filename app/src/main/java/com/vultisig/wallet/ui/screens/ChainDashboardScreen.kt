@@ -11,10 +11,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
-import com.vultisig.wallet.ui.models.ChainDashboardUiModel
-import com.vultisig.wallet.ui.models.ChainDashboardViewModel
-import com.vultisig.wallet.ui.models.ChainTokenUiModel
-import com.vultisig.wallet.ui.models.ChainTokensUiModel
+import com.vultisig.wallet.ui.models.vault.ChainDashboardUiModel
+import com.vultisig.wallet.ui.models.vault.ChainDashboardViewModel
+import com.vultisig.wallet.ui.models.vault.ChainTokenUiModel
+import com.vultisig.wallet.ui.models.vault.ChainTokensUiModel
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionCircle
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionMaya

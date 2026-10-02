@@ -292,6 +292,7 @@ constructor(
     internal fun copyQrLink(context: Context) {
         val link = qrLink.value ?: return
         VsClipboardService.copy(context, link)
+        if (!VsClipboardService.needsCopyConfirmation()) return
         viewModelScope.launch {
             snackbarFlow.showMessage(UiText.StringResource(R.string.keysign_share_qr_link_copied))
         }

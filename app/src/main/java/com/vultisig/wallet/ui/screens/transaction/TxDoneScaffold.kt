@@ -64,6 +64,7 @@ import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
@@ -322,10 +323,12 @@ private fun SuccessTransaction(
                     link = transactionLink,
                     modifier = Modifier.padding(vertical = 12.dp),
                     onTxHashCopied = { tx ->
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                context.getString(R.string.tx_done_address_copied, tx)
-                            )
+                        if (VsClipboardService.needsCopyConfirmation()) {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    context.getString(R.string.tx_done_address_copied, tx)
+                                )
+                            }
                         }
                     },
                 )

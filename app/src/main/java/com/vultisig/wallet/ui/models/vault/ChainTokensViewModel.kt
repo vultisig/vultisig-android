@@ -1,0 +1,481 @@
+package com.vultisig.wallet.ui.models.vault
+
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.api.models.ResourceUsage
+import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TokenId
+import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
+import com.vultisig.wallet.data.models.canSelectTokens
+import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.hasValidMldsaKey
+import com.vultisig.wallet.data.models.isBuySupported
+import com.vultisig.wallet.data.models.isDepositSupported
+import com.vultisig.wallet.data.models.isSwapSupported
+import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.matchesSearch
+import com.vultisig.wallet.data.models.monoToneLogo
+import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.BalanceRepository
+import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.ChainDashboardBottomBarVisibilityRepository
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.PromoBanner
+import com.vultisig.wallet.data.repositories.PromoBannerDismissalRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
+import com.vultisig.wallet.data.usecases.RippleTrustLines
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
+import com.vultisig.wallet.ui.models.scan.ScanQrUiModel
+import com.vultisig.wallet.ui.models.token.TokenSelectionViewModel.Companion.REFRESH_TOKEN_DATA
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.textAsFlow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigInteger
+import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import timber.log.Timber
+
+@Immutable
+internal data class ChainTokensUiModel(
+    val isRefreshing: Boolean = false,
+    val isSearchMode: Boolean = false,
+    val chainName: String = "",
+    val chainAddress: String = "",
+    @DrawableRes val chainLogo: Int? = null,
+    val totalBalance: String? = null,
+    val explorerURL: String = "",
+    val tokens: List<ChainTokenUiModel> = emptyList(),
+    val canDeposit: Boolean = true,
+    val canSwap: Boolean = true,
+    val canBuy: Boolean = false,
+    val canSelectTokens: Boolean = false,
+    val isBalanceVisible: Boolean = true,
+    val searchTextFieldState: TextFieldState = TextFieldState(),
+    val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
+    val tronResourceStats: ResourceUsage? = null,
+    val showQbtcClaimBanner: Boolean = false,
+    val showClaimQbtcButton: Boolean = false,
+)
+
+@Immutable
+internal data class ChainTokenUiModel(
+    val id: String = "",
+    val name: String = "",
+    val balance: String? = null,
+    val fiatBalance: String? = null,
+    val tokenLogo: ImageModel = "",
+    val price: String? = null,
+    @DrawableRes val chainLogo: Int? = null,
+    @DrawableRes val monotoneChainLogo: Int? = null,
+    val mergeBalance: String? = null,
+    val network: String = "",
+    val canActivateTrustLine: Boolean = false,
+)
+
+@HiltViewModel
+internal class ChainTokensViewModel
+@Inject
+constructor(
+    private val navigator: Navigator<Destination>,
+    private val fiatValueToStringMapper: FiatValueToStringMapper,
+    private val mapTokenValueToStringWithUnitMapper: TokenValueToStringWithUnitMapper,
+    private val discoverTokenUseCase: DiscoverTokenUseCase,
+    private val explorerLinkRepository: ExplorerLinkRepository,
+    private val accountsRepository: AccountsRepository,
+    private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val bottomBarVisibility: ChainDashboardBottomBarVisibilityRepository,
+    private val vaultRepository: VaultRepository,
+    private val requestResultRepository: RequestResultRepository,
+    private val balanceRepository: BalanceRepository,
+    private val promoBannerDismissalRepository: PromoBannerDismissalRepository,
+    private val rippleTrustLines: RippleTrustLines,
+) : ViewModel() {
+    private val tokens = MutableStateFlow(emptyList<Coin>())
+
+    private var chainRaw: String? = null
+    private var vaultId: String? = null
+    private var currentVault: Vault? = null
+
+    val uiState = MutableStateFlow(ChainTokensUiModel())
+
+    private var loadDataJob: Job? = null
+    private var qbtcBannerJob: Job? = null
+
+    private fun updateBalanceVisibility() {
+        viewModelScope.safeLaunch {
+            val vaultId = vaultId ?: return@safeLaunch
+            val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
+            uiState.update { it.copy(isBalanceVisible = isBalanceVisible) }
+        }
+    }
+
+    fun initData(vaultId: String, chainId: String) {
+        this.vaultId = vaultId
+        this.chainRaw = chainId
+        updateBalanceVisibility()
+        loadData(isRefresh = false)
+    }
+
+    fun refresh() {
+        updateBalanceVisibility()
+        loadData(isRefresh = true)
+    }
+
+    fun send() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
+            navigator.route(Route.Send(vaultId = vaultId, chainId = chainRaw))
+        }
+    }
+
+    fun swap() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
+            navigator.route(Route.Swap(vaultId = vaultId, chainId = chainRaw))
+        }
+    }
+
+    fun deposit() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
+            navigator.route(Route.Deposit(vaultId = vaultId, chainId = chainRaw))
+        }
+    }
+
+    // iOS parity (ChainDetailScreen.onClaimBannerTapped): with the quantum key in
+    // place the intro would describe a keygen ceremony that never runs, so go
+    // straight to claim; without it, the intro leads into MLDSA single keygen.
+    fun onClaimQbtc() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val hasMldsaKey = currentVault?.hasValidMldsaKey() == true
+            if (hasMldsaKey) {
+                navigator.route(Route.QbtcClaim(vaultId = vaultId))
+            } else {
+                navigator.route(Route.QuantumSecurityIntro(vaultId = vaultId))
+            }
+        }
+    }
+
+    // Instant in-memory eligibility; the claim screen does the real check, including
+    // BTC availability — so the entry point shows even when the Bitcoin chain isn't enabled.
+    // The BTC banner also shows pre-keygen for DKLS vaults, which can still generate the
+    // MLDSA key via the quantum-security intro. GG20 keyshares can't take part in the DKLS
+    // claim ceremony, and KeyImport vaults receive the MLDSA key at import time — so for
+    // those, no key means no claim path.
+    private fun checkQbtcClaimEligibility(chain: Chain) {
+        val vault = currentVault
+        val hasMldsaKey = vault != null && vault.hasValidMldsaKey()
+        val canGenerateMldsaKey = vault != null && vault.libType == SigningLibType.DKLS
+        val isEligible = chain == Chain.Bitcoin && (hasMldsaKey || canGenerateMldsaKey)
+
+        uiState.update { it.copy(showClaimQbtcButton = chain == Chain.Qbtc && hasMldsaKey) }
+
+        qbtcBannerJob?.cancel()
+        if (!isEligible) {
+            uiState.update { it.copy(showQbtcClaimBanner = false) }
+            return
+        }
+
+        // Collected rather than read once so closing the banner hides it on the spot: the
+        // dismissal is a stored timestamp, and writing it re-emits here.
+        qbtcBannerJob =
+            viewModelScope.safeLaunch {
+                promoBannerDismissalRepository.isDismissed(PromoBanner.ClaimQbtc).collect {
+                    isDismissed ->
+                    uiState.update { it.copy(showQbtcClaimBanner = !isDismissed) }
+                }
+            }
+    }
+
+    // Global dismissal under the banner's own policy — permanent, so the card does not come back
+    // once closed. The claim itself stays reachable from the QBTC chain screen.
+    fun dismissQbtcClaimBanner() {
+        // Hidden here rather than left to the dismissal collector, so the card goes on the tap
+        // instead of a disk write later; the stored dismissal then re-emits the same false.
+        uiState.update { it.copy(showQbtcClaimBanner = false) }
+        viewModelScope.safeLaunch { promoBannerDismissalRepository.dismiss(PromoBanner.ClaimQbtc) }
+    }
+
+    fun buy() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
+            navigator.route(Route.OnRamp(vaultId = vaultId, chainId = chainRaw))
+        }
+    }
+
+    fun history() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
+            navigator.route(Route.TransactionHistory(vaultId = vaultId, chainId = chainRaw))
+        }
+    }
+
+    fun selectTokens() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
+            navigator.route(Route.SelectTokens(vaultId = vaultId, chainId = chainRaw))
+            requestResultRepository.request<Unit>(REFRESH_TOKEN_DATA)
+            loadData(isRefresh = true)
+        }
+    }
+
+    fun openToken(model: ChainTokenUiModel) {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
+            navigator.route(
+                Route.TokenDetail(
+                    vaultId = vaultId,
+                    chainId = chainRaw,
+                    tokenId = model.id,
+                    mergeId = model.mergeBalance ?: "0",
+                )
+            )
+        }
+    }
+
+    fun activateTrustLine(model: ChainTokenUiModel) {
+        val vaultId = vaultId ?: return
+        viewModelScope.safeLaunch {
+            navigator.route(Route.RippleTrustLineActivation(vaultId, model.id))
+        }
+    }
+
+    private suspend fun tokensNeedingTrustLine(chain: Chain, address: Address): Set<TokenId> =
+        if (chain == Chain.Ripple) {
+            rippleTrustLines.tokensNeedingTrustLine(
+                address = address.address,
+                coins = address.accounts.map { it.token },
+            )
+        } else {
+            emptySet()
+        }
+
+    private fun loadData(isRefresh: Boolean) {
+        val vaultId =
+            vaultId
+                ?: run {
+                    Timber.w("loadData: vaultId is null, skipping")
+                    return
+                }
+        val chainRaw =
+            chainRaw
+                ?: run {
+                    Timber.w("loadData: chainRaw is null, skipping")
+                    return
+                }
+        discoverTokenUseCase(vaultId, chainRaw)
+
+        loadDataJob?.cancel()
+        loadDataJob =
+            viewModelScope.safeLaunch {
+                if (isRefresh) {
+                    updateRefreshing(true)
+                }
+                val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
+
+                val addressDataSource =
+                    accountsRepository.loadAddress(vaultId = vaultId, chain = chain)
+
+                currentVault = vaultRepository.get(vaultId) ?: error("No vault with $vaultId")
+                collectTronResourceStats(chain)
+                checkQbtcClaimEligibility(chain)
+                addressDataSource
+                    .onEach {
+                        if (isRefresh) {
+                            updateRefreshing(it.accounts.hasNullAccount())
+                        }
+                    }
+                    .combine(fetchMergeBalanceFlow(chain)) { address, mergeBalance ->
+                        address to mergeBalance
+                    }
+                    // Outside the search combine below, so a keystroke cannot re-ask the ledger.
+                    .map { (address, mergeBalances) ->
+                        Triple(address, mergeBalances, tokensNeedingTrustLine(chain, address))
+                    }
+                    .catch {
+                        if (isRefresh) {
+                            updateRefreshing(false)
+                        }
+                        Timber.e(it)
+                    }
+                    .combine(uiState.value.searchTextFieldState.textAsFlow()) {
+                        (address, mergeBalances, needsTrustLine),
+                        searchQuery ->
+                        val totalFiatValue = address.accounts.calculateAccountsTotalFiatValue()
+
+                        val accounts =
+                            address.accounts.sortedWith(
+                                compareBy(
+                                    { !it.token.isNativeToken },
+                                    {
+                                        (it.fiatValue?.value ?: it.tokenValue?.decimal)
+                                            ?.unaryMinus()
+                                    },
+                                )
+                            )
+
+                        val tokensFromAccounts = accounts.map { it.token }
+                        tokens.update { it + tokensFromAccounts }
+                        val uiTokens =
+                            accounts
+                                .filter { it.token.matchesSearch(searchQuery.toString()) }
+                                .map { account ->
+                                    val token = account.token
+                                    ChainTokenUiModel(
+                                        id = token.id,
+                                        name = token.ticker,
+                                        balance =
+                                            account.tokenValue?.let(
+                                                mapTokenValueToStringWithUnitMapper
+                                            ) ?: "",
+                                        fiatBalance =
+                                            account.fiatValue?.let { fiatValueToStringMapper(it) },
+                                        tokenLogo = getCoinLogo(token.logo),
+                                        chainLogo = chain.logo,
+                                        monotoneChainLogo = chain.monoToneLogo,
+                                        mergeBalance =
+                                            mergeBalances.findMergeBalance(token).toString(),
+                                        price =
+                                            account.price?.let {
+                                                fiatValueToStringMapper(it, asPrice = true)
+                                            },
+                                        network = token.chain.raw,
+                                        canActivateTrustLine = token.id in needsTrustLine,
+                                    )
+                                }
+
+                        val accountAddress = address.address
+                        val explorerUrl =
+                            explorerLinkRepository.getAddressLink(chain, accountAddress)
+                        val totalBalance = totalFiatValue?.let { fiatValueToStringMapper(it) }
+
+                        uiState.update {
+                            it.copy(
+                                chainName = chainRaw,
+                                chainAddress = accountAddress,
+                                chainLogo = chain.logo,
+                                tokens = uiTokens,
+                                explorerURL = explorerUrl,
+                                totalBalance = totalBalance,
+                                canDeposit = chain.isDepositSupported,
+                                canSwap = chain.isSwapSupported,
+                                canBuy = chain.isBuySupported,
+                                canSelectTokens = chain.canSelectTokens,
+                            )
+                        }
+                    }
+                    .collect()
+            }
+    }
+
+    private fun collectTronResourceStats(chain: Chain) {
+        viewModelScope.safeLaunch {
+            if (chain == Chain.Tron) {
+                val address = currentVault?.coins?.firstOrNull { it.chain == chain }?.address
+
+                if (address == null) {
+                    Timber.w("No TRON address for chain %s in vault %s", chainRaw, vaultId)
+                    return@safeLaunch
+                }
+                balanceRepository
+                    .getTronResourceDataSource(address)
+                    .flowOn(Dispatchers.IO)
+                    .catch {
+                        Timber.e(it, "Error fetching tron resource data for address $address")
+                    }
+                    .collect { uiState.update { uiState -> uiState.copy(tronResourceStats = it) } }
+            }
+        }
+    }
+
+    fun openAddressQr() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            navigator.route(
+                Route.AddressQr(
+                    vaultId = vaultId,
+                    address = uiState.value.chainAddress,
+                    name = uiState.value.chainName,
+                    logo = uiState.value.chainLogo,
+                )
+            )
+        }
+    }
+
+    fun hideSearchBar() {
+        uiState.update { it.copy(isSearchMode = false) }
+    }
+
+    fun showSearchBar() {
+        uiState.update { it.copy(isSearchMode = true) }
+    }
+
+    fun handleKeyboardState(isKeyboardOpen: Boolean) {
+        if (isKeyboardOpen) {
+            bottomBarVisibility.hideBottomBar()
+        } else {
+            bottomBarVisibility.showBottomBar()
+        }
+    }
+
+    private fun fetchMergeBalanceFlow(chain: Chain): Flow<List<MergeAccount>> = flow {
+        val vaultId = vaultId ?: return@flow
+        emit(emptyList())
+        emit(accountsRepository.fetchMergeBalance(chain, vaultId))
+    }
+
+    private fun updateRefreshing(isRefreshing: Boolean) {
+        uiState.update { it.copy(isRefreshing = isRefreshing) }
+    }
+
+    private fun List<MergeAccount>.findMergeBalance(coin: Coin): BigInteger {
+        val ticker = coin.ticker.lowercase()
+
+        val mergeBalance =
+            this.firstOrNull { it.pool?.mergeAsset?.metadata?.symbol.equals(ticker, true) }
+                ?.shares
+                ?.toBigIntegerOrNull() ?: BigInteger.ZERO
+
+        return mergeBalance
+    }
+
+    private fun List<Account>.hasNullAccount() = any {
+        it.tokenValue == null || it.fiatValue == null
+    }
+}

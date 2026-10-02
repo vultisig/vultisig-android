@@ -21,9 +21,9 @@ import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.TokenUiSingle
-import com.vultisig.wallet.ui.models.TokenSelectionUiModel
-import com.vultisig.wallet.ui.models.TokenSelectionViewModel
-import com.vultisig.wallet.ui.models.TokenUiModel
+import com.vultisig.wallet.ui.models.token.TokenSelectionUiModel
+import com.vultisig.wallet.ui.models.token.TokenSelectionViewModel
+import com.vultisig.wallet.ui.models.token.TokenUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable

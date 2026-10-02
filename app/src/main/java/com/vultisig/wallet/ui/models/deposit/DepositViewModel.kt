@@ -2,7 +2,7 @@ package com.vultisig.wallet.ui.models.deposit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.ui.models.AddressProvider
+import com.vultisig.wallet.ui.models.token.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator

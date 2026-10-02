@@ -1,0 +1,89 @@
+package com.vultisig.wallet.ui.models.onramp
+
+import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.banxaAssetName
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.ui.navigation.Route
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import timber.log.Timber
+
+@HiltViewModel
+class OnRampViewModel
+@Inject
+constructor(savedStateHandle: SavedStateHandle, private val vaultRepository: VaultRepository) :
+    ViewModel() {
+    private val args = savedStateHandle.toRoute<Route.OnRamp>()
+    private val vaultId: String = args.vaultId
+    private val chainId: String = args.chainId
+
+    val banxaUrl: StateFlow<String?>
+        field = MutableStateFlow<String?>(null)
+
+    fun openBanxaWebsite() {
+        viewModelScope.launch {
+            try {
+                val vault =
+                    vaultRepository.get(vaultId)
+                        ?: run {
+                            Timber.e("Vault not found: $vaultId")
+                            return@launch
+                        }
+
+                val chain = Chain.fromRaw(chainId)
+
+                // Find the native coin for this chain
+                val coin =
+                    vault.coins.find { it.chain == chain && it.isNativeToken }
+                        ?: run {
+                            Timber.e("Native coin not found for chain: $chainId")
+                            return@launch
+                        }
+
+                val url =
+                    getBuyURL(
+                        address = coin.address,
+                        blockChainCode =
+                            chain.banxaAssetName ?: error("Can't find blockchain code"),
+                        coinType = coin.ticker,
+                    )
+
+                // Set the URL to trigger the UI to open it
+                banxaUrl.value = url
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                // Default navigation for error
+                Timber.e(e, "Error opening Banxa website")
+                banxaUrl.value = BANXA_URL
+            }
+        }
+    }
+
+    fun onUrlOpened() {
+        banxaUrl.value = null
+    }
+
+    private fun getBuyURL(address: String, blockChainCode: String, coinType: String): String {
+        val queryParams = buildString {
+            append("?walletAddress=")
+            append(Uri.encode(address))
+            append("&blockchain=")
+            append(Uri.encode(blockChainCode))
+            append("&coinType=")
+            append(Uri.encode(coinType))
+        }
+        return BANXA_URL + queryParams
+    }
+
+    companion object {
+        val BANXA_URL = "https://vultisig.banxa.com/"
+    }
+}

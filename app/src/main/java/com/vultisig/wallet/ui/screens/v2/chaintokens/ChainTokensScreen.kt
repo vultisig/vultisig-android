@@ -46,9 +46,9 @@ import com.vultisig.wallet.ui.components.v2.containers.ExpandedTopbarContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
-import com.vultisig.wallet.ui.models.ChainTokenUiModel
-import com.vultisig.wallet.ui.models.ChainTokensUiModel
-import com.vultisig.wallet.ui.models.ChainTokensViewModel
+import com.vultisig.wallet.ui.models.vault.ChainTokenUiModel
+import com.vultisig.wallet.ui.models.vault.ChainTokensUiModel
+import com.vultisig.wallet.ui.models.vault.ChainTokensViewModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.qbtc.ClaimQbtcBottomCta
 import com.vultisig.wallet.ui.screens.qbtc.ClaimQbtcPromoBanner
@@ -63,6 +63,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
 import com.vultisig.wallet.ui.screens.v2.home.components.LocalBottomNavigatorPadding
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.KeyboardAware
+import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
@@ -202,7 +203,10 @@ internal fun ChainTokensScreen(
 
                 CopiableAddress(
                     address = uiModel.chainAddress,
-                    onAddressCopied = { snackbarState.show(addressCopiedMessage) },
+                    onAddressCopied = {
+                        if (VsClipboardService.needsCopyConfirmation())
+                            snackbarState.show(addressCopiedMessage)
+                    },
                     modifier =
                         Modifier.clip(Theme.v2.radius.sm)
                             .background(color = Theme.v2.colors.text.button.dim.copy(alpha = 0.12f))

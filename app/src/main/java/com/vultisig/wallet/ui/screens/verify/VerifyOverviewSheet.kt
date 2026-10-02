@@ -21,10 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getCoinLogo
@@ -39,10 +42,12 @@ import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetContent
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerSafeContent
 import com.vultisig.wallet.ui.components.securityscanner.getSecurityScannerBottomSheetStyle
+import com.vultisig.wallet.ui.components.util.CutoutPosition
+import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.components.v2.bottomsheets.OverviewBottomSheet
 import com.vultisig.wallet.ui.components.v2.bottomsheets.OverviewSheetControlSize
-import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
@@ -246,28 +251,66 @@ internal fun VerifyAccountCards(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            VerifyAccountCard(name = fromName, address = fromAddress)
-            VerifyAccountCard(name = toName, address = toAddress)
+        Column(verticalArrangement = Arrangement.spacedBy(PairCardGap)) {
+            VerifyAccountCard(
+                name = fromName,
+                address = fromAddress,
+                shape = verifyPairCardShape(CutoutPosition.Bottom),
+            )
+            VerifyAccountCard(
+                name = toName,
+                address = toAddress,
+                shape = verifyPairCardShape(CutoutPosition.Top),
+            )
         }
 
         VerifyPairNotch(chevron = R.drawable.ic_chevron_down_small)
     }
 }
 
+/** Spacing between the two cards of a pair; the notch sits centred in it. */
+internal val PairCardGap = 8.dp
+
+private val PairNotchSize = 40.dp
+
 /**
- * The join between a pair of cards: a sheet-coloured disc over the gap, so the chevron sits in a
- * cutout shared by both cards instead of floating over one of them.
+ * A pair card's outline with a half-disc cut from the edge facing its partner, so the two cutouts
+ * form the hole [VerifyPairNotch] sits in.
+ *
+ * [CutoutPosition.Start] and [CutoutPosition.End] follow the layout direction here, the way a `Row`
+ * places the cards; [RoundedWithCutoutShape] itself reads them as physical left and right.
+ */
+@Composable
+internal fun verifyPairCardShape(cutoutPosition: CutoutPosition): RoundedWithCutoutShape {
+    val corner = Theme.v2.radius.lg.size
+    val offset = -PairCardGap / 2
+    val physicalPosition =
+        if (LocalLayoutDirection.current == LayoutDirection.Ltr) cutoutPosition
+        else
+            when (cutoutPosition) {
+                CutoutPosition.Start -> CutoutPosition.End
+                CutoutPosition.End -> CutoutPosition.Start
+                CutoutPosition.Top,
+                CutoutPosition.Bottom -> cutoutPosition
+            }
+    val isVertical = cutoutPosition == CutoutPosition.Top || cutoutPosition == CutoutPosition.Bottom
+    return RoundedWithCutoutShape(
+        cutoutPosition = physicalPosition,
+        top = corner,
+        bottom = corner,
+        cutoutRadius = PairNotchSize / 2,
+        cutoutOffsetY = if (isVertical) offset else 0.dp,
+        cutoutOffsetX = if (isVertical) 0.dp else offset,
+    )
+}
+
+/**
+ * The chevron joining a pair of cards, drawn inside the hole their [verifyPairCardShape] cutouts
+ * leave in the gap.
  */
 @Composable
 internal fun VerifyPairNotch(@DrawableRes chevron: Int) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier =
-            Modifier.size(40.dp)
-                .background(color = Theme.v2.colors.backgrounds.surface1, shape = CircleShape)
-                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = CircleShape),
-    ) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(PairNotchSize)) {
         Box(
             contentAlignment = Alignment.Center,
             modifier =
@@ -280,17 +323,14 @@ internal fun VerifyPairNotch(@DrawableRes chevron: Int) {
 }
 
 @Composable
-private fun VerifyAccountCard(name: String?, address: String) {
+private fun VerifyAccountCard(name: String?, address: String, shape: Shape) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         modifier =
             Modifier.fillMaxWidth()
                 .defaultMinSize(minHeight = 82.dp)
-                .background(
-                    color = Theme.v2.colors.backgrounds.surface2,
-                    shape = Theme.v2.radius.lg,
-                )
+                .background(color = Theme.v2.colors.backgrounds.surface2, shape = shape)
                 .padding(16.dp),
     ) {
         if (name != null) {

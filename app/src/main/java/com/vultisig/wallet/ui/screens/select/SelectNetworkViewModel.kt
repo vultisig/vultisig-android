@@ -15,10 +15,10 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.models.NetworkUiModel
-import com.vultisig.wallet.ui.models.consolidateEvm
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
-import com.vultisig.wallet.ui.models.toNetworkUiModel
+import com.vultisig.wallet.ui.models.vault.NetworkUiModel
+import com.vultisig.wallet.ui.models.vault.consolidateEvm
+import com.vultisig.wallet.ui.models.vault.toNetworkUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
