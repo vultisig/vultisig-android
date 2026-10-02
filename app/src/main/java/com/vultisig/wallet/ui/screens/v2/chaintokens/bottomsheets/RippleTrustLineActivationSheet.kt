@@ -160,6 +160,17 @@ internal fun RippleTrustLineActivationSheet(
                                 textAlign = TextAlign.Center,
                             )
                         }
+
+                        if (state.activationError != null) {
+                            UiSpacer(12.dp)
+
+                            Text(
+                                text = state.activationError.asString(),
+                                style = Theme.brockmann.supplementary.caption,
+                                color = Theme.v2.colors.alerts.error,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                 }
             }
