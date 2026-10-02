@@ -471,8 +471,8 @@ constructor(
             when {
                 tokenAmount == null -> null
                 tokenAmount.signum() == 0 -> tokenAmount
-                // The value alone under "Deposited" would count the interest twice.
-                pnlToken == null -> null
+                // A PnL outage must not take the holding off the card: show the value instead.
+                pnlToken == null -> tokenAmount
                 else -> KaminoPositionMath.principal(tokenAmount, pnlToken, vault.tokenDecimals)
             }
 

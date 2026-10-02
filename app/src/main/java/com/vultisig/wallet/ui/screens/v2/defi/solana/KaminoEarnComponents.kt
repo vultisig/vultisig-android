@@ -126,8 +126,8 @@ private fun KaminoVaultCard(
         // An *unread* position keeps them: not knowing is not the same as knowing there is nothing.
         if (row.hasPosition) {
             PositionFigureRow(
-                // Never placeheld: a deposit of zero is a real value, and one whose PnL failed to
-                // read shows as unavailable — unlike its price, absent until the quote lands.
+                // A deposit of zero is a real value, so the amount is never placeheld — unlike its
+                // price, which is genuinely absent until the quote lands.
                 label =
                     stringResource(
                         R.string.kamino_earn_deposited,

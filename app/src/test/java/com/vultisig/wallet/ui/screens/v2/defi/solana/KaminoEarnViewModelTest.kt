@@ -24,7 +24,6 @@ import com.vultisig.wallet.ui.models.defi.clearForTest
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.v2.defi.DefiFiatTotal
-import com.vultisig.wallet.ui.screens.v2.defi.FIAT_VALUE_UNAVAILABLE
 import io.kotest.assertions.withClue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -348,7 +347,7 @@ internal class KaminoEarnViewModelTest {
     }
 
     @Test
-    fun `a position whose PnL failed to load claims no deposit rather than its value`() = runTest {
+    fun `a position whose PnL failed to load keeps its holding on the card`() = runTest {
         coEvery { selectionRepository.getSelectedVaults(VAULT_ID) } returns
             flowOf(setOf(STEAKHOUSE.address))
         coEvery { kaminoApi.getUserPositions(WALLET_ADDRESS) } returns
@@ -360,10 +359,11 @@ internal class KaminoEarnViewModelTest {
 
         val row = viewModel().apply { setData(VAULT_ID) }.state.value.rows.single()
 
-        // Without the PnL there is no telling how much of the value is interest; the value under
-        // the "Deposited" label is the double count this replaced.
-        row.depositedDisplay shouldBe FIAT_VALUE_UNAVAILABLE
-        row.depositedFiat.shouldBeNull()
+        // A PnL outage must not take the holding off the card: Deposited falls back to the value
+        // and only the earned figure is missing.
+        row.depositedDisplay shouldBe "105 USDC"
+        row.depositedFiat shouldBe "$105.00"
+        row.pnlDisplay.shouldBeNull()
         row.fiatValue.shouldNotBeNull().compareTo(BigDecimal("105")) shouldBe 0
         row.hasPosition shouldBe true
     }
