@@ -26,7 +26,7 @@ internal fun AccountList(
         accounts.forEachIndexed { index, account ->
             key(account.chainName) {
                 val addressCopiedMessage =
-                    stringResource(R.string.address_copied, account.chainName)
+                    stringResource(R.string.address_copied, account.displayName)
                 Column {
                     AccountItem(
                         modifier = Modifier.Companion.padding(horizontal = 16.dp, vertical = 12.dp),

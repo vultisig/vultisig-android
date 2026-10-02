@@ -101,7 +101,7 @@ constructor(
             combine(allChains, searchTextFieldState.textAsFlow()) { allChains, query ->
                     allChains.filter { chain ->
                         query.isBlank() ||
-                            chain.defiChain.raw.contains(other = query, ignoreCase = true)
+                            chain.defiChain.displayName.contains(other = query, ignoreCase = true)
                     }
                 }
                 .collect { filtered ->

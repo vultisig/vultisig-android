@@ -207,7 +207,7 @@ constructor(
                         .filter {
                             query.isBlank() ||
                                 it.ticker.contains(query, ignoreCase = true) ||
-                                it.chain.raw.contains(query, ignoreCase = true)
+                                it.chain.displayName.contains(query, ignoreCase = true)
                         }
                         .map { token ->
                             ChainUiModel(isEnabled = token.chain in enabledChains, coin = token)

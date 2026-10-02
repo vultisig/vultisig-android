@@ -68,7 +68,7 @@ internal fun ChainSelectionScreen(
             TokenSelectionGridUiModel(
                 tokenSelectionUiModel =
                     TokenSelectionUiModel.TokenUiSingle(
-                        name = it.data.coin.chain.raw,
+                        name = it.data.coin.chain.displayName,
                         logo = it.data.coin.chain.logo,
                     ),
                 isChecked = it.data.isEnabled,

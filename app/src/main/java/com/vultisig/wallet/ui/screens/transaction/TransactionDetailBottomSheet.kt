@@ -38,6 +38,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -426,7 +427,7 @@ private fun DetailInfoRows(
         HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)
         DetailRow(
             label = stringResource(R.string.transaction_history_detail_network),
-            value = { DetailValuePill(text = network) },
+            value = { DetailValuePill(text = Chain.displayNameOf(network)) },
         )
     }
 }

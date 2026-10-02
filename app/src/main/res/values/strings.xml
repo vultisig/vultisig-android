@@ -630,7 +630,6 @@
     <string name="error_invalid_chain">Chain is invalid</string>
     <string name="ton_stake_error_unsupported_pool">This staking pool isn\'t supported</string>
     <string name="ton_stake_error_min_amount">Minimum stake for this pool is %1$s %2$s</string>
-    <string name="ton" translatable="false">TON</string>
     <string name="ton_defi_error_ton_not_in_vault">GRAM isn\'t in this vault</string>
     <string name="ton_defi_pending_withdrawal">Pending withdrawal</string>
     <string name="ton_defi_unlock_ready">Ready to withdraw</string>

@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -313,7 +314,7 @@ private fun TonDeFiBanner(isLoading: Boolean, totalValue: String, isBalanceVisib
                     .padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
         ) {
             Text(
-                text = stringResource(R.string.ton),
+                text = Chain.Ton.displayName,
                 style = Theme.brockmann.body.l.medium,
                 color = Theme.v2.colors.text.primary,
             )

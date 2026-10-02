@@ -18,7 +18,13 @@ import wallet.core.jni.CoinType
 
 typealias ChainId = String
 
-enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: String) {
+enum class Chain(
+    val raw: ChainId,
+    val standard: TokenStandard,
+    val feeUnit: String,
+    /** User-facing network name; never an identifier, key, or payload value. */
+    val displayName: String = raw,
+) {
     ThorChain("THORChain", THORCHAIN, "Rune"),
     MayaChain("MayaChain", THORCHAIN, "cacao"),
 
@@ -57,7 +63,7 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
     Polkadot("Polkadot", SUBSTRATE, "DOT"),
     Bittensor("Bittensor", SUBSTRATE, "RAO"),
     Sui("Sui", SUI, "SUI"),
-    Ton("Ton", TON, "TON"),
+    Ton("Ton", TON, "TON", displayName = "TON (GRAM)"),
     Ripple("Ripple", RIPPLE, "XRP"),
     Tron("Tron", TRC20, "TRX"),
     Qbtc("QBTC", COSMOS, "qbtc");
@@ -78,18 +84,21 @@ enum class Chain(val raw: ChainId, val standard: TokenStandard, val feeUnit: Str
         fun fromRawOrNull(raw: String): Chain? =
             entries.firstOrNull { it.raw.equals(other = raw, ignoreCase = true) }
 
+        /** The display name for a stored [raw] chain id, or [raw] itself when it is not a chain. */
+        fun displayNameOf(raw: String): String = fromRawOrNull(raw)?.displayName ?: raw
+
         val keyImportSupportedChains: List<Chain>
             get() = entries.filter { it != Cardano && it != Qbtc }
     }
 }
 
-data class DefiChain(val raw: String, val chain: Chain)
+data class DefiChain(val raw: String, val chain: Chain, val displayName: String = raw)
 
 val Chain.toDefi: DefiChain
     get() =
         when (this) {
             Chain.Ethereum -> DefiChain(raw = "Circle", chain = this)
-            else -> DefiChain(raw = raw, chain = this)
+            else -> DefiChain(raw = raw, chain = this, displayName = displayName)
         }
 
 /**

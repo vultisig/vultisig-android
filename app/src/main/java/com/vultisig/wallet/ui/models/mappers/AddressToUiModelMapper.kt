@@ -43,6 +43,7 @@ constructor(
             // its asset count.
             defiPositionsCount =
                 if (isDefiProvider) from.accounts.calculateActiveDefiPositionsCount() else null,
+            displayName = if (isDefiProvider) defiChain.displayName else from.chain.displayName,
         )
     }
 }

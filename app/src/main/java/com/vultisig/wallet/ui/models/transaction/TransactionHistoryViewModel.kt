@@ -186,6 +186,9 @@ data class TransactionAssetUiModel(
     val tokenId: String
         get() = "$chain:$ticker"
 
+    val chainDisplayName: String
+        get() = Chain.displayNameOf(chain)
+
     /** Ticker, name and chain are the three things a user has to identify an asset by here. */
     fun matchesSearch(query: String): Boolean =
         ticker.contains(query, ignoreCase = true) ||
@@ -247,7 +250,12 @@ constructor(
     val assetSearchTextFieldState = TextFieldState()
 
     val uiState: StateFlow<TransactionHistoryUiState>
-        field = MutableStateFlow(TransactionHistoryUiState(chainName = chainId))
+        field =
+            MutableStateFlow(
+                TransactionHistoryUiState(
+                    chainName = chainId?.let(Chain::displayNameOf)
+                )
+            )
 
     /**
      * Screen visibility, driven by the composable's resume effect. A flow rather than a job handle

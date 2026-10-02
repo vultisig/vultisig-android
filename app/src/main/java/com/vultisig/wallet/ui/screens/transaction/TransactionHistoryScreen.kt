@@ -398,7 +398,8 @@ private fun AssetFilterChip(asset: TransactionAssetUiModel, onRemove: () -> Unit
         )
         Text(
             text =
-                if (asset.chain.isNotEmpty()) "${asset.ticker} (${asset.chain})" else asset.ticker,
+                if (asset.chain.isNotEmpty()) "${asset.ticker} (${asset.chainDisplayName})"
+                else asset.ticker,
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.primary,
         )
@@ -427,7 +428,8 @@ private fun AssetSearchBottomSheet(
                 tokenSelectionUiModel =
                     TokenSelectionUiModel.TokenUiSingle(
                         name =
-                            if (it.data.chain.isNotEmpty()) "${it.data.ticker} (${it.data.chain})"
+                            if (it.data.chain.isNotEmpty())
+                                "${it.data.ticker} (${it.data.chainDisplayName})"
                             else it.data.ticker,
                         logo = it.data.logo,
                     ),

@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.models.transaction
 
-import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.intl.Locale
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -116,7 +114,7 @@ constructor(
                                 if (it.chain.standard == TokenStandard.EVM) {
                                     evmNetworkUiModel.title
                                 } else {
-                                    it.chain.name.capitalize(Locale.current)
+                                    it.chain.displayName
                                 },
                             address = it.address,
                         )

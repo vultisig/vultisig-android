@@ -517,7 +517,7 @@ private fun VerifyDepositDetails(
                     )
 
                     Text(
-                        text = chain.raw,
+                        text = chain.displayName,
                         style = Theme.brockmann.supplementary.footnote,
                         color = Theme.v2.colors.text.primary,
                         textAlign = TextAlign.End,

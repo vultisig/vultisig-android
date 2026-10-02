@@ -46,7 +46,7 @@ internal data class AddAddressEntryUiModel(
     @param:StringRes val titleRes: Int = R.string.add_address_title,
     val selectedChain: NetworkUiModel = evmNetworkUiModel,
     val chains: List<NetworkUiModel> =
-        Chain.entries.map { NetworkUiModel(chain = it, logo = it.logo, title = it.raw) },
+        Chain.entries.map { NetworkUiModel(chain = it, logo = it.logo, title = it.displayName) },
     val addressError: UiText? = null,
     val titleError: UiText? = null,
 )
