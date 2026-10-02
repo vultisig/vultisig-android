@@ -53,8 +53,8 @@ internal object TronContractPayloadGuard {
 
     fun check(payload: KeysignPayload, contract: TronTriggerSmartContractPayload) {
         requireOwner(payload, contract.ownerAddress)
-        val callValue = contract.callValue?.toBigIntegerOrNull() ?: BigInteger.ZERO
-        val callTokenValue = contract.callTokenValue?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val callValue = signedLong(contract.callValue, "call_value")
+        val callTokenValue = signedLong(contract.callTokenValue, "call_token_value")
         // Attached TRC-10 value has no display field, so it is never signed.
         require(callTokenValue.signum() == 0) { "Tron contract call must not attach TRC-10 tokens" }
         val transfer = contract.data?.let { decodeTrc20Transfer(it.toByteStringOrHex()) }
@@ -76,6 +76,13 @@ internal object TronContractPayloadGuard {
         requireRecipient(payload, transfer.recipient)
         requireAmount(payload, transfer.amount)
     }
+
+    /** Parses with the same `toLong` rules [TronHelper] signs with, so a bad value fails here. */
+    private fun signedLong(value: String?, field: String): BigInteger =
+        if (value == null) BigInteger.ZERO
+        else
+            requireNotNull(value.toLongOrNull()) { "Tron contract $field is not a valid amount" }
+                .toBigInteger()
 
     private fun requireOwner(payload: KeysignPayload, ownerAddress: String) {
         require(sameTronAddress(ownerAddress, payload.coin.address)) {
