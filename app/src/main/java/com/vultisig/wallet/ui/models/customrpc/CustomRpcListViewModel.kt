@@ -58,7 +58,8 @@ constructor(
                     val trimmed = query.trim()
                     CustomRpcSupportedChains.all
                         .filter { chain ->
-                            trimmed.isEmpty() || chain.raw.contains(trimmed, ignoreCase = true)
+                            trimmed.isEmpty() ||
+                                chain.displayName.contains(trimmed, ignoreCase = true)
                         }
                         .map { chain ->
                             CustomRpcChainUiModel(

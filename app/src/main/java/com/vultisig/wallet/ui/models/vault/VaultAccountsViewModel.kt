@@ -858,7 +858,7 @@ constructor(
         if (searchQuery.isBlank()) return this
         val query = searchQuery.trim()
         return filter { account ->
-            listOf(account.chainName, account.nativeTokenTicker).any { field ->
+            listOf(account.chainName, account.displayName, account.nativeTokenTicker).any { field ->
                 field.contains(other = query, ignoreCase = true)
             }
         }

@@ -86,7 +86,7 @@ constructor(
         query: String = searchTextFieldState.text.toString(),
     ): List<ChainItemUiModel> =
         if (query.isBlank()) chains
-        else chains.filter { it.chain.raw.contains(query, ignoreCase = true) }
+        else chains.filter { it.chain.displayName.contains(query, ignoreCase = true) }
 
     private fun startScanning() {
         viewModelScope.safeLaunch(

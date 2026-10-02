@@ -110,7 +110,7 @@ constructor(
                         .asSequence()
                         .filter { (chain) ->
                             val matchesQuery =
-                                chain.raw.contains(query, ignoreCase = true) ||
+                                chain.displayName.contains(query, ignoreCase = true) ||
                                     chain.nativeTokenTicker.contains(query, ignoreCase = true)
                             val matchesFilter =
                                 when (args.filters) {
