@@ -39,7 +39,7 @@ internal fun ChainSelector(chain: Chain) {
         UiSpacer(4.dp)
 
         Text(
-            text = chain.raw,
+            text = chain.displayName,
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.primary,
         )

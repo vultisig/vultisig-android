@@ -55,7 +55,7 @@ constructor(
                     addresses
                         .map {
                             ChainToReceiveUiModel(
-                                name = it.chain.raw,
+                                name = it.chain.displayName,
                                 logo = it.chain.logo,
                                 address = it.address,
                                 ticker =

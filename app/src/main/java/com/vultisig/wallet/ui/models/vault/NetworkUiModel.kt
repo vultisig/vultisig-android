@@ -18,7 +18,7 @@ fun Chain.toNetworkUiModel(consolidateEvm: Boolean, value: String? = null) =
     } else toNetworkUiModel(value)
 
 fun Chain.toNetworkUiModel(value: String? = null) =
-    NetworkUiModel(chain = this, logo = logo, title = raw, value = value)
+    NetworkUiModel(chain = this, logo = logo, title = displayName, value = value)
 
 fun Iterable<Chain>.consolidateEvm(chainBalances: Map<Chain, String>) =
     groupBy { it.standard }

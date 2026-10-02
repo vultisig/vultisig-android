@@ -470,7 +470,7 @@ private fun VerifySendDetails(
                         text =
                             stringResource(
                                 R.string.substrate_dapp_transaction,
-                                tx.token.token.chain.raw,
+                                tx.token.token.chain.displayName,
                             ),
                         style = Theme.brockmann.supplementary.captionSmall,
                         color = Theme.v2.colors.text.tertiary,
@@ -485,7 +485,7 @@ private fun VerifySendDetails(
                             }
                                 ?: stringResource(
                                     R.string.substrate_dapp_transaction,
-                                    tx.token.token.chain.raw,
+                                    tx.token.token.chain.displayName,
                                 ),
                         style = Theme.brockmann.headings.title2,
                         color = Theme.v2.colors.text.primary,
@@ -795,7 +795,7 @@ private fun VerifySendDetails(
                 )
 
                 Text(
-                    text = chain.raw,
+                    text = chain.displayName,
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.End,

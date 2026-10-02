@@ -149,6 +149,7 @@ internal data class AccountUiModel(
      * set on a DeFi row; a wallet row keeps reporting its token count instead.
      */
     val defiPositionsCount: Int? = null,
+    val displayName: String = chainName,
 )
 
 @HiltViewModel

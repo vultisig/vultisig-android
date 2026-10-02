@@ -476,7 +476,7 @@ private fun SuccessTransactionPreview() {
                             )
 
                             Text(
-                                text = chain.raw,
+                                text = chain.displayName,
                                 style = Theme.brockmann.body.s.medium,
                                 color = Theme.v2.colors.text.primary,
                                 textAlign = TextAlign.End,

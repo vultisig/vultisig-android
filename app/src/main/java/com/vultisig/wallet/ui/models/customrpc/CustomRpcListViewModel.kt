@@ -63,7 +63,7 @@ constructor(
                         .map { chain ->
                             CustomRpcChainUiModel(
                                 chainId = chain.id,
-                                chainName = chain.raw,
+                                chainName = chain.displayName,
                                 logo = chain.logo,
                                 isCustom = overrides[chain] != null,
                             )

@@ -375,7 +375,7 @@ constructor(
                                             account.price?.let {
                                                 fiatValueToStringMapper(it, asPrice = true)
                                             },
-                                        network = token.chain.raw,
+                                        network = token.chain.displayName,
                                         canActivateTrustLine = token.id in needsTrustLine,
                                     )
                                 }
@@ -387,7 +387,7 @@ constructor(
 
                         uiState.update {
                             it.copy(
-                                chainName = chainRaw,
+                                chainName = chain.displayName,
                                 chainAddress = accountAddress,
                                 chainLogo = chain.logo,
                                 tokens = uiTokens,

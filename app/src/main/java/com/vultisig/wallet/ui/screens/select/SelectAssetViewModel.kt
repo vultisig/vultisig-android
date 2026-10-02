@@ -138,7 +138,7 @@ constructor(
                                             token = coin,
                                             logo = getCoinLogo(coin.logo),
                                             title = coin.ticker,
-                                            subtitle = coin.chain.raw,
+                                            subtitle = coin.chain.displayName,
                                             amount = "0",
                                             value = "0",
                                             isDisabled = true,
@@ -167,7 +167,7 @@ constructor(
                                         token = it.token,
                                         logo = getCoinLogo(it.token.logo),
                                         title = it.token.ticker,
-                                        subtitle = it.token.chain.raw,
+                                        subtitle = it.token.chain.displayName,
                                         amount =
                                             it.tokenValue?.let(mapTokenValueToDecimalUiString)
                                                 ?: "0",
@@ -251,7 +251,7 @@ constructor(
                     .getEnabledChains(vaultId)
                     .first()
                     .map { chain ->
-                        NetworkUiModel(chain = chain, logo = chain.logo, title = chain.name)
+                        NetworkUiModel(chain = chain, logo = chain.logo, title = chain.displayName)
                     }
                     .filter {
                         when (filter) {

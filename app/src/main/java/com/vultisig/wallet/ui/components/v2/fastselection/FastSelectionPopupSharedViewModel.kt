@@ -76,7 +76,7 @@ constructor(
                             NetworkUiModel(
                                 chain = chain,
                                 logo = chain.logo,
-                                title = chain.raw,
+                                title = chain.displayName,
                                 value = "",
                             )
                         }

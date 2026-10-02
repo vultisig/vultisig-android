@@ -37,7 +37,7 @@ internal fun ChainSelectorPickerItem(
             UiSpacer(size = 10.dp)
 
             Text(
-                text = item.chain.raw,
+                text = item.chain.displayName,
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.m.medium,
             )
