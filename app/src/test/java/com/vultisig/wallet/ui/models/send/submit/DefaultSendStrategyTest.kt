@@ -563,7 +563,7 @@ internal class DefaultSendStrategyTest {
             advanceUntilIdle()
 
             assertEquals(
-                R.string.send_error_insufficient_native_balance_with_fees,
+                R.string.send_error_insufficient_funds_including_network_costs,
                 (lastError as UiText.FormattedText).resId,
             )
             // The insufficient-balance check throws before the strategy ever builds or persists
@@ -1023,7 +1023,7 @@ internal class DefaultSendStrategyTest {
             advanceUntilIdle()
 
             assertEquals(
-                R.string.send_error_insufficient_token_balance,
+                R.string.send_error_insufficient_funds_asset,
                 (lastError as UiText.FormattedText).resId,
             )
         } finally {
@@ -1268,7 +1268,7 @@ internal class DefaultSendStrategyTest {
             advanceUntilIdle()
 
             assertEquals(
-                R.string.send_error_insufficient_native_balance_with_fees,
+                R.string.send_error_insufficient_funds_including_network_costs,
                 (lastError as UiText.FormattedText).resId,
             )
             assertEquals("1", tokenAmountFieldState.text.toString())
@@ -2023,7 +2023,7 @@ internal class DefaultSendStrategyTest {
                 advanceUntilIdle()
 
                 assertEquals(
-                    R.string.insufficient_native_token,
+                    R.string.send_error_insufficient_funds_including_network_costs,
                     (lastError as UiText.FormattedText).resId,
                 )
             } finally {
@@ -2533,7 +2533,7 @@ internal class DefaultSendStrategyTest {
             advanceUntilIdle()
 
             assertEquals(
-                R.string.send_error_insufficient_native_balance_with_fees,
+                R.string.send_error_insufficient_funds_including_network_costs,
                 (lastError as UiText.FormattedText).resId,
             )
             assertTrue(!captured.isCaptured, "an unaffordable send must not be staged")
@@ -2592,7 +2592,7 @@ internal class DefaultSendStrategyTest {
             advanceUntilIdle()
 
             assertEquals(
-                R.string.send_error_insufficient_native_balance_with_fees,
+                R.string.send_error_insufficient_funds_including_network_costs,
                 (lastError as UiText.FormattedText).resId,
             )
             assertTrue(!captured.isCaptured, "an over-entry must not be staged")

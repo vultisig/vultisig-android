@@ -229,9 +229,10 @@
     <string name="send_from_invalid_amount">Montante inválido</string>
     <string name="insufficient_utxos_error">UTXOs disponíveis insuficientes para cobrir o valor selecionado. Por favor, adicione mais fundos ou reduza o valor que está enviando</string>
     <string name="send_error_insufficient_balance">Fundos insuficientes</string>
+    <string name="send_error_insufficient_funds_asset">%1$s insuficiente: este envio precisa de %2$s, você tem %3$s</string>
+    <string name="send_error_insufficient_funds_including_network_costs">%1$s insuficiente: este envio precisa de %2$s incluindo custos de rede, você tem %3$s</string>
     <string name="send_error_msca_not_deployed">Conta MSCA ainda não implantada, tente novamente</string>
     <string name="send_error_insufficient_native_balance_with_fees">Saldo de %1$s insuficiente</string>
-    <string name="send_error_insufficient_token_balance">Saldo de %1$s insuficiente</string>
     <string name="send_error_insufficient_frozen_balance">O valor excede o saldo %1$s congelado</string>
     <string name="verify_swap_agree_receive_amount">Concordo com o valor mínimo que receberei</string>
     <string name="swap_form_estimated_fees_title">Taxa de swap</string>

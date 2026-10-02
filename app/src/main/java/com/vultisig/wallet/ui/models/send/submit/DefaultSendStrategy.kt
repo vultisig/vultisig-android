@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
+import com.vultisig.wallet.data.usecases.sendRetainedReserve
 import com.vultisig.wallet.ui.models.send.AddressManager
 import com.vultisig.wallet.ui.models.send.AmountManager
 import com.vultisig.wallet.ui.models.send.ChainValidationService
@@ -37,6 +38,7 @@ import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.models.send.evmSettingsFor
+import com.vultisig.wallet.ui.models.send.insufficientFundsText
 import com.vultisig.wallet.ui.models.send.memoLengthErrorOrNull
 import com.vultisig.wallet.ui.models.send.selectGasFeeForFeeEstimation
 import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
@@ -351,14 +353,24 @@ internal class DefaultSendStrategy(
                             }
 
                         if (tokenAmountInt > availableTokenBalance) {
-                            val errorRes =
-                                if (defiType == DeFiNavActions.UNFREEZE_TRX) {
-                                    R.string.send_error_insufficient_frozen_balance
-                                } else {
-                                    R.string.send_error_insufficient_native_balance_with_fees
-                                }
                             throw InvalidTransactionDataException(
-                                UiText.FormattedText(errorRes, listOf(selectedToken.ticker))
+                                if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                                    UiText.FormattedText(
+                                        R.string.send_error_insufficient_frozen_balance,
+                                        listOf(selectedToken.ticker),
+                                    )
+                                } else {
+                                    insufficientFundsText(
+                                        ticker = selectedToken.ticker,
+                                        decimals = selectedToken.decimal,
+                                        required =
+                                            tokenAmountInt +
+                                                spendableGasFee.value +
+                                                sendRetainedReserve(selectedToken),
+                                        available = selectedTokenValue.value,
+                                        includesNetworkCosts = true,
+                                    )
+                                }
                             )
                         }
 
@@ -405,9 +417,12 @@ internal class DefaultSendStrategy(
                         // LUNC, even though the chain deducts the fee from the USTC being sent.
                         if (selectedTokenValue.value < tokenAmountInt + gasFee.value) {
                             throw InvalidTransactionDataException(
-                                UiText.FormattedText(
-                                    R.string.send_error_insufficient_native_balance_with_fees,
-                                    listOf(selectedToken.ticker),
+                                insufficientFundsText(
+                                    ticker = selectedToken.ticker,
+                                    decimals = selectedToken.decimal,
+                                    required = tokenAmountInt + gasFee.value,
+                                    available = selectedTokenValue.value,
+                                    includesNetworkCosts = true,
                                 )
                             )
                         }
@@ -427,9 +442,12 @@ internal class DefaultSendStrategy(
                             // pure token-balance shortfall — keep the message free of any "with
                             // fees" framing that would wrongly suggest reserving tokens for gas.
                             throw InvalidTransactionDataException(
-                                UiText.FormattedText(
-                                    R.string.send_error_insufficient_token_balance,
-                                    listOf(selectedToken.ticker),
+                                insufficientFundsText(
+                                    ticker = selectedToken.ticker,
+                                    decimals = selectedToken.decimal,
+                                    required = tokenAmountInt,
+                                    available = selectedTokenValue.value,
+                                    includesNetworkCosts = false,
                                 )
                             )
                         } else {
@@ -458,9 +476,12 @@ internal class DefaultSendStrategy(
                                 }
                             if (nativeTokenValue < requiredNativeValue) {
                                 throw InvalidTransactionDataException(
-                                    UiText.FormattedText(
-                                        R.string.insufficient_native_token,
-                                        listOf(nativeTokenAccount.token.ticker),
+                                    insufficientFundsText(
+                                        ticker = nativeTokenAccount.token.ticker,
+                                        decimals = nativeTokenAccount.token.decimal,
+                                        required = requiredNativeValue,
+                                        available = nativeTokenValue,
+                                        includesNetworkCosts = true,
                                     )
                                 )
                             }
@@ -644,9 +665,12 @@ internal class DefaultSendStrategy(
         if (affordable >= amount) return amount
         if (affordable <= BigInteger.ZERO) {
             throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.send_error_insufficient_native_balance_with_fees,
-                    listOf(token.ticker),
+                insufficientFundsText(
+                    ticker = token.ticker,
+                    decimals = token.decimal,
+                    required = amount + signedFee + sendRetainedReserve(token),
+                    available = balance,
+                    includesNetworkCosts = true,
                 )
             )
         }
