@@ -22,9 +22,11 @@ import vultisig.keysign.v1.TronTriggerSmartContractPayload
  * - `TransferContract` / `TransferAssetContract`: recipient and amount of the contract.
  * - `TriggerSmartContract` with TRC-20 `transfer` data: the decoded recipient and amount, with the
  *   payload coin being that token and no TRX attached.
- * - Any other `TriggerSmartContract`: the contract address and the TRX `call_value`.
+ * - Any other `TriggerSmartContract`: the contract address and the TRX `call_value`, shown as TRX
+ *   whenever it is non-zero.
  *
- * In every case the contract owner must be the vault's own Tron address.
+ * In every case the contract owner must be the vault's own Tron address, and a contract call may
+ * not attach TRC-10 tokens (`call_token_value`), which nothing displays.
  */
 internal object TronContractPayloadGuard {
 
@@ -43,6 +45,8 @@ internal object TronContractPayloadGuard {
 
     fun check(payload: KeysignPayload, contract: TronTransferAssetContractPayload) {
         requireOwner(payload, contract.ownerAddress)
+        // The payload carries no TRC-10 id to bind `assetName` to; at least never show it as TRX.
+        require(!payload.coin.isNativeToken) { "Tron TransferAssetContract must not be shown as TRX" }
         requireRecipient(payload, contract.toAddress)
         requireAmount(payload, contract.amount.toBigIntegerOrNull())
     }
@@ -50,8 +54,14 @@ internal object TronContractPayloadGuard {
     fun check(payload: KeysignPayload, contract: TronTriggerSmartContractPayload) {
         requireOwner(payload, contract.ownerAddress)
         val callValue = contract.callValue?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val callTokenValue = contract.callTokenValue?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        // Attached TRC-10 value has no display field, so it is never signed.
+        require(callTokenValue.signum() == 0) { "Tron contract call must not attach TRC-10 tokens" }
         val transfer = contract.data?.let { decodeTrc20Transfer(it.toByteStringOrHex()) }
         if (transfer == null) {
+            require(callValue.signum() == 0 || payload.coin.isNativeToken) {
+                "Tron contract call attaching TRX must be shown as TRX"
+            }
             requireRecipient(payload, contract.contractAddress)
             requireAmount(payload, callValue)
             return
