@@ -320,6 +320,11 @@ class SuiApiTest {
     }
 
     @Test
+    fun `getHeldCoinTypes skips an incomplete coin object instead of failing`() = runTest {
+        assertEquals(emptyList(), api(coinNode(digest = "null", coinBalance = "1")).getHeldCoinTypes("0xabc"))
+    }
+
+    @Test
     fun `getAllCoins rejects objects that arrived without the coin balance`() = runTest {
         val error =
             assertFailsWith<SuiRpcException> {

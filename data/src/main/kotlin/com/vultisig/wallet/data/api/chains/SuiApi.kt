@@ -37,6 +37,9 @@ interface SuiApi {
 
     suspend fun getAllCoins(address: String): List<SuiCoin>
 
+    /** Coin types held by [address]; unlike [getAllCoins], objects that can't be spent are skipped. */
+    suspend fun getHeldCoinTypes(address: String): List<String>
+
     /** The on-chain [SuiCoinMetadata] for [coinType], or `null` when the coin publishes none. */
     suspend fun getCoinMetadata(coinType: String): SuiCoinMetadata?
 
@@ -99,17 +102,25 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
             ?.referenceGasPrice
             ?.toBigIntegerOrNull() ?: throw SuiRpcException("failed to fetch reference gas price")
 
-    override suspend fun getAllCoins(address: String): List<SuiCoin> {
+    override suspend fun getAllCoins(address: String): List<SuiCoin> =
+        walkCoins(address, strict = true)
+
+    // ponytail: discovery only needs types, so one incomplete object must not hide every token
+    override suspend fun getHeldCoinTypes(address: String): List<String> =
+        walkCoins(address, strict = false).map { it.coinType }
+
+    private suspend fun walkCoins(address: String, strict: Boolean): List<SuiCoin> {
         val allCoins = mutableListOf<SuiCoin>()
         val firstOwner = fetchCoinOwner(address, cursor = null)
         // The coin balance is not paginated, so the first page is the whole reading.
-        val coinBalance = firstOwner.requireCoinBalance()
+        val coinBalance = if (strict) firstOwner.requireCoinBalance() else BigInteger.ZERO
         var pagesFetched = 1
         var cursor =
             firstOwner.recordCoinPage(
                 into = allCoins,
                 pagesFetched = pagesFetched,
                 previousCursor = null,
+                strict = strict,
             )
         // The object connection is paginated. Follow hasNextPage/endCursor so a wallet whose
         // objects span multiple pages doesn't return a truncated set — otherwise a token whose
@@ -124,9 +135,10 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
                     into = allCoins,
                     pagesFetched = pagesFetched,
                     previousCursor = previousCursor,
+                    strict = strict,
                 )
         }
-        rejectBalanceWithoutCoins(coinBalance, allCoins)
+        if (strict) rejectBalanceWithoutCoins(coinBalance, allCoins)
         return allCoins
     }
 
@@ -154,10 +166,14 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
         into: MutableList<SuiCoin>,
         pagesFetched: Int,
         previousCursor: String?,
+        strict: Boolean,
     ): String? {
         val connection = objects ?: throw SuiRpcException("failed to fetch all coins for sui")
         // A listed coin missing its id, version, digest, or balance is an incomplete read.
-        connection.nodes.forEach { into.add(it.toSpendableCoin()) }
+        connection.nodes.forEach { node ->
+            if (strict) into.add(node.toSpendableCoin())
+            else runCatching { node.toSpendableCoin() }.onSuccess(into::add)
+        }
 
         // A stalled or over-budget cursor throws. A partial coin list is not a smaller wallet.
         val nextCursor = connection.pageInfo.endCursor.takeIf { connection.pageInfo.hasNextPage }

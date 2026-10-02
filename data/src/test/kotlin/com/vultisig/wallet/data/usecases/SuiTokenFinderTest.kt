@@ -139,14 +139,14 @@ internal class SuiTokenFinderTest {
 
     @Test
     fun `returns empty when the held-coin read fails`() = runTest {
-        coEvery { suiApi.getAllCoins(ADDRESS) } throws IllegalStateException("invalid address")
+        coEvery { suiApi.getHeldCoinTypes(ADDRESS) } throws IllegalStateException("invalid address")
 
         assertEquals(emptyList<Coin>(), finder.find(ADDRESS))
     }
 
     @Test
     fun `propagates cancellation instead of reporting an empty wallet`() = runTest {
-        coEvery { suiApi.getAllCoins(ADDRESS) } throws CancellationException("navigated away")
+        coEvery { suiApi.getHeldCoinTypes(ADDRESS) } throws CancellationException("navigated away")
 
         assertThrows<CancellationException> { finder.find(ADDRESS) }
     }
@@ -207,7 +207,7 @@ internal class SuiTokenFinderTest {
             val shortForm = withShortPackageAddress(Coins.Sui.CETUS.contractAddress)
             val held =
                 listOf(heldObject(shortForm, "0xt1", "500"), heldObject(NATIVE_TYPE, "0xg1", GAS))
-            coEvery { suiApi.getAllCoins(ADDRESS) } returns held
+            coEvery { suiApi.getHeldCoinTypes(ADDRESS) } returns held.map { it.coinType }
 
             val discovered = finder.find(ADDRESS).single()
 
@@ -227,7 +227,7 @@ internal class SuiTokenFinderTest {
             .map { it.coinObjectId }
 
     private fun stubHeld(vararg objects: SuiCoin) {
-        coEvery { suiApi.getAllCoins(ADDRESS) } returns objects.toList()
+        coEvery { suiApi.getHeldCoinTypes(ADDRESS) } returns objects.map { it.coinType }
     }
 
     private fun heldObject(coinType: String, objectId: String = "0x1", balance: String = "10") =
