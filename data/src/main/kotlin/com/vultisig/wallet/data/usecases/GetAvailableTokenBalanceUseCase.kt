@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import java.math.BigInteger
 import javax.inject.Inject
@@ -35,19 +36,22 @@ internal class GetAvailableTokenBalanceUseCaseImpl @Inject constructor() :
         // RippleApi.getBalance() already nets the live account reserve out of tokenValue before it
         // reaches this use case, so subtracting it again would double-reserve and under-fill
         // MAX/percentage sends.
-        val reserve =
-            when {
-                token.chain == Chain.Polkadot && token.isNativeToken ->
-                    PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-
-                token.chain == Chain.Bittensor && token.isNativeToken ->
-                    BittensorHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-
-                else -> BigInteger.ZERO
-            }
+        val reserve = sendRetainedReserve(token)
 
         return tokenValue?.copy(
             value = tokenValue.value.minus(gasCost).minus(reserve).coerceAtLeast(BigInteger.ZERO)
         )
     }
 }
+
+/** Balance a native send must leave behind so the chain does not reap the sender's account. */
+fun sendRetainedReserve(token: Coin): BigInteger =
+    when {
+        token.chain == Chain.Polkadot && token.isNativeToken ->
+            PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
+
+        token.chain == Chain.Bittensor && token.isNativeToken ->
+            BittensorHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
+
+        else -> BigInteger.ZERO
+    }
