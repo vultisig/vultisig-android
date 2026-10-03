@@ -56,7 +56,7 @@ class ERC20HelperSelfTransferTest {
             assertThrows(IllegalArgumentException::class.java) {
                 helper.getPreSignedImageHash(payload(USDC))
             }
-        assertTrue(e.message!!.contains("token's own contract"), e.message)
+        assertTrue(e.message?.contains("token's own contract") == true, e.message.orEmpty())
     }
 
     @Test
@@ -65,7 +65,7 @@ class ERC20HelperSelfTransferTest {
             assertThrows(IllegalArgumentException::class.java) {
                 helper.getPreSignedImageHash(payload(USDC.uppercase()))
             }
-        assertTrue(e.message!!.contains("token's own contract"), e.message)
+        assertTrue(e.message?.contains("token's own contract") == true, e.message.orEmpty())
     }
 
     private companion object {

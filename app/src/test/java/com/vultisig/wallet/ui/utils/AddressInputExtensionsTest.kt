@@ -130,6 +130,16 @@ internal class AddressInputExtensionsTest {
         assertNotEquals(TOKEN_CONTRACT, link.asAddressInput())
     }
 
+    /**
+     * EIP-681 function parsing is gated on the `ethereum:` scheme, so a non-Ethereum URI with a
+     * `/transfer?address=…` path must not have its `address` query taken as the recipient.
+     */
+    @Test
+    fun `non-ethereum scheme does not extract the address parameter`() {
+        val link = "https://evil.example/transfer?address=$EVM_ADDRESS&uint256=1"
+        assertNotEquals(EVM_ADDRESS, link.asAddressInput())
+    }
+
     /** Verifies that a non-URI identifier like a THORName is not modified. */
     @Test
     fun `thorname passes through unchanged`() {
