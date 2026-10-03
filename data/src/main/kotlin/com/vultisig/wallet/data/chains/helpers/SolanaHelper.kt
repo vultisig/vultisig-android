@@ -35,6 +35,14 @@ internal const val SOLANA_PRIORITY_FEE_LIMIT = 100000
  */
 internal const val SOLANA_MAX_PRIORITY_FEE_PRICE = 100_000_000L
 
+/**
+ * Solana's per-transaction compute-unit ceiling (`MAX_COMPUTE_UNIT_LIMIT`). A limit above this is
+ * invalid on-chain, so a relayed transaction's compute-unit limit is held here — bounding the
+ * priority fee (price × limit) a co-signer will sign to at most
+ * [SOLANA_MAX_PRIORITY_FEE_PRICE] × this.
+ */
+internal const val SOLANA_MAX_COMPUTE_UNIT_LIMIT = 1_400_000L
+
 const val SOLANA_DEFAULT_CONTRACT_ADDRESS = "So11111111111111111111111111111111111111112"
 
 /**
@@ -181,29 +189,36 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
     }
 
     /**
-     * Applies the clamped priority-fee price + compute-unit limit shared by the transfer and
-     * staking signing inputs. Price is floored at [SOLANA_PRIORITY_FEE_PRICE] and both values are
-     * clamped to their proto field widths (price → Long, limit → Int).
+     * Applies the priority-fee price + compute-unit limit shared by the transfer and staking
+     * signing inputs. Both are bounded, not just floored: this runs on every signer including a
+     * co-signer rebuilding a relayed transaction, so a compromised initiator can't inflate
+     * `priorityFee` / `priorityLimit` to burn the balance as a priority fee that the Verify screen
+     * (a fresh estimate) never shows. A price above [SOLANA_MAX_PRIORITY_FEE_PRICE] or a limit above
+     * [SOLANA_MAX_COMPUTE_UNIT_LIMIT] is refused; the price is still floored for the lower bound.
      */
     private fun Solana.SigningInput.Builder.applyPriorityFee(
         price: BigInteger,
         limit: BigInteger,
-    ): Solana.SigningInput.Builder =
-        setPriorityFeePrice(
+    ): Solana.SigningInput.Builder {
+        // Reject (don't silently clamp) an out-of-range budget: a clamped value would diverge from
+        // an unpatched initiator's and break the ceremony opaquely, whereas a refusal is explicit
+        // and still stops the fee being signed. The price is still floored for the lower bound,
+        // matching the app's own fee sampling.
+        require(price <= BigInteger.valueOf(SOLANA_MAX_PRIORITY_FEE_PRICE)) {
+            "Solana priority-fee price $price exceeds the $SOLANA_MAX_PRIORITY_FEE_PRICE ceiling"
+        }
+        require(limit <= BigInteger.valueOf(SOLANA_MAX_COMPUTE_UNIT_LIMIT)) {
+            "Solana compute-unit limit $limit exceeds the $SOLANA_MAX_COMPUTE_UNIT_LIMIT ceiling"
+        }
+        return setPriorityFeePrice(
                 Solana.PriorityFeePrice.newBuilder()
-                    .setPrice(
-                        maxOf(
-                            price.min(BigInteger.valueOf(Long.MAX_VALUE)).toLong(),
-                            SOLANA_PRIORITY_FEE_PRICE,
-                        )
-                    )
+                    .setPrice(maxOf(price.toLong(), SOLANA_PRIORITY_FEE_PRICE))
                     .build()
             )
             .setPriorityFeeLimit(
-                Solana.PriorityFeeLimit.newBuilder()
-                    .setLimit(limit.min(BigInteger.valueOf(Int.MAX_VALUE.toLong())).toInt())
-                    .build()
+                Solana.PriorityFeeLimit.newBuilder().setLimit(limit.toInt()).build()
             )
+    }
 
     private fun getStakingPreSignedInputData(
         payload: SolanaStakingPayload,
