@@ -349,11 +349,18 @@ object RippleHelper {
         }
 
         // The dApp/relay bakes `Fee` into the raw JSON and it is signed verbatim, so bound it the
-        // same way the native path bounds `gas` — an unbounded Fee burns the account.
-        (obj["Fee"] as? JsonPrimitive)?.contentOrNull?.let { feeDrops ->
+        // same way the native path bounds `gas` — an unbounded Fee burns the account. XRPL encodes
+        // `Fee` as a string of drops; a `Fee` that is present but not a positive integer within the
+        // ceiling (negative, zero, fractional, a non-string, or `null`) is malformed and refused
+        // here rather than left to produce a zero-fee input or a late signing failure.
+        obj["Fee"]?.let { feeElement ->
+            val feeDrops =
+                (feeElement as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+                    ?: error("SignRipple Fee must be a string of drops")
             val fee =
                 feeDrops.toBigIntegerOrNull()
                     ?: error("SignRipple Fee '$feeDrops' is not an integer number of drops")
+            require(fee > BigInteger.ZERO) { "SignRipple Fee $fee is not positive" }
             require(fee <= BigInteger.valueOf(MAX_FEE_DROPS.toLong())) {
                 "SignRipple Fee $fee drops exceeds the $MAX_FEE_DROPS ceiling; refusing to sign"
             }

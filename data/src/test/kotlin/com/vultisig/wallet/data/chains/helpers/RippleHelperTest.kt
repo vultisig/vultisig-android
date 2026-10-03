@@ -38,6 +38,26 @@ class RippleHelperTest {
     }
 
     @Test
+    fun `verifyDappTransaction rejects a malformed or non-positive Fee`() {
+        // A non-positive or non-integer string is refused (require / error — both RuntimeException).
+        listOf("-1", "0", "1.5", "abc").forEach { bad ->
+            assertThrows(RuntimeException::class.java) {
+                RippleHelper.verifyDappTransaction(paymentWithFee(bad), vaultXrpAddress)
+            }
+        }
+        // Fee present but not a string of drops: a JSON number, null, or an object.
+        listOf(""""Fee":400""", """"Fee":null""", """"Fee":{}""").forEach { badFeeField ->
+            val json =
+                """{"TransactionType":"Payment","Account":"$vaultXrpAddress",""" +
+                    """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000",""" +
+                    "$badFeeField}"
+            assertThrows(RuntimeException::class.java) {
+                RippleHelper.verifyDappTransaction(json, vaultXrpAddress)
+            }
+        }
+    }
+
+    @Test
     fun `getPreSignedInputData rejects a native Fee above the ceiling`() {
         val payload =
             KeysignPayload(
