@@ -13,13 +13,46 @@ private val URI_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9+\\-.]*:(.+)$")
 internal fun CharSequence.asAddressInput(): String {
     val trimmed = toString().trimUnicodeWhitespace()
     val match = URI_REGEX.matchEntire(trimmed) ?: return trimmed
+    val scheme = trimmed.substringBefore(':')
     val payload = match.groupValues[1]
-    return payload
-        .substringBefore('?')
-        .substringBefore('@')
-        .substringBefore('/')
-        .trimUnicodeWhitespace()
+    val beforeQuery = payload.substringBefore('?')
+
+    // EIP-681 function-call form: `<target>[@chainId]/<function>?<params>`. Here `<target>` is the
+    // token CONTRACT, not the recipient — for an ERC-20 `transfer` the recipient is the `address`
+    // parameter. The old code stripped everything after `/`, so it returned the contract address;
+    // sending the selected token to its own contract loses the funds. Parse the function form so
+    // the recipient is the real payee, and never silently resolve a non-transfer call to the
+    // contract (return the unresolved text, which fails address validation).
+    //
+    // Gate this on the `ethereum:` scheme — EIP-681 is only defined for it — so a non-Ethereum URI
+    // with a path (e.g. `https://x/transfer?address=…`) can't have its `address` query taken as the
+    // recipient.
+    if (scheme.equals("ethereum", ignoreCase = true) && beforeQuery.contains('/')) {
+        val function = beforeQuery.substringAfterLast('/').trimUnicodeWhitespace()
+        if (!function.equals("transfer", ignoreCase = true)) {
+            return beforeQuery.trimUnicodeWhitespace()
+        }
+        val recipient = payload.eip681Param("address")
+        return recipient?.takeIf { it.isNotEmpty() } ?: beforeQuery.trimUnicodeWhitespace()
+    }
+
+    // Plain payment form: `<target>[@chainId]`; the target is the recipient. Any path on a
+    // non-Ethereum scheme is stripped (unchanged from the original behaviour).
+    return beforeQuery.substringBefore('@').substringBefore('/').trimUnicodeWhitespace()
 }
+
+/** Value of an EIP-681 query parameter (after `?`, `&`-separated `key=value`), or null. */
+private fun String.eip681Param(key: String): String? =
+    substringAfter('?', "")
+        .split('&')
+        .firstNotNullOfOrNull { pair ->
+            val eq = pair.indexOf('=')
+            if (eq > 0 && pair.substring(0, eq).trim() == key) {
+                pair.substring(eq + 1).trimUnicodeWhitespace()
+            } else {
+                null
+            }
+        }
 
 private fun String.trimUnicodeWhitespace(): String =
     dropWhile { Character.isWhitespace(it) || Character.isSpaceChar(it) }
