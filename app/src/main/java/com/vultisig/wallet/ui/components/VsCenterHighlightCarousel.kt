@@ -251,14 +251,14 @@ private fun CarouselChainItem(chain: Chain, logo: ImageModel, modifier: Modifier
         TokenLogo(
             errorLogoModifier = Modifier.size(32.dp).background(Theme.v2.colors.neutrals.n100),
             logo = logo,
-            title = "${chain.raw} logo",
+            title = "${chain.displayName} logo",
             modifier = Modifier.size(26.dp),
         )
 
         Spacer(modifier = Modifier.width(8.dp))
 
         AutoSizingText(
-            text = chain.raw,
+            text = chain.displayName,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.primary,
         )

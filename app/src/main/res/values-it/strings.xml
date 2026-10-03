@@ -265,6 +265,7 @@
     <string name="verify_transaction_allow_death_warning">Questo trasferimento può svuotare l\'account del mittente. Se il saldo rimanente scende sotto il deposito esistenziale, l\'account verrà disattivato (raccolto) e tutti i %1$s rimanenti andranno persi.</string>
     <string name="vault_settings_delete_vault_value">Vault Valore:</string>
     <string name="join_keysign_wrong_reshare">Condivisione errata</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">La ricondivisione non è supportata per le casseforti con una chiave QBTC</string>
     <string name="swap_screen_provider_title">Fornitrice</string>
     <string name="swap_form_minimum_amount">Importo dello swap troppo piccolo. Importo consigliato %1$s %2$s</string>
     <string name="backup_password_screen_title">Backup</string>
@@ -400,6 +401,7 @@
     <string name="deposit_error_thorchain_chain_halted">I depositi su %1$s sono attualmente sospesi su THORChain. Riprova più tardi.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">Impossibile contattare THORChain per verificare il vault in entrata. Riprova.</string>
     <string name="deposit_error_pool_not_available">Il pool %1$s non è attualmente disponibile per i depositi.</string>
+    <string name="deposit_error_pool_staged_unpaired">Il pool %1$s è in stato «staged» e accetta solo depositi abbinati all\'altro lato. THORChain rimborserebbe questa transazione.</string>
     <string name="deposit_form_screen_assets">Attività</string>
     <string name="deposit_form_screen_asset_selection">Selezione asset</string>
     <string name="deposit_form_screen_lpunits">Unità LP</string>

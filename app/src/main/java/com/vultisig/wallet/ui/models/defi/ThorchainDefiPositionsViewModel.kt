@@ -175,11 +175,11 @@ constructor(
     val totalValueLpFiat: StateFlow<LpLegTotal?>
         field = MutableStateFlow<LpLegTotal?>(null)
 
-    // Cached "available" pool list shared by the Manage-Positions dialog and the LP tab loader so
-    // cold start makes a single getPoolStats call instead of two. `null` means "not loaded yet"
-    // (or "previous fetch failed and should be retried"); `emptyList()` would mean "loaded, none
-    // available", but Midgard never returns that in practice.
-    private val availablePools = MutableStateFlow<List<ThorChainPoolStatsJson>?>(null)
+    // Cached list of pools that take liquidity (Available + Staged), shared by the Manage-Positions
+    // dialog and the LP tab loader so cold start makes a single getPoolStats call instead of two.
+    // `null` means "not loaded yet" (or "previous fetch failed and should be retried");
+    // `emptyList()` would mean "loaded, none open", but Midgard never returns that in practice.
+    private val lpPools = MutableStateFlow<List<ThorChainPoolStatsJson>?>(null)
 
     private var currencyJob: Job? = null
     private var lpDialogJob: Job? = null
@@ -249,9 +249,9 @@ constructor(
             try {
                 val pools =
                     withContext(ioDispatcher) {
-                        getThorChainLpPositionsUseCase.fetchAvailablePools()
+                        getThorChainLpPositionsUseCase.fetchLpPools()
                     }
-                availablePools.value = pools
+                lpPools.value = pools
                 val dialogPositions =
                     pools
                         .map { pool -> pool.asset.toLpPositionDialogModel() }
@@ -264,7 +264,7 @@ constructor(
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load THORChain LP pools for dialog")
-                // Leave availablePools null so the next user interaction (e.g. opening Manage
+                // Leave lpPools null so the next user interaction (e.g. opening Manage
                 // Positions or saving a selection) retries instead of soft-locking.
                 // lpDialogLoaded means "settled", not "succeeded": leaving it false parks the tab
                 // in a spinner that nothing can ever clear, while any pending half-deposit still
@@ -279,7 +279,7 @@ constructor(
         }
 
     private fun ensureAvailablePoolsLoaded() {
-        if (availablePools.value != null) return
+        if (lpPools.value != null) return
         if (lpDialogJob?.isActive == true) return
         lpDialogJob = loadLpPositionsForDialog()
     }
@@ -1366,7 +1366,7 @@ constructor(
 
     private fun reloadLpTab() {
         val selectedKeys = state.value.selectedPositions.toSet()
-        val pools = availablePools.value
+        val pools = lpPools.value
         // Dialog dataset hasn't loaded yet (or last fetch failed). Don't run with stale state —
         // loadLpPositionsForDialog calls reloadLpTab again once it succeeds.
         if (pools == null) {
@@ -1465,7 +1465,7 @@ constructor(
                             getThorChainLpPositionsUseCase(
                                 runeAddress = runeCoin.address,
                                 assetAddressesByPool = assetAddressesByPool,
-                                availablePools = pools,
+                                lpPools = pools,
                             )
                         }
                     val positionsByPool = lpPositions.positions.associateBy { it.pool }

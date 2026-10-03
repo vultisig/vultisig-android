@@ -208,7 +208,7 @@ internal class MainViewModelTest {
         }
 
     @Test
-    fun `onForegroundBannerTapped to Keygen Join pops prior join entry inclusive`() =
+    fun `onForegroundBannerTapped to Keygen Join is ignored and clears banner`() =
         runTest(dispatcher) {
             val vault: Vault = mockk(relaxed = true)
             coEvery { vaultRepository.hasVaults() } returns true
@@ -227,24 +227,19 @@ internal class MainViewModelTest {
             vm.onForegroundBannerTapped()
             advanceUntilIdle()
 
-            coVerify {
-                navigator.route(
-                    ofType(Route.Keygen.Join::class),
-                    NavigationOptions(popUpToRoute = Route.Keygen.Join::class, inclusive = true),
-                )
-            }
-            vm.foregroundNotification.value.shouldNotBeNull()
+            // Devices only push keysign requests, so a keygen payload is never joined.
+            coVerify(exactly = 0) { navigator.route(any(), any()) }
+            vm.foregroundNotification.value.shouldBeNull()
         }
 
     @Test
-    fun `onForegroundBannerTapped to a non-join route navigates once and clears banner`() =
+    fun `onForegroundBannerTapped to a non-keysign route is ignored and clears banner`() =
         runTest(dispatcher) {
             val vault: Vault = mockk(relaxed = true)
             coEvery { vaultRepository.hasVaults() } returns true
             coEvery { vaultRepository.getByEcdsa(any()) } returns vault
             coEvery { getKeysignTransactionSummary.invoke(any()) } returns null
-            // Send never reaches the route-change observer, so the ViewModel clears the banner
-            // itself and routes without pop options.
+            // A push that doesn't resolve to a keysign join isn't followed.
             coEvery { getDirectionByQrCodeUseCase(any(), any()) } returns
                 Route.Send(vaultId = "vault-id", address = "addr")
 
@@ -258,7 +253,8 @@ internal class MainViewModelTest {
             vm.onForegroundBannerTapped()
             advanceUntilIdle()
 
-            coVerify { navigator.route(ofType(Route.Send::class)) }
+            coVerify(exactly = 0) { navigator.route(any()) }
+            coVerify(exactly = 0) { navigator.route(any(), any()) }
             vm.foregroundNotification.value.shouldBeNull()
         }
 

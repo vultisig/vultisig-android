@@ -30,7 +30,8 @@ constructor(
 ) {
 
     /**
-     * Decode the function signature and pretty-formatted args from EVM calldata.
+     * Decode the function signature and pretty-formatted args from EVM calldata, or from a Tron
+     * TriggerSmartContract `data`, which uses the same ABI encoding.
      *
      * The function name is split on camelCase boundaries and title-cased so it reads as a label
      * (e.g. `supplyWithPermit` → `"Supply With Permit"`). Caller renders the name as a small-text
@@ -44,7 +45,8 @@ constructor(
      * (typically the main / unconfined coroutine that runs `keysignVerify`) is never blocked.
      */
     suspend fun getTransactionFunctionInfo(memo: String?, chain: Chain): FunctionInfo? {
-        if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty()) return null
+        val decodesCalldata = chain.standard == TokenStandard.EVM || chain == Chain.Tron
+        if (!decodesCalldata || memo.isNullOrEmpty()) return null
         return withContext(Dispatchers.IO) {
             val functionSignature =
                 fourByteRepository.decodeFunction(memo) ?: return@withContext null

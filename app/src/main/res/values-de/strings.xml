@@ -265,6 +265,7 @@
     <string name="verify_transaction_allow_death_warning">Diese Überweisung kann das Konto des Absenders leeren. Fällt der verbleibende Kontostand unter das Existential Deposit, wird das Konto deaktiviert (geerntet) und alle verbleibenden %1$s gehen verloren.</string>
     <string name="vault_settings_delete_vault_value">Vault Wert:</string>
     <string name="join_keysign_wrong_reshare">Falsches ReShare</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">Erneutes Teilen wird für Tresore mit einem QBTC-Schlüssel nicht unterstützt</string>
     <string name="swap_screen_provider_title">Anbieter</string>
     <string name="swap_form_minimum_amount">Swap-Betrag zu klein. Empfohlener Betrag %1$s %2$s</string>
     <string name="backup_password_screen_title">Sicherung</string>
@@ -400,6 +401,7 @@
     <string name="deposit_error_thorchain_chain_halted">Einzahlungen auf %1$s sind derzeit auf THORChain ausgesetzt. Bitte später erneut versuchen.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">THORChain konnte nicht erreicht werden, um den eingehenden Vault zu verifizieren. Bitte erneut versuchen.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s ist derzeit nicht für Einzahlungen verfügbar.</string>
+    <string name="deposit_error_pool_staged_unpaired">Pool %1$s ist im Status „Staged“ und akzeptiert nur gepaarte Einzahlungen beider Seiten. THORChain würde diese Transaktion erstatten.</string>
     <string name="deposit_form_screen_assets">Vermögenswert</string>
     <string name="deposit_form_screen_asset_selection">Anlagenauswahl</string>
     <string name="deposit_form_screen_lpunits">LP-Einheiten</string>

@@ -12,6 +12,12 @@ internal interface ChainToDefiChainUiMapper : MapperFunc<Chain, DefiChainUiModel
 internal class ChainToDefiChainUiMapperImpl @Inject constructor() : ChainToDefiChainUiMapper {
 
     override fun invoke(from: Chain): DefiChainUiModel {
-        return DefiChainUiModel(chain = from, raw = from.toDefi.raw, logo = from.toDefi.logo)
+        val defiChain = from.toDefi
+        return DefiChainUiModel(
+            chain = from,
+            raw = defiChain.raw,
+            logo = defiChain.logo,
+            displayName = defiChain.displayName,
+        )
     }
 }

@@ -61,10 +61,7 @@ internal fun DepositScreen(
 
     val shouldUseMainNavigator = route == SendDst.Send.route
 
-    val chainName =
-        remember(chainId) {
-            Chain.entries.firstOrNull { it.raw.equals(chainId, ignoreCase = true) }?.raw ?: chainId
-        }
+    val chainName = remember(chainId) { Chain.displayNameOf(chainId) }
     val title =
         when (depositType) {
             DeFiNavActions.ADD_LP.type -> stringResource(R.string.add_lp_title, chainName)

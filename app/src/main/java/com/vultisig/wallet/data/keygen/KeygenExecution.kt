@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.keygen
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.models.Vault
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -184,6 +185,10 @@ internal fun selectKeygenExecutor(action: TssAction, libType: SigningLibType): K
  * KeyImport per-chain shares). For non-reshare flows (KEYGEN / Migrate / KeyImport / SingleKeygen)
  * the existing list is replaced with just the freshly produced root shares.
  *
+ * Reshare only re-runs the ECDSA and EdDSA ceremonies, so a carried-over MLDSA share still belongs
+ * to the old committee. That is only safe because reshare is refused on vaults holding an MLDSA key
+ * (see [isReshareBlockedByMldsa]); a preserved MLDSA share here never meets a changed committee.
+ *
  * Pure function so the preservation invariant is tested independently of the JNI-heavy ceremony
  * code in `KeygenViewModel.startKeygenDkls`. The previous inline implementation captured the
  * vault's pubkeys AFTER they were already overwritten — the filter never matched and stale root
@@ -209,6 +214,18 @@ internal fun mergeReshareKeyshares(
         addAll(preserved)
     }
 }
+
+/**
+ * Returns `true` when this device must refuse to take part in a reshare of a vault that holds an
+ * MLDSA key.
+ *
+ * Reshare regenerates only the ECDSA and EdDSA shares. The MLDSA share stays tied to the old
+ * committee: a device joining the reshare never receives one, and a removed device keeps a valid
+ * one, so QBTC signing breaks once the committee changes. The check uses the public key rather than
+ * the keyshare so it still holds when keyshares are not readable yet.
+ */
+internal fun isReshareBlockedByMldsa(action: TssAction, existingVault: Vault?): Boolean =
+    action == TssAction.ReShare && existingVault != null && existingVault.pubKeyMLDSA.isNotBlank()
 
 /**
  * Returns `true` when a reshare ceremony must preserve the vault's existing `hexChainCode` instead

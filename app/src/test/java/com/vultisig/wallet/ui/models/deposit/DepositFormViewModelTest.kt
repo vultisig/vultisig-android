@@ -55,6 +55,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
@@ -475,7 +476,7 @@ internal class DepositFormViewModelTest {
                         ),
                 )
             )
-        coEvery { thorChainLpPreflight.invoke(pool) } returns
+        coEvery { thorChainLpPreflight.invoke(pool, any()) } returns
             ThorChainLpPreflightBlock.LpPaused(pool)
 
         vm.loadData("vault1", Chain.ThorChain.raw, null, null, pool)
@@ -492,6 +493,51 @@ internal class DepositFormViewModelTest {
             R.string.deposit_error_lp_paused_pool,
             (errorText as UiText.FormattedText).resId,
         )
+    }
+
+    @Test
+    fun `AddLiquidity surfaces the staged-pool block when the pair cannot be resolved`() =
+        runTest {
+            val pool = "ETH.LINK-0X514910771AF9CA656AF840DFF83E8264ECF986CA"
+            val vm = buildViewModel()
+            stubThorChainRuneAccount()
+            coEvery { vaultRepository.get("vault1") } returns null
+            coEvery { thorChainLpPreflight.invoke(pool, false) } returns
+                ThorChainLpPreflightBlock.StagedPoolRequiresPairedAdd(pool)
+
+            vm.loadData("vault1", Chain.ThorChain.raw, null, null, pool)
+            advanceUntilIdle()
+            vm.selectDepositOption(DepositOption.AddLiquidity)
+            vm.tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+            vm.deposit()
+            advanceUntilIdle()
+
+            val errorText = vm.state.value.errorText
+            assertTrue(errorText is UiText.FormattedText)
+            assertEquals(
+                R.string.deposit_error_pool_staged_unpaired,
+                (errorText as UiText.FormattedText).resId,
+            )
+            coVerify(exactly = 0) { transactionRepository.addTransaction(any()) }
+        }
+
+    private fun stubThorChainRuneAccount() {
+        coEvery { accountsRepository.loadAddress("vault1", Chain.ThorChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.ThorChain,
+                    address = "thor1somevalidaddress",
+                    accounts =
+                        listOf(
+                            Account(
+                                token = Coins.ThorChain.RUNE,
+                                tokenValue = null,
+                                fiatValue = null,
+                                price = null,
+                            )
+                        ),
+                )
+            )
     }
 
     @Test

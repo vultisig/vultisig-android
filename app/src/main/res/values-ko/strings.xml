@@ -372,6 +372,7 @@
     <string name="verify_transaction_memo_title">메모</string>
     <string name="verify_transaction_allow_death_warning">이 전송은 보내는 계정을 비울 수 있습니다. 남은 잔액이 최소 예치금 아래로 떨어지면 계정이 비활성화(수확)되고 남은 %1$s은(는) 손실됩니다.</string>
     <string name="join_keysign_wrong_reshare">잘못된 재공유</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">QBTC 키가 있는 볼트는 재공유를 지원하지 않습니다</string>
     <string name="swap_screen_provider_title">제공자</string>
     <string name="swap_form_minimum_amount">"스왑 금액이 너무 적습니다. 권장 금액 %1$s %2$s "</string>
     <string name="backup_password_screen_title">백업</string>
@@ -520,6 +521,7 @@
     <string name="deposit_error_thorchain_chain_halted">%1$s의 입금이 현재 THORChain에서 중단되었습니다. 나중에 다시 시도해 주세요.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">수신 볼트를 확인하기 위해 THORChain에 연결할 수 없습니다. 다시 시도해 주세요.</string>
     <string name="deposit_error_pool_not_available">풀 %1$s은(는) 현재 입금에 사용할 수 없습니다.</string>
+    <string name="deposit_error_pool_staged_unpaired">풀 %1$s은(는) 준비(staged) 상태이며 반대쪽과 짝을 이룬 추가만 허용합니다. THORChain이 이 거래를 환불합니다.</string>
     <string name="deposit_form_screen_assets">자산</string>
     <string name="deposit_form_screen_asset_selection">자산 선택</string>
     <string name="deposit_form_screen_lpunits">LP 유닛</string>

@@ -268,7 +268,7 @@ constructor(
                 Route.AddressQr(
                     vaultId = vaultId,
                     address = state.chainAddress,
-                    name = chain.raw,
+                    name = chain.displayName,
                     logo = chain.logo,
                 )
             )
@@ -316,7 +316,7 @@ constructor(
                                             account.price?.let {
                                                 fiatValueToStringMapper(it, asPrice = true)
                                             },
-                                        network = token.chain.raw,
+                                        network = token.chain.displayName,
                                     )
 
                                 val accountAddress = address.address

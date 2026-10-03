@@ -60,7 +60,7 @@ internal fun AccountItem(
             horizontalAlignment = Alignment.Start,
         ) {
             Text(
-                text = account.chainName,
+                text = account.displayName,
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
                 maxLines = 1,

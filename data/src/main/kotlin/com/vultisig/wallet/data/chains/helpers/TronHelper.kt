@@ -71,6 +71,7 @@ class TronHelper(
         require(keySignTronContact != null) {
             "Empty payload for TronTransferAssetSmartContractPayload"
         }
+        TronContractPayloadGuard.check(keysignPayload, keySignTronContact)
 
         val contract =
             Tron.TransferAssetContract.newBuilder()
@@ -101,6 +102,7 @@ class TronHelper(
     ): ByteArray {
         val keySignTronContact = keysignPayload.tronTriggerSmartContractPayload
         require(keySignTronContact != null) { "Empty payload for tronTriggerSmartContractPayload" }
+        TronContractPayloadGuard.check(keysignPayload, keySignTronContact)
         val contract =
             Tron.TriggerSmartContract.newBuilder()
                 .apply {
@@ -184,6 +186,7 @@ class TronHelper(
     ): ByteArray {
         val keySignTronContact = keysignPayload.tronTransferContractPayload
         require(keySignTronContact != null) { "Empty payload for tronTransferContractPayload" }
+        TronContractPayloadGuard.check(keysignPayload, keySignTronContact)
 
         val contract =
             Tron.TransferContract.newBuilder()

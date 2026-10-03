@@ -149,6 +149,7 @@ internal data class AccountUiModel(
      * set on a DeFi row; a wallet row keeps reporting its token count instead.
      */
     val defiPositionsCount: Int? = null,
+    val displayName: String = chainName,
 )
 
 @HiltViewModel
@@ -857,7 +858,7 @@ constructor(
         if (searchQuery.isBlank()) return this
         val query = searchQuery.trim()
         return filter { account ->
-            listOf(account.chainName, account.nativeTokenTicker).any { field ->
+            listOf(account.chainName, account.displayName, account.nativeTokenTicker).any { field ->
                 field.contains(other = query, ignoreCase = true)
             }
         }

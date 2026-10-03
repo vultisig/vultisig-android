@@ -32,7 +32,10 @@ internal fun DeFiChainSelectionScreen(viewModel: DeFiChainSelectionViewModel = h
         mapper = { it: SingleToken<SelectableDefiChainUiModel> ->
             TokenSelectionGridUiModel(
                 tokenSelectionUiModel =
-                    TokenUiSingle(name = it.data.defiChain.raw, logo = it.data.defiChain.logo),
+                    TokenUiSingle(
+                        name = it.data.defiChain.displayName,
+                        logo = it.data.defiChain.logo,
+                    ),
                 isChecked = it.data.isSelected,
             )
         },
