@@ -26,8 +26,9 @@ import java.math.BigInteger
  * the user: the outbound fee and the affiliate cut still come off after that check.
  *
  * With "Auto" slippage the app sends no `tolerance_bps` at all
- * ([com.vultisig.wallet.data.repositories.swap.DEFAULT_THORCHAIN_TOLERANCE_BPS]), so the memo
- * carries no limit and this returns null — the swap accepts any output. Aggregator routes (1inch /
+ * ([com.vultisig.wallet.data.repositories.swap.DEFAULT_THORCHAIN_TOLERANCE_BPS]), so the node
+ * returns no limit; the quote source then writes its own with [withLimit] so the signed swap still
+ * has a floor. Aggregator routes (1inch /
  * KyberSwap / LI.FI / Jupiter / SwapKit) sign opaque calldata instead of a memo, so whatever floor
  * their own router enforces is not visible here either. Callers must then render no minimum at all
  * rather than a stand-in.
@@ -74,6 +75,31 @@ object ThorchainMemoLimit {
         val limit = BigInteger(terms[0])
         if (limit.signum() <= 0 || limit >= LIMIT_UPPER_BOUND) return null
         return limit
+    }
+
+    /**
+     * [memo] with [limit] written into its `LIM` term, or null when [memo] is not a market swap
+     * memo whose limit can be set: one that already asserts a floor, or whose `LIM/INTERVAL/
+     * QUANTITY` field is malformed, is left to the caller as it is.
+     *
+     * Handles the three shapes THORNode returns without a tolerance: no fourth field at all
+     * (`=:e:0xabc`), an empty one (`=:e:0xabc::va:50`), and a zero LIM in the streaming triple
+     * (`=:e:0xabc:0/1/0:va:50`).
+     */
+    fun withLimit(memo: String, limit: BigInteger): String? {
+        require(limit.signum() > 0 && limit < LIMIT_UPPER_BOUND) { "Invalid swap limit" }
+        val fields = memo.split(":").toMutableList()
+        if (fields.size < 3 || !isSwapAction(fields[0])) return null
+        if (fields.size == 3) return "$memo:$limit"
+        val terms = fields[3].split("/").toMutableList()
+        if (terms.size > 3) return null
+        if (terms.drop(1).any { !DECIMAL_DIGITS.matches(it) }) return null
+        val current = terms[0]
+        if (current.isNotEmpty() && !(DECIMAL_DIGITS.matches(current) && BigInteger(current).signum() == 0))
+            return null
+        terms[0] = limit.toString()
+        fields[3] = terms.joinToString("/")
+        return fields.joinToString(":")
     }
 
     /**

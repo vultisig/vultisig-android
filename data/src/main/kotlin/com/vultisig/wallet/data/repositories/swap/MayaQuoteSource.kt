@@ -36,7 +36,10 @@ constructor(private val mayaChainApi: MayaChainApi, private val clock: Clock) : 
                     toleranceBps = request.slippageBps ?: DEFAULT_THORCHAIN_TOLERANCE_BPS,
                 )
             }
-        val data = response.unwrapOrThrow()
+        val data =
+            response.unwrapOrThrow().let {
+                if (request.slippageBps == null) it.withAutoSlippageLimit(srcToken.chain) else it
+            }
         val recommendedMin =
             if (srcToken.chain != Chain.MayaChain) {
                 srcToken.convertToTokenValue(data.recommendedMinAmountIn)
