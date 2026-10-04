@@ -1552,6 +1552,7 @@
     <string name="swap_external_recipient_invalid">收款地址无效</string>
     <string name="swap_external_recipient_unsupported">此兑换不支持外部收款人。请将其关闭以继续。</string>
     <string name="verify_swap_recipient">接收方</string>
+    <string name="verify_swap_deposit_address">充值地址</string>
     <string name="keygen_benefit_1_template">消除单点故障</string>
     <string name="keygen_benefit_1_emphasized">多重身份验证</string>
     <string name="keygen_benefit_2_template">完全掌控您的资产</string>

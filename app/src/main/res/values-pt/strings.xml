@@ -1220,6 +1220,7 @@
     <string name="swap_external_recipient_invalid">Endereço de destinatário inválido</string>
     <string name="swap_external_recipient_unsupported">Destinatário externo não está disponível para esta troca. Desative-o para continuar.</string>
     <string name="verify_swap_recipient">Destinatário</string>
+    <string name="verify_swap_deposit_address">Endereço de depósito</string>
     <string name="keygen_benefit_1_template">Removendo o ponto único de falha</string>
     <string name="keygen_benefit_1_emphasized">Segurança multifator</string>
     <string name="keygen_benefit_2_template">dando controlo total sobre os seus ativos</string>

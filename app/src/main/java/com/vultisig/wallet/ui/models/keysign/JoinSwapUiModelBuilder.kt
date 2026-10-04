@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.errors.SwapKitError
+import com.vultisig.wallet.data.api.swapAggregators.swapKitDepositRecipient
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.VaultData
@@ -360,6 +361,7 @@ constructor(
                         totalFee = fiatValueToStringMapper(swapFeeForTotal, asFee = true),
                         totalFeeExcludingNetwork = swapFeeExcludingNetwork,
                         provider = provider,
+                        depositAddress = swapPayload.data.swapKitDepositRecipient(),
                         swapFeeIncludedInRate = isOneInchIncludedInRate,
                         swapFeePercent = feeRow.percent,
                         // Shown exactly when [swapFeeRow] priced a row, so the co-signer itemizes
