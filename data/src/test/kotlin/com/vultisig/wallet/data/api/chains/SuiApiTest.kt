@@ -320,8 +320,19 @@ class SuiApiTest {
     }
 
     @Test
-    fun `getHeldCoinTypes skips an incomplete coin object instead of failing`() = runTest {
-        assertEquals(emptyList(), api(coinNode(digest = "null", coinBalance = "1")).getHeldCoinTypes("0xabc"))
+    fun `getHeldCoinTypes keeps the type of an incomplete coin object`() = runTest {
+        assertEquals(
+            listOf("0x2::sui::SUI"),
+            api(coinNode(digest = "null", coinBalance = "1")).getHeldCoinTypes("0xabc"),
+        )
+    }
+
+    @Test
+    fun `getAllCoins skips an incomplete object of a non-native coin`() = runTest {
+        val coins =
+            api(coinNode(digest = "null", repr = "0x2::coin::Coin<$COIN_TYPE>", coinBalance = "0"))
+                .getAllCoins("0xabc")
+        assertEquals(emptyList(), coins)
     }
 
     @Test
@@ -766,6 +777,7 @@ class SuiApiTest {
         digest: String = "\"d\"",
         balance: String = "\"1\"",
         address: String = "\"0xcoin1\"",
+        repr: String = "0x2::coin::Coin<0x2::sui::SUI>",
         coinBalance: String,
     ) =
         """
@@ -774,7 +786,7 @@ class SuiApiTest {
           "nodes":[{
             "address":$address,"version":$version,"digest":$digest,
             "previousTransaction":{"digest":"p"},
-            "contents":{"type":{"repr":"0x2::coin::Coin<0x2::sui::SUI>"},
+            "contents":{"type":{"repr":"$repr"},
               "json":{"balance":$balance}}
           }]
         }}}}
