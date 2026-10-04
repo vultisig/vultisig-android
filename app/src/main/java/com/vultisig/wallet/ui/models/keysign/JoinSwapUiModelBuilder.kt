@@ -445,6 +445,10 @@ constructor(
                                 payload = swapPayload,
                                 memo = payload.memo,
                                 dstToken = dstToken,
+                                outboundFee =
+                                    rawFees?.let { dstToken.convertToTokenValue(it.outbound) },
+                                affiliateFee =
+                                    rawFees?.let { dstToken.convertToTokenValue(it.affiliate) },
                             ),
                         isLimitOrder = limitMemo != null,
                         limitOrderLabels =
@@ -537,6 +541,10 @@ constructor(
                                 payload = swapPayload,
                                 memo = payload.memo,
                                 dstToken = dstToken,
+                                outboundFee =
+                                    rawFees?.let { dstToken.convertToTokenValue(it.outbound) },
+                                affiliateFee =
+                                    rawFees?.let { dstToken.convertToTokenValue(it.affiliate) },
                             ),
                         feeProvider = SwapProvider.MAYA,
                         vultBps = mayaVultBps,
