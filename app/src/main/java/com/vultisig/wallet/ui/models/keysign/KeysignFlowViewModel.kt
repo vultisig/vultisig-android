@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
+import com.vultisig.wallet.data.api.swapAggregators.SwapKitDepositRecipientScreen
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
@@ -106,6 +107,7 @@ constructor(
     private val buildKeysignMessage: BuildKeysignMessageUseCase,
     private val updateSolanaKeysignPayload: UpdateSolanaKeysignPayloadUseCase,
     private val buildKeysignTransactionUiModel: BuildKeysignTransactionUiModelUseCase,
+    private val screenSwapKitDepositRecipient: SwapKitDepositRecipientScreen,
 ) : ViewModel() {
     private val _sessionID: String = Uuid.random().toString()
     private val _serviceName: String = generateServiceName()
@@ -243,6 +245,7 @@ constructor(
 
                     else -> error("Payload is null")
                 }
+            modifiedKeysignPayload?.let { screenSwapKitDepositRecipient(it) }
 
             shareVmCollectorsJob?.cancel()
             shareVmCollectorsJob =

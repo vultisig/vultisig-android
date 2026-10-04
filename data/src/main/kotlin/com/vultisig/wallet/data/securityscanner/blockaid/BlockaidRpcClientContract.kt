@@ -29,6 +29,9 @@ interface BlockaidRpcClientContract {
         transactions: List<EthereumScanTransactionRequestJson.DataJson>,
     ): List<BlockaidTransactionScanResponseJson>
 
+    /** Blockaid's reputation verdict for the EVM [address] on [chain]. */
+    suspend fun scanEVMAddress(chain: Chain, address: String): BlockaidAddressScanResponseJson
+
     suspend fun scanSolanaTransaction(
         address: String,
         serializedMessage: String,

@@ -61,6 +61,19 @@ data class EthereumBulkScanTransactionRequestJson(
 )
 
 @Serializable
+data class EthereumScanAddressRequestJson(
+    @SerialName("address") val address: String,
+    @SerialName("chain") val chain: String,
+    @SerialName("metadata") val metadata: EthereumScanTransactionRequestJson.MetadataJson,
+)
+
+@Serializable
+data class BlockaidAddressScanResponseJson(
+    @SerialName("result_type") val resultType: String,
+    @SerialName("features") val features: List<String> = emptyList(),
+)
+
+@Serializable
 data class CommonMetadataJson(
     @SerialName("type") val type: String = "wallet",
     @SerialName("url") val url: String,

@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.swapAggregators.SwapKitDepositRecipientScreen
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRelayedIntent
 import com.vultisig.wallet.data.blockchain.solana.kamino.ResolveKaminoRelayedIntentUseCase
@@ -290,6 +291,7 @@ constructor(
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
+    private val screenSwapKitDepositRecipient: SwapKitDepositRecipientScreen,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -1320,6 +1322,7 @@ constructor(
                     _keysignPayload = payload
                     messagesToSign =
                         SigningHelper.getKeysignMessages(payload = payload, vault = _currentVault)
+                    screenSwapKitDepositRecipient(payload)
                 }
 
                 customMessagePayload != null -> {

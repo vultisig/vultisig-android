@@ -16,7 +16,7 @@ import java.math.BigInteger
  *   chosen per route, so there's no fixed address to pin. A SwapKit `transfer` call, or a SwapKit
  *   tx addressed to the sold token (an ERC-20 deposit), must instead be exactly
  *   `transfer(recipient, fromAmount)` on the sold token with no native value
- *   ([swapKitErc20DepositRecipient]).
+ *   ([swapKitDepositRecipient]).
  * - A 1inch / Kyber swap (or a provider-less one aimed at their routers) can't send more native
  *   value than the quoted amount, and sends none from an ERC-20 source. LI.FI and SwapKit are
  *   exempt: bridge routes add native messaging fees on top of the quoted amount, so `tx.value`
@@ -37,9 +37,7 @@ internal object EvmSwapTxGuard {
 
         val rawProvider = swapPayload.provider.trim()
         val provider = swapProviderFromWireId(rawProvider)
-        if (provider == SwapProvider.SWAPKIT) {
-            swapKitErc20DepositRecipient(tx, swapPayload.fromCoin, swapPayload.fromAmount)
-        }
+        swapPayload.swapKitDepositRecipient()
         val routers =
             when {
                 provider == SwapProvider.SWAPKIT -> null

@@ -408,6 +408,11 @@ internal class BlockaidSimulationServiceImplTest {
             data: String,
         ): BlockaidTransactionScanResponseJson = error("not used")
 
+        override suspend fun scanEVMAddress(
+            chain: Chain,
+            address: String,
+        ): BlockaidAddressScanResponseJson = error("not used")
+
         override suspend fun scanSolanaTransaction(
             address: String,
             serializedMessage: String,

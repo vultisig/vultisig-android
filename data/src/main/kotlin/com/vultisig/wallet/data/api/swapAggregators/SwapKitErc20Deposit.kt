@@ -4,7 +4,16 @@ import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.blockchain.ethereum.ERC20_TRANSFER_SELECTOR
 import com.vultisig.wallet.data.blockchain.ethereum.decodeErc20TransferCallData
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapProvider
+import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.swapProviderFromWireId
+import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClientContract
 import java.math.BigInteger
+import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * True when this EVM swap tx calls the sold token [srcToken] itself: a SwapKit NEAR-Intents ERC-20
@@ -49,4 +58,52 @@ fun swapKitErc20DepositRecipient(
         "SwapKit ERC-20 deposit transfers ${transfer.amount}, not the sold amount $amount"
     }
     return transfer.recipient
+}
+
+/**
+ * The recipient of the SwapKit ERC-20 deposit this payload signs, decoded from its calldata by
+ * [swapKitErc20DepositRecipient]; null when it is not a SwapKit EVM swap or not a deposit.
+ *
+ * @throws IllegalArgumentException when it has the deposit shape but is not exactly the deposit.
+ */
+fun EVMSwapPayloadJson.swapKitDepositRecipient(): String? {
+    val isSwapKit = swapProviderFromWireId(provider.trim()) == SwapProvider.SWAPKIT
+    if (!isSwapKit || fromCoin.chain.standard != TokenStandard.EVM) return null
+    return swapKitErc20DepositRecipient(quote.tx, fromCoin, fromAmount)
+}
+
+/**
+ * Refuses a SwapKit ERC-20 deposit whose decoded recipient lacks a Benign Blockaid verdict. A
+ * Warning or Malicious verdict, a chain Blockaid does not index, and a failed scan all refuse, as
+ * vultisig-sdk's `assertSwapKitAddressReputation` does.
+ */
+class SwapKitDepositRecipientScreen
+@Inject
+constructor(private val blockaid: BlockaidRpcClientContract) {
+
+    /** @throws IllegalStateException when the deposit recipient in [payload] is refused. */
+    suspend operator fun invoke(payload: KeysignPayload) {
+        val swap = (payload.swapPayload as? SwapPayload.EVM)?.data ?: return
+        val recipient = swap.swapKitDepositRecipient() ?: return
+        val chain = swap.fromCoin.chain
+        val verdict =
+            try {
+                blockaid.scanEVMAddress(chain = chain, address = recipient)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw IllegalStateException(
+                    "SwapKit deposit recipient $recipient could not be screened on ${chain.raw}",
+                    e,
+                )
+            }
+        check(verdict.resultType == BENIGN_VERDICT) {
+            "SwapKit deposit recipient $recipient received a ${verdict.resultType} Blockaid " +
+                "verdict on ${chain.raw} (${verdict.features.joinToString()})"
+        }
+    }
+
+    private companion object {
+        const val BENIGN_VERDICT = "Benign"
+    }
 }
