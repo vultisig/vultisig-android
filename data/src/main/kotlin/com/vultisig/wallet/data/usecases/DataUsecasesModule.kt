@@ -314,6 +314,22 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindMayaChainLpPreflightUseCase(
+        impl: MayaChainLpPreflightUseCaseImpl
+    ): MayaChainLpPreflightUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetMayaChainPendingLpDepositsUseCase(
+        impl: GetMayaChainPendingLpDepositsUseCaseImpl
+    ): GetMayaChainPendingLpDepositsUseCase
+
+    @Binds
+    @Singleton
+    fun bindCheckMayaLpPairingUseCase(impl: CheckMayaLpPairingUseCaseImpl): CheckMayaLpPairingUseCase
+
+    @Binds
+    @Singleton
     fun bindThorchainMemoParser(impl: ThorchainMemoParserImpl): ThorchainMemoParser
 
     @Binds

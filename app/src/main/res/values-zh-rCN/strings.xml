@@ -694,6 +694,15 @@
     <string name="deposit_error_thorchain_inbound_unavailable">无法连接到 THORChain 以验证入站金库。请重试。</string>
     <string name="deposit_error_pool_not_available">池 %1$s 目前不可用于存款。</string>
     <string name="deposit_error_pool_staged_unpaired">池 %1$s 处于预备（staged）状态，仅接受与另一侧配对的添加。THORChain 将退回此交易。</string>
+    <string name="deposit_error_maya_lp_paused_pool">已暂停 %1$s 的添加流动性。MayaChain 将退回此交易。</string>
+    <string name="deposit_error_maya_lp_halted_chain">%1$s 上的流动性操作目前已停止。MayaChain 将退回此交易。</string>
+    <string name="deposit_error_maya_pool_staged_unpaired">池 %1$s 处于预备（staged）状态，仅接受与另一侧配对的添加。MayaChain 将退回此交易。</string>
+    <string name="deposit_error_maya_chain_halted">%1$s 上的存款目前已在 MayaChain 上停止。请稍后再试。</string>
+    <string name="deposit_error_maya_inbound_unavailable">无法连接到 MayaChain 以验证入站金库。请重试。</string>
+    <string name="deposit_error_mayachain_not_enabled_for_lp">请在此保险库中启用 MayaChain 以添加 Maya 流动性</string>
+    <string name="deposit_error_maya_lp_single_sided_position">您在 %1$s 中已有仅 CACAO 的仓位。MayaChain 只接受向其中添加 CACAO，因此此笔存入将被退回。</string>
+    <string name="deposit_error_maya_lp_address_mismatch">您在 %1$s 中的仓位已与其他地址配对。MayaChain 将退回此笔存入。</string>
+    <string name="deposit_error_maya_lp_unverified">无法连接到 MayaChain 以检查您的仓位。请重试。</string>
     <string name="deposit_form_screen_assets">资产</string>
     <string name="deposit_form_screen_asset_selection">选择资产</string>
     <string name="deposit_form_screen_lpunits">LP 单位</string>
@@ -890,6 +899,7 @@
     <string name="deposit_error_invalid_destination_address">目标地址无效</string>
     <string name="deposit_option_remove_cacao_pool">从 CACAO 池移除</string>
     <string name="deposit_option_add_liquidity">添加流动性</string>
+    <string name="deposit_option_add_maya_lp">添加 Maya LP</string>
     <string name="deposit_option_remove_liquidity">移除流动性</string>
     <string name="add_lp_title">添加 %1$s LP</string>
     <string name="add_pool_amount_label">金额</string>
@@ -1619,7 +1629,7 @@
     <string name="verify_swap_youre_swapping_title">您正在交换</string>
     <string name="keysign_app_version_text">版本 %1$s (%2$s)</string>
     <string name="lp_pending_title">等待配对的 %1$s 存入</string>
-    <string name="lp_pending_subtitle">THORChain 会保留此笔存入，直到配对的另一侧到达；否则将予以退款。</string>
+    <string name="lp_pending_subtitle">%1$s 会保留此笔存入，直到配对的另一侧到达；否则将予以退款。</string>
     <string name="lp_pending_deposited">已存入</string>
     <string name="lp_pending_from">来自</string>
     <string name="lp_pending_refunds_in">退款倒计时</string>
@@ -1649,6 +1659,7 @@
     <string name="deposit_no_secured_assets">此保险库中没有可提取的担保资产</string>
     <string name="mint_secured_asset_secure">铸造担保资产（SECURE+）</string>
     <string name="target_asset">目标资产：%1$s-%2$s</string>
+    <string name="maya_lp_target_pool">目标池：%1$s</string>
     <string name="thor_address">Thor 地址</string>
     <string name="paired_address">配对地址</string>
     <string name="node_address">节点地址</string>

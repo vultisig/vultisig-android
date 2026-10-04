@@ -27,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.ui.components.PasteIcon
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -43,11 +44,13 @@ import com.vultisig.wallet.ui.models.deposit.BondAssetsState
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
+import com.vultisig.wallet.ui.models.deposit.MayaLpPairing
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
 import com.vultisig.wallet.ui.models.deposit.bondedUnitsCeiling
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -207,6 +210,8 @@ internal fun DepositFormScreen(
                             stringResource(R.string.deposit_option_secured_assets)
                         DepositOption.WithdrawSecuredAsset ->
                             stringResource(R.string.deposit_option_withdraw_secured)
+                        DepositOption.AddMayaLiquidity ->
+                            stringResource(R.string.deposit_option_add_maya_lp)
                     }
                 },
             )
@@ -334,6 +339,7 @@ internal fun DepositFormScreen(
                                 DepositOption.RemoveLiquidity,
                                 DepositOption.SecuredAsset,
                                 DepositOption.WithdrawSecuredAsset,
+                                DepositOption.AddMayaLiquidity,
                             )
                     ) {
                         FormTextFieldCard(
@@ -555,6 +561,16 @@ internal fun DepositFormScreen(
                             )
                         }
                     }
+                    if (depositOption == DepositOption.AddMayaLiquidity) {
+                        AddMayaLiquidityFields(
+                            pairing = state.mayaLpPairing,
+                            amountLabel = amountLabel,
+                            amountHint = amountHint,
+                            tokenAmountFieldState = tokenAmountFieldState,
+                            onTokenAmountLostFocus = onTokenAmountLostFocus,
+                            tokenAmountError = state.tokenAmountError,
+                        )
+                    }
                     if (depositOption == DepositOption.WithdrawSecuredAsset) {
                         if (
                             state.availableSecuredAssets.isNotEmpty() &&
@@ -610,6 +626,74 @@ internal fun DepositFormScreen(
                     VsButtonState.Disabled
                 else VsButtonState.Enabled,
             modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(all = 16.dp),
+        )
+    }
+}
+
+/**
+ * The asset side of a Maya LP add: the amount, the pool this chain's native coin joins, the vault's
+ * CACAO address the memo credits, and the memo itself. Without a MayaChain account in the vault
+ * there is nothing to pair with, so the address row explains that instead.
+ */
+@Composable
+private fun AddMayaLiquidityFields(
+    pairing: MayaLpPairing?,
+    amountLabel: String,
+    amountHint: String,
+    tokenAmountFieldState: TextFieldState,
+    onTokenAmountLostFocus: () -> Unit,
+    tokenAmountError: UiText?,
+) {
+    FormTextFieldCard(
+        title = amountLabel,
+        hint = amountHint,
+        keyboardType = KeyboardType.Number,
+        textFieldState = tokenAmountFieldState,
+        onLostFocus = onTokenAmountLostFocus,
+        error = tokenAmountError,
+    )
+
+    if (pairing == null) return
+
+    UiSpacer(size = 4.dp)
+
+    MayaLpDetailRow(text = stringResource(R.string.maya_lp_target_pool, pairing.pool))
+
+    Text(
+        text = stringResource(R.string.address_auto_filled, Chain.MayaChain.raw),
+        style = Theme.brockmann.body.s.regular,
+        color = Theme.v2.colors.text.tertiary,
+    )
+
+    val cacaoAddress = pairing.cacaoAddress
+    if (cacaoAddress == null) {
+        Text(
+            text = stringResource(R.string.deposit_error_mayachain_not_enabled_for_lp),
+            style = Theme.brockmann.body.s.regular,
+            color = Theme.v2.colors.alerts.error,
+        )
+        return
+    }
+
+    MayaLpDetailRow(text = cacaoAddress)
+
+    Text(
+        text = stringResource(R.string.generated_memo),
+        style = Theme.brockmann.body.s.regular,
+        color = Theme.v2.colors.text.tertiary,
+    )
+
+    MayaLpDetailRow(text = DepositMemo.AddLiquidity(pairing.pool, cacaoAddress).toString())
+}
+
+@Composable
+private fun MayaLpDetailRow(text: String) {
+    V2Container(type = ContainerType.TERTIARY, radius = Theme.v2.radius.md) {
+        Text(
+            text = text,
+            style = Theme.brockmann.body.s.regular,
+            color = Theme.v2.colors.text.primary,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         )
     }
 }

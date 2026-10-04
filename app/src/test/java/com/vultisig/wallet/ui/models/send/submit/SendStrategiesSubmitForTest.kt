@@ -74,13 +74,14 @@ internal class SendStrategiesSubmitForTest {
     private companion object {
         val expectedTarget =
             mapOf(
-                // Bond/Unbond/Stake-Cacao/Unstake-Cacao/Remove-LP only submit through the Deposit
+                // Bond/Unbond/Stake-Cacao/Unstake-Cacao/Remove-LP/Add-Maya-LP only submit through the Deposit
                 // flow now — a Route.Send carrying one of these must fail closed.
                 DeFiNavActions.BOND to Target.UNSUPPORTED,
                 DeFiNavActions.UNBOND to Target.UNSUPPORTED,
                 DeFiNavActions.STAKE_CACAO to Target.UNSUPPORTED,
                 DeFiNavActions.UNSTAKE_CACAO to Target.UNSUPPORTED,
                 DeFiNavActions.REMOVE_LP to Target.UNSUPPORTED,
+                DeFiNavActions.ADD_MAYA_LP to Target.UNSUPPORTED,
                 DeFiNavActions.WITHDRAW_RUJI to Target.UNSTAKE,
                 DeFiNavActions.STAKE_RUJI to Target.STAKE,
                 DeFiNavActions.UNSTAKE_RUJI to Target.UNSTAKE,

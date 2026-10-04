@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.usecases.MayaCacaoMaturityStatus
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
+import com.vultisig.wallet.data.usecases.MayaChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
@@ -238,6 +239,7 @@ internal class DepositFormViewModelTest {
                 )
         }
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
+    private val mayaChainLpPreflight: MayaChainLpPreflightUseCase = mockk(relaxed = true)
     private val fieldValidator: DepositFieldValidator =
         DepositFieldValidatorImpl(chainAccountAddressRepository)
     private val depositFieldInputCoordinatorFactory: DepositFieldInputCoordinator.Factory =
@@ -301,6 +303,9 @@ internal class DepositFormViewModelTest {
             feeServiceComposite = feeServiceComposite,
             gasFeeToEstimate = gasFeeToEstimate,
             thorChainLpPreflight = thorChainLpPreflight,
+            mayaChainLpPreflight = mayaChainLpPreflight,
+            checkMayaLpPairing = mockk(relaxed = true),
+            mayaChainApi = mayaChainApi,
             validateMayaTransactionHeight = validateMayaTransactionHeight,
             isAssetCharsValid = isAssetCharsValid,
             fieldValidator = fieldValidator,

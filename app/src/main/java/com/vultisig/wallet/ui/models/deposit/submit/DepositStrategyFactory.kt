@@ -1,13 +1,16 @@
 package com.vultisig.wallet.ui.models.deposit.submit
 
+import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.CheckMayaLpPairingUseCase
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.MayaChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositFieldValidator
@@ -31,6 +34,9 @@ constructor(
     private val feeServiceComposite: FeeServiceComposite,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase,
+    private val mayaChainLpPreflight: MayaChainLpPreflightUseCase,
+    private val checkMayaLpPairing: CheckMayaLpPairingUseCase,
+    private val mayaChainApi: MayaChainApi,
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
     private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
     private val fieldValidator: DepositFieldValidator,
@@ -182,10 +188,28 @@ constructor(
                         tokenAmountFieldState = fields.tokenAmountFieldState,
                         accountsRepository = accountsRepository,
                         thorChainLpPreflight = thorChainLpPreflight,
+                        mayaChainLpPreflight = mayaChainLpPreflight,
+                        checkMayaLpPairing = checkMayaLpPairing,
                         resolvePairedAddress = context.resolvePairedAddress,
                         blockChainSpecificRepository = context.blockChainSpecificRepository,
                         calculateGasFee = context.calculateGasFee,
                         getFeesFiatValue = context.getFeesFiatValue,
+                    ),
+                DepositOption.AddMayaLiquidity to
+                    AddMayaLiquidityStrategy(
+                        vaultIdProvider = context.vaultId,
+                        chainProvider = context.chain,
+                        tokenAmountFieldState = fields.tokenAmountFieldState,
+                        accountsRepository = accountsRepository,
+                        vaultRepository = vaultRepository,
+                        mayaChainApi = mayaChainApi,
+                        mayaChainLpPreflight = mayaChainLpPreflight,
+                        checkMayaLpPairing = checkMayaLpPairing,
+                        feeServiceComposite = feeServiceComposite,
+                        tokenRepository = tokenRepository,
+                        blockChainSpecificRepository = context.blockChainSpecificRepository,
+                        gasFeeToEstimate = gasFeeToEstimate,
+                        getBitcoinTransactionPlan = context.getBitcoinTransactionPlan,
                     ),
                 DepositOption.RemoveLiquidity to
                     RemoveLiquidityStrategy(

@@ -26,6 +26,9 @@ internal enum class DeFiNavActions(val type: String) {
     STAKE_CACAO("stake_cacao"),
     UNSTAKE_CACAO("unstake_cacao"),
     ADD_LP("add_lp"),
+    // The asset side of a Maya LP add, opened on the Functions form rather than the CACAO-only
+    // Add LP screen ADD_LP leads to.
+    ADD_MAYA_LP("add_maya_lp"),
     REMOVE_LP("remove_lp"),
     FREEZE_TRX("freeze_trx"),
     UNFREEZE_TRX("unfreeze_trx"),
@@ -83,6 +86,7 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
         "unstake_cacao" -> DeFiNavActions.UNSTAKE_CACAO
         "addlp",
         "add_lp" -> DeFiNavActions.ADD_LP
+        "addmayalp" -> DeFiNavActions.ADD_MAYA_LP
         "removelp",
         "remove_lp" -> DeFiNavActions.REMOVE_LP
         "freezetrx",

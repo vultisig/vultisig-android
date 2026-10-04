@@ -26,6 +26,9 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.defi.MAYA_NATIVE_LP_POOLS
+import com.vultisig.wallet.ui.models.defi.mayaLpPairedChain
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.DepositAmountHelper
@@ -77,6 +80,7 @@ internal enum class DepositOption {
     WithdrawSecuredAsset,
     AddLiquidity,
     RemoveLiquidity,
+    AddMayaLiquidity,
 }
 
 /**
@@ -96,6 +100,12 @@ internal data class BondedUnitsCeiling(
 )
 
 @Immutable internal data class BondedRuneCeiling(val nodeAddress: String, val amount: BigInteger)
+
+/**
+ * What the asset side of a Maya LP add is about to name: the [pool] the chain's native coin joins
+ * and the vault's [cacaoAddress] the memo credits, null when the vault holds no MayaChain account.
+ */
+@Immutable internal data class MayaLpPairing(val pool: String, val cacaoAddress: String?)
 
 /**
  * How far the MayaChain bond-asset fetch behind the Bond / Unbond form has got.
@@ -165,6 +175,7 @@ internal data class DepositFormUiModel(
         availableSecuredAssets.firstOrNull() ?: TokenWithdrawSecureAsset.EMPTY,
     val bondableAssets: List<String> = emptyList(),
     val selectedBondAsset: String = "",
+    val mayaLpPairing: MayaLpPairing? = null,
     val availableLpUnits: String? = null,
     // Unbond's ceiling is node-scoped and so cannot share availableLpUnits, which Bond fills with
     // an address-wide surplus. It rides on the load state because it is only meaningful once that
@@ -478,6 +489,7 @@ constructor(
             updateTokenAmount = depositAmountHelper::updateTokenAmount,
             selectDstChain = ::selectDstChain,
             collectSecuredAssetAddresses = securedAssetLoader::collectSecuredAssetAddresses,
+            loadMayaLpPairing = ::loadMayaLpPairing,
             loadGasFeeForDisplay = { vaultId, chain, address ->
                 gasFeeHelper.loadGasFeeForDisplay(
                     scope = viewModelScope,
@@ -698,19 +710,27 @@ constructor(
      *
      * Returns `null` for a RUNE-only pool, which has no paired side, and for a [chain] belonging to
      * neither half — callers treat that as "cannot build this memo".
+     *
+     * A CACAO-side MayaChain add pairs only where [mayaLpPairedChain] says the app can deposit the
+     * other half; every other Maya pool stays single-sided and gets `null`.
      */
     private suspend fun resolvePairedAddress(
         chain: Chain,
         vaultId: String,
         poolId: String,
     ): String? {
-        val assetChain =
-            parseThorChainPool(poolId).chain?.takeIf { it != Chain.ThorChain } ?: return null
         val pairedChain =
-            when (chain) {
-                Chain.ThorChain -> assetChain
-                assetChain -> Chain.ThorChain
-                else -> return null
+            if (chain == Chain.MayaChain) {
+                mayaLpPairedChain(chain, poolId) ?: return null
+            } else {
+                val assetChain =
+                    parseThorChainPool(poolId).chain?.takeIf { it != Chain.ThorChain }
+                        ?: return null
+                when (chain) {
+                    Chain.ThorChain -> assetChain
+                    assetChain -> Chain.ThorChain
+                    else -> return null
+                }
             }
         return try {
             val vault = vaultRepository.get(vaultId) ?: return null
@@ -719,6 +739,26 @@ constructor(
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to resolve paired address for $poolId")
             null
+        }
+    }
+
+    /**
+     * Fills [DepositFormUiModel.mayaLpPairing] for the Add Maya LP form: the pool this chain's
+     * native coin joins and the vault's CACAO address the memo will name. The strategy re-reads both
+     * when building, so this only drives what the form shows.
+     */
+    private fun loadMayaLpPairing() {
+        val pool = chain?.let(MAYA_NATIVE_LP_POOLS::get) ?: return
+        val vaultId = vaultId ?: return
+        viewModelScope.safeLaunch(onError = { Timber.e(it, "Failed to load Maya LP pairing") }) {
+            val cacaoAddress =
+                vaultRepository
+                    .get(vaultId)
+                    ?.coins
+                    ?.firstOrNull { it.chain == Chain.MayaChain && it.isNativeToken }
+                    ?.address
+                    ?.takeIf { it.isNotBlank() }
+            state.update { it.copy(mayaLpPairing = MayaLpPairing(pool, cacaoAddress)) }
         }
     }
 

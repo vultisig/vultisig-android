@@ -533,6 +533,15 @@
     <string name="deposit_error_thorchain_inbound_unavailable">Could not reach THORChain to verify the inbound vault. Please try again.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s is not currently available for deposits.</string>
     <string name="deposit_error_pool_staged_unpaired">Pool %1$s is staged and only accepts adds paired with the other side. THORChain would refund this transaction.</string>
+    <string name="deposit_error_maya_lp_paused_pool">Add liquidity is paused for %1$s. MayaChain would refund this transaction.</string>
+    <string name="deposit_error_maya_lp_halted_chain">Liquidity actions on %1$s are currently halted. MayaChain would refund this transaction.</string>
+    <string name="deposit_error_maya_pool_staged_unpaired">Pool %1$s is staged and only accepts adds paired with the other side. MayaChain would refund this transaction.</string>
+    <string name="deposit_error_maya_chain_halted">Deposits on %1$s are currently halted on MayaChain. Please try again later.</string>
+    <string name="deposit_error_maya_inbound_unavailable">Could not reach MayaChain to verify the inbound vault. Please try again.</string>
+    <string name="deposit_error_mayachain_not_enabled_for_lp">Enable MayaChain in this vault to add Maya liquidity</string>
+    <string name="deposit_error_maya_lp_single_sided_position">You already have a CACAO-only position in %1$s. MayaChain only accepts CACAO into it, so this deposit would be refunded.</string>
+    <string name="deposit_error_maya_lp_address_mismatch">Your %1$s position is paired with a different address. MayaChain would refund this deposit.</string>
+    <string name="deposit_error_maya_lp_unverified">Could not reach MayaChain to check your position. Please try again.</string>
     <string name="deposit_form_screen_assets">Asset</string>
     <string name="deposit_form_screen_asset_selection">Asset selection</string>
     <string name="deposit_form_screen_lpunits">LP Units</string>
@@ -980,6 +989,7 @@
     <string name="deposit_option_add_cacao_pool">Add to CACAO Pool</string>
     <string name="deposit_option_remove_cacao_pool">Remove from CACAO Pool</string>
     <string name="deposit_option_add_liquidity">Add Liquidity</string>
+    <string name="deposit_option_add_maya_lp">Add Maya LP</string>
     <string name="deposit_option_remove_liquidity">Remove Liquidity</string>
     <string name="add_lp_title">Add %1$s LP</string>
     <string name="add_pool_amount_label">Amount</string>
@@ -1349,7 +1359,7 @@
     <string name="bond_node_state_disabled">Disabled</string>
     <string name="bond_node_state_unknown">Unknown</string>
     <string name="lp_pending_title">Waiting for matching %1$s deposit</string>
-    <string name="lp_pending_subtitle">THORChain holds this deposit until the matching side arrives, then refunds it if it doesn\'t.</string>
+    <string name="lp_pending_subtitle">%1$s holds this deposit until the matching side arrives, then refunds it if it doesn\'t.</string>
     <string name="lp_pending_deposited">Deposited</string>
     <string name="lp_pending_from">From</string>
     <string name="lp_pending_refunds_in">Refunds in</string>
@@ -1383,6 +1393,7 @@
     <string name="deposit_no_secured_assets">You don\'t have any secured assets to withdraw from this vault</string>
     <string name="mint_secured_asset_secure">Mint Secured Asset (SECURE+)</string>
     <string name="target_asset">Target Asset: %1$s-%2$s</string>
+    <string name="maya_lp_target_pool">Target Pool: %1$s</string>
     <string name="thor_address">Thor Address</string>
     <string name="paired_address">Paired Address</string>
     <string name="node_address">Node Address</string>
