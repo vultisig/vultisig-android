@@ -6,12 +6,15 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.chains.helpers.RippleDestinationTag
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.evmChainId
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.utils.Eip681TokenTransfer
 import com.vultisig.wallet.ui.utils.asAddressInput
+import com.vultisig.wallet.ui.utils.asEip681TokenTransfer
 import com.vultisig.wallet.ui.utils.textAsFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -103,11 +106,32 @@ internal class AddressManager(
         addressFieldState
             .textAsFlow()
             .debounce(300)
-            .combine(selectedToken.filterNotNull()) { address, token ->
-                address.asAddressInput() to token
+            .combine(selectedToken.filterNotNull()) { address, token -> address to token }
+            .mapLatest { (address, token) ->
+                val tokenTransfer = address.asEip681TokenTransfer()
+                if (tokenTransfer != null) applyTokenTransferLink(tokenTransfer, token)
+                else handleAddressInput(address.asAddressInput(), token)
             }
-            .mapLatest { (addressStr, token) -> handleAddressInput(addressStr, token) }
             .collect()
+    }
+
+    /**
+     * A token payment link's target is the token contract and its payee is `address=`. The payee
+     * replaces the link in the field only when the link names the token being sent, so a USDC
+     * link can't turn into a send of whatever else is selected; any other link is refused.
+     */
+    private fun applyTokenTransferLink(link: Eip681TokenTransfer, token: Coin) {
+        val matchesToken =
+            !token.isNativeToken &&
+                token.contractAddress.equals(link.contract, ignoreCase = true) &&
+                (link.chainId == null || link.chainId == token.chain.evmChainId())
+        if (matchesToken && chainAccountAddressRepository.isValid(token.chain, link.recipient)) {
+            addressFieldState.setTextAndPlaceCursorAtEnd(link.recipient)
+            return
+        }
+        resolvedDstAddress.value = null
+        dstAddressLabel.value = null
+        addressError.value = RecipientValidity.InvalidForChain
     }
 
     private suspend fun handleAddressInput(addressStr: String, token: Coin) {
