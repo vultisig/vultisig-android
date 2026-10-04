@@ -3,12 +3,15 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.CommonTransactionHistoryData
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -16,6 +19,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import java.math.BigInteger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -72,7 +76,10 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(transactionHistoryData: TransactionHistoryData?) =
+    private fun createViewModel(
+        transactionHistoryData: TransactionHistoryData?,
+        keysignPayload: KeysignPayload? = null,
+    ) =
         KeysignViewModel(
             vault = vault,
             keysignCommittee = emptyList(),
@@ -81,7 +88,7 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
             encryptionKeyHex = "",
             messagesToSign = emptyList(),
             keyType = TssKeyType.ECDSA,
-            keysignPayload = null,
+            keysignPayload = keysignPayload,
             customMessagePayload = null,
             transactionTypeUiModel = null,
             isInitiatingDevice = false,
@@ -183,5 +190,52 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
                 )
             }
             captured.captured.explorerUrl shouldBe "https://etherscan.io/tx/0xabc"
+        }
+
+    @Test
+    fun `xrp send persists its LastLedgerSequence for the expiry check`() =
+        runTest(testDispatcher) {
+            val payload =
+                KeysignPayload(
+                    coin =
+                        Coin(
+                            chain = Chain.Ripple,
+                            ticker = "XRP",
+                            logo = "xrp",
+                            address = "rB5TihdPbKgMrkFqrqUC3yLdE8hhv4BdeY",
+                            decimal = 6,
+                            hexPublicKey = "",
+                            priceProviderID = "ripple",
+                            contractAddress = "",
+                            isNativeToken = true,
+                        ),
+                    toAddress = "rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY",
+                    toAmount = BigInteger.ONE,
+                    blockChainSpecific =
+                        BlockChainSpecific.Ripple(
+                            sequence = 1UL,
+                            gas = 12UL,
+                            lastLedgerSequence = 107_426_542UL,
+                        ),
+                    vaultPublicKeyECDSA = "",
+                    vaultLocalPartyID = "",
+                    libType = null,
+                    wasmExecuteContractPayload = null,
+                )
+            val vm = createViewModel(sendTxData, payload)
+
+            val captured = slot<CommonTransactionHistoryData>()
+            vm.saveTransactionHistory(txHash = "XRPHASH", chain = Chain.Ripple)
+            advanceUntilIdle()
+
+            coVerify {
+                transactionHistoryRepository.recordTransaction(
+                    vaultId = any(),
+                    txHash = any(),
+                    txData = any(),
+                    genericData = capture(captured),
+                )
+            }
+            captured.captured.broadcastBlockNumber shouldBe 107_426_542L
         }
 }

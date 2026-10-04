@@ -69,6 +69,11 @@ internal class RippleTokenSendValidationTest {
             error("not used by these tests")
 
         override suspend fun getTsStatus(txHash: String): RippleBroadcastSuccessResponseJson? = null
+
+        override suspend fun isExpiredPastLastLedger(
+            txHash: String,
+            lastLedgerSequence: Long,
+        ): Boolean = false
     }
 
     // The flag lives on the destination account, not on the asset, so an untagged token deposit to

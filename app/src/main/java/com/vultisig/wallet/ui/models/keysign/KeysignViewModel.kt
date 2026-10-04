@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
+import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.keygen.DKLSKeysign
@@ -1151,11 +1152,16 @@ constructor(
             transactionHistoryData = transactionHistoryData,
             // Polkadot extrinsics are mortal: persist the head block at broadcast so the status
             // poller can scan the absolute inclusion window instead of a head-relative one that
-            // drifts out of reach. Null for other chains.
+            // drifts out of reach. XRP persists the tx's LastLedgerSequence, past which the
+            // poller can call a never-validated tx expired. Null for other chains.
             broadcastBlockNumber =
-                (keysignPayload?.blockChainSpecific as? BlockChainSpecific.Polkadot)
-                    ?.currentBlockNumber
-                    ?.toLong(),
+                keysignPayload?.let { payload ->
+                    when (val specific = payload.blockChainSpecific) {
+                        is BlockChainSpecific.Polkadot -> specific.currentBlockNumber.toLong()
+                        is BlockChainSpecific.Ripple -> RippleHelper.lastLedgerSequence(payload)
+                        else -> null
+                    }
+                },
         )
     }
 
