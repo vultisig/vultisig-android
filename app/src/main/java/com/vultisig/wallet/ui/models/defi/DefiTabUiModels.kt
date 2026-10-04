@@ -110,6 +110,8 @@ internal data class PendingLpDepositUiModel(
     val refundsIn: UiText?,
     /** False when the missing side is on a chain this vault has no account for. */
     val canComplete: Boolean = true,
+    /** The protocol holding the deposit, named in the card's explanation. */
+    val protocolName: String = Chain.ThorChain.raw,
 )
 
 internal data class LpPositionUiModel(
