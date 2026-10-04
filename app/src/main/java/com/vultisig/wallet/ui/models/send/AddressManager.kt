@@ -118,14 +118,16 @@ internal class AddressManager(
     /**
      * A token payment link's target is the token contract and its payee is `address=`. The payee
      * replaces the link in the field only when the link names the token being sent, so a USDC
-     * link can't turn into a send of whatever else is selected; any other link is refused.
+     * link can't turn into a send of whatever else is selected; any other link is refused. The
+     * payee then goes through the usual validation, so an ENS name in `address=` resolves like a
+     * typed one.
      */
     private fun applyTokenTransferLink(link: Eip681TokenTransfer, token: Coin) {
         val matchesToken =
             !token.isNativeToken &&
                 token.contractAddress.equals(link.contract, ignoreCase = true) &&
                 (link.chainId == null || link.chainId == token.chain.evmChainId())
-        if (matchesToken && chainAccountAddressRepository.isValid(token.chain, link.recipient)) {
+        if (matchesToken) {
             addressFieldState.setTextAndPlaceCursorAtEnd(link.recipient)
             return
         }
