@@ -82,7 +82,8 @@ class SolanaHelperTest {
     @Test
     fun `raw legacy transaction hashes the original message verbatim`() {
         // Legacy (non-versioned) message: first byte < 0x80, handled the same way.
-        val message = byteArrayOf(1, 0, 1, 3) + key(0x41) + key(0x42) + key(0x43) + byteArrayOf(0)
+        val message =
+            byteArrayOf(1, 0, 1, 3) + key(0x41) + key(0x42) + key(0x43) + key(0x44) + byteArrayOf(0)
         val tx = base64Of(rawTransaction(signatureCount = 1, message = message))
 
         val hashes =
@@ -95,7 +96,7 @@ class SolanaHelperTest {
     fun `raw transaction message begins after every declared signature slot`() {
         // Two declared signers: the message must start after both 64-byte slots, not just the
         // first.
-        val message = byteArrayOf(2, 0, 0, 2) + key(0x41) + key(0x42) + ByteArray(8) { 0xAB.toByte() }
+        val message = byteArrayOf(2, 0, 0, 2) + key(0x41) + key(0x42) + key(0xAB) + byteArrayOf(0)
         val tx = base64Of(rawTransaction(signatureCount = 2, message = message))
 
         val hashes =
@@ -107,7 +108,7 @@ class SolanaHelperTest {
     @Test
     fun `multiple raw transactions produce one hash each in order`() {
         val first = v0MessageWithLookupTable()
-        val second = byteArrayOf(1, 0, 1, 2) + key(0x11) + key(0xCD)
+        val second = byteArrayOf(1, 0, 1, 2) + key(0x11) + key(0xCD) + key(0x22) + byteArrayOf(0)
         val txs =
             arrayOf(
                 base64Of(rawTransaction(signatureCount = 1, message = first)),

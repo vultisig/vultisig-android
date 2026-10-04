@@ -4,6 +4,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 
 class RippleHelperTest {
 
@@ -12,6 +16,82 @@ class RippleHelperTest {
     private fun rawJson(account: String) =
         """{"TransactionType":"Payment","Account":"$account",""" +
             """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000"}"""
+
+    private fun paymentWithFee(feeDrops: String) =
+        """{"TransactionType":"Payment","Account":"$vaultXrpAddress",""" +
+            """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000",""" +
+            """"Fee":"$feeDrops"}"""
+
+    @Test
+    fun `verifyDappTransaction passes a normal Fee`() {
+        RippleHelper.verifyDappTransaction(paymentWithFee("400"), vaultXrpAddress)
+        RippleHelper.verifyDappTransaction(paymentWithFee("2000000"), vaultXrpAddress)
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects a Fee above the ceiling`() {
+        val ex =
+            assertThrows(IllegalArgumentException::class.java) {
+                RippleHelper.verifyDappTransaction(paymentWithFee("2000001"), vaultXrpAddress)
+            }
+        assertEquals(true, ex.message?.contains("Fee"))
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects a malformed or non-positive Fee`() {
+        // A non-positive or non-integer string is refused (require / error — both RuntimeException).
+        listOf("-1", "0", "1.5", "abc").forEach { bad ->
+            assertThrows(RuntimeException::class.java) {
+                RippleHelper.verifyDappTransaction(paymentWithFee(bad), vaultXrpAddress)
+            }
+        }
+        // Fee present but not a string of drops: a JSON number, null, or an object.
+        listOf(""""Fee":400""", """"Fee":null""", """"Fee":{}""").forEach { badFeeField ->
+            val json =
+                """{"TransactionType":"Payment","Account":"$vaultXrpAddress",""" +
+                    """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000",""" +
+                    "$badFeeField}"
+            assertThrows(RuntimeException::class.java) {
+                RippleHelper.verifyDappTransaction(json, vaultXrpAddress)
+            }
+        }
+    }
+
+    @Test
+    fun `getPreSignedInputData rejects a native Fee above the ceiling`() {
+        val payload =
+            KeysignPayload(
+                coin =
+                    Coin(
+                        chain = Chain.Ripple,
+                        ticker = "XRP",
+                        logo = "xrp",
+                        address = vaultXrpAddress,
+                        decimal = 6,
+                        hexPublicKey = "",
+                        priceProviderID = "ripple",
+                        contractAddress = "",
+                        isNativeToken = true,
+                    ),
+                toAddress = "rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY",
+                toAmount = java.math.BigInteger.valueOf(1_500_000),
+                blockChainSpecific =
+                    BlockChainSpecific.Ripple(
+                        sequence = 1UL,
+                        gas = 2_000_001UL,
+                        lastLedgerSequence = 100UL,
+                    ),
+                vaultPublicKeyECDSA = "",
+                vaultLocalPartyID = "",
+                libType = null,
+                wasmExecuteContractPayload = null,
+            )
+        val ex =
+            assertThrows(IllegalArgumentException::class.java) {
+                RippleHelper.getPreSignedInputData(payload)
+            }
+        assertEquals(true, ex.message?.contains("Fee"))
+    }
 
     @Test
     fun `verifyDappTransaction passes when Account matches the vault address`() {
