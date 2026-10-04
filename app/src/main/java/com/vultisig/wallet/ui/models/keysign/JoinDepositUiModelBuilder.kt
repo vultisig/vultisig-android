@@ -35,6 +35,13 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
+import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.coinType
+import timber.log.Timber
+import wallet.core.jni.proto.Common.SigningError
 
 /**
  * Builds the [VerifyUiModel.Deposit] model for the join-keysign verify screen. Extracted verbatim
@@ -121,6 +128,7 @@ constructor(
         val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
         val estimatedTokenFees =
             kamino?.let { kaminoNetworkFee(it, payload, nativeCoin) }
+                ?: plannedUtxoFee(payload, vault, nativeCoin)
                 ?: feeResolver.resolveJoinKeysignNetworkFee(
                     payload = payload,
                     chain = chain,
@@ -263,5 +271,22 @@ constructor(
                 ),
             token = nativeCoin,
         )
+    }
+
+    /**
+     * What a UTXO deposit actually pays, read from the same plan the signer builds — as the send
+     * screen does. The fee service only knows a per-byte rate (or Zcash's flat seed), which the
+     * planner turns into the real total, including the charge a memo output adds.
+     */
+    private fun plannedUtxoFee(payload: KeysignPayload, vault: Vault, nativeCoin: Coin): TokenValue? {
+        val chain = payload.coin.chain
+        if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) return null
+        if (payload.blockChainSpecific !is BlockChainSpecific.UTXO) return null
+        val plan = UtxoHelper.getHelper(vault, payload.coin.coinType).getBitcoinTransactionPlan(payload)
+        if (plan.error != SigningError.OK || plan.fee <= 0L) {
+            Timber.w("UTXO deposit plan unavailable (%s); falling back to the fee service", plan.error.name)
+            return null
+        }
+        return TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
     }
 }

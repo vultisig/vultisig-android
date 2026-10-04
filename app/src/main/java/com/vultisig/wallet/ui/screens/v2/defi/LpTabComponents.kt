@@ -66,7 +66,7 @@ internal fun LpTabContent(
 }
 
 /**
- * A symmetric add that THORChain is still holding because only one side arrived. Shows what was
+ * A symmetric add that THORChain or MayaChain is still holding because only one side arrived. Shows what was
  * deposited, the address the missing half has to come from, and how long is left before the deposit
  * is refunded.
  */
@@ -103,7 +103,7 @@ internal fun PendingLpWidget(state: PendingLpDepositUiModel, onClickComplete: ()
                 UiSpacer(4.dp)
 
                 Text(
-                    text = stringResource(R.string.lp_pending_subtitle),
+                    text = stringResource(R.string.lp_pending_subtitle, state.protocolName),
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.tertiary,
                 )

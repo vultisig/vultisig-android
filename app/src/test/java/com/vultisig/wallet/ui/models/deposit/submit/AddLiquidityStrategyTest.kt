@@ -12,6 +12,10 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
+import com.vultisig.wallet.data.usecases.CheckMayaLpPairingUseCase
+import com.vultisig.wallet.data.usecases.MayaChainLpPreflightBlock
+import com.vultisig.wallet.data.usecases.MayaChainLpPreflightUseCase
+import com.vultisig.wallet.data.usecases.MayaLpPairing
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
@@ -33,6 +37,8 @@ internal class AddLiquidityStrategyTest {
     private val tokenAmount = TextFieldState()
     private val accountsRepository: AccountsRepository = mockk()
     private val preflight: ThorChainLpPreflightUseCase = mockk()
+    private val mayaPreflight: MayaChainLpPreflightUseCase = mockk()
+    private val checkPairing: CheckMayaLpPairingUseCase = mockk()
     private val specificRepo: BlockChainSpecificRepository = mockk()
 
     @BeforeEach
@@ -45,6 +51,8 @@ internal class AddLiquidityStrategyTest {
         coEvery { preflight(STAGED_POOL, true) } returns null
         coEvery { preflight(STAGED_POOL, false) } returns
             ThorChainLpPreflightBlock.StagedPoolRequiresPairedAdd(STAGED_POOL)
+        coEvery { mayaPreflight(any(), any()) } returns null
+        coEvery { checkPairing(any(), any(), any()) } returns MayaLpPairing.Pairable
     }
 
     @Test
@@ -87,11 +95,115 @@ internal class AddLiquidityStrategyTest {
 
     @Test
     fun `Maya add never consults the THORChain preflight`() = runTest {
-        givenNativeAccount(Chain.MayaChain, "maya1self")
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
 
-        build(Chain.MayaChain, pairedAddress = null, pool = "BTC.BTC").build()
+        build(Chain.MayaChain, pairedAddress = BTC_ADDRESS, pool = MAYA_BTC_POOL).build()
 
         coVerify(exactly = 0) { preflight(any(), any()) }
+    }
+
+    @Test
+    fun `CACAO add to a native Maya pool names the asset address and asks mayanode`() = runTest {
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+
+        val tx = build(Chain.MayaChain, pairedAddress = BTC_ADDRESS, pool = MAYA_BTC_POOL).build()
+
+        assertEquals("+:$MAYA_BTC_POOL:$BTC_ADDRESS", tx.memo)
+        assertEquals(BTC_ADDRESS, tx.pairedAddress)
+        coVerify(exactly = 1) { mayaPreflight(MAYA_BTC_POOL, true) }
+    }
+
+    @Test
+    fun `CACAO add to a native Maya pool without a resolved asset address is refused`() = runTest {
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+
+        val error =
+            assertFailsWith<InvalidTransactionDataException> {
+                build(Chain.MayaChain, pairedAddress = null, pool = MAYA_BTC_POOL).build()
+            }
+
+        val text = error.text
+        assertTrue(text is UiText.StringResource)
+        assertEquals(R.string.send_error_no_address, text.resId)
+    }
+
+    @Test
+    fun `CACAO add to a Maya pool the app cannot pair stays single-sided`() = runTest {
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+
+        val tx = build(Chain.MayaChain, pairedAddress = null, pool = MAYA_USDC_POOL).build()
+
+        assertEquals("+:$MAYA_USDC_POOL", tx.memo)
+        coVerify(exactly = 1) { mayaPreflight(MAYA_USDC_POOL, false) }
+    }
+
+    @Test
+    fun `a mayanode preflight block surfaces the MayaChain reason`() = runTest {
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+        coEvery { mayaPreflight(MAYA_BTC_POOL, true) } returns
+            MayaChainLpPreflightBlock.LpPaused(MAYA_BTC_POOL)
+
+        val error =
+            assertFailsWith<InvalidTransactionDataException> {
+                build(Chain.MayaChain, pairedAddress = BTC_ADDRESS, pool = MAYA_BTC_POOL).build()
+            }
+
+        val text = error.text
+        assertTrue(text is UiText.FormattedText)
+        assertEquals(R.string.deposit_error_maya_lp_paused_pool, text.resId)
+    }
+
+    @Test
+    fun `CACAO add into a live CACAO-only position stays single-sided`() = runTest {
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+        coEvery { checkPairing(MAYA_BTC_POOL, CACAO_ADDRESS, BTC_ADDRESS) } returns
+            MayaLpPairing.SingleSidedPosition
+
+        val tx = build(Chain.MayaChain, pairedAddress = BTC_ADDRESS, pool = MAYA_BTC_POOL).build()
+
+        assertEquals("+:$MAYA_BTC_POOL", tx.memo)
+        assertEquals("", tx.pairedAddress)
+        coVerify(exactly = 1) { mayaPreflight(MAYA_BTC_POOL, false) }
+    }
+
+    @Test
+    fun `CACAO add into a record paired elsewhere is refused`() = runTest {
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+        coEvery { checkPairing(MAYA_BTC_POOL, CACAO_ADDRESS, BTC_ADDRESS) } returns
+            MayaLpPairing.AddressMismatch
+
+        val text =
+            assertFailsWith<InvalidTransactionDataException> {
+                    build(Chain.MayaChain, pairedAddress = BTC_ADDRESS, pool = MAYA_BTC_POOL)
+                        .build()
+                }
+                .text
+        assertTrue(text is UiText.FormattedText)
+        assertEquals(R.string.deposit_error_maya_lp_address_mismatch, text.resId)
+    }
+
+    @Test
+    fun `CACAO add refuses when the record cannot be read`() = runTest {
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+        coEvery { checkPairing(any(), any(), any()) } throws RuntimeException("timeout")
+
+        val text =
+            assertFailsWith<InvalidTransactionDataException> {
+                    build(Chain.MayaChain, pairedAddress = BTC_ADDRESS, pool = MAYA_BTC_POOL)
+                        .build()
+                }
+                .text
+        assertTrue(text is UiText.StringResource)
+        assertEquals(R.string.deposit_error_maya_lp_unverified, text.resId)
+    }
+
+    @Test
+    fun `THORChain adds never read the Maya record`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+
+        build(Chain.ThorChain, pairedAddress = ETH_ADDRESS).build()
+
+        coVerify(exactly = 0) { checkPairing(any(), any(), any()) }
     }
 
     private fun build(chain: Chain, pairedAddress: String?, pool: String = STAGED_POOL) =
@@ -102,6 +214,8 @@ internal class AddLiquidityStrategyTest {
             tokenAmountFieldState = tokenAmount,
             accountsRepository = accountsRepository,
             thorChainLpPreflight = preflight,
+            mayaChainLpPreflight = mayaPreflight,
+            checkMayaLpPairing = checkPairing,
             resolvePairedAddress = { _, _, _ -> pairedAddress },
             blockChainSpecificRepository = specificRepo,
             calculateGasFee = { _, coin, _ -> TokenValue(BigInteger.ONE, coin) },
@@ -149,5 +263,9 @@ internal class AddLiquidityStrategyTest {
         const val STAGED_POOL = "ETH.LINK-0X514910771AF9CA656AF840DFF83E8264ECF986CA"
         const val RUNE_ADDRESS = "thor1self"
         const val ETH_ADDRESS = "0xself"
+        const val CACAO_ADDRESS = "maya1self"
+        const val BTC_ADDRESS = "bc1qself"
+        const val MAYA_BTC_POOL = "BTC.BTC"
+        const val MAYA_USDC_POOL = "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"
     }
 }

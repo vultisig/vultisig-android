@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.MayaChainPendingLpDeposit
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -22,6 +23,7 @@ import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.GetMayaChainPendingLpDepositsUseCase
 import com.vultisig.wallet.data.usecases.BondChurnReward
 import com.vultisig.wallet.data.usecases.BondRewardHistoryUseCase
 import com.vultisig.wallet.data.usecases.MayachainBondUseCase
@@ -85,6 +87,7 @@ internal class MayachainDefiPositionsViewModelTest {
     // The real cache, not a mock: these tests assert the round trip a nav pop and a re-entry make.
     private lateinit var snapshotCache: DeFiPositionsSnapshotCache
     private lateinit var bondRewardHistoryUseCase: BondRewardHistoryUseCase
+    private lateinit var getPendingLpDeposits: GetMayaChainPendingLpDepositsUseCase
 
     @BeforeEach
     fun setUp() {
@@ -101,6 +104,8 @@ internal class MayachainDefiPositionsViewModelTest {
         defiPositionsRepository = mockk(relaxed = true)
         snapshotCache = DeFiPositionsSnapshotCache()
         bondRewardHistoryUseCase = mockk()
+        getPendingLpDeposits = mockk()
+        coEvery { getPendingLpDeposits(any()) } returns emptyList()
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { bondRewardHistoryUseCase.getLastReward(any(), any(), any()) } returns null
@@ -1101,6 +1106,107 @@ internal class MayachainDefiPositionsViewModelTest {
             nextChurn = null,
         )
 
+    @Test
+    fun `a pending CACAO half shows a card awaiting the asset, completed from Functions`() =
+        runTest {
+            coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
+                listOf(pending("BTC.BTC", cacao = "3000000000", pairedAddress = "bc1qbtcaddress"))
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            val card = successData(vm).lp.pendingDeposits.single()
+            assertEquals("BTC", card.awaitedTicker)
+            assertTrue(card.depositedAmount.contains("0.3"))
+            assertTrue(card.canComplete)
+            assertEquals(Chain.MayaChain.raw, card.protocolName)
+
+            vm.onClickCompletePendingLp("BTC.BTC")
+
+            coVerify(exactly = 1) {
+                navigator.route(
+                    Route.Deposit(
+                        vaultId = VAULT_ID,
+                        chainId = Chain.Bitcoin.id,
+                        depositType = DeFiNavActions.ADD_MAYA_LP.type,
+                    )
+                )
+            }
+        }
+
+    @Test
+    fun `a pending asset half is completed from the CACAO Add LP screen`() = runTest {
+        coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
+            listOf(pending("ETH.ETH", asset = "20000", pairedAddress = CACAO_ADDRESS))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val card = successData(vm).lp.pendingDeposits.single()
+        assertEquals("CACAO", card.awaitedTicker)
+        assertTrue(card.canComplete)
+
+        vm.onClickCompletePendingLp("ETH.ETH")
+
+        coVerify(exactly = 1) {
+            navigator.route(
+                Route.Deposit(
+                    vaultId = VAULT_ID,
+                    chainId = Chain.MayaChain.id,
+                    depositType = DeFiNavActions.ADD_LP.type,
+                    poolId = "ETH.ETH",
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `a pending half the app cannot send is shown but cannot be completed`() = runTest {
+        coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
+            listOf(
+                // ERC-20 pool: the app does not deposit its asset side.
+                pending(USDC_POOL, cacao = "3000000000"),
+                // Native pool, but the vault holds no Ethereum account to send from.
+                pending("ETH.ETH", cacao = "3000000000"),
+            )
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val cards = successData(vm).lp.pendingDeposits
+        assertEquals(2, cards.size)
+        assertTrue(cards.none { it.canComplete })
+
+        vm.onClickCompletePendingLp(USDC_POOL)
+        vm.onClickCompletePendingLp("ETH.ETH")
+
+        coVerify(exactly = 0) { navigator.route(any<Route.Deposit>()) }
+    }
+
+    @Test
+    fun `a failed rescan keeps the cards but withdraws Complete`() = runTest {
+        coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
+            listOf(pending("BTC.BTC", cacao = "3000000000"))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        assertTrue(successData(vm).lp.pendingDeposits.single().canComplete)
+
+        coEvery { getPendingLpDeposits(CACAO_ADDRESS) } throws RuntimeException("mayanode down")
+        vm.onScreenResumed()
+
+        val lp = successData(vm).lp
+        assertTrue(lp.pendingDepositsLoaded)
+        assertFalse(lp.pendingDeposits.single().canComplete)
+    }
+
+    private fun pending(
+        pool: String,
+        cacao: String = "0",
+        asset: String = "0",
+        pairedAddress: String? = null,
+    ) =
+        MayaChainPendingLpDeposit(
+            pool = pool,
+            pendingCacao = BigInteger(cacao),
+            pendingAsset = BigInteger(asset),
+            pendingTxId = "TX",
+            pairedAddress = pairedAddress,
+            blocksUntilRefund = 1_000L,
+        )
+
     private fun successData(vm: MayachainDefiPositionsViewModel): MayachainDefiPositionsUiModel {
         val state = vm.state.value
         assertTrue(state is MayachainDefiUiState.Success, "expected Success, was $state")
@@ -1123,6 +1229,7 @@ internal class MayachainDefiPositionsViewModelTest {
             fiatValueCalculator = DefiFiatValueCalculator(tokenPriceRepository),
             snapshotCache = snapshotCache,
             bondRewardsLoader = BondRewardsLoader(bondRewardHistoryUseCase),
+            getMayaChainPendingLpDeposits = getPendingLpDeposits,
             ioDispatcher = testDispatcher,
         )
 
@@ -1148,6 +1255,7 @@ internal class MayachainDefiPositionsViewModelTest {
         val HUNDRED_CACAO: BigInteger = BigInteger("1000000000000")
         val FIFTY_CACAO: BigInteger = BigInteger("500000000000")
 
+        const val USDC_POOL = "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"
         val CACAO_COIN = Coins.MayaChain.CACAO.copy(address = CACAO_ADDRESS)
         val BTC_COIN = Coins.Bitcoin.BTC.copy(address = "bc1qbtcaddress")
 
