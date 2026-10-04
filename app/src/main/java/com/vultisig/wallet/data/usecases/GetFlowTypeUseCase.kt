@@ -6,8 +6,8 @@ import com.vultisig.wallet.data.common.SEND_FLOW
 import com.vultisig.wallet.data.common.UNKNOWN_FLOW
 import com.vultisig.wallet.data.common.isJson
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.repositories.isRecognizedAs
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.isRecognizedAs
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import javax.inject.Inject
 import timber.log.Timber

@@ -124,8 +124,8 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
     override suspend fun getFeeConfig(): NearFees.FeeConfig {
         val method = "EXPERIMENTAL_protocol_config"
         val runtime =
-            call(method, buildJsonObject { put("finality", "final") })["runtime_config"]
-                ?.jsonObject ?: throw malformed(method, "is missing its runtime_config")
+            call(method, buildJsonObject { put("finality", "final") })["runtime_config"]?.jsonObject
+                ?: throw malformed(method, "is missing its runtime_config")
         val costs =
             runtime["transaction_costs"]?.jsonObject
                 ?: throw malformed(method, "is missing transaction_costs")
@@ -260,8 +260,8 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
         private val UNSIGNED_DECIMAL = Regex("^[0-9]+$")
 
         /**
-         * Exact non-negative integer from a field that may arrive as a JSON number or a string. Read
-         * from the primitive's text so an access-key nonce above 2^53 is never rounded.
+         * Exact non-negative integer from a field that may arrive as a JSON number or a string.
+         * Read from the primitive's text so an access-key nonce above 2^53 is never rounded.
          */
         internal fun JsonObject.exactInteger(key: String): BigInteger {
             val text =
@@ -275,6 +275,5 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
 
         private fun JsonObject.stringOrNull(key: String): String? =
             (this[key] as? JsonPrimitive)?.content?.takeIf { it.isNotEmpty() }
-
     }
 }

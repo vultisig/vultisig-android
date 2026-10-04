@@ -2,10 +2,10 @@
 
 package com.vultisig.wallet.ui.models.send.submit
 
-import com.vultisig.wallet.data.api.NearApi
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseAccountDataJson
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseJson
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseResultJson

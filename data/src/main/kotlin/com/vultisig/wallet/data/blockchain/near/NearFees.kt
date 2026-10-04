@@ -35,8 +35,8 @@ object NearFees {
     )
 
     /**
-     * YoctoNEAR the sender must hold on top of the transfer amount. [senderIsReceiver] is nearcore's
-     * `sender_is_receiver`: a self-send pays the cheaper `send_sir` variants.
+     * YoctoNEAR the sender must hold on top of the transfer amount. [senderIsReceiver] is
+     * nearcore's `sender_is_receiver`: a self-send pays the cheaper `send_sir` variants.
      */
     fun gasReservation(
         config: FeeConfig,

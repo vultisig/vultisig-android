@@ -51,7 +51,11 @@ constructor(
 
             try {
                 val result =
-                    transactionStatusRepository.checkTransactionStatus(txHash, chain, senderAccountId)
+                    transactionStatusRepository.checkTransactionStatus(
+                        txHash,
+                        chain,
+                        senderAccountId,
+                    )
                 errorCount = 0
                 backoffAttempt = 0
                 emit(result)

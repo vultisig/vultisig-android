@@ -1,9 +1,8 @@
 package com.vultisig.wallet.ui.models.send
 
-import io.mockk.mockk
-import com.vultisig.wallet.data.api.NearApi
 import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseAccountDataJson
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseJson
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseResultJson
@@ -17,6 +16,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.ui.utils.UiText
+import io.mockk.mockk
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -59,7 +59,11 @@ private class FakeRippleApi(
 internal class ChainValidationServiceTest {
 
     private val service =
-        ChainValidationService(rippleApi = FakeRippleApi(), bittensorApi = FakeBittensorApi(), nearApi = mockk<NearApi>())
+        ChainValidationService(
+            rippleApi = FakeRippleApi(),
+            bittensorApi = FakeBittensorApi(),
+            nearApi = mockk<NearApi>(),
+        )
 
     @Test
     fun `validateSlippage - null returns required error`() {
@@ -358,7 +362,11 @@ internal class ChainValidationServiceTest {
     fun `validateRippleDestinationReserve - funded destination does not throw regardless of amount`() =
         runTest {
             val fundedService =
-                ChainValidationService(rippleApiWithAccount(exists = true), FakeBittensorApi(), mockk<NearApi>())
+                ChainValidationService(
+                    rippleApiWithAccount(exists = true),
+                    FakeBittensorApi(),
+                    mockk<NearApi>(),
+                )
             fundedService.validateRippleDestinationReserve(
                 selectedToken = xrpCoin,
                 dstAddress = "rDestination",
@@ -370,7 +378,11 @@ internal class ChainValidationServiceTest {
     @Test
     fun `validateRippleDestinationReserve - unfunded destination below reserve throws`() = runTest {
         val unfundedService =
-            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi(), mockk<NearApi>())
+            ChainValidationService(
+                rippleApiWithAccount(exists = false),
+                FakeBittensorApi(),
+                mockk<NearApi>(),
+            )
         try {
             unfundedService.validateRippleDestinationReserve(
                 selectedToken = xrpCoin,
@@ -398,7 +410,11 @@ internal class ChainValidationServiceTest {
     fun `validateRippleDestinationReserve - unfunded destination at reserve does not throw`() =
         runTest {
             val unfundedService =
-                ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi(), mockk<NearApi>())
+                ChainValidationService(
+                    rippleApiWithAccount(exists = false),
+                    FakeBittensorApi(),
+                    mockk<NearApi>(),
+                )
             unfundedService.validateRippleDestinationReserve(
                 selectedToken = xrpCoin,
                 dstAddress = "rNewAddress",
@@ -410,7 +426,11 @@ internal class ChainValidationServiceTest {
     @Test
     fun `validateRippleDestinationReserve - non-native token does not throw`() = runTest {
         val unfundedService =
-            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi(), mockk<NearApi>())
+            ChainValidationService(
+                rippleApiWithAccount(exists = false),
+                FakeBittensorApi(),
+                mockk<NearApi>(),
+            )
         val nonNativeXrpToken = xrpCoin.copy(ticker = "USD", isNativeToken = false)
         unfundedService.validateRippleDestinationReserve(
             selectedToken = nonNativeXrpToken,
@@ -423,7 +443,11 @@ internal class ChainValidationServiceTest {
     @Test
     fun `validateRippleDestinationReserve - non-Ripple chain does not throw`() = runTest {
         val unfundedService =
-            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi(), mockk<NearApi>())
+            ChainValidationService(
+                rippleApiWithAccount(exists = false),
+                FakeBittensorApi(),
+                mockk<NearApi>(),
+            )
         val ethCoin = dotCoin.copy(chain = Chain.Ethereum, ticker = "ETH", decimal = 18)
         unfundedService.validateRippleDestinationReserve(
             selectedToken = ethCoin,

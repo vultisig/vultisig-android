@@ -250,7 +250,9 @@ constructor(
                 // SwapKitSwapPayloadJson.SIGNABLE_TX_TYPES — the same list
                 // SigningHelper dispatches on — so this guard can't drift from what
                 // the dispatcher actually accepts.
-                require(SwapKitSwapPayloadJson.isSignableTxType(quote.data.txType, srcToken.chain)) {
+                require(
+                    SwapKitSwapPayloadJson.isSignableTxType(quote.data.txType, srcToken.chain)
+                ) {
                     "Unsupported SwapKit txType for swap: ${quote.data.txType}"
                 }
                 val specificAndUtxo =
@@ -259,7 +261,8 @@ constructor(
                         srcAddress = srcAddress,
                         gasFee = gasFee,
                         // NEAR reserves receiver-dependent gas: the deposit is the receiver.
-                        dstAddress = quote.data.targetAddress.takeIf { srcToken.chain == Chain.Near },
+                        dstAddress =
+                            quote.data.targetAddress.takeIf { srcToken.chain == Chain.Near },
                     )
                 RegularSwapTransaction(
                     id = Uuid.random().toString(),

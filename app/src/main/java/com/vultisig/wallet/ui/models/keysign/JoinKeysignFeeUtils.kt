@@ -51,7 +51,8 @@ internal fun computeJoinKeysignNetworkFee(
             TokenValue(value = blockChainSpecific.gas, token = nativeCoin)
         // NEAR's gas reservation is frozen into the payload by the initiator; showing it keeps the
         // joiner's fee equal to the one the initiator saw.
-        is BlockChainSpecific.Near -> TokenValue(value = blockChainSpecific.gasFee, token = nativeCoin)
+        is BlockChainSpecific.Near ->
+            TokenValue(value = blockChainSpecific.gasFee, token = nativeCoin)
         else -> TokenValue(value = fallbackFeeAmount, token = nativeCoin)
     }
 

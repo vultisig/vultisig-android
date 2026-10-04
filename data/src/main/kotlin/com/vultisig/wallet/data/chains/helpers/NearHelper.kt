@@ -36,7 +36,11 @@ import wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
 class NearHelper(private val vaultHexPublicKey: String) {
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> =
-        listOf(Numeric.toHexStringNoPrefix(preSigningOutput(signingInput(keysignPayload)).dataHash.toByteArray()))
+        listOf(
+            Numeric.toHexStringNoPrefix(
+                preSigningOutput(signingInput(keysignPayload)).dataHash.toByteArray()
+            )
+        )
 
     fun getSignedTransaction(
         keysignPayload: KeysignPayload,
@@ -133,7 +137,9 @@ class NearHelper(private val vaultHexPublicKey: String) {
         require(specific.blockHash.size == BLOCK_HASH_BYTES) {
             "Invalid NEAR block hash: expected $BLOCK_HASH_BYTES bytes, received ${specific.blockHash.size}"
         }
-        require(specific.nonce > 0UL) { "Invalid NEAR nonce: a signed transaction needs a positive nonce" }
+        require(specific.nonce > 0UL) {
+            "Invalid NEAR nonce: a signed transaction needs a positive nonce"
+        }
 
         // The sender is the implicit account of the vault key; anything else would sign a
         // transaction funded by an account this device does not control.
@@ -156,7 +162,8 @@ class NearHelper(private val vaultHexPublicKey: String) {
         require(swap.fromCoin.chain == Chain.Near && swap.fromCoin.isNativeToken) {
             "NEAR SwapKit deposit must sell native NEAR"
         }
-        // NEAR Intents deposits go to a fresh per-swap implicit account; a named target is never one.
+        // NEAR Intents deposits go to a fresh per-swap implicit account; a named target is never
+        // one.
         require(NearAccountId.isImplicit(swap.targetAddress)) {
             "NEAR SwapKit deposit address ${swap.targetAddress} is not an implicit account"
         }
@@ -223,12 +230,7 @@ class NearHelper(private val vaultHexPublicKey: String) {
             require(length > 0 && ACCOUNT_ID_LENGTH_BYTES + length <= signedTransaction.size) {
                 "NEAR signed transaction carries a malformed signer account id"
             }
-            return String(
-                signedTransaction,
-                ACCOUNT_ID_LENGTH_BYTES,
-                length,
-                Charsets.UTF_8,
-            )
+            return String(signedTransaction, ACCOUNT_ID_LENGTH_BYTES, length, Charsets.UTF_8)
         }
 
         // Borsh `u128`: 16 little-endian bytes.

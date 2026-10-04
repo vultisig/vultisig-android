@@ -2,11 +2,11 @@
 
 package com.vultisig.wallet.ui.models.send
 
-import com.vultisig.wallet.data.api.NearApi
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin

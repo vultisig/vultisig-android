@@ -6,7 +6,9 @@ package com.vultisig.wallet.data.blockchain.near
  */
 object NearAccountId {
 
-    /** Alphanumeric groups joined by one separator, with `.` delimiting the domain-like segments. */
+    /**
+     * Alphanumeric groups joined by one separator, with `.` delimiting the domain-like segments.
+     */
     private val NAMED = Regex("""(([a-z0-9]+[-_])*[a-z0-9]+\.)*([a-z0-9]+[-_])*[a-z0-9]+""")
 
     /** Implicit accounts are the lowercase hex form of an Ed25519 public key. */

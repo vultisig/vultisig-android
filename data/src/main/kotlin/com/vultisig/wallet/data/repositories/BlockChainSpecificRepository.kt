@@ -1,13 +1,13 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.BittensorApi
-import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.DashApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -26,16 +26,16 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
-import com.vultisig.wallet.data.blockchain.near.NearAccountId
-import com.vultisig.wallet.data.blockchain.near.NearFees
-import com.vultisig.wallet.data.chains.helpers.NearHelper
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.TronFees
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.blockchain.near.NearAccountId
+import com.vultisig.wallet.data.blockchain.near.NearFees
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos
 import com.vultisig.wallet.data.chains.helpers.CardanoHelper
+import com.vultisig.wallet.data.chains.helpers.NearHelper
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
@@ -641,7 +641,9 @@ constructor(
                     "NEAR sender $address is not an implicit account"
                 }
                 coroutineScope {
-                    val accessKeyDeferred = async { nearApi.getAccessKey(address, token.hexPublicKey) }
+                    val accessKeyDeferred = async {
+                        nearApi.getAccessKey(address, token.hexPublicKey)
+                    }
                     val blockDeferred = async { nearApi.getFinalBlock() }
                     val feesDeferred = async { nearApi.getFeeConfig() }
 
