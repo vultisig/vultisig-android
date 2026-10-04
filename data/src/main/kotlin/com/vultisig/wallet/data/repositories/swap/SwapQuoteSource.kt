@@ -103,6 +103,9 @@ internal const val AUTO_SLIPPAGE_LIMIT_BPS = 100
 /** OP_RETURN payload limit for a UTXO-chain swap memo. */
 private const val UTXO_MEMO_MAX_BYTES = 80
 
+/** THORChain / MayaChain memo limit, whatever the source chain. */
+private const val MEMO_MAX_BYTES = 250
+
 /**
  * This quote with a minimum output written into its memo, for an "Auto" slippage swap that the
  * node returned without one. Without it the signed memo accepts any output, however far the price
@@ -116,7 +119,8 @@ private const val UTXO_MEMO_MAX_BYTES = 80
  * high-impact streaming quote from being refused.
  *
  * Returns the quote unchanged when its memo can't carry the limit: not a market swap memo, a
- * floor already set, or a UTXO memo the extra digits would push past the OP_RETURN limit.
+ * floor already set, or a memo the extra digits would push past its size limit (80 bytes of
+ * OP_RETURN on a UTXO source, 250 bytes otherwise).
  */
 internal fun THORChainSwapQuote.withAutoSlippageLimit(srcChain: Chain): THORChainSwapQuote {
     val memo = memo ?: return this
@@ -126,11 +130,10 @@ internal fun THORChainSwapQuote.withAutoSlippageLimit(srcChain: Chain): THORChai
             .divide(BigInteger.valueOf(10_000L))
     if (limit.signum() <= 0) return this
     val limited = ThorchainMemoLimit.withLimit(memo, limit) ?: return this
-    if (
-        srcChain.standard == TokenStandard.UTXO &&
-            limited.toByteArray(Charsets.UTF_8).size > UTXO_MEMO_MAX_BYTES
-    ) {
-        Timber.w("Auto-slippage limit would push the %s swap memo past OP_RETURN", srcChain)
+    val maxBytes =
+        if (srcChain.standard == TokenStandard.UTXO) UTXO_MEMO_MAX_BYTES else MEMO_MAX_BYTES
+    if (limited.toByteArray(Charsets.UTF_8).size > maxBytes) {
+        Timber.w("Auto-slippage limit would push the %s swap memo past %d bytes", srcChain, maxBytes)
         return this
     }
     return copy(memo = limited)
