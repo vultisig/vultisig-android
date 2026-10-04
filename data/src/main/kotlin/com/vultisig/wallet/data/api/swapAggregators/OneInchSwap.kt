@@ -15,6 +15,16 @@ import tss.KeysignResponse
 import wallet.core.jni.proto.Ethereum.SigningInput
 import wallet.core.jni.proto.Ethereum.Transaction
 
+/**
+ * The gas limit [OneInchSwap] signs an EVM aggregator swap with: the route's own [routeGas] (the
+ * swap default when it carries none), raised to the chain-specific [gasLimit].
+ */
+fun evmSwapSignedGasLimit(routeGas: Long, gasLimit: BigInteger): BigInteger =
+    maxOf(
+        (routeGas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
+        gasLimit,
+    )
+
 class OneInchSwap(private val vaultHexPublicKey: String, private val vaultHexChainCode: String) {
 
     fun getPreSignedImageHash(
@@ -72,10 +82,9 @@ class OneInchSwap(private val vaultHexPublicKey: String, private val vaultHexCha
                 requireEthereumSpec(keysignPayload.blockChainSpecific).maxFeePerGasWei,
             )
         val gas =
-            maxOf(
-                (quote.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
-                    .toBigInteger(),
-                requireEthereumSpec(keysignPayload.blockChainSpecific).gasLimit,
+            evmSwapSignedGasLimit(
+                routeGas = quote.tx.gas,
+                gasLimit = requireEthereumSpec(keysignPayload.blockChainSpecific).gasLimit,
             )
         return EthereumGasHelper.setGasParameters(
                 gas = gas,

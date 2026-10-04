@@ -482,6 +482,18 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
+    fun `fetch sizes an ERC-20 deposit at the ERC-20 transfer gas floor, not SwapKit's route gas`() =
+        runTest {
+            // A router-sized 900k figure on a plain token transfer over-reserves the fee and
+            // blocks low-balance deposits.
+            stubErc20Deposit(gas = "0xdbba0")
+
+            val result = source().fetch(usdtDepositRequest()) as SwapQuoteResult.Evm
+
+            assertEquals(210_000L, result.data.tx.gas)
+        }
+
+    @Test
     fun `fetch refuses an ERC-20 deposit whose calldata recipient is not targetAddress`() =
         runTest {
             stubErc20Deposit(targetAddress = "0x000000000000000000000000000000000000dEaD")
@@ -2365,7 +2377,10 @@ internal class SwapKitQuoteSourceTest {
             slippageBps = slippageBps,
         )
 
-    private fun stubErc20Deposit(targetAddress: String = USDT_DEPOSIT_TARGET) {
+    private fun stubErc20Deposit(
+        targetAddress: String = USDT_DEPOSIT_TARGET,
+        gas: String = "0x12c25",
+    ) {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
@@ -2373,7 +2388,7 @@ internal class SwapKitQuoteSourceTest {
             )
         coEvery { api.swap(any()) } returns
             evmSwapResponse(
-                gas = "0x12c25",
+                gas = gas,
                 to = USDT_CONTRACT,
                 data = USDT_DEPOSIT_DATA,
                 value = "0x0",

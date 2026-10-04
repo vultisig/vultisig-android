@@ -1,6 +1,9 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.swapAggregators.evmSwapSignedGasLimit
+import com.vultisig.wallet.data.api.swapAggregators.isErc20DepositTransfer
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.model.Swap
@@ -66,13 +69,19 @@ internal sealed interface UtxoPlanFeeResult {
 
 /**
  * Gas limit to display an EVM aggregator swap fee at: the route's [routeGas] floored by the
- * per-chain default the signer uses (40k native ETH, 400k native Arbitrum, else 600k). Null means
- * keep the flat 600k baseline — no usable route gas, an OP-stack L2 (its baseline folds in an
- * un-scalable L1 data fee), or a limit that lands back on 600k. Shared by the initiator and the
- * joiner so both display the same fee for one swap (#5056).
+ * per-chain default the signer uses (40k native ETH, 400k native Arbitrum, else 600k). A SwapKit
+ * ERC-20 deposit ([isErc20DepositTransfer]) is a token transfer signed at its own limit, so its
+ * [routeGas] is shown unfloored. Null means keep the flat 600k baseline — no usable route gas, an
+ * OP-stack L2 (its baseline folds in an un-scalable L1 data fee), or a limit that lands back on
+ * 600k. Shared by the initiator and the joiner so both display the same fee for one swap (#5056).
  */
-internal fun evmSwapDisplayGasLimit(srcToken: Coin, routeGas: Long): BigInteger? {
+internal fun evmSwapDisplayGasLimit(
+    srcToken: Coin,
+    routeGas: Long,
+    isErc20DepositTransfer: Boolean,
+): BigInteger? {
     if (routeGas <= 0L || srcToken.chain.isOpStackL2) return null
+    if (isErc20DepositTransfer) return routeGas.toBigInteger()
     val floor =
         when {
             !srcToken.isNativeToken -> DEFAULT_SWAP_LIMIT
@@ -81,6 +90,24 @@ internal fun evmSwapDisplayGasLimit(srcToken: Coin, routeGas: Long): BigInteger?
             else -> DEFAULT_SWAP_LIMIT
         }
     return maxOf(routeGas.toBigInteger(), floor).takeIf { it != DEFAULT_SWAP_LIMIT }
+}
+
+/**
+ * Gas limit to display the EVM swap [tx] at, read from the payload alone so the initiator and the
+ * joiner agree: [evmSwapDisplayGasLimit] of the relayed `tx.gas`, except that a SwapKit ERC-20
+ * deposit shows exactly the limit the signer derives from `tx.gas` and [specific]
+ * ([evmSwapSignedGasLimit]), whichever device stamped them.
+ */
+internal fun evmSwapPayloadDisplayGasLimit(
+    srcToken: Coin,
+    tx: OneInchSwapTxJson,
+    specific: BlockChainSpecific.Ethereum,
+): BigInteger? {
+    val isErc20Deposit = tx.isErc20DepositTransfer(srcToken)
+    val routeGas =
+        if (isErc20Deposit) evmSwapSignedGasLimit(tx.gas, specific.gasLimit).longValueExact()
+        else tx.gas
+    return evmSwapDisplayGasLimit(srcToken, routeGas, isErc20Deposit)
 }
 
 internal class SwapGasCalculator
@@ -196,22 +223,53 @@ constructor(
         dstAddress: String? = null,
         memo: String? = null,
         tokenAmountValue: BigInteger? = null,
-    ) =
+    ) = specificOrInvalid {
+        blockChainSpecificRepository.getSpecific(
+            chain = srcToken.chain,
+            address = srcAddress,
+            token = srcToken,
+            gasFee = gasFee,
+            isSwap = true,
+            isMaxAmountEnabled = false,
+            isDeposit = srcToken.chain == Chain.MayaChain,
+            gasLimit = getGasLimit(srcToken),
+            isThorchainRouterDeposit = isThorchainRouterDeposit,
+            dstAddress = dstAddress,
+            memo = memo,
+            tokenAmountValue = tokenAmountValue,
+        )
+    }
+
+    /**
+     * Chain specifics for a SwapKit ERC-20 deposit: priced and gas-limited as the
+     * `transfer([recipient], [amount])` it is, so the limit is that transfer's own estimate floored
+     * at the per-chain ERC-20 transfer limit, never the swap default.
+     */
+    suspend fun getErc20DepositTransferSpecific(
+        srcToken: Coin,
+        srcAddress: String,
+        gasFee: TokenValue,
+        recipient: String,
+        amount: BigInteger,
+    ) = specificOrInvalid {
+        blockChainSpecificRepository.getSpecific(
+            chain = srcToken.chain,
+            address = srcAddress,
+            token = srcToken,
+            gasFee = gasFee,
+            isSwap = false,
+            isMaxAmountEnabled = false,
+            isDeposit = false,
+            dstAddress = recipient,
+            tokenAmountValue = amount,
+        )
+    }
+
+    private inline fun specificOrInvalid(
+        block: () -> BlockChainSpecificAndUtxo
+    ): BlockChainSpecificAndUtxo =
         try {
-            blockChainSpecificRepository.getSpecific(
-                chain = srcToken.chain,
-                address = srcAddress,
-                token = srcToken,
-                gasFee = gasFee,
-                isSwap = true,
-                isMaxAmountEnabled = false,
-                isDeposit = srcToken.chain == Chain.MayaChain,
-                gasLimit = getGasLimit(srcToken),
-                isThorchainRouterDeposit = isThorchainRouterDeposit,
-                dstAddress = dstAddress,
-                memo = memo,
-                tokenAmountValue = tokenAmountValue,
-            )
+            block()
         } catch (e: Exception) {
             if (e is kotlin.coroutines.cancellation.CancellationException) throw e
             Timber.d(e)
@@ -325,9 +383,11 @@ constructor(
         srcToken: Coin,
         baselineGasFee: TokenValue,
         routeGas: Long,
+        isErc20DepositTransfer: Boolean,
     ): GasCalculationResult? {
         if (baselineGasFee.value <= BigInteger.ZERO) return null
-        val displayLimit = evmSwapDisplayGasLimit(srcToken, routeGas) ?: return null
+        val displayLimit =
+            evmSwapDisplayGasLimit(srcToken, routeGas, isErc20DepositTransfer) ?: return null
         // baselineGasFee is maxFeePerGas × DEFAULT_SWAP_LIMIT on the chain's native coin, so
         // scaling
         // by displayLimit / DEFAULT_SWAP_LIMIT keeps the per-gas price and the coin.

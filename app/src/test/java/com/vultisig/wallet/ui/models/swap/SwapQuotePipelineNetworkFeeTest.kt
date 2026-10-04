@@ -58,7 +58,12 @@ internal class SwapQuotePipelineNetworkFeeTest {
         val src = sendSrc(ethCoin)
         val rebased = gasResult(ethCoin, BigInteger.valueOf(2_861_460))
         coEvery {
-            swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), routeGas = 286_146L)
+            swapGasCalculator.rebaseEvmSwapNetworkFee(
+                ethCoin,
+                any(),
+                routeGas = 286_146L,
+                isErc20DepositTransfer = false,
+            )
         } returns rebased
 
         val outcome =
@@ -92,7 +97,12 @@ internal class SwapQuotePipelineNetworkFeeTest {
             val inboundPlaceholder = TokenValue(BigInteger.valueOf(130), ethCoin) // FLASHNET seed
             val oracleBond = TokenValue(BigInteger.valueOf(2_000_000_000_000_000L), ethCoin) // .002
             coEvery {
-                swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), routeGas = 100_000L)
+                swapGasCalculator.rebaseEvmSwapNetworkFee(
+                    ethCoin,
+                    any(),
+                    routeGas = 100_000L,
+                    isErc20DepositTransfer = false,
+                )
             } returns gasResult(ethCoin, oracleBond.value)
 
             val outcome =
@@ -118,7 +128,12 @@ internal class SwapQuotePipelineNetworkFeeTest {
             assertTrue(set.tokenValue.value != inboundPlaceholder.value)
             // The SwapKit route was routed through the oracle rebase exactly like a 1inch quote.
             coVerify(exactly = 1) {
-                swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), routeGas = 100_000L)
+                swapGasCalculator.rebaseEvmSwapNetworkFee(
+                    ethCoin,
+                    any(),
+                    routeGas = 100_000L,
+                    isErc20DepositTransfer = false,
+                )
             }
         }
 
@@ -129,7 +144,12 @@ internal class SwapQuotePipelineNetworkFeeTest {
         val ethCoin = coin(Chain.Ethereum)
         val rebased = gasResult(ethCoin, BigInteger.valueOf(10_000_000))
         coEvery {
-            swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), routeGas = 1_000_000L)
+            swapGasCalculator.rebaseEvmSwapNetworkFee(
+                ethCoin,
+                any(),
+                routeGas = 1_000_000L,
+                isErc20DepositTransfer = false,
+            )
         } returns rebased
 
         val outcome =
@@ -146,7 +166,7 @@ internal class SwapQuotePipelineNetworkFeeTest {
         val set = assertIs<NetworkFeeUpdate.Set>(outcome.networkFee)
         assertEquals(BigInteger.valueOf(10_000_000), set.tokenValue.value)
         coVerify(exactly = 0) {
-            swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 286_146L)
+            swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 286_146L, any())
         }
     }
 
@@ -155,7 +175,12 @@ internal class SwapQuotePipelineNetworkFeeTest {
         // Mirrors the builder: only a positive override replaces the aggregator's estimate.
         val ethCoin = coin(Chain.Ethereum)
         coEvery {
-            swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), routeGas = 286_146L)
+            swapGasCalculator.rebaseEvmSwapNetworkFee(
+                ethCoin,
+                any(),
+                routeGas = 286_146L,
+                isErc20DepositTransfer = false,
+            )
         } returns gasResult(ethCoin, BigInteger.valueOf(2_861_460))
 
         val outcome =
@@ -180,8 +205,9 @@ internal class SwapQuotePipelineNetworkFeeTest {
             // floor swallows): the fee re-based for the previous limit must not linger.
             val ethCoin = coin(Chain.Ethereum)
             val baseline = gasResult(ethCoin, BigInteger.valueOf(6_000_000)).estimated
-            coEvery { swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), any()) } returns
-                null
+            coEvery {
+                swapGasCalculator.rebaseEvmSwapNetworkFee(ethCoin, any(), any(), any())
+            } returns null
 
             val outcome =
                 pipeline.resolveNetworkFee(
@@ -212,7 +238,9 @@ internal class SwapQuotePipelineNetworkFeeTest {
             )
 
         assertNull(outcome.networkFee)
-        coVerify(exactly = 0) { swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), any(), any())
+        }
     }
 
     @Test
@@ -237,7 +265,9 @@ internal class SwapQuotePipelineNetworkFeeTest {
 
         val set = assertIs<NetworkFeeUpdate.Set>(outcome.networkFee)
         assertEquals(BigInteger.valueOf(6_000_000), set.tokenValue.value)
-        coVerify(exactly = 0) { swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), any(), any())
+        }
     }
 
     @Test
@@ -271,7 +301,9 @@ internal class SwapQuotePipelineNetworkFeeTest {
             )
 
         assertEquals(NetworkFeeUpdate.Clear, outcome.networkFee)
-        coVerify(exactly = 0) { swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), any()) }
+        coVerify(exactly = 0) {
+            swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), any(), any())
+        }
     }
 
     // A SwapKit EVM route as SwapQuoteManager.fetchSwapKitQuote materialises it: SwapQuote.OneInch

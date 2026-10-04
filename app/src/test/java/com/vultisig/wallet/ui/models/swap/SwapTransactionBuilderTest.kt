@@ -425,8 +425,9 @@ internal class SwapTransactionBuilderTest {
         val srcToken =
             coin(Chain.Ethereum, "USDT", "0xsrc", 6, isNative = false, contract = USDT_CONTRACT)
         val dstToken = coin(Chain.Solana, "SOL", "soldst", 9, isNative = true)
-        coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
-            ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(99))
+        coEvery {
+            swapGasCalculator.getErc20DepositTransferSpecific(any(), any(), any(), any(), any())
+        } returns ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(99))
         // The token-to-itself allowance a router swap would read is zero.
         coEvery {
             allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
@@ -452,6 +453,53 @@ internal class SwapTransactionBuilderTest {
             allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
         }
     }
+
+    @Test
+    fun `sizes a SwapKit ERC-20 deposit at its own transfer gas, not SwapKit's route gas`() =
+        runTest {
+            val srcToken =
+                coin(Chain.Ethereum, "USDT", "0xsrc", 6, isNative = false, contract = USDT_CONTRACT)
+            val dstToken = coin(Chain.Solana, "SOL", "soldst", 9, isNative = true)
+            // The transfer's own estimate, floored at the ERC-20 transfer limit.
+            val transferGas = BigInteger.valueOf(210_000)
+            coEvery {
+                swapGasCalculator.getErc20DepositTransferSpecific(
+                    srcToken = srcToken,
+                    srcAddress = "0xsrc",
+                    gasFee = any(),
+                    recipient = USDT_DEPOSIT_RECIPIENT,
+                    amount = USDT_DEPOSIT_AMOUNT,
+                )
+            } returns
+                ethereumSpecificAndUtxo(
+                    maxFeePerGasWei = BigInteger.valueOf(99),
+                    gasLimit = transferGas,
+                )
+
+            val tx =
+                builder.build(
+                    vaultId = "vault-deposit",
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcAddress = "0xsrc",
+                    srcTokenValue = TokenValue(USDT_DEPOSIT_AMOUNT, srcToken),
+                    // The quote still carries a 900k route gas.
+                    quote = usdtDepositQuote(dstToken),
+                    gasFee = TokenValue(BigInteger.valueOf(8), srcToken),
+                    gasFeeFiatValue = FiatValue(BigDecimal("2.00"), "USD"),
+                    estimatedNetworkFeeTokenValue = null,
+                    estimatedNetworkFeeFiatValue = null,
+                )
+
+            // OneInchSwap signs max(tx.gas, gasLimit): both carry the transfer gas.
+            val payload = assertIs<SwapPayload.EVM>(tx.payload)
+            assertEquals(transferGas.toLong(), payload.data.quote.tx.gas)
+            val specific =
+                assertIs<BlockChainSpecific.Ethereum>(tx.blockChainSpecific.blockChainSpecific)
+            assertEquals(transferGas, specific.gasLimit)
+            // The fee shown is the bond signed: 99 × 210_000, not the 600k swap floor.
+            assertEquals(BigInteger.valueOf(99) * transferGas, tx.gasFees.value)
+        }
 
     // The reset decision is the repository's; the builder only has to carry it onto the transaction
     // the keysign payload is built from, with the same spender the plain approve would use.
@@ -1029,14 +1077,17 @@ internal class SwapTransactionBuilderTest {
         )
 
     /** Plan fixture whose [BlockChainSpecific] is a real [BlockChainSpecific.Ethereum]. */
-    private fun ethereumSpecificAndUtxo(maxFeePerGasWei: BigInteger) =
+    private fun ethereumSpecificAndUtxo(
+        maxFeePerGasWei: BigInteger,
+        gasLimit: BigInteger = BigInteger.valueOf(21_000),
+    ) =
         BlockChainSpecificAndUtxo(
             blockChainSpecific =
                 BlockChainSpecific.Ethereum(
                     maxFeePerGasWei = maxFeePerGasWei,
                     priorityFeeWei = BigInteger.ONE,
                     nonce = BigInteger.ZERO,
-                    gasLimit = BigInteger.valueOf(21_000),
+                    gasLimit = gasLimit,
                 )
         )
 
@@ -1065,6 +1116,7 @@ internal class SwapTransactionBuilderTest {
         const val USDT_DEPOSIT_DATA =
             "0xa9059cbb000000000000000000000000cb2ac797eff13ee982453f5722b74ab5c56741af" +
                 "0000000000000000000000000000000000000000000000000000000001312d00"
+        const val USDT_DEPOSIT_RECIPIENT = "0xcb2ac797eff13ee982453f5722b74ab5c56741af"
         val USDT_DEPOSIT_AMOUNT: BigInteger = BigInteger.valueOf(20_000_000)
     }
 }
