@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.models.SwapTransaction
+import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.data.repositories.ThorMimirRepository
@@ -31,10 +32,17 @@ constructor(
     suspend fun assertSourceChainNotHalted(transaction: SwapTransaction) {
         assertAdvancedSwapQueueEnabledForLimitOrder(transaction)
 
+        val payload = transaction.payload
         val fetchInboundAddresses: suspend () -> List<THORChainInboundAddress> =
-            when (transaction.payload) {
+            when (payload) {
                 is SwapPayload.ThorChain -> thorChainApi::getTHORChainInboundAddresses
                 is SwapPayload.MayaChain -> mayaChainApi::getInboundAddresses
+                else -> return
+            }
+        val swap =
+            when (payload) {
+                is SwapPayload.ThorChain -> payload.data
+                is SwapPayload.MayaChain -> payload.data
                 else -> return
             }
 
@@ -54,6 +62,32 @@ constructor(
 
         if (inbound?.let { it.halted || it.globalTradingPaused || it.chainTradingPaused } == true) {
             throw SwapException.TradingHalted(SIGNING_BLOCKED_MESSAGE)
+        }
+
+        assertDepositTargetsLiveInbound(swap, inbound)
+    }
+
+    /**
+     * The deposit goes to the vault and router the quote named, which can be stale by signing time
+     * — vaults rotate — or come from a node that disagrees with the live inbound list. A deposit
+     * to a retiring vault or the wrong router is not refunded reliably, so both must match the
+     * inbound set fetched just now.
+     *
+     * A swap out of the protocol's own chain (RUNE, CACAO, secured assets) is a `MsgDeposit` with
+     * no inbound vault: the quote names none and the payload carries the sender's own address in
+     * its place, so there is nothing to compare.
+     */
+    private fun assertDepositTargetsLiveInbound(
+        swap: THORChainSwapPayload,
+        inbound: THORChainInboundAddress?,
+    ) {
+        if (swap.vaultAddress.equals(swap.fromAddress, ignoreCase = true)) return
+        if (inbound == null || !swap.vaultAddress.equals(inbound.address, ignoreCase = true)) {
+            throw SwapException.TradingHalted(INBOUND_CHANGED_MESSAGE)
+        }
+        val router = swap.routerAddress?.takeIf { it.isNotBlank() } ?: return
+        if (!router.equals(inbound.router, ignoreCase = true)) {
+            throw SwapException.TradingHalted(INBOUND_CHANGED_MESSAGE)
         }
     }
 
@@ -77,6 +111,8 @@ constructor(
 
     private companion object {
         const val SIGNING_BLOCKED_MESSAGE = "Source-chain trading is halted or unavailable"
+        const val INBOUND_CHANGED_MESSAGE =
+            "The swap's inbound vault has changed since the quote; get a new quote"
         const val ADV_SWAP_QUEUE_DISABLED_MESSAGE =
             "THORChain's advanced swap queue is disabled; limit orders can't be placed right now"
     }
