@@ -58,6 +58,13 @@ object RippleHelper {
      */
     private val FORBIDDEN_DAPP_FIELDS = setOf("TxnSignature", "Signers", "SigningPubKey")
 
+    /**
+     * Client-side XRP fee ceiling, 2 XRP in drops — the same `maxFeeXRP` default xrpl.js uses to
+     * refuse a transaction whose `Fee` is implausibly large. Normal XRP fees are tens to hundreds
+     * of drops, so this never rejects a legitimate fee but blocks one set to drain the account.
+     */
+    private val MAX_FEE_DROPS: ULong = 2_000_000UL
+
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Ripple) { "Coin is not XRP" }
 
@@ -79,6 +86,13 @@ object RippleHelper {
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
                 ?: error("getPreSignedInputData: fail to get account number and sequence")
         val (sequence, gas, lastLedgerSequence) = rippleSpecific
+        // `gas` is the on-chain `Fee`, taken from the payload. A co-signer rebuilds this input from
+        // the relayed payload and the fee row is a fresh estimate, so bound it here (on every
+        // signer) — otherwise a compromised initiator could set a Fee near the whole balance and
+        // burn the account at signing time. Normal XRP fees are tens to hundreds of drops.
+        require(gas <= MAX_FEE_DROPS) {
+            "XRP Fee $gas drops exceeds the $MAX_FEE_DROPS ceiling; refusing to sign"
+        }
 
         val issuedCurrency = keysignPayload.coin.rippleIssuedCurrency()
 
@@ -332,6 +346,24 @@ object RippleHelper {
         val tamperedField = FORBIDDEN_DAPP_FIELDS.firstOrNull { obj.containsKey(it) }
         require(tamperedField == null) {
             "SignRipple rawJson carries a signing-mechanics field ($tamperedField); refusing to sign"
+        }
+
+        // The dApp/relay bakes `Fee` into the raw JSON and it is signed verbatim, so bound it the
+        // same way the native path bounds `gas` — an unbounded Fee burns the account. XRPL encodes
+        // `Fee` as a string of drops; a `Fee` that is present but not a positive integer within the
+        // ceiling (negative, zero, fractional, a non-string, or `null`) is malformed and refused
+        // here rather than left to produce a zero-fee input or a late signing failure.
+        obj["Fee"]?.let { feeElement ->
+            val feeDrops =
+                (feeElement as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+                    ?: error("SignRipple Fee must be a string of drops")
+            val fee =
+                feeDrops.toBigIntegerOrNull()
+                    ?: error("SignRipple Fee '$feeDrops' is not an integer number of drops")
+            require(fee > BigInteger.ZERO) { "SignRipple Fee $fee is not positive" }
+            require(fee <= BigInteger.valueOf(MAX_FEE_DROPS.toLong())) {
+                "SignRipple Fee $fee drops exceeds the $MAX_FEE_DROPS ceiling; refusing to sign"
+            }
         }
 
         verifyPartialPaymentIsBounded(obj, transactionType)
