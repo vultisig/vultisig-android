@@ -176,16 +176,11 @@ constructor(
                 null
             }
 
-        // The floor the signed memo enforces, net of the fees that come off after the node checks
-        // it, or null when it enforces none — the case for every aggregator route (#5711).
+        // The floor the signed memo enforces, or null when it enforces none — which is the case
+        // for every aggregator route and for a THORChain/Maya swap left on "Auto" slippage, where
+        // the node returns a memo with no LIM at all (#5711).
         val minPayout =
-            signedMinimumOutput(
-                    payload = from.payload,
-                    memo = from.memo,
-                    dstToken = from.dstToken,
-                    outboundFee = from.outboundFee,
-                    affiliateFee = from.swapFee,
-                )
+            signedMinimumOutput(payload = from.payload, memo = from.memo, dstToken = from.dstToken)
                 ?.let { mapTokenValueToDecimalUiString(it) }
 
         // The Swap Fee adds nothing to the total when it is baked into the quoted rate (1inch) or

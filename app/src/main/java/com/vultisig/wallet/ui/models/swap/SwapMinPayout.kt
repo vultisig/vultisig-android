@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.swap.ThorchainMemoLimit
 import com.vultisig.wallet.data.swap.limit.LimitSwapMemo
 import com.vultisig.wallet.data.swap.limit.MemoAssetMatch
 import com.vultisig.wallet.data.swap.limit.compareToMemoAsset
-import java.math.BigInteger
 
 /**
  * The minimum destination amount the transaction about to be signed actually enforces, or null when
@@ -30,18 +29,8 @@ import java.math.BigInteger
  * payload's destination coin reach a cosigner as two independently decoded halves of the same
  * request, and the LIM is denominated in the asset the memo names: pairing them without checking
  * would put a floor read in one asset under another asset's ticker.
- *
- * The node checks the LIM before the [outboundFee] and the [affiliateFee] come off, so both are
- * taken off the floor here to state it in the same terms as the expected payout. Otherwise a small
- * swap, where the outbound fee is a large share, shows a "minimum" above what the user receives.
  */
-internal fun signedMinimumOutput(
-    payload: SwapPayload,
-    memo: String?,
-    dstToken: Coin,
-    outboundFee: TokenValue? = null,
-    affiliateFee: TokenValue? = null,
-): TokenValue? {
+internal fun signedMinimumOutput(payload: SwapPayload, memo: String?, dstToken: Coin): TokenValue? {
     if (payload !is SwapPayload.ThorChain && payload !is SwapPayload.MayaChain) return null
     if (memo == null) return null
     val limit = ThorchainMemoLimit.assertedLimit(memo) ?: return null
@@ -53,9 +42,7 @@ internal fun signedMinimumOutput(
     }
     // The LIM is in the protocol's own fixed point — THORChain's 1e8 whatever the destination
     // chain, Maya's 1e10 for CACAO — which is exactly what convertToTokenValue rescales from.
-    val floor = dstToken.convertToTokenValue(limit.toString())
-    val fees = listOfNotNull(outboundFee, affiliateFee).sumOf { it.value }
-    return floor.copy(value = (floor.value - fees).max(BigInteger.ZERO))
+    return dstToken.convertToTokenValue(limit.toString())
 }
 
 /**

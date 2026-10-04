@@ -94,7 +94,7 @@ sealed class SwapQuoteResult {
 internal const val DEFAULT_THORCHAIN_TOLERANCE_BPS = 0
 
 /**
- * Floor an "Auto" THORChain/Maya swap is signed with, in basis points below the quoted emit. The
+ * Floor an "Auto" THORChain/Maya swap is signed with, in basis points below the quoted output. The
  * node is never asked for it (see [DEFAULT_THORCHAIN_TOLERANCE_BPS]); the quote source writes it
  * into the memo itself with [withAutoSlippageLimit]. Matches the SDK / extension default.
  */
@@ -108,9 +108,11 @@ private const val UTXO_MEMO_MAX_BYTES = 80
  * node returned without one. Without it the signed memo accepts any output, however far the price
  * moves before the swap executes.
  *
- * The node checks `LIM` against the swap's emit — before the outbound fee and the affiliate cut —
- * so the floor is taken off `expected_amount_out` with both added back. Deriving it from the
- * quote's own expected output, rather than asking the node for `tolerance_bps`, keeps a
+ * The floor is taken off `expected_amount_out`, the quote's output with every fee already off.
+ * Which fees the node's emit still includes depends on the route — a swap out of RUNE is checked
+ * after the outbound fee, so a floor built on fees added back refunds a swap that delivered its
+ * quote — while the emit is never below `expected_amount_out`, so this floor never trips on fee
+ * accounting. Deriving it from the quote, rather than asking the node for `tolerance_bps`, keeps a
  * high-impact streaming quote from being refused.
  *
  * Returns the quote unchanged when its memo can't carry the limit: not a market swap memo, a
@@ -118,12 +120,9 @@ private const val UTXO_MEMO_MAX_BYTES = 80
  */
 internal fun THORChainSwapQuote.withAutoSlippageLimit(srcChain: Chain): THORChainSwapQuote {
     val memo = memo ?: return this
-    val emit =
-        listOf(expectedAmountOut, fees.outbound, fees.affiliate)
-            .map { it.toBigIntegerOrNull() ?: return this }
-            .fold(BigInteger.ZERO, BigInteger::add)
+    val expected = expectedAmountOut.toBigIntegerOrNull() ?: return this
     val limit =
-        emit.multiply(BigInteger.valueOf(10_000L - AUTO_SLIPPAGE_LIMIT_BPS))
+        expected.multiply(BigInteger.valueOf(10_000L - AUTO_SLIPPAGE_LIMIT_BPS))
             .divide(BigInteger.valueOf(10_000L))
     if (limit.signum() <= 0) return this
     val limited = ThorchainMemoLimit.withLimit(memo, limit) ?: return this
