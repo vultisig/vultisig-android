@@ -123,10 +123,12 @@ internal class AddressManager(
      * typed one.
      */
     private fun applyTokenTransferLink(link: Eip681TokenTransfer, token: Coin) {
+        val evmChainId = token.chain.evmChainId()
         val matchesToken =
-            !token.isNativeToken &&
+            evmChainId != null &&
+                !token.isNativeToken &&
                 token.contractAddress.equals(link.contract, ignoreCase = true) &&
-                (link.chainId == null || link.chainId == token.chain.evmChainId())
+                (link.chainId == null || link.chainId == evmChainId)
         if (matchesToken) {
             addressFieldState.setTextAndPlaceCursorAtEnd(link.recipient)
             return
