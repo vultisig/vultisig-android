@@ -338,7 +338,7 @@ constructor(
                 // A deposit's estimate is its transfer limit, not SwapKit's route gas.
                 val routeGas =
                     if (isErc20Deposit) {
-                        requireEthereumSpec(specific).gasLimit.longValueExact()
+                        gasLimitToLong(requireEthereumSpec(specific).gasLimit)
                     } else {
                         quote.data.tx.gas.takeIf { it > 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
                     }

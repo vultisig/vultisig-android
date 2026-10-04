@@ -105,9 +105,16 @@ internal fun evmSwapPayloadDisplayGasLimit(
 ): BigInteger? {
     val isErc20Deposit = tx.isErc20DepositTransfer(srcToken)
     val routeGas =
-        if (isErc20Deposit) evmSwapSignedGasLimit(tx.gas, specific.gasLimit).longValueExact()
+        if (isErc20Deposit) gasLimitToLong(evmSwapSignedGasLimit(tx.gas, specific.gasLimit))
         else tx.gas
     return evmSwapDisplayGasLimit(srcToken, routeGas, isErc20Deposit)
+}
+
+/** [gasLimit] as a Long, refused rather than truncated when it does not fit. */
+internal fun gasLimitToLong(gasLimit: BigInteger): Long {
+    // BigInteger.longValueExact() is API 31+, above minSdk.
+    require(gasLimit.bitLength() < Long.SIZE_BITS) { "Gas limit $gasLimit exceeds the Long range" }
+    return gasLimit.toLong()
 }
 
 internal class SwapGasCalculator

@@ -631,7 +631,7 @@ constructor(
                 "SwapKit ERC-20 deposit transfers to $recipient, not targetAddress $targetAddress"
             )
         }
-        return copy(tx = tx.copy(gas = DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN.longValueExact()))
+        return copy(tx = tx.copy(gas = DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN.toLong()))
     }
 
     /**
