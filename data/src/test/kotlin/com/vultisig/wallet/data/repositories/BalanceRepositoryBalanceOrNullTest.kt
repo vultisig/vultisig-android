@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
@@ -67,6 +68,7 @@ class BalanceRepositoryBalanceOrNullTest {
             tronResourceDataSource = mockk<TronResourceDataSource>(relaxed = true),
             polkadotApi = polkadotApi,
             bittensorApi = mockk<BittensorApi>(relaxed = true),
+            nearApi = mockk<NearApi>(),
             suiApi = mockk<SuiApi>(relaxed = true),
             tonApi = mockk<TonApi>(relaxed = true),
             rippleApi = mockk<RippleApi>(relaxed = true),

@@ -190,6 +190,14 @@ data class SwapKitSwapPayloadJson(
         const val TX_TYPE_XRP = "XRP"
 
         /**
+         * The NEAR Intents deposit carries no `txType` (byte-identical to the SDK and iOS): the
+         * cosigning peer builds the plain transfer to [targetAddress] for [fromAmount] via
+         * `NearHelper`, which asserts that binding. Only a NEAR source may use it — a blank txType
+         * means PSBT on the UTXO chains.
+         */
+        const val TX_TYPE_NEAR_DEPOSIT = ""
+
+        /**
          * Every `txType` the signing pipeline can actually handle — each has a branch in
          * `SigningHelper`'s SwapKit dispatch (a per-chain signer or a native-helper fall-through).
          * The single source of truth for "is this route signable", so the pre-flight gate in
@@ -217,7 +225,8 @@ data class SwapKitSwapPayloadJson(
         /**
          * True when [txType] has a wired signing path in `SigningHelper`. See [SIGNABLE_TX_TYPES].
          */
-        fun isSignableTxType(txType: String): Boolean = txType in SIGNABLE_TX_TYPES
+        fun isSignableTxType(txType: String, chain: Chain): Boolean =
+            txType in SIGNABLE_TX_TYPES || (chain == Chain.Near && txType == TX_TYPE_NEAR_DEPOSIT)
 
         private val UTXO_PSBT_TX_TYPES =
             setOf(

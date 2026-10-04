@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.BittensorApi
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
@@ -25,6 +26,9 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.near.NearAccountId
+import com.vultisig.wallet.data.blockchain.near.NearFees
+import com.vultisig.wallet.data.chains.helpers.NearHelper
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.TronFees
@@ -105,6 +109,7 @@ constructor(
     private val zcashApi: ZcashApi,
     private val polkadotApi: PolkadotApi,
     private val bittensorApi: BittensorApi,
+    private val nearApi: NearApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
@@ -620,6 +625,49 @@ constructor(
                         utxos = emptyList(),
                     )
                 }
+
+            TokenStandard.NEAR -> {
+                require(token.isNativeToken) {
+                    "NEAR tokens are not supported by the native send path"
+                }
+                // The upfront gas depends on the receiver: a 64-hex implicit receiver reserves
+                // account-creation gas whether or not it exists. For a swap this is the deposit
+                // address.
+                val recipient = dstAddress.orEmpty()
+                require(NearAccountId.isValid(recipient)) {
+                    "Invalid NEAR recipient account id: $recipient"
+                }
+                require(NearAccountId.isImplicit(address)) {
+                    "NEAR sender $address is not an implicit account"
+                }
+                coroutineScope {
+                    val accessKeyDeferred = async { nearApi.getAccessKey(address, token.hexPublicKey) }
+                    val blockDeferred = async { nearApi.getFinalBlock() }
+                    val feesDeferred = async { nearApi.getFeeConfig() }
+
+                    val accessKey =
+                        accessKeyDeferred.await()
+                            ?: error("NEAR account $address does not hold the vault's signing key")
+                    check(accessKey.isFullAccess) {
+                        "NEAR signing key for $address is a function-call key; a transfer needs full access"
+                    }
+                    val block = blockDeferred.await()
+
+                    BlockChainSpecificAndUtxo(
+                        BlockChainSpecific.Near(
+                            nonce = NearHelper.transactionNonce(accessKey.nonce),
+                            blockHash = block.hash,
+                            gasFee =
+                                NearFees.gasReservation(
+                                    config = feesDeferred.await(),
+                                    gasPrice = block.gasPrice,
+                                    senderIsReceiver = address == recipient,
+                                    receiverIsImplicit = NearAccountId.isImplicit(recipient),
+                                ),
+                        )
+                    )
+                }
+            }
 
             TokenStandard.TON -> {
                 coroutineScope {

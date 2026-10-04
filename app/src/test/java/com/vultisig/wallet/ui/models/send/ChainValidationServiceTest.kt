@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.models.send
 
+import io.mockk.mockk
+import com.vultisig.wallet.data.api.NearApi
 import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseAccountDataJson
@@ -57,7 +59,7 @@ private class FakeRippleApi(
 internal class ChainValidationServiceTest {
 
     private val service =
-        ChainValidationService(rippleApi = FakeRippleApi(), bittensorApi = FakeBittensorApi())
+        ChainValidationService(rippleApi = FakeRippleApi(), bittensorApi = FakeBittensorApi(), nearApi = mockk<NearApi>())
 
     @Test
     fun `validateSlippage - null returns required error`() {
@@ -356,7 +358,7 @@ internal class ChainValidationServiceTest {
     fun `validateRippleDestinationReserve - funded destination does not throw regardless of amount`() =
         runTest {
             val fundedService =
-                ChainValidationService(rippleApiWithAccount(exists = true), FakeBittensorApi())
+                ChainValidationService(rippleApiWithAccount(exists = true), FakeBittensorApi(), mockk<NearApi>())
             fundedService.validateRippleDestinationReserve(
                 selectedToken = xrpCoin,
                 dstAddress = "rDestination",
@@ -368,7 +370,7 @@ internal class ChainValidationServiceTest {
     @Test
     fun `validateRippleDestinationReserve - unfunded destination below reserve throws`() = runTest {
         val unfundedService =
-            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi())
+            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi(), mockk<NearApi>())
         try {
             unfundedService.validateRippleDestinationReserve(
                 selectedToken = xrpCoin,
@@ -396,7 +398,7 @@ internal class ChainValidationServiceTest {
     fun `validateRippleDestinationReserve - unfunded destination at reserve does not throw`() =
         runTest {
             val unfundedService =
-                ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi())
+                ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi(), mockk<NearApi>())
             unfundedService.validateRippleDestinationReserve(
                 selectedToken = xrpCoin,
                 dstAddress = "rNewAddress",
@@ -408,7 +410,7 @@ internal class ChainValidationServiceTest {
     @Test
     fun `validateRippleDestinationReserve - non-native token does not throw`() = runTest {
         val unfundedService =
-            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi())
+            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi(), mockk<NearApi>())
         val nonNativeXrpToken = xrpCoin.copy(ticker = "USD", isNativeToken = false)
         unfundedService.validateRippleDestinationReserve(
             selectedToken = nonNativeXrpToken,
@@ -421,7 +423,7 @@ internal class ChainValidationServiceTest {
     @Test
     fun `validateRippleDestinationReserve - non-Ripple chain does not throw`() = runTest {
         val unfundedService =
-            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi())
+            ChainValidationService(rippleApiWithAccount(exists = false), FakeBittensorApi(), mockk<NearApi>())
         val ethCoin = dotCoin.copy(chain = Chain.Ethereum, ticker = "ETH", decimal = 18)
         unfundedService.validateRippleDestinationReserve(
             selectedToken = ethCoin,
@@ -440,6 +442,7 @@ internal class ChainValidationServiceTest {
                         fetchAccountsInfoError = IllegalStateException("RPC unreachable")
                     ),
                     FakeBittensorApi(),
+                    mockk<NearApi>(),
                 )
             try {
                 brokenService.validateRippleDestinationReserve(
@@ -462,7 +465,7 @@ internal class ChainValidationServiceTest {
     fun `validateBittensorDestinationExistentialDeposit - amount at the deposit skips the lookup`() =
         runTest {
             val api = FakeBittensorApi()
-            val bittensorService = ChainValidationService(FakeRippleApi(), api)
+            val bittensorService = ChainValidationService(FakeRippleApi(), api, mockk<NearApi>())
 
             bittensorService.validateBittensorDestinationExistentialDeposit(
                 selectedToken = taoCoin,
@@ -479,7 +482,11 @@ internal class ChainValidationServiceTest {
     fun `validateBittensorDestinationExistentialDeposit - dust to an unfunded destination throws`() =
         runTest {
             val bittensorService =
-                ChainValidationService(FakeRippleApi(), FakeBittensorApi(balance = BigInteger.ZERO))
+                ChainValidationService(
+                    FakeRippleApi(),
+                    FakeBittensorApi(balance = BigInteger.ZERO),
+                    mockk<NearApi>(),
+                )
             try {
                 bittensorService.validateBittensorDestinationExistentialDeposit(
                     selectedToken = taoCoin,
@@ -507,6 +514,7 @@ internal class ChainValidationServiceTest {
                 ChainValidationService(
                     FakeRippleApi(),
                     FakeBittensorApi(balance = BigInteger.valueOf(1_000L)),
+                    mockk<NearApi>(),
                 )
 
             bittensorService.validateBittensorDestinationExistentialDeposit(
@@ -523,6 +531,7 @@ internal class ChainValidationServiceTest {
             ChainValidationService(
                 FakeRippleApi(),
                 FakeBittensorApi(balanceError = IllegalStateException("RPC unreachable")),
+                mockk<NearApi>(),
             )
         try {
             bittensorService.validateBittensorDestinationExistentialDeposit(
@@ -540,7 +549,7 @@ internal class ChainValidationServiceTest {
     fun `validateBittensorDestinationExistentialDeposit - non-Bittensor chain skips the lookup`() =
         runTest {
             val api = FakeBittensorApi()
-            val bittensorService = ChainValidationService(FakeRippleApi(), api)
+            val bittensorService = ChainValidationService(FakeRippleApi(), api, mockk<NearApi>())
 
             bittensorService.validateBittensorDestinationExistentialDeposit(
                 selectedToken = dotCoin,

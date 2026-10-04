@@ -1175,7 +1175,12 @@ constructor(
         pollingTxStatusJob =
             viewModelScope.safeLaunch {
                 val outcome =
-                    txStatusPoller.poll(txHash, chain, isSwapKitSwap = isSwapKitSwap()) { result ->
+                    txStatusPoller.poll(
+                        txHash,
+                        chain,
+                        isSwapKitSwap = isSwapKitSwap(),
+                        senderAccountId = keysignPayload?.coin?.address,
+                    ) { result ->
                         state.update {
                             it.copy(
                                 signingState =

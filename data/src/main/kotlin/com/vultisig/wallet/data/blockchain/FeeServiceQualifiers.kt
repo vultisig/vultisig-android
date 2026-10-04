@@ -10,6 +10,8 @@ import javax.inject.Qualifier
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class BittensorFee
 
+@Qualifier @Retention(AnnotationRetention.BINARY) annotation class NearFee
+
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class RippleFee
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class SuiFee

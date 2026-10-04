@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.swapAggregators.swapKitErc20DepositRecipient
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper.requireEthereumSpec
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
@@ -249,7 +250,7 @@ constructor(
                 // SwapKitSwapPayloadJson.SIGNABLE_TX_TYPES — the same list
                 // SigningHelper dispatches on — so this guard can't drift from what
                 // the dispatcher actually accepts.
-                require(SwapKitSwapPayloadJson.isSignableTxType(quote.data.txType)) {
+                require(SwapKitSwapPayloadJson.isSignableTxType(quote.data.txType, srcToken.chain)) {
                     "Unsupported SwapKit txType for swap: ${quote.data.txType}"
                 }
                 val specificAndUtxo =
@@ -257,6 +258,8 @@ constructor(
                         srcToken = srcToken,
                         srcAddress = srcAddress,
                         gasFee = gasFee,
+                        // NEAR reserves receiver-dependent gas: the deposit is the receiver.
+                        dstAddress = quote.data.targetAddress.takeIf { srcToken.chain == Chain.Near },
                     )
                 RegularSwapTransaction(
                     id = Uuid.random().toString(),

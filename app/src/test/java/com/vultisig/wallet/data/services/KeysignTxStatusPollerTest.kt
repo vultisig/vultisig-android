@@ -56,7 +56,7 @@ internal class KeysignTxStatusPollerTest {
     // forever. Emitting a status here would leave the screen on a "Pending" nothing can advance.
     @Test
     fun `a rejected binding is untracked and emits no status`() = runTest {
-        every { serviceManager.startPolling(txHash, Chain.Ethereum) } returns false
+        every { serviceManager.startPolling(txHash, Chain.Ethereum, null) } returns false
         val observed = mutableListOf<TransactionResult>()
 
         val outcome = poll(observed)
@@ -70,7 +70,7 @@ internal class KeysignTxStatusPollerTest {
     // on serviceReady would then hold the screen on "Pending" for the rest of the session.
     @Test
     fun `a binding that never connects is untracked`() = runTest {
-        every { serviceManager.startPolling(txHash, Chain.Ethereum) } returns true
+        every { serviceManager.startPolling(txHash, Chain.Ethereum, null) } returns true
         every { serviceManager.serviceReady } returns MutableStateFlow(false)
         val observed = mutableListOf<TransactionResult>()
 
@@ -85,7 +85,7 @@ internal class KeysignTxStatusPollerTest {
     // on its initial Pending forever — indistinguishable from a slow chain until the budget lapses.
     @Test
     fun `a bound service that never reports is untracked once the poll budget lapses`() = runTest {
-        every { serviceManager.startPolling(txHash, Chain.Ethereum) } returns true
+        every { serviceManager.startPolling(txHash, Chain.Ethereum, null) } returns true
         every { serviceManager.getStatusFlow() } returns MutableStateFlow(TransactionResult.Pending)
         val observed = mutableListOf<TransactionResult>()
 
@@ -100,7 +100,7 @@ internal class KeysignTxStatusPollerTest {
     // same outcome, the transaction has no watcher.
     @Test
     fun `a vanished binder is untracked`() = runTest {
-        every { serviceManager.startPolling(txHash, Chain.Ethereum) } returns true
+        every { serviceManager.startPolling(txHash, Chain.Ethereum, null) } returns true
         every { serviceManager.getStatusFlow() } returns null
         val observed = mutableListOf<TransactionResult>()
 
@@ -112,7 +112,7 @@ internal class KeysignTxStatusPollerTest {
 
     @Test
     fun `a settled transaction is terminal and every status is emitted and persisted`() = runTest {
-        every { serviceManager.startPolling(txHash, Chain.Ethereum) } returns true
+        every { serviceManager.startPolling(txHash, Chain.Ethereum, null) } returns true
         every { serviceManager.getStatusFlow() } returns
             flowOf(TransactionResult.Pending, TransactionResult.Confirmed)
         val observed = mutableListOf<TransactionResult>()
@@ -148,7 +148,7 @@ internal class KeysignTxStatusPollerTest {
 
         outcome shouldBe TxStatusPollOutcome.Terminal
         observed shouldBe listOf(TransactionResult.Pending, TransactionResult.Confirmed)
-        verify(exactly = 0) { serviceManager.startPolling(any(), any()) }
+        verify(exactly = 0) { serviceManager.startPolling(any(), any(), any()) }
     }
 
     // Only SwapKit can see a SwapKit swap's destination leg; a chain it can't track falls back to
@@ -156,12 +156,12 @@ internal class KeysignTxStatusPollerTest {
     @Test
     fun `a SwapKit swap on an untrackable chain falls back to the status service`() = runTest {
         every { swapKitTrackingService.canTrack(Chain.Ethereum) } returns false
-        every { serviceManager.startPolling(txHash, Chain.Ethereum) } returns false
+        every { serviceManager.startPolling(txHash, Chain.Ethereum, null) } returns false
 
         val outcome = poll(mutableListOf(), isSwapKitSwap = true)
 
         outcome shouldBe TxStatusPollOutcome.NotTracked
-        verify { serviceManager.startPolling(txHash, Chain.Ethereum) }
+        verify { serviceManager.startPolling(txHash, Chain.Ethereum, null) }
     }
 
     private suspend fun poll(
@@ -172,6 +172,7 @@ internal class KeysignTxStatusPollerTest {
             txHash = txHash,
             chain = Chain.Ethereum,
             isSwapKitSwap = isSwapKitSwap,
+            senderAccountId = null,
             onStatus = { observed += it },
         )
 }

@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.SolanaAccountOwnership
 import com.vultisig.wallet.data.api.SolanaApi
+import com.vultisig.wallet.data.blockchain.near.NearAccountId
 import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
@@ -23,6 +24,13 @@ import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
+
+/**
+ * Whether a scanned or pasted [address] should select [chain] on its own: valid for the chain, and
+ * for NEAR not a bare word, which the account-id grammar also admits.
+ */
+fun ChainAccountAddressRepository.isRecognizedAs(chain: Chain, address: String): Boolean =
+    isValid(chain, address) && (chain != Chain.Near || NearAccountId.isUnambiguous(address))
 
 interface ChainAccountAddressRepository {
 
@@ -187,6 +195,9 @@ constructor(private val solanaApi: SolanaApi) : ChainAccountAddressRepository {
             Chain.Sei -> AnyAddress.isValid(address, CoinType.ETHEREUM)
 
             Chain.Bittensor -> AnyAddress.isValidSS58(address, CoinType.POLKADOT, 42)
+
+            // WalletCore refuses every named NEAR account; the account-id grammar is authoritative.
+            Chain.Near -> NearAccountId.isValid(address)
 
             else -> chain.coinType.validate(address)
         }

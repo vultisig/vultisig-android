@@ -38,6 +38,7 @@ internal object SwapKitAssetPrefix {
             Chain.Cardano -> "ADA"
             Chain.Ton -> "TON"
             Chain.Ripple -> "XRP"
+            Chain.Near -> "NEAR"
             // Confirmed against `GET /tokens`: chain 4663 lists as `HOOD.ETH` / `HOOD.TSLA-0x…`,
             // chain 999 as `HYPEREVM.HYPE` / `HYPEREVM.USDC-0x…`. The catalogue's separate `HYPE.*`
             // bucket is HyperCore (`USDC:0x…` addresses), a different venue — never this chain.

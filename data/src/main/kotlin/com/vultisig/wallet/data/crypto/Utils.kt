@@ -4,6 +4,7 @@ import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Cardano
 import wallet.core.jni.proto.Cosmos
 import wallet.core.jni.proto.Ethereum
+import wallet.core.jni.proto.NEAR
 import wallet.core.jni.proto.Polkadot
 import wallet.core.jni.proto.Solana
 import wallet.core.jni.proto.Sui
@@ -60,6 +61,13 @@ internal fun Solana.SigningOutput.checkError(): Solana.SigningOutput {
 }
 
 internal fun Polkadot.SigningOutput.checkError(): Polkadot.SigningOutput {
+    if (!errorMessage.isNullOrEmpty()) {
+        error("SigningOutput contains error: $errorMessage")
+    }
+    return this
+}
+
+internal fun NEAR.SigningOutput.checkError(): NEAR.SigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error("SigningOutput contains error: $errorMessage")
     }

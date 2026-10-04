@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
@@ -1503,6 +1504,7 @@ internal class BlockChainSpecificRepositoryImplTest {
             zcashApi = zcashApi,
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
             bittensorApi = mockk<BittensorApi>(relaxed = true),
+            nearApi = mockk<NearApi>(),
             suiApi = suiApi,
             tonApi = tonApi,
             rippleApi = mockk<RippleApi>(relaxed = true),
@@ -1515,6 +1517,7 @@ internal class BlockChainSpecificRepositoryImplTest {
                     zkFeeService = ZkFeeService(evmApiFactory),
                     polkadotFeeService = NoOpFeeService,
                     bittensorFeeService = NoOpFeeService,
+                    nearFeeService = NoOpFeeService,
                     rippleFeeService = NoOpFeeService,
                     suiFeeService = suiFeeService,
                     tonFeeService = NoOpFeeService,

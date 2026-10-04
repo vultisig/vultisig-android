@@ -29,6 +29,7 @@ class PollingTxStatusUseCaseTest {
         override suspend fun checkTransactionStatus(
             txHash: String,
             chain: Chain,
+            senderAccountId: String?,
         ): TransactionResult {
             callCount++
             return TransactionResult.NotFound
@@ -42,6 +43,7 @@ class PollingTxStatusUseCaseTest {
         override suspend fun checkTransactionStatus(
             txHash: String,
             chain: Chain,
+            senderAccountId: String?,
         ): TransactionResult {
             callCount++
             return TransactionResult.Pending
@@ -55,6 +57,7 @@ class PollingTxStatusUseCaseTest {
         override suspend fun checkTransactionStatus(
             txHash: String,
             chain: Chain,
+            senderAccountId: String?,
         ): TransactionResult {
             callCount++
             throw NetworkException(429, "Too Many Requests")
@@ -68,6 +71,7 @@ class PollingTxStatusUseCaseTest {
         override suspend fun checkTransactionStatus(
             txHash: String,
             chain: Chain,
+            senderAccountId: String?,
         ): TransactionResult {
             callCount++
             return TransactionResult.Refunded("refunded")
@@ -85,6 +89,7 @@ class PollingTxStatusUseCaseTest {
         override suspend fun checkTransactionStatus(
             txHash: String,
             chain: Chain,
+            senderAccountId: String?,
         ): TransactionResult {
             callCount++
             timeSource += pollInterval

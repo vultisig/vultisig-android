@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.BittensorApi
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
@@ -19,6 +20,7 @@ import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.near.NearFees
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
 import com.vultisig.wallet.data.blockchain.solana.SolanaDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
@@ -167,6 +169,7 @@ constructor(
     private val tronResourceDataSource: TronResourceDataSource,
     private val polkadotApi: PolkadotApi,
     private val bittensorApi: BittensorApi,
+    private val nearApi: NearApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
@@ -483,6 +486,24 @@ constructor(
                 TokenValue(value = it.toBigInteger(), unit = coin.ticker, decimals = coin.decimal)
             }
 
+    /**
+     * NEAR balance less what must stay behind to back the account's own storage, netted here like
+     * Ripple's reserve so MAX and the available balance never spend it. An unfunded account
+     * (UNKNOWN_ACCOUNT) holds zero; a failed read throws. NEP-448 accounts up to 770 bytes reserve
+     * nothing, so the protocol config is read only above that.
+     */
+    private suspend fun nearSpendableBalance(address: String): BigInteger {
+        val account = nearApi.getAccount(address) ?: return BigInteger.ZERO
+        if (account.storageUsage <= NearFees.ZERO_BALANCE_STORAGE_LIMIT) return account.amount
+        val reserve =
+            NearFees.storageReserve(
+                storageUsage = account.storageUsage,
+                locked = account.locked,
+                storageAmountPerByte = nearApi.getFeeConfig().storageAmountPerByte,
+            )
+        return (account.amount - reserve).max(BigInteger.ZERO)
+    }
+
     override fun getTokenValue(address: String, coin: Coin): Flow<TokenValue> =
         flow {
                 emit(
@@ -606,6 +627,8 @@ constructor(
                                     ?: splTokenRepository.getCachedBalance(coin)
                             Polkadot -> polkadotApi.getBalance(address)
                             Chain.Bittensor -> bittensorApi.getBalance(address)
+                            Chain.Near if coin.isNativeToken -> nearSpendableBalance(address)
+                            Chain.Near -> error("NEAR tokens have no balance reader")
 
                             Sui -> suiApi.getBalance(address, coin.contractAddress)
 

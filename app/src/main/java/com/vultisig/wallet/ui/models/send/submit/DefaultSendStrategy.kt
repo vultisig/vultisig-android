@@ -513,6 +513,10 @@ internal class DefaultSendStrategy(
                             dstAddress = dstAddress,
                             tokenAmountInt = tokenAmountInt,
                         )
+                        chainValidationService.validateNearDestinationExists(
+                            selectedToken = selectedToken,
+                            dstAddress = dstAddress,
+                        )
                     }
 
                     val evmGasSettings = gasSettings.value.evmSettingsFor(chain)

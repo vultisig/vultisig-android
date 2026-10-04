@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.send
 
+import com.vultisig.wallet.data.api.NearApi
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
@@ -53,6 +54,7 @@ internal class AmountManagerTest {
         ChainValidationService(
             rippleApi = mockk(relaxed = true),
             bittensorApi = mockk(relaxed = true),
+            nearApi = mockk<NearApi>(),
         )
     private val tokenPriceRepository: TokenPriceRepository = mockk(relaxed = true)
 

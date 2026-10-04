@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.send.submit
 
+import com.vultisig.wallet.data.api.NearApi
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
@@ -2816,7 +2817,11 @@ internal class DefaultSendStrategyTest {
             getAvailableTokenBalance = getAvailableTokenBalance,
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
             chainValidationService =
-                ChainValidationService(rippleApi = rippleApi, bittensorApi = mockk(relaxed = true)),
+                ChainValidationService(
+                    rippleApi = rippleApi,
+                    bittensorApi = mockk(relaxed = true),
+                    nearApi = mockk<NearApi>(),
+                ),
             addressManager = addressManager,
             amountManager = amountManager,
             gasSettings = gasSettings,

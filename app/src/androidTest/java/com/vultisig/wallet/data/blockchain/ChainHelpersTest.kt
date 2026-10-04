@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper.Companion.ATOM_DENOM
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.chains.helpers.NearHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.QBTCTransactionHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
@@ -33,6 +34,8 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import java.math.BigDecimal
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
 import java.util.Base64
@@ -556,6 +559,18 @@ class ChainHelpersTest {
         }
     }
 
+    @Test
+    fun sendNearTest() {
+        val transactions: List<TransactionData> = loadTransactionData(NEAR_JSON_FILE)
+
+        transactions.forEach { transaction ->
+            val payload = transaction.keysignPayload.toInternalKeySignPayload()
+            val preImageHashes = NearHelper(payload.coin.hexPublicKey).getPreSignedImageHash(payload)
+
+            assertEquals(preImageHashes, transaction.expectedImageHash)
+        }
+    }
+
     /**
      * The last line of defence for issue #5844: the form refuses the all-zero AccountId, but the
      * extrinsic builder is what every signing path funnels through, so it refuses it too rather
@@ -573,6 +588,35 @@ class ChainHelpersTest {
 
         assertThrows(IllegalArgumentException::class.java) {
             BittensorHelper(HEX_PUBLIC_KEY_EDDSA).getPreSignedImageHash(payload)
+        }
+    }
+
+    /**
+     * A NEAR Intents deposit goes to a fresh implicit account: a SwapKit payload naming a named
+     * account is refused even when it is also the transfer receiver.
+     */
+    @Test
+    fun nearRefusesANamedSwapKitDepositAddress() {
+        val payload =
+            loadTransactionData(NEAR_JSON_FILE).first().keysignPayload.toInternalKeySignPayload()
+        val deposit =
+            payload.copy(
+                swapPayload =
+                    SwapPayload.SwapKit(
+                        SwapKitSwapPayloadJson(
+                            fromCoin = payload.coin,
+                            toCoin = payload.coin,
+                            fromAmount = payload.toAmount,
+                            toAmountDecimal = BigDecimal.ONE,
+                            txType = SwapKitSwapPayloadJson.TX_TYPE_NEAR_DEPOSIT,
+                            txPayload = ByteArray(0),
+                            targetAddress = payload.toAddress,
+                        )
+                    )
+            )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            NearHelper(payload.coin.hexPublicKey).getPreSignedImageHash(deposit)
         }
     }
 
@@ -1141,6 +1185,7 @@ class ChainHelpersTest {
         private const val LIFI_SWAP_JSON_FILE = "lifiswap.json"
 
         private const val ARB_SWAP_JSON_FILE = "arb.json"
+        private const val NEAR_JSON_FILE = "near.json"
 
         /**
          * Every fixture file in `androidTest/assets`, bound to the test that hashes its cases.
@@ -1176,6 +1221,7 @@ class ChainHelpersTest {
                 MAYA_SWAP_JSON_FILE to "sendMayaChainSwapTest",
                 LIFI_SWAP_JSON_FILE to "oneInchLifiSwapTest",
                 ARB_SWAP_JSON_FILE to "oneInchArbitrumSwapTest",
+                NEAR_JSON_FILE to "sendNearTest",
             )
 
         // +5: cosmos-chain-matrix.json (issue #5421 item 5, Osmosis/Dydx/Noble/Akash + one IBC
@@ -1189,7 +1235,9 @@ class ChainHelpersTest {
         // check reports it as missing here rather than as a hash disagreement.
         // +2: "Send TAO (allow_death)" / "Send DOT (allow_death)" — the keep-alive vectors with
         // only the Balances call index changed, pinned alongside vultisig-sdk's copies.
-        private const val EXPECTED_CASE_COUNT = 88
+        // +2: near.json (named + implicit receiver), byte-identical to the vultisig-sdk and iOS
+        // copies.
+        private const val EXPECTED_CASE_COUNT = 90
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"

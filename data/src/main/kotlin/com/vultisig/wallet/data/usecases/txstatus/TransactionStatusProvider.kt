@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases.txstatus
 
+import com.vultisig.wallet.data.api.txstatus.NearStatusProvider
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import javax.inject.Inject
@@ -24,7 +25,12 @@ sealed class TransactionResult {
 }
 
 interface TransactionStatusRepository {
-    suspend fun checkTransactionStatus(txHash: String, chain: Chain): TransactionResult
+    /** [senderAccountId] is required where the chain looks transactions up by sender (NEAR). */
+    suspend fun checkTransactionStatus(
+        txHash: String,
+        chain: Chain,
+        senderAccountId: String? = null,
+    ): TransactionResult
 }
 
 internal class TransactionStatusRepositoryImpl
@@ -42,6 +48,7 @@ constructor(
     @param:RippleTxStatus private val rippleProvider: TransactionStatusProvider,
     @param:TronTxStatus private val tronProvider: TransactionStatusProvider,
     @param:BittensorTxStatus private val bittensorProvider: TransactionStatusProvider,
+    private val nearProvider: NearStatusProvider,
 ) : TransactionStatusRepository {
     private fun getProvider(chain: Chain) =
         when (chain.standard) {
@@ -58,11 +65,19 @@ constructor(
             TokenStandard.TON -> tonProvider
             TokenStandard.RIPPLE -> rippleProvider
             TokenStandard.TRC20 -> tronProvider
+            TokenStandard.NEAR ->
+                error("NEAR status needs the sender and is resolved in checkTransactionStatus")
         }
 
-    override suspend fun checkTransactionStatus(txHash: String, chain: Chain): TransactionResult {
-        val provider = getProvider(chain)
-        return provider.checkStatus(txHash = txHash, chain = chain)
+    override suspend fun checkTransactionStatus(
+        txHash: String,
+        chain: Chain,
+        senderAccountId: String?,
+    ): TransactionResult {
+        if (chain.standard == TokenStandard.NEAR) {
+            return nearProvider.checkStatus(txHash, senderAccountId)
+        }
+        return getProvider(chain).checkStatus(txHash = txHash, chain = chain)
     }
 }
 

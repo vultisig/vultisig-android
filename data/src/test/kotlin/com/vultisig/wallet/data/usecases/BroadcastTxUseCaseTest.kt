@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
@@ -527,6 +528,7 @@ class BroadcastTxUseCaseTest {
             solanaApi = solanaApi,
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
             bittensorApi = bittensorApi,
+            nearApi = mockk<NearApi>(),
             suiApi = mockk<SuiApi>(relaxed = true),
             tonApi = mockk<TonApi>(relaxed = true),
             rippleApi = mockk<RippleApi>(relaxed = true),

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.tron
 
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
@@ -325,6 +326,7 @@ internal class TronFeeReconciliationTest {
             zcashApi = mockk<ZcashApi>(relaxed = true),
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
             bittensorApi = mockk<BittensorApi>(relaxed = true),
+            nearApi = mockk<NearApi>(),
             suiApi = mockk<SuiApi>(relaxed = true),
             tonApi = mockk<TonApi>(relaxed = true),
             rippleApi = mockk<RippleApi>(relaxed = true),

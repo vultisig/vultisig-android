@@ -211,6 +211,9 @@ constructor(
             api.swap(
                 SwapKitSwapRequest(
                     routeId = routeId,
+                    // A NEAR source signs its own frozen transfer, so SwapKit must not build one.
+                    disableBuildTx = true.takeIf { request.srcToken.chain == Chain.Near },
+                    disableBalanceCheck = true.takeIf { request.srcToken.chain == Chain.Near },
                     // Honor the request-scoped sender/receiver overrides (passed by
                     // SwapQuoteManager). Fall back to the token's account address only when the
                     // request did not supply one, so a Vault address override (e.g. a different
@@ -263,7 +266,7 @@ constructor(
         // from `tx.data`, matching how JupiterQuoteSource stages a Solana swap). PSBT (Bitcoin),
         // TRON and TON can't fit that shape, so they surface as a fully-formed SwapQuote.SwapKit
         // on the Native result for a per-chain signer to consume.
-        val txKind = txTypeOf(swapResponse)
+        val txKind = txTypeOf(swapResponse, request.srcToken.chain)
         // A typed payload for the wrong chain is as unsafe as an unknown one — both reach a signer
         // that cannot vouch for what it signs. The chain allowlist used to make most mismatches
         // unreachable; with the list open, this is the check that keeps them so. Port of iOS'
@@ -297,7 +300,8 @@ constructor(
             TxKind.CARDANO,
             TxKind.CARDANO_PREBUILT,
             TxKind.TON,
-            TxKind.XRP ->
+            TxKind.XRP,
+            TxKind.NEAR_DEPOSIT ->
                 SwapQuoteResult.Native(
                     buildSwapKitNativeQuote(
                         swapResponse,
@@ -327,6 +331,7 @@ constructor(
             TxKind.CARDANO_PREBUILT -> srcChain == Chain.Cardano
             TxKind.TON -> srcChain == Chain.Ton
             TxKind.XRP -> srcChain == Chain.Ripple
+            TxKind.NEAR_DEPOSIT -> srcChain == Chain.Near
             TxKind.UNSUPPORTED -> false
         }
 
@@ -479,6 +484,8 @@ constructor(
             // ADA is denominated in lovelace (1 ADA = 1e6 lovelace).
             Chain.Cardano -> 6
             Chain.Ripple -> 6
+            // yoctoNEAR: 1 NEAR = 1e24.
+            Chain.Near -> 24
             else -> 18
         }
 
@@ -509,7 +516,7 @@ constructor(
         // (the native-coin sentinel resolveSwapFee recognises) so the consumer reads it the same
         // way Kyber/Jupiter quote sources surface their per-leg fees.
         val inboundFee = inboundFeeRawUnits(srcToken, response.fees, routeFees).toString()
-        return when (txTypeOf(response)) {
+        return when (txTypeOf(response, srcToken.chain)) {
             TxKind.EVM -> {
                 val evm = decode<SwapKitEvmTx>(response.tx, "evm")
                 // SwapKit V3 hex-encodes the EVM tx envelope's numeric fields with a `0x` prefix
@@ -602,6 +609,7 @@ constructor(
             TxKind.CARDANO_PREBUILT,
             TxKind.TON,
             TxKind.XRP,
+            TxKind.NEAR_DEPOSIT,
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
     }
@@ -653,7 +661,7 @@ constructor(
         val srcToken = request.srcToken
         val dstToken = request.dstToken
         val toAmountDecimal = parseExpectedBuyAmount(response.expectedBuyAmount)
-        val isXrp = txTypeOf(response) == TxKind.XRP
+        val isXrp = txTypeOf(response, srcToken.chain) == TxKind.XRP
         // Deposit-only chains (XRP) route entirely on `targetAddress`, so a blank value would stage
         // an unspendable quote — refuse it rather than emit a quote that can't settle. For XRP the
         // address may carry a `?dt=`/`|` destination-tag suffix; strip it so only the bare
@@ -732,7 +740,7 @@ constructor(
         response: SwapKitSwapResponseJson,
         srcChain: Chain,
     ): ByteArray =
-        when (txTypeOf(response)) {
+        when (txTypeOf(response, srcChain)) {
             TxKind.PSBT ->
                 decodeBinaryTx(response.tx).let { psbt ->
                     if (srcChain in LEGACY_P2PKH_PSBT_CHAINS) normalizeLegacyPsbtVersion(psbt)
@@ -779,6 +787,9 @@ constructor(
             // a plain XRP Payment from the payload's targetAddress / fromAmount / memo, so there is
             // nothing to carry here.
             TxKind.XRP -> ByteArray(0)
+            // NEAR deposit: no body by construction (`disableBuildTx`); every device builds the
+            // same plain transfer to targetAddress for fromAmount.
+            TxKind.NEAR_DEPOSIT -> ByteArray(0)
             else -> decodeBinaryTx(response.tx)
         }
 
@@ -826,7 +837,7 @@ constructor(
      * `XRP` vs `RIPPLE`). Only the native (non-EVM/Solana) kinds reach [buildSwapKitNativeQuote].
      */
     private fun canonicalTxType(response: SwapKitSwapResponseJson, srcChain: Chain): String =
-        when (txTypeOf(response)) {
+        when (txTypeOf(response, srcChain)) {
             // SwapKit ships a single `psbt` wire type for every UTXO source, but the signing path
             // differs: BTC/LTC are segwit (BIP-143), DOGE/BCH/DASH are legacy P2PKH, ZEC is
             // Sapling-v4 (ZIP-243). Split by the source chain into the per-chain discriminators the
@@ -837,6 +848,7 @@ constructor(
             TxKind.SUI -> SwapKitSwapPayloadJson.TX_TYPE_SUI
             TxKind.TON -> SwapKitSwapPayloadJson.TX_TYPE_TON
             TxKind.XRP -> SwapKitSwapPayloadJson.TX_TYPE_XRP
+            TxKind.NEAR_DEPOSIT -> SwapKitSwapPayloadJson.TX_TYPE_NEAR_DEPOSIT
             // Cardano's wire `CARDANO`/`CBOR` is split by `tx` presence into the deposit-only
             // CARDANO and the pre-built CARDANO_PREBUILT so the cosigning peer (incl. iOS, which
             // emits the same strings) dispatches correctly.
@@ -964,8 +976,9 @@ constructor(
      * both `SOLANA` and `SERIALIZED_BASE64` for the Solana branch — SwapKit flipped that
      * discriminator once before (per iOS commit `382b28f5f`), so the source is permissive.
      */
-    private fun txTypeOf(response: SwapKitSwapResponseJson): TxKind =
-        when (response.meta.type) {
+    private fun txTypeOf(response: SwapKitSwapResponseJson, srcChain: Chain): TxKind {
+        if (srcChain == Chain.Near) return nearDepositKind(response)
+        return when (response.meta.type) {
             "evm" -> TxKind.EVM
             "solana",
             "serialized_base64" -> TxKind.SOLANA
@@ -985,6 +998,16 @@ constructor(
             "ripple" -> TxKind.XRP
             else -> TxKind.UNSUPPORTED
         }
+    }
+
+    /**
+     * A NEAR source is requested with `disableBuildTx`: a NEAR Intents `simpleTransfer` deposit to
+     * the per-swap implicit account at `targetAddress`, with no `txType` and no body. A response
+     * that still carries a built transaction is turned away rather than half-used.
+     */
+    private fun nearDepositKind(response: SwapKitSwapResponseJson): TxKind =
+        if (response.meta.txType.isEmpty() && !response.tx.isTxPresent()) TxKind.NEAR_DEPOSIT
+        else TxKind.UNSUPPORTED
 
     /**
      * True when `tx` carries a payload — absent (`null`) and JSON `null` ([JsonNull]) both fail.
@@ -1041,6 +1064,7 @@ constructor(
         CARDANO_PREBUILT,
         TON,
         XRP,
+        NEAR_DEPOSIT,
         UNSUPPORTED,
     }
 
