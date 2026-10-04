@@ -18,10 +18,12 @@ import com.vultisig.wallet.data.swap.limit.compareToMemoAsset
  * route signs opaque calldata or a provider-built transaction instead, so whatever floor their
  * router enforces is not exposed to us and this returns null.
  *
- * Null is the answer for an "Auto" slippage swap too, which is the common case: the app then sends
- * no `tolerance_bps` and the node returns a memo with an empty limit, so the swap accepts any
- * output. The screens must render no minimum at all there — the expected output is not a floor, and
- * labelling it one promises a guarantee the signature does not back.
+ * An "Auto" slippage swap has one too: the node returns it without a limit, and the quote source
+ * writes its own floor into the memo before signing
+ * ([com.vultisig.wallet.data.repositories.swap.withAutoSlippageLimit]). When that memo still
+ * carries no limit — a UTXO memo with no room for it — this is null and the screens must render no
+ * minimum: the expected output is not a floor, and labelling it one promises a guarantee the
+ * signature does not back.
  *
  * Null too when the memo's own target asset is confidently not [dstToken]. The memo and the
  * payload's destination coin reach a cosigner as two independently decoded halves of the same

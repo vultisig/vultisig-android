@@ -2,11 +2,17 @@ package com.vultisig.wallet.data.repositories.swap
 
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.swap.ThorchainMemoLimit
 import dagger.MapKey
+import java.math.BigInteger
+import timber.log.Timber
 
 /**
  * Single, polymorphic request used by every [SwapQuoteSource]. Each provider reads only what it
@@ -86,6 +92,50 @@ sealed class SwapQuoteResult {
  * `SwapService.defaultThorchainToleranceBps` (vultisig-ios#4640).
  */
 internal const val DEFAULT_THORCHAIN_TOLERANCE_BPS = 0
+
+/**
+ * Floor an "Auto" THORChain/Maya swap is signed with, in basis points below the quoted emit. The
+ * node is never asked for it (see [DEFAULT_THORCHAIN_TOLERANCE_BPS]); the quote source writes it
+ * into the memo itself with [withAutoSlippageLimit]. Matches the SDK / extension default.
+ */
+internal const val AUTO_SLIPPAGE_LIMIT_BPS = 100
+
+/** OP_RETURN payload limit for a UTXO-chain swap memo. */
+private const val UTXO_MEMO_MAX_BYTES = 80
+
+/**
+ * This quote with a minimum output written into its memo, for an "Auto" slippage swap that the
+ * node returned without one. Without it the signed memo accepts any output, however far the price
+ * moves before the swap executes.
+ *
+ * The node checks `LIM` against the swap's emit — before the outbound fee and the affiliate cut —
+ * so the floor is taken off `expected_amount_out` with both added back. Deriving it from the
+ * quote's own expected output, rather than asking the node for `tolerance_bps`, keeps a
+ * high-impact streaming quote from being refused.
+ *
+ * Returns the quote unchanged when its memo can't carry the limit: not a market swap memo, a
+ * floor already set, or a UTXO memo the extra digits would push past the OP_RETURN limit.
+ */
+internal fun THORChainSwapQuote.withAutoSlippageLimit(srcChain: Chain): THORChainSwapQuote {
+    val memo = memo ?: return this
+    val emit =
+        listOf(expectedAmountOut, fees.outbound, fees.affiliate)
+            .map { it.toBigIntegerOrNull() ?: return this }
+            .fold(BigInteger.ZERO, BigInteger::add)
+    val limit =
+        emit.multiply(BigInteger.valueOf(10_000L - AUTO_SLIPPAGE_LIMIT_BPS))
+            .divide(BigInteger.valueOf(10_000L))
+    if (limit.signum() <= 0) return this
+    val limited = ThorchainMemoLimit.withLimit(memo, limit) ?: return this
+    if (
+        srcChain.standard == TokenStandard.UTXO &&
+            limited.toByteArray(Charsets.UTF_8).size > UTXO_MEMO_MAX_BYTES
+    ) {
+        Timber.w("Auto-slippage limit would push the %s swap memo past OP_RETURN", srcChain)
+        return this
+    }
+    return copy(memo = limited)
+}
 
 /** Common contract for every per-provider quote source. */
 interface SwapQuoteSource {
