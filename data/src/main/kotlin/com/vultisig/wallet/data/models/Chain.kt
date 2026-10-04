@@ -22,54 +22,64 @@ enum class Chain(
     val raw: ChainId,
     val standard: TokenStandard,
     val feeUnit: String,
-    /** User-facing network name; never an identifier, key, or payload value. */
-    val displayName: String = raw,
+    /**
+     * User-facing network name; never an identifier, key, or payload value. Deliberately has no
+     * default, so a new chain cannot ship with its identifier as its label.
+     */
+    val displayName: String,
 ) {
-    ThorChain("THORChain", THORCHAIN, "Rune"),
-    MayaChain("MayaChain", THORCHAIN, "cacao"),
+    ThorChain("THORChain", THORCHAIN, "Rune", displayName = "THORChain"),
+    MayaChain("MayaChain", THORCHAIN, "cacao", displayName = "MayaChain"),
 
     // ERC20
-    Arbitrum("Arbitrum", EVM, "Gwei"),
-    Avalanche("Avalanche", EVM, "Gwei"),
-    Base("Base", EVM, "Gwei"),
-    CronosChain("CronosChain", EVM, "Gwei"),
-    BscChain("BSC", EVM, "Gwei"),
-    Blast("Blast", EVM, "Gwei"),
-    Ethereum("Ethereum", EVM, "Gwei"),
-    Optimism("Optimism", EVM, "Gwei"),
-    Polygon("Polygon", EVM, "Gwei"),
-    ZkSync("Zksync", EVM, "Gwei"),
-    Mantle("Mantle", EVM, "Gwei"),
-    Sei("Sei", EVM, "Gwei"),
-    Hyperliquid("Hyperliquid", EVM, "Gwei"),
-    Robinhood("Robinhood", EVM, "Gwei"),
+    Arbitrum("Arbitrum", EVM, "Gwei", displayName = "Arbitrum"),
+    Avalanche("Avalanche", EVM, "Gwei", displayName = "Avalanche"),
+    Base("Base", EVM, "Gwei", displayName = "Base"),
+    CronosChain("CronosChain", EVM, "Gwei", displayName = "Cronos Chain"),
+    BscChain("BSC", EVM, "Gwei", displayName = "BSC"),
+    Blast("Blast", EVM, "Gwei", displayName = "Blast"),
+    Ethereum("Ethereum", EVM, "Gwei", displayName = "Ethereum"),
+    Optimism("Optimism", EVM, "Gwei", displayName = "Optimism"),
+    Polygon("Polygon", EVM, "Gwei", displayName = "Polygon"),
+    ZkSync("Zksync", EVM, "Gwei", displayName = "ZKsync"),
+    Mantle("Mantle", EVM, "Gwei", displayName = "Mantle"),
+    Sei("Sei", EVM, "Gwei", displayName = "Sei"),
+    Hyperliquid("Hyperliquid", EVM, "Gwei", displayName = "Hyperliquid"),
+    Robinhood("Robinhood", EVM, "Gwei", displayName = "Robinhood"),
 
     // BITCOIN
-    Bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
-    BitcoinCash("Bitcoin-Cash", UTXO, "BCH/vbyte"),
-    Litecoin("Litecoin", UTXO, "LTC/vbyte"),
-    Dogecoin("Dogecoin", UTXO, "Doge/vbyte"),
-    Dash("Dash", UTXO, "DASH/vbyte"),
-    Zcash("Zcash", UTXO, "ZEC/vbyte"),
-    Cardano("Cardano", UTXO, "Lovelace"),
-    GaiaChain("Cosmos", COSMOS, "uatom"),
-    Dydx("Dydx", COSMOS, "adydx"),
-    Osmosis("Osmosis", COSMOS, "uosmo"),
-    Terra("Terra", COSMOS, "uluna"),
-    TerraClassic("TerraClassic", COSMOS, "uluna"),
-    Noble("Noble", COSMOS, "uusdc"),
-    Akash("Akash", COSMOS, "uakt"),
-    Solana("Solana", SOL, "SOL"),
-    Polkadot("Polkadot", SUBSTRATE, "DOT"),
-    Bittensor("Bittensor", SUBSTRATE, "RAO"),
-    Sui("Sui", SUI, "SUI"),
+    Bitcoin("Bitcoin", UTXO, "BTC/vbyte", displayName = "Bitcoin"),
+    BitcoinCash("Bitcoin-Cash", UTXO, "BCH/vbyte", displayName = "Bitcoin Cash"),
+    Litecoin("Litecoin", UTXO, "LTC/vbyte", displayName = "Litecoin"),
+    Dogecoin("Dogecoin", UTXO, "Doge/vbyte", displayName = "Dogecoin"),
+    Dash("Dash", UTXO, "DASH/vbyte", displayName = "Dash"),
+    Zcash("Zcash", UTXO, "ZEC/vbyte", displayName = "Zcash"),
+    Cardano("Cardano", UTXO, "Lovelace", displayName = "Cardano"),
+    GaiaChain("Cosmos", COSMOS, "uatom", displayName = "Cosmos"),
+    Dydx("Dydx", COSMOS, "adydx", displayName = "dYdX"),
+    Osmosis("Osmosis", COSMOS, "uosmo", displayName = "Osmosis"),
+    Terra("Terra", COSMOS, "uluna", displayName = "Terra"),
+    TerraClassic("TerraClassic", COSMOS, "uluna", displayName = "Terra Classic"),
+    Noble("Noble", COSMOS, "uusdc", displayName = "Noble"),
+    Akash("Akash", COSMOS, "uakt", displayName = "Akash"),
+    Solana("Solana", SOL, "SOL", displayName = "Solana"),
+    Polkadot("Polkadot", SUBSTRATE, "DOT", displayName = "Polkadot"),
+    Bittensor("Bittensor", SUBSTRATE, "RAO", displayName = "Bittensor"),
+    Sui("Sui", SUI, "SUI", displayName = "Sui"),
     Ton("Ton", TON, "TON", displayName = "TON (GRAM)"),
-    Ripple("Ripple", RIPPLE, "XRP"),
-    Tron("Tron", TRC20, "TRX"),
-    Qbtc("QBTC", COSMOS, "qbtc");
+    Ripple("Ripple", RIPPLE, "XRP", displayName = "Ripple"),
+    Tron("Tron", TRC20, "TRX", displayName = "Tron"),
+    Qbtc("QBTC", COSMOS, "qbtc", displayName = "QBTC");
 
     val id: ChainId
         get() = raw
+
+    /**
+     * Case-insensitive search against [displayName] and the identifier [raw], so "terra c" and
+     * "terrac" both find Terra Classic.
+     */
+    fun matchesSearch(query: CharSequence): Boolean =
+        displayName.contains(query, ignoreCase = true) || raw.contains(query, ignoreCase = true)
 
     companion object {
         fun fromRaw(raw: String): Chain =

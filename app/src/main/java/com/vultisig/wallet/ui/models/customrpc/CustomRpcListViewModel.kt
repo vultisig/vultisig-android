@@ -59,7 +59,7 @@ constructor(
                     CustomRpcSupportedChains.all
                         .filter { chain ->
                             trimmed.isEmpty() ||
-                                chain.displayName.contains(trimmed, ignoreCase = true)
+                                chain.matchesSearch(trimmed)
                         }
                         .map { chain ->
                             CustomRpcChainUiModel(
