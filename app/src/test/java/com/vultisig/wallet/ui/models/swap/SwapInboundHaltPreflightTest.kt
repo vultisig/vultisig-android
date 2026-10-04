@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
+import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.ThorMimirRepository
 import io.mockk.coEvery
@@ -51,7 +52,7 @@ internal class SwapInboundHaltPreflightTest {
 
     @Test
     fun `native route proceeds when source chain inbound is active`() = runTest {
-        val transaction = transaction(SwapPayload.ThorChain(mockk(relaxed = true)), Chain.Bitcoin)
+        val transaction = transaction(depositingTo(INBOUND_ADDRESS), Chain.Bitcoin)
         coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
             listOf(inbound(chain = "BTC"))
 
@@ -59,13 +60,15 @@ internal class SwapInboundHaltPreflightTest {
     }
 
     @Test
-    fun `native route proceeds when source chain is absent from inbound response`() = runTest {
-        val transaction = transaction(SwapPayload.ThorChain(mockk(relaxed = true)), Chain.Bitcoin)
+    fun `vault deposit is blocked when source chain is absent from inbound response`() = runTest {
+        val transaction = transaction(depositingTo(INBOUND_ADDRESS), Chain.Bitcoin)
         coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
             listOf(inbound(chain = "ETH", halted = true))
 
-        // Matches the iOS gate: a missing entry is not treated as a confirmed source-chain halt.
-        preflight.assertSourceChainNotHalted(transaction)
+        // With no live entry there is no vault to check the deposit target against.
+        assertFailsWith<SwapException.TradingHalted> {
+            preflight.assertSourceChainNotHalted(transaction)
+        }
     }
 
     @Test
@@ -110,7 +113,7 @@ internal class SwapInboundHaltPreflightTest {
     fun `limit order proceeds to inbound validation when the queue is enabled`() = runTest {
         val transaction =
             transaction(
-                SwapPayload.ThorChain(mockk(relaxed = true)),
+                depositingTo(INBOUND_ADDRESS),
                 Chain.Bitcoin,
                 memoValue = "=<:ETH.ETH:0xabc:1600000000/14400/0:va:50",
             )
@@ -140,6 +143,11 @@ internal class SwapInboundHaltPreflightTest {
                 mockk<Coin>(relaxed = true) { every { chain } returns sourceChain }
         }
 
+    private fun depositingTo(vault: String) =
+        SwapPayload.ThorChain(
+            mockk<THORChainSwapPayload>(relaxed = true) { every { vaultAddress } returns vault }
+        )
+
     private fun inbound(
         chain: String,
         halted: Boolean = false,
@@ -148,7 +156,7 @@ internal class SwapInboundHaltPreflightTest {
     ) =
         THORChainInboundAddress(
             chain = chain,
-            address = "inbound-address",
+            address = INBOUND_ADDRESS,
             halted = halted,
             globalTradingPaused = globalTradingPaused,
             chainTradingPaused = chainTradingPaused,
@@ -156,4 +164,8 @@ internal class SwapInboundHaltPreflightTest {
             gasRate = "1",
             gasRateUnits = "satsperbyte",
         )
+
+    private companion object {
+        const val INBOUND_ADDRESS = "inbound-address"
+    }
 }

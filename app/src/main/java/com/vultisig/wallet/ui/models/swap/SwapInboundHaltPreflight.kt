@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -64,7 +65,10 @@ constructor(
             throw SwapException.TradingHalted(SIGNING_BLOCKED_MESSAGE)
         }
 
-        assertDepositTargetsLiveInbound(swap, inbound)
+        val protocolChain = if (payload is SwapPayload.MayaChain) Chain.MayaChain else Chain.ThorChain
+        if (transaction.srcToken.chain != protocolChain) {
+            assertDepositTargetsLiveInbound(swap, inbound)
+        }
     }
 
     /**
@@ -73,15 +77,15 @@ constructor(
      * to a retiring vault or the wrong router is not refunded reliably, so both must match the
      * inbound set fetched just now.
      *
-     * A swap out of the protocol's own chain (RUNE, CACAO, secured assets) is a `MsgDeposit` with
-     * no inbound vault: the quote names none and the payload carries the sender's own address in
-     * its place, so there is nothing to compare.
+     * Only a swap out of the protocol's own chain (RUNE, CACAO, secured assets) is a `MsgDeposit`
+     * with no inbound vault, and the caller skips this for it. Every other source deposits to a
+     * vault, so a payload whose vault is missing or fell back to the sender's own address fails
+     * here too instead of building a deposit to the wrong place.
      */
     private fun assertDepositTargetsLiveInbound(
         swap: THORChainSwapPayload,
         inbound: THORChainInboundAddress?,
     ) {
-        if (swap.vaultAddress.equals(swap.fromAddress, ignoreCase = true)) return
         if (inbound == null || !swap.vaultAddress.equals(inbound.address, ignoreCase = true)) {
             throw SwapException.TradingHalted(INBOUND_CHANGED_MESSAGE)
         }
