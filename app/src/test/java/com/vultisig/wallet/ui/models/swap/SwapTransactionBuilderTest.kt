@@ -420,6 +420,39 @@ internal class SwapTransactionBuilderTest {
             assertEquals(21_000L, payload.data.quote.tx.gas)
         }
 
+    @Test
+    fun `builds a SwapKit ERC-20 deposit without an approve leg`() = runTest {
+        val srcToken =
+            coin(Chain.Ethereum, "USDT", "0xsrc", 6, isNative = false, contract = USDT_CONTRACT)
+        val dstToken = coin(Chain.Solana, "SOL", "soldst", 9, isNative = true)
+        coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+            ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(99))
+        // The token-to-itself allowance a router swap would read is zero.
+        coEvery {
+            allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+        } returns ApprovalRequirement.Approve
+
+        val tx =
+            builder.build(
+                vaultId = "vault-deposit",
+                srcToken = srcToken,
+                dstToken = dstToken,
+                srcAddress = "0xsrc",
+                srcTokenValue = TokenValue(USDT_DEPOSIT_AMOUNT, srcToken),
+                quote = usdtDepositQuote(dstToken),
+                gasFee = TokenValue(BigInteger.valueOf(8), srcToken),
+                gasFeeFiatValue = FiatValue(BigDecimal("2.00"), "USD"),
+                estimatedNetworkFeeTokenValue = null,
+                estimatedNetworkFeeFiatValue = null,
+            )
+
+        assertFalse(tx.isApprovalRequired)
+        assertFalse(tx.resetAllowanceFirst)
+        coVerify(exactly = 0) {
+            allowanceRepository.getApprovalRequirement(any(), any(), any(), any(), any())
+        }
+    }
+
     // The reset decision is the repository's; the builder only has to carry it onto the transaction
     // the keysign payload is built from, with the same spender the plain approve would use.
     @Test
@@ -973,6 +1006,28 @@ internal class SwapTransactionBuilderTest {
             assertEquals("0xExternalRecipient", tx.externalRecipient)
         }
 
+    /** SwapKit NEAR Intents deposit of 20 USDT: the tx calls the token with `transfer`. */
+    private fun usdtDepositQuote(dstToken: Coin) =
+        SwapQuote.OneInch(
+            expectedDstValue = TokenValue(BigInteger.valueOf(165_993_965), dstToken),
+            fees = TokenValue(BigInteger.valueOf(6_137_856_990), dstToken),
+            expiredAt = Clock.System.now(),
+            data =
+                EVMSwapQuoteJson(
+                    dstAmount = "165993965",
+                    tx =
+                        OneInchSwapTxJson(
+                            from = "0xsrc",
+                            to = USDT_CONTRACT,
+                            gas = 900_000,
+                            data = USDT_DEPOSIT_DATA,
+                            value = "0",
+                            gasPrice = "1",
+                        ),
+                ),
+            provider = "swapkit",
+        )
+
     /** Plan fixture whose [BlockChainSpecific] is a real [BlockChainSpecific.Ethereum]. */
     private fun ethereumSpecificAndUtxo(maxFeePerGasWei: BigInteger) =
         BlockChainSpecificAndUtxo(
@@ -1004,4 +1059,12 @@ internal class SwapTransactionBuilderTest {
             contractAddress = contract,
             isNativeToken = isNative,
         )
+
+    private companion object {
+        const val USDT_CONTRACT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+        const val USDT_DEPOSIT_DATA =
+            "0xa9059cbb000000000000000000000000cb2ac797eff13ee982453f5722b74ab5c56741af" +
+                "0000000000000000000000000000000000000000000000000000000001312d00"
+        val USDT_DEPOSIT_AMOUNT: BigInteger = BigInteger.valueOf(20_000_000)
+    }
 }

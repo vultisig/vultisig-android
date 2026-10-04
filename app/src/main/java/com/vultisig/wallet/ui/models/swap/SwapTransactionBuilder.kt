@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.swap
 
+import com.vultisig.wallet.data.api.swapAggregators.isErc20DepositTransfer
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
@@ -291,14 +292,20 @@ constructor(
                 val specificAndUtxo =
                     swapGasCalculator.getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
+                // A SwapKit ERC-20 deposit is a plain token transfer and spends no allowance.
+                val isErc20Deposit = quote.data.tx.isErc20DepositTransfer(srcToken)
                 val approval =
-                    allowanceRepository.getApprovalRequirement(
-                        chain = srcToken.chain,
-                        contractAddress = srcToken.contractAddress,
-                        srcAddress = srcAddress,
-                        dstAddress = approveSpender,
-                        amount = srcTokenValue.value,
-                    )
+                    if (isErc20Deposit) {
+                        ApprovalRequirement.NotRequired
+                    } else {
+                        allowanceRepository.getApprovalRequirement(
+                            chain = srcToken.chain,
+                            contractAddress = srcToken.contractAddress,
+                            srcAddress = srcAddress,
+                            dstAddress = approveSpender,
+                            amount = srcTokenValue.value,
+                        )
+                    }
 
                 val specific = specificAndUtxo.blockChainSpecific
                 // Aggregators can return a non-positive tx.gas; fall back to the standard EVM swap
