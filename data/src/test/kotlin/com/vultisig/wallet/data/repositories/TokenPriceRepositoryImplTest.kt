@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.utils.NetworkException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.neq
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals

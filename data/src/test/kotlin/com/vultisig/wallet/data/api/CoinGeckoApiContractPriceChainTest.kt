@@ -36,7 +36,12 @@ class CoinGeckoApiContractPriceChainTest {
         lateinit var requestedUrl: String
         val engine = MockEngine { request ->
             requestedUrl = request.url.toString()
-            respond(content = "{}", status = HttpStatusCode.OK)
+            respond(
+                content = "{}",
+                status = HttpStatusCode.OK,
+                headers =
+                    headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
         }
         val api = CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
 
@@ -52,7 +57,12 @@ class CoinGeckoApiContractPriceChainTest {
         lateinit var requestedUrl: String
         val engine = MockEngine { request ->
             requestedUrl = request.url.toString()
-            respond(content = "{}", status = HttpStatusCode.OK)
+            respond(
+                content = "{}",
+                status = HttpStatusCode.OK,
+                headers =
+                    headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
         }
         val api = CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
 
