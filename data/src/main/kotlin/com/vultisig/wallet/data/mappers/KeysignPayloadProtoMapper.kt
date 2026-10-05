@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.mappers
 
+import com.vultisig.wallet.data.api.NEAR_UNSIGNED_DECIMAL
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
@@ -38,6 +39,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
 
     override fun invoke(from: KeysignPayloadProto): KeysignPayload {
         val coin = requireNotNull(from.coin).toCoin()
+        if (coin.chain == Chain.Near) from.requireNearWireAmounts()
         return KeysignPayload(
             vaultLocalPartyID = from.vaultLocalPartyId,
             vaultPublicKeyECDSA = from.vaultPublicKeyEcdsa,
@@ -388,6 +390,26 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
         } else {
             BigInteger(fromAmount)
         }
+
+    /**
+     * Refuses the NEAR amount spellings the SDK signer refuses: anything but a plain unsigned
+     * decimal, and a SwapKit deposit amount that is not the transfer amount verbatim.
+     */
+    private fun KeysignPayloadProto.requireNearWireAmounts() {
+        require(NEAR_UNSIGNED_DECIMAL.matches(toAmount)) {
+            "NEAR transfer amount is not an unsigned decimal integer: $toAmount"
+        }
+        nearSpecific?.let {
+            require(NEAR_UNSIGNED_DECIMAL.matches(it.gasFee)) {
+                "NEAR gas fee is not an unsigned decimal integer: ${it.gasFee}"
+            }
+        }
+        swapkitSwapPayload?.let {
+            require(it.fromAmount == toAmount) {
+                "NEAR SwapKit deposit amount ${it.fromAmount} is not the transfer amount $toAmount"
+            }
+        }
+    }
 
     private fun CoinProto.toCoin(): Coin =
         Coin(

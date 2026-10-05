@@ -122,6 +122,17 @@ class NearHelper(private val vaultHexPublicKey: String) {
         ) {
             "NEAR native transfers do not support contract payloads"
         }
+        require(
+            keysignPayload.signAmino == null &&
+                keysignPayload.signDirect == null &&
+                keysignPayload.signSolana == null &&
+                keysignPayload.signTon == null &&
+                keysignPayload.signSui == null &&
+                keysignPayload.signRipple == null &&
+                keysignPayload.signBitcoin == null
+        ) {
+            "NEAR native transfers do not support custom sign payloads"
+        }
         require(NearAccountId.isValid(keysignPayload.toAddress)) {
             "Invalid NEAR recipient account id: ${keysignPayload.toAddress}"
         }
@@ -146,6 +157,15 @@ class NearHelper(private val vaultHexPublicKey: String) {
         val derived = CoinType.NEAR.deriveAddressFromPublicKey(vaultPublicKey())
         require(NearAccountId.isImplicit(coin.address) && derived == coin.address) {
             "NEAR sender ${coin.address} is not the vault key's implicit account $derived"
+        }
+        // The payload's own key must name that account too, so it cannot pair it with another key.
+        require(ED25519_PUBLIC_KEY_HEX.matches(coin.hexPublicKey)) {
+            "Invalid NEAR public key: ${coin.hexPublicKey} is not a 32-byte Ed25519 key in lowercase hex"
+        }
+        val coinKey = PublicKey(coin.hexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
+        val coinKeyAccount = CoinType.NEAR.deriveAddressFromPublicKey(coinKey)
+        require(coinKeyAccount == coin.address) {
+            "NEAR sender address does not match the signing public key: ${coin.address} != $coinKeyAccount"
         }
         return specific
     }
@@ -186,6 +206,7 @@ class NearHelper(private val vaultHexPublicKey: String) {
         private const val DEPOSIT_BYTES = 16
         private const val ACCOUNT_ID_LENGTH_BYTES = 4
         private const val ED25519_KEY_TYPE: Byte = 0
+        private val ED25519_PUBLIC_KEY_HEX = Regex("^[0-9a-f]{64}$")
         private val MAX_U128: BigInteger = BigInteger.ONE.shiftLeft(128) - BigInteger.ONE
         private val MAX_U64: BigInteger = BigInteger.ONE.shiftLeft(64) - BigInteger.ONE
 

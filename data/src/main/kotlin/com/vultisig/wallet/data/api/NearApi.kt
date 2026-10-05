@@ -33,6 +33,9 @@ data class NearTransactionOutcome(
     val status: JsonElement?,
 )
 
+/** A plain unsigned decimal: no sign, no whitespace, no exponent. */
+internal val NEAR_UNSIGNED_DECIMAL = Regex("^[0-9]+$")
+
 /** A JSON-RPC error the node returned; [name] distinguishes a missing record from a rejection. */
 class NearRpcException(val method: String, val name: String, message: String) :
     Exception("NEAR $method failed ($name): $message")
@@ -272,7 +275,6 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
         private const val FULL_ACCESS = "FullAccess"
         private const val BLOCK_HASH_BYTES = 32
         private const val ED25519_PUBLIC_KEY_BYTES = 32
-        private val UNSIGNED_DECIMAL = Regex("^[0-9]+$")
 
         /**
          * Exact non-negative integer from a field that may arrive as a JSON number or a string.
@@ -282,7 +284,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
             val text =
                 (this[key] as? JsonPrimitive)?.content
                     ?: throw IllegalStateException("NEAR response is missing $key")
-            require(UNSIGNED_DECIMAL.matches(text)) {
+            require(NEAR_UNSIGNED_DECIMAL.matches(text)) {
                 "NEAR $key is not an unsigned decimal integer: $text"
             }
             return BigInteger(text)
