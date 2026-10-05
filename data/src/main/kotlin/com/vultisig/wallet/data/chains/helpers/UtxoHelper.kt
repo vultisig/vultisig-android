@@ -531,7 +531,7 @@ class UtxoHelper(
         val plan: Bitcoin.TransactionPlan
         val toAddress: String
         when (val swapPayload = keysignPayload.swapPayload) {
-            is SwapPayload.ThorChain -> {
+            is SwapPayload.ThorChain if coinType != CoinType.ZCASH -> {
                 plan =
                     buildSigningInput(
                             keysignPayload,

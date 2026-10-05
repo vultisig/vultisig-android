@@ -34,6 +34,13 @@ import vultisig.keysign.v1.CustomMessagePayload
 import wallet.core.jni.EthereumAbi
 
 object SigningHelper {
+
+    /**
+     * Swaps signed as a plain memo send to the inbound address: Maya, and THORChain from Zcash —
+     * WalletCore's THORChainSwap has no ZEC, and the plain UTXO path carries the ZIP-317 fee plan.
+     */
+    private fun SwapPayload.isPlainMemoSend(chain: Chain): Boolean =
+        this is SwapPayload.MayaChain || (this is SwapPayload.ThorChain && chain == Chain.Zcash)
     private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
 
     fun getKeysignMessages(messagePayload: CustomMessagePayload): List<String> =
@@ -173,7 +180,7 @@ object SigningHelper {
         }
 
         val swapPayload = payload.swapPayload
-        if (swapPayload != null && swapPayload !is SwapPayload.MayaChain) {
+        if (swapPayload != null && !swapPayload.isPlainMemoSend(chain)) {
             when (swapPayload) {
                 is SwapPayload.ThorChain -> {
                     messages +=
@@ -493,7 +500,7 @@ object SigningHelper {
 
         val swapPayload = keysignPayload.swapPayload
 
-        if (swapPayload != null && swapPayload !is SwapPayload.MayaChain) {
+        if (swapPayload != null && !swapPayload.isPlainMemoSend(chain)) {
             when (swapPayload) {
                 is SwapPayload.ThorChain -> {
                     return THORChainSwaps(ecdsaKey, ecdsaChainCode, eddsaKey)
