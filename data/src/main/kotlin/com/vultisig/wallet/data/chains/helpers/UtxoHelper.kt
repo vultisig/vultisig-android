@@ -245,6 +245,11 @@ class UtxoHelper(
         return signingInput.build()
     }
 
+    /** The address the signed output pays: ZEC's TEX inbound (THORChain) becomes its `t1…` form. */
+    private fun payeeAddress(keysignPayload: KeysignPayload): String =
+        if (coinType == CoinType.ZCASH) ZcashTexAddress.toTransparent(keysignPayload.toAddress)
+        else keysignPayload.toAddress
+
     fun getBitcoinSigningInput(keysignPayload: KeysignPayload): Bitcoin.SigningInput.Builder {
         val utxo = keysignPayload.blockChainSpecific as BlockChainSpecific.UTXO
         val input =
@@ -252,7 +257,7 @@ class UtxoHelper(
                 .setHashType(BitcoinScript.hashTypeForCoin(coinType))
                 .setAmount(keysignPayload.toAmount.toLong())
                 .setUseMaxAmount(utxo.sendMaxAmount)
-                .setToAddress(keysignPayload.toAddress)
+                .setToAddress(payeeAddress(keysignPayload))
                 .setChangeAddress(keysignPayload.coin.address)
                 .setByteFee(utxo.byteFee.toLong())
                 .setZip0317(coinType == CoinType.ZCASH)
@@ -403,7 +408,7 @@ class UtxoHelper(
         val signingInput = getBitcoinSigningInput(keysignPayload)
         val plan = planTransaction(signingInput)
 
-        val toScript = requireLockScript(keysignPayload.toAddress)
+        val toScript = requireLockScript(payeeAddress(keysignPayload))
         val changeScript =
             if (plan.change > 0) requireLockScript(keysignPayload.coin.address) else null
         val opReturnData = signingInput.outputOpReturn.toByteArray().takeIf { it.isNotEmpty() }
@@ -543,7 +548,7 @@ class UtxoHelper(
             is SwapPayload.SwapKit -> return null
             else -> {
                 plan = getBitcoinTransactionPlan(keysignPayload)
-                toAddress = keysignPayload.toAddress
+                toAddress = payeeAddress(keysignPayload)
             }
         }
 
