@@ -66,6 +66,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.nearRefusalTextOrNull
 import com.vultisig.wallet.ui.utils.userText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
@@ -105,7 +106,7 @@ sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
 
-    /** The payload's messages to sign could not be prepared. */
+    /** The payload's messages to sign could not be prepared, e.g. a NEAR payload it refuses. */
     data class FailedToPrepare(val reason: UiText) : JoinKeysignError(reason)
 
     data object MissingRequiredVault :
@@ -151,7 +152,10 @@ sealed class JoinKeysignError(val message: UiText) {
 }
 
 /** Raised when the messages to sign cannot be prepared once the ceremony starts. */
-internal class KeysignMessagesException(message: String) : Exception(message)
+internal class KeysignMessagesException(
+    message: String,
+    val text: UiText = UiText.DynamicString(message),
+) : Exception(message)
 
 /** Raised when polling the relay for committee membership fails (network/relay error). */
 internal class KeysignCheckException(message: String) : Exception(message)
@@ -162,7 +166,10 @@ internal sealed interface KeysignStartOutcome {
     data object Started : KeysignStartOutcome
 
     /** Preparing the messages to sign failed; carries the reason for the error state. */
-    data class FailedToPrepare(val message: String) : KeysignStartOutcome
+    data class FailedToPrepare(
+        val message: String,
+        val text: UiText = UiText.DynamicString(message),
+    ) : KeysignStartOutcome
 
     /** Polling the relay for the committee failed; carries the reason for the error state. */
     data class FailedToCheck(val message: String) : KeysignStartOutcome
@@ -193,7 +200,8 @@ internal suspend fun awaitKeysignStart(
                 }
             } catch (e: KeysignMessagesException) {
                 return@withTimeoutOrNull KeysignStartOutcome.FailedToPrepare(
-                    e.message ?: "Failed to prepare messages to sign"
+                    e.message ?: "Failed to prepare messages to sign",
+                    e.text,
                 )
             } catch (e: KeysignCheckException) {
                 return@withTimeoutOrNull KeysignStartOutcome.FailedToCheck(
@@ -1292,7 +1300,7 @@ constructor(
                             Timber.e("Failed to prepare messages to sign")
                             currentState.value =
                                 JoinKeysignState.Error(
-                                    JoinKeysignError.FailedToCheck(outcome.message)
+                                    JoinKeysignError.FailedToPrepare(outcome.text)
                                 )
                         }
 
@@ -1371,7 +1379,11 @@ constructor(
         } catch (ce: CancellationException) {
             throw ce
         } catch (e: Exception) {
-            throw KeysignMessagesException(e.message ?: "Failed to resolve messages to sign")
+            val message = e.message ?: "Failed to resolve messages to sign"
+            throw KeysignMessagesException(
+                message,
+                e.nearRefusalTextOrNull() ?: UiText.DynamicString(message),
+            )
         }
     }
 

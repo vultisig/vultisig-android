@@ -32,6 +32,9 @@ import com.vultisig.wallet.data.blockchain.model.TronFees
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.near.NearAccountId
 import com.vultisig.wallet.data.blockchain.near.NearFees
+import com.vultisig.wallet.data.blockchain.near.NearRefusal
+import com.vultisig.wallet.data.blockchain.near.NearRefusalException
+import com.vultisig.wallet.data.blockchain.near.requireNear
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos
 import com.vultisig.wallet.data.chains.helpers.CardanoHelper
@@ -627,19 +630,21 @@ constructor(
                 }
 
             TokenStandard.NEAR -> {
-                require(token.isNativeToken) {
-                    "NEAR tokens are not supported by the native send path"
-                }
+                requireNear(token.isNativeToken, NearRefusal.TOKENS_UNSUPPORTED)
                 // The upfront gas depends on the receiver: a 64-hex implicit receiver reserves
                 // account-creation gas whether or not it exists. For a swap this is the deposit
                 // address.
                 val recipient = dstAddress.orEmpty()
-                require(NearAccountId.isValid(recipient)) {
-                    "Invalid NEAR recipient account id: $recipient"
-                }
-                require(NearAccountId.isImplicit(address)) {
-                    "NEAR sender $address is not an implicit account"
-                }
+                requireNear(
+                    NearAccountId.isValid(recipient),
+                    NearRefusal.INVALID_RECIPIENT,
+                    recipient,
+                )
+                requireNear(
+                    NearAccountId.isImplicit(address),
+                    NearRefusal.SENDER_NOT_IMPLICIT,
+                    address,
+                )
                 coroutineScope {
                     val accessKeyDeferred = async {
                         nearApi.getAccessKey(address, token.hexPublicKey)
@@ -649,10 +654,8 @@ constructor(
 
                     val accessKey =
                         accessKeyDeferred.await()
-                            ?: error("NEAR account $address does not hold the vault's signing key")
-                    check(accessKey.isFullAccess) {
-                        "NEAR signing key for $address is a function-call key; a transfer needs full access"
-                    }
+                            ?: throw NearRefusalException(NearRefusal.UNKNOWN_ACCESS_KEY, address)
+                    requireNear(accessKey.isFullAccess, NearRefusal.FUNCTION_CALL_KEY, address)
                     val block = blockDeferred.await()
 
                     BlockChainSpecificAndUtxo(

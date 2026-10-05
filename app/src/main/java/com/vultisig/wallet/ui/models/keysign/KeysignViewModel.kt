@@ -86,6 +86,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.nearRefusalTextOrNull
 import com.vultisig.wallet.ui.utils.or
 import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import dagger.assisted.Assisted
@@ -823,7 +824,12 @@ constructor(
         } catch (e: Exception) {
             Timber.e(e)
             state.update {
-                it.copy(signingState = KeysignState.Error(e.message or R.string.unknown_error))
+                it.copy(
+                    signingState =
+                        KeysignState.Error(
+                            e.nearRefusalTextOrNull() ?: (e.message or R.string.unknown_error)
+                        )
+                )
             }
         }
     }

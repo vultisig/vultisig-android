@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.nearRefusalTextOrNull
 import com.vultisig.wallet.ui.utils.swapKitDepositErrorTextOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -291,6 +292,7 @@ constructor(
             moveToState(
                 Error(
                     e.swapKitDepositErrorTextOrNull()
+                        ?: e.nearRefusalTextOrNull()
                         ?: e.message?.asUiText()
                         ?: UiText.StringResource(R.string.unknown_error)
                 )

@@ -2,6 +2,9 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.blockchain.near.NearAccountId
+import com.vultisig.wallet.data.blockchain.near.NearRefusal
+import com.vultisig.wallet.data.blockchain.near.NearRefusalException
+import com.vultisig.wallet.data.blockchain.near.requireNear
 import com.vultisig.wallet.data.common.toHexByteArray
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
@@ -52,9 +55,9 @@ class NearHelper(private val vaultHexPublicKey: String) {
         val publicKey = vaultPublicKey()
 
         val signature =
-            signatures[Numeric.toHexStringNoPrefix(dataHash)]?.getSignature()
-                ?: error("NEAR signature not found")
-        check(publicKey.verify(signature, dataHash)) { "NEAR signature verification failed" }
+            signatures[Numeric.toHexStringNoPrefix(dataHash)]?.getSignature()?.takeIf {
+                publicKey.verify(it, dataHash)
+            } ?: throw NearRefusalException(NearRefusal.SIGNATURE_VERIFICATION_FAILED)
 
         val compiled =
             TransactionCompiler.compileWithSignatures(
@@ -74,9 +77,11 @@ class NearHelper(private val vaultHexPublicKey: String) {
 
     private fun vaultPublicKey(): PublicKey {
         val keyBytes = vaultHexPublicKey.toHexByteArray()
-        require(keyBytes.size == ED25519_PUBLIC_KEY_BYTES) {
-            "NEAR vault key is not a 32-byte Ed25519 key"
-        }
+        requireNear(
+            keyBytes.size == ED25519_PUBLIC_KEY_BYTES,
+            NearRefusal.INVALID_PUBLIC_KEY_LENGTH,
+            vaultHexPublicKey,
+        )
         return PublicKey(keyBytes, PublicKeyType.ED25519)
     }
 
@@ -107,66 +112,82 @@ class NearHelper(private val vaultHexPublicKey: String) {
     /** Every check the frozen payload must pass before it is signed; returns its NEAR specifics. */
     private fun validatedTransfer(keysignPayload: KeysignPayload): BlockChainSpecific.Near {
         val coin = keysignPayload.coin
-        require(coin.chain == Chain.Near && coin.isNativeToken) {
-            "NEAR signing supports native NEAR transfers only"
-        }
+        requireNear(coin.chain == Chain.Near && coin.isNativeToken, NearRefusal.TOKENS_UNSUPPORTED)
         // A payload decoded from the wire carries "" for an unset memo.
-        require(keysignPayload.memo.isNullOrEmpty()) { "NEAR native transfers cannot carry a memo" }
+        requireNear(keysignPayload.memo.isNullOrEmpty(), NearRefusal.MEMO)
         assertSwapKitDepositOnly(keysignPayload)
-        require(
+        requireNear(
             keysignPayload.wasmExecuteContractPayload == null &&
                 keysignPayload.tronTransferContractPayload == null &&
                 keysignPayload.tronTriggerSmartContractPayload == null &&
                 keysignPayload.tronTransferAssetContractPayload == null &&
-                keysignPayload.approvePayload == null
-        ) {
-            "NEAR native transfers do not support contract payloads"
-        }
-        require(
+                keysignPayload.approvePayload == null,
+            NearRefusal.CONTRACT_PAYLOAD,
+        )
+        requireNear(
             keysignPayload.signAmino == null &&
                 keysignPayload.signDirect == null &&
                 keysignPayload.signSolana == null &&
                 keysignPayload.signTon == null &&
                 keysignPayload.signSui == null &&
                 keysignPayload.signRipple == null &&
-                keysignPayload.signBitcoin == null
-        ) {
-            "NEAR native transfers do not support custom sign payloads"
-        }
-        require(NearAccountId.isValid(keysignPayload.toAddress)) {
-            "Invalid NEAR recipient account id: ${keysignPayload.toAddress}"
-        }
-        require(keysignPayload.toAmount > BigInteger.ZERO && keysignPayload.toAmount <= MAX_U128) {
-            "Invalid NEAR transfer amount: ${keysignPayload.toAmount}"
-        }
+                keysignPayload.signBitcoin == null,
+            NearRefusal.CUSTOM_SIGN_PAYLOAD,
+        )
+        requireNear(
+            NearAccountId.isValid(keysignPayload.toAddress),
+            NearRefusal.INVALID_RECIPIENT,
+            keysignPayload.toAddress,
+        )
+        requireNear(
+            keysignPayload.toAmount > BigInteger.ZERO && keysignPayload.toAmount <= MAX_U128,
+            NearRefusal.INVALID_AMOUNT,
+            keysignPayload.toAmount.toString(),
+        )
         val specific =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Near
-                ?: error("NEAR payload carries no NEAR chain specific data")
-        require(specific.gasFee.signum() >= 0 && specific.gasFee <= MAX_U128) {
-            "Invalid NEAR gas fee: ${specific.gasFee}"
-        }
-        require(specific.blockHash.size == BLOCK_HASH_BYTES) {
-            "Invalid NEAR block hash: expected $BLOCK_HASH_BYTES bytes, received ${specific.blockHash.size}"
-        }
-        require(specific.nonce > 0UL) {
-            "Invalid NEAR nonce: a signed transaction needs a positive nonce"
-        }
+                ?: throw NearRefusalException(NearRefusal.MISSING_CHAIN_SPECIFIC)
+        requireNear(
+            specific.gasFee.signum() >= 0,
+            NearRefusal.INVALID_GAS_FEE,
+            specific.gasFee.toString(),
+        )
+        requireNear(
+            specific.gasFee <= MAX_U128,
+            NearRefusal.GAS_FEE_TOO_LARGE,
+            specific.gasFee.toString(),
+        )
+        requireNear(
+            specific.blockHash.size == BLOCK_HASH_BYTES,
+            NearRefusal.INVALID_BLOCK_HASH,
+            BLOCK_HASH_BYTES,
+            specific.blockHash.size,
+        )
+        requireNear(specific.nonce > 0UL, NearRefusal.INVALID_NONCE)
 
         // The sender is the implicit account of the vault key; anything else would sign a
         // transaction funded by an account this device does not control.
+        requireNear(
+            NearAccountId.isImplicit(coin.address),
+            NearRefusal.SENDER_NOT_IMPLICIT,
+            coin.address,
+        )
         val derived = CoinType.NEAR.deriveAddressFromPublicKey(vaultPublicKey())
-        require(NearAccountId.isImplicit(coin.address) && derived == coin.address) {
-            "NEAR sender ${coin.address} is not the vault key's implicit account $derived"
-        }
+        requireNear(derived == coin.address, NearRefusal.SENDER_KEY_MISMATCH, coin.address, derived)
         // The payload's own key must name that account too, so it cannot pair it with another key.
-        require(ED25519_PUBLIC_KEY_HEX.matches(coin.hexPublicKey)) {
-            "Invalid NEAR public key: ${coin.hexPublicKey} is not a 32-byte Ed25519 key in lowercase hex"
-        }
+        requireNear(
+            ED25519_PUBLIC_KEY_HEX.matches(coin.hexPublicKey),
+            NearRefusal.INVALID_PUBLIC_KEY_LENGTH,
+            coin.hexPublicKey,
+        )
         val coinKey = PublicKey(coin.hexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
         val coinKeyAccount = CoinType.NEAR.deriveAddressFromPublicKey(coinKey)
-        require(coinKeyAccount == coin.address) {
-            "NEAR sender address does not match the signing public key: ${coin.address} != $coinKeyAccount"
-        }
+        requireNear(
+            coinKeyAccount == coin.address,
+            NearRefusal.SENDER_KEY_MISMATCH,
+            coin.address,
+            coinKeyAccount,
+        )
         return specific
     }
 
@@ -178,25 +199,35 @@ class NearHelper(private val vaultHexPublicKey: String) {
         val swapPayload = keysignPayload.swapPayload ?: return
         val swap =
             (swapPayload as? SwapPayload.SwapKit)?.data
-                ?: error("NEAR native transfers support SwapKit deposit swaps only")
-        require(swap.fromCoin.chain == Chain.Near && swap.fromCoin.isNativeToken) {
-            "NEAR SwapKit deposit must sell native NEAR"
-        }
+                ?: throw NearRefusalException(NearRefusal.SWAPKIT_DEPOSIT_ONLY)
+        requireNear(
+            swap.fromCoin.chain == Chain.Near && swap.fromCoin.isNativeToken,
+            NearRefusal.SWAPKIT_NOT_NATIVE_NEAR,
+        )
         // NEAR Intents deposits go to a fresh per-swap implicit account; a named target is never
         // one.
-        require(NearAccountId.isImplicit(swap.targetAddress)) {
-            "NEAR SwapKit deposit address ${swap.targetAddress} is not an implicit account"
-        }
-        require(swap.targetAddress == keysignPayload.toAddress) {
-            "NEAR SwapKit deposit address ${swap.targetAddress} is not the transfer receiver ${keysignPayload.toAddress}"
-        }
-        require(swap.fromAmount == keysignPayload.toAmount) {
-            "NEAR SwapKit deposit amount ${swap.fromAmount} is not the transfer amount ${keysignPayload.toAmount}"
-        }
-        require(swap.txPayload.isEmpty() && swap.txType.isEmpty()) {
-            "NEAR SwapKit deposits are plain transfers and cannot carry a pre-built transaction"
-        }
-        require(swap.memo.isNullOrEmpty()) { "NEAR SwapKit deposits cannot carry a memo" }
+        requireNear(
+            NearAccountId.isImplicit(swap.targetAddress),
+            NearRefusal.SWAPKIT_DEPOSIT_NOT_IMPLICIT,
+            swap.targetAddress,
+        )
+        requireNear(
+            swap.targetAddress == keysignPayload.toAddress,
+            NearRefusal.SWAPKIT_DEPOSIT_RECEIVER_MISMATCH,
+            swap.targetAddress,
+            keysignPayload.toAddress,
+        )
+        requireNear(
+            swap.fromAmount == keysignPayload.toAmount,
+            NearRefusal.SWAPKIT_DEPOSIT_AMOUNT_MISMATCH,
+            swap.fromAmount.toString(),
+            keysignPayload.toAmount.toString(),
+        )
+        requireNear(
+            swap.txPayload.isEmpty() && swap.txType.isEmpty(),
+            NearRefusal.SWAPKIT_DEPOSIT_PREBUILT,
+        )
+        requireNear(swap.memo.isNullOrEmpty(), NearRefusal.SWAPKIT_DEPOSIT_MEMO)
     }
 
     companion object {
@@ -217,9 +248,11 @@ class NearHelper(private val vaultHexPublicKey: String) {
          */
         fun transactionNonce(accessKeyNonce: BigInteger): ULong {
             val next = accessKeyNonce + BigInteger.ONE
-            require(accessKeyNonce.signum() >= 0 && next <= MAX_U64) {
-                "NEAR access key nonce $accessKeyNonce has no successor in the uint64 field"
-            }
+            requireNear(
+                accessKeyNonce.signum() >= 0 && next <= MAX_U64,
+                NearRefusal.NONCE_OVERFLOW,
+                accessKeyNonce.toString(),
+            )
             return next.toLong().toULong()
         }
 
@@ -230,9 +263,10 @@ class NearHelper(private val vaultHexPublicKey: String) {
          */
         fun transactionHash(signedTransaction: ByteArray): String {
             val bodyLength = signedTransaction.size - ED25519_SIGNATURE_BYTES - 1
-            require(bodyLength > 0 && signedTransaction[bodyLength] == ED25519_KEY_TYPE) {
-                "NEAR signed transaction does not end with an Ed25519 signature"
-            }
+            requireNear(
+                bodyLength > 0 && signedTransaction[bodyLength] == ED25519_KEY_TYPE,
+                NearRefusal.MALFORMED_SIGNED_TRANSACTION,
+            )
             return Base58.encodeNoCheck(Hash.sha256(signedTransaction.copyOfRange(0, bodyLength)))
         }
 
@@ -241,16 +275,18 @@ class NearHelper(private val vaultHexPublicKey: String) {
          * NEAR's `tx` status lookup is sharded by sender, so the status call needs it.
          */
         fun signerId(signedTransaction: ByteArray): String {
-            require(signedTransaction.size >= ACCOUNT_ID_LENGTH_BYTES) {
-                "NEAR signed transaction is too short to carry a signer account id"
-            }
+            requireNear(
+                signedTransaction.size >= ACCOUNT_ID_LENGTH_BYTES,
+                NearRefusal.MALFORMED_SIGNED_TRANSACTION,
+            )
             val length =
                 ByteBuffer.wrap(signedTransaction, 0, ACCOUNT_ID_LENGTH_BYTES)
                     .order(ByteOrder.LITTLE_ENDIAN)
                     .int
-            require(length > 0 && ACCOUNT_ID_LENGTH_BYTES + length <= signedTransaction.size) {
-                "NEAR signed transaction carries a malformed signer account id"
-            }
+            requireNear(
+                length > 0 && ACCOUNT_ID_LENGTH_BYTES + length <= signedTransaction.size,
+                NearRefusal.MALFORMED_SIGNED_TRANSACTION,
+            )
             return String(signedTransaction, ACCOUNT_ID_LENGTH_BYTES, length, Charsets.UTF_8)
         }
 
