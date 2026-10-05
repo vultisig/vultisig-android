@@ -28,10 +28,12 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
+import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.send.ChainValidationService
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_DST_TOKEN_ID
@@ -84,6 +86,8 @@ constructor(
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val fiatValueToString: FiatValueToStringMapper,
     private val tokenPriceRepository: TokenPriceRepository,
+    private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase,
+    private val chainValidationService: ChainValidationService,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -130,6 +134,7 @@ constructor(
     // user raises the target.
     private val buyUnitFiat = MutableStateFlow<FiatValue?>(null)
     private var marketPriceJob: Job? = null
+    private var srcPercentageJob: Job? = null
     // The pair the current market/target prices belong to, so a pair change can invalidate them.
     private var pricedPairKey: String? = null
     private val assetFormat = DecimalFormat("#,##0.########")
@@ -810,6 +815,12 @@ constructor(
                     feeDisplay = feeDisplay,
                 )
 
+            chainValidationService.validateNearSendAffordable(
+                selectedToken = inputs.srcToken,
+                tokenAmountInt = transaction.srcTokenValue.value,
+                specific = transaction.blockChainSpecific.blockChainSpecific,
+            )
+
             swapTransactionRepository.addTransaction(transaction)
 
             navigator.route(
@@ -1003,13 +1014,14 @@ constructor(
         uiState.update { it.copy(error = null) }
 
         // The 25/50/75 chips take a plain fraction of the full balance, matching iOS and the
-        // desktop app. Only MAX reserves the source-chain network fee, and only for a native source
-        // on its own gas chain — a combination the UI no longer offers, since MAX is hidden
-        // whenever the source is native (#5317), so this branch is now a guard for direct callers
-        // rather than a live path. The provider swap fee is taken from the destination amount (for
-        // LI.FI it is denominated in the destination token's units), so it is never deducted from
-        // the source balance here — that would mix decimals and could wrongly drive the usable
-        // amount negative for a low-decimal source into a high-decimal destination.
+        // desktop app; for NEAR that balance excludes the storage reserve. Only MAX reserves the
+        // source-chain network fee, and only for a native source on its own gas chain — a
+        // combination the UI no longer offers, since MAX is hidden whenever the source is native
+        // (#5317), so this branch is now a guard for direct callers rather than a live path. The
+        // provider swap fee is taken from the destination amount (for LI.FI it is denominated in
+        // the destination token's units), so it is never deducted from the source balance here —
+        // that would mix decimals and could wrongly drive the usable amount negative for a
+        // low-decimal source into a high-decimal destination.
         val reservedNetworkFee =
             if (
                 percentage >= 1f &&
@@ -1031,33 +1043,56 @@ constructor(
             } else {
                 BigInteger.ZERO
             }
-        val maxUsableTokenAmount = srcTokenValue.value - reservedNetworkFee
-
-        if (maxUsableTokenAmount <= BigInteger.ZERO) {
-            // Empty (not "0"): the empty-field path clears the stale quote silently, whereas a
-            // literal "0" reaches the quote pipeline and throws/logs AmountCannotBeZero at ERROR
-            // for an expected condition. The error set below stays visible to explain why.
-            srcAmountState.setTextAndPlaceCursorAtEnd("")
-            val errorRes =
-                if (srcToken.isNativeToken) {
-                    R.string.swap_error_insufficient_balance_and_fees
-                } else {
-                    R.string.swap_error_insufficient_source_token
+        srcPercentageJob?.cancel()
+        srcPercentageJob = viewModelScope.launch {
+            val maxUsableTokenAmount =
+                try {
+                    if (srcToken.chain == Chain.Near) {
+                        // NEAR shows its raw balance; the storage reserve stays behind.
+                        checkNotNull(
+                                getAvailableTokenBalance(selectedSrcAccount, reservedNetworkFee)
+                            )
+                            .value
+                    } else {
+                        srcTokenValue.value - reservedNetworkFee
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to size the selected swap amount fraction")
+                    showError(UiText.StringResource(R.string.network_connection_lost))
+                    return@launch
                 }
-            showError(UiText.FormattedText(errorRes, listOf(srcToken.ticker)))
-            return
+            // A source picked while the NEAR reserve was read owns the field now.
+            if (selectedSrc.value?.account?.token?.id != srcToken.id) return@launch
+
+            if (maxUsableTokenAmount <= BigInteger.ZERO) {
+                // Empty (not "0"): the empty-field path clears the stale quote silently,
+                // whereas a literal "0" reaches the quote pipeline and throws/logs
+                // AmountCannotBeZero at ERROR for an expected condition. The error set below
+                // stays visible to explain why.
+                srcAmountState.setTextAndPlaceCursorAtEnd("")
+                val errorRes =
+                    if (srcToken.isNativeToken) {
+                        R.string.swap_error_insufficient_balance_and_fees
+                    } else {
+                        R.string.swap_error_insufficient_source_token
+                    }
+                showError(UiText.FormattedText(errorRes, listOf(srcToken.ticker)))
+                return@launch
+            }
+
+            val amount =
+                TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
+                    .multiply(percentage.toBigDecimal())
+                    .formatFlippedAmount(srcTokenValue.decimals)
+
+            // A percentage / Max tap is an explicit, deliberate amount — fetch the quote
+            // immediately instead of waiting out the typing debounce (#4712). Mark before
+            // mutating the text so the resulting emission is already marked immediate.
+            swapQuoteManager.markImmediateFetch()
+            srcAmountState.setTextAndPlaceCursorAtEnd(amount)
         }
-
-        val amount =
-            TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
-                .multiply(percentage.toBigDecimal())
-                .formatFlippedAmount(srcTokenValue.decimals)
-
-        // A percentage / Max tap is an explicit, deliberate amount — fetch the quote immediately
-        // instead of waiting out the typing debounce (#4712). Mark before mutating the text so the
-        // resulting emission is already marked immediate.
-        swapQuoteManager.markImmediateFetch()
-        srcAmountState.setTextAndPlaceCursorAtEnd(amount)
     }
 
     fun loadData(vaultId: String, chainId: String?, srcTokenId: String?, dstTokenId: String?) {

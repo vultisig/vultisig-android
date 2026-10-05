@@ -41,6 +41,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.send.ChainValidationService
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.findCurrentSrc
 import com.vultisig.wallet.ui.models.send.firstSendSrc
@@ -196,7 +197,7 @@ internal class SwapFormViewModelTest {
         limitMarketPriceRepository = mockk(relaxed = true)
         buildLimitSwapTransactionUseCase = mockk(relaxed = true)
 
-        swapValidator = SwapValidator()
+        swapValidator = SwapValidator(getAvailableTokenBalance = mockk())
         swapDiscountChecker = mockk(relaxed = true)
         every { swapDiscountChecker.checkVultBpsDiscount(any()) } returns
             VultDiscountResult(null, null)
@@ -300,6 +301,8 @@ internal class SwapFormViewModelTest {
                 convertTokenValueToFiat = convertTokenValueToFiat,
                 fiatValueToString = fiatValueToString,
                 tokenPriceRepository = tokenPriceRepository,
+                getAvailableTokenBalance = mockk(),
+                chainValidationService = ChainValidationService(mockk(), mockk(), mockk()),
             )
             .also { createdViewModels += it }
 
