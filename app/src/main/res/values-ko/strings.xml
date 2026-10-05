@@ -626,6 +626,8 @@
     <string name="near_error_swapkit_deposit_amount_mismatch">NEAR SwapKit 입금 금액 %1$s이(가) 전송 금액 %2$s과(와) 다릅니다</string>
     <string name="near_error_swapkit_deposit_prebuilt">NEAR SwapKit 입금은 단순 전송이므로 미리 빌드된 트랜잭션을 포함할 수 없습니다</string>
     <string name="near_error_swapkit_deposit_memo">NEAR SwapKit 입금에는 메모를 포함할 수 없습니다</string>
+    <string name="near_error_rpc">NEAR %1$s 실패 (%2$s): %3$s</string>
+    <string name="near_error_malformed_response">NEAR 응답을 읽을 수 없습니다: %1$s</string>
     <string name="send_error_xrp_destination_tag_required">이 주소에는 목적지 태그가 필요합니다. 계속하려면 태그를 입력하세요.</string>
     <string name="send_error_xrp_destination_no_trust_line">이 주소는 %1$s을(를) 받을 수 없습니다. 수신자가 먼저 해당 자산의 신뢰선을 개설해야 합니다.</string>
     <string name="ripple_trust_line_title">신뢰선 활성화</string>

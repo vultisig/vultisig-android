@@ -37,8 +37,11 @@ data class NearTransactionOutcome(
 internal val NEAR_UNSIGNED_DECIMAL = Regex("^[0-9]+$")
 
 /** A JSON-RPC error the node returned; [name] distinguishes a missing record from a rejection. */
-class NearRpcException(val method: String, val name: String, message: String) :
-    Exception("NEAR $method failed ($name): $message")
+class NearRpcException(val method: String, val name: String, val detail: String) :
+    Exception("NEAR $method failed ($name): $detail")
+
+/** A node answer that is not the JSON-RPC envelope, or lacks or garbles a field this reads. */
+class NearMalformedResponseException(val detail: String) : IllegalStateException("NEAR $detail")
 
 /**
  * NEAR mainnet JSON-RPC. Everything the native transfer freezes at preparation time comes from
@@ -269,7 +272,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
     }
 
     private fun malformed(method: String, detail: String) =
-        IllegalStateException("NEAR $method response $detail")
+        NearMalformedResponseException("$method response $detail")
 
     companion object {
         const val NEAR_RPC_URL = "https://rpc.mainnet.fastnear.com"
@@ -287,9 +290,11 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
         internal fun JsonObject.exactInteger(key: String): BigInteger {
             val text =
                 (this[key] as? JsonPrimitive)?.content
-                    ?: throw IllegalStateException("NEAR response is missing $key")
-            require(NEAR_UNSIGNED_DECIMAL.matches(text)) {
-                "NEAR $key is not an unsigned decimal integer: $text"
+                    ?: throw NearMalformedResponseException("response is missing $key")
+            if (!NEAR_UNSIGNED_DECIMAL.matches(text)) {
+                throw NearMalformedResponseException(
+                    "$key is not an unsigned decimal integer: $text"
+                )
             }
             return BigInteger(text)
         }

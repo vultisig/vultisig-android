@@ -1,12 +1,24 @@
 package com.vultisig.wallet.ui.utils
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.NearMalformedResponseException
+import com.vultisig.wallet.data.api.NearRpcException
 import com.vultisig.wallet.data.blockchain.near.NearRefusal
 import com.vultisig.wallet.data.blockchain.near.NearRefusalException
 
-/** The user-facing text of a NEAR refusal behind [this] failure, or null for any other failure. */
-fun Throwable.nearRefusalTextOrNull(): UiText? =
-    (this as? NearRefusalException)?.let { UiText.FormattedText(it.reason.stringRes, it.args) }
+/**
+ * The user-facing text of a NEAR refusal, node error or unreadable node answer behind [this]
+ * failure, or null for any other failure.
+ */
+fun Throwable.nearErrorTextOrNull(): UiText? =
+    when (this) {
+        is NearRefusalException -> UiText.FormattedText(reason.stringRes, args)
+        is NearRpcException ->
+            UiText.FormattedText(R.string.near_error_rpc, listOf(method, name, detail))
+        is NearMalformedResponseException ->
+            UiText.FormattedText(R.string.near_error_malformed_response, listOf(detail))
+        else -> null
+    }
 
 private val NearRefusal.stringRes: Int
     get() =

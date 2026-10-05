@@ -66,7 +66,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
-import com.vultisig.wallet.ui.utils.nearRefusalTextOrNull
+import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import com.vultisig.wallet.ui.utils.userText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
@@ -1382,7 +1382,7 @@ constructor(
             val message = e.message ?: "Failed to resolve messages to sign"
             throw KeysignMessagesException(
                 message,
-                e.nearRefusalTextOrNull() ?: UiText.DynamicString(message),
+                e.nearErrorTextOrNull() ?: UiText.DynamicString(message),
             )
         }
     }

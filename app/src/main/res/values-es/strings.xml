@@ -1076,6 +1076,8 @@
     <string name="near_error_swapkit_deposit_amount_mismatch">El monto del depósito de SwapKit en NEAR %1$s no es el monto de la transferencia %2$s</string>
     <string name="near_error_swapkit_deposit_prebuilt">Los depósitos de SwapKit en NEAR son transferencias simples y no pueden llevar una transacción precompilada</string>
     <string name="near_error_swapkit_deposit_memo">Los depósitos de SwapKit en NEAR no pueden llevar un memo</string>
+    <string name="near_error_rpc">NEAR %1$s falló (%2$s): %3$s</string>
+    <string name="near_error_malformed_response">La respuesta de NEAR no se puede leer: %1$s</string>
     <string name="send_error_xrp_destination_tag_required">Esta dirección requiere una etiqueta de destino. Añade una para continuar.</string>
     <string name="send_error_xrp_destination_no_trust_line">Esta dirección no puede recibir %1$s. El destinatario debe abrir antes una línea de confianza para este activo.</string>
     <string name="ripple_trust_line_title">Activar línea de confianza</string>
