@@ -134,7 +134,7 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
             Chain.BitcoinCash,
             Chain.Litecoin -> setOf(SwapProvider.THORCHAIN)
 
-            Chain.Zcash -> setOf(SwapProvider.MAYA)
+            Chain.Zcash -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
 
             Chain.Arbitrum if isMayaEligible(Chain.Arbitrum, ticker, mayaArbTokens) ->
                 mayaPlusEvmAggregators

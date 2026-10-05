@@ -300,6 +300,18 @@ internal class SwapProviderTableTest {
     }
 
     @Test
+    fun `Zcash is routable through both THORChain and Maya`() {
+        val zec = coin(Chain.Zcash, "ZEC", isNative = true)
+        val providers = table.providersFor(zec)
+        assertTrue(SwapProvider.THORCHAIN in providers, "THORChain missing for ZEC: $providers")
+        assertTrue(SwapProvider.MAYA in providers, "Maya dropped for ZEC: $providers")
+        assertTrue(
+            SwapProvider.THORCHAIN in
+                table.eligibleProvidersFor(zec, coin(Chain.Bitcoin, "BTC", isNative = true))
+        )
+    }
+
+    @Test
     fun `MayaChain keeps its MAYA route`() {
         assertEquals(
             setOf(SwapProvider.MAYA),
