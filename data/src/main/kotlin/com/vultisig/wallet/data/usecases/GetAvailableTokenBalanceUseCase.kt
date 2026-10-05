@@ -36,9 +36,7 @@ constructor(private val nearApi: NearApi) : GetAvailableTokenBalanceUseCase {
         // throws rather than sizing a send that would leave the account's storage unbacked.
         if (token.chain == Chain.Near) {
             val balance = tokenValue ?: return null
-            val storageReserve =
-                nearApi.getAccount(token.address)?.let { nearApi.storageReserve(it) }
-                    ?: BigInteger.ZERO
+            val storageReserve = nearApi.storageReserve(token.address)
             return balance.copy(
                 value = NearFees.maxSendable(balance.value, gasCost, storageReserve)
             )

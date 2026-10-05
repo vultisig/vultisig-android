@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.rippleTokenIdentity
 import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
+import com.vultisig.wallet.data.usecases.sendRetainedReserve
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
@@ -307,17 +308,10 @@ constructor(
         val gasReservation = (specific as BlockChainSpecific.Near).gasFee
 
         val (available, storageReserve) =
-            try {
+            readNearAccount(selectedToken.address) {
                 val account = nearApi.getAccount(selectedToken.address)
                 (account?.amount ?: BigInteger.ZERO) to
                     (account?.let { nearApi.storageReserve(it) } ?: BigInteger.ZERO)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch NEAR account %s", selectedToken.address)
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.network_connection_lost)
-                )
             }
 
         val required = tokenAmountInt + gasReservation + storageReserve
@@ -332,6 +326,29 @@ constructor(
             )
         )
     }
+
+    /**
+     * Balance a native send of [token] must leave behind: NEAR's storage reserve read now,
+     * otherwise [sendRetainedReserve]. Fails closed when the NEAR read fails.
+     */
+    suspend fun retainedReserve(token: Coin): BigInteger =
+        if (token.chain == Chain.Near && token.isNativeToken) {
+            readNearAccount(token.address) { nearApi.storageReserve(token.address) }
+        } else {
+            sendRetainedReserve(token)
+        }
+
+    private suspend fun <T> readNearAccount(address: String, read: suspend () -> T): T =
+        try {
+            read()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch NEAR account %s", address)
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.network_connection_lost)
+            )
+        }
 
     /**
      * Ensures an XRP payment to a not-yet-activated destination meets the ledger's account reserve,

@@ -77,6 +77,10 @@ suspend fun NearApi.storageReserve(account: NearAccount): BigInteger =
         )
     }
 
+/** [storageReserve] of [accountId] read now; an unfunded account reserves nothing. */
+suspend fun NearApi.storageReserve(accountId: String): BigInteger =
+    getAccount(accountId)?.let { storageReserve(it) } ?: BigInteger.ZERO
+
 internal class NearApiImpl
 @Inject
 constructor(private val httpClient: HttpClient, private val json: Json) : NearApi {

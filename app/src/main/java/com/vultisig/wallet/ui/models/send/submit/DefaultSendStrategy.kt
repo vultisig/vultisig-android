@@ -366,7 +366,9 @@ internal class DefaultSendStrategy(
                                         required =
                                             tokenAmountInt +
                                                 spendableGasFee.value +
-                                                sendRetainedReserve(selectedToken),
+                                                chainValidationService.retainedReserve(
+                                                    selectedToken
+                                                ),
                                         available = selectedTokenValue.value,
                                         includesNetworkCosts = true,
                                     )
