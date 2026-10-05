@@ -123,7 +123,33 @@ data class JettonWalletJson(
 
 @Serializable
 data class JettonMastersJson(
-    @SerialName("jetton_masters") val jettonMasters: List<JettonMasterJson> = emptyList()
+    @SerialName("jetton_masters") val jettonMasters: List<JettonMasterJson> = emptyList(),
+    /**
+     * toncenter's resolved token info, keyed by the master's raw address. Most jettons keep their
+     * metadata off-chain (`jetton_content` is only a `uri`), and this is where its symbol and
+     * decimals end up.
+     */
+    @SerialName("metadata") val metadata: Map<String, JettonMetadataJson> = emptyMap(),
+)
+
+@Serializable
+data class JettonMetadataJson(
+    @SerialName("token_info") val tokenInfo: List<JettonTokenInfoJson> = emptyList()
+)
+
+@Serializable
+data class JettonTokenInfoJson(
+    @SerialName("valid") val valid: Boolean = false,
+    @SerialName("symbol") val symbol: String? = null,
+    @SerialName("name") val name: String? = null,
+    @SerialName("image") val image: String? = null,
+    @SerialName("extra") val extra: JettonTokenInfoExtraJson? = null,
+)
+
+@Serializable
+data class JettonTokenInfoExtraJson(
+    // A string, like `jetton_content.decimals`.
+    @SerialName("decimals") val decimals: String? = null
 )
 
 @Serializable

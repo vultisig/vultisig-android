@@ -42,6 +42,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.data.usecases.VerifyTonJettonTransferUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
@@ -288,6 +289,7 @@ constructor(
     private val joinSwapUiModelBuilder: JoinSwapUiModelBuilder,
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
+    private val verifyTonJettonTransfer: VerifyTonJettonTransferUseCase,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
 ) : ViewModel() {
@@ -639,11 +641,27 @@ constructor(
         // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
         if (ksPayload.isQbtcClaim) return true
 
-        loadTransaction(ksPayload)
-        return true
+        return loadTransaction(ksPayload)
     }
 
-    private suspend fun loadTransaction(payload: KeysignPayload) {
+    /** Builds the verify screen for [payload]; false when it was refused and an error is shown. */
+    private suspend fun loadTransaction(payload: KeysignPayload): Boolean {
+        // A TON jetton transfer is signed from the jetton wallet the payload names, not from the
+        // token it shows; refuse one whose wallet or token details aren't this vault's own.
+        try {
+            verifyTonJettonTransfer(payload, _currentVault.coins)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "TON jetton transfer failed verification")
+            currentState.value =
+                JoinKeysignState.Error(
+                    JoinKeysignError.FailedToCheck(
+                        e.message ?: "Couldn't verify the TON jetton transfer"
+                    )
+                )
+            return false
+        }
         val currency = appCurrencyRepository.currency.first()
         val swapPayload = payload.swapPayload
         // Resolved after the swap branch, not before it: recognition decodes the relayed bytes and
@@ -684,7 +702,7 @@ constructor(
                         srcVaultName = _currentVault.name,
                         vaultId = vaultId,
                         currency = currency,
-                    ) ?: return
+                    ) ?: return true
                 applyVerifyResult(sendResult.result)
                 // Kick off the hero resolution in parallel with the existing security scan; the
                 // hero refresh and the badge refresh happen independently so neither blocks the
@@ -701,6 +719,7 @@ constructor(
                 scanTransaction(sendResult.transaction)
             }
         }
+        return true
     }
 
     /**

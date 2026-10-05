@@ -184,23 +184,39 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             .getMasterAddress(jettonWalletAddress, ::tonUserFriendlyAddress)
 
     override suspend fun getJettonMetadata(masterAddress: String): TonJettonMetadata? {
-        val content =
+        val response =
             http
                 .get("$BASE_URL/v3/jetton/masters") {
                     parameter("address", masterAddress)
                     parameter("limit", 1)
                 }
                 .bodyOrThrow<JettonMastersJson>()
-                .jettonMasters
-                .firstOrNull()
-                ?.jettonContent ?: return null
-        val ticker = content.symbol?.takeIf { it.isNotBlank() } ?: return null
+        val master = response.jettonMasters.firstOrNull() ?: return null
+        val content = master.jettonContent
+        // Off-chain metadata (the common case) leaves `jetton_content` holding only a `uri`; the
+        // resolved values are in toncenter's `metadata` block instead.
+        val info =
+            master.address
+                ?.let { address ->
+                    response.metadata.entries.firstOrNull { it.key.equals(address, true) }
+                }
+                ?.value
+                ?.tokenInfo
+                ?.firstOrNull { it.valid }
+        val ticker =
+            content?.symbol?.takeIf { it.isNotBlank() }
+                ?: info?.symbol?.takeIf { it.isNotBlank() }
+                ?: return null
         // toncenter returns decimals as a string; default to 9 (TON's native scale) when absent.
+        val decimals =
+            content?.decimals?.trim()?.toIntOrNull()
+                ?: info?.extra?.decimals?.trim()?.toIntOrNull()
+                ?: 9
         return TonJettonMetadata(
             ticker = ticker,
-            decimals = content.decimals?.trim()?.toIntOrNull() ?: 9,
-            logo = content.image?.takeIf { it.isNotBlank() },
-            name = content.name?.trim()?.takeIf { it.isNotBlank() },
+            decimals = decimals,
+            logo = (content?.image ?: info?.image)?.takeIf { it.isNotBlank() },
+            name = (content?.name ?: info?.name)?.trim()?.takeIf { it.isNotBlank() },
         )
     }
 
