@@ -591,16 +591,29 @@ constructor(
                     // transaction carries no unpriced inputs), and only widens it by the objects
                     // the higher ceiling genuinely needs.
                     val payloadSelectionBudget = maxOf(SUI_DEFAULT_GAS_BUDGET, suiFees.limit)
+                    val loadedCoins = coinsDeferred.await()
+                    val amount = tokenAmountValue ?: BigInteger.ZERO
+                    // Fee fallback must not publish a positive send these objects cannot pay.
+                    if (amount > BigInteger.ZERO) {
+                        SuiHelper.requireSpendableCoins(
+                            coins = loadedCoins,
+                            isNativeToken = token.isNativeToken,
+                            contractAddress = token.contractAddress,
+                            amount = amount,
+                            gasBudget = suiFees.limit,
+                            ticker = token.ticker,
+                        )
+                    }
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Sui(
                             referenceGasPrice = suiFees.price,
                             gasBudget = suiFees.limit,
                             coins =
                                 SuiHelper.selectPayloadCoins(
-                                    coinsDeferred.await(),
+                                    loadedCoins,
                                     isNativeToken = token.isNativeToken,
                                     contractAddress = token.contractAddress,
-                                    amount = tokenAmountValue ?: BigInteger.ZERO,
+                                    amount = amount,
                                     gasBudget = payloadSelectionBudget,
                                 ),
                         ),

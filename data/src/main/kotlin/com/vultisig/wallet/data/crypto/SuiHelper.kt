@@ -110,6 +110,15 @@ object SuiHelper {
                     "getPreSignedInputData fail to get SUI transaction information from RPC"
                 )
 
+        requireSpendableCoins(
+            coins = coins,
+            isNativeToken = keysignPayload.coin.isNativeToken,
+            contractAddress = keysignPayload.coin.contractAddress,
+            amount = keysignPayload.toAmount,
+            gasBudget = gasBudget,
+            ticker = keysignPayload.coin.ticker,
+        )
+
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
 
         val suiObjects = coins.filter { it.isNativeSui() }
@@ -126,9 +135,6 @@ object SuiHelper {
                     // happen to be present. A token send whose token objects are absent (e.g. a
                     // truncated coin page) must fail loudly here, never fall through and silently
                     // sign a native PaySui transfer of the raw amount as a different asset.
-                    check(tokenObjects.isNotEmpty()) {
-                        "No ${keysignPayload.coin.ticker} coin objects available for this SUI token send"
-                    }
                     // Reference only the largest token objects covering the amount, and pay gas
                     // from a single native SUI object that covers the budget.
                     val gasCoin = selectSuiGasCoin(coins, gasBudget)
@@ -138,11 +144,6 @@ object SuiHelper {
                             gasCoin?.coinObjectId,
                         )
                     val tokenInputCoins = selectInputCoins(tokenObjects, keysignPayload.toAmount)
-                    checkCoinsCover(
-                        tokenInputCoins,
-                        keysignPayload.toAmount,
-                        keysignPayload.coin.ticker,
-                    )
                     Sui.SigningInput.newBuilder()
                         .setPay(
                             Sui.Pay.newBuilder()
@@ -157,7 +158,6 @@ object SuiHelper {
                     // one coin), so cover amount + gas with the fewest largest objects.
                     val target = keysignPayload.toAmount + gasBudget
                     val nativeInputCoins = selectInputCoins(suiObjects, target)
-                    checkCoinsCover(nativeInputCoins, target, keysignPayload.coin.ticker)
                     Sui.SigningInput.newBuilder()
                         .setPaySui(
                             Sui.PaySui.newBuilder()
@@ -313,6 +313,32 @@ object SuiHelper {
 
     private fun SuiCoin.balanceOrZero(): BigInteger =
         balance.toBigIntegerOrNull() ?: BigInteger.ZERO
+
+    internal fun requireSpendableCoins(
+        coins: List<SuiCoin>,
+        isNativeToken: Boolean,
+        contractAddress: String,
+        amount: BigInteger,
+        gasBudget: BigInteger,
+        ticker: String,
+    ) {
+        if (isNativeToken) {
+            val target = amount + gasBudget
+            val selected = selectInputCoins(coins.filter { it.isNativeSui() }, target)
+            checkCoinsCover(selected, target, ticker)
+            return
+        }
+        val tokenObjects =
+            coins.filter { isSameSuiCoinType(it.coinType, contractAddress) && !it.isNativeSui() }
+        check(tokenObjects.isNotEmpty()) {
+            "No $ticker coin objects available for this SUI token send"
+        }
+        check(selectSuiGasCoin(coins, gasBudget) != null) {
+            "No suitable SUI gas coin available for transaction"
+        }
+        val selected = selectInputCoins(tokenObjects, amount)
+        checkCoinsCover(selected, amount, ticker)
+    }
 
     /**
      * Fails fast when the [selected] objects cannot cover [target] — the same fail-fast contract as
