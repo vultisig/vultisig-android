@@ -233,6 +233,17 @@ class SuiApiTest {
         assertTrue(e.errorMessage.contains("stalled"), e.errorMessage)
     }
 
+    @Test
+    fun `getAllCoins raises when more pages are reported without an endCursor`() = runTest {
+        val client =
+            MockHttpClient.respondingWithSequence(
+                HttpStatusCode.OK to coinsPage(hasNextPage = true, endCursor = null)
+            )
+
+        val e = assertFailsWith<SuiRpcException> { SuiApiImpl(client, json).getAllCoins("0xabc") }
+        assertTrue(e.errorMessage.contains("without a cursor"), e.errorMessage)
+    }
+
     // A node that advances the cursor forever is bounded by the page budget rather than by trust,
     // and exhausting that budget is reported rather than absorbed — 5000 coin objects is a
     // misbehaving connection, and a send built from a truncated list fails as a bogus
@@ -754,13 +765,13 @@ class SuiApiTest {
     private fun coinsPage(
         hasNextPage: Boolean,
         objectId: String = "0xcoin1",
-        endCursor: String = "cursor-1",
+        endCursor: String? = "cursor-1",
         repr: String = "0x2::coin::Coin<0x2::sui::SUI>",
         coinBalance: String = "600",
     ) =
         """
         {"data":{"address":{"balance":{"coinBalance":"$coinBalance"},"objects":{
-          "pageInfo":{"hasNextPage":$hasNextPage,"endCursor":"$endCursor"},
+          "pageInfo":{"hasNextPage":$hasNextPage,"endCursor":${endCursor?.let { "\"$it\"" }}},
           "nodes":[{
             "address":"$objectId",
             "version":100,

@@ -186,7 +186,13 @@ internal class SuiApiImpl @Inject constructor(http: HttpClient, private val json
         connection.nodes.forEach(visit)
 
         // A stalled or over-budget cursor throws. A partial coin list is not a smaller wallet.
-        val nextCursor = connection.pageInfo.endCursor.takeIf { connection.pageInfo.hasNextPage }
+        val nextCursor =
+            if (connection.pageInfo.hasNextPage) {
+                connection.pageInfo.endCursor
+                    ?: throw SuiRpcException("coin pagination reported more pages without a cursor")
+            } else {
+                null
+            }
         if (nextCursor != null && nextCursor == previousCursor) {
             throw SuiRpcException(
                 "coin pagination stalled: the node reported more pages but returned the same " +
