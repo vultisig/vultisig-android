@@ -207,11 +207,15 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             content?.symbol?.takeIf { it.isNotBlank() }
                 ?: info?.symbol?.takeIf { it.isNotBlank() }
                 ?: return null
-        // toncenter returns decimals as a string; default to 9 (TON's native scale) when absent.
+        // toncenter returns decimals as a string. TEP-64 makes 9 the default only when the field
+        // is omitted; a value that is present but unreadable leaves the decimals unknown, and a
+        // guess would let a token be shown at the wrong scale.
+        val rawDecimals =
+            content?.decimals?.takeIf { it.isNotBlank() }
+                ?: info?.extra?.decimals?.takeIf { it.isNotBlank() }
         val decimals =
-            content?.decimals?.trim()?.toIntOrNull()
-                ?: info?.extra?.decimals?.trim()?.toIntOrNull()
-                ?: 9
+            if (rawDecimals == null) DEFAULT_JETTON_DECIMALS
+            else rawDecimals.trim().toIntOrNull()?.takeIf { it >= 0 } ?: return null
         return TonJettonMetadata(
             ticker = ticker,
             decimals = decimals,
@@ -318,6 +322,8 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             .maxOrNull() ?: BigInteger.ZERO
 
     private companion object {
+        /** TEP-64's decimals when a jetton's metadata omits the field. */
+        const val DEFAULT_JETTON_DECIMALS = 9
         const val BASE_URL = "https://api.vultisig.com/ton"
         const val DUPLICATE_MESSAGE_MARKER = "duplicate message"
         // Bounds the settlement-scan pages (newest-first) so the genuine refund/fill transfer is
