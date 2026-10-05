@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.matches
 import com.vultisig.wallet.data.api.requiresDestinationTag
+import com.vultisig.wallet.data.api.storageReserve
 import com.vultisig.wallet.data.blockchain.near.NearAccountId
 import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
@@ -289,6 +290,46 @@ constructor(
 
         throw InvalidTransactionDataException(
             UiText.StringResource(R.string.send_error_near_destination_not_found)
+        )
+    }
+
+    /**
+     * Refuses a native NEAR send the sender cannot cover, before any keysign session starts: the
+     * amount, the gas reservation frozen into [specific] and the account's storage reserve must fit
+     * the balance read now. Fails closed when the read fails.
+     */
+    suspend fun validateNearSendAffordable(
+        selectedToken: Coin,
+        tokenAmountInt: BigInteger,
+        specific: BlockChainSpecific,
+    ) {
+        if (selectedToken.chain != Chain.Near || !selectedToken.isNativeToken) return
+        val gasReservation = (specific as BlockChainSpecific.Near).gasFee
+
+        val (available, storageReserve) =
+            try {
+                val account = nearApi.getAccount(selectedToken.address)
+                (account?.amount ?: BigInteger.ZERO) to
+                    (account?.let { nearApi.storageReserve(it) } ?: BigInteger.ZERO)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to fetch NEAR account %s", selectedToken.address)
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.network_connection_lost)
+                )
+            }
+
+        val required = tokenAmountInt + gasReservation + storageReserve
+        if (required <= available) return
+        throw InvalidTransactionDataException(
+            insufficientFundsText(
+                ticker = selectedToken.ticker,
+                decimals = selectedToken.decimal,
+                required = required,
+                available = available,
+                includesNetworkCosts = true,
+            )
         )
     }
 

@@ -402,6 +402,14 @@ internal class DefaultSendStrategy(
                                 planBtc.value,
                             )
                         }
+
+                        withContext(Dispatchers.IO) {
+                            chainValidationService.validateNearSendAffordable(
+                                selectedToken = selectedToken,
+                                tokenAmountInt = stagedAmountInt,
+                                specific = specific.blockChainSpecific,
+                            )
+                        }
                     } else if (
                         chain == Chain.TerraClassic &&
                             TerraClassicTax.isBankDenom(
