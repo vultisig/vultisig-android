@@ -303,6 +303,32 @@ object RippleHelper {
     }
 
     /**
+     * The `LastLedgerSequence` the signed transaction carries, or null when it has none. A dApp
+     * transaction is signed verbatim from its raw JSON, so that JSON — not `rippleSpecific`, which
+     * the extension fills independently — is what lands on-chain.
+     */
+    fun lastLedgerSequence(keysignPayload: KeysignPayload): Long? {
+        val signRipple = keysignPayload.signRipple
+        val value =
+            if (signRipple != null) {
+                runCatching {
+                        rawJsonParser
+                            .parseToJsonElement(signRipple.rawJson)
+                            .jsonObject["LastLedgerSequence"]
+                            ?.jsonPrimitive
+                            ?.contentOrNull
+                            ?.toLongOrNull()
+                    }
+                    .getOrNull()
+            } else {
+                (keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple)
+                    ?.lastLedgerSequence
+                    ?.toLong()
+            }
+        return value?.takeIf { it > 0 }
+    }
+
+    /**
      * Fail-closed guard for a dApp-supplied [SignRipple] transaction, verbatim-signed so this is
      * the only gate between the wire and the signer. Throws unless:
      * - the `TransactionType` is on the [ALLOWED_DAPP_TRANSACTION_TYPES] allowlist — a

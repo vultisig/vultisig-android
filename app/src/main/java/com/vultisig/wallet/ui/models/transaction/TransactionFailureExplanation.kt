@@ -41,6 +41,21 @@ enum class TransactionFailureExplanation(
                 "insufficient_output_amount",
                 "too little received",
             ),
+    ),
+
+    /**
+     * The network dropped the transaction without ever including it: it outlived its validity
+     * window (an XRP `LastLedgerSequence`, a Polkadot mortal era). Nothing moved and no fee was
+     * charged, which "failed" alone would leave the user to doubt.
+     */
+    EXPIRED_NOT_INCLUDED(
+        labelRes = R.string.transaction_status_failed_expired_label,
+        descriptionRes = R.string.transaction_status_failed_expired_description,
+        signatures =
+            listOf(
+                "not validated by its lastledgersequence",
+                "not included within its mortal era",
+            ),
     );
 
     companion object {

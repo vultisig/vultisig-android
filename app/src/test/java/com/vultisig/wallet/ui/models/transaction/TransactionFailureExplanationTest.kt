@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.transaction
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.txstatus.RippleStatusProvider
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -46,6 +47,27 @@ class TransactionFailureExplanationTest {
         with(TransactionFailureExplanation.MIN_OUTPUT_SLIPPAGE) {
             labelRes shouldBe R.string.transaction_status_failed_slippage_label
             descriptionRes shouldBe R.string.transaction_status_failed_slippage_description
+        }
+    }
+
+    @Test
+    fun `recognises an XRP tx that expired past its LastLedgerSequence`() {
+        TransactionFailureExplanation.from(RippleStatusProvider.EXPIRED_REASON) shouldBe
+            TransactionFailureExplanation.EXPIRED_NOT_INCLUDED
+    }
+
+    @Test
+    fun `recognises a Polkadot extrinsic that outlived its mortal era`() {
+        TransactionFailureExplanation.from(
+            "Extrinsic expired: not included within its mortal era"
+        ) shouldBe TransactionFailureExplanation.EXPIRED_NOT_INCLUDED
+    }
+
+    @Test
+    fun `the expired explanation points at the expired copy`() {
+        with(TransactionFailureExplanation.EXPIRED_NOT_INCLUDED) {
+            labelRes shouldBe R.string.transaction_status_failed_expired_label
+            descriptionRes shouldBe R.string.transaction_status_failed_expired_description
         }
     }
 

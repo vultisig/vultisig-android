@@ -25,9 +25,7 @@ data class CommonTransactionHistoryData(
     val timestamp: Long,
     val txHash: String,
     val explorerUrl: String,
-    /**
-     * Chain head block number at broadcast; see [TransactionHistoryEntity.broadcastBlockNumber].
-     */
+    /** Chain-specific block anchor; see [TransactionHistoryEntity.broadcastBlockNumber]. */
     val broadcastBlockNumber: Long? = null,
 )
 

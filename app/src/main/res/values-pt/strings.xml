@@ -1466,6 +1466,8 @@
     <string name="transaction_status_refunded_label">Reembolsada</string>
     <string name="transaction_status_failed_slippage_label">O preço ultrapassou a tolerância de derrapagem</string>
     <string name="transaction_status_failed_slippage_description">O preço mudou antes de esta troca ser executada, portanto o pagamento teria sido inferior ao permitido pela sua tolerância de derrapagem e a rede reverteu-a. Aumente a tolerância de derrapagem ou tente novamente.</string>
+    <string name="transaction_status_failed_expired_label">Expirou antes de ser incluída</string>
+    <string name="transaction_status_failed_expired_description">A rede descartou esta transação antes de incluí-la, portanto nada foi enviado e nenhuma taxa de rede foi cobrada. Pode tentar novamente.</string>
     <string name="transaction_status_in_progress_label">Em andamento…</string>
     <string name="transaction_status_signed_label">Assinada</string>
     <string name="transaction_history_to_label">Para</string>

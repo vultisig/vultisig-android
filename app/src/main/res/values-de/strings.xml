@@ -1466,6 +1466,8 @@
     <string name="transaction_status_refunded_label">Erstattet</string>
     <string name="transaction_status_failed_slippage_label">Preis hat die Slippage-Toleranz überschritten</string>
     <string name="transaction_status_failed_slippage_description">Der Preis hat sich geändert, bevor dieser Tausch ausgeführt wurde. Die Auszahlung wäre geringer ausgefallen, als Ihre Slippage-Toleranz erlaubt, und das Netzwerk hat ihn rückgängig gemacht. Erhöhen Sie Ihre Slippage-Toleranz oder versuchen Sie es erneut.</string>
+    <string name="transaction_status_failed_expired_label">Abgelaufen, bevor sie aufgenommen wurde</string>
+    <string name="transaction_status_failed_expired_description">Das Netzwerk hat diese Transaktion verworfen, bevor sie aufgenommen wurde. Es wurde nichts gesendet und keine Netzwerkgebühr berechnet. Sie können es erneut versuchen.</string>
     <string name="transaction_status_in_progress_label">In Bearbeitung…</string>
     <string name="transaction_status_signed_label">Signiert</string>
     <string name="transaction_history_to_label">An</string>
