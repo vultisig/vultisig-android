@@ -1,6 +1,9 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.api.NearApi
+import com.vultisig.wallet.data.api.storageReserve
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
+import com.vultisig.wallet.data.blockchain.near.NearFees
 import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.models.Account
@@ -12,8 +15,9 @@ import javax.inject.Inject
 
 interface GetAvailableTokenBalanceUseCase : suspend (Account, BigInteger) -> TokenValue?
 
-internal class GetAvailableTokenBalanceUseCaseImpl @Inject constructor() :
-    GetAvailableTokenBalanceUseCase {
+internal class GetAvailableTokenBalanceUseCaseImpl
+@Inject
+constructor(private val nearApi: NearApi) : GetAvailableTokenBalanceUseCase {
 
     override suspend fun invoke(account: Account, gasCost: BigInteger): TokenValue? {
         val token = account.token
@@ -27,6 +31,18 @@ internal class GetAvailableTokenBalanceUseCaseImpl @Inject constructor() :
                 (token.chain == Chain.TerraClassic &&
                     TerraClassicTax.isBankDenom(token.contractAddress, token.isNativeToken))
         if (!feePaidInThisToken) return tokenValue
+
+        // NEAR shows the raw balance, so the storage reserve is read live here; a failed read
+        // throws rather than sizing a send that would leave the account's storage unbacked.
+        if (token.chain == Chain.Near) {
+            val balance = tokenValue ?: return null
+            val storageReserve =
+                nearApi.getAccount(token.address)?.let { nearApi.storageReserve(it) }
+                    ?: BigInteger.ZERO
+            return balance.copy(
+                value = NearFees.maxSendable(balance.value, gasCost, storageReserve)
+            )
+        }
 
         // Polkadot and Bittensor reap (deactivate) an account whose free balance drops below the
         // existential deposit, so that reserve must be excluded from the selectable balance the

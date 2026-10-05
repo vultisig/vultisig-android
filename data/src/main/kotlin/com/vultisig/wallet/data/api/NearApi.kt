@@ -59,6 +59,21 @@ interface NearApi {
     suspend fun getTransactionOutcome(hash: String, senderAccountId: String): NearTransactionOutcome
 }
 
+/**
+ * Balance [account] must keep behind to back its own storage. The fee config is read only when
+ * NEP-448 does not already exempt the account; a failed read throws.
+ */
+suspend fun NearApi.storageReserve(account: NearAccount): BigInteger =
+    if (account.storageUsage <= NearFees.ZERO_BALANCE_STORAGE_LIMIT) {
+        BigInteger.ZERO
+    } else {
+        NearFees.storageReserve(
+            storageUsage = account.storageUsage,
+            locked = account.locked,
+            storageAmountPerByte = getFeeConfig().storageAmountPerByte,
+        )
+    }
+
 internal class NearApiImpl
 @Inject
 constructor(private val httpClient: HttpClient, private val json: Json) : NearApi {

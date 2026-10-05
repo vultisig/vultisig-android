@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.blockchain.model.Transfer
@@ -18,6 +19,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asAddressInput
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -92,7 +94,7 @@ internal class AmountFractionManager(
                 }
                 val amount =
                     try {
-                        calculatePercentageWithAccurateFee(1f)
+                        calculateOrReportFailure(1f)
                     } finally {
                         // Cancelled job's finally still runs, but if a newer selection is
                         // in flight, that one owns the loading flag now — isActive is false
@@ -100,7 +102,7 @@ internal class AmountFractionManager(
                         if (currentCoroutineContext().isActive) {
                             uiState.update { it.copy(isAmountSelectionLoading = false) }
                         }
-                    }
+                    } ?: return@launch
                 // If a newer choose*Amount call cancelled this job after the last suspension
                 // point, abort before applying — otherwise the older selection would clobber
                 // the newer one.
@@ -128,16 +130,33 @@ internal class AmountFractionManager(
                 }
                 val amount =
                     try {
-                        calculatePercentageWithAccurateFee(amountFraction.value)
+                        calculateOrReportFailure(amountFraction.value)
                     } finally {
                         if (currentCoroutineContext().isActive) {
                             uiState.update { it.copy(isAmountSelectionLoading = false) }
                         }
-                    }
+                    } ?: return@launch
                 currentCoroutineContext().ensureActive()
                 tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
             }
     }
+
+    /**
+     * Null once a failed balance read (NEAR's live storage reserve) has been shown as an error, so
+     * the tap neither crashes the form nor fills an amount sized without the reserve.
+     */
+    private suspend fun calculateOrReportFailure(percentage: Float): BigDecimal? =
+        try {
+            calculatePercentageWithAccurateFee(percentage)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to size the selected amount fraction")
+            uiState.update {
+                it.copy(errorText = UiText.StringResource(R.string.network_connection_lost))
+            }
+            null
+        }
 
     private suspend fun calculatePercentageWithAccurateFee(percentage: Float): BigDecimal {
         val vault = vaultProvider() ?: return BigDecimal.ZERO
