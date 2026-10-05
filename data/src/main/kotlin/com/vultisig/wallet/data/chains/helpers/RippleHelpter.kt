@@ -308,21 +308,23 @@ object RippleHelper {
      * the extension fills independently — is what lands on-chain.
      */
     fun lastLedgerSequence(keysignPayload: KeysignPayload): Long? {
+        val signRipple = keysignPayload.signRipple
         val value =
-            keysignPayload.signRipple?.let { signRipple ->
+            if (signRipple != null) {
                 runCatching {
-                    rawJsonParser
-                        .parseToJsonElement(signRipple.rawJson)
-                        .jsonObject["LastLedgerSequence"]
-                        ?.jsonPrimitive
-                        ?.contentOrNull
-                        ?.toLongOrNull()
-                }
+                        rawJsonParser
+                            .parseToJsonElement(signRipple.rawJson)
+                            .jsonObject["LastLedgerSequence"]
+                            ?.jsonPrimitive
+                            ?.contentOrNull
+                            ?.toLongOrNull()
+                    }
                     .getOrNull()
-            }
-                ?: (keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple)
+            } else {
+                (keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple)
                     ?.lastLedgerSequence
                     ?.toLong()
+            }
         return value?.takeIf { it > 0 }
     }
 

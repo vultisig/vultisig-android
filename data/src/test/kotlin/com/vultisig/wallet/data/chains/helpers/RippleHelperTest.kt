@@ -392,12 +392,11 @@ class RippleHelperTest {
     }
 
     @Test
-    fun `lastLedgerSequence falls back to rippleSpecific when the dApp JSON has none`() {
-        assertEquals(
-            107_426_542L,
+    fun `lastLedgerSequence is null when the dApp JSON has none`() {
+        assertNull(
             RippleHelper.lastLedgerSequence(
                 lastLedgerPayload(107_426_542UL, rawJson(vaultXrpAddress))
-            ),
+            )
         )
     }
 }
