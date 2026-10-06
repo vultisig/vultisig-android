@@ -379,24 +379,30 @@ constructor(
             viewModelScope.launch {
                 // DOGE/DASH signatures don't commit to input amounts; a provider that understated
                 // one would turn the difference into miner fee, so check before anything is signed.
+                // Keysign reloads the transaction by id, so signing before it has loaded here would
+                // sign one that was never checked.
                 val tx = transaction
-                if (tx != null) {
-                    try {
-                        verifyUtxoInputAmounts(tx.token, tx.utxos)
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        Timber.w(e, "UTXO inputs failed verification")
-                        uiState.update {
-                            it.copy(
-                                errorText =
-                                    UiText.DynamicString(
-                                        e.message ?: "Couldn't verify the transaction inputs"
-                                    )
-                            )
-                        }
-                        return@launch
+                if (tx == null) {
+                    uiState.update {
+                        it.copy(errorText = UiText.DynamicString("The transaction isn't loaded yet"))
                     }
+                    return@launch
+                }
+                try {
+                    verifyUtxoInputAmounts(tx.token, tx.utxos)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.w(e, "UTXO inputs failed verification")
+                    uiState.update {
+                        it.copy(
+                            errorText =
+                                UiText.DynamicString(
+                                    e.message ?: "Couldn't verify the transaction inputs"
+                                )
+                        )
+                    }
+                    return@launch
                 }
                 launchKeysign(
                     keysignInitType,
