@@ -3,7 +3,7 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
-import com.vultisig.wallet.data.api.swapAggregators.isErc20DepositTransfer
+import com.vultisig.wallet.data.api.swapAggregators.callsSoldToken
 import com.vultisig.wallet.data.api.swapAggregators.swapKitErc20DepositRecipient
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper.requireEthereumSpec
@@ -295,7 +295,7 @@ constructor(
                 // a regression collapsing it to `to` can't pass CI silently.
                 val approveSpender = approveSpenderFor(quote.data.tx)
                 val (specificAndUtxo, approval, routeGas) =
-                    if (quote.data.tx.isErc20DepositTransfer(srcToken)) {
+                    if (quote.data.tx.callsSoldToken(srcToken)) {
                         erc20DepositSpend(
                             quote.data.tx,
                             srcToken,

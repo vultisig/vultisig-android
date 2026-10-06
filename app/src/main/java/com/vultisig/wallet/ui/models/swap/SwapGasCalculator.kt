@@ -2,8 +2,8 @@ package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.swapAggregators.callsSoldToken
 import com.vultisig.wallet.data.api.swapAggregators.evmSwapSignedGasLimit
-import com.vultisig.wallet.data.api.swapAggregators.isErc20DepositTransfer
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.model.Swap
@@ -71,10 +71,10 @@ internal sealed interface UtxoPlanFeeResult {
 /**
  * Gas limit to display an EVM aggregator swap fee at: the route's [routeGas] floored by the
  * per-chain default the signer uses (40k native ETH, 400k native Arbitrum, else 600k). A SwapKit
- * ERC-20 deposit ([isErc20DepositTransfer]) is a token transfer signed at its own limit, so its
- * [routeGas] is shown unfloored. Null means keep the flat 600k baseline — no usable route gas, an
- * OP-stack L2 (its baseline folds in an un-scalable L1 data fee), or a limit that lands back on
- * 600k. Shared by the initiator and the joiner so both display the same fee for one swap (#5056).
+ * ERC-20 deposit ([callsSoldToken]) is a token transfer signed at its own limit, so its [routeGas]
+ * is shown unfloored. Null means keep the flat 600k baseline — no usable route gas, an OP-stack L2
+ * (its baseline folds in an un-scalable L1 data fee), or a limit that lands back on 600k. Shared by
+ * the initiator and the joiner so both display the same fee for one swap (#5056).
  */
 internal fun evmSwapDisplayGasLimit(
     srcToken: Coin,
@@ -104,7 +104,7 @@ internal fun evmSwapPayloadDisplayGasLimit(
     tx: OneInchSwapTxJson,
     specific: BlockChainSpecific.Ethereum,
 ): BigInteger? {
-    val isErc20Deposit = tx.isErc20DepositTransfer(srcToken)
+    val isErc20Deposit = tx.callsSoldToken(srcToken)
     val routeGas =
         if (isErc20Deposit) evmSwapSignedGasLimit(tx.gas, specific.gasLimit).toLongExact()
         else tx.gas

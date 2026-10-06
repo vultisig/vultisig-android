@@ -31,14 +31,14 @@ internal class SwapKitErc20DepositTest {
     fun `a router call that is not a transfer is not a deposit`() {
         val routerTx = depositTx().copy(to = ROUTER, data = "0x12aa3caf" + "00".repeat(64))
 
-        routerTx.isErc20DepositTransfer(usdt).shouldBeFalse()
+        routerTx.callsSoldToken(usdt).shouldBeFalse()
         swapKitErc20DepositRecipient(routerTx, usdt, SOLD).shouldBeNull()
     }
 
     @Test
     fun `matches the sold token case-insensitively and never for a native source`() {
-        depositTx().copy(to = USDT.lowercase()).isErc20DepositTransfer(usdt).shouldBeTrue()
-        depositTx().copy(to = "").isErc20DepositTransfer(eth).shouldBeFalse()
+        depositTx().copy(to = USDT.lowercase()).callsSoldToken(usdt).shouldBeTrue()
+        depositTx().copy(to = "").callsSoldToken(eth).shouldBeFalse()
     }
 
     @Test

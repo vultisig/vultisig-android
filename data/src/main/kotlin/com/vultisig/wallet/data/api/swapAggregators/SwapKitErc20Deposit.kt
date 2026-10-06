@@ -13,11 +13,11 @@ import com.vultisig.wallet.data.models.swapProviderFromWireId
 import java.math.BigInteger
 
 /**
- * True when this EVM swap tx calls the sold token [srcToken] itself: a SwapKit NEAR-Intents ERC-20
- * deposit (`txHint: simpleTransfer`), which carries the deposit address in `transfer` calldata and
- * spends no allowance.
+ * True when this EVM swap tx calls the sold token [srcToken] itself, whatever the provider. For
+ * SwapKit that is a NEAR-Intents ERC-20 deposit (`txHint: simpleTransfer`), which carries the
+ * deposit address in `transfer` calldata and spends no allowance.
  */
-fun OneInchSwapTxJson.isErc20DepositTransfer(srcToken: Coin): Boolean =
+fun OneInchSwapTxJson.callsSoldToken(srcToken: Coin): Boolean =
     !srcToken.isNativeToken &&
         srcToken.contractAddress.isNotEmpty() &&
         to.equals(srcToken.contractAddress, ignoreCase = true)
@@ -38,7 +38,7 @@ fun swapKitErc20DepositRecipient(
     amount: BigInteger,
 ): String? {
     val value = parseSwapKitDecimal(tx.value, "tx.value")
-    val isTokenAddressed = tx.isErc20DepositTransfer(srcToken)
+    val isTokenAddressed = tx.callsSoldToken(srcToken)
     val isTransferCall = tx.data.lowercase().removePrefix("0x").startsWith(ERC20_TRANSFER_SELECTOR)
     if (!isTokenAddressed && !isTransferCall) return null
 

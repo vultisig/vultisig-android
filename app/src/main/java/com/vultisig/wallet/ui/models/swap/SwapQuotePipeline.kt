@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.models.swap
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
-import com.vultisig.wallet.data.api.swapAggregators.isErc20DepositTransfer
+import com.vultisig.wallet.data.api.swapAggregators.callsSoldToken
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
@@ -627,7 +627,7 @@ internal class SwapQuotePipeline(
                         srcToken = srcToken,
                         baselineGasFee = currentGasFee,
                         routeGas = gasLimitOverride?.takeIf { it > 0L } ?: quote.data.tx.gas,
-                        isErc20DepositTransfer = quote.data.tx.isErc20DepositTransfer(srcToken),
+                        isErc20DepositTransfer = quote.data.tx.callsSoldToken(srcToken),
                     )
                 val baseline = evmBaselineEstimate?.takeIf { gasFeeChain == srcToken.chain }
                 if (rebased != null) {
