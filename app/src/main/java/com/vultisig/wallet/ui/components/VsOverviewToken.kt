@@ -37,6 +37,11 @@ import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * [alwaysShowChainLogo] badges native Layer 1 coins too, which otherwise go unbadged. A swap
+ * summary needs it: both sides can be the same native coin on different chains (ETH on Ethereum and
+ * on Base), and without the badge neither card says which network it is on.
+ */
 @Composable
 internal fun VsOverviewToken(
     header: String,
@@ -44,6 +49,7 @@ internal fun VsOverviewToken(
     shape: Shape,
     modifier: Modifier = Modifier,
     withContainer: Boolean = true,
+    alwaysShowChainLogo: Boolean = false,
 ) {
     val token: Coin = valuedToken.token
 
@@ -52,7 +58,9 @@ internal fun VsOverviewToken(
         tokenLogo = getCoinLogo(token.logo),
         ticker = token.ticker,
         chainLogo =
-            token.chain.monoToneLogo.takeIf { !token.isNativeToken || token.chain.isLayer2 },
+            token.chain.monoToneLogo.takeIf {
+                alwaysShowChainLogo || !token.isNativeToken || token.chain.isLayer2
+            },
         value = valuedToken.value,
         fiatValue = valuedToken.fiatValue,
         shape = shape,
