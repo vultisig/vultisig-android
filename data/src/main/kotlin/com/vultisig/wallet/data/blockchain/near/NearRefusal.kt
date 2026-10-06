@@ -3,8 +3,8 @@ package com.vultisig.wallet.data.blockchain.near
 import java.util.Locale
 
 /**
- * Why a NEAR transaction is refused before it is built or signed. The app shows each reason in the
- * user's language; [english] is the log text, with the same placeholders in the same order.
+ * Why a NEAR transaction is refused before it is built or signed. [english] is the exact log text;
+ * the app maps each reason onto a short user message.
  */
 enum class NearRefusal(internal val english: String) {
     TOKENS_UNSUPPORTED("NEAR tokens are not supported by the native send path"),
@@ -45,13 +45,9 @@ enum class NearRefusal(internal val english: String) {
     SWAPKIT_DEPOSIT_MEMO("NEAR SwapKit deposits cannot carry a memo"),
 }
 
-/**
- * A NEAR transaction this device refuses to build or sign; [args] fill the reason's placeholders.
- */
+/** A NEAR transaction this device refuses to build or sign; [args] fill the log text. */
 class NearRefusalException(val reason: NearRefusal, vararg args: Any) :
-    IllegalArgumentException(reason.english.format(Locale.ROOT, *args)) {
-    val args: List<Any> = args.toList()
-}
+    IllegalArgumentException(reason.english.format(Locale.ROOT, *args))
 
 /** Throws [NearRefusalException] for [reason] unless [condition] holds. */
 internal fun requireNear(condition: Boolean, reason: NearRefusal, vararg args: Any) {
