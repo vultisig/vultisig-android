@@ -4,6 +4,14 @@ import com.vultisig.wallet.data.common.add0x
 import java.math.BigDecimal
 import java.math.BigInteger
 
+private val UNSIGNED_DECIMAL = Regex("[0-9]+")
+
+/**
+ * True when this is ASCII decimal digits only. `BigInteger` alone also reads a sign (`+100`, `-0`)
+ * and non-ASCII numerals, which the SDK co-signer refuses on wire amounts.
+ */
+internal fun String.isUnsignedDecimal(): Boolean = matches(UNSIGNED_DECIMAL)
+
 fun BigInteger.toHexString(): String {
     return this.toString(16).add0x()
 }

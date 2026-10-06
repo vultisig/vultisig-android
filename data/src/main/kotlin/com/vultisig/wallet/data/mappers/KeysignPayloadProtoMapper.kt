@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
-import com.vultisig.wallet.data.api.swapAggregators.parseSwapKitDecimal
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -16,6 +15,7 @@ import com.vultisig.wallet.data.models.cardanoAssetId
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.getWireId
 import com.vultisig.wallet.data.models.parseCardanoAssetId
+import com.vultisig.wallet.data.models.parseSwapKitDecimal
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
 import com.vultisig.wallet.data.models.payload.DAppMetadata
