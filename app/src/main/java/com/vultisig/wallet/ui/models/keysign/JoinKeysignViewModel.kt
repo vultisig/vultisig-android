@@ -166,10 +166,7 @@ internal sealed interface KeysignStartOutcome {
     data object Started : KeysignStartOutcome
 
     /** Preparing the messages to sign failed; carries the reason for the error state. */
-    data class FailedToPrepare(
-        val message: String,
-        val text: UiText = UiText.DynamicString(message),
-    ) : KeysignStartOutcome
+    data class FailedToPrepare(val text: UiText) : KeysignStartOutcome
 
     /** Polling the relay for the committee failed; carries the reason for the error state. */
     data class FailedToCheck(val message: String) : KeysignStartOutcome
@@ -199,10 +196,7 @@ internal suspend fun awaitKeysignStart(
                     return@withTimeoutOrNull KeysignStartOutcome.Started
                 }
             } catch (e: KeysignMessagesException) {
-                return@withTimeoutOrNull KeysignStartOutcome.FailedToPrepare(
-                    e.message ?: "Failed to prepare messages to sign",
-                    e.text,
-                )
+                return@withTimeoutOrNull KeysignStartOutcome.FailedToPrepare(e.text)
             } catch (e: KeysignCheckException) {
                 return@withTimeoutOrNull KeysignStartOutcome.FailedToCheck(
                     e.message ?: "Failed to check keysign start"

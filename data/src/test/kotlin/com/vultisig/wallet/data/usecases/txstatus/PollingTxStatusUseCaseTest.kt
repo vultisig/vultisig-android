@@ -119,7 +119,7 @@ class PollingTxStatusUseCaseTest {
 
         // Bounds the test itself: if this ever regressed back to polling forever on NotFound, this
         // would hang and fail with a TimeoutCancellationException instead of hanging the suite.
-        val results = withTimeout(10_000) { useCase(Chain.Qbtc, "deadbeef").toList() }
+        val results = withTimeout(10_000) { useCase(Chain.Qbtc, "deadbeef", null).toList() }
 
         assertEquals(TransactionResult.TimedOut, results.last())
         assertTrue(results.dropLast(1).all { it == TransactionResult.NotFound })
@@ -145,7 +145,8 @@ class PollingTxStatusUseCaseTest {
                     timeSource = TimeSource.Monotonic,
                 )
 
-            val results = withTimeout(20_000) { useCase(Chain.Bittensor, "deadbeef").toList() }
+            val results =
+                withTimeout(20_000) { useCase(Chain.Bittensor, "deadbeef", null).toList() }
 
             assertEquals(TransactionResult.TimedOut, results.last())
             assertTrue(
@@ -172,7 +173,7 @@ class PollingTxStatusUseCaseTest {
                     timeSource = TimeSource.Monotonic,
                 )
 
-            val results = withTimeout(20_000) { useCase(Chain.Solana, "deadbeef").toList() }
+            val results = withTimeout(20_000) { useCase(Chain.Solana, "deadbeef", null).toList() }
 
             assertEquals(TransactionResult.TimedOut, results.last())
             assertTrue(results.dropLast(1).all { it == TransactionResult.Pending })
@@ -199,7 +200,7 @@ class PollingTxStatusUseCaseTest {
             )
 
         val start = System.currentTimeMillis()
-        val results = withTimeout(20_000) { useCase(Chain.Bittensor, "deadbeef").toList() }
+        val results = withTimeout(20_000) { useCase(Chain.Bittensor, "deadbeef", null).toList() }
         val elapsedMillis = System.currentTimeMillis() - start
 
         assertEquals(TransactionResult.TimedOut, results.last())
@@ -222,7 +223,7 @@ class PollingTxStatusUseCaseTest {
                 timeSource = TimeSource.Monotonic,
             )
 
-        val results = withTimeout(5_000) { useCase(Chain.ThorChain, "deadbeef").toList() }
+        val results = withTimeout(5_000) { useCase(Chain.ThorChain, "deadbeef", null).toList() }
 
         assertEquals(listOf(TransactionResult.Refunded("refunded")), results)
         assertEquals(1, repository.callCount)
@@ -242,7 +243,7 @@ class PollingTxStatusUseCaseTest {
                 timeSource = timeSource,
             )
 
-        val results = useCase(Chain.Ethereum, "deadbeef").toList()
+        val results = useCase(Chain.Ethereum, "deadbeef", null).toList()
 
         // Exactly maxWait / pollInterval checks fit before the deadline; the next loop iteration
         // sees it passed and emits TimedOut without another network call.

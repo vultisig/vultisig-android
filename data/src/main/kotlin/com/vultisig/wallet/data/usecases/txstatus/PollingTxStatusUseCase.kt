@@ -19,7 +19,7 @@ interface PollingTxStatusUseCase {
     operator fun invoke(
         chain: Chain,
         txHash: String,
-        senderAccountId: String? = null,
+        senderAccountId: String?,
     ): Flow<TransactionResult>
 }
 
