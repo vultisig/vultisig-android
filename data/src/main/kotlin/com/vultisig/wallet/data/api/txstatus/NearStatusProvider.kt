@@ -49,8 +49,9 @@ internal class NearStatusProvider @Inject constructor(private val nearApi: NearA
                     TransactionResult.Pending
                 }
             }
-        } catch (e: IllegalStateException) {
-            // An answer that cannot be bound to this hash is never reported as settled.
+        } catch (e: Exception) {
+            // A transport failure or an answer that cannot be bound to this hash leaves the state
+            // unknown, never settled: the transaction may have landed.
             Timber.e(e, "NEAR status for %s could not be read", txHash)
             TransactionResult.Pending
         }
