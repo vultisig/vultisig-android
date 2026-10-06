@@ -74,7 +74,8 @@ enum class RecipientValidity {
 
     /**
      * A well-formed address that provably nobody holds the key to, so funds sent there are
-     * destroyed: on Bittensor, the all-zero Substrate AccountId ([BittensorHelper.BURN_ADDRESS]).
+     * destroyed: on Bittensor, the all-zero Substrate AccountId ([BittensorHelper.BURN_ADDRESS]);
+     * on NEAR, the all-zero implicit account ([NearAccountId.BURN_ACCOUNT_ID]).
      *
      * Distinct from [NotAWalletAddress] because the two are not the same claim and do not deserve
      * the same wording: a Solana token account is real and owned, it just strands the transfer,
@@ -206,6 +207,8 @@ constructor(private val solanaApi: SolanaApi) : ChainAccountAddressRepository {
         when {
             !isValid(chain, address) -> RecipientValidity.InvalidForChain
             chain == Chain.Bittensor && address == BittensorHelper.BURN_ADDRESS ->
+                RecipientValidity.BurnAddress
+            chain == Chain.Near && address == NearAccountId.BURN_ACCOUNT_ID ->
                 RecipientValidity.BurnAddress
             chain != Chain.Solana -> RecipientValidity.Valid
             else -> solanaRecipientVerdict(address)

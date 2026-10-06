@@ -156,6 +156,10 @@ class NearHelper(private val vaultHexPublicKey: String) {
             keysignPayload.toAddress,
         )
         requireNear(
+            keysignPayload.toAddress != NearAccountId.BURN_ACCOUNT_ID,
+            NearRefusal.BURN_RECIPIENT,
+        )
+        requireNear(
             keysignPayload.toAmount > BigInteger.ZERO && keysignPayload.toAmount <= MAX_U128,
             NearRefusal.INVALID_AMOUNT,
             keysignPayload.toAmount.toString(),

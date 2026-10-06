@@ -12,6 +12,7 @@ enum class NearRefusal(internal val english: String) {
     CONTRACT_PAYLOAD("NEAR native transfers do not support contract payloads"),
     CUSTOM_SIGN_PAYLOAD("NEAR native transfers do not support custom sign payloads"),
     INVALID_RECIPIENT("Invalid NEAR recipient account id: %1\$s"),
+    BURN_RECIPIENT("NEAR recipient is the all-zero implicit account, which no key controls"),
     INVALID_AMOUNT("Invalid NEAR transfer amount: %1\$s"),
     MISSING_CHAIN_SPECIFIC("NEAR payload carries no NEAR chain specific data"),
     INVALID_GAS_FEE("Invalid NEAR gas fee: %1\$s is not an unsigned decimal integer"),

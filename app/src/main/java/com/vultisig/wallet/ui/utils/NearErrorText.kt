@@ -23,6 +23,7 @@ private val NearRefusal.stringRes: Int
     get() =
         when (this) {
             NearRefusal.INVALID_RECIPIENT -> R.string.send_error_near_invalid_recipient
+            NearRefusal.BURN_RECIPIENT -> R.string.error_recipient_burn_address
             NearRefusal.UNKNOWN_ACCESS_KEY,
             NearRefusal.FUNCTION_CALL_KEY -> R.string.send_error_near_key_not_full_access
             NearRefusal.TOKENS_UNSUPPORTED,

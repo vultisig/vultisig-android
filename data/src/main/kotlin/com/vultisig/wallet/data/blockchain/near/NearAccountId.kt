@@ -20,6 +20,12 @@ object NearAccountId {
     private const val MIN_LENGTH = 2
     private const val MAX_LENGTH = 64
 
+    /**
+     * The implicit account of the all-zero Ed25519 key. Valid by the grammar, but no private key
+     * derives it, so anything transferred there is destroyed.
+     */
+    const val BURN_ACCOUNT_ID = "0000000000000000000000000000000000000000000000000000000000000000"
+
     fun isImplicit(accountId: String): Boolean = IMPLICIT.matches(accountId)
 
     /**
