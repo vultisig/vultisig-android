@@ -1222,6 +1222,8 @@
     <string name="swap_external_recipient_unsupported">El destinatario externo no está disponible para este intercambio. Desactívalo para continuar.</string>
     <string name="verify_swap_recipient">Destinatario</string>
     <string name="verify_swap_deposit_address">Dirección de depósito</string>
+    <string name="swap_error_swapkit_deposit_recipient_refused">Blockaid marcó la dirección de depósito de este swap, por lo que el swap no se firmó.</string>
+    <string name="swap_error_swapkit_deposit_recipient_unscreened">Blockaid no pudo verificar la dirección de depósito de este swap, por lo que el swap no se firmó. Inténtalo de nuevo.</string>
     <string name="keygen_benefit_1_template">Eliminando el único punto de fallo</string>
     <string name="keygen_benefit_1_emphasized">Seguridad multifactor</string>
     <string name="keygen_benefit_2_template">Control total sobre tus activos</string>

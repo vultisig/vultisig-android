@@ -1227,6 +1227,8 @@
     <string name="swap_external_recipient_unsupported">Внешний получатель недоступен для этого обмена. Отключите его, чтобы продолжить.</string>
     <string name="verify_swap_recipient">Получатель</string>
     <string name="verify_swap_deposit_address">Адрес депозита</string>
+    <string name="swap_error_swapkit_deposit_recipient_refused">Blockaid пометил адрес депозита этого обмена, поэтому обмен не был подписан.</string>
+    <string name="swap_error_swapkit_deposit_recipient_unscreened">Blockaid не смог проверить адрес депозита этого обмена, поэтому обмен не был подписан. Попробуйте ещё раз.</string>
     <string name="keygen_benefit_1_template">Удаление единой точки отказа</string>
     <string name="keygen_benefit_1_emphasized">Многофакторная безопасность</string>
     <string name="keygen_benefit_2_template">предоставляет полный контроль над вашими активами</string>

@@ -874,6 +874,8 @@
     <string name="swap_external_recipient_unsupported">External recipient isn’t available for this swap. Turn it off to continue.</string>
     <string name="verify_swap_recipient">Recipient</string>
     <string name="verify_swap_deposit_address">Deposit Address</string>
+    <string name="swap_error_swapkit_deposit_recipient_refused">Blockaid flagged this swap\'s deposit address, so the swap was not signed.</string>
+    <string name="swap_error_swapkit_deposit_recipient_unscreened">Blockaid could not check this swap\'s deposit address, so the swap was not signed. Try again.</string>
     <string name="select_asset_title">Select asset</string>
     <string name="select_asset_no_result">No result found.</string>
     <string name="select_asset_no_token_found">No token found</string>

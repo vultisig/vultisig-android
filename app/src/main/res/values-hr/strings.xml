@@ -1227,6 +1227,8 @@
     <string name="swap_external_recipient_unsupported">Vanjski primatelj nije dostupan za ovu zamjenu. Isključite ga za nastavak.</string>
     <string name="verify_swap_recipient">Primatelj</string>
     <string name="verify_swap_deposit_address">Adresa za uplatu</string>
+    <string name="swap_error_swapkit_deposit_recipient_refused">Blockaid je označio adresu za uplatu ove zamjene, pa zamjena nije potpisana.</string>
+    <string name="swap_error_swapkit_deposit_recipient_unscreened">Blockaid nije mogao provjeriti adresu za uplatu ove zamjene, pa zamjena nije potpisana. Pokušajte ponovno.</string>
     <string name="keygen_benefit_1_template">Uklanjanje jedinstvene točke kvara</string>
     <string name="keygen_benefit_1_emphasized">Višefaktorska sigurnost,</string>
     <string name="keygen_benefit_2_template">dajući potpunu kontrolu nad vašom imovinom</string>

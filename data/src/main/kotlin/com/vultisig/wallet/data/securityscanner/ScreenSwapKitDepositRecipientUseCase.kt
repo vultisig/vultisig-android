@@ -18,7 +18,9 @@ class ScreenSwapKitDepositRecipientUseCase
 @Inject
 constructor(private val blockaid: BlockaidRpcClientContract) {
 
-    /** @throws IllegalStateException when the deposit recipient in [payload] is refused. */
+    /**
+     * @throws SwapKitDepositRecipientException when the deposit recipient in [payload] is refused.
+     */
     suspend operator fun invoke(payload: KeysignPayload) {
         val swap = (payload.swapPayload as? SwapPayload.EVM)?.data ?: return
         val chain = payload.coin.chain
@@ -29,18 +31,35 @@ constructor(private val blockaid: BlockaidRpcClientContract) {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                throw IllegalStateException(
+                throw SwapKitDepositRecipientException.Unscreened(
                     "SwapKit deposit recipient $recipient could not be screened on ${chain.raw}",
                     e,
                 )
             }
-        check(verdict.resultType == BENIGN_VERDICT) {
-            "SwapKit deposit recipient $recipient received a ${verdict.resultType} Blockaid " +
-                "verdict on ${chain.raw} (${verdict.features.joinToString()})"
+        if (verdict.resultType != BENIGN_VERDICT) {
+            throw SwapKitDepositRecipientException.Refused(
+                "SwapKit deposit recipient $recipient received a ${verdict.resultType} Blockaid " +
+                    "verdict on ${chain.raw} (${verdict.features.joinToString()})"
+            )
         }
     }
 
     private companion object {
         const val BENIGN_VERDICT = "Benign"
     }
+}
+
+/**
+ * Why [ScreenSwapKitDepositRecipientUseCase] refused a SwapKit deposit recipient. The message is
+ * log text; the app shows its own string per subtype.
+ */
+sealed class SwapKitDepositRecipientException(message: String, cause: Throwable? = null) :
+    IllegalStateException(message, cause) {
+
+    /** Blockaid gave the recipient a verdict other than Benign. */
+    class Refused(message: String) : SwapKitDepositRecipientException(message)
+
+    /** The recipient could not be screened at all; a later attempt may succeed. */
+    class Unscreened(message: String, cause: Throwable) :
+        SwapKitDepositRecipientException(message, cause)
 }

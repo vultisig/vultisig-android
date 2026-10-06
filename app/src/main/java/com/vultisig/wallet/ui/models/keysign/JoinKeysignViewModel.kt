@@ -40,6 +40,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.ScreenSwapKitDepositRecipientUseCase
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SwapKitDepositRecipientException
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
@@ -65,6 +66,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.userText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import java.net.SocketException
@@ -114,6 +116,9 @@ sealed class JoinKeysignError(val message: UiText) {
     data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
 
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
+
+    /** The SwapKit deposit recipient in the payload was refused by its Blockaid screen. */
+    data class SwapKitDepositRefused(val reason: UiText) : JoinKeysignError(reason)
 
     data class FailedToStart(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
@@ -640,6 +645,16 @@ constructor(
         // A QBTC claim payload is a flag carrier with no real tx body — skip the Send/verify
         // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
         if (ksPayload.isQbtcClaim) return true
+
+        // Screened before the verify screen, so a refused recipient never reaches approval.
+        try {
+            screenSwapKitDepositRecipient(ksPayload)
+        } catch (e: SwapKitDepositRecipientException) {
+            Timber.e(e, "SwapKit deposit recipient refused")
+            currentState.value =
+                JoinKeysignState.Error(JoinKeysignError.SwapKitDepositRefused(e.userText))
+            return false
+        }
 
         loadTransaction(ksPayload)
         return true
@@ -1322,7 +1337,6 @@ constructor(
                     _keysignPayload = payload
                     messagesToSign =
                         SigningHelper.getKeysignMessages(payload = payload, vault = _currentVault)
-                    screenSwapKitDepositRecipient(payload)
                 }
 
                 customMessagePayload != null -> {

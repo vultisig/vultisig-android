@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.swapKitDepositErrorTextOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -288,7 +289,11 @@ constructor(
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             moveToState(
-                Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
+                Error(
+                    e.swapKitDepositErrorTextOrNull()
+                        ?: e.message?.asUiText()
+                        ?: UiText.StringResource(R.string.unknown_error)
+                )
             )
         }
     }
