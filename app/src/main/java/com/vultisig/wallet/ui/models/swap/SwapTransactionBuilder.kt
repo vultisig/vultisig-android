@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.swap
 
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.swapAggregators.isErc20DepositTransfer
 import com.vultisig.wallet.data.api.swapAggregators.swapKitErc20DepositRecipient
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
@@ -22,6 +23,7 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.swapProviderFromWireId
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.ApprovalRequirement
+import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.utils.toLongExact
 import java.math.BigInteger
@@ -292,57 +294,41 @@ constructor(
                 // Derivation is factored into approveSpenderFor (pinned by test) so
                 // a regression collapsing it to `to` can't pass CI silently.
                 val approveSpender = approveSpenderFor(quote.data.tx)
-                // A SwapKit ERC-20 deposit is a plain token transfer: it spends no allowance and
-                // is priced and gas-limited as that transfer.
-                val depositRecipient =
+                val (specificAndUtxo, approval, routeGas) =
                     if (quote.data.tx.isErc20DepositTransfer(srcToken)) {
-                        swapKitErc20DepositRecipient(quote.data.tx, srcToken, srcTokenValue.value)
-                    } else {
-                        null
-                    }
-                val isErc20Deposit = depositRecipient != null
-                val specificAndUtxo =
-                    if (depositRecipient != null) {
-                        swapGasCalculator.getErc20DepositTransferSpecific(
-                            srcToken = srcToken,
-                            srcAddress = srcAddress,
-                            gasFee = gasFee,
-                            recipient = depositRecipient,
-                            amount = srcTokenValue.value,
+                        erc20DepositSpend(
+                            quote.data.tx,
+                            srcToken,
+                            srcAddress,
+                            srcTokenValue,
+                            gasFee,
                         )
                     } else {
-                        swapGasCalculator.getSpecificAndUtxo(srcToken, srcAddress, gasFee)
-                    }
-
-                val approval =
-                    if (isErc20Deposit) {
-                        ApprovalRequirement.NotRequired
-                    } else {
-                        allowanceRepository.getApprovalRequirement(
-                            chain = srcToken.chain,
-                            contractAddress = srcToken.contractAddress,
-                            srcAddress = srcAddress,
-                            dstAddress = approveSpender,
-                            amount = srcTokenValue.value,
+                        EvmSpend(
+                            specificAndUtxo =
+                                swapGasCalculator.getSpecificAndUtxo(srcToken, srcAddress, gasFee),
+                            approval =
+                                allowanceRepository.getApprovalRequirement(
+                                    chain = srcToken.chain,
+                                    contractAddress = srcToken.contractAddress,
+                                    srcAddress = srcAddress,
+                                    dstAddress = approveSpender,
+                                    amount = srcTokenValue.value,
+                                ),
+                            // Aggregators can return a non-positive tx.gas; fall back to the
+                            // standard EVM swap unit so a malformed gas limit never reaches the
+                            // shared signed payload (matches SwapQuoteManager's fee path).
+                            routeGas =
+                                quote.data.tx.gas.takeIf { it > 0L }
+                                    ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT,
                         )
                     }
 
                 val specific = specificAndUtxo.blockChainSpecific
-                // Aggregators can return a non-positive tx.gas; fall back to the standard EVM swap
-                // unit so a malformed (zero or negative) gas limit never reaches the shared signed
-                // payload (matches SwapQuoteManager's fee path).
-                //
                 // A user gas-limit override (#4858) replaces the aggregator estimate. OneInchSwap
                 // signs with maxOf(tx.gas, ethSpecific.gasLimit), so set BOTH to the override —
                 // maxOf(x, x) = x — making it effective whether the user raises or lowers the
                 // limit. Auto (null/non-positive) keeps the estimate and the current behavior.
-                // A deposit's estimate is its transfer limit, not SwapKit's route gas.
-                val routeGas =
-                    if (isErc20Deposit) {
-                        requireEthereumSpec(specific).gasLimit.toLongExact()
-                    } else {
-                        quote.data.tx.gas.takeIf { it > 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
-                    }
                 val gasLimit = gasLimitOverride?.takeIf { it > 0L } ?: routeGas
                 val hasGasOverride = gasLimitOverride != null && gasLimitOverride > 0L
                 val effectiveSpecificAndUtxo =
@@ -436,6 +422,42 @@ constructor(
                 )
             }
         }
+    }
+
+    /** The chain specifics, allowance and route gas an EVM swap tx spends with. */
+    private data class EvmSpend(
+        val specificAndUtxo: BlockChainSpecificAndUtxo,
+        val approval: ApprovalRequirement,
+        val routeGas: Long,
+    )
+
+    /**
+     * A SwapKit ERC-20 deposit is a plain token transfer: it spends no allowance and is priced and
+     * gas-limited as that transfer, so its route gas is the transfer limit, not SwapKit's.
+     */
+    private suspend fun erc20DepositSpend(
+        tx: OneInchSwapTxJson,
+        srcToken: Coin,
+        srcAddress: String,
+        srcTokenValue: TokenValue,
+        gasFee: TokenValue,
+    ): EvmSpend {
+        val specificAndUtxo =
+            swapGasCalculator.getErc20DepositTransferSpecific(
+                srcToken = srcToken,
+                srcAddress = srcAddress,
+                gasFee = gasFee,
+                // A tx addressed to the sold token decodes to its deposit recipient or throws.
+                recipient =
+                    checkNotNull(swapKitErc20DepositRecipient(tx, srcToken, srcTokenValue.value)),
+                amount = srcTokenValue.value,
+            )
+        return EvmSpend(
+            specificAndUtxo = specificAndUtxo,
+            approval = ApprovalRequirement.NotRequired,
+            routeGas =
+                requireEthereumSpec(specificAndUtxo.blockChainSpecific).gasLimit.toLongExact(),
+        )
     }
 
     /**
