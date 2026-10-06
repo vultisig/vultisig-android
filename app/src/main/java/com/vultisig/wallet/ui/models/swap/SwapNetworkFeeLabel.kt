@@ -17,7 +17,8 @@ import com.vultisig.wallet.data.models.isOpStackL2
  * label too.
  *
  * NEAR shows its upfront gas reservation, the most the transfer can burn (the unused part is
- * refunded), so it is labelled as a maximum like the iOS and extension rows.
+ * refunded), so it is labelled as a maximum, as iOS `SwapCryptoLogic.feeLabelKeys` and the
+ * extension's `getSwapNetworkFeeLabelKey` label it.
  */
 internal val Chain.hasSwapNetworkFeeCeiling: Boolean
     get() = (standard == TokenStandard.EVM && !isOpStackL2) || this == Chain.Near

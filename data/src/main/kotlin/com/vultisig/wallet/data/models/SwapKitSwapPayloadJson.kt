@@ -190,10 +190,11 @@ data class SwapKitSwapPayloadJson(
         const val TX_TYPE_XRP = "XRP"
 
         /**
-         * The NEAR Intents deposit carries no `txType` (byte-identical to the SDK and iOS): the
-         * cosigning peer builds the plain transfer to [targetAddress] for [fromAmount] via
-         * `NearHelper`, which asserts that binding. Only a NEAR source may use it — a blank txType
-         * means PSBT on the UTXO chains.
+         * The NEAR Intents deposit carries no `txType`, as vultisig-sdk's `buildSwapKeysignPayload`
+         * and iOS `SwapPayloadBuilder.buildSwapKitNearPayload` write it: the cosigning peer builds
+         * the plain transfer to [targetAddress] for [fromAmount] via `NearHelper`, which asserts
+         * that binding. Only a NEAR source may use it — a blank txType means PSBT on the UTXO
+         * chains.
          */
         const val TX_TYPE_NEAR_DEPOSIT = ""
 

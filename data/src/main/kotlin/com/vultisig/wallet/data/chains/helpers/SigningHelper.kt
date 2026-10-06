@@ -203,9 +203,9 @@ object SigningHelper {
                     // See SwapKitSwapPayloadJson.isUtxoPsbtTxType for why the UTXO family is keyed
                     // off `chain` rather than `txType`.
                     messages +=
-                        // NEAR Intents deposit: no txType (SDK/iOS parity), signed as the plain
-                        // transfer whose deposit binding NearHelper asserts. Checked before the
-                        // PSBT branch, where a blank txType means a UTXO PSBT.
+                        // NEAR Intents deposit: no txType (see TX_TYPE_NEAR_DEPOSIT), signed as
+                        // the plain transfer whose deposit binding NearHelper asserts. Checked
+                        // before the PSBT branch, where a blank txType means a UTXO PSBT.
                         if (chain == Chain.Near) {
                             NearHelper(eddsaKey).getPreSignedImageHash(payload)
                         } else if (SwapKitSwapPayloadJson.isUtxoPsbtTxType(txType)) {
