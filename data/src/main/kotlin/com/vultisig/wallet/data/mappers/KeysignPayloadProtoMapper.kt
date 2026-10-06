@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.mappers
 
-import com.vultisig.wallet.data.api.NEAR_UNSIGNED_DECIMAL
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
@@ -29,6 +28,7 @@ import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.proto.v1.ThorChainSwapPayloadProto
 import com.vultisig.wallet.data.models.swapProviderFromWireId
+import com.vultisig.wallet.data.utils.isUnsignedDecimal
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -396,11 +396,11 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
      * decimal, and a SwapKit deposit amount that is not the transfer amount verbatim.
      */
     private fun KeysignPayloadProto.requireNearWireAmounts() {
-        require(NEAR_UNSIGNED_DECIMAL.matches(toAmount)) {
+        require(toAmount.isUnsignedDecimal()) {
             "NEAR transfer amount is not an unsigned decimal integer: $toAmount"
         }
         nearSpecific?.let {
-            require(NEAR_UNSIGNED_DECIMAL.matches(it.gasFee)) {
+            require(it.gasFee.isUnsignedDecimal()) {
                 "NEAR gas fee is not an unsigned decimal integer: ${it.gasFee}"
             }
         }

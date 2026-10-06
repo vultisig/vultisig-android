@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.blockchain.near.NEAR_BLOCK_HASH_BYTES
+import com.vultisig.wallet.data.blockchain.near.NEAR_ED25519_PUBLIC_KEY_BYTES
 import com.vultisig.wallet.data.blockchain.near.NearAccountId
 import com.vultisig.wallet.data.blockchain.near.NearRefusal
 import com.vultisig.wallet.data.blockchain.near.NearRefusalException
@@ -78,7 +80,7 @@ class NearHelper(private val vaultHexPublicKey: String) {
     private fun vaultPublicKey(): PublicKey {
         val keyBytes = vaultHexPublicKey.toHexByteArray()
         requireNear(
-            keyBytes.size == ED25519_PUBLIC_KEY_BYTES,
+            keyBytes.size == NEAR_ED25519_PUBLIC_KEY_BYTES,
             NearRefusal.INVALID_PUBLIC_KEY_LENGTH,
             vaultHexPublicKey,
         )
@@ -158,9 +160,9 @@ class NearHelper(private val vaultHexPublicKey: String) {
             specific.gasFee.toString(),
         )
         requireNear(
-            specific.blockHash.size == BLOCK_HASH_BYTES,
+            specific.blockHash.size == NEAR_BLOCK_HASH_BYTES,
             NearRefusal.INVALID_BLOCK_HASH,
-            BLOCK_HASH_BYTES,
+            NEAR_BLOCK_HASH_BYTES,
             specific.blockHash.size,
         )
         requireNear(specific.nonce > 0UL, NearRefusal.INVALID_NONCE)
@@ -231,9 +233,7 @@ class NearHelper(private val vaultHexPublicKey: String) {
     }
 
     companion object {
-        private const val ED25519_PUBLIC_KEY_BYTES = 32
         private const val ED25519_SIGNATURE_BYTES = 64
-        private const val BLOCK_HASH_BYTES = 32
         private const val DEPOSIT_BYTES = 16
         private const val ACCOUNT_ID_LENGTH_BYTES = 4
         private const val ED25519_KEY_TYPE: Byte = 0

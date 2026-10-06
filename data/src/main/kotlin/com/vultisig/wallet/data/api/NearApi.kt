@@ -1,7 +1,10 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.blockchain.near.NEAR_BLOCK_HASH_BYTES
+import com.vultisig.wallet.data.blockchain.near.NEAR_ED25519_PUBLIC_KEY_BYTES
 import com.vultisig.wallet.data.blockchain.near.NearFees
 import com.vultisig.wallet.data.common.hexToByteArrayOrNull
+import com.vultisig.wallet.data.utils.isUnsignedDecimal
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -32,9 +35,6 @@ data class NearTransactionOutcome(
     val finalExecutionStatus: String?,
     val status: JsonElement?,
 )
-
-/** A plain unsigned decimal: no sign, no whitespace, no exponent. */
-internal val NEAR_UNSIGNED_DECIMAL = Regex("^[0-9]+$")
 
 /** A JSON-RPC error the node returned; [name] distinguishes a missing record from a rejection. */
 class NearRpcException(val method: String, val name: String, val detail: String) :
@@ -140,8 +140,8 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
             (header["hash"] as? JsonPrimitive)?.content
                 ?: throw malformed("block", "is missing its header hash")
         val decoded = Base58.decodeNoCheck(hash)
-        if (decoded == null || decoded.size != BLOCK_HASH_BYTES) {
-            throw malformed("block", "hash is not $BLOCK_HASH_BYTES bytes: $hash")
+        if (decoded == null || decoded.size != NEAR_BLOCK_HASH_BYTES) {
+            throw malformed("block", "hash is not $NEAR_BLOCK_HASH_BYTES bytes: $hash")
         }
         return NearFinalBlock(hash = decoded, gasPrice = header.exactInteger("gas_price"))
     }
@@ -209,7 +209,10 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
             if (e.name == unknownName) null else throw e
         }
 
-    /** POSTs one JSON-RPC call and unwraps `result`, never a partial body. */
+    /**
+     * POSTs one JSON-RPC call and unwraps `result`, never a partial body. Walked by hand, not via
+     * `postRpc`: NEAR takes object params, and `query` nests its error one level deeper.
+     */
     private suspend fun call(method: String, params: JsonObject): JsonObject {
         val body = buildJsonObject {
             put("jsonrpc", "2.0")
@@ -265,7 +268,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
 
     private fun publicKeyString(hexPublicKey: String): String {
         val key = hexPublicKey.hexToByteArrayOrNull()
-        require(key != null && key.size == ED25519_PUBLIC_KEY_BYTES) {
+        require(key != null && key.size == NEAR_ED25519_PUBLIC_KEY_BYTES) {
             "$hexPublicKey is not a 32-byte Ed25519 public key"
         }
         return "ed25519:${Base58.encodeNoCheck(key)}"
@@ -280,8 +283,6 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
         private const val UNKNOWN_ACCOUNT = "UNKNOWN_ACCOUNT"
         private const val UNKNOWN_ACCESS_KEY = "UNKNOWN_ACCESS_KEY"
         private const val FULL_ACCESS = "FullAccess"
-        private const val BLOCK_HASH_BYTES = 32
-        private const val ED25519_PUBLIC_KEY_BYTES = 32
 
         /**
          * Exact non-negative integer from a field that may arrive as a JSON number or a string.
@@ -291,7 +292,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
             val text =
                 (this[key] as? JsonPrimitive)?.content
                     ?: throw NearMalformedResponseException("response is missing $key")
-            if (!NEAR_UNSIGNED_DECIMAL.matches(text)) {
+            if (!text.isUnsignedDecimal()) {
                 throw NearMalformedResponseException(
                     "$key is not an unsigned decimal integer: $text"
                 )
