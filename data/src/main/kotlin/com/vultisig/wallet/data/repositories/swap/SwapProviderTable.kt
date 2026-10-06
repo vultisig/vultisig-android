@@ -152,8 +152,7 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
             Chain.Tron -> setOf(SwapProvider.THORCHAIN)
 
             // TON, SUI, NEAR and Cardano have no native Thor/Maya route on Android, so SwapKit —
-            // appended
-            // by [providersFor] — is the only provider they ever carry.
+            // appended by [providersFor] — is the only provider they ever carry.
             Chain.Ton,
             Chain.Sui,
             Chain.Near,
