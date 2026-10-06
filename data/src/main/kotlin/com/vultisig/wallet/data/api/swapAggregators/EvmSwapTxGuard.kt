@@ -29,13 +29,25 @@ import java.math.BigInteger
 internal object EvmSwapTxGuard {
 
     /**
-     * @param signingCoin the keysign coin: the transaction is signed for its chain, so the checks
-     *   run on that chain, as vultisig-sdk's `getKeysignSwapKitDepositRecipient` and iOS
-     *   `EVMSwapTxGuard.check` key them.
+     * @param signingCoin the keysign coin the transaction is signed for. The payload's `fromCoin`
+     *   must be that same coin (chain, native flag and contract, case-insensitive) for every
+     *   provider, as iOS `EVMSwapTxGuard.check` and vultisig-sdk's `assertSwapCoinIsSigningCoin`
+     *   require.
      */
     fun check(swapPayload: EVMSwapPayloadJson, signingCoin: Coin) {
         val chain = signingCoin.chain
         require(chain.standard == TokenStandard.EVM) { "EVM swap signed for ${chain.raw}" }
+        // The bounds below read the payload's coin and the approval leg is built from the signing
+        // coin's contract, so both must be the same token.
+        val fromCoin = swapPayload.fromCoin
+        require(
+            fromCoin.chain == chain &&
+                fromCoin.isNativeToken == signingCoin.isNativeToken &&
+                fromCoin.contractAddress.lowercase() == signingCoin.contractAddress.lowercase()
+        ) {
+            "EVM swap sells ${fromCoin.ticker} on ${fromCoin.chain.raw} but signs " +
+                "${signingCoin.ticker} on ${chain.raw}"
+        }
         val tx = swapPayload.quote.tx
         val value =
             tx.value.toBigIntegerOrNull()?.takeIf { it >= BigInteger.ZERO }
@@ -44,9 +56,6 @@ internal object EvmSwapTxGuard {
         val rawProvider = swapPayload.provider.trim()
         val provider = swapProviderFromWireId(rawProvider)
         if (provider == SwapProvider.SWAPKIT) {
-            require(swapPayload.fromCoin.chain == chain) {
-                "SwapKit swap sells a ${swapPayload.fromCoin.chain.raw} coin but signs on ${chain.raw}"
-            }
             // Called for its throw only: a deposit-shaped tx must be exactly the deposit.
             swapPayload.swapKitDepositRecipient(chain)
         }
