@@ -670,6 +670,13 @@ constructor(
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.SwapKitDepositRefused(e.userText))
             return false
+        } catch (e: IllegalArgumentException) {
+            Timber.e(e, "SwapKit deposit is malformed")
+            currentState.value =
+                JoinKeysignState.Error(
+                    JoinKeysignError.FailedToPrepare(UiText.DynamicString(e.message.orEmpty()))
+                )
+            return false
         }
 
         loadTransaction(ksPayload)
