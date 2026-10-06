@@ -28,13 +28,6 @@ object NearAccountId {
 
     fun isImplicit(accountId: String): Boolean = IMPLICIT.matches(accountId)
 
-    /**
-     * True when [accountId] reads as NEAR without other context: a 64-hex key or a dotted name. A
-     * bare word passes the grammar but is as likely a typo or another chain's address.
-     */
-    fun isUnambiguous(accountId: String): Boolean =
-        isImplicit(accountId) || ('.' in accountId && isValid(accountId))
-
     fun isValid(accountId: String): Boolean {
         if (accountId.length !in MIN_LENGTH..MAX_LENGTH) return false
         if (isImplicit(accountId)) return true

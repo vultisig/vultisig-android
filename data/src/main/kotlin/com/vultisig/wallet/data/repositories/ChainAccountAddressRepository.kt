@@ -27,10 +27,10 @@ import wallet.core.jni.PublicKeyType
 
 /**
  * Whether a scanned or pasted [address] should select [chain] on its own: valid for the chain, and
- * for NEAR not a bare word, which the account-id grammar also admits.
+ * for NEAR a 64-hex implicit account. The named grammar also admits ENS names and THORNames.
  */
 fun ChainAccountAddressRepository.isRecognizedAs(chain: Chain, address: String): Boolean =
-    isValid(chain, address) && (chain != Chain.Near || NearAccountId.isUnambiguous(address))
+    isValid(chain, address) && (chain != Chain.Near || NearAccountId.isImplicit(address))
 
 interface ChainAccountAddressRepository {
 
