@@ -105,6 +105,9 @@ sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
 
+    /** The payload's messages to sign could not be prepared. */
+    data class FailedToPrepare(val reason: UiText) : JoinKeysignError(reason)
+
     data object MissingRequiredVault :
         JoinKeysignError(R.string.join_keysign_missing_required_vault.asUiText())
 
@@ -645,6 +648,19 @@ constructor(
         // A QBTC claim payload is a flag carrier with no real tx body — skip the Send/verify
         // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
         if (ksPayload.isQbtcClaim) return true
+
+        // A swap selling another coin than the one signed never reaches approval (iOS and the
+        // extension refuse it before their review screens too).
+        try {
+            ksPayload.swapPayload?.requireSellsSigningCoin(ksPayload.coin)
+        } catch (e: IllegalArgumentException) {
+            Timber.e(e, "Swap payload sells another coin than the one signed")
+            currentState.value =
+                JoinKeysignState.Error(
+                    JoinKeysignError.FailedToPrepare(UiText.DynamicString(e.message.orEmpty()))
+                )
+            return false
+        }
 
         // Screened before the verify screen, so a refused recipient never reaches approval.
         try {
