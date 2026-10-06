@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -1014,14 +1015,13 @@ constructor(
         uiState.update { it.copy(error = null) }
 
         // The 25/50/75 chips take a plain fraction of the full balance, matching iOS and the
-        // desktop app; for NEAR that balance excludes the storage reserve. Only MAX reserves the
-        // source-chain network fee, and only for a native source on its own gas chain — a
-        // combination the UI no longer offers, since MAX is hidden whenever the source is native
-        // (#5317), so this branch is now a guard for direct callers rather than a live path. The
-        // provider swap fee is taken from the destination amount (for LI.FI it is denominated in
-        // the destination token's units), so it is never deducted from the source balance here —
-        // that would mix decimals and could wrongly drive the usable amount negative for a
-        // low-decimal source into a high-decimal destination.
+        // desktop app. Only MAX reserves the source-chain network fee, and only for a native source
+        // on its own gas chain — a combination the UI no longer offers, since MAX is hidden
+        // whenever the source is native (#5317), so this branch is now a guard for direct callers
+        // rather than a live path. The provider swap fee is taken from the destination amount (for
+        // LI.FI it is denominated in the destination token's units), so it is never deducted from
+        // the source balance here — that would mix decimals and could wrongly drive the usable
+        // amount negative for a low-decimal source into a high-decimal destination.
         val reservedNetworkFee =
             if (
                 percentage >= 1f &&
@@ -1046,23 +1046,8 @@ constructor(
         srcPercentageJob?.cancel()
         srcPercentageJob = viewModelScope.launch {
             val maxUsableTokenAmount =
-                try {
-                    if (srcToken.chain == Chain.Near) {
-                        // NEAR shows its raw balance; the storage reserve stays behind.
-                        checkNotNull(
-                                getAvailableTokenBalance(selectedSrcAccount, reservedNetworkFee)
-                            )
-                            .value
-                    } else {
-                        srcTokenValue.value - reservedNetworkFee
-                    }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to size the selected swap amount fraction")
-                    showError(UiText.StringResource(R.string.network_connection_lost))
-                    return@launch
-                }
+                maxUsableSrcAmount(selectedSrcAccount, srcTokenValue, reservedNetworkFee)
+                    ?: return@launch
             // A source picked while the NEAR reserve was read owns the field now.
             if (selectedSrc.value?.account?.token?.id != srcToken.id) return@launch
 
@@ -1092,6 +1077,28 @@ constructor(
             // mutating the text so the resulting emission is already marked immediate.
             swapQuoteManager.markImmediateFetch()
             srcAmountState.setTextAndPlaceCursorAtEnd(amount)
+        }
+    }
+
+    /**
+     * The source balance a percentage tap sizes from, less [reservedNetworkFee]. NEAR shows its raw
+     * balance, so its storage reserve is read live and kept behind; null once a failed read has
+     * been shown as an error.
+     */
+    private suspend fun maxUsableSrcAmount(
+        account: Account,
+        srcTokenValue: TokenValue,
+        reservedNetworkFee: BigInteger,
+    ): BigInteger? {
+        if (account.token.chain != Chain.Near) return srcTokenValue.value - reservedNetworkFee
+        return try {
+            checkNotNull(getAvailableTokenBalance(account, reservedNetworkFee)).value
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to size the selected swap amount fraction")
+            showError(UiText.StringResource(R.string.network_connection_lost))
+            null
         }
     }
 
