@@ -335,9 +335,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                             BlockChainSpecific.Near(
                                 nonce = it.nonce,
                                 blockHash = it.blockHash,
-                                gasFee =
-                                    it.gasFee.toBigIntegerOrNull()
-                                        ?: error("NEAR gas fee is not an integer: ${it.gasFee}"),
+                                gasFee = BigInteger(it.gasFee),
                             )
                         }
 
