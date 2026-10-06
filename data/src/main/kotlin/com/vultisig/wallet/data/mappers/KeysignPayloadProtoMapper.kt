@@ -2,13 +2,16 @@ package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.swapAggregators.parseSwapKitDecimal
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.THORChainSwapPayload
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.cardanoAssetId
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.parseCardanoAssetId
@@ -77,11 +80,13 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 when {
                     from.oneinchSwapPayload != null ->
                         from.oneinchSwapPayload.let { it ->
+                            val fromCoin = requireNotNull(it.fromCoin).toCoin()
                             SwapPayload.EVM(
                                 EVMSwapPayloadJson(
-                                    fromCoin = requireNotNull(it.fromCoin).toCoin(),
+                                    fromCoin = fromCoin,
                                     toCoin = requireNotNull(it.toCoin).toCoin(),
-                                    fromAmount = BigInteger(it.fromAmount),
+                                    fromAmount =
+                                        readEvmSwapFromAmount(it.provider, fromCoin, it.fromAmount),
                                     toAmountDecimal = BigDecimal(it.toAmountDecimal),
                                     quote =
                                         requireNotNull(it.quote).let { it ->
@@ -344,6 +349,17 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             BigInteger.ZERO
         } else {
             BigInteger(toAmount)
+        }
+
+    /** A SwapKit EVM [fromAmount] is plain decimal only, as the SDK co-signer reads it. */
+    private fun readEvmSwapFromAmount(provider: String, fromCoin: Coin, fromAmount: String) =
+        if (
+            swapProviderFromWireId(provider) == SwapProvider.SWAPKIT &&
+                fromCoin.chain.standard == TokenStandard.EVM
+        ) {
+            parseSwapKitDecimal(fromAmount, "fromAmount")
+        } else {
+            BigInteger(fromAmount)
         }
 
     private fun CoinProto.toCoin(): Coin =

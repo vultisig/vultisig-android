@@ -31,14 +31,16 @@ fun OneInchSwapTxJson.isErc20DepositTransfer(srcToken: Coin): Boolean =
  * value, where [amount] is the sold amount. Returns null when [tx] is neither addressed to the sold
  * token nor a `transfer` call. Mirrors vultisig-sdk's `getSwapKitErc20DepositRecipient`.
  *
- * @throws IllegalArgumentException when [tx] is either of those but not exactly the deposit:
- *   another token, native value attached, other calldata, or another amount.
+ * @throws IllegalArgumentException when `tx.value` is not plain decimal ([parseSwapKitDecimal]), or
+ *   when [tx] is either of those but not exactly the deposit: another token, native value attached,
+ *   other calldata, or another amount.
  */
 fun swapKitErc20DepositRecipient(
     tx: OneInchSwapTxJson,
     srcToken: Coin,
     amount: BigInteger,
 ): String? {
+    val value = parseSwapKitDecimal(tx.value, "tx.value")
     val isTokenAddressed = tx.isErc20DepositTransfer(srcToken)
     val isTransferCall = tx.data.lowercase().removePrefix("0x").startsWith(ERC20_TRANSFER_SELECTOR)
     if (!isTokenAddressed && !isTransferCall) return null
@@ -47,9 +49,7 @@ fun swapKitErc20DepositRecipient(
         "SwapKit ERC-20 deposit calls transfer on ${tx.to}, not the sold token " +
             "'${srcToken.contractAddress}'"
     }
-    require(tx.value.toBigIntegerOrNull()?.signum() == 0) {
-        "SwapKit ERC-20 deposit attaches native value ${tx.value}"
-    }
+    require(value.signum() == 0) { "SwapKit ERC-20 deposit attaches native value ${tx.value}" }
     val transfer =
         requireNotNull(decodeErc20TransferCallData(tx.data)) {
             "SwapKit ERC-20 deposit is not exactly an ERC-20 transfer(address,uint256) call"
@@ -58,6 +58,22 @@ fun swapKitErc20DepositRecipient(
         "SwapKit ERC-20 deposit transfers ${transfer.amount}, not the sold amount $amount"
     }
     return transfer.recipient
+}
+
+private val PLAIN_DECIMAL = Regex("[0-9]+")
+
+/**
+ * Reads a SwapKit EVM wire amount as vultisig-sdk's `parseNonNegativeBigInt` does: ASCII decimal
+ * digits only. `BigInteger` alone also reads a sign (`+100`, `-0`) and non-ASCII numerals, which
+ * the SDK co-signer refuses.
+ *
+ * @throws IllegalArgumentException when [value] is anything else.
+ */
+internal fun parseSwapKitDecimal(value: String, field: String): BigInteger {
+    require(value.matches(PLAIN_DECIMAL)) {
+        "SwapKit EVM swap $field '$value' is not a plain decimal integer"
+    }
+    return BigInteger(value)
 }
 
 /**
