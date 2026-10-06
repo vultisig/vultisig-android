@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api.swapAggregators
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.blockchain.ethereum.ERC20_TRANSFER_SELECTOR
 import com.vultisig.wallet.data.blockchain.ethereum.decodeErc20TransferCallData
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
@@ -77,14 +78,15 @@ internal fun parseSwapKitDecimal(value: String, field: String): BigInteger {
 }
 
 /**
- * The recipient of the SwapKit ERC-20 deposit this payload signs, decoded from its calldata by
- * [swapKitErc20DepositRecipient]; null when it is not a SwapKit EVM swap or not a deposit.
+ * The recipient of the SwapKit ERC-20 deposit this payload signs on [signingChain] (the keysign
+ * coin's chain), decoded from its calldata by [swapKitErc20DepositRecipient]; null when it is not a
+ * SwapKit swap, [signingChain] is not EVM, or it is not a deposit.
  *
  * @throws IllegalArgumentException when it has the deposit shape but is not exactly the deposit.
  */
-fun EVMSwapPayloadJson.swapKitDepositRecipient(): String? {
-    val isSwapKit = swapProviderFromWireId(provider.trim()) == SwapProvider.SWAPKIT
-    if (!isSwapKit || fromCoin.chain.standard != TokenStandard.EVM) return null
+fun EVMSwapPayloadJson.swapKitDepositRecipient(signingChain: Chain): String? {
+    val isSwapKit = swapProviderFromWireId(provider) == SwapProvider.SWAPKIT
+    if (!isSwapKit || signingChain.standard != TokenStandard.EVM) return null
     return swapKitErc20DepositRecipient(quote.tx, fromCoin, fromAmount)
 }
 
@@ -100,8 +102,8 @@ constructor(private val blockaid: BlockaidRpcClientContract) {
     /** @throws IllegalStateException when the deposit recipient in [payload] is refused. */
     suspend operator fun invoke(payload: KeysignPayload) {
         val swap = (payload.swapPayload as? SwapPayload.EVM)?.data ?: return
-        val recipient = swap.swapKitDepositRecipient() ?: return
-        val chain = swap.fromCoin.chain
+        val chain = payload.coin.chain
+        val recipient = swap.swapKitDepositRecipient(chain) ?: return
         val verdict =
             try {
                 blockaid.scanEVMAddress(chain = chain, address = recipient)

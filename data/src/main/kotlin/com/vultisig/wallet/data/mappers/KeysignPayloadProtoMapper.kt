@@ -80,13 +80,16 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 when {
                     from.oneinchSwapPayload != null ->
                         from.oneinchSwapPayload.let { it ->
-                            val fromCoin = requireNotNull(it.fromCoin).toCoin()
                             SwapPayload.EVM(
                                 EVMSwapPayloadJson(
-                                    fromCoin = fromCoin,
+                                    fromCoin = requireNotNull(it.fromCoin).toCoin(),
                                     toCoin = requireNotNull(it.toCoin).toCoin(),
                                     fromAmount =
-                                        readEvmSwapFromAmount(it.provider, fromCoin, it.fromAmount),
+                                        readEvmSwapFromAmount(
+                                            it.provider,
+                                            coin.chain,
+                                            it.fromAmount,
+                                        ),
                                     toAmountDecimal = BigDecimal(it.toAmountDecimal),
                                     quote =
                                         requireNotNull(it.quote).let { it ->
@@ -351,11 +354,14 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             BigInteger(toAmount)
         }
 
-    /** A SwapKit EVM [fromAmount] is plain decimal only, as the SDK co-signer reads it. */
-    private fun readEvmSwapFromAmount(provider: String, fromCoin: Coin, fromAmount: String) =
+    /**
+     * A SwapKit [fromAmount] signed on an EVM [signingChain] (the keysign coin's) is plain decimal
+     * only, as the SDK co-signer reads it.
+     */
+    private fun readEvmSwapFromAmount(provider: String, signingChain: Chain, fromAmount: String) =
         if (
             swapProviderFromWireId(provider) == SwapProvider.SWAPKIT &&
-                fromCoin.chain.standard == TokenStandard.EVM
+                signingChain.standard == TokenStandard.EVM
         ) {
             parseSwapKitDecimal(fromAmount, "fromAmount")
         } else {

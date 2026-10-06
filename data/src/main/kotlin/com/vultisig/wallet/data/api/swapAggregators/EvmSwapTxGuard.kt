@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api.swapAggregators
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
@@ -27,9 +28,14 @@ import java.math.BigInteger
  */
 internal object EvmSwapTxGuard {
 
-    fun check(swapPayload: EVMSwapPayloadJson) {
-        val chain = swapPayload.fromCoin.chain
-        if (chain.standard != TokenStandard.EVM) return
+    /**
+     * @param signingCoin the keysign coin: the transaction is signed for its chain, so the checks
+     *   run on that chain, as vultisig-sdk's `getKeysignSwapKitDepositRecipient` and iOS
+     *   `EVMSwapTxGuard.check` key them.
+     */
+    fun check(swapPayload: EVMSwapPayloadJson, signingCoin: Coin) {
+        val chain = signingCoin.chain
+        require(chain.standard == TokenStandard.EVM) { "EVM swap signed for ${chain.raw}" }
         val tx = swapPayload.quote.tx
         val value =
             tx.value.toBigIntegerOrNull()?.takeIf { it >= BigInteger.ZERO }
@@ -37,7 +43,12 @@ internal object EvmSwapTxGuard {
 
         val rawProvider = swapPayload.provider.trim()
         val provider = swapProviderFromWireId(rawProvider)
-        swapPayload.swapKitDepositRecipient()
+        if (provider == SwapProvider.SWAPKIT) {
+            require(swapPayload.fromCoin.chain == chain) {
+                "SwapKit swap sells a ${swapPayload.fromCoin.chain.raw} coin but signs on ${chain.raw}"
+            }
+            swapPayload.swapKitDepositRecipient(chain)
+        }
         val routers =
             when {
                 provider == SwapProvider.SWAPKIT -> null

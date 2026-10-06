@@ -19,13 +19,14 @@ internal class EvmSwapTxGuardSwapKitDepositTest {
 
     @Test
     fun `signs a real NEAR Intents USDT deposit`() {
-        EvmSwapTxGuard.check(payload(depositTx()))
+        EvmSwapTxGuard.check(payload(depositTx()), usdt)
     }
 
     @Test
     fun `still signs a SwapKit router call to an unpinned entry contract`() {
         EvmSwapTxGuard.check(
-            payload(depositTx().copy(to = ROUTER, data = "0x12aa3caf" + "00".repeat(64)))
+            payload(depositTx().copy(to = ROUTER, data = "0x12aa3caf" + "00".repeat(64))),
+            usdt,
         )
     }
 
@@ -33,20 +34,20 @@ internal class EvmSwapTxGuardSwapKitDepositTest {
     fun `refuses a SwapKit transfer call on a token the swap does not sell`() {
         val drain = depositTx().copy(to = USDC)
 
-        shouldThrow<IllegalArgumentException> { EvmSwapTxGuard.check(payload(drain)) }
+        shouldThrow<IllegalArgumentException> { EvmSwapTxGuard.check(payload(drain), usdt) }
     }
 
     @Test
     fun `refuses a deposit that transfers more than the swap sells`() {
         shouldThrow<IllegalArgumentException> {
-            EvmSwapTxGuard.check(payload(depositTx(), fromAmount = SOLD - BigInteger.ONE))
+            EvmSwapTxGuard.check(payload(depositTx(), fromAmount = SOLD - BigInteger.ONE), usdt)
         }
     }
 
     @Test
     fun `refuses a deposit that attaches native value`() {
         shouldThrow<IllegalArgumentException> {
-            EvmSwapTxGuard.check(payload(depositTx().copy(value = "1")))
+            EvmSwapTxGuard.check(payload(depositTx().copy(value = "1")), usdt)
         }
     }
 

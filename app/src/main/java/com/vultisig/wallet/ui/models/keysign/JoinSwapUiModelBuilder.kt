@@ -361,7 +361,8 @@ constructor(
                         totalFee = fiatValueToStringMapper(swapFeeForTotal, asFee = true),
                         totalFeeExcludingNetwork = swapFeeExcludingNetwork,
                         provider = provider,
-                        depositAddress = swapPayload.data.swapKitDepositRecipient(),
+                        depositAddress =
+                            swapPayload.data.swapKitDepositRecipient(payload.coin.chain),
                         swapFeeIncludedInRate = isOneInchIncludedInRate,
                         swapFeePercent = feeRow.percent,
                         // Shown exactly when [swapFeeRow] priced a row, so the co-signer itemizes
