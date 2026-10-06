@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.data.usecases.VerifyUtxoInputAmountsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
@@ -238,6 +239,7 @@ internal class VerifyTransactionViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    private val verifyUtxoInputAmounts: VerifyUtxoInputAmountsUseCase,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
     private val transactionRepository: TransactionRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
@@ -375,6 +377,27 @@ constructor(
     private fun keysign(keysignInitType: KeysignInitType) {
         if (uiState.value.hasAllConsents) {
             viewModelScope.launch {
+                // DOGE/DASH signatures don't commit to input amounts; a provider that understated
+                // one would turn the difference into miner fee, so check before anything is signed.
+                val tx = transaction
+                if (tx != null) {
+                    try {
+                        verifyUtxoInputAmounts(tx.token, tx.utxos)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Timber.w(e, "UTXO inputs failed verification")
+                        uiState.update {
+                            it.copy(
+                                errorText =
+                                    UiText.DynamicString(
+                                        e.message ?: "Couldn't verify the transaction inputs"
+                                    )
+                            )
+                        }
+                        return@launch
+                    }
+                }
                 launchKeysign(
                     keysignInitType,
                     transactionId,

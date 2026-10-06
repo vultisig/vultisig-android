@@ -42,6 +42,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.data.usecases.VerifyUtxoInputAmountsUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
@@ -288,6 +289,7 @@ constructor(
     private val joinSwapUiModelBuilder: JoinSwapUiModelBuilder,
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
+    private val verifyUtxoInputAmounts: VerifyUtxoInputAmountsUseCase,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
 ) : ViewModel() {
@@ -638,6 +640,21 @@ constructor(
         // A QBTC claim payload is a flag carrier with no real tx body — skip the Send/verify
         // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
         if (ksPayload.isQbtcClaim) return true
+
+        // DOGE/DASH signatures don't commit to input amounts; refuse inputs that don't match the
+        // transactions that created them before showing anything to approve.
+        try {
+            verifyUtxoInputAmounts(ksPayload.coin, ksPayload.utxos)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "UTXO inputs failed verification")
+            currentState.value =
+                JoinKeysignState.Error(
+                    JoinKeysignError.FailedToCheck(e.message ?: "Couldn't verify the inputs")
+                )
+            return false
+        }
 
         loadTransaction(ksPayload)
         return true

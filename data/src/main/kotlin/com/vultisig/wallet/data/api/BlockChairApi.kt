@@ -21,6 +21,9 @@ import io.ktor.http.isSuccess
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
 interface BlockChairApi {
@@ -38,6 +41,12 @@ interface BlockChairApi {
     suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String
 
     suspend fun getTsStatus(chain: Chain, txHash: String): BlockChainStatusDeserialized?
+
+    /**
+     * The serialized transaction [txHash] as hex, or null when Blockchair doesn't know it. The
+     * bytes are only as trustworthy as their hash: callers check them against [txHash].
+     */
+    suspend fun getRawTransaction(chain: Chain, txHash: String): String?
 }
 
 internal class BlockChairApiImp
@@ -150,6 +159,24 @@ constructor(
             "Blockchair pagination exceeded $MAX_UTXO_PAGES pages for $chain:$address with " +
                 "${utxos.size} UTXOs retrieved"
         )
+    }
+
+    override suspend fun getRawTransaction(chain: Chain, txHash: String): String? {
+        val response =
+            httpClient.get("$BASE_URL/${getChainName(chain)}/raw/transaction/$txHash") {
+                header("Content-Type", "application/json")
+            }
+        if (response.status == HttpStatusCode.NotFound) return null
+        // {"data": {"<hash>": {"raw_transaction": "<hex>", …}}, "context": {…}}
+        return response
+            .bodyOrThrow<JsonObject>()["data"]
+            ?.let { it as? JsonObject }
+            ?.values
+            ?.firstOrNull()
+            ?.let { it as? JsonObject }
+            ?.get("raw_transaction")
+            ?.jsonPrimitive
+            ?.contentOrNull
     }
 
     override suspend fun getBlockChairStats(chain: Chain): BigInteger {
