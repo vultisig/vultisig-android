@@ -78,10 +78,4 @@ object NearFees {
         if (storageUsage <= ZERO_BALANCE_STORAGE_LIMIT) return BigInteger.ZERO
         return (storageAmountPerByte * storageUsage - locked).max(BigInteger.ZERO)
     }
-
-    fun maxSendable(
-        balance: BigInteger,
-        gasReservation: BigInteger,
-        storageReserve: BigInteger,
-    ): BigInteger = (balance - gasReservation - storageReserve).max(BigInteger.ZERO)
 }

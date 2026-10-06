@@ -24,7 +24,7 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.rippleTokenIdentity
 import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
-import com.vultisig.wallet.data.usecases.sendRetainedReserve
+import com.vultisig.wallet.data.usecases.readSendRetainedReserve
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
@@ -327,15 +327,11 @@ constructor(
     }
 
     /**
-     * Balance a native send of [token] must leave behind: NEAR's storage reserve read now,
-     * otherwise [sendRetainedReserve]. Fails closed when the NEAR read fails.
+     * Balance a native send of [token] must leave behind ([NearApi.readSendRetainedReserve]), with
+     * a failed NEAR read shown as a lost connection.
      */
     suspend fun retainedReserve(token: Coin): BigInteger =
-        if (token.chain == Chain.Near && token.isNativeToken) {
-            readNearAccount(token.address) { nearApi.storageReserve(token.address) }
-        } else {
-            sendRetainedReserve(token)
-        }
+        readNearAccount(token.address) { nearApi.readSendRetainedReserve(token) }
 
     private suspend fun <T> readNearAccount(address: String, read: suspend () -> T): T =
         try {
