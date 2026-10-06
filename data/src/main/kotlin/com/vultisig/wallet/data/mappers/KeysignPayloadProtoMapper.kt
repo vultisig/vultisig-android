@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.cardanoAssetId
 import com.vultisig.wallet.data.models.getSwapProviderId
+import com.vultisig.wallet.data.models.getWireId
 import com.vultisig.wallet.data.models.parseCardanoAssetId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
@@ -80,16 +81,13 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 when {
                     from.oneinchSwapPayload != null ->
                         from.oneinchSwapPayload.let { it ->
+                            val provider = readEvmSwapProvider(it.provider)
                             SwapPayload.EVM(
                                 EVMSwapPayloadJson(
                                     fromCoin = requireNotNull(it.fromCoin).toCoin(),
                                     toCoin = requireNotNull(it.toCoin).toCoin(),
                                     fromAmount =
-                                        readEvmSwapFromAmount(
-                                            it.provider,
-                                            coin.chain,
-                                            it.fromAmount,
-                                        ),
+                                        readEvmSwapFromAmount(provider, coin.chain, it.fromAmount),
                                     toAmountDecimal = BigDecimal(it.toAmountDecimal),
                                     quote =
                                         requireNotNull(it.quote).let { it ->
@@ -116,9 +114,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                         },
                                     // Wire carries the lowercase canonical id; the domain
                                     // model and its consumers key off the display id.
-                                    provider =
-                                        swapProviderFromWireId(it.provider)?.getSwapProviderId()
-                                            ?: it.provider,
+                                    provider = provider?.getSwapProviderId() ?: it.provider,
                                 )
                             )
                         }
@@ -355,14 +351,28 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
         }
 
     /**
+     * SwapKit counts only under its exact wire id, as vultisig-sdk's
+     * `getKeysignSwapKitDepositRecipient` compares it; any other spelling of it is refused, not
+     * normalized. Other providers keep the lenient read.
+     */
+    private fun readEvmSwapProvider(wireId: String): SwapProvider? {
+        val provider = swapProviderFromWireId(wireId)
+        require(provider != SwapProvider.SWAPKIT || wireId == SwapProvider.SWAPKIT.getWireId()) {
+            "EVM swap from unrecognized provider '$wireId'"
+        }
+        return provider
+    }
+
+    /**
      * A SwapKit [fromAmount] signed on an EVM [signingChain] (the keysign coin's) is plain decimal
      * only, as the SDK co-signer reads it.
      */
-    private fun readEvmSwapFromAmount(provider: String, signingChain: Chain, fromAmount: String) =
-        if (
-            swapProviderFromWireId(provider) == SwapProvider.SWAPKIT &&
-                signingChain.standard == TokenStandard.EVM
-        ) {
+    private fun readEvmSwapFromAmount(
+        provider: SwapProvider?,
+        signingChain: Chain,
+        fromAmount: String,
+    ) =
+        if (provider == SwapProvider.SWAPKIT && signingChain.standard == TokenStandard.EVM) {
             parseSwapKitDecimal(fromAmount, "fromAmount")
         } else {
             BigInteger(fromAmount)
