@@ -47,6 +47,7 @@ internal object EvmSwapTxGuard {
             require(swapPayload.fromCoin.chain == chain) {
                 "SwapKit swap sells a ${swapPayload.fromCoin.chain.raw} coin but signs on ${chain.raw}"
             }
+            // Called for its throw only: a deposit-shaped tx must be exactly the deposit.
             swapPayload.swapKitDepositRecipient(chain)
         }
         val routers =
