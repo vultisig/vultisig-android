@@ -50,34 +50,30 @@ constructor(
     @param:BittensorTxStatus private val bittensorProvider: TransactionStatusProvider,
     private val nearProvider: NearStatusProvider,
 ) : TransactionStatusRepository {
-    private fun getProvider(chain: Chain) =
-        when (chain.standard) {
-            TokenStandard.EVM -> evmProvider
-            TokenStandard.UTXO if chain == Chain.Cardano -> cardanoProvider
-            TokenStandard.UTXO -> utxoProvider
-
-            TokenStandard.COSMOS -> cosmosProvider
-            TokenStandard.THORCHAIN -> thorChainProvider
-            TokenStandard.SOL -> solanaProvider
-            TokenStandard.SUBSTRATE if chain == Chain.Bittensor -> bittensorProvider
-            TokenStandard.SUBSTRATE -> polkadotProvider
-            TokenStandard.SUI -> suiProvider
-            TokenStandard.TON -> tonProvider
-            TokenStandard.RIPPLE -> rippleProvider
-            TokenStandard.TRC20 -> tronProvider
-            TokenStandard.NEAR ->
-                error("NEAR status needs the sender and is resolved in checkTransactionStatus")
-        }
-
     override suspend fun checkTransactionStatus(
         txHash: String,
         chain: Chain,
         senderAccountId: String?,
     ): TransactionResult {
-        if (chain.standard == TokenStandard.NEAR) {
-            return nearProvider.checkStatus(txHash, senderAccountId)
-        }
-        return getProvider(chain).checkStatus(txHash = txHash, chain = chain)
+        val provider =
+            when (chain.standard) {
+                TokenStandard.EVM -> evmProvider
+                TokenStandard.UTXO if chain == Chain.Cardano -> cardanoProvider
+                TokenStandard.UTXO -> utxoProvider
+
+                TokenStandard.COSMOS -> cosmosProvider
+                TokenStandard.THORCHAIN -> thorChainProvider
+                TokenStandard.SOL -> solanaProvider
+                TokenStandard.SUBSTRATE if chain == Chain.Bittensor -> bittensorProvider
+                TokenStandard.SUBSTRATE -> polkadotProvider
+                TokenStandard.SUI -> suiProvider
+                TokenStandard.TON -> tonProvider
+                TokenStandard.RIPPLE -> rippleProvider
+                TokenStandard.TRC20 -> tronProvider
+                // NEAR looks a transaction up by its sender as well as its hash.
+                TokenStandard.NEAR -> return nearProvider.checkStatus(txHash, senderAccountId)
+            }
+        return provider.checkStatus(txHash = txHash, chain = chain)
     }
 }
 
