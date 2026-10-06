@@ -318,8 +318,7 @@ constructor(
         if (required <= available) return
         throw InvalidTransactionDataException(
             insufficientFundsText(
-                ticker = selectedToken.ticker,
-                decimals = selectedToken.decimal,
+                token = selectedToken,
                 required = required,
                 available = available,
                 includesNetworkCosts = true,
