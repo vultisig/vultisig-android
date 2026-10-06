@@ -207,13 +207,14 @@ constructor(
                     "SwapKit route has no routeId — cannot call /v3/swap"
                 )
 
+        // A NEAR source signs its own frozen transfer, so SwapKit must not build one.
+        val nearSource = true.takeIf { request.srcToken.chain == Chain.Near }
         val swapResponse =
             api.swap(
                 SwapKitSwapRequest(
                     routeId = routeId,
-                    // A NEAR source signs its own frozen transfer, so SwapKit must not build one.
-                    disableBuildTx = true.takeIf { request.srcToken.chain == Chain.Near },
-                    disableBalanceCheck = true.takeIf { request.srcToken.chain == Chain.Near },
+                    disableBuildTx = nearSource,
+                    disableBalanceCheck = nearSource,
                     // Honor the request-scoped sender/receiver overrides (passed by
                     // SwapQuoteManager). Fall back to the token's account address only when the
                     // request did not supply one, so a Vault address override (e.g. a different
