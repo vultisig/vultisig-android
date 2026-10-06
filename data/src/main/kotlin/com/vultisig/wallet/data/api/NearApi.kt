@@ -52,7 +52,7 @@ interface NearApi {
     /** `null` when the node answers UNKNOWN_ACCOUNT (an unfunded account); a failed read throws. */
     suspend fun getAccount(accountId: String): NearAccount?
 
-    /** `null` when the account does not hold this key; a failed read throws. */
+    /** `null` when the account does not hold this key; a failed or garbled read throws. */
     suspend fun getAccessKey(accountId: String, hexPublicKey: String): NearAccessKey?
 
     suspend fun getFinalBlock(): NearFinalBlock
@@ -124,7 +124,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : NearAp
 
         // A missing key can also arrive as a `result.error` string rather than a JSON-RPC error.
         if (result["error"] != null) return null
-        val permission = result["permission"] ?: return null
+        val permission = result["permission"] ?: throw malformed("query", "is missing permission")
 
         return NearAccessKey(
             nonce = result.exactInteger("nonce"),
