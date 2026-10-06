@@ -142,21 +142,25 @@ internal class AmountFractionManager(
     }
 
     /**
-     * Null once a failed balance read (NEAR's live storage reserve) has been shown as an error, so
-     * the tap neither crashes the form nor fills an amount sized without the reserve.
+     * Null once a failed NEAR read (its live storage reserve) has been shown as an error, so the
+     * tap neither crashes the form nor fills an amount sized without the reserve. Other chains fail
+     * as they always have.
      */
-    private suspend fun calculateOrReportFailure(percentage: Float): BigDecimal? =
-        try {
+    private suspend fun calculateOrReportFailure(percentage: Float): BigDecimal? {
+        val isNear = accountProvider()?.token?.chain == Chain.Near
+        return try {
             calculatePercentageWithAccurateFee(percentage)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "Failed to size the selected amount fraction")
+            if (!isNear) throw e
+            Timber.e(e, "Failed to read the NEAR storage reserve for the amount fraction")
             uiState.update {
                 it.copy(errorText = UiText.StringResource(R.string.network_connection_lost))
             }
             null
         }
+    }
 
     private suspend fun calculatePercentageWithAccurateFee(percentage: Float): BigDecimal {
         val vault = vaultProvider() ?: return BigDecimal.ZERO
