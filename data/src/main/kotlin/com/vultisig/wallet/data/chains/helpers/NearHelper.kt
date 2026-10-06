@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.blockchain.near.requireNear
 import com.vultisig.wallet.data.common.toHexByteArray
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -54,7 +55,7 @@ class NearHelper(private val vaultHexPublicKey: String) {
         val input = signingInput(keysignPayload)
         // NEAR's Ed25519 message is `dataHash` (sha256 of the Borsh body), not `data`.
         val dataHash = preSigningOutput(input).dataHash.toByteArray()
-        val publicKey = vaultPublicKey()
+        val publicKey = vaultPublicKey
 
         val signature =
             signatures[Numeric.toHexStringNoPrefix(dataHash)]?.getSignature()?.takeIf {
@@ -77,14 +78,15 @@ class NearHelper(private val vaultHexPublicKey: String) {
         )
     }
 
-    private fun vaultPublicKey(): PublicKey {
+    // Parsed on first use, so a bad vault key is still refused in validatedTransfer's order.
+    private val vaultPublicKey: PublicKey by lazy {
         val keyBytes = vaultHexPublicKey.toHexByteArray()
         requireNear(
             keyBytes.size == NEAR_ED25519_PUBLIC_KEY_BYTES,
             NearRefusal.INVALID_PUBLIC_KEY_LENGTH,
             vaultHexPublicKey,
         )
-        return PublicKey(keyBytes, PublicKeyType.ED25519)
+        PublicKey(keyBytes, PublicKeyType.ED25519)
     }
 
     private fun preSigningOutput(input: ByteArray): PreSigningOutput =
@@ -99,7 +101,7 @@ class NearHelper(private val vaultHexPublicKey: String) {
             .setNonce(specific.nonce.toLong())
             .setReceiverId(keysignPayload.toAddress)
             .setBlockHash(ByteString.copyFrom(specific.blockHash))
-            .setPublicKey(ByteString.copyFrom(vaultPublicKey().data()))
+            .setPublicKey(ByteString.copyFrom(vaultPublicKey.data()))
             .addActions(
                 NEAR.Action.newBuilder()
                     .setTransfer(
@@ -113,6 +115,14 @@ class NearHelper(private val vaultHexPublicKey: String) {
 
     /** Every check the frozen payload must pass before it is signed; returns its NEAR specifics. */
     private fun validatedTransfer(keysignPayload: KeysignPayload): BlockChainSpecific.Near {
+        requirePlainTransfer(keysignPayload)
+        val specific = requireTransferFields(keysignPayload)
+        requireVaultSender(keysignPayload.coin)
+        return specific
+    }
+
+    /** The payload is a native NEAR transfer, or a SwapKit deposit, and carries nothing else. */
+    private fun requirePlainTransfer(keysignPayload: KeysignPayload) {
         val coin = keysignPayload.coin
         requireNear(coin.chain == Chain.Near && coin.isNativeToken, NearRefusal.TOKENS_UNSUPPORTED)
         // A payload decoded from the wire carries "" for an unset memo.
@@ -136,6 +146,10 @@ class NearHelper(private val vaultHexPublicKey: String) {
                 keysignPayload.signBitcoin == null,
             NearRefusal.CUSTOM_SIGN_PAYLOAD,
         )
+    }
+
+    /** Recipient, amount and the frozen NEAR specifics are in range; returns the specifics. */
+    private fun requireTransferFields(keysignPayload: KeysignPayload): BlockChainSpecific.Near {
         requireNear(
             NearAccountId.isValid(keysignPayload.toAddress),
             NearRefusal.INVALID_RECIPIENT,
@@ -166,15 +180,20 @@ class NearHelper(private val vaultHexPublicKey: String) {
             specific.blockHash.size,
         )
         requireNear(specific.nonce > 0UL, NearRefusal.INVALID_NONCE)
+        return specific
+    }
 
-        // The sender is the implicit account of the vault key; anything else would sign a
-        // transaction funded by an account this device does not control.
+    /**
+     * The sender is the implicit account of the vault key; anything else would sign a transaction
+     * funded by an account this device does not control.
+     */
+    private fun requireVaultSender(coin: Coin) {
         requireNear(
             NearAccountId.isImplicit(coin.address),
             NearRefusal.SENDER_NOT_IMPLICIT,
             coin.address,
         )
-        val derived = CoinType.NEAR.deriveAddressFromPublicKey(vaultPublicKey())
+        val derived = CoinType.NEAR.deriveAddressFromPublicKey(vaultPublicKey)
         requireNear(derived == coin.address, NearRefusal.SENDER_KEY_MISMATCH, coin.address, derived)
         // The payload's own key must name that account too, so it cannot pair it with another key.
         requireNear(
@@ -190,7 +209,6 @@ class NearHelper(private val vaultHexPublicKey: String) {
             coin.address,
             coinKeyAccount,
         )
-        return specific
     }
 
     /**
