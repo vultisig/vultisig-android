@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.api.swapAggregators.SwapKitDepositRecipientScreen
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRelayedIntent
 import com.vultisig.wallet.data.blockchain.solana.kamino.ResolveKaminoRelayedIntentUseCase
@@ -39,6 +38,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
+import com.vultisig.wallet.data.securityscanner.ScreenSwapKitDepositRecipientUseCase
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
@@ -291,7 +291,7 @@ constructor(
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
-    private val screenSwapKitDepositRecipient: SwapKitDepositRecipientScreen,
+    private val screenSwapKitDepositRecipient: ScreenSwapKitDepositRecipientUseCase,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"

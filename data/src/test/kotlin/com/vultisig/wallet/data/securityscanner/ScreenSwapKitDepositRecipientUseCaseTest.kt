@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.api.swapAggregators
+package com.vultisig.wallet.data.securityscanner
 
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test
  * api.vultisig.com/blockaid/v0/evm/address/scan` reply for its targetAddress (2026-10-04):
  * `{"result_type":"Benign","features":["This address has no history on this chain", …]}`.
  */
-internal class SwapKitDepositRecipientScreenTest {
+internal class ScreenSwapKitDepositRecipientUseCaseTest {
 
     private val response: JsonObject =
         Json.parseToJsonElement(
@@ -53,7 +53,7 @@ internal class SwapKitDepositRecipientScreenTest {
     fun `signs a deposit whose decoded recipient Blockaid calls Benign`() = runTest {
         val blockaid = FakeBlockaid(verdict = "Benign")
 
-        SwapKitDepositRecipientScreen(blockaid)(depositPayload())
+        ScreenSwapKitDepositRecipientUseCase(blockaid)(depositPayload())
 
         blockaid.scanned shouldBe listOf(Chain.Ethereum to targetAddress)
     }
@@ -61,16 +61,18 @@ internal class SwapKitDepositRecipientScreenTest {
     @Test
     fun `refuses a deposit whose recipient gets a Warning verdict`() = runTest {
         shouldThrow<IllegalStateException> {
-            SwapKitDepositRecipientScreen(FakeBlockaid(verdict = "Warning"))(depositPayload())
+            ScreenSwapKitDepositRecipientUseCase(FakeBlockaid(verdict = "Warning"))(
+                depositPayload()
+            )
         }
     }
 
     @Test
     fun `refuses a deposit whose recipient cannot be screened`() = runTest {
         shouldThrow<IllegalStateException> {
-            SwapKitDepositRecipientScreen(FakeBlockaid(failure = IOException("blockaid down")))(
-                depositPayload()
-            )
+            ScreenSwapKitDepositRecipientUseCase(
+                FakeBlockaid(failure = IOException("blockaid down"))
+            )(depositPayload())
         }
     }
 
