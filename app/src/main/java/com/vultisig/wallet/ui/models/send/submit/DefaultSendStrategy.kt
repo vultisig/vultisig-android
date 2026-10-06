@@ -361,8 +361,7 @@ internal class DefaultSendStrategy(
                                     )
                                 } else {
                                     insufficientFundsText(
-                                        ticker = selectedToken.ticker,
-                                        decimals = selectedToken.decimal,
+                                        token = selectedToken,
                                         required =
                                             tokenAmountInt +
                                                 spendableGasFee.value +
@@ -418,8 +417,7 @@ internal class DefaultSendStrategy(
                         if (selectedTokenValue.value < tokenAmountInt + gasFee.value) {
                             throw InvalidTransactionDataException(
                                 insufficientFundsText(
-                                    ticker = selectedToken.ticker,
-                                    decimals = selectedToken.decimal,
+                                    token = selectedToken,
                                     required = tokenAmountInt + gasFee.value,
                                     available = selectedTokenValue.value,
                                     includesNetworkCosts = true,
@@ -443,8 +441,7 @@ internal class DefaultSendStrategy(
                             // fees" framing that would wrongly suggest reserving tokens for gas.
                             throw InvalidTransactionDataException(
                                 insufficientFundsText(
-                                    ticker = selectedToken.ticker,
-                                    decimals = selectedToken.decimal,
+                                    token = selectedToken,
                                     required = tokenAmountInt,
                                     available = selectedTokenValue.value,
                                     includesNetworkCosts = false,
@@ -477,8 +474,7 @@ internal class DefaultSendStrategy(
                             if (nativeTokenValue < requiredNativeValue) {
                                 throw InvalidTransactionDataException(
                                     insufficientFundsText(
-                                        ticker = nativeTokenAccount.token.ticker,
-                                        decimals = nativeTokenAccount.token.decimal,
+                                        token = nativeTokenAccount.token,
                                         required = requiredNativeValue,
                                         available = nativeTokenValue,
                                         includesNetworkCosts = true,
@@ -666,8 +662,7 @@ internal class DefaultSendStrategy(
         if (affordable <= BigInteger.ZERO) {
             throw InvalidTransactionDataException(
                 insufficientFundsText(
-                    ticker = token.ticker,
-                    decimals = token.decimal,
+                    token = token,
                     required = amount + signedFee + sendRetainedReserve(token),
                     available = balance,
                     includesNetworkCosts = true,
