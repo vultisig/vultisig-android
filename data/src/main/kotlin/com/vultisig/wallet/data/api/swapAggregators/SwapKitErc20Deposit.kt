@@ -63,10 +63,13 @@ fun swapKitErc20DepositRecipient(
 
 private val PLAIN_DECIMAL = Regex("[0-9]+")
 
+private const val UINT256_BITS = 256
+
 /**
  * Reads a SwapKit EVM wire amount as vultisig-sdk's `parseNonNegativeBigInt` does: ASCII decimal
  * digits only. `BigInteger` alone also reads a sign (`+100`, `-0`) and non-ASCII numerals, which
- * the SDK co-signer refuses.
+ * the SDK co-signer refuses. The amount must also fit the EVM word (at most 2^256 - 1), as iOS
+ * `EVMSwapTxGuard.check` requires of `tx.value`.
  *
  * @throws IllegalArgumentException when [value] is anything else.
  */
@@ -74,7 +77,11 @@ internal fun parseSwapKitDecimal(value: String, field: String): BigInteger {
     require(value.matches(PLAIN_DECIMAL)) {
         "SwapKit EVM swap $field '$value' is not a plain decimal integer"
     }
-    return BigInteger(value)
+    val amount = BigInteger(value)
+    require(amount.bitLength() <= UINT256_BITS) {
+        "SwapKit EVM swap $field '$value' exceeds uint256"
+    }
+    return amount
 }
 
 /**
