@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.utils.toLongExact
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
@@ -105,16 +106,9 @@ internal fun evmSwapPayloadDisplayGasLimit(
 ): BigInteger? {
     val isErc20Deposit = tx.isErc20DepositTransfer(srcToken)
     val routeGas =
-        if (isErc20Deposit) gasLimitToLong(evmSwapSignedGasLimit(tx.gas, specific.gasLimit))
+        if (isErc20Deposit) evmSwapSignedGasLimit(tx.gas, specific.gasLimit).toLongExact()
         else tx.gas
     return evmSwapDisplayGasLimit(srcToken, routeGas, isErc20Deposit)
-}
-
-/** [gasLimit] as a Long, refused rather than truncated when it does not fit. */
-internal fun gasLimitToLong(gasLimit: BigInteger): Long {
-    // BigInteger.longValueExact() is API 31+, above minSdk.
-    require(gasLimit.bitLength() < Long.SIZE_BITS) { "Gas limit $gasLimit exceeds the Long range" }
-    return gasLimit.toLong()
 }
 
 internal class SwapGasCalculator

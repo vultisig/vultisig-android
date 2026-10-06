@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.models.swapProviderFromWireId
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.ApprovalRequirement
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
+import com.vultisig.wallet.data.utils.toLongExact
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
@@ -338,7 +339,7 @@ constructor(
                 // A deposit's estimate is its transfer limit, not SwapKit's route gas.
                 val routeGas =
                     if (isErc20Deposit) {
-                        gasLimitToLong(requireEthereumSpec(specific).gasLimit)
+                        requireEthereumSpec(specific).gasLimit.toLongExact()
                     } else {
                         quote.data.tx.gas.takeIf { it > 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
                     }

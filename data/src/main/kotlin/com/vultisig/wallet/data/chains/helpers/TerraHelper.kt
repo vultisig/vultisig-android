@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
+import com.vultisig.wallet.data.utils.toLongExact
 import kotlinx.serialization.json.Json
 import tss.KeysignResponse
 import wallet.core.jni.AnyAddress
@@ -33,16 +34,7 @@ class TerraHelper(
      * it) into the SignDoc, so they must resolve to the identical limit or the MPC signature fails.
      */
     private fun effectiveGasLimit(atomData: BlockChainSpecific.Cosmos): Long =
-        atomData.gasLimit
-            ?.takeIf { it.signum() > 0 }
-            ?.let {
-                // BigInteger.longValueExact() is API 31+, but minSdk is 26. Reject out-of-range
-                // values ourselves so a truncated gas value can never diverge between co-signers.
-                require(it.bitLength() < Long.SIZE_BITS) {
-                    "Relayed gas limit $it exceeds the supported range"
-                }
-                it.toLong()
-            } ?: gasLimit
+        atomData.gasLimit?.takeIf { it.signum() > 0 }?.toLongExact() ?: gasLimit
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val result = getPreSignedInputData(keysignPayload)
