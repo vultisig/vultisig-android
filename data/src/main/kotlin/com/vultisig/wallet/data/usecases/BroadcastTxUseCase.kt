@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.NearApi
+import com.vultisig.wallet.data.api.NearMalformedResponseException
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -216,8 +217,10 @@ constructor(
                     tx = tx,
                     broadcast = {
                         val returned = nearApi.sendTransaction(tx.rawTransaction)
-                        check(returned == null || returned == tx.transactionHash) {
-                            "NEAR broadcast returned $returned for ${tx.transactionHash}"
+                        if (returned != null && returned != tx.transactionHash) {
+                            throw NearMalformedResponseException(
+                                "send_tx returned $returned for ${tx.transactionHash}"
+                            )
                         }
                         tx.transactionHash
                     },
