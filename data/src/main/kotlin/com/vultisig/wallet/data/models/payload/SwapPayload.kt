@@ -14,6 +14,29 @@ sealed class SwapPayload {
     abstract val srcTokenValue: TokenValue
     abstract val dstTokenValue: TokenValue
 
+    /**
+     * Throws unless an aggregator swap ([EVM] or [SwapKit], every chain) sells exactly
+     * [signingCoin]: same chain, native flag and contract (case-insensitive). Each signer builds
+     * for the signing coin while co-signers display the payload's coin. Mirrors vultisig-sdk's
+     * `assertKeysignSwapSellsSigningCoin` and iOS `SwapPayload.requireSellsSigningCoin`.
+     */
+    fun requireSellsSigningCoin(signingCoin: Coin) {
+        when (this) {
+            is EVM,
+            is SwapKit -> Unit
+            is ThorChain,
+            is MayaChain -> return
+        }
+        require(
+            srcToken.chain == signingCoin.chain &&
+                srcToken.isNativeToken == signingCoin.isNativeToken &&
+                srcToken.contractAddress.lowercase() == signingCoin.contractAddress.lowercase()
+        ) {
+            "Swap sells ${srcToken.ticker} on ${srcToken.chain.raw} but signs " +
+                "${signingCoin.ticker} on ${signingCoin.chain.raw}"
+        }
+    }
+
     data class ThorChain(val data: THORChainSwapPayload) : SwapPayload() {
 
         override val srcToken: Coin

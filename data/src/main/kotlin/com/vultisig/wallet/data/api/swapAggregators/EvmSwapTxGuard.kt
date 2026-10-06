@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.swapProviderFromWireId
 import java.math.BigInteger
 
@@ -30,24 +31,14 @@ internal object EvmSwapTxGuard {
 
     /**
      * @param signingCoin the keysign coin the transaction is signed for. The payload's `fromCoin`
-     *   must be that same coin (chain, native flag and contract, case-insensitive) for every
-     *   provider, as iOS `EVMSwapTxGuard.check` and vultisig-sdk's `assertSwapCoinIsSigningCoin`
-     *   require.
+     *   must be that same coin ([SwapPayload.requireSellsSigningCoin]).
      */
     fun check(swapPayload: EVMSwapPayloadJson, signingCoin: Coin) {
         val chain = signingCoin.chain
         require(chain.standard == TokenStandard.EVM) { "EVM swap signed for ${chain.raw}" }
         // The bounds below read the payload's coin and the approval leg is built from the signing
         // coin's contract, so both must be the same token.
-        val fromCoin = swapPayload.fromCoin
-        require(
-            fromCoin.chain == chain &&
-                fromCoin.isNativeToken == signingCoin.isNativeToken &&
-                fromCoin.contractAddress.lowercase() == signingCoin.contractAddress.lowercase()
-        ) {
-            "EVM swap sells ${fromCoin.ticker} on ${fromCoin.chain.raw} but signs " +
-                "${signingCoin.ticker} on ${chain.raw}"
-        }
+        SwapPayload.EVM(swapPayload).requireSellsSigningCoin(signingCoin)
         val tx = swapPayload.quote.tx
         val value =
             tx.value.toBigIntegerOrNull()?.takeIf { it >= BigInteger.ZERO }

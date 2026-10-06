@@ -161,6 +161,8 @@ object SigningHelper {
     }
 
     fun getKeysignMessages(payload: KeysignPayload, vault: Vault): List<String> {
+        payload.swapPayload?.requireSellsSigningCoin(payload.coin)
+
         val messages = mutableListOf<String>()
         val chain = payload.coin.chain
         val (ecdsaKey, ecdsaChainCode) = vault.getEcdsaSigningKey(chain)
