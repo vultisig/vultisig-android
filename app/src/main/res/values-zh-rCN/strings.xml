@@ -763,6 +763,7 @@
     <string name="swap_error_quote_failed">兑换报价失败。请重试或调整金额。</string>
     <string name="swap_error_rate_limit">请求次数过多。请稍后重试。</string>
     <string name="swap_error_trading_halted">该资产的交易暂时暂停。请稍后重试。</string>
+    <string name="swap_error_swapkit_deposit_recipient_refused">Blockaid 标记了此兑换的充值地址，因此未签署此兑换。</string>
 
     <!-- Swap Screen Invalid -->
     <string name="swap_screen_invalid_no_vault">未选择保险库</string>
