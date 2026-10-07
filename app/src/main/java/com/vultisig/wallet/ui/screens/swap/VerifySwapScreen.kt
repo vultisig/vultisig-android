@@ -253,6 +253,8 @@ private fun VerifySwapSheetDetails(tx: SwapTransactionUiModel, vaultName: String
                 ?.takeIf { it.isNotBlank() }
                 ?.let { recipient -> VerifyExternalRecipientRow(address = recipient) }
 
+            tx.depositAddress?.let { VerifyDepositAddressRow(address = it) }
+
             HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.light)
 
             // The same breakdown the form showed, so the figures being signed read exactly as
@@ -662,6 +664,11 @@ private fun VerifySwapScreen(
                             VerifyCardDivider(size = 20.dp)
                             VerifyExternalRecipientRow(address = recipient)
                         }
+
+                    tx.depositAddress?.let {
+                        VerifyCardDivider(size = 20.dp)
+                        VerifyDepositAddressRow(address = it)
+                    }
 
                     VerifyCardDivider(size = 20.dp)
 
@@ -1077,6 +1084,15 @@ internal fun VerifyExternalRecipientRow(address: String, modifier: Modifier = Mo
             maxLines = 1,
         )
     }
+}
+
+/** The address a SwapKit ERC-20 deposit sends the sold token to, read from the signed calldata. */
+@Composable
+private fun VerifyDepositAddressRow(address: String) {
+    VerifyCardDetails(
+        title = stringResource(R.string.verify_swap_deposit_address),
+        subtitle = address,
+    )
 }
 
 @Composable

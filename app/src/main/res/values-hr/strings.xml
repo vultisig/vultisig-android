@@ -1229,6 +1229,7 @@
     <string name="swap_external_recipient_invalid">Nevažeća adresa primatelja</string>
     <string name="swap_external_recipient_unsupported">Vanjski primatelj nije dostupan za ovu zamjenu. Isključite ga za nastavak.</string>
     <string name="verify_swap_recipient">Primatelj</string>
+    <string name="verify_swap_deposit_address">Adresa za uplatu</string>
     <string name="keygen_benefit_1_template">Uklanjanje jedinstvene točke kvara</string>
     <string name="keygen_benefit_1_emphasized">Višefaktorska sigurnost,</string>
     <string name="keygen_benefit_2_template">dajući potpunu kontrolu nad vašom imovinom</string>

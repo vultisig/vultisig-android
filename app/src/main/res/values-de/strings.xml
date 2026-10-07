@@ -1226,6 +1226,7 @@
     <string name="swap_external_recipient_invalid">Ungültige Empfängeradresse</string>
     <string name="swap_external_recipient_unsupported">Externer Empfänger ist für diesen Swap nicht verfügbar. Deaktiviere ihn, um fortzufahren.</string>
     <string name="verify_swap_recipient">Empfänger</string>
+    <string name="verify_swap_deposit_address">Einzahlungsadresse</string>
     <string name="keygen_benefit_1_template">Beseitigung des Single Point of Failure</string>
     <string name="keygen_benefit_1_emphasized">Multifaktor-Sicherheit</string>
     <string name="keygen_benefit_2_template">Volle Kontrolle über Ihre Vermögenswerte</string>
