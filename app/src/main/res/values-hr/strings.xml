@@ -265,6 +265,9 @@
     <string name="verify_transaction_allow_death_warning">Ovaj prijenos može isprazniti račun pošiljatelja. Ako preostalo stanje padne ispod egzistencijalnog depozita, račun će biti deaktiviran (požnjet) i svi preostali %1$s bit će izgubljeni.</string>
     <string name="vault_settings_delete_vault_value">Vault Vrijednost:</string>
     <string name="join_keysign_wrong_reshare">Pogrešan ReShare</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Ovaj prijenos TON tokena nije iz ovog trezora</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">Prikazani token ne odgovara tokenu koji ovaj prijenos šalje</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Nije moguće provjeriti ovaj prijenos TON tokena. Pokušajte ponovno.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">Ponovno dijeljenje nije podržano za sefove s QBTC ključem</string>
     <string name="swap_screen_provider_title">Davatelj</string>
     <string name="swap_form_minimum_amount">Iznos zamjene premali. Preporučena količina %1$s %2$s</string>

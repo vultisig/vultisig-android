@@ -264,6 +264,9 @@
     <string name="verify_transaction_memo_title">Memo</string>
     <string name="verify_transaction_allow_death_warning">Deze overboeking kan de rekening van de afzender leegmaken. Als het resterende saldo onder de Existential Deposit zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende %1$s verloren.</string>
     <string name="join_keysign_wrong_reshare">Verkeerde ReShare</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Deze TON-tokenoverdracht komt niet uit deze kluis</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">Het getoonde token komt niet overeen met het token dat deze overdracht verstuurt</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Deze TON-tokenoverdracht kon niet worden geverifieerd. Probeer het opnieuw.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">Opnieuw delen wordt niet ondersteund voor kluizen met een QBTC-sleutel</string>
     <string name="swap_screen_provider_title">Leverancier</string>
     <string name="swap_form_minimum_amount">Wisselbedrag te klein. Aanbevolen bedrag: %1$s %2$s</string>

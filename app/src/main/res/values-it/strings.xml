@@ -265,6 +265,9 @@
     <string name="verify_transaction_allow_death_warning">Questo trasferimento può svuotare l\'account del mittente. Se il saldo rimanente scende sotto il deposito esistenziale, l\'account verrà disattivato (raccolto) e tutti i %1$s rimanenti andranno persi.</string>
     <string name="vault_settings_delete_vault_value">Vault Valore:</string>
     <string name="join_keysign_wrong_reshare">Condivisione errata</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Questo trasferimento di token TON non proviene da questo caveau</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">Il token mostrato non corrisponde al token inviato da questo trasferimento</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Impossibile verificare questo trasferimento di token TON. Riprova.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">La ricondivisione non è supportata per le casseforti con una chiave QBTC</string>
     <string name="swap_screen_provider_title">Fornitrice</string>
     <string name="swap_form_minimum_amount">Importo dello swap troppo piccolo. Importo consigliato %1$s %2$s</string>

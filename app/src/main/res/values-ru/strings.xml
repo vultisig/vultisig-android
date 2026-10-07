@@ -264,6 +264,9 @@
     <string name="verify_transaction_memo_title">Мемо</string>
     <string name="verify_transaction_allow_death_warning">Этот перевод может опустошить счет отправителя. Если оставшийся баланс опустится ниже экзистенциального депозита, счет будет деактивирован (изъят), а все оставшиеся %1$s будут потеряны.</string>
     <string name="join_keysign_wrong_reshare">Неправильный ReShare</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Этот перевод токена TON отправлен не из этого хранилища</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">Показанный токен не совпадает с токеном, который отправляет этот перевод</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Не удалось проверить этот перевод токена TON. Попробуйте ещё раз.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">Повторное совместное использование не поддерживается для хранилищ с ключом QBTC</string>
     <string name="swap_screen_provider_title">Провайдер</string>
     <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %1$s %2$s</string>

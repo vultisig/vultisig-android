@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import android.net.nsd.NsdManager
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -42,6 +43,8 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.data.usecases.TonJettonTransferRefusedException
+import com.vultisig.wallet.data.usecases.VerifyTonJettonTransferUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
@@ -139,6 +142,24 @@ sealed class JoinKeysignError(val message: UiText) {
      */
     data object MissingQbtcClaimAccount :
         JoinKeysignError(R.string.join_keysign_qbtc_claim_missing_account.asUiText())
+
+    /** A TON jetton transfer that doesn't move what it shows, or that couldn't be checked. */
+    data class TonJettonTransferRefused(@StringRes val reason: Int) :
+        JoinKeysignError(reason.asUiText()) {
+        companion object {
+            fun from(error: Exception) =
+                TonJettonTransferRefused(
+                    when ((error as? TonJettonTransferRefusedException)?.reason) {
+                        TonJettonTransferRefusedException.Reason.NotThisVault ->
+                            R.string.join_keysign_ton_jetton_not_this_vault
+                        TonJettonTransferRefusedException.Reason.TokenMismatch ->
+                            R.string.join_keysign_ton_jetton_token_mismatch
+                        TonJettonTransferRefusedException.Reason.Unverifiable,
+                        null -> R.string.join_keysign_ton_jetton_unverifiable
+                    }
+                )
+        }
+    }
 }
 
 /** Raised when the messages to sign cannot be prepared once the ceremony starts. */
@@ -288,6 +309,7 @@ constructor(
     private val joinSwapUiModelBuilder: JoinSwapUiModelBuilder,
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
+    private val verifyTonJettonTransfer: VerifyTonJettonTransferUseCase,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
 ) : ViewModel() {
@@ -631,6 +653,19 @@ constructor(
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongReShare)
                 return false
             }
+        }
+
+        // A TON jetton transfer is signed from the jetton wallet the payload names, not from the
+        // token it shows; refuse one whose sender, wallet or token details aren't this vault's own.
+        try {
+            verifyTonJettonTransfer(ksPayload, _currentVault)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "TON jetton transfer failed verification")
+            currentState.value =
+                JoinKeysignState.Error(JoinKeysignError.TonJettonTransferRefused.from(e))
+            return false
         }
 
         this@JoinKeysignViewModel._keysignPayload = ksPayload
