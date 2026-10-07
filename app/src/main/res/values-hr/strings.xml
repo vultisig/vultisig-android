@@ -444,6 +444,7 @@
     <string name="swap_error_quote_failed">Ponuda za zamjenu nije uspjela. Pokušajte ponovno ili prilagodite iznos.</string>
     <string name="swap_error_rate_limit">Previše zahtjeva. Pokušajte ponovno kasnije.</string>
     <string name="swap_error_trading_halted">Trgovanje ovom imovinom privremeno je obustavljeno. Pokušajte ponovno kasnije.</string>
+    <string name="swap_error_swapkit_deposit_recipient_refused">Blockaid je označio adresu za uplatu ove zamjene, pa zamjena nije potpisana.</string>
     <string name="swap_screen_invalid_no_vault">Trezor nije odabran</string>
     <string name="swap_screen_invalid_no_src_error">Nije odabran izvorni token</string>
     <string name="swap_screen_invalid_selected_no_dst">Nije odabran odredišni token</string>

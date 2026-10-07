@@ -39,7 +39,10 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
+import com.vultisig.wallet.data.securityscanner.ScreenSwapKitDepositRecipientUseCase
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SwapKitDepositRecipientException
+import com.vultisig.wallet.data.securityscanner.SwapKitDepositScreen
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
@@ -67,6 +70,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.userText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import java.net.SocketException
@@ -116,6 +120,12 @@ sealed class JoinKeysignError(val message: UiText) {
     data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
 
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
+
+    /**
+     * The SwapKit deposit in the payload was refused before approval: its recipient is confirmed
+     * Malicious, or it is not exactly the deposit it claims to be.
+     */
+    data class SwapKitDepositRefused(val reason: UiText) : JoinKeysignError(reason)
 
     data class FailedToStart(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
@@ -312,6 +322,7 @@ constructor(
     private val verifyTonJettonTransfer: VerifyTonJettonTransferUseCase,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
+    private val screenSwapKitDepositRecipient: ScreenSwapKitDepositRecipientUseCase,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -674,8 +685,46 @@ constructor(
         // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
         if (ksPayload.isQbtcClaim) return true
 
+        // Screened before the verify screen, so a Malicious recipient never reaches approval.
+        val depositScreen =
+            try {
+                screenSwapKitDepositRecipient(ksPayload)
+            } catch (e: SwapKitDepositRecipientException) {
+                Timber.e(e, "SwapKit deposit recipient refused")
+                currentState.value =
+                    JoinKeysignState.Error(JoinKeysignError.SwapKitDepositRefused(e.userText))
+                return false
+            } catch (e: IllegalArgumentException) {
+                Timber.e(e, "SwapKit deposit is malformed")
+                currentState.value =
+                    JoinKeysignState.Error(
+                        JoinKeysignError.SwapKitDepositRefused(
+                            UiText.DynamicString(e.message.orEmpty())
+                        )
+                    )
+                return false
+            }
+
         loadTransaction(ksPayload)
+        depositScreen?.let(::showSwapKitDepositScreen)
         return true
+    }
+
+    /** Shows the SwapKit deposit recipient's scan in the swap review's scanner badge. */
+    private fun showSwapKitDepositScreen(screen: SwapKitDepositScreen) {
+        val status =
+            when (screen) {
+                is SwapKitDepositScreen.Scanned -> TransactionScanStatus.Scanned(screen.result)
+                is SwapKitDepositScreen.NotScanned ->
+                    TransactionScanStatus.Error(screen.reason, BLOCKAID_PROVIDER)
+            }
+        verifyUiModel.update { model ->
+            if (model is VerifyUiModel.Swap) {
+                model.copy(model = model.model.copy(txScanStatus = status))
+            } else {
+                model
+            }
+        }
     }
 
     private suspend fun loadTransaction(payload: KeysignPayload) {

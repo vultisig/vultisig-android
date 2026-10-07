@@ -134,6 +134,7 @@ internal class KeysignFlowViewModelNetworkSwitchNotificationTest {
             buildKeysignMessage = buildKeysignMessage,
             updateSolanaKeysignPayload = updateSolanaKeysignPayload,
             buildKeysignTransactionUiModel = buildKeysignTransactionUiModel,
+            screenSwapKitDepositRecipient = mockk(relaxed = true),
         )
 
     @Test
