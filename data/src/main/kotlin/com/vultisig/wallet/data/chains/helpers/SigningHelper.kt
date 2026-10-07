@@ -21,7 +21,6 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -162,6 +161,8 @@ object SigningHelper {
     }
 
     fun getKeysignMessages(payload: KeysignPayload, vault: Vault): List<String> {
+        payload.swapPayload?.requireSellsSigningCoin(payload.coin)
+
         val messages = mutableListOf<String>()
         val chain = payload.coin.chain
         val (ecdsaKey, ecdsaChainCode) = vault.getEcdsaSigningKey(chain)
@@ -513,7 +514,7 @@ object SigningHelper {
                 }
 
                 is SwapPayload.EVM -> {
-                    return if (keysignPayload.blockChainSpecific is BlockChainSpecific.Solana)
+                    return if (chain == Chain.Solana)
                         SolanaSwap(eddsaKey)
                             .getSignedTransaction(swapPayload.data, keysignPayload, signatures)
                     else

@@ -25,8 +25,10 @@ import java.math.BigInteger
 internal object EvmSwapTxGuard {
 
     fun check(swapPayload: EVMSwapPayloadJson) {
+        // SigningHelper.getKeysignMessages has refused a fromCoin other than the keysign coin, so
+        // this is the chain the transaction is signed on.
         val chain = swapPayload.fromCoin.chain
-        if (chain.standard != TokenStandard.EVM) return
+        require(chain.standard == TokenStandard.EVM) { "EVM swap signed for ${chain.raw}" }
         val tx = swapPayload.quote.tx
         val value =
             tx.value.toBigIntegerOrNull()?.takeIf { it >= BigInteger.ZERO }
