@@ -12,6 +12,7 @@ import java.util.Base64
 import javax.inject.Inject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.contentOrNull
 import wallet.core.jni.TONAddressConverter
 
 /** Display metadata for a jetton, resolved from its master contract. */
@@ -212,15 +213,19 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
         // guess would let a token be shown at the wrong scale.
         val rawDecimals =
             content?.decimals?.takeIf { it.isNotBlank() }
-                ?: info?.extra?.decimals?.takeIf { it.isNotBlank() }
+                ?: info?.extra?.decimals?.contentOrNull?.takeIf { it.isNotBlank() }
         val decimals =
             if (rawDecimals == null) DEFAULT_JETTON_DECIMALS
             else rawDecimals.trim().toIntOrNull()?.takeIf { it >= 0 } ?: return null
         return TonJettonMetadata(
             ticker = ticker,
             decimals = decimals,
-            logo = (content?.image ?: info?.image)?.takeIf { it.isNotBlank() },
-            name = (content?.name ?: info?.name)?.trim()?.takeIf { it.isNotBlank() },
+            logo =
+                content?.image?.takeIf { it.isNotBlank() }
+                    ?: info?.image?.takeIf { it.isNotBlank() },
+            name =
+                content?.name?.trim()?.takeIf { it.isNotBlank() }
+                    ?: info?.name?.trim()?.takeIf { it.isNotBlank() },
         )
     }
 

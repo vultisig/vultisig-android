@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import android.net.nsd.NsdManager
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -42,6 +43,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.data.usecases.TonJettonTransferRefusedException
 import com.vultisig.wallet.data.usecases.VerifyTonJettonTransferUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -140,6 +142,24 @@ sealed class JoinKeysignError(val message: UiText) {
      */
     data object MissingQbtcClaimAccount :
         JoinKeysignError(R.string.join_keysign_qbtc_claim_missing_account.asUiText())
+
+    /** A TON jetton transfer that doesn't move what it shows, or that couldn't be checked. */
+    data class TonJettonTransferRefused(@StringRes val reason: Int) :
+        JoinKeysignError(reason.asUiText()) {
+        companion object {
+            fun from(error: Exception) =
+                TonJettonTransferRefused(
+                    when ((error as? TonJettonTransferRefusedException)?.reason) {
+                        TonJettonTransferRefusedException.Reason.NotThisVault ->
+                            R.string.join_keysign_ton_jetton_not_this_vault
+                        TonJettonTransferRefusedException.Reason.TokenMismatch ->
+                            R.string.join_keysign_ton_jetton_token_mismatch
+                        TonJettonTransferRefusedException.Reason.Unverifiable,
+                        null -> R.string.join_keysign_ton_jetton_unverifiable
+                    }
+                )
+        }
+    }
 }
 
 /** Raised when the messages to sign cannot be prepared once the ceremony starts. */
@@ -635,33 +655,30 @@ constructor(
             }
         }
 
+        // A TON jetton transfer is signed from the jetton wallet the payload names, not from the
+        // token it shows; refuse one whose sender, wallet or token details aren't this vault's own.
+        try {
+            verifyTonJettonTransfer(ksPayload, _currentVault)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "TON jetton transfer failed verification")
+            currentState.value =
+                JoinKeysignState.Error(JoinKeysignError.TonJettonTransferRefused.from(e))
+            return false
+        }
+
         this@JoinKeysignViewModel._keysignPayload = ksPayload
 
         // A QBTC claim payload is a flag carrier with no real tx body — skip the Send/verify
         // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
         if (ksPayload.isQbtcClaim) return true
 
-        return loadTransaction(ksPayload)
+        loadTransaction(ksPayload)
+        return true
     }
 
-    /** Builds the verify screen for [payload]; false when it was refused and an error is shown. */
-    private suspend fun loadTransaction(payload: KeysignPayload): Boolean {
-        // A TON jetton transfer is signed from the jetton wallet the payload names, not from the
-        // token it shows; refuse one whose wallet or token details aren't this vault's own.
-        try {
-            verifyTonJettonTransfer(payload, _currentVault.coins)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.w(e, "TON jetton transfer failed verification")
-            currentState.value =
-                JoinKeysignState.Error(
-                    JoinKeysignError.FailedToCheck(
-                        e.message ?: "Couldn't verify the TON jetton transfer"
-                    )
-                )
-            return false
-        }
+    private suspend fun loadTransaction(payload: KeysignPayload) {
         val currency = appCurrencyRepository.currency.first()
         val swapPayload = payload.swapPayload
         // Resolved after the swap branch, not before it: recognition decodes the relayed bytes and
@@ -702,7 +719,7 @@ constructor(
                         srcVaultName = _currentVault.name,
                         vaultId = vaultId,
                         currency = currency,
-                    ) ?: return true
+                    ) ?: return
                 applyVerifyResult(sendResult.result)
                 // Kick off the hero resolution in parallel with the existing security scan; the
                 // hero refresh and the badge refresh happen independently so neither blocks the
@@ -719,7 +736,6 @@ constructor(
                 scanTransaction(sendResult.transaction)
             }
         }
-        return true
     }
 
     /**

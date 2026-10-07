@@ -457,6 +457,9 @@
 
     <!-- Join Keysign -->
     <string name="join_keysign_wrong_reshare">错误的重新分享</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">此 TON 代币转账并非来自此保险库</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">显示的代币与此转账发送的代币不一致</string>
+    <string name="join_keysign_ton_jetton_unverifiable">无法验证此 TON 代币转账，请重试。</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">带有 QBTC 密钥的保险库不支持重新分享</string>
 
     <!-- Swap Screen -->

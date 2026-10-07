@@ -148,8 +148,9 @@ data class JettonTokenInfoJson(
 
 @Serializable
 data class JettonTokenInfoExtraJson(
-    // A string, like `jetton_content.decimals`.
-    @SerialName("decimals") val decimals: String? = null
+    // A string today, like `jetton_content.decimals`; read as a primitive so a number doesn't fail
+    // the whole response.
+    @SerialName("decimals") val decimals: JsonPrimitive? = null
 )
 
 @Serializable
