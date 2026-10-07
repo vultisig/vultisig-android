@@ -615,7 +615,7 @@
     <string name="send_error_xrp_destination_not_activated">Minimum amount to activate this address is %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Minimum amount to activate this address is %1$s %2$s (Existential Deposit).</string>
     <string name="send_error_near_destination_not_found">This NEAR account doesn\'t exist. Check the recipient: a transfer to it would only burn gas.</string>
-    <string name="send_error_near_unsupported_payload">This NEAR transaction isn\'t supported. Only native NEAR transfers can be signed.</string>
+    <string name="send_error_near_unsupported_payload">This NEAR transaction isn\'t supported. Only native NEAR transfers and SwapKit deposits can be signed.</string>
     <string name="send_error_near_invalid_recipient">This isn\'t a valid NEAR account. Check the recipient.</string>
     <string name="send_error_near_key_not_full_access">This vault\'s key has no full access to this NEAR account, so it can\'t send from it.</string>
     <string name="send_error_near_network">The NEAR network returned an error or an unreadable answer. Try again.</string>

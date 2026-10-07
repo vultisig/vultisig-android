@@ -31,10 +31,12 @@ import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Base64
 import kotlinx.serialization.decodeFromString
@@ -587,6 +589,35 @@ class ChainHelpersTest {
 
         assertThrows(IllegalArgumentException::class.java) {
             BittensorHelper(HEX_PUBLIC_KEY_EDDSA).getPreSignedImageHash(payload)
+        }
+    }
+
+    /**
+     * A NEAR Intents deposit goes to a fresh implicit account: a SwapKit payload naming a named
+     * account is refused even when it is also the transfer receiver.
+     */
+    @Test
+    fun nearRefusesANamedSwapKitDepositAddress() {
+        val payload =
+            loadTransactionData(NEAR_JSON_FILE).first().keysignPayload.toInternalKeySignPayload()
+        val deposit =
+            payload.copy(
+                swapPayload =
+                    SwapPayload.SwapKit(
+                        SwapKitSwapPayloadJson(
+                            fromCoin = payload.coin,
+                            toCoin = payload.coin,
+                            fromAmount = payload.toAmount,
+                            toAmountDecimal = BigDecimal.ONE,
+                            txType = SwapKitSwapPayloadJson.TX_TYPE_NEAR_DEPOSIT,
+                            txPayload = ByteArray(0),
+                            targetAddress = payload.toAddress,
+                        )
+                    )
+            )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            NearHelper(payload.coin.hexPublicKey).getPreSignedImageHash(deposit)
         }
     }
 

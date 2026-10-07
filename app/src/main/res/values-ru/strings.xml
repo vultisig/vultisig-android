@@ -1058,7 +1058,7 @@
     <string name="send_error_xrp_destination_not_activated">Минимальная сумма для активации этого адреса — %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Минимальная сумма для активации этого адреса — %1$s %2$s (экзистенциальный депозит).</string>
     <string name="send_error_near_destination_not_found">Этот аккаунт NEAR не существует. Проверьте получателя: перевод на него лишь сожжёт газ.</string>
-    <string name="send_error_near_unsupported_payload">Эта транзакция NEAR не поддерживается. Подписать можно только нативные переводы NEAR.</string>
+    <string name="send_error_near_unsupported_payload">Эта транзакция NEAR не поддерживается. Подписать можно только нативные переводы NEAR и депозиты SwapKit.</string>
     <string name="send_error_near_invalid_recipient">Это недействительный аккаунт NEAR. Проверьте получателя.</string>
     <string name="send_error_near_key_not_full_access">Ключ этого хранилища не имеет полного доступа к этому аккаунту NEAR, поэтому с него нельзя отправлять.</string>
     <string name="send_error_near_network">Сеть NEAR вернула ошибку или нечитаемый ответ. Попробуйте ещё раз.</string>

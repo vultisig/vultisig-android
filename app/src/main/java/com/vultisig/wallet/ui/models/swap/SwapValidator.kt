@@ -1,15 +1,21 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
+import timber.log.Timber
 
-internal class SwapValidator @Inject constructor() {
+internal class SwapValidator
+@Inject
+constructor(private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase) {
 
     fun validateSrcAmount(srcAmount: String): UiText? {
         if (srcAmount.isEmpty() || srcAmount.length > TextFieldUtils.AMOUNT_MAX_LENGTH) {
@@ -31,7 +37,7 @@ internal class SwapValidator @Inject constructor() {
      *   caller.
      * @return the error [UiText] to raise, or `null` if pre-flight validation passes.
      */
-    fun validateSwapPreflight(
+    suspend fun validateSwapPreflight(
         selectedSrc: SendSrc,
         srcAmountValue: BigInteger,
         selectedSrcBalance: BigInteger,
@@ -49,7 +55,7 @@ internal class SwapValidator @Inject constructor() {
      * [validateSwapPreflight], so the two cannot diverge. Returns `null` when the source balance is
      * unknown (nothing to validate yet) or when validation passes; otherwise wraps the error.
      */
-    fun validateBalanceForSwap(
+    suspend fun validateBalanceForSwap(
         src: SendSrc,
         srcAmountValue: BigInteger,
         estimatedNetworkFeeTokenValue: TokenValue?,
@@ -68,9 +74,11 @@ internal class SwapValidator @Inject constructor() {
     /**
      * Shared source-balance and native-gas check for native vs. non-native source tokens, returning
      * the error [UiText] to surface or `null` when the swap may proceed. Single source of truth for
-     * both [validateSwapPreflight] and [validateBalanceForSwap].
+     * both [validateSwapPreflight] and [validateBalanceForSwap]. A native NEAR source must also
+     * leave its storage reserve behind, sized by [GetAvailableTokenBalanceUseCase] as the send form
+     * sizes it.
      */
-    private fun validateSwapBalance(
+    private suspend fun validateSwapBalance(
         selectedSrc: SendSrc,
         srcAmountValue: BigInteger,
         selectedSrcBalance: BigInteger,
@@ -79,7 +87,23 @@ internal class SwapValidator @Inject constructor() {
         val srcToken = selectedSrc.account.token
         val feeValue = estimatedNetworkFeeTokenValue?.value ?: BigInteger.ZERO
         if (srcToken.isNativeToken) {
-            if (srcAmountValue + feeValue > selectedSrcBalance) {
+            val insufficient =
+                if (srcToken.chain == Chain.Near) {
+                    // The storage reserve is read live; a failed read refuses the swap.
+                    val spendable =
+                        try {
+                            getAvailableTokenBalance(selectedSrc.account, feeValue)?.value
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to read the NEAR storage reserve")
+                            return UiText.StringResource(R.string.network_connection_lost)
+                        }
+                    spendable == null || srcAmountValue > spendable
+                } else {
+                    srcAmountValue + feeValue > selectedSrcBalance
+                }
+            if (insufficient) {
                 return UiText.FormattedText(
                     R.string.swap_error_insufficient_balance_and_fees,
                     listOf(srcToken.ticker),

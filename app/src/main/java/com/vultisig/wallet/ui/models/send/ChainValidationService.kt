@@ -295,9 +295,9 @@ constructor(
     }
 
     /**
-     * Refuses a native NEAR send the sender cannot cover, before any keysign session starts: the
-     * amount, the gas reservation frozen into [specific] and the account's storage reserve must fit
-     * the balance read now. Fails closed when the read fails.
+     * Refuses a native NEAR send or swap deposit the sender cannot cover, before any keysign
+     * session starts: the amount, the gas reservation frozen into [specific] and the account's
+     * storage reserve must fit the balance read now. Fails closed when the read fails.
      */
     suspend fun validateNearSendAffordable(
         selectedToken: Coin,

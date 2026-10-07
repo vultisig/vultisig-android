@@ -1384,7 +1384,7 @@
     <string name="send_error_xrp_destination_not_activated">激活此地址所需的最低金额为 %1$s %2$s。</string>
     <string name="send_error_tao_destination_below_existential_deposit">激活此地址所需的最低金额为 %1$s %2$s（存在性存款）。</string>
     <string name="send_error_near_destination_not_found">此 NEAR 账户不存在。请检查收款方：向其转账只会消耗 Gas。</string>
-    <string name="send_error_near_unsupported_payload">不支持此 NEAR 交易。只能签署原生 NEAR 转账。</string>
+    <string name="send_error_near_unsupported_payload">不支持此 NEAR 交易。只能签署原生 NEAR 转账和 SwapKit 充值。</string>
     <string name="send_error_near_invalid_recipient">这不是有效的 NEAR 账户。请检查收款方。</string>
     <string name="send_error_near_key_not_full_access">此保险库的密钥对该 NEAR 账户没有完全访问权限，因此无法从该账户发送。</string>
     <string name="send_error_near_network">NEAR 网络返回了错误或无法读取的响应。请重试。</string>

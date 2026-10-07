@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import java.math.BigInteger
@@ -120,13 +121,13 @@ class NearHelper(private val vaultHexPublicKey: String) {
         return specific
     }
 
-    /** The payload is a native NEAR transfer and carries nothing else. */
+    /** The payload is a native NEAR transfer, or a SwapKit deposit, and carries nothing else. */
     private fun requirePlainTransfer(keysignPayload: KeysignPayload) {
         val coin = keysignPayload.coin
         requireNear(coin.chain == Chain.Near && coin.isNativeToken, NearRefusal.TOKENS_UNSUPPORTED)
         // A payload decoded from the wire carries "" for an unset memo.
         requireNear(keysignPayload.memo.isNullOrEmpty(), NearRefusal.MEMO)
-        requireNear(keysignPayload.swapPayload == null, NearRefusal.SWAP_PAYLOAD)
+        assertSwapKitDepositOnly(keysignPayload)
         requireNear(
             keysignPayload.wasmExecuteContractPayload == null &&
                 keysignPayload.tronTransferContractPayload == null &&
@@ -212,6 +213,45 @@ class NearHelper(private val vaultHexPublicKey: String) {
             coin.address,
             coinKeyAccount,
         )
+    }
+
+    /**
+     * A SwapKit deposit (NEAR Intents `simpleTransfer`) is signed as the plain transfer it
+     * describes, so the swap metadata must name exactly that transfer.
+     */
+    private fun assertSwapKitDepositOnly(keysignPayload: KeysignPayload) {
+        val swapPayload = keysignPayload.swapPayload ?: return
+        val swap =
+            (swapPayload as? SwapPayload.SwapKit)?.data
+                ?: throw NearRefusalException(NearRefusal.SWAPKIT_DEPOSIT_ONLY)
+        requireNear(
+            swap.fromCoin.chain == Chain.Near && swap.fromCoin.isNativeToken,
+            NearRefusal.SWAPKIT_NOT_NATIVE_NEAR,
+        )
+        // NEAR Intents deposits go to a fresh per-swap implicit account; a named target is never
+        // one.
+        requireNear(
+            NearAccountId.isImplicit(swap.targetAddress),
+            NearRefusal.SWAPKIT_DEPOSIT_NOT_IMPLICIT,
+            swap.targetAddress,
+        )
+        requireNear(
+            swap.targetAddress == keysignPayload.toAddress,
+            NearRefusal.SWAPKIT_DEPOSIT_RECEIVER_MISMATCH,
+            swap.targetAddress,
+            keysignPayload.toAddress,
+        )
+        requireNear(
+            swap.fromAmount == keysignPayload.toAmount,
+            NearRefusal.SWAPKIT_DEPOSIT_AMOUNT_MISMATCH,
+            swap.fromAmount.toString(),
+            keysignPayload.toAmount.toString(),
+        )
+        requireNear(
+            swap.txPayload.isEmpty() && swap.txType.isEmpty(),
+            NearRefusal.SWAPKIT_DEPOSIT_PREBUILT,
+        )
+        requireNear(swap.memo.isNullOrEmpty(), NearRefusal.SWAPKIT_DEPOSIT_MEMO)
     }
 
     companion object {

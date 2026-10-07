@@ -603,7 +603,7 @@
     <string name="send_error_xrp_destination_not_activated">이 주소를 활성화하려면 최소 %1$s %2$s이 필요합니다.</string>
     <string name="send_error_tao_destination_below_existential_deposit">이 주소를 활성화하려면 최소 %1$s %2$s이 필요합니다(최소 예치금).</string>
     <string name="send_error_near_destination_not_found">이 NEAR 계정은 존재하지 않습니다. 받는 사람을 확인하세요. 이 계정으로 전송하면 가스만 소모됩니다.</string>
-    <string name="send_error_near_unsupported_payload">이 NEAR 거래는 지원되지 않습니다. 네이티브 NEAR 전송만 서명할 수 있습니다.</string>
+    <string name="send_error_near_unsupported_payload">이 NEAR 거래는 지원되지 않습니다. 네이티브 NEAR 전송과 SwapKit 입금만 서명할 수 있습니다.</string>
     <string name="send_error_near_invalid_recipient">유효한 NEAR 계정이 아닙니다. 받는 사람을 확인하세요.</string>
     <string name="send_error_near_key_not_full_access">이 볼트의 키에는 이 NEAR 계정에 대한 전체 액세스 권한이 없어 이 계정에서 보낼 수 없습니다.</string>
     <string name="send_error_near_network">NEAR 네트워크가 오류 또는 읽을 수 없는 응답을 반환했습니다. 다시 시도해 주세요.</string>

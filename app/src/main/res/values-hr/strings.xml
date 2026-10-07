@@ -1058,7 +1058,7 @@
     <string name="send_error_xrp_destination_not_activated">Minimalni iznos za aktivaciju ove adrese je %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Minimalni iznos za aktivaciju ove adrese je %1$s %2$s (egzistencijalni depozit).</string>
     <string name="send_error_near_destination_not_found">Ovaj NEAR račun ne postoji. Provjerite primatelja: prijenos na njega samo bi potrošio gas.</string>
-    <string name="send_error_near_unsupported_payload">Ova NEAR transakcija nije podržana. Mogu se potpisati samo izvorni NEAR prijenosi.</string>
+    <string name="send_error_near_unsupported_payload">Ova NEAR transakcija nije podržana. Mogu se potpisati samo izvorni NEAR prijenosi i SwapKit uplate.</string>
     <string name="send_error_near_invalid_recipient">Ovo nije valjani NEAR račun. Provjerite primatelja.</string>
     <string name="send_error_near_key_not_full_access">Ključ ovog trezora nema puni pristup ovom NEAR računu, pa s njega ne može slati.</string>
     <string name="send_error_near_network">NEAR mreža vratila je pogrešku ili nečitljiv odgovor. Pokušajte ponovno.</string>

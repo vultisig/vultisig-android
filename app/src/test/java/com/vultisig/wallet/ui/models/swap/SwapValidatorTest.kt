@@ -8,17 +8,19 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
+import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 internal class SwapValidatorTest {
 
-    private val validator = SwapValidator()
+    private val validator = SwapValidator(getAvailableTokenBalance = mockk())
 
     @Test
-    fun `validateSwapPreflight passes for a native swap covered by balance plus fee`() {
+    fun `validateSwapPreflight passes for a native swap covered by balance plus fee`() = runTest {
         val src = nativeSendSrc(balance = BigInteger("1000"))
 
         val error =
@@ -33,43 +35,45 @@ internal class SwapValidatorTest {
     }
 
     @Test
-    fun `validateSwapPreflight flags a native swap when amount plus fee exceeds balance`() {
-        val src = nativeSendSrc(balance = BigInteger("1000"))
+    fun `validateSwapPreflight flags a native swap when amount plus fee exceeds balance`() =
+        runTest {
+            val src = nativeSendSrc(balance = BigInteger("1000"))
 
-        val error =
-            validator.validateSwapPreflight(
-                selectedSrc = src,
-                srcAmountValue = BigInteger("950"),
-                selectedSrcBalance = BigInteger("1000"),
-                estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), src.account.token),
+            val error =
+                validator.validateSwapPreflight(
+                    selectedSrc = src,
+                    srcAmountValue = BigInteger("950"),
+                    selectedSrcBalance = BigInteger("1000"),
+                    estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), src.account.token),
+                )
+
+            assertEquals(
+                UiText.FormattedText(
+                    R.string.swap_error_insufficient_balance_and_fees,
+                    listOf(src.account.token.ticker),
+                ),
+                error,
             )
-
-        assertEquals(
-            UiText.FormattedText(
-                R.string.swap_error_insufficient_balance_and_fees,
-                listOf(src.account.token.ticker),
-            ),
-            error,
-        )
-    }
+        }
 
     @Test
-    fun `validateSwapPreflight reports no native token when the gas account is missing`() {
-        val src = tokenSendSrc(balance = BigInteger("1000"), nativeBalance = null)
+    fun `validateSwapPreflight reports no native token when the gas account is missing`() =
+        runTest {
+            val src = tokenSendSrc(balance = BigInteger("1000"), nativeBalance = null)
 
-        val error =
-            validator.validateSwapPreflight(
-                selectedSrc = src,
-                srcAmountValue = BigInteger("500"),
-                selectedSrcBalance = BigInteger("1000"),
-                estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), nativeCoin()),
-            )
+            val error =
+                validator.validateSwapPreflight(
+                    selectedSrc = src,
+                    srcAmountValue = BigInteger("500"),
+                    selectedSrcBalance = BigInteger("1000"),
+                    estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), nativeCoin()),
+                )
 
-        assertEquals(UiText.StringResource(R.string.send_error_no_token), error)
-    }
+            assertEquals(UiText.StringResource(R.string.send_error_no_token), error)
+        }
 
     @Test
-    fun `validateSwapPreflight flags an insufficient source token balance`() {
+    fun `validateSwapPreflight flags an insufficient source token balance`() = runTest {
         val src = tokenSendSrc(balance = BigInteger("400"), nativeBalance = BigInteger("1000"))
 
         val error =
@@ -90,7 +94,7 @@ internal class SwapValidatorTest {
     }
 
     @Test
-    fun `validateSwapPreflight flags insufficient native balance for gas fees`() {
+    fun `validateSwapPreflight flags insufficient native balance for gas fees`() = runTest {
         val src = tokenSendSrc(balance = BigInteger("1000"), nativeBalance = BigInteger("50"))
 
         val error =
@@ -111,22 +115,23 @@ internal class SwapValidatorTest {
     }
 
     @Test
-    fun `validateSwapPreflight passes for a token swap with sufficient source and gas balances`() {
-        val src = tokenSendSrc(balance = BigInteger("1000"), nativeBalance = BigInteger("1000"))
+    fun `validateSwapPreflight passes for a token swap with sufficient source and gas balances`() =
+        runTest {
+            val src = tokenSendSrc(balance = BigInteger("1000"), nativeBalance = BigInteger("1000"))
 
-        val error =
-            validator.validateSwapPreflight(
-                selectedSrc = src,
-                srcAmountValue = BigInteger("500"),
-                selectedSrcBalance = BigInteger("1000"),
-                estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), nativeCoin()),
-            )
+            val error =
+                validator.validateSwapPreflight(
+                    selectedSrc = src,
+                    srcAmountValue = BigInteger("500"),
+                    selectedSrcBalance = BigInteger("1000"),
+                    estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), nativeCoin()),
+                )
 
-        assertNull(error)
-    }
+            assertNull(error)
+        }
 
     @Test
-    fun `validateBalanceForSwap returns null when the source balance is unknown`() {
+    fun `validateBalanceForSwap returns null when the source balance is unknown`() = runTest {
         val src = tokenSendSrc(balance = null, nativeBalance = BigInteger("1000"))
 
         val validation =
@@ -140,21 +145,22 @@ internal class SwapValidatorTest {
     }
 
     @Test
-    fun `validateBalanceForSwap reports no native token when the gas account is missing`() {
-        val src = tokenSendSrc(balance = BigInteger("1000"), nativeBalance = null)
+    fun `validateBalanceForSwap reports no native token when the gas account is missing`() =
+        runTest {
+            val src = tokenSendSrc(balance = BigInteger("1000"), nativeBalance = null)
 
-        val validation =
-            validator.validateBalanceForSwap(
-                src = src,
-                srcAmountValue = BigInteger("500"),
-                estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), nativeCoin()),
-            )
+            val validation =
+                validator.validateBalanceForSwap(
+                    src = src,
+                    srcAmountValue = BigInteger("500"),
+                    estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), nativeCoin()),
+                )
 
-        assertEquals(UiText.StringResource(R.string.send_error_no_token), validation?.formError)
-    }
+            assertEquals(UiText.StringResource(R.string.send_error_no_token), validation?.formError)
+        }
 
     @Test
-    fun `validateBalanceForSwap flags insufficient native balance for gas fees`() {
+    fun `validateBalanceForSwap flags insufficient native balance for gas fees`() = runTest {
         val src = tokenSendSrc(balance = BigInteger("1000"), nativeBalance = BigInteger("50"))
 
         val validation =

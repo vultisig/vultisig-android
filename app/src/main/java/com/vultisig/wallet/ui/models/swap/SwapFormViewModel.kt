@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -28,10 +29,12 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
+import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_TIER_THRESHOLD
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.send.ChainValidationService
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_DST_TOKEN_ID
@@ -84,6 +87,8 @@ constructor(
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val fiatValueToString: FiatValueToStringMapper,
     private val tokenPriceRepository: TokenPriceRepository,
+    private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase,
+    private val chainValidationService: ChainValidationService,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -130,6 +135,7 @@ constructor(
     // user raises the target.
     private val buyUnitFiat = MutableStateFlow<FiatValue?>(null)
     private var marketPriceJob: Job? = null
+    private var srcPercentageJob: Job? = null
     // The pair the current market/target prices belong to, so a pair change can invalidate them.
     private var pricedPairKey: String? = null
     private val assetFormat = DecimalFormat("#,##0.########")
@@ -810,6 +816,12 @@ constructor(
                     feeDisplay = feeDisplay,
                 )
 
+            chainValidationService.validateNearSendAffordable(
+                selectedToken = inputs.srcToken,
+                tokenAmountInt = transaction.srcTokenValue.value,
+                specific = transaction.blockChainSpecific.blockChainSpecific,
+            )
+
             swapTransactionRepository.addTransaction(transaction)
 
             navigator.route(
@@ -1031,33 +1043,63 @@ constructor(
             } else {
                 BigInteger.ZERO
             }
-        val maxUsableTokenAmount = srcTokenValue.value - reservedNetworkFee
+        srcPercentageJob?.cancel()
+        srcPercentageJob = viewModelScope.launch {
+            val maxUsableTokenAmount =
+                maxUsableSrcAmount(selectedSrcAccount, srcTokenValue, reservedNetworkFee)
+                    ?: return@launch
+            // A source picked while the NEAR reserve was read owns the field now.
+            if (selectedSrc.value?.account?.token?.id != srcToken.id) return@launch
 
-        if (maxUsableTokenAmount <= BigInteger.ZERO) {
-            // Empty (not "0"): the empty-field path clears the stale quote silently, whereas a
-            // literal "0" reaches the quote pipeline and throws/logs AmountCannotBeZero at ERROR
-            // for an expected condition. The error set below stays visible to explain why.
-            srcAmountState.setTextAndPlaceCursorAtEnd("")
-            val errorRes =
-                if (srcToken.isNativeToken) {
-                    R.string.swap_error_insufficient_balance_and_fees
-                } else {
-                    R.string.swap_error_insufficient_source_token
-                }
-            showError(UiText.FormattedText(errorRes, listOf(srcToken.ticker)))
-            return
+            if (maxUsableTokenAmount <= BigInteger.ZERO) {
+                // Empty (not "0"): the empty-field path clears the stale quote silently,
+                // whereas a literal "0" reaches the quote pipeline and throws/logs
+                // AmountCannotBeZero at ERROR for an expected condition. The error set below
+                // stays visible to explain why.
+                srcAmountState.setTextAndPlaceCursorAtEnd("")
+                val errorRes =
+                    if (srcToken.isNativeToken) {
+                        R.string.swap_error_insufficient_balance_and_fees
+                    } else {
+                        R.string.swap_error_insufficient_source_token
+                    }
+                showError(UiText.FormattedText(errorRes, listOf(srcToken.ticker)))
+                return@launch
+            }
+
+            val amount =
+                TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
+                    .multiply(percentage.toBigDecimal())
+                    .formatFlippedAmount(srcTokenValue.decimals)
+
+            // A percentage / Max tap is an explicit, deliberate amount — fetch the quote
+            // immediately instead of waiting out the typing debounce (#4712). Mark before
+            // mutating the text so the resulting emission is already marked immediate.
+            swapQuoteManager.markImmediateFetch()
+            srcAmountState.setTextAndPlaceCursorAtEnd(amount)
         }
+    }
 
-        val amount =
-            TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
-                .multiply(percentage.toBigDecimal())
-                .formatFlippedAmount(srcTokenValue.decimals)
-
-        // A percentage / Max tap is an explicit, deliberate amount — fetch the quote immediately
-        // instead of waiting out the typing debounce (#4712). Mark before mutating the text so the
-        // resulting emission is already marked immediate.
-        swapQuoteManager.markImmediateFetch()
-        srcAmountState.setTextAndPlaceCursorAtEnd(amount)
+    /**
+     * The source balance a percentage tap sizes from, less [reservedNetworkFee]. NEAR shows its raw
+     * balance, so its storage reserve is read live and kept behind; null once a failed read has
+     * been shown as an error.
+     */
+    private suspend fun maxUsableSrcAmount(
+        account: Account,
+        srcTokenValue: TokenValue,
+        reservedNetworkFee: BigInteger,
+    ): BigInteger? {
+        if (account.token.chain != Chain.Near) return srcTokenValue.value - reservedNetworkFee
+        return try {
+            checkNotNull(getAvailableTokenBalance(account, reservedNetworkFee)).value
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to size the selected swap amount fraction")
+            showError(UiText.StringResource(R.string.network_connection_lost))
+            null
+        }
     }
 
     fun loadData(vaultId: String, chainId: String?, srcTokenId: String?, dstTokenId: String?) {
