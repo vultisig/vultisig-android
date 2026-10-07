@@ -286,6 +286,7 @@ internal class SwapKitProviderCacheTest {
                 "polygon" to Chain.Polygon,
                 "matic" to Chain.Polygon,
                 "solana" to Chain.Solana,
+                "near" to Chain.Near,
                 // Case-insensitivity sanity check.
                 "Ethereum" to Chain.Ethereum,
                 "SOLANA" to Chain.Solana,
@@ -325,7 +326,6 @@ internal class SwapKitProviderCacheTest {
 
     @Test
     fun `chain ids the wallet holds no account for map to null`() = runTest {
-        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("near"))
         assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("stellar"))
         assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("aleo"))
         assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("80094")) // Berachain
