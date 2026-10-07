@@ -168,6 +168,7 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
             Chain.Noble,
             Chain.Akash,
             Chain.Sei,
+            Chain.Near,
             Chain.Qbtc -> emptySet()
         }
     }

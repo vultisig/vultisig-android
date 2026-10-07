@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asAddressInput
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -365,7 +366,9 @@ internal class DefaultSendStrategy(
                                         required =
                                             tokenAmountInt +
                                                 spendableGasFee.value +
-                                                sendRetainedReserve(selectedToken),
+                                                chainValidationService.retainedReserve(
+                                                    selectedToken
+                                                ),
                                         available = selectedTokenValue.value,
                                         includesNetworkCosts = true,
                                     )
@@ -400,6 +403,14 @@ internal class DefaultSendStrategy(
                                 tokenAmountInt,
                                 chain,
                                 planBtc.value,
+                            )
+                        }
+
+                        withContext(Dispatchers.IO) {
+                            chainValidationService.validateNearSendAffordable(
+                                selectedToken = selectedToken,
+                                tokenAmountInt = stagedAmountInt,
+                                specific = specific.blockChainSpecific,
                             )
                         }
                     } else if (
@@ -513,6 +524,10 @@ internal class DefaultSendStrategy(
                             dstAddress = dstAddress,
                             tokenAmountInt = tokenAmountInt,
                         )
+                        chainValidationService.validateNearDestinationExists(
+                            selectedToken = selectedToken,
+                            dstAddress = dstAddress,
+                        )
                     }
 
                     val evmGasSettings = gasSettings.value.evmSettingsFor(chain)
@@ -585,7 +600,8 @@ internal class DefaultSendStrategy(
                     throw e
                 } catch (e: Exception) {
                     showError(
-                        e.message?.asUiText()
+                        e.nearErrorTextOrNull()
+                            ?: e.message?.asUiText()
                             ?: UiText.StringResource(R.string.dialog_default_error_body)
                     )
                 } finally {
