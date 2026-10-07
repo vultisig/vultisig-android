@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.api.swapAggregators.swapKitErc20DepositRecipient
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
 import com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSignerException
 import com.vultisig.wallet.data.chains.helpers.SwapKitLegacyPsbtVersion
 import com.vultisig.wallet.data.chains.helpers.SwapKitPsbtException
@@ -609,6 +610,8 @@ constructor(
      * Refuses a SwapKit ERC-20 deposit (the tx calls the sold token, or any `transfer` call) unless
      * it is exactly `transfer(targetAddress, soldAmount)` on the sold token with no native value.
      * The refusal is [SwapKitError.Decoding] so the picker drops SwapKit; a router tx passes as is.
+     * A bound deposit carries the ERC-20 transfer gas floor in place of SwapKit's route gas, which
+     * sizes a router call, not a token transfer.
      */
     private fun EVMSwapQuoteJson.bindErc20Deposit(
         srcToken: Coin,
@@ -628,7 +631,7 @@ constructor(
                 "SwapKit ERC-20 deposit transfers to $recipient, not targetAddress $targetAddress"
             )
         }
-        return this
+        return copy(tx = tx.copy(gas = DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN.toLong()))
     }
 
     /**

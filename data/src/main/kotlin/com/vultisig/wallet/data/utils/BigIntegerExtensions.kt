@@ -31,6 +31,15 @@ fun BigInteger.toSafeByteArray(): ByteArray {
     }
 }
 
+/**
+ * This value as a Long, refused rather than truncated when it does not fit, so a relayed value can
+ * never diverge between co-signers. `longValueExact()` is API 31+, above minSdk.
+ */
+fun BigInteger.toLongExact(): Long {
+    require(bitLength() < Long.SIZE_BITS) { "$this exceeds the Long range" }
+    return toLong()
+}
+
 fun BigInteger.increaseByPercent(percent: Int): BigInteger =
     this.multiply(BigInteger.valueOf(100L + percent)).divide(BigInteger.valueOf(100))
 

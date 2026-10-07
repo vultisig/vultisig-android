@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.swap
 
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
@@ -550,6 +551,7 @@ internal class SwapGasCalculatorTest {
                 srcToken = ethCoin,
                 baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
                 routeGas = 286_146L,
+                isErc20DepositTransfer = false,
             )
 
         requireNotNull(result)
@@ -569,6 +571,7 @@ internal class SwapGasCalculatorTest {
                 srcToken = ethCoin,
                 baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
                 routeGas = 0L,
+                isErc20DepositTransfer = false,
             )
         assertNull(result)
     }
@@ -588,6 +591,7 @@ internal class SwapGasCalculatorTest {
                     baselineGasFee =
                         TokenValue(BigInteger.valueOf(6_000_000), nativeCoinFor(Chain.Ethereum)),
                     routeGas = 286_146L,
+                    isErc20DepositTransfer = false,
                 )
             assertNull(result)
         }
@@ -610,6 +614,7 @@ internal class SwapGasCalculatorTest {
                     srcToken = erc20,
                     baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), ethCoin),
                     routeGas = 900_000L,
+                    isErc20DepositTransfer = false,
                 )
 
             requireNotNull(result)
@@ -630,6 +635,7 @@ internal class SwapGasCalculatorTest {
                 srcToken = baseCoin,
                 baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), baseCoin),
                 routeGas = 900_000L,
+                isErc20DepositTransfer = false,
             )
         assertNull(result)
     }
@@ -648,6 +654,7 @@ internal class SwapGasCalculatorTest {
                 srcToken = arbCoin,
                 baselineGasFee = TokenValue(BigInteger.valueOf(6_000_000), arbCoin),
                 routeGas = 100_000L,
+                isErc20DepositTransfer = false,
             )
 
         requireNotNull(result)
@@ -697,6 +704,7 @@ internal class SwapGasCalculatorTest {
                     srcToken = ethCoin,
                     baselineGasFee = baselineGasFee,
                     routeGas = routeGas,
+                    isErc20DepositTransfer = false,
                 )
 
             requireNotNull(result)
@@ -718,7 +726,11 @@ internal class SwapGasCalculatorTest {
     fun `evmSwapDisplayGasLimit returns route gas for native ETH above the 40k floor`() {
         assertEquals(
             BigInteger.valueOf(286_146),
-            evmSwapDisplayGasLimit(nativeCoinFor(Chain.Ethereum), 286_146L),
+            evmSwapDisplayGasLimit(
+                nativeCoinFor(Chain.Ethereum),
+                286_146L,
+                isErc20DepositTransfer = false,
+            ),
         )
     }
 
@@ -726,28 +738,132 @@ internal class SwapGasCalculatorTest {
     fun `evmSwapDisplayGasLimit floors native Arbitrum at its 400k limit`() {
         assertEquals(
             BigInteger.valueOf(400_000),
-            evmSwapDisplayGasLimit(nativeCoinFor(Chain.Arbitrum), 100_000L),
+            evmSwapDisplayGasLimit(
+                nativeCoinFor(Chain.Arbitrum),
+                100_000L,
+                isErc20DepositTransfer = false,
+            ),
         )
     }
 
     @Test
     fun `evmSwapDisplayGasLimit returns null for ERC-20 at or below the 600k default`() {
-        assertNull(evmSwapDisplayGasLimit(evmErc20Coin(Chain.Ethereum), 286_146L))
+        assertNull(
+            evmSwapDisplayGasLimit(
+                evmErc20Coin(Chain.Ethereum),
+                286_146L,
+                isErc20DepositTransfer = false,
+            )
+        )
     }
 
     @Test
     fun `evmSwapDisplayGasLimit returns route gas for ERC-20 above the 600k default`() {
         assertEquals(
             BigInteger.valueOf(900_000),
-            evmSwapDisplayGasLimit(evmErc20Coin(Chain.Ethereum), 900_000L),
+            evmSwapDisplayGasLimit(
+                evmErc20Coin(Chain.Ethereum),
+                900_000L,
+                isErc20DepositTransfer = false,
+            ),
         )
     }
 
     @Test
     fun `evmSwapDisplayGasLimit returns null for OP-stack L2s and for zero route gas`() {
-        assertNull(evmSwapDisplayGasLimit(nativeCoinFor(Chain.Base), 900_000L))
-        assertNull(evmSwapDisplayGasLimit(nativeCoinFor(Chain.Ethereum), 0L))
+        assertNull(
+            evmSwapDisplayGasLimit(
+                nativeCoinFor(Chain.Base),
+                900_000L,
+                isErc20DepositTransfer = false,
+            )
+        )
+        assertNull(
+            evmSwapDisplayGasLimit(
+                nativeCoinFor(Chain.Ethereum),
+                0L,
+                isErc20DepositTransfer = false,
+            )
+        )
     }
+
+    // ── SwapKit ERC-20 deposits: a token transfer, sized and shown as one ──
+
+    @Test
+    fun `evmSwapDisplayGasLimit shows an ERC-20 deposit at its transfer gas below the swap default`() {
+        assertEquals(
+            BigInteger.valueOf(210_000),
+            evmSwapDisplayGasLimit(
+                evmErc20Coin(Chain.Ethereum),
+                210_000L,
+                isErc20DepositTransfer = true,
+            ),
+        )
+    }
+
+    /**
+     * iOS relays the 120k ERC-20 floor as `tx.gas` and its own simulation as the specific's limit;
+     * the signer takes the larger, so a co-signer must show that and not the relayed `tx.gas`.
+     */
+    @Test
+    fun `evmSwapPayloadDisplayGasLimit shows the limit a deposit is signed with`() {
+        val token = evmErc20Coin(Chain.Arbitrum)
+        val deposit =
+            OneInchSwapTxJson(
+                from = "0xerc20",
+                to = token.contractAddress,
+                gas = 120_000,
+                data = "0x",
+                value = "0",
+                gasPrice = "1",
+            )
+
+        assertEquals(
+            BigInteger.valueOf(300_000),
+            evmSwapPayloadDisplayGasLimit(token, deposit, ethereumSpecific(gasLimit = 300_000)),
+        )
+    }
+
+    @Test
+    fun `getErc20DepositTransferSpecific prices the deposit as a transfer to its recipient`() =
+        runTest {
+            val token = evmErc20Coin(Chain.Ethereum)
+            val amount = BigInteger.valueOf(20_000_000)
+            val specific = BlockChainSpecificAndUtxo(ethereumSpecific(gasLimit = 210_000))
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = Chain.Ethereum,
+                    address = "0xerc20",
+                    token = token,
+                    gasFee = any(),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                    gasLimit = null,
+                    dstAddress = "0xdeposit",
+                    tokenAmountValue = amount,
+                )
+            } returns specific
+
+            val result =
+                calculator.getErc20DepositTransferSpecific(
+                    srcToken = token,
+                    srcAddress = "0xerc20",
+                    gasFee = TokenValue(BigInteger.ONE, nativeCoinFor(Chain.Ethereum)),
+                    recipient = "0xdeposit",
+                    amount = amount,
+                )
+
+            assertEquals(specific, result)
+        }
+
+    private fun ethereumSpecific(gasLimit: Long) =
+        BlockChainSpecific.Ethereum(
+            maxFeePerGasWei = BigInteger.TEN,
+            priorityFeeWei = BigInteger.ONE,
+            nonce = BigInteger.ZERO,
+            gasLimit = BigInteger.valueOf(gasLimit),
+        )
 
     private fun stubGetSpecific() {
         coEvery {

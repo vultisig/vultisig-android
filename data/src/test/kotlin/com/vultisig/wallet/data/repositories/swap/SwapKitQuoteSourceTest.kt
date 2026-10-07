@@ -482,6 +482,18 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
+    fun `fetch sizes an ERC-20 deposit at the ERC-20 transfer gas floor, not SwapKit's route gas`() =
+        runTest {
+            // A router-sized 900k figure on a plain token transfer over-reserves the fee and
+            // blocks low-balance deposits.
+            stubErc20Deposit(gas = "0xdbba0")
+
+            val result = source().fetch(usdtDepositRequest()) as SwapQuoteResult.Evm
+
+            assertEquals(210_000L, result.data.tx.gas)
+        }
+
+    @Test
     fun `fetch refuses an ERC-20 deposit whose calldata recipient is not targetAddress`() =
         runTest {
             stubErc20Deposit(targetAddress = "0x000000000000000000000000000000000000dEaD")
