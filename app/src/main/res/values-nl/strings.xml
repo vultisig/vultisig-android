@@ -1048,6 +1048,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Het minimumbedrag om dit adres te activeren is %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Het minimumbedrag om dit adres te activeren is %1$s %2$s (Existential Deposit).</string>
+    <string name="send_error_near_destination_not_found">Dit NEAR-account bestaat niet. Controleer de ontvanger: een overboeking ernaartoe verbruikt alleen gas.</string>
+    <string name="send_error_near_unsupported_payload">Deze NEAR-transactie wordt niet ondersteund. Alleen native NEAR-overboekingen kunnen worden ondertekend.</string>
+    <string name="send_error_near_invalid_recipient">Dit is geen geldig NEAR-account. Controleer de ontvanger.</string>
+    <string name="send_error_near_key_not_full_access">De sleutel van deze kluis heeft geen volledige toegang tot dit NEAR-account en kan er dus niet vanaf verzenden.</string>
+    <string name="send_error_near_network">Het NEAR-netwerk gaf een fout of een onleesbaar antwoord. Probeer het opnieuw.</string>
+    <string name="send_error_near_safety_check">Deze NEAR-transactie heeft een veiligheidscontrole niet doorstaan en is niet ondertekend.</string>
     <string name="send_error_xrp_destination_tag_required">Dit adres vereist een bestemmingstag. Voeg er een toe om door te gaan.</string>
     <string name="send_error_xrp_destination_no_trust_line">Dit adres kan geen %1$s ontvangen. De ontvanger moet daarvoor eerst een trustline openen.</string>
     <string name="ripple_trust_line_title">Trustline activeren</string>

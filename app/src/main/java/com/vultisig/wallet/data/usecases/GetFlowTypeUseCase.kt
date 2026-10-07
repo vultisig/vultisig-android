@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.common.UNKNOWN_FLOW
 import com.vultisig.wallet.data.common.isJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.isRecognizedAs
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import javax.inject.Inject
 import timber.log.Timber
@@ -30,7 +31,7 @@ constructor(private val chainAccountAddressRepository: ChainAccountAddressReposi
                 val address = qr.getAddressFromQrCode()
                 if (
                     Chain.entries.any { chain ->
-                        chainAccountAddressRepository.isValid(chain, address)
+                        chainAccountAddressRepository.isRecognizedAs(chain, address)
                     }
                 ) {
                     JOIN_SEND_ON_ADDRESS_FLOW

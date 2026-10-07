@@ -33,6 +33,7 @@ fun String.getChain(): Chain {
         "CRO" -> Chain.CronosChain
         "DOT" -> Chain.Polkadot
         "TAO" -> Chain.Bittensor
+        "NEAR" -> Chain.Near
         "DYDX" -> Chain.Dydx
         "ZK" -> Chain.ZkSync
         "SUI" -> Chain.Sui

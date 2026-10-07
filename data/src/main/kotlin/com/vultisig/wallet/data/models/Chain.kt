@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.TokenStandard.COSMOS
 import com.vultisig.wallet.data.models.TokenStandard.EVM
+import com.vultisig.wallet.data.models.TokenStandard.NEAR
 import com.vultisig.wallet.data.models.TokenStandard.RIPPLE
 import com.vultisig.wallet.data.models.TokenStandard.SOL
 import com.vultisig.wallet.data.models.TokenStandard.SUBSTRATE
@@ -69,6 +70,7 @@ enum class Chain(
     Ton("Ton", TON, "TON", displayName = "TON (GRAM)"),
     Ripple("Ripple", RIPPLE, "XRP", displayName = "Ripple"),
     Tron("Tron", TRC20, "TRX", displayName = "Tron"),
+    Near("Near", NEAR, "yoctoNEAR", displayName = "Near"),
     Qbtc("QBTC", COSMOS, "qbtc", displayName = "QBTC");
 
     val id: ChainId
@@ -98,7 +100,7 @@ enum class Chain(
         fun displayNameOf(raw: String): String = fromRawOrNull(raw)?.displayName ?: raw
 
         val keyImportSupportedChains: List<Chain>
-            get() = entries.filter { it != Cardano && it != Qbtc }
+            get() = entries.filter { it != Cardano && it != Qbtc && it != Near }
     }
 }
 
@@ -145,6 +147,7 @@ val Chain.coinType: CoinType
             Chain.ZkSync -> CoinType.ZKSYNC
             Chain.Sui -> CoinType.SUI
             Chain.Ton -> CoinType.TON
+            Chain.Near -> CoinType.NEAR
             Chain.Osmosis -> CoinType.OSMOSIS
             Chain.Terra -> CoinType.TERRAV2
             Chain.TerraClassic -> CoinType.TERRA
@@ -181,6 +184,7 @@ val Chain.TssKeysignType: TssKeyType
             Chain.Bittensor,
             Chain.Sui,
             Chain.Ton,
+            Chain.Near,
             Chain.Cardano -> TssKeyType.EDDSA
             Chain.Qbtc -> TssKeyType.MLDSA
             else -> TssKeyType.ECDSA
@@ -235,6 +239,7 @@ val Chain.isSwapSupported: Boolean
                 Chain.Litecoin,
                 Chain.Dash,
                 Chain.Ripple,
+                Chain.Near,
                 Chain.Avalanche,
                 Chain.Base,
                 Chain.BscChain,
@@ -452,6 +457,7 @@ fun Chain.swapAssetName(): String {
         Chain.ZkSync -> "ZK"
         Chain.Sui -> "SUI"
         Chain.Ton -> "TON"
+        Chain.Near -> "NEAR"
         Chain.Osmosis -> "OSMO"
         Chain.Terra -> "LUNA"
         Chain.TerraClassic -> "LUNC"
@@ -523,6 +529,7 @@ fun Chain.ticker(): String {
         Chain.ZkSync -> "ZK"
         Chain.Sui -> "SUI"
         Chain.Ton -> "TON"
+        Chain.Near -> "NEAR"
         Chain.Osmosis -> "OSMO"
         Chain.Terra -> "LUNA"
         Chain.TerraClassic -> "LUNC"

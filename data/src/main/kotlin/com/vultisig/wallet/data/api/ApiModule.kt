@@ -42,6 +42,8 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindBittensorApi(impl: BittensorApiImp): BittensorApi
 
+    @Binds @Singleton fun bindNearApi(impl: NearApiImpl): NearApi
+
     @Binds fun bindSessionApi(impl: SessionApiImpl): SessionApi
 
     @Binds @Singleton fun bindCoinGeckoApi(impl: CoinGeckoApiImpl): CoinGeckoApi

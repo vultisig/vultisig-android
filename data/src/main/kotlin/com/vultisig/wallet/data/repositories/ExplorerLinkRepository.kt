@@ -106,6 +106,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
                 Chain.Polkadot -> "https://assethub-polkadot.subscan.io/extrinsic/"
                 Chain.Bittensor -> "https://taostats.io/extrinsic/"
+                Chain.Near -> "${explorerUrl}txns/"
 
                 else -> "${explorerUrl}tx/"
             }
@@ -177,6 +178,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.ThorChain -> "https://runescan.io/"
                 Chain.Polkadot -> "https://assethub-polkadot.subscan.io/"
                 Chain.Bittensor -> "https://taostats.io/"
+                Chain.Near -> "https://nearblocks.io/"
                 Chain.ZkSync -> "https://explorer.zksync.io/"
                 Chain.Sui -> "https://suiscan.xyz/mainnet/"
                 Chain.Ton -> "https://tonviewer.com/"
