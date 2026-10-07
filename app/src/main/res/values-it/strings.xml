@@ -1224,6 +1224,7 @@
     <string name="swap_external_recipient_invalid">Indirizzo del destinatario non valido</string>
     <string name="swap_external_recipient_unsupported">Il destinatario esterno non è disponibile per questo scambio. Disattivalo per continuare.</string>
     <string name="verify_swap_recipient">Destinatario</string>
+    <string name="verify_swap_deposit_address">Indirizzo di deposito</string>
     <string name="keygen_benefit_1_template">Rimozione del singolo punto di errore</string>
     <string name="keygen_benefit_1_emphasized">Sicurezza multifattoriale,</string>
     <string name="keygen_benefit_2_template">che ti dà il controllo completo sui tuoi asset</string>
