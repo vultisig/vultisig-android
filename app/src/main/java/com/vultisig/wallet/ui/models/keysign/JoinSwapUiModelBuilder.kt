@@ -45,7 +45,7 @@ import com.vultisig.wallet.ui.models.swap.SwapFeeRow
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
-import com.vultisig.wallet.ui.models.swap.evmSwapDisplayGasLimit
+import com.vultisig.wallet.ui.models.swap.evmSwapPayloadDisplayGasLimit
 import com.vultisig.wallet.ui.models.swap.formatAffiliatePercent
 import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
@@ -107,8 +107,10 @@ constructor(
         // EVM aggregator display gas limit, computed with the same rule as the initiator so both
         // co-signers show the same fee; null for native deposits and OP-stack L2s (#5056).
         val aggregatorDisplayGasLimit =
-            (swapPayload as? SwapPayload.EVM)?.let {
-                evmSwapDisplayGasLimit(srcToken, it.data.quote.tx.gas)
+            (swapPayload as? SwapPayload.EVM)?.let { evm ->
+                (blockChainSpecific as? BlockChainSpecific.Ethereum)?.let {
+                    evmSwapPayloadDisplayGasLimit(srcToken, evm.data.quote.tx, it)
+                }
             }
         val gasFee =
             when {

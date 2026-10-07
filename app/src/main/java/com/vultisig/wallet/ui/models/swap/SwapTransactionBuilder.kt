@@ -2,7 +2,11 @@
 
 package com.vultisig.wallet.ui.models.swap
 
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.swapAggregators.callsSoldToken
+import com.vultisig.wallet.data.api.swapAggregators.swapKitErc20DepositRecipient
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
+import com.vultisig.wallet.data.chains.helpers.EthereumGasHelper.requireEthereumSpec
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
@@ -19,7 +23,9 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.swapProviderFromWireId
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.ApprovalRequirement
+import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
+import com.vultisig.wallet.data.utils.toLongExact
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
@@ -288,31 +294,42 @@ constructor(
                 // Derivation is factored into approveSpenderFor (pinned by test) so
                 // a regression collapsing it to `to` can't pass CI silently.
                 val approveSpender = approveSpenderFor(quote.data.tx)
-                val specificAndUtxo =
-                    swapGasCalculator.getSpecificAndUtxo(srcToken, srcAddress, gasFee)
-
-                val approval =
-                    allowanceRepository.getApprovalRequirement(
-                        chain = srcToken.chain,
-                        contractAddress = srcToken.contractAddress,
-                        srcAddress = srcAddress,
-                        dstAddress = approveSpender,
-                        amount = srcTokenValue.value,
-                    )
+                val (specificAndUtxo, approval, routeGas) =
+                    if (quote.data.tx.callsSoldToken(srcToken)) {
+                        erc20DepositSpend(
+                            quote.data.tx,
+                            srcToken,
+                            srcAddress,
+                            srcTokenValue,
+                            gasFee,
+                        )
+                    } else {
+                        EvmSpend(
+                            specificAndUtxo =
+                                swapGasCalculator.getSpecificAndUtxo(srcToken, srcAddress, gasFee),
+                            approval =
+                                allowanceRepository.getApprovalRequirement(
+                                    chain = srcToken.chain,
+                                    contractAddress = srcToken.contractAddress,
+                                    srcAddress = srcAddress,
+                                    dstAddress = approveSpender,
+                                    amount = srcTokenValue.value,
+                                ),
+                            // Aggregators can return a non-positive tx.gas; fall back to the
+                            // standard EVM swap unit so a malformed gas limit never reaches the
+                            // shared signed payload (matches SwapQuoteManager's fee path).
+                            routeGas =
+                                quote.data.tx.gas.takeIf { it > 0L }
+                                    ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT,
+                        )
+                    }
 
                 val specific = specificAndUtxo.blockChainSpecific
-                // Aggregators can return a non-positive tx.gas; fall back to the standard EVM swap
-                // unit so a malformed (zero or negative) gas limit never reaches the shared signed
-                // payload (matches SwapQuoteManager's fee path).
-                //
                 // A user gas-limit override (#4858) replaces the aggregator estimate. OneInchSwap
                 // signs with maxOf(tx.gas, ethSpecific.gasLimit), so set BOTH to the override —
                 // maxOf(x, x) = x — making it effective whether the user raises or lowers the
                 // limit. Auto (null/non-positive) keeps the estimate and the current behavior.
-                val gasLimit =
-                    gasLimitOverride?.takeIf { it > 0L }
-                        ?: (quote.data.tx.gas.takeIf { it > 0L }
-                            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
+                val gasLimit = gasLimitOverride?.takeIf { it > 0L } ?: routeGas
                 val hasGasOverride = gasLimitOverride != null && gasLimitOverride > 0L
                 val effectiveSpecificAndUtxo =
                     if (specific is BlockChainSpecific.Ethereum && hasGasOverride) {
@@ -323,16 +340,6 @@ constructor(
                         specificAndUtxo
                     }
 
-                val (displayGasFees, displayGasFeeFiat) =
-                    displayedSwapGasFee(
-                        specific = specific,
-                        srcToken = srcToken,
-                        gasLimit = gasLimit,
-                        gasFee = gasFee,
-                        gasFeeFiatValue = gasFeeFiatValue,
-                        estimatedNetworkFeeTokenValue = estimatedNetworkFeeTokenValue,
-                        estimatedNetworkFeeFiatValue = estimatedNetworkFeeFiatValue,
-                    )
                 val quoteData =
                     if (specific is BlockChainSpecific.Ethereum) {
                         quote.data.copy(
@@ -345,6 +352,18 @@ constructor(
                     } else {
                         quote.data
                     }
+                val (displayGasFees, displayGasFeeFiat) =
+                    displayedSwapGasFee(
+                        specific = specific,
+                        displayLimit =
+                            (effectiveSpecificAndUtxo.blockChainSpecific
+                                    as? BlockChainSpecific.Ethereum)
+                                ?.let { evmSwapPayloadDisplayGasLimit(srcToken, quoteData.tx, it) },
+                        gasFee = gasFee,
+                        gasFeeFiatValue = gasFeeFiatValue,
+                        estimatedNetworkFeeTokenValue = estimatedNetworkFeeTokenValue,
+                        estimatedNetworkFeeFiatValue = estimatedNetworkFeeFiatValue,
+                    )
                 // A literal 1inch quote carries no affiliate fee, so `quote.fees` is 1inch's own
                 // quoted `gasPrice × gas` shown as the "Swap Fee". The joiner re-derives that same
                 // placeholder from the signed tx's `gasPrice × gas` (JoinSwapUiModelBuilder's
@@ -405,10 +424,46 @@ constructor(
         }
     }
 
+    /** The chain specifics, allowance and route gas an EVM swap tx spends with. */
+    private data class EvmSpend(
+        val specificAndUtxo: BlockChainSpecificAndUtxo,
+        val approval: ApprovalRequirement,
+        val routeGas: Long,
+    )
+
+    /**
+     * A SwapKit ERC-20 deposit is a plain token transfer: it spends no allowance and is priced and
+     * gas-limited as that transfer, so its route gas is the transfer limit, not SwapKit's.
+     */
+    private suspend fun erc20DepositSpend(
+        tx: OneInchSwapTxJson,
+        srcToken: Coin,
+        srcAddress: String,
+        srcTokenValue: TokenValue,
+        gasFee: TokenValue,
+    ): EvmSpend {
+        val specificAndUtxo =
+            swapGasCalculator.getErc20DepositTransferSpecific(
+                srcToken = srcToken,
+                srcAddress = srcAddress,
+                gasFee = gasFee,
+                // A tx addressed to the sold token decodes to its deposit recipient or throws.
+                recipient =
+                    checkNotNull(swapKitErc20DepositRecipient(tx, srcToken, srcTokenValue.value)),
+                amount = srcTokenValue.value,
+            )
+        return EvmSpend(
+            specificAndUtxo = specificAndUtxo,
+            approval = ApprovalRequirement.NotRequired,
+            routeGas =
+                requireEthereumSpec(specificAndUtxo.blockChainSpecific).gasLimit.toLongExact(),
+        )
+    }
+
     /**
      * Displayed/staged EVM swap network fee (never the signed tx): valued at the exact gas
      * parameters stamped into the payload — [BlockChainSpecific.Ethereum.maxFeePerGasWei] times the
-     * co-signer-aligned display gas limit ([evmSwapDisplayGasLimit], falling back to
+     * co-signer-aligned [displayLimit] ([evmSwapPayloadDisplayGasLimit], falling back to
      * [EthereumFeeService.DEFAULT_SWAP_LIMIT]). This is the identical formula the joiner applies in
      * `computeJoinKeysignSwapNetworkFee` off the same stamped `tx.gas` (which already folds in a
      * user gas-limit override, #4858), so every device — including OP-stack L2s and sub-floor
@@ -419,8 +474,7 @@ constructor(
      */
     private fun displayedSwapGasFee(
         specific: BlockChainSpecific,
-        srcToken: Coin,
-        gasLimit: Long,
+        displayLimit: BigInteger?,
         gasFee: TokenValue,
         gasFeeFiatValue: FiatValue,
         estimatedNetworkFeeTokenValue: TokenValue?,
@@ -439,11 +493,9 @@ constructor(
         if (specific !is BlockChainSpecific.Ethereum || referenceFee.value.signum() <= 0) {
             return referenceFee to referenceFiat
         }
-        // Floor an override / route gas exactly as the joiner does so both devices agree, even for
-        // OP-stack L2s (null → DEFAULT_SWAP_LIMIT) and sub-floor overrides.
-        val displayLimit =
-            evmSwapDisplayGasLimit(srcToken, gasLimit) ?: EthereumFeeService.DEFAULT_SWAP_LIMIT
-        val feeWei = specific.maxFeePerGasWei * displayLimit
+        // OP-stack L2s (null → DEFAULT_SWAP_LIMIT) land on the same limit the joiner falls back to.
+        val feeWei =
+            specific.maxFeePerGasWei * (displayLimit ?: EthereumFeeService.DEFAULT_SWAP_LIMIT)
         return gasFee.copy(value = feeWei) to repriceFee(feeWei, referenceFee, referenceFiat)
     }
 

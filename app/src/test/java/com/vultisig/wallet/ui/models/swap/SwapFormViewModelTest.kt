@@ -2616,10 +2616,20 @@ internal class SwapFormViewModelTest {
             // already on screen, not a fresh fetch.
             val overrideBond = TokenValue(BigInteger("10000000000000000"), ETH_COIN)
             coEvery {
-                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 0L)
+                swapGasCalculator.rebaseEvmSwapNetworkFee(
+                    any(),
+                    any(),
+                    routeGas = 0L,
+                    isErc20DepositTransfer = false,
+                )
             } returns null
             coEvery {
-                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 1_000_000L)
+                swapGasCalculator.rebaseEvmSwapNetworkFee(
+                    any(),
+                    any(),
+                    routeGas = 1_000_000L,
+                    isErc20DepositTransfer = false,
+                )
             } returns
                 GasCalculationResult(
                     gasFee = overrideBond,
@@ -2711,14 +2721,29 @@ internal class SwapFormViewModelTest {
                     chain = Chain.Ethereum,
                 )
             coEvery {
-                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 0L)
+                swapGasCalculator.rebaseEvmSwapNetworkFee(
+                    any(),
+                    any(),
+                    routeGas = 0L,
+                    isErc20DepositTransfer = false,
+                )
             } returns null
             coEvery {
-                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 1_000_000L)
+                swapGasCalculator.rebaseEvmSwapNetworkFee(
+                    any(),
+                    any(),
+                    routeGas = 1_000_000L,
+                    isErc20DepositTransfer = false,
+                )
             } returns overrideResult("0.01 ETH")
             val rebaseGate = CompletableDeferred<Unit>()
             coEvery {
-                swapGasCalculator.rebaseEvmSwapNetworkFee(any(), any(), routeGas = 2_000_000L)
+                swapGasCalculator.rebaseEvmSwapNetworkFee(
+                    any(),
+                    any(),
+                    routeGas = 2_000_000L,
+                    isErc20DepositTransfer = false,
+                )
             } coAnswers
                 {
                     rebaseGate.await()
