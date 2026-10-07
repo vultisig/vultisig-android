@@ -55,13 +55,7 @@ class OneInchSwap(private val vaultHexPublicKey: String, private val vaultHexCha
                     Transaction.newBuilder()
                         .setContractGeneric(
                             Transaction.ContractGeneric.newBuilder()
-                                .setAmount(
-                                    quote.tx.value
-                                        .toBigIntegerOrNull()
-                                        ?.toByteArray()
-                                        ?.toByteString()
-                                        ?: BigInteger.ZERO.toByteArray().toByteString()
-                                )
+                                .setAmount(BigInteger(quote.tx.value).toByteArray().toByteString())
                                 .setData(quote.tx.data.removePrefix("0x").toHexBytesInByteString())
                         )
                 )

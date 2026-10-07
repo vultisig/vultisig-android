@@ -8,10 +8,12 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.cardanoAssetId
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.parseCardanoAssetId
+import com.vultisig.wallet.data.models.parseSwapKitDecimal
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.CardanoTokenAsset
 import com.vultisig.wallet.data.models.payload.DAppMetadata
@@ -77,11 +79,12 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 when {
                     from.oneinchSwapPayload != null ->
                         from.oneinchSwapPayload.let { it ->
+                            val provider = swapProviderFromWireId(it.provider)
                             SwapPayload.EVM(
                                 EVMSwapPayloadJson(
                                     fromCoin = requireNotNull(it.fromCoin).toCoin(),
                                     toCoin = requireNotNull(it.toCoin).toCoin(),
-                                    fromAmount = BigInteger(it.fromAmount),
+                                    fromAmount = readSwapFromAmount(provider, it.fromAmount),
                                     toAmountDecimal = BigDecimal(it.toAmountDecimal),
                                     quote =
                                         requireNotNull(it.quote).let { it ->
@@ -108,9 +111,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                         },
                                     // Wire carries the lowercase canonical id; the domain
                                     // model and its consumers key off the display id.
-                                    provider =
-                                        swapProviderFromWireId(it.provider)?.getSwapProviderId()
-                                            ?: it.provider,
+                                    provider = provider?.getSwapProviderId() ?: it.provider,
                                 )
                             )
                         }
@@ -133,7 +134,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                 SwapKitSwapPayloadJson(
                                     fromCoin = requireNotNull(it.fromCoin).toCoin(),
                                     toCoin = requireNotNull(it.toCoin).toCoin(),
-                                    fromAmount = BigInteger(it.fromAmount),
+                                    fromAmount = parseSwapKitDecimal(it.fromAmount, "fromAmount"),
                                     toAmountDecimal = BigDecimal(it.toAmountDecimal),
                                     txType = it.txType,
                                     txPayload = it.txPayload,
@@ -344,6 +345,17 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             BigInteger.ZERO
         } else {
             BigInteger(toAmount)
+        }
+
+    /**
+     * A SwapKit [fromAmount] is plain decimal only, whatever chain it is signed on, as the SDK
+     * co-signer reads it. Other providers keep the lenient read.
+     */
+    private fun readSwapFromAmount(provider: SwapProvider?, fromAmount: String) =
+        if (provider == SwapProvider.SWAPKIT) {
+            parseSwapKitDecimal(fromAmount, "fromAmount")
+        } else {
+            BigInteger(fromAmount)
         }
 
     private fun CoinProto.toCoin(): Coin =

@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.parseSwapKitDecimal
 import com.vultisig.wallet.data.models.swapProviderFromWireId
 import java.math.BigInteger
 
@@ -34,6 +35,8 @@ internal object EvmSwapTxGuard {
 
         val rawProvider = swapPayload.provider.trim()
         val provider = swapProviderFromWireId(rawProvider)
+        // SwapKit's tx.value is plain decimal only, as the SDK co-signer reads it.
+        if (provider == SwapProvider.SWAPKIT) parseSwapKitDecimal(tx.value, "tx.value")
         val routers =
             when {
                 provider == SwapProvider.SWAPKIT -> null
