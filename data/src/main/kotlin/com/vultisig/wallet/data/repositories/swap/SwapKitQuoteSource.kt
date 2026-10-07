@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
+import com.vultisig.wallet.data.api.swapAggregators.swapKitErc20DepositRecipient
 import com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSignerException
 import com.vultisig.wallet.data.chains.helpers.SwapKitLegacyPsbtVersion
 import com.vultisig.wallet.data.chains.helpers.SwapKitPsbtException
@@ -275,11 +276,16 @@ constructor(
                 SwapQuoteResult.Evm(
                     data =
                         buildEvmQuoteFromSwapKit(
-                            swapResponse,
-                            request.srcToken,
-                            request.dstToken,
-                            best.fees,
-                        ),
+                                swapResponse,
+                                request.srcToken,
+                                request.dstToken,
+                                best.fees,
+                            )
+                            .bindErc20Deposit(
+                                request.srcToken,
+                                request.tokenValue.value,
+                                swapResponse.targetAddress,
+                            ),
                     subProvider = subProvider,
                     swapId = swapId,
                     priceImpact = priceImpact,
@@ -597,6 +603,32 @@ constructor(
             TxKind.XRP,
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
+    }
+
+    /**
+     * Refuses a SwapKit ERC-20 deposit (the tx calls the sold token, or any `transfer` call) unless
+     * it is exactly `transfer(targetAddress, soldAmount)` on the sold token with no native value.
+     * The refusal is [SwapKitError.Decoding] so the picker drops SwapKit; a router tx passes as is.
+     */
+    private fun EVMSwapQuoteJson.bindErc20Deposit(
+        srcToken: Coin,
+        soldAmount: BigInteger,
+        targetAddress: String?,
+    ): EVMSwapQuoteJson {
+        // A Solana route rides the same envelope with a base64 transaction in `data`.
+        if (srcToken.chain.standard != TokenStandard.EVM) return this
+        val recipient =
+            try {
+                swapKitErc20DepositRecipient(tx, srcToken, soldAmount)
+            } catch (e: IllegalArgumentException) {
+                throw SwapKitError.Decoding(e.message ?: "SwapKit ERC-20 deposit is malformed", e)
+            } ?: return this
+        if (recipient != targetAddress?.lowercase()) {
+            throw SwapKitError.Decoding(
+                "SwapKit ERC-20 deposit transfers to $recipient, not targetAddress $targetAddress"
+            )
+        }
+        return this
     }
 
     /**

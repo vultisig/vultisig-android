@@ -4,7 +4,6 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.parseSwapKitDecimal
 import com.vultisig.wallet.data.models.swapProviderFromWireId
 import java.math.BigInteger
 
@@ -14,7 +13,10 @@ import java.math.BigInteger
  * `tx.value` must be ones that quote implies rather than whatever the provider response (or a
  * compromised initiator) put there.
  * - `tx.to` must be the provider's router on that chain. SwapKit is exempt: its entry contract is
- *   chosen per route, so there's no fixed address to pin.
+ *   chosen per route, so there's no fixed address to pin. A SwapKit `transfer` call, or a SwapKit
+ *   tx addressed to the sold token (an ERC-20 deposit), must instead be exactly
+ *   `transfer(recipient, fromAmount)` on the sold token with no native value
+ *   ([swapKitDepositRecipient]).
  * - A 1inch / Kyber swap (or a provider-less one aimed at their routers) can't send more native
  *   value than the quoted amount, and sends none from an ERC-20 source. LI.FI and SwapKit are
  *   exempt: bridge routes add native messaging fees on top of the quoted amount, so `tx.value`
@@ -35,8 +37,11 @@ internal object EvmSwapTxGuard {
 
         val rawProvider = swapPayload.provider.trim()
         val provider = swapProviderFromWireId(rawProvider)
-        // SwapKit's tx.value is plain decimal only, as the SDK co-signer reads it.
-        if (provider == SwapProvider.SWAPKIT) parseSwapKitDecimal(tx.value, "tx.value")
+        if (provider == SwapProvider.SWAPKIT) {
+            // Called for its throws only: tx.value must be plain decimal, and a deposit-shaped
+            // tx must be exactly the deposit.
+            swapPayload.swapKitDepositRecipient(chain)
+        }
         val routers =
             when {
                 provider == SwapProvider.SWAPKIT -> null
