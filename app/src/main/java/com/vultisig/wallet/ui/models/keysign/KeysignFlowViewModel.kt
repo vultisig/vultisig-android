@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.tokenLogoRes
+import com.vultisig.wallet.data.securityscanner.ScreenSwapKitDepositRecipientUseCase
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.GenerateServiceName
@@ -46,6 +47,7 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.swapKitDepositErrorTextOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -106,6 +108,7 @@ constructor(
     private val buildKeysignMessage: BuildKeysignMessageUseCase,
     private val updateSolanaKeysignPayload: UpdateSolanaKeysignPayloadUseCase,
     private val buildKeysignTransactionUiModel: BuildKeysignTransactionUiModelUseCase,
+    private val screenSwapKitDepositRecipient: ScreenSwapKitDepositRecipientUseCase,
 ) : ViewModel() {
     private val _sessionID: String = Uuid.random().toString()
     private val _serviceName: String = generateServiceName()
@@ -243,6 +246,9 @@ constructor(
 
                     else -> error("Payload is null")
                 }
+            // Refuses a Malicious SwapKit deposit recipient before the QR and relay start; any
+            // other verdict is left to the review's own scan.
+            modifiedKeysignPayload?.let { screenSwapKitDepositRecipient(it) }
 
             shareVmCollectorsJob?.cancel()
             shareVmCollectorsJob =
@@ -285,7 +291,11 @@ constructor(
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             moveToState(
-                Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
+                Error(
+                    e.swapKitDepositErrorTextOrNull()
+                        ?: e.message?.asUiText()
+                        ?: UiText.StringResource(R.string.unknown_error)
+                )
             )
         }
     }

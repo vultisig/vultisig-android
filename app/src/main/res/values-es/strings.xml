@@ -444,6 +444,7 @@
     <string name="swap_error_quote_failed">La cotización del swap falló. Inténtalo de nuevo o ajusta el monto.</string>
     <string name="swap_error_rate_limit">Demasiadas solicitudes. Inténtelo de nuevo más tarde.</string>
     <string name="swap_error_trading_halted">El comercio de este activo está temporalmente suspendido. Inténtelo de nuevo más tarde.</string>
+    <string name="swap_error_swapkit_deposit_recipient_refused">Blockaid marcó la dirección de depósito de este swap, por lo que el swap no se firmó.</string>
     <string name="swap_screen_invalid_no_vault">No se ha seleccionado ninguna bóveda</string>
     <string name="swap_screen_invalid_no_src_error">No se ha seleccionado ningún token de origen</string>
     <string name="swap_screen_invalid_selected_no_dst">No se ha seleccionado ningún token de destino</string>
