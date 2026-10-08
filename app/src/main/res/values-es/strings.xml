@@ -405,6 +405,15 @@
     <string name="deposit_error_thorchain_inbound_unavailable">No se pudo conectar con THORChain para verificar la bóveda de entrada. Por favor, inténtelo de nuevo.</string>
     <string name="deposit_error_pool_not_available">El pool %1$s no está disponible actualmente para depósitos.</string>
     <string name="deposit_error_pool_staged_unpaired">El pool %1$s está en estado «staged» y solo acepta depósitos emparejados con el otro lado. THORChain reembolsaría esta transacción.</string>
+    <string name="deposit_error_maya_lp_paused_pool">Agregar liquidez está pausado para %1$s. MayaChain reembolsaría esta transacción.</string>
+    <string name="deposit_error_maya_lp_halted_chain">Las acciones de liquidez en %1$s están actualmente detenidas. MayaChain reembolsaría esta transacción.</string>
+    <string name="deposit_error_maya_pool_staged_unpaired">El pool %1$s está en estado «staged» y solo acepta depósitos emparejados con el otro lado. MayaChain reembolsaría esta transacción.</string>
+    <string name="deposit_error_maya_chain_halted">Los depósitos en %1$s están actualmente detenidos en MayaChain. Por favor, inténtelo de nuevo más tarde.</string>
+    <string name="deposit_error_maya_inbound_unavailable">No se pudo conectar con MayaChain para verificar la bóveda de entrada. Por favor, inténtelo de nuevo.</string>
+    <string name="deposit_error_mayachain_not_enabled_for_lp">Habilita MayaChain en esta bóveda para agregar liquidez en Maya</string>
+    <string name="deposit_error_maya_lp_single_sided_position">Ya tienes una posición solo de CACAO en %1$s. MayaChain solo acepta CACAO en ella, así que este depósito se reembolsaría.</string>
+    <string name="deposit_error_maya_lp_address_mismatch">Tu posición en %1$s está emparejada con otra dirección. MayaChain reembolsaría este depósito.</string>
+    <string name="deposit_error_maya_lp_unverified">No se pudo conectar con MayaChain para comprobar tu posición. Por favor, inténtelo de nuevo.</string>
     <string name="deposit_form_screen_assets">Activo</string>
     <string name="deposit_form_screen_asset_selection">Selección de activos</string>
     <string name="deposit_form_screen_lpunits">Unidades LP</string>
@@ -646,6 +655,7 @@
     <string name="deposit_option_add_cacao_pool">Agregar al pool de CACAO</string>
     <string name="deposit_option_remove_cacao_pool">Retirar del pool de CACAO</string>
     <string name="deposit_option_add_liquidity">Agregar liquidez</string>
+    <string name="deposit_option_add_maya_lp">Agregar LP de Maya</string>
     <string name="deposit_option_remove_liquidity">Retirar liquidez</string>
     <string name="add_lp_title">Agregar LP de %1$s</string>
     <string name="add_pool_amount_label">Importe</string>
@@ -1291,7 +1301,7 @@
     <string name="verify_swap_youre_swapping_title">Estás intercambiando</string>
     <string name="keysign_app_version_text">Versión %1$s (%2$s)</string>
     <string name="lp_pending_title">Esperando el depósito correspondiente de %1$s</string>
-    <string name="lp_pending_subtitle">THORChain retiene este depósito hasta que llegue la parte correspondiente y lo reembolsa si no llega.</string>
+    <string name="lp_pending_subtitle">%1$s retiene este depósito hasta que llegue la parte correspondiente y lo reembolsa si no llega.</string>
     <string name="lp_pending_deposited">Depositado</string>
     <string name="lp_pending_from">Desde</string>
     <string name="lp_pending_refunds_in">Se reembolsa en</string>
@@ -1323,6 +1333,7 @@
     <string name="deposit_no_secured_assets">No tienes activos garantizados para retirar en esta bóveda</string>
     <string name="mint_secured_asset_secure">Acuñar activo garantizado (SECURE+)</string>
     <string name="target_asset">Activo objetivo: %1$s-%2$s</string>
+    <string name="maya_lp_target_pool">Pool objetivo: %1$s</string>
     <string name="thor_address">Dirección de Thor</string>
     <string name="paired_address">Dirección emparejada</string>
     <string name="node_address">Dirección del nodo</string>

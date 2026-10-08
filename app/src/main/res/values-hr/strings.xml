@@ -405,6 +405,15 @@
     <string name="deposit_error_thorchain_inbound_unavailable">Nije moguće dohvatiti THORChain radi provjere dolaznog trezora. Pokušajte ponovno.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s trenutno nije dostupan za depozite.</string>
     <string name="deposit_error_pool_staged_unpaired">Pool %1$s je u stanju „staged“ i prihvaća samo uparene depozite s drugom stranom. THORChain bi vratio ovu transakciju.</string>
+    <string name="deposit_error_maya_lp_paused_pool">Dodavanje likvidnosti je pauzirano za %1$s. MayaChain bi vratio ovu transakciju.</string>
+    <string name="deposit_error_maya_lp_halted_chain">Akcije likvidnosti na %1$s su trenutno zaustavljene. MayaChain bi vratio ovu transakciju.</string>
+    <string name="deposit_error_maya_pool_staged_unpaired">Pool %1$s je u stanju „staged“ i prihvaća samo uparene depozite s drugom stranom. MayaChain bi vratio ovu transakciju.</string>
+    <string name="deposit_error_maya_chain_halted">Pologi na %1$s su trenutno zaustavljeni na MayaChain-u. Pokušajte ponovno kasnije.</string>
+    <string name="deposit_error_maya_inbound_unavailable">Nije moguće dohvatiti MayaChain radi provjere dolaznog trezora. Pokušajte ponovno.</string>
+    <string name="deposit_error_mayachain_not_enabled_for_lp">Omogućite MayaChain u ovom trezoru za dodavanje Maya likvidnosti</string>
+    <string name="deposit_error_maya_lp_single_sided_position">Već imate poziciju samo u CACAO-u u %1$s. MayaChain u nju prihvaća samo CACAO, pa bi ovaj polog bio vraćen.</string>
+    <string name="deposit_error_maya_lp_address_mismatch">Vaša pozicija u %1$s uparena je s drugom adresom. MayaChain bi vratio ovaj polog.</string>
+    <string name="deposit_error_maya_lp_unverified">Nije moguće dohvatiti MayaChain radi provjere vaše pozicije. Pokušajte ponovno.</string>
     <string name="deposit_form_screen_assets">Imovina</string>
     <string name="deposit_form_screen_asset_selection">Odabir imovine</string>
     <string name="deposit_form_screen_lpunits">LP jedinice</string>
@@ -647,6 +656,7 @@
     <string name="deposit_option_add_cacao_pool">Dodaj u CACAO pool</string>
     <string name="deposit_option_remove_cacao_pool">Ukloni iz CACAO poola</string>
     <string name="deposit_option_add_liquidity">Dodaj likvidnost</string>
+    <string name="deposit_option_add_maya_lp">Dodaj Maya LP</string>
     <string name="deposit_option_remove_liquidity">Ukloni likvidnost</string>
     <string name="add_lp_title">Dodaj %1$s LP</string>
     <string name="add_pool_amount_label">Iznos</string>
@@ -1296,7 +1306,7 @@
     <string name="verify_swap_youre_swapping_title">Zamjenjujete</string>
     <string name="keysign_app_version_text">Verzija %1$s (%2$s)</string>
     <string name="lp_pending_title">Čeka se odgovarajući %1$s polog</string>
-    <string name="lp_pending_subtitle">THORChain zadržava ovaj polog dok ne stigne odgovarajuća strana, a inače ga vraća.</string>
+    <string name="lp_pending_subtitle">%1$s zadržava ovaj polog dok ne stigne odgovarajuća strana, a inače ga vraća.</string>
     <string name="lp_pending_deposited">Položeno</string>
     <string name="lp_pending_from">Od</string>
     <string name="lp_pending_refunds_in">Povrat za</string>
@@ -1328,6 +1338,7 @@
     <string name="deposit_no_secured_assets">Nemate osiguranu imovinu za povlačenje iz ovog trezora</string>
     <string name="mint_secured_asset_secure">Osigurana imovina Mint (SECURE+)</string>
     <string name="target_asset">Ciljana imovina: %1$s-%2$s</string>
+    <string name="maya_lp_target_pool">Ciljani pool: %1$s</string>
     <string name="thor_address">THORChain adresa</string>
     <string name="paired_address">Uparena adresa</string>
     <string name="node_address">Adresa čvora</string>

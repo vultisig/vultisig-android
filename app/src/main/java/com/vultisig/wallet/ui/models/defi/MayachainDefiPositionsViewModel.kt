@@ -12,6 +12,10 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.MayaChainPendingLpDeposit
+import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.usecases.GetMayaChainPendingLpDepositsUseCase
+import com.vultisig.wallet.ui.utils.lpRefundsInUiText
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.lpAssetLogoRes
@@ -152,6 +156,7 @@ constructor(
     private val fiatValueCalculator: DefiFiatValueCalculator,
     private val snapshotCache: DeFiPositionsSnapshotCache,
     private val bondRewardsLoader: BondRewardsLoader,
+    private val getMayaChainPendingLpDeposits: GetMayaChainPendingLpDepositsUseCase,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -179,6 +184,7 @@ constructor(
     private var loadBondedJob: Job? = null
     private var loadStakingJob: Job? = null
     private var loadLpJob: Job? = null
+    private var loadPendingLpJob: Job? = null
     private var rewardHistoryJob: Job? = null
 
     // The vault's CACAO address the bonded list was last loaded for; reward readings are this
@@ -211,6 +217,165 @@ constructor(
         observeTotalRawJob = observeTotalRaw()
         currencyJob?.cancel()
         currencyJob = observeCurrencyChanges()
+        loadPendingLpDeposits()
+    }
+
+    /**
+     * Re-scans for pending half-deposits when the screen returns to the foreground: their refund
+     * timer keeps running while the app is backgrounded, so a stale card could offer Complete on a
+     * deposit MayaChain has already refunded.
+     */
+    fun onScreenResumed() {
+        if (!::vaultId.isInitialized) return
+        loadPendingLpDeposits()
+    }
+
+    /**
+     * Loads half-finished paired adds. Independent of the LP cards, which only cover the pools the
+     * user picked in Manage Positions: a deposit stuck in any other pool is exactly the one that
+     * would otherwise be refunded unseen.
+     */
+    private fun loadPendingLpDeposits() {
+        loadPendingLpJob?.cancel()
+        // Hide Complete behind the spinner only when there is a list the rescan could prove stale.
+        if (currentModel.lp.pendingDeposits.isNotEmpty()) {
+            updateModel { it.copy(lp = it.lp.copy(pendingDepositsLoaded = false)) }
+        }
+        loadPendingLpJob =
+            viewModelScope.safeLaunch(
+                onError = {
+                    Timber.e(it, "Failed to load pending MayaChain LP deposits")
+                    markPendingLpDepositsSettled()
+                }
+            ) {
+                val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
+                val cacaoAddress =
+                    vault
+                        ?.coins
+                        ?.firstOrNull { it.chain == Chain.MayaChain && it.isNativeToken }
+                        ?.address
+                if (vault == null || cacaoAddress.isNullOrBlank()) {
+                    markPendingLpDepositsSettled()
+                    return@safeLaunch
+                }
+
+                val pending =
+                    withContext(ioDispatcher) { getMayaChainPendingLpDeposits(cacaoAddress) }
+                val models =
+                    pending.map { deposit ->
+                        deposit.toUiModel(canComplete = vault.canCompleteMayaPending(deposit))
+                    }
+                updateModel {
+                    it.copy(lp = it.lp.copy(pendingDeposits = models, pendingDepositsLoaded = true))
+                }
+            }
+    }
+
+    /**
+     * Settles the scan without erasing cards an earlier scan found — the refund timer is running on
+     * them — but withdraws Complete, since nothing confirms MayaChain has not refunded them since.
+     */
+    private fun markPendingLpDepositsSettled() {
+        updateModel {
+            it.copy(
+                lp =
+                    it.lp.copy(
+                        pendingDeposits =
+                            it.lp.pendingDeposits.map { deposit ->
+                                deposit.copy(canComplete = false)
+                            },
+                        pendingDepositsLoaded = true,
+                    )
+            )
+        }
+    }
+
+    /**
+     * Whether the app can send [deposit]'s missing half: only into a pool it pairs (see
+     * [MAYA_NATIVE_LP_POOLS]), and only from an account the vault holds on that half's chain.
+     */
+    private fun Vault.canCompleteMayaPending(deposit: MayaChainPendingLpDeposit): Boolean {
+        val assetChain =
+            MAYA_NATIVE_LP_POOLS.entries
+                .firstOrNull { it.value.equals(deposit.pool, ignoreCase = true) }
+                ?.key ?: return false
+        val missingChain = if (deposit.isCacaoPending) assetChain else Chain.MayaChain
+        return coins.any { it.chain == missingChain && it.isNativeToken }
+    }
+
+    private fun MayaChainPendingLpDeposit.toUiModel(canComplete: Boolean): PendingLpDepositUiModel {
+        val poolChain = mayaPoolChainPrefixToChain(pool.substringBefore('.'))
+        val poolAsset = pool.substringAfter('.', missingDelimiterValue = pool)
+        val assetTicker = poolAsset.substringBefore('-')
+        val assetContract = poolAsset.substringAfter('-', missingDelimiterValue = "")
+        val cacaoTicker = Coins.MayaChain.CACAO.ticker
+
+        val depositedAmount =
+            if (isCacaoPending) {
+                BigDecimal(pendingCacao)
+                    .movePointLeft(Coins.MayaChain.CACAO.decimal)
+                    .stripTrailingZeros()
+                    .formatTokenAmount(cacaoTicker)
+            } else {
+                BigDecimal(pendingAsset)
+                    .movePointLeft(MAYA_FIXED_POINT_DECIMALS)
+                    .stripTrailingZeros()
+                    .formatTokenAmount(assetTicker)
+            }
+
+        // The card names the side that has not arrived, so its icon follows that side too.
+        val awaitedChain = if (isCacaoPending) poolChain else Chain.MayaChain
+        val awaitedTicker = if (isCacaoPending) assetTicker else cacaoTicker
+        val awaitedContract = if (isCacaoPending) assetContract else ""
+
+        return PendingLpDepositUiModel(
+            poolId = pool,
+            icon =
+                lpAssetLogoRes(awaitedChain, awaitedTicker, awaitedContract)
+                    ?: getCoinLogo(awaitedTicker.lowercase()),
+            chainLogo = awaitedChain?.monoToneLogo,
+            awaitedTicker = awaitedTicker,
+            depositedAmount = depositedAmount,
+            pairedAddress = pairedAddress?.formatAddress(),
+            refundsIn =
+                blocksUntilRefund?.let {
+                    lpRefundsInUiText(it * MAYACHAIN_BLOCK_MILLIS / MILLIS_PER_SECOND)
+                },
+            canComplete = canComplete,
+            protocolName = Chain.MayaChain.raw,
+        )
+    }
+
+    /**
+     * Sends the user to the half they still owe, with the pool fixed: the CACAO side on the Add LP
+     * screen (which names the asset address for a pool the app pairs), or the asset side on its
+     * chain's Functions form, opened on Add Maya LP.
+     */
+    fun onClickCompletePendingLp(poolId: String) {
+        val pending = currentModel.lp.pendingDeposits.find { it.poolId == poolId } ?: return
+        // Also enforced by the card's disabled button.
+        if (!pending.canComplete) return
+        val isCacaoMissing = pending.awaitedTicker == Coins.MayaChain.CACAO.ticker
+        val route =
+            if (isCacaoMissing) {
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.MayaChain.id,
+                    depositType = DeFiNavActions.ADD_LP.type,
+                    poolId = poolId,
+                )
+            } else {
+                val assetChain =
+                    MAYA_NATIVE_LP_POOLS.entries
+                        .firstOrNull { it.value.equals(poolId, ignoreCase = true) }
+                        ?.key ?: return
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = assetChain.id,
+                    depositType = DeFiNavActions.ADD_MAYA_LP.type,
+                )
+            }
+        viewModelScope.safeLaunch { navigator.route(route) }
     }
 
     /**
@@ -1188,23 +1353,13 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
     )
 }
 
-// Every prefix `/mayachain/pools` currently returns as Available. A prefix missing here resolves to
-// no chain, which leaves the pool's asset leg priced at zero and halves the card and header totals.
-private fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
-    when (prefix.uppercase()) {
-        "BTC" -> Chain.Bitcoin
-        "ETH" -> Chain.Ethereum
-        "DASH" -> Chain.Dash
-        "MAYA" -> Chain.MayaChain
-        "BASE" -> Chain.Base
-        "ARB" -> Chain.Arbitrum
-        "AVAX" -> Chain.Avalanche
-        "BSC" -> Chain.BscChain
-        "THOR" -> Chain.ThorChain
-        "ADA" -> Chain.Cardano
-        "ZEC" -> Chain.Zcash
-        else -> null
-    }
+// mayanode publishes pending asset amounts in 1e8 fixed point, whatever the asset's decimals.
+private const val MAYA_FIXED_POINT_DECIMALS = 8
+
+// MayaChain's average block time (5.83 s over 10,000 blocks, 2026-10-04), rounded down so the
+// refund countdown never promises more time than the deposit has.
+private const val MAYACHAIN_BLOCK_MILLIS = 5_800L
+private const val MILLIS_PER_SECOND = 1_000L
 
 private fun formatCacaoReward(reward: Double): String {
     val rewardBase = BigDecimal.valueOf(reward).setScale(0, RoundingMode.DOWN).toBigInteger()

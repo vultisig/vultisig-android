@@ -405,6 +405,15 @@
     <string name="deposit_error_thorchain_inbound_unavailable">THORChain konnte nicht erreicht werden, um den eingehenden Vault zu verifizieren. Bitte erneut versuchen.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s ist derzeit nicht für Einzahlungen verfügbar.</string>
     <string name="deposit_error_pool_staged_unpaired">Pool %1$s ist im Status „Staged“ und akzeptiert nur gepaarte Einzahlungen beider Seiten. THORChain würde diese Transaktion erstatten.</string>
+    <string name="deposit_error_maya_lp_paused_pool">Liquidität hinzufügen ist für %1$s pausiert. MayaChain würde diese Transaktion erstatten.</string>
+    <string name="deposit_error_maya_lp_halted_chain">Liquiditätsaktionen auf %1$s sind derzeit angehalten. MayaChain würde diese Transaktion erstatten.</string>
+    <string name="deposit_error_maya_pool_staged_unpaired">Pool %1$s ist im Status „Staged“ und akzeptiert nur gepaarte Einzahlungen beider Seiten. MayaChain würde diese Transaktion erstatten.</string>
+    <string name="deposit_error_maya_chain_halted">Einzahlungen auf %1$s sind derzeit auf MayaChain ausgesetzt. Bitte später erneut versuchen.</string>
+    <string name="deposit_error_maya_inbound_unavailable">MayaChain konnte nicht erreicht werden, um den eingehenden Vault zu verifizieren. Bitte erneut versuchen.</string>
+    <string name="deposit_error_mayachain_not_enabled_for_lp">Aktivieren Sie MayaChain in diesem Tresor, um Maya-Liquidität hinzuzufügen</string>
+    <string name="deposit_error_maya_lp_single_sided_position">Sie haben bereits eine reine CACAO-Position in %1$s. MayaChain nimmt dort nur CACAO an, daher würde diese Einzahlung erstattet.</string>
+    <string name="deposit_error_maya_lp_address_mismatch">Ihre Position in %1$s ist mit einer anderen Adresse gekoppelt. MayaChain würde diese Einzahlung erstatten.</string>
+    <string name="deposit_error_maya_lp_unverified">MayaChain konnte nicht erreicht werden, um Ihre Position zu prüfen. Bitte erneut versuchen.</string>
     <string name="deposit_form_screen_assets">Vermögenswert</string>
     <string name="deposit_form_screen_asset_selection">Anlagenauswahl</string>
     <string name="deposit_form_screen_lpunits">LP-Einheiten</string>
@@ -646,6 +655,7 @@
     <string name="deposit_option_add_cacao_pool">Zum CACAO-Pool hinzufügen</string>
     <string name="deposit_option_remove_cacao_pool">Aus dem CACAO-Pool entfernen</string>
     <string name="deposit_option_add_liquidity">Liquidität hinzufügen</string>
+    <string name="deposit_option_add_maya_lp">Maya LP hinzufügen</string>
     <string name="deposit_option_remove_liquidity">Liquidität entfernen</string>
     <string name="add_lp_title">%1$s LP hinzufügen</string>
     <string name="add_pool_amount_label">Betrag</string>
@@ -1293,7 +1303,7 @@
     <string name="verify_swap_youre_swapping_title">Sie tauschen</string>
     <string name="keysign_app_version_text">Version %1$s (%2$s)</string>
     <string name="lp_pending_title">Warte auf passende %1$s-Einzahlung</string>
-    <string name="lp_pending_subtitle">THORChain hält diese Einzahlung, bis die passende Seite eintrifft, und erstattet sie andernfalls zurück.</string>
+    <string name="lp_pending_subtitle">%1$s hält diese Einzahlung, bis die passende Seite eintrifft, und erstattet sie andernfalls zurück.</string>
     <string name="lp_pending_deposited">Eingezahlt</string>
     <string name="lp_pending_from">Von</string>
     <string name="lp_pending_refunds_in">Rückerstattung in</string>
@@ -1324,6 +1334,7 @@
     <string name="deposit_no_secured_assets">Sie haben in diesem Tresor keine gesicherten Assets zum Abheben</string>
     <string name="mint_secured_asset_secure">Gesichertes Asset erstellen (SECURE+)</string>
     <string name="target_asset">Zielvermögen: %1$s-%2$s</string>
+    <string name="maya_lp_target_pool">Ziel-Pool: %1$s</string>
     <string name="thor_address">THORChain-Adresse</string>
     <string name="paired_address">Gepaarte Adresse</string>
     <string name="node_address">Node-Adresse</string>

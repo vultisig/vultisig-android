@@ -756,8 +756,8 @@ constructor(
     }
 
     /**
-     * Whether [payload] is a deposit (THORChain/MayaChain deposit, or a SECURE+ secured-asset
-     * memo). PSBT co-signs are initiated by an external dApp and are never a deposit, so they exit
+     * Whether [payload] is a deposit (THORChain/MayaChain deposit, a SECURE+ secured-asset memo, or
+     * the asset side of an LP add — see [isInboundLpAddMemo]). PSBT co-signs are initiated by an external dApp and are never a deposit, so they exit
      * before the memo-keyword heuristic — a payload carrying `SECURE+:` in `payload.memo` (BTC is
      * `isSecuredAssetEligible`) must not be flagged `isDeposit=true`.
      */
@@ -772,6 +772,7 @@ constructor(
         // is dust being donated. Keyed off the MEMO, which is what THORChain itself reads to decide
         // what the transaction is, and all a joining device has to go on.
         if (LimitOrderCancelPresentation.isCancel(payload.memo)) return true
+        if (payload.isInboundLpAddMemo()) return true
         return when (val specific = payload.blockChainSpecific) {
             is BlockChainSpecific.MayaChain -> specific.isDeposit
             is BlockChainSpecific.THORChain -> specific.isDeposit

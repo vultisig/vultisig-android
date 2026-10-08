@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.api.errors.parseCosmosBroadcastResponse
 import com.vultisig.wallet.data.api.models.CacaoProviderResponse
 import com.vultisig.wallet.data.api.models.MayaLatestBlockInfoResponse
+import com.vultisig.wallet.data.api.models.MayaLiquidityProviderJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.MayaChainDepositCacaoResponse
@@ -84,6 +85,9 @@ interface MayaChainApi {
     suspend fun getMayaNodePools(): List<MayaNodePool>
 
     suspend fun getPool(poolAsset: String): MayaNodePool
+
+    /** The [address]'s record on [pool], or null when mayanode has none for it. */
+    suspend fun getLiquidityProvider(pool: String, address: String): MayaLiquidityProviderJson?
 }
 
 @Serializable
@@ -125,6 +129,8 @@ data class MayaNodePool(
     @SerialName("LP_units") val lpUnits: String = "0",
     @SerialName("balance_cacao") val balanceCacao: String = "0",
     @SerialName("balance_asset") val balanceAsset: String = "0",
+    @SerialName("pending_inbound_cacao") val pendingInboundCacao: String = "0",
+    @SerialName("pending_inbound_asset") val pendingInboundAsset: String = "0",
 )
 
 @Serializable
@@ -383,6 +389,18 @@ constructor(
         httpClient
             .get("$MAYA_NODE_BASE/mayachain/pool/$poolAsset") { header(xClientID, xClientIDValue) }
             .bodyOrThrow<MayaNodePool>()
+
+    override suspend fun getLiquidityProvider(
+        pool: String,
+        address: String,
+    ): MayaLiquidityProviderJson? {
+        val response =
+            httpClient.get("$MAYA_NODE_BASE/mayachain/pool/$pool/liquidity_provider/$address") {
+                header(xClientID, xClientIDValue)
+            }
+        return if (response.status == HttpStatusCode.NotFound) null
+        else response.bodyOrThrow<MayaLiquidityProviderJson>()
+    }
 
     companion object {
         private const val MAYA_NODE_BASE = "https://mayanode.mayachain.info"

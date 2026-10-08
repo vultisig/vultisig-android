@@ -14,15 +14,21 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
+import com.vultisig.wallet.data.usecases.CheckMayaLpPairingUseCase
+import com.vultisig.wallet.data.usecases.MayaChainLpPreflightUseCase
+import com.vultisig.wallet.data.usecases.MayaLpPairing
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
+import com.vultisig.wallet.ui.models.defi.mayaLpPairedChain
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.toError
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.first
+import timber.log.Timber
 
 /** Builds an Add-Liquidity [DepositTransaction] for the RUNE/CACAO side of a pool. */
 internal class AddLiquidityStrategy(
@@ -32,6 +38,8 @@ internal class AddLiquidityStrategy(
     private val tokenAmountFieldState: TextFieldState,
     private val accountsRepository: AccountsRepository,
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase,
+    private val mayaChainLpPreflight: MayaChainLpPreflightUseCase,
+    private val checkMayaLpPairing: CheckMayaLpPairingUseCase,
     private val resolvePairedAddress: suspend (Chain, String, String) -> String?,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val calculateGasFee: suspend (Chain, Coin, String) -> TokenValue,
@@ -76,6 +84,26 @@ internal class AddLiquidityStrategy(
         val isSymmetricPool = assetChain != null && assetChain != Chain.ThorChain
 
         val pairedAddress = resolvePairedAddress(chain, vaultId, poolId)
+        val isMayaChainLpAdd = chain == Chain.MayaChain
+        // mayanode only records an asset address on a zero-unit record, so a pool where the vault
+        // already holds a CACAO-only position refunds any add naming one. There the CACAO side
+        // stays the single-sided add it always was; see [CheckMayaLpPairingUseCase].
+        val memoPairedAddress =
+            if (isMayaChainLpAdd && pairedAddress != null) {
+                when (checkMayaPairing(poolId, selectedToken.address, pairedAddress)) {
+                    MayaLpPairing.Pairable -> pairedAddress
+                    MayaLpPairing.SingleSidedPosition -> null
+                    MayaLpPairing.AddressMismatch ->
+                        throw InvalidTransactionDataException(
+                            UiText.FormattedText(
+                                R.string.deposit_error_maya_lp_address_mismatch,
+                                listOf(poolId),
+                            )
+                        )
+                }
+            } else {
+                pairedAddress
+            }
 
         // Preflight against THORChain network state — pool status and the relevant mimir pause
         // keys. Refuses to build the keysign payload when the network would refund the inbound,
@@ -86,10 +114,15 @@ internal class AddLiquidityStrategy(
         // Staged pool accepts exactly the paired adds and refunds the rest. Maya reuses this
         // strategy with chain == MayaChain and its own pool ids, which thornode knows nothing
         // about: a THORChain-wide PAUSELP, or a same-named THOR pool sitting Staged, would reject a
-        // perfectly valid CACAO add.
+        // perfectly valid CACAO add — so a CACAO add asks mayanode instead.
         val isThorChainLpAdd = chain == Chain.ThorChain || (isSymmetricPool && chain == assetChain)
         if (isThorChainLpAdd) {
             thorChainLpPreflight(poolId, isPairedAdd = pairedAddress != null)?.let { block ->
+                throw block.toError()
+            }
+        }
+        if (isMayaChainLpAdd) {
+            mayaChainLpPreflight(poolId, isPairedAdd = memoPairedAddress != null)?.let { block ->
                 throw block.toError()
             }
         }
@@ -100,15 +133,19 @@ internal class AddLiquidityStrategy(
         // THORChain opens a separate asymmetric position rather than crediting the pair: a
         // RUNE-side add carries the asset address, and the asset-side add that completes a pending
         // half-deposit carries the RUNE address. Gated on the preflight's THORChain-only condition
-        // as well as the pool shape: resolvePairedAddress has no Maya branch and always returns
-        // null there, so isSymmetricPool alone would reject every real Maya pool add, while
-        // isThorChainLpAdd alone would reject a THOR.* pool that has no paired side at all.
-        if (isSymmetricPool && isThorChainLpAdd && pairedAddress == null) {
+        // as well as the pool shape: isSymmetricPool alone would reject every Maya pool add, while
+        // isThorChainLpAdd alone would reject a THOR.* pool that has no paired side at all. A CACAO
+        // add pairs exactly where mayaLpPairedChain says the app can deposit the asset half; an
+        // unresolved address there must not quietly turn the add single-sided.
+        val requiresPairedAddress =
+            (isSymmetricPool && isThorChainLpAdd) ||
+                (isMayaChainLpAdd && mayaLpPairedChain(chain, poolId) != null)
+        if (requiresPairedAddress && pairedAddress == null) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )
         }
-        val memo = DepositMemo.AddLiquidity(poolId, pairedAddress)
+        val memo = DepositMemo.AddLiquidity(poolId, memoPairedAddress)
 
         val specific =
             blockChainSpecificRepository.getSpecific(
@@ -136,7 +173,25 @@ internal class AddLiquidityStrategy(
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             operation = OPERATION_MINT,
             pool = poolId,
-            pairedAddress = pairedAddress.orEmpty(),
+            pairedAddress = memoPairedAddress.orEmpty(),
         )
     }
+
+    /** Reads the vault's record; an unreadable one refuses rather than risk a refunded inbound. */
+    private suspend fun checkMayaPairing(
+        pool: String,
+        cacaoAddress: String,
+        assetAddress: String,
+    ): MayaLpPairing =
+        try {
+            checkMayaLpPairing(pool, cacaoAddress, assetAddress)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to read the MayaChain LP record for %s", pool)
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_maya_lp_unverified)
+            )
+        }
+
 }

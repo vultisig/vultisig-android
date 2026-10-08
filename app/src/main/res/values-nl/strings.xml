@@ -404,6 +404,15 @@
     <string name="deposit_error_thorchain_inbound_unavailable">Kon THORChain niet bereiken om de inkomende vault te verifiëren. Probeer het opnieuw.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s is momenteel niet beschikbaar voor stortingen.</string>
     <string name="deposit_error_pool_staged_unpaired">Pool %1$s staat op „staged” en accepteert alleen stortingen die gekoppeld zijn aan de andere kant. THORChain zou deze transactie terugbetalen.</string>
+    <string name="deposit_error_maya_lp_paused_pool">Liquiditeit toevoegen is gepauzeerd voor %1$s. MayaChain zou deze transactie terugbetalen.</string>
+    <string name="deposit_error_maya_lp_halted_chain">Liquiditeitsacties op %1$s zijn momenteel stilgelegd. MayaChain zou deze transactie terugbetalen.</string>
+    <string name="deposit_error_maya_pool_staged_unpaired">Pool %1$s staat op „staged” en accepteert alleen stortingen die gekoppeld zijn aan de andere kant. MayaChain zou deze transactie terugbetalen.</string>
+    <string name="deposit_error_maya_chain_halted">Stortingen op %1$s zijn momenteel stilgelegd op MayaChain. Probeer het later opnieuw.</string>
+    <string name="deposit_error_maya_inbound_unavailable">Kon MayaChain niet bereiken om de inkomende vault te verifiëren. Probeer het opnieuw.</string>
+    <string name="deposit_error_mayachain_not_enabled_for_lp">Schakel MayaChain in deze kluis in om Maya-liquiditeit toe te voegen</string>
+    <string name="deposit_error_maya_lp_single_sided_position">Je hebt al een positie met alleen CACAO in %1$s. MayaChain accepteert daarin alleen CACAO, dus deze storting zou worden terugbetaald.</string>
+    <string name="deposit_error_maya_lp_address_mismatch">Je positie in %1$s is gekoppeld aan een ander adres. MayaChain zou deze storting terugbetalen.</string>
+    <string name="deposit_error_maya_lp_unverified">Kon MayaChain niet bereiken om je positie te controleren. Probeer het opnieuw.</string>
     <string name="deposit_form_screen_assets">Activa</string>
     <string name="deposit_form_screen_asset_selection">Activaselectie</string>
     <string name="deposit_form_screen_lpunits">LP-eenheden</string>
@@ -643,6 +652,7 @@
     <string name="deposit_option_add_cacao_pool">Toevoegen aan CACAO-pool</string>
     <string name="deposit_option_remove_cacao_pool">Verwijderen uit CACAO-pool</string>
     <string name="deposit_option_add_liquidity">Liquiditeit toevoegen</string>
+    <string name="deposit_option_add_maya_lp">Maya LP toevoegen</string>
     <string name="deposit_option_remove_liquidity">Liquiditeit verwijderen</string>
     <string name="add_lp_title">%1$s LP toevoegen</string>
     <string name="add_pool_amount_label">Bedrag</string>
@@ -1288,7 +1298,7 @@
     <string name="verify_swap_youre_swapping_title">Je wisselt</string>
     <string name="keysign_app_version_text">Versie %1$s (%2$s)</string>
     <string name="lp_pending_title">Wachten op bijbehorende %1$s-storting</string>
-    <string name="lp_pending_subtitle">THORChain houdt deze storting vast tot de bijbehorende kant binnenkomt en betaalt hem anders terug.</string>
+    <string name="lp_pending_subtitle">%1$s houdt deze storting vast tot de bijbehorende kant binnenkomt en betaalt hem anders terug.</string>
     <string name="lp_pending_deposited">Gestort</string>
     <string name="lp_pending_from">Van</string>
     <string name="lp_pending_refunds_in">Terugbetaling over</string>
@@ -1319,6 +1329,7 @@
     <string name="deposit_no_secured_assets">Je hebt geen gedekte activa om op te nemen in deze kluis</string>
     <string name="mint_secured_asset_secure">Mint Gedekte activa (SECURE+)</string>
     <string name="target_asset">Doelactiva: %1$s-%2$s</string>
+    <string name="maya_lp_target_pool">Doelpool: %1$s</string>
     <string name="thor_address">THORChain-adres</string>
     <string name="paired_address">Gekoppeld adres</string>
     <string name="node_address">Node-adres</string>
