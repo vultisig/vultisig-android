@@ -632,7 +632,8 @@ constructor(
             TokenStandard.NEAR -> {
                 requireNear(token.isNativeToken, NearRefusal.TOKENS_UNSUPPORTED)
                 // The upfront gas depends on the receiver: a 64-hex implicit receiver reserves
-                // account-creation gas whether or not it exists.
+                // account-creation gas whether or not it exists. For a swap this is the deposit
+                // address.
                 val recipient = dstAddress.orEmpty()
                 requireNear(
                     NearAccountId.isValid(recipient),

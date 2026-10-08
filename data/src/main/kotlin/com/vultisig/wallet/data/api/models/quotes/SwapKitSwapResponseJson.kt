@@ -15,6 +15,9 @@ data class SwapKitSwapRequest(
     @SerialName("routeId") val routeId: String,
     @SerialName("sourceAddress") val sourceAddress: String,
     @SerialName("destinationAddress") val destinationAddress: String,
+    /** Sent only for a source that signs its own transfer (NEAR); dropped as null otherwise. */
+    @SerialName("disableBuildTx") val disableBuildTx: Boolean? = null,
+    @SerialName("disableBalanceCheck") val disableBalanceCheck: Boolean? = null,
 )
 
 /**
@@ -74,7 +77,8 @@ data class SwapKitApprovalTx(
 /** Discriminator metadata sitting alongside [SwapKitSwapResponseJson.tx]. */
 @Serializable
 data class SwapKitTxMeta(
-    @SerialName("txType") val txType: String,
+    // Absent on deposit-only routes requested with `disableBuildTx` (NEAR).
+    @SerialName("txType") val txType: String = "",
     @SerialName("tags") val tags: List<String> = emptyList(),
     @SerialName("chain") val chain: String? = null,
     @SerialName("subProvider") val subProvider: String? = null,
