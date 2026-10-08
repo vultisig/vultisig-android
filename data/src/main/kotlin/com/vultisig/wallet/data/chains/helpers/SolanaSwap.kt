@@ -22,9 +22,8 @@ class SolanaSwap(private val vaultHexPublicKey: String) {
         keysignPayload: KeysignPayload,
     ): List<String> {
         val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload)
-        val chain = swapPayload.fromCoin.chain
-        val coinType = keysignPayload.coin.coinType
-        return Swaps.getPreSignedImageHash(inputData, coinType, chain)
+        val coin = keysignPayload.coin
+        return Swaps.getPreSignedImageHash(inputData, coin.coinType, coin.chain)
     }
 
     fun getSignedTransaction(
