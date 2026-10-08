@@ -16,7 +16,7 @@ sealed class SwapPayload {
     abstract val dstTokenValue: TokenValue
 
     /**
-     * Throws unless an aggregator swap ([EVM] or [SwapKit], every chain) sells exactly
+     * Throws unless a swap (any provider, every chain) sells exactly
      * [signingCoin]: same chain, native flag and contract. Contracts compare case-insensitively
      * only on EVM chains, where they are hex; every other chain (Solana base58 mints, …) compares
      * them exactly. Each signer builds for the signing coin while co-signers display the payload's
@@ -24,12 +24,6 @@ sealed class SwapPayload {
      * `SwapPayload.requireSellsSigningCoin`.
      */
     fun requireSellsSigningCoin(signingCoin: Coin) {
-        when (this) {
-            is EVM,
-            is SwapKit -> Unit
-            is ThorChain,
-            is MayaChain -> return
-        }
         val isEvm = signingCoin.chain.standard == TokenStandard.EVM
         require(
             srcToken.chain == signingCoin.chain &&
