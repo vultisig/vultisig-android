@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
+import com.vultisig.wallet.data.utils.toLongExact
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -334,17 +335,7 @@ class CosmosHelper(
         // must
         // resolve to the identical limit or the MPC signature fails.
         val effectiveGasLimit =
-            atomData.gasLimit
-                ?.takeIf { it.signum() > 0 }
-                ?.let {
-                    // BigInteger.longValueExact() is API 31+, but minSdk is 26. Reject out-of-range
-                    // values ourselves so a truncated gas value can never diverge between
-                    // co-signers.
-                    require(it.bitLength() < Long.SIZE_BITS) {
-                        "Relayed gas limit $it exceeds the supported range"
-                    }
-                    it.toLong()
-                } ?: gasLimit
+            atomData.gasLimit?.takeIf { it.signum() > 0 }?.toLongExact() ?: gasLimit
         val fee = Cosmos.Fee.newBuilder().setGas(effectiveGasLimit)
         // A zero fee amount yields an empty fee: the `/simulate` tx must not declare a fee, or the
         // AnteHandler's DeductFee charges it and fails MAX / near-balance sends.
