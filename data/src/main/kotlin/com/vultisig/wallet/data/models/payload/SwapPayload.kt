@@ -16,28 +16,32 @@ sealed class SwapPayload {
     abstract val dstTokenValue: TokenValue
 
     /**
-     * Throws unless an aggregator swap ([EVM] or [SwapKit], every chain) sells exactly
-     * [signingCoin]: same chain, native flag and contract. Contracts compare case-insensitively
-     * only on EVM chains, where they are hex; every other chain (Solana base58 mints, …) compares
-     * them exactly. Each signer builds for the signing coin while co-signers display the payload's
-     * coin. Mirrors vultisig-sdk's `assertKeysignSwapSellsSigningCoin` and iOS
-     * `SwapPayload.requireSellsSigningCoin`.
+     * Throws unless a swap (any provider, every chain) sells exactly [signingCoin]: same chain,
+     * native flag, contract, ticker and decimals (co-signer reviews render the payload coin's
+     * ticker and decimals). Contracts compare case-insensitively only on EVM chains, where they are
+     * hex; every other chain (Solana base58 mints, …) compares them exactly. Each signer builds for
+     * the signing coin while co-signers display the payload's coin. Mirrors vultisig-sdk's
+     * `assertKeysignSwapSellsSigningCoin` and iOS `SwapPayload.requireSellsSigningCoin`.
      */
     fun requireSellsSigningCoin(signingCoin: Coin) {
-        when (this) {
-            is EVM,
-            is SwapKit -> Unit
-            is ThorChain,
-            is MayaChain -> return
-        }
         val isEvm = signingCoin.chain.standard == TokenStandard.EVM
-        require(
-            srcToken.chain == signingCoin.chain &&
-                srcToken.isNativeToken == signingCoin.isNativeToken &&
-                srcToken.contractAddress.equals(signingCoin.contractAddress, ignoreCase = isEvm)
-        ) {
+        val mismatch =
+            when {
+                srcToken.chain != signingCoin.chain ->
+                    "chain differs (${srcToken.chain.raw} vs ${signingCoin.chain.raw})"
+                srcToken.isNativeToken != signingCoin.isNativeToken ->
+                    "native flag differs (${srcToken.isNativeToken} vs ${signingCoin.isNativeToken})"
+                !srcToken.contractAddress.equals(signingCoin.contractAddress, ignoreCase = isEvm) ->
+                    "contract differs (${srcToken.contractAddress} vs ${signingCoin.contractAddress})"
+                srcToken.ticker != signingCoin.ticker ->
+                    "ticker differs (${srcToken.ticker} vs ${signingCoin.ticker})"
+                srcToken.decimal != signingCoin.decimal ->
+                    "decimals differ (${srcToken.decimal} vs ${signingCoin.decimal})"
+                else -> null
+            }
+        require(mismatch == null) {
             "Swap sells ${srcToken.ticker} on ${srcToken.chain.raw} but signs " +
-                "${signingCoin.ticker} on ${signingCoin.chain.raw}"
+                "${signingCoin.ticker} on ${signingCoin.chain.raw}: $mismatch"
         }
     }
 
