@@ -40,9 +40,14 @@ class VerifyEvmFeeUseCase @Inject constructor(private val evmApiFactory: EvmApiF
         }
 
         val reference = evmApiFactory.createEvmApi(coin.chain).getGasPrice()
-        // A zero/absent reference says nothing, so fall back to the floor rather than reject every
-        // fee as "infinitely over a zero reference".
-        val ceiling = reference.coerceAtLeast(MIN_REFERENCE_GAS_PRICE_WEI) * MAX_GAS_PRICE_MULTIPLE
+        // Fail closed when the reference can't be read: without it there is nothing to bound the fee
+        // against, so a fee that can't be checked is not signed. No lower floor on the reference —
+        // chains like BSC price gas below 1 Gwei, and a floor there would lift the ceiling far above
+        // the true rate and let a large inflation sit under it.
+        require(reference.signum() > 0) {
+            "Couldn't read a gas-price reference for ${coin.chain.raw}"
+        }
+        val ceiling = reference * MAX_GAS_PRICE_MULTIPLE
         Timber.d(
             "EVM fee check %s: maxFeePerGas=%s priorityFee=%s reference=%s ceiling=%s",
             coin.chain.raw,
@@ -69,8 +74,5 @@ class VerifyEvmFeeUseCase @Inject constructor(private val evmApiFactory: EvmApiF
          * honest fee reaches and a ×1000 inflation never clears.
          */
         val MAX_GAS_PRICE_MULTIPLE: BigInteger = BigInteger.valueOf(50L)
-
-        /** 1 Gwei — floors the reference so a momentarily tiny `eth_gasPrice` can't shrink the ceiling to nothing. */
-        val MIN_REFERENCE_GAS_PRICE_WEI: BigInteger = BigInteger.valueOf(1_000_000_000L)
     }
 }
