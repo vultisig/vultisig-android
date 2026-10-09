@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.data.usecases.VerifyEvmFeeUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
@@ -243,6 +244,7 @@ constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
+    private val verifyEvmFee: VerifyEvmFeeUseCase,
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
@@ -375,6 +377,32 @@ constructor(
     private fun keysign(keysignInitType: KeysignInitType) {
         if (uiState.value.hasAllConsents) {
             viewModelScope.launch {
+                // The signing devices build the EVM signing input from these gas fields, so refuse
+                // an implausibly inflated gas price or limit before anything is signed. Keysign
+                // reloads the transaction by id, so a null here would start a ceremony never checked.
+                val tx = transaction
+                if (tx == null) {
+                    uiState.update {
+                        it.copy(errorText = UiText.DynamicString("The transaction isn't loaded yet"))
+                    }
+                    return@launch
+                }
+                try {
+                    verifyEvmFee(tx.token, tx.blockChainSpecific)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.w(e, "EVM fee failed verification")
+                    uiState.update {
+                        it.copy(
+                            errorText =
+                                UiText.DynamicString(
+                                    e.message ?: "Couldn't verify the network fee"
+                                )
+                        )
+                    }
+                    return@launch
+                }
                 launchKeysign(
                     keysignInitType,
                     transactionId,

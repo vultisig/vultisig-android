@@ -44,6 +44,7 @@ import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationServi
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.TonJettonTransferRefusedException
+import com.vultisig.wallet.data.usecases.VerifyEvmFeeUseCase
 import com.vultisig.wallet.data.usecases.VerifyTonJettonTransferUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -310,6 +311,7 @@ constructor(
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
     private val verifyTonJettonTransfer: VerifyTonJettonTransferUseCase,
+    private val verifyEvmFee: VerifyEvmFeeUseCase,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
 ) : ViewModel() {
@@ -673,6 +675,21 @@ constructor(
         // A QBTC claim payload is a flag carrier with no real tx body — skip the Send/verify
         // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
         if (ksPayload.isQbtcClaim) return true
+
+        // The co-signer builds the EVM signing input from the payload's own gas fields, so refuse an
+        // implausibly inflated gas price or limit before showing anything to approve.
+        try {
+            verifyEvmFee(ksPayload.coin, ksPayload.blockChainSpecific)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "EVM fee failed verification")
+            currentState.value =
+                JoinKeysignState.Error(
+                    JoinKeysignError.FailedToCheck(e.message ?: "Couldn't verify the network fee")
+                )
+            return false
+        }
 
         loadTransaction(ksPayload)
         return true
