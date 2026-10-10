@@ -105,6 +105,31 @@ class EvmTransactionMessageParserTest {
     }
 
     @Test
+    fun `a signed legacy transaction is not a preimage`() {
+        // Same tx but with v=37, r, s in slots 6-8 instead of chainId, 0, 0 — a broadcastable tx,
+        // not a signing preimage, so it must not be read as one.
+        assertNull(
+            EvmTransactionMessageParser.parse(
+                "0xf864808504a817c80082520894000000000000000000000000000000000000dead018025" +
+                    "a0cbda998fedd4ac6db90d82e62f25825aaeb5200b86d7961fa136e25d824de214" +
+                    "a070869d7dc0b551212df9fd5614599fccb554fbe976482021425ffade767b0bd3"
+            )
+        )
+    }
+
+    @Test
+    fun `a signed type-2 transaction is not a preimage`() {
+        // 12 items: the unsigned 9 plus yParity, r, s.
+        assertNull(
+            EvmTransactionMessageParser.parse(
+                "0x02f86b0180843b9aca008504a817c80082520894000000000000000000000000000000000000dead" +
+                    "0180c080a0cbda998fedd4ac6db90d82e62f25825aaeb5200b86d7961fa136e25d824de214" +
+                    "a070869d7dc0b551212df9fd5614599fccb554fbe976482021425ffade767b0bd3"
+            )
+        )
+    }
+
+    @Test
     fun `plain text and empty input are not transactions`() {
         assertNull(EvmTransactionMessageParser.parse("0x"))
         assertNull(EvmTransactionMessageParser.parse("not hex at all"))

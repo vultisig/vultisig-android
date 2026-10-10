@@ -767,6 +767,9 @@
     <string name="verify_sign_message_message_hash">Berichthash</string>
     <string name="verify_sign_message_tx_warning">Dit bericht is eigenlijk een transactie. Door te ondertekenen autoriseer je on-chain de onderstaande overdracht, geen gewoon bericht.</string>
     <string name="verify_sign_message_tx_network">Netwerk</string>
+    <string name="verify_sign_message_tx_chain_id">Keten-ID %1$s</string>
+    <string name="verify_sign_message_tx_unknown_chain">Onbekend EVM-netwerk</string>
+    <string name="verify_sign_message_tx_new_contract">Nieuw contract</string>
     <string name="address_book_empty_description">Houd al uw belangrijke adressen op één plek bij elkaar.</string>
     <string name="address_book_empty_title">Uw adresboek is leeg</string>
     <string name="check_updates_settings_title">Controleer op Updates</string>

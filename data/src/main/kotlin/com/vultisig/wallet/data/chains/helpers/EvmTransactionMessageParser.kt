@@ -60,7 +60,9 @@ object EvmTransactionMessageParser {
         minItems: Int,
     ): EvmMessageTransaction? {
         val list = (decodeWhole(bytes, offset = 1) as? Rlp.List)?.items ?: return null
-        if (list.size < minItems) return null
+        // Exactly the unsigned field count: a signed envelope appends yParity/r/s, and its bytes are
+        // not a signing preimage, so it must not be read as one.
+        if (list.size != minItems) return null
         val to = addressOrNull(list[toIndex]) ?: return null
         return EvmMessageTransaction(
             chainId = integer(list[chainIdIndex]).takeIf { it.signum() > 0 },
@@ -78,6 +80,11 @@ object EvmTransactionMessageParser {
         if ((bytes[0].toInt() and 0xff) < RLP_LIST_SHORT) return null
         val list = (decodeWhole(bytes, offset = 0) as? Rlp.List)?.items ?: return null
         if (list.size != LEGACY_PRE155_ITEMS && list.size != LEGACY_EIP155_ITEMS) return null
+        // An EIP-155 preimage carries `[…, chainId, 0, 0]`; a *signed* legacy tx is also nine items
+        // but holds `[…, v, r, s]`. Require the trailing r/s slots empty so a signed tx is not read
+        // as a preimage.
+        if (list.size == LEGACY_EIP155_ITEMS && (!isEmptyString(list[7]) || !isEmptyString(list[8])))
+            return null
         val to = addressOrNull(list[3]) ?: return null
         val chainId =
             if (list.size == LEGACY_EIP155_ITEMS) integer(list[6]).takeIf { it.signum() > 0 }
@@ -98,6 +105,9 @@ object EvmTransactionMessageParser {
 
     /** The bytes of a string item, or empty for a list (callers only read strings as bytes). */
     private fun bytesOf(item: Rlp): ByteArray = (item as? Rlp.Str)?.bytes ?: ByteArray(0)
+
+    /** True for an empty RLP string (`0x80`) — an omitted field, not a list or a value. */
+    private fun isEmptyString(item: Rlp): Boolean = item is Rlp.Str && item.bytes.isEmpty()
 
     private fun integer(item: Rlp): BigInteger {
         val b = bytesOf(item)

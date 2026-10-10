@@ -602,6 +602,9 @@
     <string name="verify_sign_message_message_hash">Message hash</string>
     <string name="verify_sign_message_tx_warning">This message is actually a transaction. Signing it authorizes the transfer below on-chain, not a plain message.</string>
     <string name="verify_sign_message_tx_network">Network</string>
+    <string name="verify_sign_message_tx_chain_id">Chain ID %1$s</string>
+    <string name="verify_sign_message_tx_unknown_chain">Unknown EVM chain</string>
+    <string name="verify_sign_message_tx_new_contract">New contract</string>
     <string name="sign_message_sign_screen_title">Sign message</string>
     <string name="vault_settings_sign_message_description">Sign custom message</string>
     <string name="swap_screen_invalid_specific_and_utxo">Specific calculation failed</string>

@@ -48,8 +48,12 @@ internal sealed interface DecodedCustomMessage {
      * the screen can warn and show where the money goes.
      */
     data class Transaction(
-        val network: String,
-        val to: String,
+        /** Resolved chain name (`Chain.raw`), or null when the chain id is unknown. */
+        val network: String?,
+        /** The signed chain id, for the fallback label when [network] is null. */
+        val chainId: BigInteger?,
+        /** 0x recipient, or null for contract creation. */
+        val to: String?,
         val amount: String,
         val function: String?,
     ) : DecodedCustomMessage
@@ -121,14 +125,18 @@ constructor(
      */
     private suspend fun transaction(message: String, chainRaw: String?): DecodedCustomMessage.Transaction? {
         val tx = EvmTransactionMessageParser.parse(message) ?: return null
-        val chain = evmChain(tx.chainId, chainRaw)
+        // The network shown must be the one the signature authorizes: resolve the preimage's own
+        // chain id, and only fall back to the payload chain when the preimage names none (pre-155).
+        val chain =
+            if (tx.chainId != null) evmChain(tx.chainId, null) else evmChain(null, chainRaw)
         val amount =
             if (chain != null)
                 "${chain.toValue(tx.value).stripTrailingZeros().toPlainString()} ${chain.nativeTokenTicker}"
             else "${tx.value} wei"
         return DecodedCustomMessage.Transaction(
-            network = chain?.raw ?: tx.chainId?.let { "Chain id $it" } ?: UNKNOWN_EVM_CHAIN,
-            to = tx.to ?: NEW_CONTRACT,
+            network = chain?.raw,
+            chainId = tx.chainId,
+            to = tx.to,
             amount = amount,
             function = tx.data.takeIf { it.isNotEmpty() }?.let { fourByteRepository.decodeFunction(tx.dataHex) },
         )
@@ -269,8 +277,5 @@ constructor(
         private const val SELECTOR_BYTES = 4
         private const val ABI_WORD_BYTES = 32
         private const val DIGEST_BYTES = 32
-
-        private const val UNKNOWN_EVM_CHAIN = "Unknown EVM chain"
-        private const val NEW_CONTRACT = "New contract"
     }
 }

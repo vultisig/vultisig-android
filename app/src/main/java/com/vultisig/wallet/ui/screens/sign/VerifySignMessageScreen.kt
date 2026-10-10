@@ -198,11 +198,21 @@ private fun VerifySignMessageScreen(
                     )
                     SignMessageCard(
                         title = stringResource(R.string.verify_sign_message_tx_network),
-                        value = decoded.network,
+                        value =
+                            decoded.network
+                                ?: decoded.chainId?.let {
+                                    stringResource(
+                                        R.string.verify_sign_message_tx_chain_id,
+                                        it.toString(),
+                                    )
+                                }
+                                ?: stringResource(R.string.verify_sign_message_tx_unknown_chain),
                     )
                     SignMessageCard(
                         title = stringResource(R.string.verify_transaction_to_title),
-                        value = decoded.to,
+                        value =
+                            decoded.to
+                                ?: stringResource(R.string.verify_sign_message_tx_new_contract),
                     )
                     SignMessageCard(
                         title = stringResource(R.string.verify_transaction_amount_title),

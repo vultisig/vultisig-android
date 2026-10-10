@@ -772,6 +772,9 @@
     <string name="verify_sign_message_message_hash">Hash del mensaje</string>
     <string name="verify_sign_message_tx_warning">Este mensaje es en realidad una transacción. Firmarlo autoriza en la cadena la transferencia que se muestra abajo, no un simple mensaje.</string>
     <string name="verify_sign_message_tx_network">Red</string>
+    <string name="verify_sign_message_tx_chain_id">ID de cadena %1$s</string>
+    <string name="verify_sign_message_tx_unknown_chain">Red EVM desconocida</string>
+    <string name="verify_sign_message_tx_new_contract">Nuevo contrato</string>
     <string name="address_book_empty_description">Mantén todas tus direcciones importantes organizadas en un solo lugar.</string>
     <string name="address_book_empty_title">Tu libreta de direcciones está vacía</string>
     <string name="check_updates_settings_title">Consultar actualizaciones</string>

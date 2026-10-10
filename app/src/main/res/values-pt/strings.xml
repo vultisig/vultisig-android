@@ -768,6 +768,9 @@
     <string name="verify_sign_message_message_hash">Hash da mensagem</string>
     <string name="verify_sign_message_tx_warning">Esta mensagem é, na verdade, uma transação. Assiná-la autoriza na cadeia a transferência mostrada abaixo, não uma simples mensagem.</string>
     <string name="verify_sign_message_tx_network">Rede</string>
+    <string name="verify_sign_message_tx_chain_id">ID da cadeia %1$s</string>
+    <string name="verify_sign_message_tx_unknown_chain">Rede EVM desconhecida</string>
+    <string name="verify_sign_message_tx_new_contract">Novo contrato</string>
     <string name="address_book_empty_description">Mantenha todos os seus endereços importantes organizados num só lugar.</string>
     <string name="address_book_empty_title">A sua agenda está vazia.</string>
     <string name="check_updates_settings_title">Verificar Atualizações</string>

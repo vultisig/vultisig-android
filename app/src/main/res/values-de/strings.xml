@@ -770,6 +770,9 @@
     <string name="verify_sign_message_message_hash">Nachrichten-Hash</string>
     <string name="verify_sign_message_tx_warning">Diese Nachricht ist tatsächlich eine Transaktion. Durch das Signieren autorisieren Sie die unten stehende Übertragung on-chain, keine einfache Nachricht.</string>
     <string name="verify_sign_message_tx_network">Netzwerk</string>
+    <string name="verify_sign_message_tx_chain_id">Chain-ID %1$s</string>
+    <string name="verify_sign_message_tx_unknown_chain">Unbekanntes EVM-Netzwerk</string>
+    <string name="verify_sign_message_tx_new_contract">Neuer Vertrag</string>
     <string name="address_book_empty_description">Bewahren Sie alle wichtigen Adressen an einem Ort auf.</string>
     <string name="address_book_empty_title">Ihr Adressbuch ist leer</string>
     <string name="check_updates_settings_title">Aktualisierungen prüfen</string>
