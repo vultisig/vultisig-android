@@ -32,6 +32,7 @@ import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageViewModel
 import com.vultisig.wallet.ui.screens.send.DecodedFunctionParamRows
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -188,6 +189,35 @@ private fun VerifySignMessageScreen(
                             modifier = Modifier.padding(top = 4.dp),
                         )
                     }
+
+                is DecodedCustomMessage.Transaction -> {
+                    SignMessageCard(
+                        title = stringResource(R.string.verify_sign_message_decoded_message),
+                        value = stringResource(R.string.verify_sign_message_tx_warning),
+                        valueColor = Theme.v2.colors.alerts.warning,
+                    )
+                    SignMessageCard(
+                        title = stringResource(R.string.verify_sign_message_tx_network),
+                        value = decoded.network,
+                    )
+                    SignMessageCard(
+                        title = stringResource(R.string.verify_transaction_to_title),
+                        value = decoded.to,
+                    )
+                    SignMessageCard(
+                        title = stringResource(R.string.verify_transaction_amount_title),
+                        value = decoded.amount,
+                    )
+                    decoded.function?.let { function ->
+                        SignMessageCard(
+                            title =
+                                stringResource(
+                                    R.string.verify_transaction_function_signature_title
+                                ),
+                            value = function,
+                        )
+                    }
+                }
 
                 // A digest is named by the card below rather than described by one of its own.
                 DecodedCustomMessage.Hash,

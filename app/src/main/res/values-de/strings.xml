@@ -768,6 +768,8 @@
     <!-- Sign-message Verify: what the signed payload turned out to be -->
     <string name="verify_sign_message_decoded_message">Dekodierte Nachricht</string>
     <string name="verify_sign_message_message_hash">Nachrichten-Hash</string>
+    <string name="verify_sign_message_tx_warning">Diese Nachricht ist tatsächlich eine Transaktion. Durch das Signieren autorisieren Sie die unten stehende Übertragung on-chain, keine einfache Nachricht.</string>
+    <string name="verify_sign_message_tx_network">Netzwerk</string>
     <string name="address_book_empty_description">Bewahren Sie alle wichtigen Adressen an einem Ort auf.</string>
     <string name="address_book_empty_title">Ihr Adressbuch ist leer</string>
     <string name="check_updates_settings_title">Aktualisierungen prüfen</string>

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.sign
 
+import com.vultisig.wallet.data.chains.helpers.EvmTransactionMessageParser
 import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.common.remove0x
 import com.vultisig.wallet.data.models.Chain
@@ -8,6 +9,8 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.evmChainId
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.nativeTokenTicker
+import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.KnownEvmContracts
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
@@ -38,6 +41,18 @@ internal sealed interface DecodedCustomMessage {
      * rather than leaving an unexplained hex string on a signing screen.
      */
     data object Hash : DecodedCustomMessage
+
+    /**
+     * The "message" is actually an EVM transaction signing preimage: signing it authorises an
+     * on-chain transfer, not a plain message (security review H4). Carries display-ready fields so
+     * the screen can warn and show where the money goes.
+     */
+    data class Transaction(
+        val network: String,
+        val to: String,
+        val amount: String,
+        val function: String?,
+    ) : DecodedCustomMessage
 }
 
 /**
@@ -88,11 +103,35 @@ constructor(
             return DecodedCustomMessage.Text(it)
         }
 
+        transaction(message, chain)?.let {
+            return it
+        }
+
         contractCall(message)?.let {
             return it
         }
 
         return digest(message)
+    }
+
+    /**
+     * The payload read as an EVM transaction signing preimage, or null when it is not one. Read
+     * ahead of [contractCall] and [digest] so a message that is a whole transaction is called out as
+     * one instead of falling through to an opaque hex blob — the H4 attack shape.
+     */
+    private suspend fun transaction(message: String, chainRaw: String?): DecodedCustomMessage.Transaction? {
+        val tx = EvmTransactionMessageParser.parse(message) ?: return null
+        val chain = evmChain(tx.chainId, chainRaw)
+        val amount =
+            if (chain != null)
+                "${chain.toValue(tx.value).stripTrailingZeros().toPlainString()} ${chain.nativeTokenTicker}"
+            else "${tx.value} wei"
+        return DecodedCustomMessage.Transaction(
+            network = chain?.raw ?: tx.chainId?.let { "Chain id $it" } ?: UNKNOWN_EVM_CHAIN,
+            to = tx.to ?: NEW_CONTRACT,
+            amount = amount,
+            function = tx.data.takeIf { it.isNotEmpty() }?.let { fourByteRepository.decodeFunction(tx.dataHex) },
+        )
     }
 
     /**
@@ -230,5 +269,8 @@ constructor(
         private const val SELECTOR_BYTES = 4
         private const val ABI_WORD_BYTES = 32
         private const val DIGEST_BYTES = 32
+
+        private const val UNKNOWN_EVM_CHAIN = "Unknown EVM chain"
+        private const val NEW_CONTRACT = "New contract"
     }
 }

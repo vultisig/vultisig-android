@@ -769,6 +769,8 @@
     <!-- Sign-message Verify: what the signed payload turned out to be -->
     <string name="verify_sign_message_decoded_message">Расшифрованное сообщение</string>
     <string name="verify_sign_message_message_hash">Хеш сообщения</string>
+    <string name="verify_sign_message_tx_warning">Это сообщение на самом деле является транзакцией. Его подпись авторизует в сети перевод, показанный ниже, а не обычное сообщение.</string>
+    <string name="verify_sign_message_tx_network">Сеть</string>
     <string name="address_book_empty_description">Храните все важные адреса в одном месте.</string>
     <string name="address_book_empty_title">Ваша адресная книга пуста.</string>
     <string name="check_updates_settings_title">Проверить Обновления</string>

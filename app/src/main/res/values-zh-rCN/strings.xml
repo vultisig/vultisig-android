@@ -798,6 +798,8 @@
     <!-- Sign-message Verify: what the signed payload turned out to be -->
     <string name="verify_sign_message_decoded_message">解码后的消息</string>
     <string name="verify_sign_message_message_hash">消息哈希</string>
+    <string name="verify_sign_message_tx_warning">此消息实际上是一笔交易。签名将在链上授权下方的转账，而非普通消息。</string>
+    <string name="verify_sign_message_tx_network">网络</string>
 
     <!-- Keygen -->
     <string name="keygen_step_preparing_vault">准备保险库</string>
