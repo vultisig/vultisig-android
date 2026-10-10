@@ -673,6 +673,19 @@ constructor(
             return false
         }
 
+        // A swap selling another coin than the one signed never reaches approval (iOS and the
+        // extension refuse it before their review screens too).
+        try {
+            ksPayload.swapPayload?.requireSellsSigningCoin(ksPayload.coin)
+        } catch (e: IllegalArgumentException) {
+            Timber.e(e, "Swap payload sells another coin than the one signed")
+            currentState.value =
+                JoinKeysignState.Error(
+                    JoinKeysignError.FailedToPrepare(UiText.DynamicString(e.message.orEmpty()))
+                )
+            return false
+        }
+
         this@JoinKeysignViewModel._keysignPayload = ksPayload
 
         // A QBTC claim payload is a flag carrier with no real tx body — skip the Send/verify
