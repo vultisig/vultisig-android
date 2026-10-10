@@ -114,6 +114,16 @@ data class BlockchainSpecific(
     @SerialName("MayaSpecific") val mayachainSpecific: MayachainSpecific? = null,
     @SerialName("TronSpecific") val tronSpecific: TronSpecific? = null,
     @SerialName("CardanoSpecific") val cardanoSpecific: CardanoSpecific? = null,
+    @SerialName("NearSpecific") val nearSpecific: NearSpecific? = null,
+)
+
+@Serializable
+data class NearSpecific(
+    /** Decimal string: the corpus nonce is above 2^53. */
+    val nonce: String,
+    /** Base64 of the 32-byte final block hash. */
+    @SerialName("block_hash") val blockHash: String,
+    @SerialName("gas_fee") val gasFee: String,
 )
 
 @Serializable

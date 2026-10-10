@@ -61,6 +61,7 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "fox" -> R.drawable.fox
         "dot" -> R.drawable.dot
         "bittensor" -> R.drawable.bittensor
+        "near" -> R.drawable.near
         "omni" -> R.drawable.omni
         "pyth" -> R.drawable.pyth
         "snx" -> R.drawable.snx

@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
+import com.vultisig.wallet.data.repositories.fromAddressOrNull
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import javax.inject.Inject
@@ -111,7 +112,9 @@ constructor(
         return if (isSwapKitSwap && swapKitTrackingService.canTrack(chain)) {
             swapKitTrackingService.checkSettlementStatus(tx.txHash, chain)
         } else {
-            transactionStatusRepository.checkTransactionStatus(tx.txHash, chain)
+            // NEAR looks a transaction up by sender as well as hash; no other chain needs it.
+            val sender = if (chain == Chain.Near) tx.payload.fromAddressOrNull else null
+            transactionStatusRepository.checkTransactionStatus(tx.txHash, chain, sender)
         }
     }
 

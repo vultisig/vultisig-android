@@ -2077,6 +2077,24 @@ object Coins {
         val all = listOf(TAO)
     }
 
+    object Near {
+        val NEAR =
+            Coin(
+                chain = Chain.Near,
+                ticker = "NEAR",
+                name = "NEAR",
+                logo = "near",
+                address = "",
+                decimal = 24,
+                hexPublicKey = "",
+                priceProviderID = "near",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+
+        val all = listOf(NEAR)
+    }
+
     object Polygon {
         val AVAX =
             Coin(
@@ -4817,6 +4835,7 @@ object Coins {
             Chain.Osmosis to Osmosis.all,
             Chain.Polkadot to Polkadot.all,
             Chain.Bittensor to Bittensor.all,
+            Chain.Near to Near.all,
             Chain.Polygon to Polygon.all,
             Chain.Ripple to Ripple.all,
             Chain.Solana to Solana.all,

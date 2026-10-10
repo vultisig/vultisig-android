@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send
 
 import RippleBroadcastSuccessResponseJson
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseAccountDataJson
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseJson
 import com.vultisig.wallet.data.api.RippleAccountInfoResponseResultJson
@@ -17,6 +18,7 @@ import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.ui.utils.UiText
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -81,7 +83,11 @@ internal class RippleTokenSendValidationTest {
     @Test
     fun `an untagged token send to a tag-requiring destination is blocked`() = runTest {
         val service =
-            ChainValidationService(FakeRippleApi(flags = requireDestTagFlags), FakeBittensorApi())
+            ChainValidationService(
+                FakeRippleApi(flags = requireDestTagFlags),
+                FakeBittensorApi(),
+                mockk<NearApi>(),
+            )
 
         val error =
             shouldThrow<InvalidTransactionDataException> {
@@ -97,7 +103,7 @@ internal class RippleTokenSendValidationTest {
     fun `a tagged token send is allowed without asking the ledger`() = runTest {
         val api = FakeRippleApi(flags = requireDestTagFlags)
 
-        ChainValidationService(api, FakeBittensorApi())
+        ChainValidationService(api, FakeBittensorApi(), mockk<NearApi>())
             .validateRippleDestinationTag(rlusd, DESTINATION, 42u)
 
         api.accountsInfoCalls shouldBe 0
@@ -109,6 +115,7 @@ internal class RippleTokenSendValidationTest {
             ChainValidationService(
                 FakeRippleApi(lines = listOf(line(RLUSD_HEX, ISSUER))),
                 FakeBittensorApi(),
+                mockk<NearApi>(),
             )
 
         service.validateRippleDestinationTrustLine(rlusd, DESTINATION)
@@ -122,6 +129,7 @@ internal class RippleTokenSendValidationTest {
             ChainValidationService(
                 FakeRippleApi(lines = listOf(line(RLUSD_HEX, OTHER_ISSUER))),
                 FakeBittensorApi(),
+                mockk<NearApi>(),
             )
 
         val error =
@@ -136,7 +144,12 @@ internal class RippleTokenSendValidationTest {
     // An unfunded account answers actNotFound with no lines, which is evidence of absence.
     @Test
     fun `a destination holding no lines at all is blocked`() = runTest {
-        val service = ChainValidationService(FakeRippleApi(lines = emptyList()), FakeBittensorApi())
+        val service =
+            ChainValidationService(
+                FakeRippleApi(lines = emptyList()),
+                FakeBittensorApi(),
+                mockk<NearApi>(),
+            )
 
         shouldThrow<InvalidTransactionDataException> {
             service.validateRippleDestinationTrustLine(rlusd, DESTINATION)
@@ -149,7 +162,7 @@ internal class RippleTokenSendValidationTest {
     fun `sending back to the issuer needs no trust line and no lookup`() = runTest {
         val api = FakeRippleApi(lines = emptyList())
 
-        ChainValidationService(api, FakeBittensorApi())
+        ChainValidationService(api, FakeBittensorApi(), mockk<NearApi>())
             .validateRippleDestinationTrustLine(rlusd, ISSUER)
 
         api.accountLinesCalls shouldBe 0
@@ -170,6 +183,7 @@ internal class RippleTokenSendValidationTest {
                         )
                 ),
                 FakeBittensorApi(),
+                mockk<NearApi>(),
             )
 
         service.validateRippleDestinationTrustLine(rlusd, DESTINATION)
@@ -179,7 +193,7 @@ internal class RippleTokenSendValidationTest {
     fun `native XRP holds no trust line and is not looked up`() = runTest {
         val api = FakeRippleApi(lines = emptyList())
 
-        ChainValidationService(api, FakeBittensorApi())
+        ChainValidationService(api, FakeBittensorApi(), mockk<NearApi>())
             .validateRippleDestinationTrustLine(xrp, DESTINATION)
 
         api.accountLinesCalls shouldBe 0

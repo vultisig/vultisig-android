@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.CosmosApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -527,6 +528,7 @@ class BroadcastTxUseCaseTest {
             solanaApi = solanaApi,
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
             bittensorApi = bittensorApi,
+            nearApi = mockk<NearApi>(),
             suiApi = mockk<SuiApi>(relaxed = true),
             tonApi = mockk<TonApi>(relaxed = true),
             rippleApi = mockk<RippleApi>(relaxed = true),

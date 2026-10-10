@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases.txstatus
 
+import com.vultisig.wallet.data.api.txstatus.NearStatusProvider
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import javax.inject.Inject
@@ -24,7 +25,12 @@ sealed class TransactionResult {
 }
 
 interface TransactionStatusRepository {
-    suspend fun checkTransactionStatus(txHash: String, chain: Chain): TransactionResult
+    /** [senderAccountId] is required where the chain looks transactions up by sender (NEAR). */
+    suspend fun checkTransactionStatus(
+        txHash: String,
+        chain: Chain,
+        senderAccountId: String? = null,
+    ): TransactionResult
 }
 
 internal class TransactionStatusRepositoryImpl
@@ -42,26 +48,31 @@ constructor(
     @param:RippleTxStatus private val rippleProvider: TransactionStatusProvider,
     @param:TronTxStatus private val tronProvider: TransactionStatusProvider,
     @param:BittensorTxStatus private val bittensorProvider: TransactionStatusProvider,
+    private val nearProvider: NearStatusProvider,
 ) : TransactionStatusRepository {
-    private fun getProvider(chain: Chain) =
-        when (chain.standard) {
-            TokenStandard.EVM -> evmProvider
-            TokenStandard.UTXO if chain == Chain.Cardano -> cardanoProvider
-            TokenStandard.UTXO -> utxoProvider
+    override suspend fun checkTransactionStatus(
+        txHash: String,
+        chain: Chain,
+        senderAccountId: String?,
+    ): TransactionResult {
+        val provider =
+            when (chain.standard) {
+                TokenStandard.EVM -> evmProvider
+                TokenStandard.UTXO if chain == Chain.Cardano -> cardanoProvider
+                TokenStandard.UTXO -> utxoProvider
 
-            TokenStandard.COSMOS -> cosmosProvider
-            TokenStandard.THORCHAIN -> thorChainProvider
-            TokenStandard.SOL -> solanaProvider
-            TokenStandard.SUBSTRATE if chain == Chain.Bittensor -> bittensorProvider
-            TokenStandard.SUBSTRATE -> polkadotProvider
-            TokenStandard.SUI -> suiProvider
-            TokenStandard.TON -> tonProvider
-            TokenStandard.RIPPLE -> rippleProvider
-            TokenStandard.TRC20 -> tronProvider
-        }
-
-    override suspend fun checkTransactionStatus(txHash: String, chain: Chain): TransactionResult {
-        val provider = getProvider(chain)
+                TokenStandard.COSMOS -> cosmosProvider
+                TokenStandard.THORCHAIN -> thorChainProvider
+                TokenStandard.SOL -> solanaProvider
+                TokenStandard.SUBSTRATE if chain == Chain.Bittensor -> bittensorProvider
+                TokenStandard.SUBSTRATE -> polkadotProvider
+                TokenStandard.SUI -> suiProvider
+                TokenStandard.TON -> tonProvider
+                TokenStandard.RIPPLE -> rippleProvider
+                TokenStandard.TRC20 -> tronProvider
+                // NEAR looks a transaction up by its sender as well as its hash.
+                TokenStandard.NEAR -> return nearProvider.checkStatus(txHash, senderAccountId)
+            }
         return provider.checkStatus(txHash = txHash, chain = chain)
     }
 }

@@ -130,6 +130,26 @@ sealed class BlockChainSpecific {
 
     data class Cardano(val byteFee: Long, val sendMaxAmount: Boolean, val ttl: ULong) :
         BlockChainSpecific()
+
+    /**
+     * Frozen once by the initiator: a co-signer cannot re-read the access-key nonce or the block
+     * hash without producing a different transaction.
+     *
+     * @param nonce access-key nonce + 1, the only value nearcore's `verify_nonce` admits
+     * @param blockHash the 32-byte final block hash the transaction is anchored to
+     * @param gasFee upfront gas reservation in yoctoNEAR (display metadata, not an on-chain cap)
+     */
+    class Near(val nonce: ULong, val blockHash: ByteArray, val gasFee: BigInteger) :
+        BlockChainSpecific() {
+        override fun equals(other: Any?): Boolean =
+            other is Near &&
+                nonce == other.nonce &&
+                blockHash.contentEquals(other.blockHash) &&
+                gasFee == other.gasFee
+
+        override fun hashCode(): Int =
+            31 * (31 * nonce.hashCode() + blockHash.contentHashCode()) + gasFee.hashCode()
+    }
 }
 
 /**

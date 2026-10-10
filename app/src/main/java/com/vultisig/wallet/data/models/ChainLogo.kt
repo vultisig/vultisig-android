@@ -25,6 +25,7 @@ internal val Chain.logo: Int
             Chain.CronosChain -> R.drawable.cro
             Chain.Polkadot -> R.drawable.dot
             Chain.Bittensor -> R.drawable.bittensor
+            Chain.Near -> R.drawable.near
             Chain.Dydx -> R.drawable.dydx
             Chain.ZkSync -> R.drawable.zksync
             Chain.Sui -> R.drawable.sui
@@ -68,6 +69,7 @@ internal val Chain.monoToneLogo: Int
             Chain.CronosChain -> R.drawable.cronos_mono
             Chain.Polkadot -> R.drawable.dot_mono
             Chain.Bittensor -> R.drawable.bittensor_mono
+            Chain.Near -> R.drawable.near_mono
             Chain.Dydx -> R.drawable.dxdy_mono
             Chain.ZkSync -> R.drawable.zksync_mono
             Chain.Sui -> R.drawable.sui_mono
