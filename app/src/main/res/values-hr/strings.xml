@@ -769,6 +769,11 @@
     <!-- Sign-message Verify: what the signed payload turned out to be -->
     <string name="verify_sign_message_decoded_message">Dekodirana poruka</string>
     <string name="verify_sign_message_message_hash">Hash poruke</string>
+    <string name="verify_sign_message_tx_warning">Ova poruka zapravo je transakcija. Njezino potpisivanje autorizira prijenos prikazan u nastavku na lancu, a ne običnu poruku.</string>
+    <string name="verify_sign_message_tx_network">Mreža</string>
+    <string name="verify_sign_message_tx_chain_id">ID lanca %1$s</string>
+    <string name="verify_sign_message_tx_unknown_chain">Nepoznata EVM mreža</string>
+    <string name="verify_sign_message_tx_new_contract">Novi ugovor</string>
     <string name="address_book_empty_description">Držite sve važne adrese organizirane na jednom mjestu.</string>
     <string name="address_book_empty_title">Vaš adresar je prazan</string>
     <string name="check_updates_settings_title">Provjerite Ažuriranja</string>
