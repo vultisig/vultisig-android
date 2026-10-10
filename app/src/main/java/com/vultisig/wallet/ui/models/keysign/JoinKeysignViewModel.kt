@@ -671,12 +671,6 @@ constructor(
             return false
         }
 
-        this@JoinKeysignViewModel._keysignPayload = ksPayload
-
-        // A QBTC claim payload is a flag carrier with no real tx body — skip the Send/verify
-        // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
-        if (ksPayload.isQbtcClaim) return true
-
         // A swap selling another coin than the one signed never reaches approval (iOS and the
         // extension refuse it before their review screens too).
         try {
@@ -689,6 +683,12 @@ constructor(
                 )
             return false
         }
+
+        this@JoinKeysignViewModel._keysignPayload = ksPayload
+
+        // A QBTC claim payload is a flag carrier with no real tx body — skip the Send/verify
+        // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
+        if (ksPayload.isQbtcClaim) return true
 
         loadTransaction(ksPayload)
         return true
