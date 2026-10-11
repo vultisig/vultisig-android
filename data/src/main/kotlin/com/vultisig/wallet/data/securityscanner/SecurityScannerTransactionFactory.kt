@@ -172,9 +172,17 @@ class SecurityScannerTransactionFactory(
             data = EthereumFunction.transferErc20Encoder(transaction.dstAddress, tokenAmount)
             to = transaction.token.contractAddress
         } else {
-            transferType = SecurityTransactionType.COIN_TRANSFER
+            // The signer writes the memo into the signed tx data (EvmHelper), so a native-coin dApp
+            // contract call rides in `memo`. Scanning "0x" graded it as a plain value transfer, so
+            // the threat verdict never saw the call (e.g. a setApprovalForAll still got a benign
+            // "scanned by Blockaid" badge). Scan the memo as calldata — the same bytes the
+            // simulation path already sends (BlockaidSimulationServiceImpl.scanEvm).
+            val calldata = transaction.memo?.takeIf { it.isNotEmpty() }
+            transferType =
+                if (calldata == null) SecurityTransactionType.COIN_TRANSFER
+                else SecurityTransactionType.SMART_CONTRACT
             amount = transaction.tokenValue.value
-            data = "0x"
+            data = calldata ?: "0x"
             to = transaction.dstAddress
         }
 
