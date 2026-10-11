@@ -561,6 +561,7 @@ class PreviewActivity : ComponentActivity() {
                     "swap_advanced_external_recipient" -> AdvancedExternalRecipientPreview()
                     "select_asset_secured_before" -> SelectAssetSecuredPreview(showSecured = false)
                     "select_asset_secured_after" -> SelectAssetSecuredPreview(showSecured = true)
+                    "token_selection_secured" -> TokenSelectionSecuredPreview()
                     "import_seedphrase" -> ImportSeedphrasePreview()
                     "defi_account_list" -> DeFiAccountListPreview()
                     "solana_staking_positions" -> SolanaStakingPositionsLoadedPreview()
@@ -3101,6 +3102,39 @@ private fun securedAssetCoin(ticker: String, contractAddress: String): Coin =
         isNativeToken = false,
         decimal = 8,
     )
+
+@Composable
+private fun TokenSelectionSecuredPreview() {
+    val coins =
+        listOf(
+            securedAssetCoin("USDC", "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"),
+            securedAssetCoin("USDT", "eth-usdt-0xdac17f958d2ee523a2206206994597c13d831ec7"),
+            securedAssetCoin("ETH", "eth-eth"),
+            securedAssetCoin("USDC", "bsc-usdc-0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"),
+            securedAssetCoin("VVV", "base-vvv-0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf"),
+            securedAssetCoin("BCH", "bch-bch"),
+            securedAssetCoin("BNB", "bsc-bnb"),
+            securedAssetCoin("BTCB", "bsc-btcb-0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c"),
+            securedAssetCoin("BUSD", "bsc-busd-0xe9e7cea3dedca5984780bafc599bd69add087d56"),
+            securedAssetCoin("ETH", "base-eth"),
+            securedAssetCoin("USDC", "avax-usdc-0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e"),
+            securedAssetCoin("USDT", "bsc-usdt-0x55d398326f99059ff775485246999027b3197955"),
+        )
+    TokenSelectionScreen(
+        searchTextFieldState = TextFieldState(),
+        state =
+            com.vultisig.wallet.ui.models.token.TokenSelectionUiModel(
+                tokens =
+                    coins.mapIndexed { index, coin ->
+                        com.vultisig.wallet.ui.models.token.TokenUiModel(
+                            isEnabled = index < 2,
+                            coin = coin,
+                        )
+                    }
+            ),
+        hasCustomToken = false,
+    )
+}
 
 /**
  * Renders the swap destination picker over the swap form. `showSecured = false` reproduces the
