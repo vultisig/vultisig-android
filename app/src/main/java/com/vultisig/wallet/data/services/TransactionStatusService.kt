@@ -56,6 +56,7 @@ class TransactionStatusService : Service() {
             ACTION_START_POLLING -> {
                 val txHash = intent.getStringExtra(EXTRA_TX_HASH)
                 val chainName = intent.getStringExtra(EXTRA_CHAIN)
+                val senderAccountId = intent.getStringExtra(EXTRA_SENDER_ACCOUNT_ID)
 
                 if (txHash == null || chainName == null) {
                     stopSelf()
@@ -72,7 +73,7 @@ class TransactionStatusService : Service() {
                             ongoing = true,
                         )
                     startForeground(NOTIFICATION_ID, notification)
-                    startPolling(txHash, chain)
+                    startPolling(txHash, chain, senderAccountId)
                     START_STICKY
                 } catch (_: SecurityException) {
                     stopSelf()
@@ -87,7 +88,7 @@ class TransactionStatusService : Service() {
         }
     }
 
-    private fun startPolling(txHash: String, chain: Chain) {
+    private fun startPolling(txHash: String, chain: Chain, senderAccountId: String?) {
         pollingJob?.cancel()
 
         pollingJob =
@@ -95,7 +96,7 @@ class TransactionStatusService : Service() {
                 updateNotification(getString(R.string.transaction_status_pending), ongoing = true)
                 statusFlow.emit(TransactionResult.Pending)
 
-                pollingTxStatus(chain, txHash).collect { result ->
+                pollingTxStatus(chain, txHash, senderAccountId).collect { result ->
                     when (result) {
                         is TransactionResult.Confirmed,
                         is TransactionResult.Failed,
@@ -201,6 +202,7 @@ class TransactionStatusService : Service() {
         const val ACTION_START_POLLING = "com.vultisig.wallet.START_POLLING"
         const val EXTRA_TX_HASH = "tx_hash"
         const val EXTRA_CHAIN = "chain"
+        const val EXTRA_SENDER_ACCOUNT_ID = "sender_account_id"
     }
 
     private fun TransactionResult.toNotificationMessage() =

@@ -134,6 +134,7 @@ val Coin.carriesMemo: Boolean
         chain != Chain.Sui &&
             chain != Chain.Polkadot &&
             chain != Chain.Bittensor &&
+            chain != Chain.Near &&
             (isNativeToken ||
                 chain.standard == TokenStandard.COSMOS ||
                 chain == Chain.Ton ||

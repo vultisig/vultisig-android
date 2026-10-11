@@ -85,12 +85,13 @@ constructor(
         txHash: String,
         chain: Chain,
         isSwapKitSwap: Boolean,
+        senderAccountId: String?,
         onStatus: suspend (TransactionResult) -> Unit,
     ): TxStatusPollOutcome =
         if (isSwapKitSwap && swapKitTrackingService.canTrack(chain)) {
             pollSwapKit(txHash, chain, onStatus)
         } else {
-            pollStatusService(txHash, chain, onStatus)
+            pollStatusService(txHash, chain, senderAccountId, onStatus)
         }
 
     /**
@@ -104,12 +105,13 @@ constructor(
     private suspend fun pollStatusService(
         txHash: String,
         chain: Chain,
+        senderAccountId: String?,
         onStatus: suspend (TransactionResult) -> Unit,
     ): TxStatusPollOutcome {
         try {
             // A rejected binding never connects, so serviceReady would suspend forever — and a
             // status emitted here would be the last one the screen ever received.
-            if (!transactionStatusServiceManager.startPolling(txHash, chain)) {
+            if (!transactionStatusServiceManager.startPolling(txHash, chain, senderAccountId)) {
                 return TxStatusPollOutcome.NotTracked
             }
             onStatus(TransactionResult.Pending)

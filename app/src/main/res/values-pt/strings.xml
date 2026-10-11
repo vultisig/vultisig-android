@@ -1050,6 +1050,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">O valor mínimo para ativar este endereço é %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">O valor mínimo para ativar este endereço é %1$s %2$s (Depósito Existencial).</string>
+    <string name="send_error_near_destination_not_found">Esta conta NEAR não existe. Verifique o destinatário: uma transferência para ela apenas consumiria gas.</string>
+    <string name="send_error_near_unsupported_payload">Esta transação da NEAR não é suportada. Só podem ser assinadas transferências nativas da NEAR.</string>
+    <string name="send_error_near_invalid_recipient">Esta não é uma conta NEAR válida. Verifique o destinatário.</string>
+    <string name="send_error_near_key_not_full_access">A chave deste cofre não tem acesso total a esta conta NEAR, por isso não pode enviar a partir dela.</string>
+    <string name="send_error_near_network">A rede NEAR devolveu um erro ou uma resposta ilegível. Tente novamente.</string>
+    <string name="send_error_near_safety_check">Esta transação da NEAR não passou numa verificação de segurança e não foi assinada.</string>
     <string name="send_error_xrp_destination_tag_required">Este endereço requer uma tag de destino. Adicione uma para continuar.</string>
     <string name="send_error_xrp_destination_no_trust_line">Este endereço não pode receber %1$s. O destinatário precisa de abrir primeiro uma linha de confiança para este ativo.</string>
     <string name="ripple_trust_line_title">Ativar linha de confiança</string>

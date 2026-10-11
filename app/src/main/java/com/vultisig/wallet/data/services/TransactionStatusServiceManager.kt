@@ -53,12 +53,13 @@ constructor(@param:ApplicationContext private val context: Context) {
      *   binding: `onServiceConnected()` never fires in that case, so [serviceReady] stays `false`
      *   and callers must not wait on it.
      */
-    fun startPolling(txHash: String, chain: Chain): Boolean {
+    fun startPolling(txHash: String, chain: Chain, senderAccountId: String?): Boolean {
         val intent =
             Intent(context, TransactionStatusService::class.java).apply {
                 action = TransactionStatusService.ACTION_START_POLLING
                 putExtra(TransactionStatusService.EXTRA_TX_HASH, txHash)
                 putExtra(TransactionStatusService.EXTRA_CHAIN, chain.raw)
+                putExtra(TransactionStatusService.EXTRA_SENDER_ACCOUNT_ID, senderAccountId)
             }
         val started =
             runCatching { context.startForegroundService(intent) }

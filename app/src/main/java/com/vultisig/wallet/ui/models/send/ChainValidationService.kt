@@ -2,9 +2,12 @@ package com.vultisig.wallet.ui.models.send
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.BittensorApi
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.matches
 import com.vultisig.wallet.data.api.requiresDestinationTag
+import com.vultisig.wallet.data.api.storageReserve
+import com.vultisig.wallet.data.blockchain.near.NearAccountId
 import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
@@ -35,7 +38,11 @@ import wallet.core.jni.proto.Common.SigningError
 /** Validates chain-specific transaction constraints for the send form. */
 internal class ChainValidationService
 @Inject
-constructor(private val rippleApi: RippleApi, private val bittensorApi: BittensorApi) {
+constructor(
+    private val rippleApi: RippleApi,
+    private val bittensorApi: BittensorApi,
+    private val nearApi: NearApi,
+) {
 
     // 1 ADA = 1,000,000 lovelace; kept as a local constant to avoid a WalletCore JNI call
     // (CoinTypeConfiguration.getDecimals) which is unavailable in unit tests.
@@ -258,6 +265,75 @@ constructor(private val rippleApi: RippleApi, private val bittensorApi: Bittenso
             )
         )
     }
+
+    /**
+     * Blocks a native NEAR send to a named account the chain does not know: nearcore includes the
+     * transfer, refunds the deposit and burns the gas. An implicit (64-hex) receiver is created by
+     * the transfer itself and is not looked up. Fails closed when the lookup fails.
+     */
+    suspend fun validateNearDestinationExists(selectedToken: Coin, dstAddress: String) {
+        if (selectedToken.chain != Chain.Near || !selectedToken.isNativeToken) return
+        if (NearAccountId.isImplicit(dstAddress)) return
+
+        val destination =
+            try {
+                nearApi.getAccount(dstAddress)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to fetch NEAR account %s", dstAddress)
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.network_connection_lost)
+                )
+            }
+        if (destination != null) return
+
+        throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_near_destination_not_found)
+        )
+    }
+
+    /**
+     * Refuses a native NEAR send the sender cannot cover, before any keysign session starts: the
+     * amount, the gas reservation frozen into [specific] and the account's storage reserve must fit
+     * the balance read now. Fails closed when the read fails.
+     */
+    suspend fun validateNearSendAffordable(
+        selectedToken: Coin,
+        tokenAmountInt: BigInteger,
+        specific: BlockChainSpecific,
+    ) {
+        if (selectedToken.chain != Chain.Near || !selectedToken.isNativeToken) return
+        val gasReservation = (specific as BlockChainSpecific.Near).gasFee
+
+        val (available, storageReserve) =
+            readNearAccount(selectedToken.address) {
+                val account = nearApi.getAccount(selectedToken.address)
+                (account?.amount ?: BigInteger.ZERO) to
+                    (account?.let { nearApi.storageReserve(it) } ?: BigInteger.ZERO)
+            }
+
+        val required = tokenAmountInt + gasReservation + storageReserve
+        if (required <= available) return
+        throw InvalidTransactionDataException(
+            UiText.FormattedText(
+                R.string.send_error_insufficient_native_balance_with_fees,
+                listOf(selectedToken.ticker),
+            )
+        )
+    }
+
+    private suspend fun <T> readNearAccount(address: String, read: suspend () -> T): T =
+        try {
+            read()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch NEAR account %s", address)
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.network_connection_lost)
+            )
+        }
 
     /**
      * Ensures an XRP payment to a not-yet-activated destination meets the ledger's account reserve,

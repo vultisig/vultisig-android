@@ -67,6 +67,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import java.net.SocketException
@@ -104,6 +105,9 @@ import wallet.core.jni.TONAddressConverter
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
+
+    /** The payload's messages to sign could not be prepared. */
+    data class FailedToPrepare(val reason: UiText) : JoinKeysignError(reason)
 
     data object MissingRequiredVault :
         JoinKeysignError(R.string.join_keysign_missing_required_vault.asUiText())
@@ -163,7 +167,10 @@ sealed class JoinKeysignError(val message: UiText) {
 }
 
 /** Raised when the messages to sign cannot be prepared once the ceremony starts. */
-internal class KeysignMessagesException(message: String) : Exception(message)
+internal class KeysignMessagesException(
+    message: String,
+    val text: UiText = UiText.DynamicString(message),
+) : Exception(message)
 
 /** Raised when polling the relay for committee membership fails (network/relay error). */
 internal class KeysignCheckException(message: String) : Exception(message)
@@ -174,7 +181,7 @@ internal sealed interface KeysignStartOutcome {
     data object Started : KeysignStartOutcome
 
     /** Preparing the messages to sign failed; carries the reason for the error state. */
-    data class FailedToPrepare(val message: String) : KeysignStartOutcome
+    data class FailedToPrepare(val text: UiText) : KeysignStartOutcome
 
     /** Polling the relay for the committee failed; carries the reason for the error state. */
     data class FailedToCheck(val message: String) : KeysignStartOutcome
@@ -204,9 +211,7 @@ internal suspend fun awaitKeysignStart(
                     return@withTimeoutOrNull KeysignStartOutcome.Started
                 }
             } catch (e: KeysignMessagesException) {
-                return@withTimeoutOrNull KeysignStartOutcome.FailedToPrepare(
-                    e.message ?: "Failed to prepare messages to sign"
-                )
+                return@withTimeoutOrNull KeysignStartOutcome.FailedToPrepare(e.text)
             } catch (e: KeysignCheckException) {
                 return@withTimeoutOrNull KeysignStartOutcome.FailedToCheck(
                     e.message ?: "Failed to check keysign start"
@@ -665,6 +670,19 @@ constructor(
             Timber.w(e, "TON jetton transfer failed verification")
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.TonJettonTransferRefused.from(e))
+            return false
+        }
+
+        // A swap selling another coin than the one signed never reaches approval (iOS and the
+        // extension refuse it before their review screens too).
+        try {
+            ksPayload.swapPayload?.requireSellsSigningCoin(ksPayload.coin)
+        } catch (e: IllegalArgumentException) {
+            Timber.e(e, "Swap payload sells another coin than the one signed")
+            currentState.value =
+                JoinKeysignState.Error(
+                    JoinKeysignError.FailedToPrepare(UiText.DynamicString(e.message.orEmpty()))
+                )
             return false
         }
 
@@ -1294,7 +1312,7 @@ constructor(
                             Timber.e("Failed to prepare messages to sign")
                             currentState.value =
                                 JoinKeysignState.Error(
-                                    JoinKeysignError.FailedToCheck(outcome.message)
+                                    JoinKeysignError.FailedToPrepare(outcome.text)
                                 )
                         }
 
@@ -1373,7 +1391,11 @@ constructor(
         } catch (ce: CancellationException) {
             throw ce
         } catch (e: Exception) {
-            throw KeysignMessagesException(e.message ?: "Failed to resolve messages to sign")
+            val message = e.message ?: "Failed to resolve messages to sign"
+            throw KeysignMessagesException(
+                message,
+                e.nearErrorTextOrNull() ?: UiText.DynamicString(message),
+            )
         }
     }
 
