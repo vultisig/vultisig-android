@@ -4,6 +4,8 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
+import com.vultisig.wallet.data.common.asCallData
+import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.SuiHelper
@@ -175,14 +177,16 @@ class SecurityScannerTransactionFactory(
             // The signer writes the memo into the signed tx data (EvmHelper), so a native-coin dApp
             // contract call rides in `memo`. Scanning "0x" graded it as a plain value transfer, so
             // the threat verdict never saw the call (e.g. a setApprovalForAll still got a benign
-            // "scanned by Blockaid" badge). Scan the memo as calldata — the same bytes the
-            // simulation path already sends (BlockaidSimulationServiceImpl.scanEvm).
+            // "scanned by Blockaid" badge). Scan the memo as calldata, encoded the same way
+            // EvmHelper writes it into the signed tx (`memo.toByteStringOrHex()`), so the scan sees
+            // the exact bytes that get signed — a hex memo round-trips, a text memo becomes its
+            // UTF-8 bytes rather than being sent as a non-hex string.
             val calldata = transaction.memo?.takeIf { it.isNotEmpty() }
             transferType =
                 if (calldata == null) SecurityTransactionType.COIN_TRANSFER
                 else SecurityTransactionType.SMART_CONTRACT
             amount = transaction.tokenValue.value
-            data = calldata ?: "0x"
+            data = calldata?.let { it.toByteStringOrHex().toByteArray().asCallData() } ?: "0x"
             to = transaction.dstAddress
         }
 
