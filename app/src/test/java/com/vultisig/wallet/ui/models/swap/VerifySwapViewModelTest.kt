@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -456,6 +457,7 @@ internal class VerifySwapViewModelTest {
             mockk<SwapTransaction.RegularSwapTransaction>(relaxed = true) {
                 every { isApprovalRequired } returns false
                 every { memo } returns null
+                every { payload } returns mockk<SwapPayload.SwapKit>(relaxed = true)
                 every { srcToken } returns
                     mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.Solana }
                 every { dstToken } returns
