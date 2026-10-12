@@ -72,7 +72,7 @@ internal fun SearchedTokenInfo(token: Coin) {
                     UiSpacer(size = 6.dp)
 
                     Text(
-                        text = token.chain.raw,
+                        text = token.chain.displayName,
                         color = Theme.v2.colors.text.secondary,
                         style = Theme.brockmann.supplementary.captionSmall,
                         modifier =

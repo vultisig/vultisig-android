@@ -1,11 +1,13 @@
 package com.vultisig.wallet.data.repositories.swap
 
 import androidx.annotation.VisibleForTesting
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitEvmTx
 import com.vultisig.wallet.data.api.models.quotes.SwapKitFee
+import com.vultisig.wallet.data.api.models.quotes.SwapKitProviderError
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitRoute
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSolanaTx
@@ -13,6 +15,10 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
+import com.vultisig.wallet.data.api.swapAggregators.swapKitErc20DepositRecipient
+import com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSignerException
+import com.vultisig.wallet.data.chains.helpers.SwapKitLegacyPsbtVersion
+import com.vultisig.wallet.data.chains.helpers.SwapKitPsbtException
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
@@ -87,6 +93,8 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: SwapKitError) {
+            throw e
+        } catch (e: SwapException) {
             throw e
         } catch (e: Exception) {
             Timber.w(e, "SwapKit quote fetch failed")
@@ -171,11 +179,19 @@ constructor(
         // Distinguish "upstream returned zero routes" (NoRoutes) from "client filtering dropped
         // every candidate" (RouteFiltered). iOS produces RouteFiltered at SwapService.swift:386
         // for the same client-side gate, and the two surface different localized copies.
+        // Either way, a provider that refused only because the amount is under its minimum is the
+        // actionable answer: raising the amount would get a route.
         if (quoteResponse.routes.isEmpty()) {
+            throwIfBelowProviderMinimum(quoteResponse.providerErrors, request.tokenValue)
             throw SwapKitError.NoRoutes("SwapKit returned no routes for this pair")
         }
 
-        val best = pickBestRoute(quoteResponse.routes) ?: throw SwapKitError.RouteFiltered
+        val best =
+            pickBestRoute(quoteResponse.routes)
+                ?: run {
+                    throwIfBelowProviderMinimum(quoteResponse.providerErrors, request.tokenValue)
+                    throw SwapKitError.RouteFiltered
+                }
 
         // Defense-in-depth: independently reject a route whose expected buy amount has slipped
         // below
@@ -260,11 +276,16 @@ constructor(
                 SwapQuoteResult.Evm(
                     data =
                         buildEvmQuoteFromSwapKit(
-                            swapResponse,
-                            request.srcToken,
-                            request.dstToken,
-                            best.fees,
-                        ),
+                                swapResponse,
+                                request.srcToken,
+                                request.dstToken,
+                                best.fees,
+                            )
+                            .bindErc20Deposit(
+                                request.srcToken,
+                                request.tokenValue.value,
+                                swapResponse.targetAddress,
+                            ),
                     subProvider = subProvider,
                     swapId = swapId,
                     priceImpact = priceImpact,
@@ -316,6 +337,34 @@ constructor(
     private suspend fun assertChainsEnabled(srcChain: Chain, dstChain: Chain) {
         if (!providerCache.isEnabled(srcChain) || !providerCache.isEnabled(dstChain)) {
             throw SwapKitError.ProviderNotEnabled
+        }
+    }
+
+    /**
+     * Throws [SwapException.SmallSwapAmount] carrying the lowest `sellAssetAmountTooSmall` minimum
+     * among the providers this client would route through, when [sellAmount] is below it. Thor/Maya
+     * minimums are skipped: those routes are filtered out, so meeting their minimum would still
+     * yield no SwapKit route. Minimums with no provider are skipped for the same reason, since
+     * provider-less routes are dropped too. The message is the bare decimal amount, which the swap form renders
+     * as "Recommended amount <amount> <ticker>".
+     */
+    private fun throwIfBelowProviderMinimum(
+        providerErrors: List<SwapKitProviderError>,
+        sellAmount: TokenValue,
+    ) {
+        val minimum =
+            providerErrors
+                .filter { error ->
+                    val provider = error.provider?.lowercase(Locale.ROOT)
+                    error.errorCode?.lowercase(Locale.ROOT) == SELL_AMOUNT_TOO_SMALL &&
+                        provider != null &&
+                        provider !in FILTERED_PROVIDERS
+                }
+                .mapNotNull { error -> error.minAmount?.toBigDecimalOrNull() }
+                .filter { it.signum() > 0 }
+                .minOrNull() ?: return
+        if (sellAmount.decimal < minimum) {
+            throw SwapException.SmallSwapAmount(minimum.stripTrailingZeros().toPlainString())
         }
     }
 
@@ -557,6 +606,32 @@ constructor(
     }
 
     /**
+     * Refuses a SwapKit ERC-20 deposit (the tx calls the sold token, or any `transfer` call) unless
+     * it is exactly `transfer(targetAddress, soldAmount)` on the sold token with no native value.
+     * The refusal is [SwapKitError.Decoding] so the picker drops SwapKit; a router tx passes as is.
+     */
+    private fun EVMSwapQuoteJson.bindErc20Deposit(
+        srcToken: Coin,
+        soldAmount: BigInteger,
+        targetAddress: String?,
+    ): EVMSwapQuoteJson {
+        // A Solana route rides the same envelope with a base64 transaction in `data`.
+        if (srcToken.chain.standard != TokenStandard.EVM) return this
+        val recipient =
+            try {
+                swapKitErc20DepositRecipient(tx, srcToken, soldAmount)
+            } catch (e: IllegalArgumentException) {
+                throw SwapKitError.Decoding(e.message ?: "SwapKit ERC-20 deposit is malformed", e)
+            } ?: return this
+        if (recipient != targetAddress?.lowercase()) {
+            throw SwapKitError.Decoding(
+                "SwapKit ERC-20 deposit transfers to $recipient, not targetAddress $targetAddress"
+            )
+        }
+        return this
+    }
+
+    /**
      * Wrap a non-EVM SwapKit route (Bitcoin PSBT, TRON object, TON transfer array) into a
      * fully-formed [SwapQuote.SwapKit] for a per-chain signer to consume. The unsigned-tx bytes
      * land in [SwapKitSwapPayloadJson.txPayload] ([encodeNativeTxPayload]); the inbound fee is the
@@ -611,7 +686,7 @@ constructor(
                 // would make the signing-side gate reject those routes. Mirrors iOS, which
                 // normalises the payload txType in its buildSwapKit*Payload builders.
                 txType = canonicalTxType(response, srcToken.chain),
-                txPayload = encodeNativeTxPayload(response),
+                txPayload = encodeNativeTxPayload(response, srcToken.chain),
                 targetAddress = targetAddress,
                 memo = memo,
                 subProvider = subProvider.orEmpty(),
@@ -640,7 +715,9 @@ constructor(
     /**
      * Encode `tx` into the raw [SwapKitSwapPayloadJson.txPayload] bytes the per-chain signer
      * consumes. The wire shape depends on `meta.txType`:
-     * - PSBT → a top-level base64 string ([decodeBinaryTx]).
+     * - PSBT → a top-level base64 string ([decodeBinaryTx]). DOGE / BCH / DASH PSBTs are rewritten
+     *   to tx version 1 ([SwapKitLegacyPsbtVersion.normalizeToV1]) so every co-signer build hashes
+     *   the same transaction.
      * - TRON → a TronWeb-shaped JSON object (`{txID, raw_data, raw_data_hex, …}`). We UTF-8 encode
      *   the object verbatim so the cosigning peer reconstructs it and [SwapKitTronSigner] can pull
      *   `raw_data_hex`. Matches iOS' `buildSwapKitTronPayload`.
@@ -648,8 +725,16 @@ constructor(
      *   integer (so a malformed transfer is rejected at quote time, not keysign), then re-encode
      *   the validated transfers canonically. Matches iOS' `buildSwapKitTonPayload` byte-for-byte.
      */
-    private fun encodeNativeTxPayload(response: SwapKitSwapResponseJson): ByteArray =
+    private fun encodeNativeTxPayload(
+        response: SwapKitSwapResponseJson,
+        srcChain: Chain,
+    ): ByteArray =
         when (txTypeOf(response)) {
+            TxKind.PSBT ->
+                decodeBinaryTx(response.tx).let { psbt ->
+                    if (srcChain in LEGACY_P2PKH_PSBT_CHAINS) normalizeLegacyPsbtVersion(psbt)
+                    else psbt
+                }
             TxKind.TRON -> {
                 val obj =
                     response.tx as? JsonObject
@@ -692,6 +777,19 @@ constructor(
             // nothing to carry here.
             TxKind.XRP -> ByteArray(0)
             else -> decodeBinaryTx(response.tx)
+        }
+
+    /**
+     * Rewrite a legacy P2PKH PSBT to tx version 1, rejecting one that can't be signed as version 1
+     * here so quote selection falls back to another provider instead of failing at keysign.
+     */
+    private fun normalizeLegacyPsbtVersion(psbt: ByteArray): ByteArray =
+        try {
+            SwapKitLegacyPsbtVersion.normalizeToV1(psbt)
+        } catch (e: SwapKitPsbtException) {
+            throw SwapKitError.Decoding(e.message ?: "SwapKit PSBT is malformed", e)
+        } catch (e: SwapKitLegacyP2PKHSignerException) {
+            throw SwapKitError.Decoding(e.message ?: "SwapKit PSBT version is unsupported", e)
         }
 
     /**
@@ -927,6 +1025,9 @@ constructor(
             Chain.Zcash,
         )
 
+    /** PSBT chains signed by `SwapKitLegacyP2PKHSigner`, whose tx version is normalized. */
+    private val LEGACY_P2PKH_PSBT_CHAINS = setOf(Chain.BitcoinCash, Chain.Dogecoin, Chain.Dash)
+
     private enum class TxKind {
         EVM,
         SOLANA,
@@ -1054,6 +1155,9 @@ constructor(
          */
         private val FILTERED_PROVIDERS: Set<String> =
             setOf("thorchain", "thorchain_streaming", "mayachain", "mayachain_streaming")
+
+        /** `providerErrors[].errorCode`, lower-cased, for a sell amount under the provider minimum. */
+        private const val SELL_AMOUNT_TOO_SMALL = "sellassetamounttoosmall"
 
         /**
          * Render [TokenValue] as a dot-separated decimal string suitable for

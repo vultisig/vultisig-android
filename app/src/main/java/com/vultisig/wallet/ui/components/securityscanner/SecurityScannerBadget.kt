@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
-import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
 

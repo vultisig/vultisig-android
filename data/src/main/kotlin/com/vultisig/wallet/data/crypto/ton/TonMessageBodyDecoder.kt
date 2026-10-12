@@ -27,6 +27,9 @@ object TonMessageBodyDecoder {
     // allow-listed.
     // Such bodies fall through to the raw transfer display rather than a (ungated) swap card.
     private const val OP_DEDUST_JETTON_SWAP = 0xe3a0d482L
+    private const val OP_LIQUID_STAKING_DEPOSIT =
+        0x47d54391L // liquid-staking-contract pool::deposit
+    private const val OP_JETTON_BURN = 0x595f07bcL // TEP-74
 
     fun decode(payload: String?): TonMessageBodyIntent? {
         val base64 = TonBocParser.payloadToBase64(payload) ?: return null
@@ -53,9 +56,45 @@ object TonMessageBodyDecoder {
             OP_EXCESSES -> parseExcesses(slice)
             OP_PTON_TRANSFER -> parsePtonTransfer(slice)
             OP_DEDUST_NATIVE_SWAP -> parseDedustNativeSwap(slice)
+            OP_LIQUID_STAKING_DEPOSIT -> parseLiquidStakingDeposit(slice)
+            OP_JETTON_BURN -> parseJettonBurn(slice)
             // OP_DEDUST_JETTON_SWAP is deliberately absent — see its declaration.
             else -> null
         }
+
+    /**
+     * `deposit#47d54391 query_id:uint64`. The pool reads only this header, so anything after it
+     * (the `tonstakers-sdk` appends a partner code) is ignored here too.
+     */
+    private fun parseLiquidStakingDeposit(slice: TonSlice): TonMessageBodyIntent =
+        TonMessageBodyIntent.LiquidStakingDeposit(queryId = slice.loadUIntBig(64))
+
+    /**
+     * `burn#595f07bc query_id:uint64 amount:(VarUInteger 16) response_destination:MsgAddress
+     * custom_payload:(Maybe ^Cell)`. The liquid-staking withdrawal flags are recognised only in
+     * their exact shape — a two-bit cell — so a burn carrying any other payload stays a plain burn.
+     */
+    private fun parseJettonBurn(slice: TonSlice): TonMessageBodyIntent {
+        val queryId = slice.loadUIntBig(64)
+        val amount = slice.loadCoins()
+        val responseDestination = slice.loadMaybeAddress()
+        val customPayload = slice.loadMaybeRef()?.beginParse()
+        val withdrawal =
+            customPayload
+                ?.takeIf { it.remainingBits == 2 && it.remainingRefs == 0 }
+                ?.let {
+                    TonMessageBodyIntent.LiquidStakingWithdrawal(
+                        waitTillRoundEnd = it.loadBit(),
+                        fillOrKill = it.loadBit(),
+                    )
+                }
+        return TonMessageBodyIntent.JettonBurn(
+            queryId = queryId,
+            amount = amount,
+            responseDestination = responseDestination,
+            liquidStakingWithdrawal = withdrawal,
+        )
+    }
 
     /**
      * Parse a TEP-74 jetton transfer. When the forward payload carries a STON.fi v2 swap

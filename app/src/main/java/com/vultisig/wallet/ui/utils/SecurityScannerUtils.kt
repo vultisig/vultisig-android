@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.utils
 
-import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
 
 fun handleSigningFlowCommon(
     txScanStatus: TransactionScanStatus,

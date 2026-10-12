@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
@@ -42,11 +43,12 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
-import com.vultisig.wallet.app.activity.components.AnimatedSplash
 import com.vultisig.wallet.app.activity.components.CheckDeeplink
+import com.vultisig.wallet.app.activity.components.LaunchSplash
 import com.vultisig.wallet.app.activity.components.MainActivityContent
 import com.vultisig.wallet.app.passcode.PasscodeAutoLock
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
+import com.vultisig.wallet.data.services.PendingPushPayload
 import com.vultisig.wallet.data.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
@@ -93,9 +95,10 @@ class MainActivity : AppCompatActivity() {
 
         // Handle notification tap when app was killed — ViewModel awaits navigation readiness.
         // Track whether this cold start was launched by a keysign notification, so we can skip
-        // the branded AnimatedSplash replay and make the cold path match the warm onNewIntent path.
+        // the branded LaunchSplash and make the cold path match the warm onNewIntent path.
+        // The payload comes from PendingPushPayload, never from this exported activity's extras.
         val launchedFromKeysignNotification =
-            intent?.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)?.let {
+            PendingPushPayload.take()?.let {
                 mainViewModel.onPushNotificationReceived(it)
                 true
             } ?: false
@@ -127,18 +130,20 @@ class MainActivity : AppCompatActivity() {
                     val navController = rememberNavController()
 
                     val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
-                    var showSplash by remember { mutableStateOf(!launchedFromKeysignNotification) }
+                    var showSplash by rememberSaveable {
+                        mutableStateOf(!launchedFromKeysignNotification)
+                    }
 
+                    // The NavHost captures its start destination on first composition, so nothing
+                    // below may compose until it resolves.
                     when {
                         showSplash ->
-                            AnimatedSplash(
+                            LaunchSplash(
                                 isLoading = isLoading,
                                 onSplashComplete = { showSplash = false },
                             )
-                        // Keysign notification cold start: skip the branded splash. The NavHost
-                        // captures its start destination on first composition, so hold on a plain
-                        // background until it resolves rather than starting on the stale Home
-                        // default, then route straight into the keysign flow.
+                        // Keysign notification cold start: skip the branded splash and hold on a
+                        // plain background, then route straight into the keysign flow.
                         isLoading ->
                             Box(Modifier.fillMaxSize().background(colors.backgrounds.primary))
                         else -> {
@@ -177,8 +182,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val qrCodeData =
-            intent.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA) ?: return
+        val qrCodeData = PendingPushPayload.take() ?: return
         mainViewModel.onPushNotificationReceived(qrCodeData)
     }
 

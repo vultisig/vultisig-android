@@ -31,7 +31,10 @@ internal data class SignMessageTransactionUiModel(
     val message: String = "",
     /** What [message] turned out to be, or null when it is already plain text. */
     val decoded: DecodedCustomMessage? = null,
-)
+) {
+    /** [message] as the cards show it: typed data pretty-printed, anything else as signed. */
+    val displayMessage: String = typedDataForDisplay(method, message)
+}
 
 internal data class VerifySignMessageUiModel(
     val model: SignMessageTransactionUiModel = SignMessageTransactionUiModel(),

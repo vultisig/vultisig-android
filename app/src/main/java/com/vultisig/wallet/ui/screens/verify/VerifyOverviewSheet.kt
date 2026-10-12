@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,35 +19,51 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
+import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.components.TokenAndChainLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetContent
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerSafeContent
 import com.vultisig.wallet.ui.components.securityscanner.getSecurityScannerBottomSheetStyle
+import com.vultisig.wallet.ui.components.util.CutoutPosition
+import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.components.v2.bottomsheets.OverviewBottomSheet
 import com.vultisig.wallet.ui.components.v2.bottomsheets.OverviewSheetControlSize
-import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
  * The overview sheet the Send, Swap and Deposit reviews share: the floating card, the scan-status
- * control at the title's left, and the Blockaid verdict that takes the card over when a flagged
- * transaction is signed anyway.
+ * control at the title's left, and the Blockaid result that takes the card over when a flagged
+ * transaction is signed anyway or when the control is tapped.
  *
- * The verdict replaces [content] and [footer] together rather than opening a second sheet, so "Go
- * back" returns to the figures in place and "Continue anyway" carries on from where the sign tap
- * left off. A clean scan never interrupts: it only turns the control's ring green.
+ * The result replaces [content] and [footer] together rather than opening a second sheet, so "Go
+ * back" and "Continue" return to the figures in place and "Continue anyway" carries on signing. A
+ * clean scan never interrupts on its own: it turns the control's ring green, and only a tap on the
+ * control shows that it was scanned.
+ *
+ * @param onScanMarkClick opens the scan result; the control stays inert when it is null or when the
+ *   scan has no result yet.
+ * @param isContinueAnywayEnabled mirrors whether the sign buttons are, so the override cannot sign
+ *   something they would refuse.
  */
 @Composable
 internal fun VerifyOverviewSheet(
@@ -57,41 +74,70 @@ internal fun VerifyOverviewSheet(
     onContinueAnyway: () -> Unit,
     onDismissWarning: () -> Unit,
     footer: @Composable ColumnScope.() -> Unit,
+    onScanMarkClick: (() -> Unit)? = null,
+    isContinueAnywayEnabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val warning = (scanStatus as? TransactionScanStatus.Scanned)?.takeIf { showScanningWarning }
+    val scanResult = overviewScanResult(scanStatus, showScanningWarning)
 
     OverviewBottomSheet(
         title = title,
         onDismissRequest = onDismissRequest,
-        leadingControl = { ScanStatusControl(status = scanStatus) },
-        footer = footer.takeIf { warning == null },
+        leadingControl = {
+            ScanStatusControl(
+                status = scanStatus,
+                onClick = onScanMarkClick.takeIf { scanStatus is TransactionScanStatus.Scanned },
+            )
+        },
+        footer = footer.takeIf { scanResult == null },
     ) {
-        // Back from the verdict returns to the figures, as "Go back" does; only the figures' own
+        // Back from the result returns to the figures, as "Go back" does; only the figures' own
         // back closes the sheet. Registered inside the sheet, whose window is the one that gets
         // the key.
-        BackHandler(enabled = warning != null, onBack = onDismissWarning)
+        BackHandler(enabled = scanResult != null, onBack = onDismissWarning)
 
-        if (warning != null) {
-            SecurityScannerBottomSheetContent(
-                contentStyle = warning.result.getSecurityScannerBottomSheetStyle(),
-                // The provider is already named by the control in the header.
-                securityScannerProvider = null,
-                onDismissRequest = onDismissWarning,
-                onContinueAnyway = onContinueAnyway,
-            )
-        } else {
-            content()
+        when (scanResult) {
+            OverviewScanResult.Safe -> SecurityScannerSafeContent(onContinue = onDismissWarning)
+            is OverviewScanResult.Verdict ->
+                SecurityScannerBottomSheetContent(
+                    contentStyle = scanResult.result.getSecurityScannerBottomSheetStyle(),
+                    // The provider is already named by the control in the header.
+                    securityScannerProvider = null,
+                    onDismissRequest = onDismissWarning,
+                    onContinueAnyway = onContinueAnyway,
+                    isContinueAnywayEnabled = isContinueAnywayEnabled,
+                )
+            null -> content()
         }
     }
 }
 
+/** What the sheet shows in place of its figures while a scan result is open. */
+internal sealed interface OverviewScanResult {
+    data object Safe : OverviewScanResult
+
+    data class Verdict(val result: SecurityScannerResult) : OverviewScanResult
+}
+
+/**
+ * Picks the result from the scan alone, whichever way it was opened, so a secure scan never renders
+ * the risk verdict. Nothing is open until there is a finished scan to show.
+ */
+internal fun overviewScanResult(
+    scanStatus: TransactionScanStatus,
+    showScanningWarning: Boolean,
+): OverviewScanResult? {
+    if (!showScanningWarning || scanStatus !is TransactionScanStatus.Scanned) return null
+    return if (scanStatus.result.isSecure) OverviewScanResult.Safe
+    else OverviewScanResult.Verdict(scanStatus.result)
+}
+
 /**
  * The scanner's mark, ringed in the colour of its verdict once there is one. Scanning, a scan that
- * failed and a scan not yet started all show the bare mark.
+ * failed and a scan not yet started all show the bare mark. With an [onClick] it opens the result.
  */
 @Composable
-private fun ScanStatusControl(status: TransactionScanStatus) {
+private fun ScanStatusControl(status: TransactionScanStatus, onClick: (() -> Unit)?) {
     val ring =
         when (status) {
             is TransactionScanStatus.Scanned ->
@@ -111,8 +157,13 @@ private fun ScanStatusControl(status: TransactionScanStatus) {
         contentAlignment = Alignment.Center,
         modifier =
             Modifier.size(OverviewSheetControlSize)
+                .clip(CircleShape)
                 .background(color = ScanControlBackground, shape = CircleShape)
-                .border(width = 1.dp, color = ring, shape = CircleShape),
+                .border(width = 1.dp, color = ring, shape = CircleShape)
+                .then(
+                    if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick)
+                    else Modifier
+                ),
     ) {
         UiIcon(
             drawableResId = R.drawable.ic_blockaid_mark,
@@ -200,28 +251,66 @@ internal fun VerifyAccountCards(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            VerifyAccountCard(name = fromName, address = fromAddress)
-            VerifyAccountCard(name = toName, address = toAddress)
+        Column(verticalArrangement = Arrangement.spacedBy(PairCardGap)) {
+            VerifyAccountCard(
+                name = fromName,
+                address = fromAddress,
+                shape = verifyPairCardShape(CutoutPosition.Bottom),
+            )
+            VerifyAccountCard(
+                name = toName,
+                address = toAddress,
+                shape = verifyPairCardShape(CutoutPosition.Top),
+            )
         }
 
         VerifyPairNotch(chevron = R.drawable.ic_chevron_down_small)
     }
 }
 
+/** Spacing between the two cards of a pair; the notch sits centred in it. */
+internal val PairCardGap = 8.dp
+
+private val PairNotchSize = 40.dp
+
 /**
- * The join between a pair of cards: a sheet-coloured disc over the gap, so the chevron sits in a
- * cutout shared by both cards instead of floating over one of them.
+ * A pair card's outline with a half-disc cut from the edge facing its partner, so the two cutouts
+ * form the hole [VerifyPairNotch] sits in.
+ *
+ * [CutoutPosition.Start] and [CutoutPosition.End] follow the layout direction here, the way a `Row`
+ * places the cards; [RoundedWithCutoutShape] itself reads them as physical left and right.
+ */
+@Composable
+internal fun verifyPairCardShape(cutoutPosition: CutoutPosition): RoundedWithCutoutShape {
+    val corner = Theme.v2.radius.lg.size
+    val offset = -PairCardGap / 2
+    val physicalPosition =
+        if (LocalLayoutDirection.current == LayoutDirection.Ltr) cutoutPosition
+        else
+            when (cutoutPosition) {
+                CutoutPosition.Start -> CutoutPosition.End
+                CutoutPosition.End -> CutoutPosition.Start
+                CutoutPosition.Top,
+                CutoutPosition.Bottom -> cutoutPosition
+            }
+    val isVertical = cutoutPosition == CutoutPosition.Top || cutoutPosition == CutoutPosition.Bottom
+    return RoundedWithCutoutShape(
+        cutoutPosition = physicalPosition,
+        top = corner,
+        bottom = corner,
+        cutoutRadius = PairNotchSize / 2,
+        cutoutOffsetY = if (isVertical) offset else 0.dp,
+        cutoutOffsetX = if (isVertical) 0.dp else offset,
+    )
+}
+
+/**
+ * The chevron joining a pair of cards, drawn inside the hole their [verifyPairCardShape] cutouts
+ * leave in the gap.
  */
 @Composable
 internal fun VerifyPairNotch(@DrawableRes chevron: Int) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier =
-            Modifier.size(40.dp)
-                .background(color = Theme.v2.colors.backgrounds.surface1, shape = CircleShape)
-                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = CircleShape),
-    ) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(PairNotchSize)) {
         Box(
             contentAlignment = Alignment.Center,
             modifier =
@@ -234,17 +323,14 @@ internal fun VerifyPairNotch(@DrawableRes chevron: Int) {
 }
 
 @Composable
-private fun VerifyAccountCard(name: String?, address: String) {
+private fun VerifyAccountCard(name: String?, address: String, shape: Shape) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         modifier =
             Modifier.fillMaxWidth()
                 .defaultMinSize(minHeight = 82.dp)
-                .background(
-                    color = Theme.v2.colors.backgrounds.surface2,
-                    shape = Theme.v2.radius.lg,
-                )
+                .background(color = Theme.v2.colors.backgrounds.surface2, shape = shape)
                 .padding(16.dp),
     ) {
         if (name != null) {
@@ -258,14 +344,11 @@ private fun VerifyAccountCard(name: String?, address: String) {
             )
         }
 
-        Text(
+        AutoSizingText(
             text = address,
             style = Theme.brockmann.body.s.medium,
             color =
                 if (name != null) Theme.v2.colors.text.tertiary else Theme.v2.colors.text.secondary,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.MiddleEllipsis,
         )
     }
 }

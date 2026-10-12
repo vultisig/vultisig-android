@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.swap.components.PriceImpactRow
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
 @Composable
@@ -107,6 +108,7 @@ internal fun SwapTransactionOverviewScreen(
                                 cutoutRadius = 18.dp,
                             ),
                         modifier = Modifier.weight(1f),
+                        alwaysShowChainLogo = true,
                     )
 
                     VsOverviewToken(
@@ -119,6 +121,7 @@ internal fun SwapTransactionOverviewScreen(
                                 cutoutRadius = 18.dp,
                             ),
                         modifier = Modifier.weight(1f),
+                        alwaysShowChainLogo = true,
                     )
                 }
 
@@ -156,7 +159,9 @@ internal fun SwapTransactionOverviewScreen(
                         hash = approveTransactionHash,
                         link = approveTransactionLink,
                         modifier = Modifier.padding(vertical = 12.dp),
-                        onTxHashCopied = { tx -> copiedApprovalTx = tx },
+                        onTxHashCopied = { tx ->
+                            if (VsClipboardService.needsCopyConfirmation()) copiedApprovalTx = tx
+                        },
                     )
 
                     VerifyCardDivider(size = 1.dp)
@@ -295,16 +300,15 @@ internal fun SwapTransactionOverviewScreen(
 }
 
 @Composable
-internal fun TextDetails(title: String, subtitle: String, showAllContent: Boolean = false) {
+internal fun TextDetails(title: String, subtitle: String) {
     Details(title = title, modifier = Modifier.padding(vertical = 12.dp)) {
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.primary,
-            overflow = if (showAllContent) TextOverflow.Visible else TextOverflow.MiddleEllipsis,
+            overflow = TextOverflow.MiddleEllipsis,
             textAlign = TextAlign.End,
-            modifier = if (showAllContent) Modifier.fillMaxWidth() else Modifier,
-            maxLines = if (showAllContent) 5 else 1,
+            maxLines = 1,
         )
     }
 }

@@ -265,6 +265,10 @@
     <string name="verify_transaction_allow_death_warning">Ovaj prijenos može isprazniti račun pošiljatelja. Ako preostalo stanje padne ispod egzistencijalnog depozita, račun će biti deaktiviran (požnjet) i svi preostali %1$s bit će izgubljeni.</string>
     <string name="vault_settings_delete_vault_value">Vault Vrijednost:</string>
     <string name="join_keysign_wrong_reshare">Pogrešan ReShare</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Ovaj prijenos TON tokena nije iz ovog trezora</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">Prikazani token ne odgovara tokenu koji ovaj prijenos šalje</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Nije moguće provjeriti ovaj prijenos TON tokena. Pokušajte ponovno.</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">Ponovno dijeljenje nije podržano za sefove s QBTC ključem</string>
     <string name="swap_screen_provider_title">Davatelj</string>
     <string name="swap_form_minimum_amount">Iznos zamjene premali. Preporučena količina %1$s %2$s</string>
     <string name="backup_password_screen_title">Sigurnosna kopija</string>
@@ -350,6 +354,7 @@
     <string name="signing_error_account_not_funded">Ovaj račun još ne postoji on-chain.\nMolimo prvo uplatite novčanik.</string>
     <string name="signing_error_broadcast_rejected">Mreža je odbila transakciju.</string>
     <string name="signing_error_broadcast_rejected_s">Mreža je odbila transakciju: %s</string>
+    <string name="signing_error_swap_tx_unsignable">Davatelj zamjene vratio je transakciju koja se ne može sigurno potpisati. Ponovni pokušaj neće pomoći – vrati se i zatraži novu ponudu.</string>
     <string name="verify_transaction_fast_sign_btn_title">Brzi znak</string>
     <string name="verify_transaction_paired_btn_title">Upareno</string>
     <string name="keysign_sign_transaction">Potpiši transakciju</string>
@@ -374,6 +379,10 @@
     <string name="qr_share_label_to">Za</string>
     <string name="qr_share_label_from">Od</string>
     <string name="qr_share_label_type">Vrsta</string>
+    <string name="keysign_share_qr_title">Podijeli QR kod</string>
+    <string name="keysign_share_qr_copy_link">Kopiraj poveznicu</string>
+    <string name="keysign_share_qr_share_image">Podijeli QR sliku</string>
+    <string name="keysign_share_qr_link_copied">Poveznica kopirana</string>
     <string name="qr_share_type_fast_vault">Brzi trezor</string>
     <string name="qr_share_type_secure_vault">Sigurni trezor</string>
     <string name="error_folder_must_have_at_least_one_vault">Za mapu je potreban barem jedan odabrani trezor</string>
@@ -395,6 +404,7 @@
     <string name="deposit_error_thorchain_chain_halted">Pologi na %1$s su trenutno zaustavljeni na THORChain-u. Pokušajte ponovno kasnije.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">Nije moguće dohvatiti THORChain radi provjere dolaznog trezora. Pokušajte ponovno.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s trenutno nije dostupan za depozite.</string>
+    <string name="deposit_error_pool_staged_unpaired">Pool %1$s je u stanju „staged“ i prihvaća samo uparene depozite s drugom stranom. THORChain bi vratio ovu transakciju.</string>
     <string name="deposit_form_screen_assets">Imovina</string>
     <string name="deposit_form_screen_asset_selection">Odabir imovine</string>
     <string name="deposit_form_screen_lpunits">LP jedinice</string>
@@ -496,6 +506,13 @@
     <string name="active_nodes">Aktivni čvorovi</string>
     <string name="next_churn">Sljedeća rotacija</string>
     <string name="next_award">Sljedeća nagrada</string>
+    <string name="next_reward">Sljedeća nagrada</string>
+    <string name="last_reward">Zadnja nagrada</string>
+    <string name="last_reward_unavailable">N/D</string>
+    <string name="total_rewards_earned">Ukupno zarađene nagrade</string>
+    <string name="reward_history_node">Čvor: %s</string>
+    <string name="reward_history_upcoming">Nadolazeća</string>
+    <string name="reward_history_error">Povijest nagrada nije moguće učitati</string>
     <string name="next_payout">Sljedeća isplata</string>
     <string name="wait_until_node_churned_out">Pričekajte dok čvor ne bude izbačen</string>
     <string name="deposit_option_leave">Napusti</string>
@@ -527,6 +544,9 @@
     <string name="security_scanner_transaction_scanned_by">Transakcija skenirana od</string>
     <string name="security_scanner_transaction_scanning">Skeniranje…</string>
     <string name="security_scanner_transaction_not_scanned">Transakcija nije skenirana od</string>
+    <string name="security_scanner_safe_title">Skenirao Blockaid</string>
+    <string name="security_scanner_safe_description">Nije otkrivena zlonamjerna aktivnost. Ova transakcija je sigurna za potpisivanje.</string>
+    <string name="security_scanner_safe_continue">Nastavi</string>
     <string name="keygen_step_preparing_vault">Priprema trezora</string>
     <string name="keygen_step_generating_ecdsa">Generiranje ECDSA ključa</string>
     <string name="reshare_step_generating_eddsa">Generiranje EDDSA ključa</string>
@@ -1036,6 +1056,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Minimalni iznos za aktivaciju ove adrese je %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Minimalni iznos za aktivaciju ove adrese je %1$s %2$s (egzistencijalni depozit).</string>
+    <string name="send_error_near_destination_not_found">Ovaj NEAR račun ne postoji. Provjerite primatelja: prijenos na njega samo bi potrošio gas.</string>
+    <string name="send_error_near_unsupported_payload">Ova NEAR transakcija nije podržana. Mogu se potpisati samo izvorni NEAR prijenosi.</string>
+    <string name="send_error_near_invalid_recipient">Ovo nije valjani NEAR račun. Provjerite primatelja.</string>
+    <string name="send_error_near_key_not_full_access">Ključ ovog trezora nema puni pristup ovom NEAR računu, pa s njega ne može slati.</string>
+    <string name="send_error_near_network">NEAR mreža vratila je pogrešku ili nečitljiv odgovor. Pokušajte ponovno.</string>
+    <string name="send_error_near_safety_check">Ova NEAR transakcija nije prošla sigurnosnu provjeru i nije potpisana.</string>
     <string name="send_error_xrp_destination_tag_required">Ova adresa zahtijeva odredišnu oznaku. Dodajte je za nastavak.</string>
     <string name="send_error_xrp_destination_no_trust_line">Ova adresa ne može primiti %1$s. Primatelj prvo mora otvoriti liniju povjerenja za tu imovinu.</string>
     <string name="ripple_trust_line_title">Aktiviraj liniju povjerenja</string>
@@ -1073,6 +1099,15 @@
     <string name="ton_unstake_title">Povuci %1$s</string>
     <string name="ton_staking_pool_address">Adresa poola</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator poolovi podržavaju samo potpuno povlačenje. Vraća se cijeli stakirani saldo.</string>
+    <string name="ton_liquid_staking_label">Likvidni staking</string>
+    <string name="ton_liquid_deposit_fee">Naknada za polog</string>
+    <string name="ton_liquid_you_receive">Primit ćete</string>
+    <string name="ton_liquid_attached_value">Priloženo za obradu</string>
+    <string name="ton_liquid_stake_fee_notice">Uključuje naknadu za polog od %1$s %2$s koju Tonstakers unaprijed odbija. Dio koji pool ne iskoristi vraća se.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s prilaže se za obradu povlačenja; neiskorišteni dio se vraća. Isplata je trenutačna kada pool ima likvidnost, inače na kraju trenutačne runde validacije.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s prilaže se za obradu povlačenja; neiskorišteni dio se vraća. Isplata se vrši na kraju trenutačne runde validacije.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers trenutačno ne prima pologe</string>
+    <string name="ton_liquid_no_position">Ovaj trezor nema tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL nije u ovom trezoru</string>
     <string name="solana_staking_total_staked_sol">Ukupno stakirano SOL</string>
@@ -1445,6 +1480,8 @@
     <string name="transaction_status_refunded_label">Vraćeno</string>
     <string name="transaction_status_failed_slippage_label">Cijena je premašila toleranciju proklizavanja</string>
     <string name="transaction_status_failed_slippage_description">Cijena se promijenila prije nego što je ova zamjena izvršena, pa bi isplata bila manja od one koju dopušta vaša tolerancija proklizavanja i mreža ju je poništila. Povećajte toleranciju proklizavanja ili pokušajte ponovno.</string>
+    <string name="transaction_status_failed_expired_label">Istekla prije uključivanja</string>
+    <string name="transaction_status_failed_expired_description">Mreža je odbacila ovu transakciju prije nego što ju je uključila, pa ništa nije poslano i nije naplaćena mrežna naknada. Možete pokušati ponovno.</string>
     <string name="transaction_status_in_progress_label">U tijeku…</string>
     <string name="transaction_status_signed_label">Potpisano</string>
     <string name="transaction_history_to_label">Za</string>
@@ -1522,6 +1559,8 @@
     <string name="ton_op_nft_transfer">NFT prijenos</string>
     <string name="ton_op_excess_gas_refund">Povrat viška plina</string>
     <string name="ton_op_transfer">Prijenos</string>
+    <string name="ton_op_liquid_staking_deposit">Polog za likvidni staking</string>
+    <string name="ton_op_jetton_burn">Jetton burn</string>
     <string name="ton_forward_ton_amount">Proslijeđeni iznos GRAM-a</string>
     <string name="ton_raw_payload">Neobrađeni payload</string>
 

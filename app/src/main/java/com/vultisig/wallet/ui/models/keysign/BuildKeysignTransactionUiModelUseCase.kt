@@ -53,22 +53,29 @@ constructor(
         val isSwap =
             keysignPayload.swapPayload != null || txType == Route.Keysign.Keysign.TxType.Swap
 
+        // The route is authoritative: setData loaded this id from the deposit repository for a
+        // Deposit route, so the transaction is there whatever the chain-specific block says. A
+        // Tonstakers stake/unstake rides `signTon` with the flag off — the co-signer renders it
+        // from the payload through its send builder — and without this it fell through to the send
+        // repository, found nothing, and left the flow's data unloaded: the initiator's automatic
+        // keysign start never fired and the transaction never reached history.
         val isDeposit =
-            when (val specific = keysignPayload.blockChainSpecific) {
-                is BlockChainSpecific.MayaChain -> specific.isDeposit
-                is BlockChainSpecific.THORChain -> specific.isDeposit
-                is BlockChainSpecific.Ton -> specific.isDeposit
-                is BlockChainSpecific.Cosmos ->
-                    specific.transactionType == TransactionType.TRANSACTION_TYPE_IBC_TRANSFER ||
-                        try {
-                            depositTransactionRepository.getTransaction(transactionId)
-                            true
-                        } catch (_: IllegalStateException) {
-                            false
-                        }
+            txType == Route.Keysign.Keysign.TxType.Deposit ||
+                when (val specific = keysignPayload.blockChainSpecific) {
+                    is BlockChainSpecific.MayaChain -> specific.isDeposit
+                    is BlockChainSpecific.THORChain -> specific.isDeposit
+                    is BlockChainSpecific.Ton -> specific.isDeposit
+                    is BlockChainSpecific.Cosmos ->
+                        specific.transactionType == TransactionType.TRANSACTION_TYPE_IBC_TRANSFER ||
+                            try {
+                                depositTransactionRepository.getTransaction(transactionId)
+                                true
+                            } catch (_: IllegalStateException) {
+                                false
+                            }
 
-                else -> txType == Route.Keysign.Keysign.TxType.Deposit
-            }
+                    else -> false
+                }
 
         return when {
             isSwap -> {
@@ -106,7 +113,8 @@ constructor(
                 val transactionDetailsUiModel = mapTransactionToUiModel(tx)
                 KeysignTransactionUiModelResult(
                     transactionTypeUiModel = TransactionTypeUiModel.Send(transactionDetailsUiModel),
-                    transactionHistoryData = transactionHistoryDataMapper(transactionDetailsUiModel),
+                    transactionHistoryData =
+                        transactionHistoryDataMapper(transactionDetailsUiModel),
                 )
             }
         }

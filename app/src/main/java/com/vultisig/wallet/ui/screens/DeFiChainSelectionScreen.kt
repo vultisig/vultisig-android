@@ -12,8 +12,8 @@ import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.TokenUiSingle
-import com.vultisig.wallet.ui.models.DeFiChainSelectionViewModel
-import com.vultisig.wallet.ui.models.SelectableDefiChainUiModel
+import com.vultisig.wallet.ui.models.defi.DeFiChainSelectionViewModel
+import com.vultisig.wallet.ui.models.defi.SelectableDefiChainUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -32,7 +32,10 @@ internal fun DeFiChainSelectionScreen(viewModel: DeFiChainSelectionViewModel = h
         mapper = { it: SingleToken<SelectableDefiChainUiModel> ->
             TokenSelectionGridUiModel(
                 tokenSelectionUiModel =
-                    TokenUiSingle(name = it.data.defiChain.raw, logo = it.data.defiChain.logo),
+                    TokenUiSingle(
+                        name = it.data.defiChain.displayName,
+                        logo = it.data.defiChain.logo,
+                    ),
                 isChecked = it.data.isSelected,
             )
         },

@@ -561,6 +561,42 @@ internal class SwapQuoteManagerTest {
         }
 
     @Test
+    fun `fetchBestQuote surfaces a SwapKit provider minimum over a THORChain halt`() = runTest {
+        // DOGE -> BTC under NEAR's minimum while THORChain is paused: raising the amount gets a
+        // route, so the minimum is the answer, not "try again later".
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } throws
+            SwapException.TradingHalted("trading is halted")
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, any()) } throws
+            SwapException.SmallSwapAmount("73.40788248")
+
+        val error =
+            runCatching {
+                    createManager()
+                        .fetchBestQuote(
+                            candidates =
+                                listOf(SwapProvider.THORCHAIN, SwapProvider.SWAPKIT).map {
+                                    provider ->
+                                    QuoteCandidate(provider, vultBPSDiscount = null, referral = null)
+                                },
+                            src = mockk(relaxed = true),
+                            dst = mockk(relaxed = true),
+                            srcToken = mockk(relaxed = true),
+                            dstToken = mockk(relaxed = true),
+                            srcTokenValue = BigInteger.ONE,
+                            tokenValue = mockk(relaxed = true),
+                            currency = AppCurrency.USD,
+                            amount = BigDecimal.ONE,
+                        )
+                }
+                .exceptionOrNull()
+
+        error.shouldBeInstanceOf<SwapException.SmallSwapAmount>()
+        assertEquals("73.40788248", error.message)
+    }
+
+    @Test
     fun `fetchBestQuote does not retry an aggregator when no native provider is halted`() =
         runTest {
             // The second window is the halt's price, not every failed run's. With no halt to

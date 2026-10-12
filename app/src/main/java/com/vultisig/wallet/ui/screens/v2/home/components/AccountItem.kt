@@ -30,7 +30,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
-import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.vault.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -60,7 +60,7 @@ internal fun AccountItem(
             horizontalAlignment = Alignment.Start,
         ) {
             Text(
-                text = account.chainName,
+                text = account.displayName,
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
                 maxLines = 1,

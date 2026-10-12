@@ -223,7 +223,9 @@ class SwapQuoteRepositoryProvidersTest {
         assertEquals(BigInteger("1000000000000000000"), result.fees.value)
         // recommendedMinTokenValue uses srcToken (8 decimals): 100000 / 1e8 = 0.001 BTC = 100000
         assertEquals(BigInteger("100000"), result.recommendedMinTokenValue.value)
-        assertEquals(quote, result.data)
+        // Auto slippage: the node's memo carries no floor, so one 1% under the expected output
+        // is written in before signing.
+        assertEquals(quote.copy(memo = "=:ETH.ETH:0xDest:11880000000"), result.data)
     }
 
     @Test

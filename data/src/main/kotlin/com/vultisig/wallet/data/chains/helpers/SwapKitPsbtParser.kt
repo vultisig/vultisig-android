@@ -50,7 +50,32 @@ internal object SwapKitPsbtParser {
                 )
         return PsbtFramingHeader(cursor, globals, unsignedTx)
     }
+
+    /**
+     * Byte offset of the `PSBT_GLOBAL_UNSIGNED_TX` value inside [psbtBytes], so a caller can patch
+     * the unsigned tx in place without re-serializing the PSBT.
+     */
+    fun unsignedTxOffset(psbtBytes: ByteArray): Int {
+        parseFramingHeader(psbtBytes)
+        val cursor = PsbtCursor(psbtBytes)
+        cursor.expectMagic(MAGIC)
+        while (true) {
+            val key = cursor.readBytes(cursor.asLength(cursor.readCompactSize()))
+            val valueLength = cursor.asLength(cursor.readCompactSize())
+            if (Numeric.toHexStringNoPrefix(key) == GLOBAL_UNSIGNED_TX_KEY) return cursor.offset
+            cursor.readBytes(valueLength)
+        }
+    }
 }
+
+/**
+ * Prefix of the message a SwapKit PSBT the signer refuses surfaces with. The keysign error screen
+ * matches it to explain that the transaction can't be built, rather than blame a device timeout.
+ */
+const val SWAPKIT_PSBT_REJECTED_PREFIX = "SwapKit PSBT rejected: "
+
+internal class SwapKitPsbtRejectedException(cause: Exception) :
+    Exception("$SWAPKIT_PSBT_REJECTED_PREFIX${cause.message}", cause)
 
 /**
  * Cursor into a PSBT byte stream implementing the BIP-174 wire helpers. Mutable offset; all readers

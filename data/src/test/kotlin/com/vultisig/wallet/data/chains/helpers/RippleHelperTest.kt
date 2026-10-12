@@ -1,9 +1,14 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import vultisig.keysign.v1.SignRipple
 
 class RippleHelperTest {
 
@@ -12,6 +17,83 @@ class RippleHelperTest {
     private fun rawJson(account: String) =
         """{"TransactionType":"Payment","Account":"$account",""" +
             """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000"}"""
+
+    private fun paymentWithFee(feeDrops: String) =
+        """{"TransactionType":"Payment","Account":"$vaultXrpAddress",""" +
+            """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000",""" +
+            """"Fee":"$feeDrops"}"""
+
+    @Test
+    fun `verifyDappTransaction passes a normal Fee`() {
+        RippleHelper.verifyDappTransaction(paymentWithFee("400"), vaultXrpAddress)
+        RippleHelper.verifyDappTransaction(paymentWithFee("2000000"), vaultXrpAddress)
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects a Fee above the ceiling`() {
+        val ex =
+            assertThrows(IllegalArgumentException::class.java) {
+                RippleHelper.verifyDappTransaction(paymentWithFee("2000001"), vaultXrpAddress)
+            }
+        assertEquals(true, ex.message?.contains("Fee"))
+    }
+
+    @Test
+    fun `verifyDappTransaction rejects a malformed or non-positive Fee`() {
+        // A non-positive or non-integer string is refused (require / error — both
+        // RuntimeException).
+        listOf("-1", "0", "1.5", "abc").forEach { bad ->
+            assertThrows(RuntimeException::class.java) {
+                RippleHelper.verifyDappTransaction(paymentWithFee(bad), vaultXrpAddress)
+            }
+        }
+        // Fee present but not a string of drops: a JSON number, null, or an object.
+        listOf(""""Fee":400""", """"Fee":null""", """"Fee":{}""").forEach { badFeeField ->
+            val json =
+                """{"TransactionType":"Payment","Account":"$vaultXrpAddress",""" +
+                    """"Destination":"rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY","Amount":"1500000",""" +
+                    "$badFeeField}"
+            assertThrows(RuntimeException::class.java) {
+                RippleHelper.verifyDappTransaction(json, vaultXrpAddress)
+            }
+        }
+    }
+
+    @Test
+    fun `getPreSignedInputData rejects a native Fee above the ceiling`() {
+        val payload =
+            KeysignPayload(
+                coin =
+                    Coin(
+                        chain = Chain.Ripple,
+                        ticker = "XRP",
+                        logo = "xrp",
+                        address = vaultXrpAddress,
+                        decimal = 6,
+                        hexPublicKey = "",
+                        priceProviderID = "ripple",
+                        contractAddress = "",
+                        isNativeToken = true,
+                    ),
+                toAddress = "rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY",
+                toAmount = java.math.BigInteger.valueOf(1_500_000),
+                blockChainSpecific =
+                    BlockChainSpecific.Ripple(
+                        sequence = 1UL,
+                        gas = 2_000_001UL,
+                        lastLedgerSequence = 100UL,
+                    ),
+                vaultPublicKeyECDSA = "",
+                vaultLocalPartyID = "",
+                libType = null,
+                wasmExecuteContractPayload = null,
+            )
+        val ex =
+            assertThrows(IllegalArgumentException::class.java) {
+                RippleHelper.getPreSignedInputData(payload)
+            }
+        assertEquals(true, ex.message?.contains("Fee"))
+    }
 
     @Test
     fun `verifyDappTransaction passes when Account matches the vault address`() {
@@ -252,6 +334,69 @@ class RippleHelperTest {
         assertEquals(
             "005899AE70C8A8E0148C331956CF37D216596BB757764EA11F3B19392609C974",
             RippleHelper.calculateTransactionHash(signedBlob),
+        )
+    }
+
+    private fun lastLedgerPayload(lastLedgerSequence: ULong, rawJson: String? = null) =
+        KeysignPayload(
+            coin =
+                Coin(
+                    chain = Chain.Ripple,
+                    ticker = "XRP",
+                    logo = "xrp",
+                    address = vaultXrpAddress,
+                    decimal = 6,
+                    hexPublicKey = "",
+                    priceProviderID = "ripple",
+                    contractAddress = "",
+                    isNativeToken = true,
+                ),
+            toAddress = "rNXEkKCxvfLcM1h4HJkaj2FtmYuAWrsGbY",
+            toAmount = java.math.BigInteger.valueOf(1_500_000),
+            blockChainSpecific =
+                BlockChainSpecific.Ripple(
+                    sequence = 1UL,
+                    gas = 12UL,
+                    lastLedgerSequence = lastLedgerSequence,
+                ),
+            vaultPublicKeyECDSA = "",
+            vaultLocalPartyID = "",
+            libType = null,
+            wasmExecuteContractPayload = null,
+            signRipple = rawJson?.let { SignRipple(rawJson = it) },
+        )
+
+    @Test
+    fun `lastLedgerSequence reads the native send's rippleSpecific`() {
+        assertEquals(
+            107_426_542L,
+            RippleHelper.lastLedgerSequence(lastLedgerPayload(107_426_542UL)),
+        )
+    }
+
+    @Test
+    fun `lastLedgerSequence is null when the payload carries none`() {
+        assertNull(RippleHelper.lastLedgerSequence(lastLedgerPayload(0UL)))
+    }
+
+    @Test
+    fun `lastLedgerSequence prefers the dApp raw JSON that is actually signed`() {
+        val json =
+            """{"TransactionType":"Payment","Account":"$vaultXrpAddress",""" +
+                """"LastLedgerSequence":107426600}"""
+
+        assertEquals(
+            107_426_600L,
+            RippleHelper.lastLedgerSequence(lastLedgerPayload(107_426_542UL, json)),
+        )
+    }
+
+    @Test
+    fun `lastLedgerSequence is null when the dApp JSON has none`() {
+        assertNull(
+            RippleHelper.lastLedgerSequence(
+                lastLedgerPayload(107_426_542UL, rawJson(vaultXrpAddress))
+            )
         )
     }
 }

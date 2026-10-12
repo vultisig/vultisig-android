@@ -31,6 +31,12 @@ data class RippleBroadcastSuccessResultJson(
     @SerialName("error") val error: String? = null,
     @SerialName("error_code") val errorCode: Int? = null,
     @SerialName("error_message") val errorMessage: String? = null,
+    /**
+     * Only on a `txnNotFound` answer to a `tx` request bounded by `min_ledger`/`max_ledger`: true
+     * when the server holds every validated ledger in that range, so the transaction is
+     * definitively in none of them.
+     */
+    @SerialName("searched_all") val searchedAll: Boolean? = null,
 )
 
 @Serializable

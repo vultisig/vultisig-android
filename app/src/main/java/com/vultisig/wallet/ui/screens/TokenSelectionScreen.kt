@@ -15,15 +15,17 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.monoToneLogo
+import com.vultisig.wallet.data.models.securedAssetUnderlyingChain
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridPlusUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
 import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.TokenUiSingle
-import com.vultisig.wallet.ui.models.TokenSelectionUiModel
-import com.vultisig.wallet.ui.models.TokenSelectionViewModel
-import com.vultisig.wallet.ui.models.TokenUiModel
+import com.vultisig.wallet.ui.models.token.TokenSelectionUiModel
+import com.vultisig.wallet.ui.models.token.TokenSelectionViewModel
+import com.vultisig.wallet.ui.models.token.TokenUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -76,11 +78,15 @@ internal fun TokenSelectionScreen(
             }
         },
         mapper = {
+            val coin = it.data.coin
+            val securedChain = coin.securedAssetUnderlyingChain()
             TokenSelectionGridUiModel(
                 tokenSelectionUiModel =
                     TokenUiSingle(
-                        name = it.data.coin.ticker,
-                        logo = getCoinLogo(logoName = it.data.coin.logo),
+                        name = coin.ticker,
+                        logo = getCoinLogo(logoName = coin.logo),
+                        chainLogo = securedChain?.monoToneLogo,
+                        chainName = securedChain?.displayName,
                     ),
                 isChecked = it.data.isEnabled,
             )

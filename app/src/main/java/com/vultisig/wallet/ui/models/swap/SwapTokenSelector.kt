@@ -16,9 +16,9 @@ import com.vultisig.wallet.data.models.securedAssetChain
 import com.vultisig.wallet.data.models.securedAssetSymbol
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
-import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
+import com.vultisig.wallet.ui.models.send.firstSendSrc
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route

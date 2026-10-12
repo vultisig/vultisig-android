@@ -35,8 +35,8 @@ import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.loading.V2Loading
-import com.vultisig.wallet.ui.models.RippleTrustLineActivationUiModel
-import com.vultisig.wallet.ui.models.RippleTrustLineActivationViewModel
+import com.vultisig.wallet.ui.models.token.RippleTrustLineActivationUiModel
+import com.vultisig.wallet.ui.models.token.RippleTrustLineActivationViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -155,6 +155,17 @@ internal fun RippleTrustLineActivationSheet(
 
                             Text(
                                 text = stringResource(R.string.ripple_trust_line_insufficient_xrp),
+                                style = Theme.brockmann.supplementary.caption,
+                                color = Theme.v2.colors.alerts.error,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+
+                        if (state.activationError != null) {
+                            UiSpacer(12.dp)
+
+                            Text(
+                                text = state.activationError.asString(),
                                 style = Theme.brockmann.supplementary.caption,
                                 color = Theme.v2.colors.alerts.error,
                                 textAlign = TextAlign.Center,

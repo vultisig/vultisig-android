@@ -13,8 +13,8 @@ import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SubstrateSignerPayload
 import com.vultisig.wallet.data.models.rippleTrustSetDisplay
-import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import javax.inject.Inject
 import vultisig.keysign.v1.TransactionType
 

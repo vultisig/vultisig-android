@@ -47,11 +47,11 @@ import com.vultisig.wallet.ui.components.hero.HeroContentView
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
-import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositViewModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.SwapToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
@@ -517,7 +517,7 @@ private fun VerifyDepositDetails(
                     )
 
                     Text(
-                        text = chain.raw,
+                        text = chain.displayName,
                         style = Theme.brockmann.supplementary.footnote,
                         color = Theme.v2.colors.text.primary,
                         textAlign = TextAlign.End,

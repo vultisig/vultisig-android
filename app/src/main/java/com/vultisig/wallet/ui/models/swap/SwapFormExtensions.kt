@@ -2,9 +2,9 @@ package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.ui.models.findCurrentSrc
-import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.send.SendSrc
+import com.vultisig.wallet.ui.models.send.findCurrentSrc
+import com.vultisig.wallet.ui.models.send.firstSendSrc
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -107,6 +107,31 @@ class SwapKitQuoteDecodingTest {
     }
 
     @Test
+    fun `decodes provider errors with the minimum sell amount`() {
+        val payload =
+            """
+            {
+              "routes": [],
+              "providerErrors": [
+                {
+                  "provider": "NEAR",
+                  "errorCode": "sellAssetAmountTooSmall",
+                  "message": "Sell asset amount too small for provider NEAR. Min amount is 73.40788248 DOGE.DOGE",
+                  "minAmount": "73.40788248"
+                }
+              ]
+            }
+            """
+                .trimIndent()
+
+        val error = json.decodeFromString<SwapKitQuoteResponseJson>(payload).providerErrors.single()
+
+        assertEquals("NEAR", error.provider)
+        assertEquals("sellAssetAmountTooSmall", error.errorCode)
+        assertEquals("73.40788248", error.minAmount)
+    }
+
+    @Test
     fun `route with multi-hop legs decodes without losing providers`() {
         val payload =
             """

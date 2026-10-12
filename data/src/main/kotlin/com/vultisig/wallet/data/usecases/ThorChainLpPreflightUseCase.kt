@@ -24,9 +24,15 @@ sealed class ThorChainLpPreflightBlock {
     /** LP activity on the asset's chain is halted via `HALT<CHAIN>LP`/`HALT<CHAIN>CHAIN`. */
     data class ChainLpHalted(val chainPrefix: String) : ThorChainLpPreflightBlock()
 
-    /** Pool exists but its `status` is not `Available` (typically `Staged` or `Suspended`). */
+    /** Pool exists but its `status` takes no adds at all (typically `Suspended`). */
     data class PoolNotAvailable(val pool: String, val status: String?) :
         ThorChainLpPreflightBlock()
+
+    /**
+     * Pool is `Staged`, which THORChain opens only to dual-sided adds: an add that does not name the
+     * other side's address is refunded.
+     */
+    data class StagedPoolRequiresPairedAdd(val pool: String) : ThorChainLpPreflightBlock()
 }
 
 /**
@@ -49,8 +55,10 @@ interface ThorChainLpPreflightUseCase {
      *
      * @param pool canonical THORChain pool id, e.g.
      *   `ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7`.
+     * @param isPairedAdd whether the memo names the other side's address, making this one leg of a
+     *   dual-sided add — the only kind a `Staged` pool accepts.
      */
-    suspend operator fun invoke(pool: String): ThorChainLpPreflightBlock?
+    suspend operator fun invoke(pool: String, isPairedAdd: Boolean): ThorChainLpPreflightBlock?
 }
 
 internal class ThorChainLpPreflightUseCaseImpl
@@ -60,7 +68,8 @@ constructor(
     private val mimirRepository: ThorMimirRepository,
 ) : ThorChainLpPreflightUseCase {
 
-    override suspend fun invoke(pool: String): ThorChainLpPreflightBlock? = coroutineScope {
+    override suspend fun invoke(pool: String, isPairedAdd: Boolean): ThorChainLpPreflightBlock? =
+        coroutineScope {
         val chainPrefix = pool.substringBefore('.', missingDelimiterValue = "").uppercase()
 
         val lpPausedDeferred = async { probe { mimirRepository.isLpPaused(pool) } }
@@ -78,15 +87,14 @@ constructor(
             return@coroutineScope ThorChainLpPreflightBlock.ChainLpHalted(chainPrefix)
         }
 
-        val poolJson = poolDeferred.await()
-        if (poolJson != null) {
-            val status = poolJson.status
-            if (status != null && !status.equals(POOL_STATUS_AVAILABLE, ignoreCase = true)) {
-                return@coroutineScope ThorChainLpPreflightBlock.PoolNotAvailable(pool, status)
-            }
+        val status = poolDeferred.await()?.status
+        when {
+            status == null || status.equals(POOL_STATUS_AVAILABLE, ignoreCase = true) -> null
+            status.equals(POOL_STATUS_STAGED, ignoreCase = true) ->
+                if (isPairedAdd) null
+                else ThorChainLpPreflightBlock.StagedPoolRequiresPairedAdd(pool)
+            else -> ThorChainLpPreflightBlock.PoolNotAvailable(pool, status)
         }
-
-        null
     }
 
     private fun cancelAll(vararg deferreds: Deferred<*>) {
@@ -104,5 +112,6 @@ constructor(
 
     private companion object {
         const val POOL_STATUS_AVAILABLE = "Available"
+        const val POOL_STATUS_STAGED = "Staged"
     }
 }

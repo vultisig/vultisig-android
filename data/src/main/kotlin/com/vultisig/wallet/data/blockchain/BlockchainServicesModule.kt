@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ton.TonDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.ton.TonLiquidStakingService
 import com.vultisig.wallet.data.blockchain.tron.TronDeFiBalanceService
 import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.KaminoPositionCacheRepository
@@ -141,10 +142,12 @@ internal interface BlockchainServicesModule {
         @Singleton
         fun provideTonDeFiBalanceService(
             tonStakingApi: TonStakingApi,
+            liquidStakingService: TonLiquidStakingService,
             stakingDetailsRepository: StakingDetailsRepository,
         ): TonDeFiBalanceService =
             TonDeFiBalanceService(
                 tonStakingApi = tonStakingApi,
+                liquidStakingService = liquidStakingService,
                 stakingDetailsRepository = stakingDetailsRepository,
             )
 

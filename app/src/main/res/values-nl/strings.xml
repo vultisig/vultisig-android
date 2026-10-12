@@ -264,6 +264,10 @@
     <string name="verify_transaction_memo_title">Memo</string>
     <string name="verify_transaction_allow_death_warning">Deze overboeking kan de rekening van de afzender leegmaken. Als het resterende saldo onder de Existential Deposit zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende %1$s verloren.</string>
     <string name="join_keysign_wrong_reshare">Verkeerde ReShare</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Deze TON-tokenoverdracht komt niet uit deze kluis</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">Het getoonde token komt niet overeen met het token dat deze overdracht verstuurt</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Deze TON-tokenoverdracht kon niet worden geverifieerd. Probeer het opnieuw.</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">Opnieuw delen wordt niet ondersteund voor kluizen met een QBTC-sleutel</string>
     <string name="swap_screen_provider_title">Leverancier</string>
     <string name="swap_form_minimum_amount">Wisselbedrag te klein. Aanbevolen bedrag: %1$s %2$s</string>
     <string name="backup_password_screen_title">Back-up</string>
@@ -349,6 +353,7 @@
     <string name="signing_error_account_not_funded">Dit account bestaat nog niet on-chain.\nVul de wallet eerst aan.</string>
     <string name="signing_error_broadcast_rejected">Transactie geweigerd door het netwerk.</string>
     <string name="signing_error_broadcast_rejected_s">Transactie geweigerd door het netwerk: %s</string>
+    <string name="signing_error_swap_tx_unsignable">De swap-leverancier gaf een transactie terug die niet veilig kan worden ondertekend. Opnieuw proberen helpt niet — ga terug en vraag een nieuwe offerte aan.</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
     <string name="verify_transaction_paired_btn_title">Gekoppeld</string>
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>
@@ -373,6 +378,10 @@
     <string name="qr_share_label_to">Aan</string>
     <string name="qr_share_label_from">Van</string>
     <string name="qr_share_label_type">Type</string>
+    <string name="keysign_share_qr_title">QR-code delen</string>
+    <string name="keysign_share_qr_copy_link">Link kopiëren</string>
+    <string name="keysign_share_qr_share_image">QR-afbeelding delen</string>
+    <string name="keysign_share_qr_link_copied">Link gekopieerd</string>
     <string name="qr_share_type_fast_vault">Snelle kluis</string>
     <string name="qr_share_type_secure_vault">Beveiligde kluis</string>
     <string name="error_folder_must_have_at_least_one_vault">Map heeft minimaal één geselecteerde kluis nodig</string>
@@ -394,6 +403,7 @@
     <string name="deposit_error_thorchain_chain_halted">Stortingen op %1$s zijn momenteel stilgelegd op THORChain. Probeer het later opnieuw.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">Kon THORChain niet bereiken om de inkomende vault te verifiëren. Probeer het opnieuw.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s is momenteel niet beschikbaar voor stortingen.</string>
+    <string name="deposit_error_pool_staged_unpaired">Pool %1$s staat op „staged” en accepteert alleen stortingen die gekoppeld zijn aan de andere kant. THORChain zou deze transactie terugbetalen.</string>
     <string name="deposit_form_screen_assets">Activa</string>
     <string name="deposit_form_screen_asset_selection">Activaselectie</string>
     <string name="deposit_form_screen_lpunits">LP-eenheden</string>
@@ -494,6 +504,13 @@
     <string name="active_nodes">Actieve Nodes</string>
     <string name="next_churn">Volgende Wisseling</string>
     <string name="next_award">Volgende beloning</string>
+    <string name="next_reward">Volgende beloning</string>
+    <string name="last_reward">Laatste beloning</string>
+    <string name="last_reward_unavailable">n.v.t.</string>
+    <string name="total_rewards_earned">Totaal verdiende beloningen</string>
+    <string name="reward_history_node">Node: %s</string>
+    <string name="reward_history_upcoming">Aankomend</string>
+    <string name="reward_history_error">Beloningsgeschiedenis kon niet worden geladen</string>
     <string name="next_payout">Volgende uitbetaling</string>
     <string name="wait_until_node_churned_out">Wacht tot de node is uitgefaseerd</string>
     <string name="deposit_option_leave">Verlaten</string>
@@ -523,6 +540,9 @@
     <string name="security_scanner_transaction_scanned_by">Transactie gescand door</string>
     <string name="security_scanner_transaction_scanning">Scannen…</string>
     <string name="security_scanner_transaction_not_scanned">Transactie niet gescand door</string>
+    <string name="security_scanner_safe_title">Gescand door Blockaid</string>
+    <string name="security_scanner_safe_description">Geen kwaadaardige activiteit gedetecteerd. Deze transactie is veilig om te ondertekenen.</string>
+    <string name="security_scanner_safe_continue">Doorgaan</string>
     <string name="keygen_step_preparing_vault">Kluis voorbereiden</string>
     <string name="keygen_step_generating_ecdsa">ECDSA-sleutel genereren</string>
     <string name="reshare_step_generating_eddsa">EdDSA-sleutel genereren</string>
@@ -1028,6 +1048,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Het minimumbedrag om dit adres te activeren is %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Het minimumbedrag om dit adres te activeren is %1$s %2$s (Existential Deposit).</string>
+    <string name="send_error_near_destination_not_found">Dit NEAR-account bestaat niet. Controleer de ontvanger: een overboeking ernaartoe verbruikt alleen gas.</string>
+    <string name="send_error_near_unsupported_payload">Deze NEAR-transactie wordt niet ondersteund. Alleen native NEAR-overboekingen kunnen worden ondertekend.</string>
+    <string name="send_error_near_invalid_recipient">Dit is geen geldig NEAR-account. Controleer de ontvanger.</string>
+    <string name="send_error_near_key_not_full_access">De sleutel van deze kluis heeft geen volledige toegang tot dit NEAR-account en kan er dus niet vanaf verzenden.</string>
+    <string name="send_error_near_network">Het NEAR-netwerk gaf een fout of een onleesbaar antwoord. Probeer het opnieuw.</string>
+    <string name="send_error_near_safety_check">Deze NEAR-transactie heeft een veiligheidscontrole niet doorstaan en is niet ondertekend.</string>
     <string name="send_error_xrp_destination_tag_required">Dit adres vereist een bestemmingstag. Voeg er een toe om door te gaan.</string>
     <string name="send_error_xrp_destination_no_trust_line">Dit adres kan geen %1$s ontvangen. De ontvanger moet daarvoor eerst een trustline openen.</string>
     <string name="ripple_trust_line_title">Trustline activeren</string>
@@ -1065,6 +1091,15 @@
     <string name="ton_unstake_title">%1$s unstaken</string>
     <string name="ton_staking_pool_address">Pooladres</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator-pools ondersteunen alleen volledige opname. Je volledige gestakete saldo wordt teruggestort.</string>
+    <string name="ton_liquid_staking_label">Liquid staking</string>
+    <string name="ton_liquid_deposit_fee">Stortingskosten</string>
+    <string name="ton_liquid_you_receive">Je ontvangt</string>
+    <string name="ton_liquid_attached_value">Bijgevoegd voor verwerking</string>
+    <string name="ton_liquid_stake_fee_notice">Inclusief de stortingskosten van %1$s %2$s die Tonstakers vooraf inhoudt. Het deel dat de pool niet gebruikt, wordt terugbetaald.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s wordt bijgevoegd om de opname te verwerken; het ongebruikte deel wordt terugbetaald. Je wordt direct uitbetaald als de pool liquiditeit heeft, anders aan het einde van de huidige validatieronde.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s wordt bijgevoegd om de opname te verwerken; het ongebruikte deel wordt terugbetaald. Je wordt uitbetaald aan het einde van de huidige validatieronde.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers accepteert momenteel geen stortingen</string>
+    <string name="ton_liquid_no_position">Deze vault bevat geen tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL staat niet in deze kluis</string>
     <string name="solana_staking_total_staked_sol">Totaal gestaket SOL</string>
@@ -1435,6 +1470,8 @@
     <string name="transaction_status_refunded_label">Terugbetaald</string>
     <string name="transaction_status_failed_slippage_label">Prijs ging voorbij de slippage-tolerantie</string>
     <string name="transaction_status_failed_slippage_description">De prijs veranderde voordat deze wissel werd uitgevoerd, waardoor de uitbetaling lager zou zijn dan uw slippage-tolerantie toestaat en het netwerk hem heeft teruggedraaid. Verhoog uw slippage-tolerantie of probeer het opnieuw.</string>
+    <string name="transaction_status_failed_expired_label">Verlopen voordat hij werd opgenomen</string>
+    <string name="transaction_status_failed_expired_description">Het netwerk heeft deze transactie verworpen voordat hij werd opgenomen, dus er is niets verzonden en er zijn geen netwerkkosten in rekening gebracht. U kunt het opnieuw proberen.</string>
     <string name="transaction_status_in_progress_label">Bezig…</string>
     <string name="transaction_status_signed_label">Ondertekend</string>
     <string name="transaction_history_to_label">Aan</string>
@@ -1508,6 +1545,8 @@
     <string name="ton_op_nft_transfer">NFT-overdracht</string>
     <string name="ton_op_excess_gas_refund">Terugbetaling overtollig gas</string>
     <string name="ton_op_transfer">Overdracht</string>
+    <string name="ton_op_liquid_staking_deposit">Liquid staking-storting</string>
+    <string name="ton_op_jetton_burn">Jetton-burn</string>
     <string name="ton_forward_ton_amount">Doorgestuurd GRAM-bedrag</string>
     <string name="ton_raw_payload">Ruwe payload</string>
 

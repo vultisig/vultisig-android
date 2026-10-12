@@ -25,9 +25,7 @@ data class CommonTransactionHistoryData(
     val timestamp: Long,
     val txHash: String,
     val explorerUrl: String,
-    /**
-     * Chain head block number at broadcast; see [TransactionHistoryEntity.broadcastBlockNumber].
-     */
+    /** Chain-specific block anchor; see [TransactionHistoryEntity.broadcastBlockNumber]. */
     val broadcastBlockNumber: Long? = null,
 )
 
@@ -51,6 +49,14 @@ data class SendTransactionHistoryData(
      * migration.
      */
     val dappSummary: String? = null,
+    /**
+     * Network fee the transaction actually paid, in the native coin's base unit (wei on EVM,
+     * nanotons on TON), read once it settled. Only this transaction's own fee: an approval
+     * broadcast before it is a separate transaction and is never folded in. Null until the fee is
+     * known, and on chains it isn't read back for. The name predates TON support and stays because
+     * it is the stored JSON key. Default-valued so legacy rows stay readable (no Room migration).
+     */
+    val paidNetworkFeeWei: String? = null,
 ) : TransactionHistoryData
 
 @Serializable
@@ -124,6 +130,11 @@ data class SwapTransactionHistoryData(
      * alone and offers a retry only when that match is unique.
      */
     val fromContractAddress: String = "",
+    /**
+     * Network fee the swap transaction actually paid; see
+     * [SendTransactionHistoryData.paidNetworkFeeWei].
+     */
+    val paidNetworkFeeWei: String? = null,
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(

@@ -67,7 +67,7 @@ internal class SuiTokenFinderImpl @Inject constructor(private val suiApi: SuiApi
     private suspend fun fetchHeldCoinTypes(address: String): List<String> {
         val coins =
             try {
-                suiApi.getAllCoins(address)
+                suiApi.getHeldCoinTypes(address)
             } catch (e: SocketTimeoutException) {
                 Timber.e(e, "Sui getAllCoins timed out")
                 return emptyList()
@@ -83,7 +83,6 @@ internal class SuiTokenFinderImpl @Inject constructor(private val suiApi: SuiApi
 
         return coins
             .asSequence()
-            .map { it.coinType }
             .filterNot { it.isBlank() || SuiHelper.isNativeSuiCoinType(it) }
             // An address holds one coin object per payment received, so a single coin type comes
             // back as many objects.

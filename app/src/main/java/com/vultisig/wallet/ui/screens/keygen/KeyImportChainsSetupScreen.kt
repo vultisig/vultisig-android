@@ -314,7 +314,7 @@ private fun CustomizeChainsContent(
                             TokenSelectionGridUiModel(
                                 tokenSelectionUiModel =
                                     TokenSelectionUiModel.TokenUiSingle(
-                                        name = item.chain.raw,
+                                        name = item.chain.displayName,
                                         logo = item.chain.logo,
                                     ),
                                 isChecked = item.isSelected,
@@ -358,12 +358,12 @@ private fun ActiveChainItem(chain: Chain) {
     ) {
         Image(
             painter = painterResource(chain.logo),
-            contentDescription = chain.raw,
+            contentDescription = chain.displayName,
             modifier = Modifier.size(36.dp),
         )
         UiSpacer(4.dp)
         Text(
-            text = chain.raw,
+            text = chain.displayName,
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
         )

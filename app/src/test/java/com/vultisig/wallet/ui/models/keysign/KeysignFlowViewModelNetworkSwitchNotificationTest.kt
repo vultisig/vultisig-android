@@ -10,8 +10,8 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.GenerateServiceName
-import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.peer.NetworkOption
+import com.vultisig.wallet.ui.models.token.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route

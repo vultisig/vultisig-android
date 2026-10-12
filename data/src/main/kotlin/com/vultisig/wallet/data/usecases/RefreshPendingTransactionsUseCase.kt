@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
+import com.vultisig.wallet.data.repositories.fromAddressOrNull
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
 import javax.inject.Inject
@@ -44,6 +45,7 @@ constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val transactionStatusRepository: TransactionStatusRepository,
     private val swapKitTrackingService: SwapKitTrackingService,
+    private val recordPaidNetworkFee: RecordPaidNetworkFeeUseCase,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val clock: Clock,
 ) : RefreshPendingTransactionsUseCase {
@@ -82,6 +84,9 @@ constructor(
         try {
             val result = checkStatus(tx, chain)
             transactionHistoryRepository.updateTransactionStatus(tx.chain, tx.txHash, result)
+            // A reverted or refunded transaction burned its gas too. Best-effort: a missing
+            // receipt leaves the recorded estimate, never the settled status, behind.
+            if (result.isTerminal) runSafeCatching { recordPaidNetworkFee(chain, tx.txHash) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -107,7 +112,9 @@ constructor(
         return if (isSwapKitSwap && swapKitTrackingService.canTrack(chain)) {
             swapKitTrackingService.checkSettlementStatus(tx.txHash, chain)
         } else {
-            transactionStatusRepository.checkTransactionStatus(tx.txHash, chain)
+            // NEAR looks a transaction up by sender as well as hash; no other chain needs it.
+            val sender = if (chain == Chain.Near) tx.payload.fromAddressOrNull else null
+            transactionStatusRepository.checkTransactionStatus(tx.txHash, chain, sender)
         }
     }
 
@@ -150,6 +157,12 @@ constructor(
         const val MAX_SHIFT = 13
     }
 }
+
+private val TransactionResult.isTerminal: Boolean
+    get() =
+        this == TransactionResult.Confirmed ||
+            this is TransactionResult.Failed ||
+            this is TransactionResult.Refunded
 
 /** Like [runCatching] but rethrows [CancellationException] to preserve structured concurrency. */
 private inline fun runSafeCatching(block: () -> Unit) {

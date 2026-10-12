@@ -42,6 +42,13 @@
     <string name="active_nodes">活跃节点</string>
     <string name="next_churn">下次轮换</string>
     <string name="next_award">下次奖励</string>
+    <string name="next_reward">下次奖励</string>
+    <string name="last_reward">上次奖励</string>
+    <string name="last_reward_unavailable">无</string>
+    <string name="total_rewards_earned">累计获得奖励</string>
+    <string name="reward_history_node">节点：%s</string>
+    <string name="reward_history_upcoming">即将发放</string>
+    <string name="reward_history_error">无法加载奖励记录</string>
     <string name="next_payout">下次支付</string>
     <string name="wait_until_node_churned_out">等待节点被淘汰</string>
     <string name="deposit_option_leave">离开</string>
@@ -450,6 +457,10 @@
 
     <!-- Join Keysign -->
     <string name="join_keysign_wrong_reshare">错误的重新分享</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">此 TON 代币转账并非来自此保险库</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">显示的代币与此转账发送的代币不一致</string>
+    <string name="join_keysign_ton_jetton_unverifiable">无法验证此 TON 代币转账，请重试。</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">带有 QBTC 密钥的保险库不支持重新分享</string>
 
     <!-- Swap Screen -->
     <string name="swap_screen_provider_title">提供商</string>
@@ -611,6 +622,7 @@
     <string name="signing_error_account_not_funded">此账户尚未在链上存在。\n请先为钱包充值。</string>
     <string name="signing_error_broadcast_rejected">交易被网络拒绝。</string>
     <string name="signing_error_broadcast_rejected_s">交易被网络拒绝：%s</string>
+    <string name="signing_error_swap_tx_unsignable">兑换提供商返回了无法安全签名的交易。重试无济于事，请返回并获取新的报价。</string>
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_fast_sign_btn_title">快速签名</string>
@@ -647,6 +659,10 @@
     <string name="qr_share_label_to">至</string>
     <string name="qr_share_label_from">从</string>
     <string name="qr_share_label_type">类型</string>
+    <string name="keysign_share_qr_title">分享二维码</string>
+    <string name="keysign_share_qr_copy_link">复制链接</string>
+    <string name="keysign_share_qr_share_image">分享二维码图片</string>
+    <string name="keysign_share_qr_link_copied">链接已复制</string>
     <string name="qr_share_type_fast_vault">快速保险库</string>
     <string name="qr_share_type_secure_vault">安全保险库</string>
 
@@ -680,6 +696,7 @@
     <string name="deposit_error_thorchain_chain_halted">%1$s 上的存款目前已在 THORChain 上停止。请稍后再试。</string>
     <string name="deposit_error_thorchain_inbound_unavailable">无法连接到 THORChain 以验证入站金库。请重试。</string>
     <string name="deposit_error_pool_not_available">池 %1$s 目前不可用于存款。</string>
+    <string name="deposit_error_pool_staged_unpaired">池 %1$s 处于预备（staged）状态，仅接受与另一侧配对的添加。THORChain 将退回此交易。</string>
     <string name="deposit_form_screen_assets">资产</string>
     <string name="deposit_form_screen_asset_selection">选择资产</string>
     <string name="deposit_form_screen_lpunits">LP 单位</string>
@@ -836,6 +853,9 @@
     <string name="security_scanner_transaction_scanned_by">交易已扫描</string>
     <string name="security_scanner_transaction_scanning">扫描中…</string>
     <string name="security_scanner_transaction_not_scanned">交易未扫描</string>
+    <string name="security_scanner_safe_title">已通过 Blockaid 扫描</string>
+    <string name="security_scanner_safe_description">未检测到恶意活动。此交易可以安全签署。</string>
+    <string name="security_scanner_safe_continue">继续</string>
 
 
     <!-- Swap Error -->
@@ -1362,6 +1382,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">激活此地址所需的最低金额为 %1$s %2$s。</string>
     <string name="send_error_tao_destination_below_existential_deposit">激活此地址所需的最低金额为 %1$s %2$s（存在性存款）。</string>
+    <string name="send_error_near_destination_not_found">此 NEAR 账户不存在。请检查收款方：向其转账只会消耗 Gas。</string>
+    <string name="send_error_near_unsupported_payload">不支持此 NEAR 交易。只能签署原生 NEAR 转账。</string>
+    <string name="send_error_near_invalid_recipient">这不是有效的 NEAR 账户。请检查收款方。</string>
+    <string name="send_error_near_key_not_full_access">此保险库的密钥对该 NEAR 账户没有完全访问权限，因此无法从该账户发送。</string>
+    <string name="send_error_near_network">NEAR 网络返回了错误或无法读取的响应。请重试。</string>
+    <string name="send_error_near_safety_check">此 NEAR 交易未通过安全检查，未被签署。</string>
     <string name="send_error_xrp_destination_tag_required">此地址需要目标标签。请添加后继续。</string>
     <string name="send_error_xrp_destination_no_trust_line">此地址无法接收 %1$s。收款方需要先为该资产开通信任线。</string>
     <string name="ripple_trust_line_title">激活信任线</string>
@@ -1399,6 +1425,15 @@
     <string name="ton_unstake_title">解除质押 %1$s</string>
     <string name="ton_staking_pool_address">质押池地址</string>
     <string name="ton_unstake_full_withdrawal_notice">提名池仅支持全额提取。您的全部质押余额将被返还。</string>
+    <string name="ton_liquid_staking_label">流动性质押</string>
+    <string name="ton_liquid_deposit_fee">存入费用</string>
+    <string name="ton_liquid_you_receive">您将收到</string>
+    <string name="ton_liquid_attached_value">附加的处理金额</string>
+    <string name="ton_liquid_stake_fee_notice">包含 Tonstakers 预先扣除的 %1$s %2$s 存入费用。质押池未使用的部分将退还。</string>
+    <string name="ton_liquid_unstake_notice">将附加 %1$s %2$s 用于处理提取，未使用的部分将退还。质押池有流动性时立即支付，否则在当前验证轮次结束时支付。</string>
+    <string name="ton_liquid_unstake_notice_round_end">将附加 %1$s %2$s 用于处理提取，未使用的部分将退还。将在当前验证轮次结束时支付。</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers 目前不接受存入</string>
+    <string name="ton_liquid_no_position">此金库没有 tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">此保险库中没有 SOL</string>
     <string name="solana_staking_total_staked_sol">质押 SOL 总额</string>
@@ -1769,6 +1804,8 @@
     <string name="transaction_status_refunded_label">已退款</string>
     <string name="transaction_status_failed_slippage_label">价格超出滑点容差</string>
     <string name="transaction_status_failed_slippage_description">此次交换执行前价格发生变动，支付金额将低于您的滑点容差允许的范围，网络已撤销该交易。请提高滑点容差或重试。</string>
+    <string name="transaction_status_failed_expired_label">在被打包前已过期</string>
+    <string name="transaction_status_failed_expired_description">网络在打包此交易前已将其丢弃，因此没有发送任何资产，也未收取网络费用。您可以重试。</string>
     <string name="transaction_status_in_progress_label">进行中…</string>
     <string name="transaction_status_signed_label">已签名</string>
     <string name="transaction_history_to_label">至</string>
@@ -1838,6 +1875,8 @@
     <string name="ton_op_nft_transfer">NFT 转账</string>
     <string name="ton_op_excess_gas_refund">超额燃料退款</string>
     <string name="ton_op_transfer">转账</string>
+    <string name="ton_op_liquid_staking_deposit">流动性质押存入</string>
+    <string name="ton_op_jetton_burn">Jetton 销毁</string>
     <string name="ton_forward_ton_amount">转发的 GRAM 金额</string>
     <string name="ton_raw_payload">原始 Payload</string>
 

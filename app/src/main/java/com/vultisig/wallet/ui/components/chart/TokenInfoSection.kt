@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.models.TokenInfoUiModel
+import com.vultisig.wallet.ui.models.token.TokenInfoUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 /**

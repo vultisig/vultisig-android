@@ -122,8 +122,9 @@ interface ThorChainApi {
     suspend fun getMimir(): Map<String, Long>
 
     /**
-     * Midgard pool statistics including LUVI-based APR. Pass [period] (e.g. "7d", "30d", "100d") to
-     * control the APR window; defaults to 30d to match thorchain.org.
+     * Midgard pool statistics including LUVI-based APR, for pools of every status — callers filter by
+     * [ThorChainPoolStatsJson.status]. Pass [period] (e.g. "7d", "30d", "100d") to control the APR
+     * window; defaults to 30d to match thorchain.org.
      */
     suspend fun getPoolStats(period: String? = null): List<ThorChainPoolStatsJson>
 
@@ -158,6 +159,9 @@ interface ThorChainApi {
     suspend fun getBondedNodes(address: String): BondedNodesResponse
 
     suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse
+
+    /** The node as THORNode saw it at block [height], for reading an award before a churn. */
+    suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): NodeDetailsResponse
 
     suspend fun getChurns(): List<ChurnEntry>
 
@@ -438,7 +442,6 @@ constructor(
         httpClient
             .get("$MIDGARD_URL/pools") {
                 header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
-                parameter("status", "available")
                 parameter("period", period?.takeIf { it.isNotBlank() } ?: DEFAULT_LP_PERIOD)
             }
             .bodyOrThrow()
@@ -750,6 +753,20 @@ constructor(
 
         return httpClient
             .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow<NodeDetailsResponse>()
+    }
+
+    override suspend fun getNodeDetailsAtHeight(
+        nodeAddress: String,
+        height: Long,
+    ): NodeDetailsResponse {
+        val url = "$THORNODE_BASE/thorchain/node/$nodeAddress"
+
+        return httpClient
+            .get(url) {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+                parameter("height", height)
+            }
             .bodyOrThrow<NodeDetailsResponse>()
     }
 

@@ -76,9 +76,9 @@ internal class GetThorChainLpPositionsUseCaseTest {
     }
 
     @Test
-    fun `skips pools that are not available`() = runTest {
+    fun `skips suspended pools`() = runTest {
         coEvery { api.getPoolStats(any()) } returns
-            listOf(pool("BTC.BTC", status = "staged"), pool("ETH.ETH"))
+            listOf(pool("BTC.BTC", status = "suspended"), pool("ETH.ETH"))
         coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns lp(units = "1")
 
         val positions = useCase(runeAddress = RUNE_ADDR).positions
@@ -88,26 +88,43 @@ internal class GetThorChainLpPositionsUseCaseTest {
     }
 
     @Test
-    fun `uses injected availablePools and skips getPoolStats`() = runTest {
+    fun `uses injected lpPools and skips getPoolStats`() = runTest {
         val pools = listOf(pool("BTC.BTC"), pool("ETH.ETH"))
         coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } returns lp(units = "1")
         coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns null
 
-        val positions = useCase(runeAddress = RUNE_ADDR, availablePools = pools).positions
+        val positions = useCase(runeAddress = RUNE_ADDR, lpPools = pools).positions
 
         assertEquals(listOf("BTC.BTC"), positions.map { it.pool })
         coVerify(exactly = 0) { api.getPoolStats(any()) }
     }
 
     @Test
-    fun `filters non-available pools from injected availablePools`() = runTest {
-        val pools = listOf(pool("BTC.BTC", status = "staged"), pool("ETH.ETH"))
+    fun `filters suspended pools from injected lpPools`() = runTest {
+        val pools = listOf(pool("BTC.BTC", status = "suspended"), pool("ETH.ETH"))
         coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns lp(units = "1")
 
-        val positions = useCase(runeAddress = RUNE_ADDR, availablePools = pools).positions
+        val positions = useCase(runeAddress = RUNE_ADDR, lpPools = pools).positions
 
         assertEquals(listOf("ETH.ETH"), positions.map { it.pool })
         coVerify(exactly = 0) { api.getLiquidityProvider("BTC.BTC", any()) }
+    }
+
+    @Test
+    fun `fetchLpPools keeps available and staged pools and drops suspended ones`() = runTest {
+        coEvery { api.getPoolStats(any()) } returns
+            listOf(
+                pool("BTC.BTC"),
+                pool("ETH.LINK-0X514910771AF9CA656AF840DFF83E8264ECF986CA", status = "staged"),
+                pool("ETH.FOX-0XC770EEFAD204B5180DF6A14EE197D99D808EE52D", status = "suspended"),
+            )
+
+        val pools = useCase.fetchLpPools()
+
+        assertEquals(
+            listOf("BTC.BTC", "ETH.LINK-0X514910771AF9CA656AF840DFF83E8264ECF986CA"),
+            pools.map { it.asset },
+        )
     }
 
     @Test

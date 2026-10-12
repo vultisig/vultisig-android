@@ -22,6 +22,8 @@ import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.BondChurnReward
+import com.vultisig.wallet.data.usecases.BondRewardHistoryUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainPendingLpDepositsUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPositions
@@ -44,11 +46,14 @@ import io.mockk.unmockkStatic
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.text.NumberFormat
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -94,10 +99,14 @@ internal class ThorchainDefiPositionsViewModelTest {
     private lateinit var getThorChainPendingLpDepositsUseCase: GetThorChainPendingLpDepositsUseCase
     // The real cache, not a mock: these tests assert the round trip a nav pop and a re-entry make.
     private lateinit var snapshotCache: DeFiPositionsSnapshotCache
+    private lateinit var bondRewardHistoryUseCase: BondRewardHistoryUseCase
+    private val defaultTimeZone: TimeZone = TimeZone.getDefault()
 
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        // Churn dates format in the device's zone; pin it so the date assertions hold anywhere.
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
         mockkStatic("com.vultisig.wallet.data.utils.CoinTypeKt")
         every { any<CoinType>().symbol } returns "RUNE"
         every { any<CoinType>().decimals } returns 8
@@ -115,10 +124,14 @@ internal class ThorchainDefiPositionsViewModelTest {
         getThorChainLpPositionsUseCase = mockk(relaxed = true)
         getThorChainPendingLpDepositsUseCase = mockk(relaxed = true)
         snapshotCache = DeFiPositionsSnapshotCache()
+        bondRewardHistoryUseCase = mockk()
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
         coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrencyUsd)
+        coEvery { bondRewardHistoryUseCase.getLastReward(any(), any(), any()) } returns null
+        coEvery { bondRewardHistoryUseCase.getRewardHistory(any(), any(), any()) } returns
+            emptyList()
         coEvery { appCurrencyRepository.getCurrencyFormat() } returns
             NumberFormat.getCurrencyInstance(Locale.US)
         coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns BigDecimal("2")
@@ -128,7 +141,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { tcyStakingService.getStakingDetails(any(), any()) } returns flowOf()
         coEvery { defaultStakingPositionService.getStakingDetails(any(), any()) } returns flowOf()
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns emptyList()
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns emptyList()
         coEvery { getThorChainPendingLpDepositsUseCase(any()) } returns emptyList()
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions()
@@ -138,6 +151,7 @@ internal class ThorchainDefiPositionsViewModelTest {
     fun tearDown() {
         unmockkStatic("com.vultisig.wallet.data.utils.CoinTypeKt")
         Dispatchers.resetMain()
+        TimeZone.setDefault(defaultTimeZone)
     }
 
     @Test
@@ -526,7 +540,7 @@ internal class ThorchainDefiPositionsViewModelTest {
     @Test
     fun `a failed available-pool fetch still settles the LP tab`() = runTest {
         selectPositions("RUNE")
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } throws
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } throws
             RuntimeException("midgard down")
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
@@ -535,14 +549,14 @@ internal class ThorchainDefiPositionsViewModelTest {
         // no retry can clear, while a pending half-deposit still renders through it. Settled, the
         // tab falls through to its no-positions container and its Manage Positions retry.
         vm.state.value.lpDialogLoaded shouldBe true
-        // availablePools stays null so the next interaction re-fetches instead of soft-locking.
+        // lpPools stays null so the next interaction re-fetches instead of soft-locking.
         vm.state.value.lpPositionsDialog.isEmpty() shouldBe true
     }
 
     @Test
     fun `a selected pool with no liquidity still renders a placeholder card`() = runTest {
         selectPositions(BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
@@ -563,7 +577,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // A vault holding only LP used to read $0.00 in the header while the LP cards below it
         // showed real money: the total summed bond and stake but never LP.
         selectPositions(BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions(
@@ -752,7 +766,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // before it can report, which is exactly the window the old code published a total in.
         selectPositions("RUNE", BTC_POOL)
         val heldPools = MutableStateFlow<List<ThorChainPoolStatsJson>?>(null)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } coAnswers
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } coAnswers
             {
                 heldPools.filterNotNull().first()
             }
@@ -800,7 +814,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // The placeholder used to snapshot a zero still being resolved on another coroutine, and a
         // failed load then froze that null in as the terminal state.
         selectPositions(BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } throws
             RuntimeException("midgard down")
@@ -821,7 +835,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         selectPositions("RUNE", BTC_POOL)
         val currency = MutableStateFlow(AppCurrencyUsd)
         coEvery { appCurrencyRepository.currency } returns currency
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions(
@@ -856,7 +870,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         selectPositions("RUNE", BTC_POOL)
         val currency = MutableStateFlow(AppCurrencyUsd)
         coEvery { appCurrencyRepository.currency } returns currency
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         val heldPositions =
             MutableStateFlow<ThorChainLpPositions?>(
@@ -1034,7 +1048,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             // liquidity. Folding that in produced a header total that looked as settled as a
             // correct one while silently understating what the vault holds.
             selectPositions("RUNE", BTC_POOL)
-            coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
                 listOf(poolStats(BTC_POOL))
             coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
                 ThorChainLpPositions(positions = emptyList(), failedPools = setOf(BTC_POOL))
@@ -1052,7 +1066,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // The use case queries every available pool, so an unrelated pool erroring must not blank
         // a total the user's own positions priced perfectly well.
         selectPositions("RUNE", BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL), poolStats(ETH_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions(
@@ -1218,7 +1232,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // legs holding their pre-selection values, so the header read as a settled total — short by
         // the pool just added — for the whole refetch.
         selectPositions("RUNE", BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL), poolStats(ETH_POOL))
         val bothPools =
             ThorChainLpPositions(
@@ -1261,7 +1275,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // Done is reachable without touching a checkbox, and reloading for it would blank a settled
         // header to a spinner and refetch all three legs for an identical selection.
         selectPositions("RUNE", BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         val heldPositions =
             MutableStateFlow<ThorChainLpPositions?>(
@@ -1361,7 +1375,7 @@ internal class ThorchainDefiPositionsViewModelTest {
     @Test
     fun `a refresh leaves the settled LP cards up instead of blanking them`() = runTest {
         selectPositions(BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions(
@@ -1422,7 +1436,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             // next reload as though they were settled would present a figure nothing confirmed and
             // hide the fact that a read is in flight.
             selectPositions(BTC_POOL)
-            coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+            coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
                 listOf(poolStats(BTC_POOL))
             coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } throws
                 RuntimeException("midgard down")
@@ -1445,7 +1459,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         // reload rejected every restored card and put the tab back on the shimmer the cache exists
         // to remove.
         selectPositions(BTC_POOL)
-        coEvery { getThorChainLpPositionsUseCase.fetchAvailablePools(any()) } returns
+        coEvery { getThorChainLpPositionsUseCase.fetchLpPools(any()) } returns
             listOf(poolStats(BTC_POOL))
         coEvery { getThorChainLpPositionsUseCase(any(), any(), any(), any()) } returns
             ThorChainLpPositions(
@@ -1537,6 +1551,148 @@ internal class ThorchainDefiPositionsViewModelTest {
             flow { awaitCancellation() }
     }
 
+    @Test
+    fun `a bonded node shows what the last churn paid this vault`() = runTest {
+        selectPositions("RUNE")
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+            flowOf(listOf(bondedNode(BigInteger("1000000000"))))
+        coEvery {
+            bondRewardHistoryUseCase.getLastReward(Chain.ThorChain, NODE_ADDRESS, RUNE_ADDRESS)
+        } returns churnReward(BigInteger("2172412345"))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        assertEquals(
+            LastRewardUiModel.Paid("21.7241 RUNE"),
+            vm.state.value.bonded.nodes.single().lastReward,
+        )
+    }
+
+    @Test
+    fun `a refresh after a churn picks up the new last reward`() = runTest {
+        selectPositions("RUNE")
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+            flowOf(listOf(bondedNode(BigInteger("1000000000"))))
+        coEvery { bondRewardHistoryUseCase.getLastReward(any(), any(), any()) } returnsMany
+            listOf(churnReward(BigInteger.ZERO), churnReward(BigInteger("2172412345")))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        assertEquals(
+            LastRewardUiModel.Paid("0.0000 RUNE"),
+            vm.state.value.bonded.nodes.single().lastReward,
+        )
+
+        vm.setData(VAULT_ID)
+
+        assertEquals(
+            LastRewardUiModel.Paid("21.7241 RUNE"),
+            vm.state.value.bonded.nodes.single().lastReward,
+        )
+    }
+
+    @Test
+    fun `a refresh during a pending last reward reads it again and drops the old answer`() =
+        runTest {
+            selectPositions("RUNE")
+            coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+                flowOf(listOf(bondedNode(BigInteger("1000000000"))))
+            val staleReward = CompletableDeferred<BondChurnReward?>()
+            var reads = 0
+            coEvery { bondRewardHistoryUseCase.getLastReward(any(), any(), any()) } coAnswers
+                {
+                    if (reads++ == 0) staleReward.await() else churnReward(BigInteger("2172412345"))
+                }
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            vm.setData(VAULT_ID)
+            staleReward.complete(churnReward(BigInteger.ZERO))
+
+            assertEquals(2, reads)
+            assertEquals(
+                LastRewardUiModel.Paid("21.7241 RUNE"),
+                vm.state.value.bonded.nodes.single().lastReward,
+            )
+        }
+
+    @Test
+    fun `a failed last reward reading keeps the bonded list and shows no amount`() = runTest {
+        selectPositions("RUNE")
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+            flowOf(listOf(bondedNode(BigInteger("1000000000"))))
+        coEvery { bondRewardHistoryUseCase.getLastReward(any(), any(), any()) } throws
+            IllegalStateException("archive node unavailable")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val node = vm.state.value.bonded.nodes.single()
+        assertEquals(LastRewardUiModel.Unavailable, node.lastReward)
+        assertEquals("10.00000000 RUNE", node.bondedAmount)
+    }
+
+    @Test
+    fun `last reward opens the history sheet with realised churns summed newest first`() = runTest {
+        selectPositions("RUNE")
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+            flowOf(listOf(bondedNode(BigInteger("1000000000"))))
+        coEvery {
+            bondRewardHistoryUseCase.getRewardHistory(Chain.ThorChain, NODE_ADDRESS, RUNE_ADDRESS)
+        } returns
+            listOf(
+                churnReward(BigInteger("2200000000"), date = SEP_20_NOON_UTC),
+                churnReward(BigInteger("2000000000"), date = SEP_17_NOON_UTC),
+            )
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onClickLastReward(NODE_ADDRESS)
+
+        val sheet = vm.state.value.rewardHistory
+        requireNotNull(sheet)
+        assertFalse(sheet.isLoading)
+        assertFalse(sheet.isError)
+        assertEquals(NODE_ADDRESS, sheet.nodeAddress)
+        assertEquals(vm.state.value.bonded.nodes.single().nextAward, sheet.upcoming)
+        assertEquals("42.0000 RUNE", sheet.totalEarned)
+        assertEquals(
+            listOf(
+                BondRewardRowUiModel(amount = "22.0000 RUNE", date = "Sep 20, 2026"),
+                BondRewardRowUiModel(amount = "20.0000 RUNE", date = "Sep 17, 2026"),
+            ),
+            sheet.rows,
+        )
+    }
+
+    @Test
+    fun `a failed history reading flags the sheet instead of closing it`() = runTest {
+        selectPositions("RUNE")
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+            flowOf(listOf(bondedNode(BigInteger("1000000000"))))
+        coEvery { bondRewardHistoryUseCase.getRewardHistory(any(), any(), any()) } throws
+            IllegalStateException("archive node unavailable")
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onClickLastReward(NODE_ADDRESS)
+
+        val sheet = requireNotNull(vm.state.value.rewardHistory)
+        assertTrue(sheet.isError)
+        assertNull(sheet.totalEarned)
+        assertTrue(sheet.rows.isEmpty())
+    }
+
+    @Test
+    fun `dismissing the history sheet closes it`() = runTest {
+        selectPositions("RUNE")
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+            flowOf(listOf(bondedNode(BigInteger("1000000000"))))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.onClickLastReward(NODE_ADDRESS)
+
+        vm.onDismissRewardHistory()
+
+        assertNull(vm.state.value.rewardHistory)
+    }
+
+    private fun churnReward(amount: BigInteger, date: Date = Date(0)) =
+        BondChurnReward(churnHeight = 1L, date = date, amount = amount)
+
     private fun selectPositions(vararg keys: String) {
         coEvery { defiPositionsRepository.getSelectedPositions(Chain.ThorChain, VAULT_ID) } returns
             flowOf(keys.toSet())
@@ -1609,6 +1765,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             getThorChainLpPositionsUseCase = getThorChainLpPositionsUseCase,
             getThorChainPendingLpDepositsUseCase = getThorChainPendingLpDepositsUseCase,
             snapshotCache = snapshotCache,
+            bondRewardsLoader = BondRewardsLoader(bondRewardHistoryUseCase),
             ioDispatcher = testDispatcher,
         )
 
@@ -1628,6 +1785,10 @@ internal class ThorchainDefiPositionsViewModelTest {
         const val RUNE_ADDRESS = "thor1runeaddress"
         const val RUJI_ADDRESS = "thor1rujiaddress"
         const val NODE_ADDRESS = "thor1nodeaddress"
+
+        // Noon UTC, formatted under the UTC default zone pinned in setUp.
+        val SEP_20_NOON_UTC = Date(1_789_905_600_000L)
+        val SEP_17_NOON_UTC = Date(1_789_646_400_000L)
         const val BTC_POOL = "BTC.BTC"
         const val ETH_POOL = "ETH.ETH"
 

@@ -30,10 +30,10 @@ import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
-import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
+import com.vultisig.wallet.ui.models.token.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -46,6 +46,7 @@ import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -74,7 +75,7 @@ internal sealed class KeysignFlowState {
 
 @Immutable
 data class KeysignFlowUiState(
-    val vault: Vault = Vault(id = "", name = ""),
+    val vault: Vault? = null,
     val amount: String = "",
     val toAmount: String = "",
     val toAddress: String = "",
@@ -285,7 +286,11 @@ constructor(
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             moveToState(
-                Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
+                Error(
+                    e.nearErrorTextOrNull()
+                        ?: e.message?.asUiText()
+                        ?: UiText.StringResource(R.string.unknown_error)
+                )
             )
         }
     }

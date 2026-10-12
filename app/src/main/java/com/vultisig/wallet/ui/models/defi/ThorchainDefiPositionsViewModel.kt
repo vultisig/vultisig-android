@@ -69,6 +69,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -98,6 +99,8 @@ internal data class ThorchainDefiPositionsUiModel(
     val lp: LpTabUiModel = LpTabUiModel(),
     val isTotalAmountLoading: Boolean = true,
     val isBalanceVisible: Boolean = true,
+    // Total Rewards Earned sheet for one bonded node, open while non-null
+    val rewardHistory: BondRewardHistoryUiModel? = null,
 
     // position selection dialog
     val showPositionSelectionDialog: Boolean = false,
@@ -141,6 +144,7 @@ constructor(
     private val getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase,
     private val getThorChainPendingLpDepositsUseCase: GetThorChainPendingLpDepositsUseCase,
     private val snapshotCache: DeFiPositionsSnapshotCache,
+    private val bondRewardsLoader: BondRewardsLoader,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -171,17 +175,22 @@ constructor(
     val totalValueLpFiat: StateFlow<LpLegTotal?>
         field = MutableStateFlow<LpLegTotal?>(null)
 
-    // Cached "available" pool list shared by the Manage-Positions dialog and the LP tab loader so
-    // cold start makes a single getPoolStats call instead of two. `null` means "not loaded yet"
-    // (or "previous fetch failed and should be retried"); `emptyList()` would mean "loaded, none
-    // available", but Midgard never returns that in practice.
-    private val availablePools = MutableStateFlow<List<ThorChainPoolStatsJson>?>(null)
+    // Cached list of pools that take liquidity (Available + Staged), shared by the Manage-Positions
+    // dialog and the LP tab loader so cold start makes a single getPoolStats call instead of two.
+    // `null` means "not loaded yet" (or "previous fetch failed and should be retried");
+    // `emptyList()` would mean "loaded, none open", but Midgard never returns that in practice.
+    private val lpPools = MutableStateFlow<List<ThorChainPoolStatsJson>?>(null)
 
     private var currencyJob: Job? = null
     private var lpDialogJob: Job? = null
     private var loadLpJob: Job? = null
     private var loadPendingLpJob: Job? = null
     private var loadBondedNodesJob: Job? = null
+    private var rewardHistoryJob: Job? = null
+
+    // The vault's RUNE address the bonded list was last loaded for; reward readings are this
+    // address's share of each node.
+    private var bondAddress: String? = null
     private var loadStakingPositionsJob: Job? = null
 
     // A caller-supplied tab is applied once and then forgotten: the screen leaves and re-enters
@@ -224,6 +233,7 @@ constructor(
             cached.copy(
                 showPositionSelectionDialog = false,
                 tempSelectedPositions = cached.selectedPositions,
+                rewardHistory = null,
             )
     }
 
@@ -239,9 +249,9 @@ constructor(
             try {
                 val pools =
                     withContext(ioDispatcher) {
-                        getThorChainLpPositionsUseCase.fetchAvailablePools()
+                        getThorChainLpPositionsUseCase.fetchLpPools()
                     }
-                availablePools.value = pools
+                lpPools.value = pools
                 val dialogPositions =
                     pools
                         .map { pool -> pool.asset.toLpPositionDialogModel() }
@@ -254,7 +264,7 @@ constructor(
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load THORChain LP pools for dialog")
-                // Leave availablePools null so the next user interaction (e.g. opening Manage
+                // Leave lpPools null so the next user interaction (e.g. opening Manage
                 // Positions or saving a selection) retries instead of soft-locking.
                 // lpDialogLoaded means "settled", not "succeeded": leaving it false parks the tab
                 // in a spinner that nothing can ever clear, while any pending half-deposit still
@@ -269,7 +279,7 @@ constructor(
         }
 
     private fun ensureAvailablePoolsLoaded() {
-        if (availablePools.value != null) return
+        if (lpPools.value != null) return
         if (lpDialogJob?.isActive == true) return
         lpDialogJob = loadLpPositionsForDialog()
     }
@@ -759,6 +769,7 @@ constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadBondedNodes() {
         loadedTabs.add(DeFiTab.BONDED.displayNameRes)
+        bondRewardsLoader.forgetLastRewards()
 
         // Cancel any in-flight collector before starting a new one. getActiveNodes never
         // completes, so without this each refresh would stack another collector that writes
@@ -802,6 +813,7 @@ constructor(
                     }
 
                     val address = runeCoin.address
+                    bondAddress = address
 
                     bondedNodesRefreshTrigger
                         .flatMapLatest {
@@ -833,7 +845,21 @@ constructor(
                         }
                         .collect { activeNodes ->
                             // Format UI data and show
-                            val nodeUiModels = activeNodes.map { it.toUiModel() }
+                            val shownNodes = state.value.bonded.nodes
+                            val nodeUiModels =
+                                activeNodes.map { position ->
+                                    val nodeAddress = position.node.address
+                                    position
+                                        .toUiModel()
+                                        .copy(
+                                            lastReward =
+                                                bondRewardsLoader.knownLastReward(nodeAddress)
+                                                    ?: shownNodes
+                                                        .find { it.fullAddress == nodeAddress }
+                                                        ?.lastReward
+                                                    ?: LastRewardUiModel.Loading
+                                        )
+                                }
                             val totalBonded = calculateTotalBonded(activeNodes)
 
                             val totalBondedRaw =
@@ -854,6 +880,8 @@ constructor(
                             }
 
                             totalValueBond.update { totalBondedRaw }
+
+                            loadLastRewards(activeNodes.map { it.node.address }, address)
                         }
                 } catch (t: Throwable) {
                     if (t is kotlinx.coroutines.CancellationException) throw t
@@ -867,6 +895,50 @@ constructor(
                     totalValueBond.update { BigInteger.ZERO }
                 }
             }
+    }
+
+    /** Runs as children of the bonded load, so the refresh that replaces it cancels them too. */
+    private suspend fun loadLastRewards(nodeAddresses: List<String>, bondAddress: String) {
+        val bondedLoad = CoroutineScope(currentCoroutineContext())
+        for (nodeAddress in bondRewardsLoader.claimLastRewardLoads(nodeAddresses)) {
+            bondedLoad.launch {
+                val reward =
+                    bondRewardsLoader.loadLastReward(Chain.ThorChain, nodeAddress, bondAddress)
+                state.update {
+                    it.copy(
+                        bonded =
+                            it.bonded.copy(
+                                nodes = it.bonded.nodes.withLastReward(nodeAddress, reward)
+                            )
+                    )
+                }
+            }
+        }
+    }
+
+    fun onClickLastReward(nodeAddress: String) {
+        val bondAddress = bondAddress ?: return
+        val node = state.value.bonded.nodes.find { it.fullAddress == nodeAddress } ?: return
+        val sheet = BondRewardHistoryUiModel(nodeAddress = nodeAddress, upcoming = node.nextAward)
+        state.update { it.copy(rewardHistory = sheet) }
+        rewardHistoryJob?.cancel()
+        rewardHistoryJob =
+            viewModelScope.launch {
+                val loaded = bondRewardsLoader.loadHistory(Chain.ThorChain, sheet, bondAddress)
+                // A sheet closed, or reopened on another node, while this ran is left alone.
+                state.update {
+                    if (it.rewardHistory?.nodeAddress == nodeAddress) {
+                        it.copy(rewardHistory = loaded)
+                    } else {
+                        it
+                    }
+                }
+            }
+    }
+
+    fun onDismissRewardHistory() {
+        rewardHistoryJob?.cancel()
+        state.update { it.copy(rewardHistory = null) }
     }
 
     private fun calculateTotalBonded(nodes: List<BondedNodePosition>): String {
@@ -1294,7 +1366,7 @@ constructor(
 
     private fun reloadLpTab() {
         val selectedKeys = state.value.selectedPositions.toSet()
-        val pools = availablePools.value
+        val pools = lpPools.value
         // Dialog dataset hasn't loaded yet (or last fetch failed). Don't run with stale state —
         // loadLpPositionsForDialog calls reloadLpTab again once it succeeds.
         if (pools == null) {
@@ -1393,7 +1465,7 @@ constructor(
                             getThorChainLpPositionsUseCase(
                                 runeAddress = runeCoin.address,
                                 assetAddressesByPool = assetAddressesByPool,
-                                availablePools = pools,
+                                lpPools = pools,
                             )
                         }
                     val positionsByPool = lpPositions.positions.associateBy { it.pool }

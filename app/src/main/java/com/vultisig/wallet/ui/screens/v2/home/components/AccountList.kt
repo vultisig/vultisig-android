@@ -10,8 +10,9 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
-import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.vault.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsClipboardService
 
 @Composable
 internal fun AccountList(
@@ -25,7 +26,7 @@ internal fun AccountList(
         accounts.forEachIndexed { index, account ->
             key(account.chainName) {
                 val addressCopiedMessage =
-                    stringResource(R.string.address_copied, account.chainName)
+                    stringResource(R.string.address_copied, account.displayName)
                 Column {
                     AccountItem(
                         modifier = Modifier.Companion.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -33,7 +34,10 @@ internal fun AccountList(
                         isBalanceVisible = isBalanceVisible,
                         showAddress = showAddress,
                         onClick = { onAccountClick(account) },
-                        onCopy = { snackbarState.show(addressCopiedMessage) },
+                        onCopy = {
+                            if (VsClipboardService.needsCopyConfirmation())
+                                snackbarState.show(addressCopiedMessage)
+                        },
                     )
 
                     if (index != accounts.lastIndex) {

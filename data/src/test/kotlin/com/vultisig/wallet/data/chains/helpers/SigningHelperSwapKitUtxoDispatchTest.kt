@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigDecimal
 import java.math.BigInteger
+import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -23,10 +24,21 @@ import org.junit.jupiter.api.Test
  * Every case below feeds an empty PSBT payload: each per-chain signer validates payload emptiness
  * in pure JVM before touching the WalletCore JNI, so asserting the exact exception type thrown is
  * enough to prove which signer was actually dispatched to, without needing the native library.
+ * Pre-signing refusals arrive wrapped in [SwapKitPsbtRejectedException], so those cases assert its
+ * cause.
  */
 class SigningHelperSwapKitUtxoDispatchTest {
 
     private val vault = Vault(id = "v1", name = "Test Vault")
+
+    private inline fun <reified T : Exception> assertRejectedBy(
+        crossinline block: () -> Unit
+    ): SwapKitPsbtRejectedException {
+        val e = assertThrows(SwapKitPsbtRejectedException::class.java) { block() }
+        assertInstanceOf(T::class.java, e.cause)
+        assertTrue(e.message!!.startsWith(SWAPKIT_PSBT_REJECTED_PREFIX))
+        return e
+    }
 
     private fun swapKitKeysignPayload(chain: Chain, txType: String) =
         KeysignPayload(
@@ -56,7 +68,7 @@ class SigningHelperSwapKitUtxoDispatchTest {
     @Test
     fun `Zcash source with the documented generic PSBT txType dispatches to the Zcash signer`() {
         val e =
-            assertThrows(SwapKitZcashSignerException::class.java) {
+            assertRejectedBy<SwapKitZcashSignerException> {
                 SigningHelper.getKeysignMessages(
                     swapKitKeysignPayload(Chain.Zcash, SwapKitSwapPayloadJson.TX_TYPE_PSBT),
                     vault,
@@ -68,14 +80,14 @@ class SigningHelperSwapKitUtxoDispatchTest {
     @Test
     fun `Zcash source with a blank txType still dispatches to the Zcash signer`() {
         // Mirrors a peer's SDK omitting `meta.txType` for the non-Bitcoin PSBT variants.
-        assertThrows(SwapKitZcashSignerException::class.java) {
+        assertRejectedBy<SwapKitZcashSignerException> {
             SigningHelper.getKeysignMessages(swapKitKeysignPayload(Chain.Zcash, ""), vault)
         }
     }
 
     @Test
     fun `BitcoinCash source with the generic PSBT txType dispatches to the legacy P2PKH signer`() {
-        assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+        assertRejectedBy<SwapKitLegacyP2PKHSignerException> {
             SigningHelper.getKeysignMessages(
                 swapKitKeysignPayload(Chain.BitcoinCash, SwapKitSwapPayloadJson.TX_TYPE_PSBT),
                 vault,
@@ -85,7 +97,7 @@ class SigningHelperSwapKitUtxoDispatchTest {
 
     @Test
     fun `Dogecoin source with a blank txType dispatches to the legacy P2PKH signer`() {
-        assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+        assertRejectedBy<SwapKitLegacyP2PKHSignerException> {
             SigningHelper.getKeysignMessages(swapKitKeysignPayload(Chain.Dogecoin, ""), vault)
         }
     }
@@ -93,7 +105,7 @@ class SigningHelperSwapKitUtxoDispatchTest {
     @Test
     fun `Dash source with the legacy PSBT_DASH txType still dispatches to the legacy P2PKH signer`() {
         // Backward compatibility: Android/iOS-initiated swaps still stamp this literal.
-        assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+        assertRejectedBy<SwapKitLegacyP2PKHSignerException> {
             SigningHelper.getKeysignMessages(
                 swapKitKeysignPayload(Chain.Dash, SwapKitSwapPayloadJson.TX_TYPE_PSBT_DASH),
                 vault,
@@ -151,7 +163,7 @@ class SigningHelperSwapKitUtxoDispatchTest {
         // SwapKit's own casing isn't trusted on the quote-decoding side either
         // (SwapKitQuoteSource normalizes response.meta.type to lowercase before matching) — the
         // join-side check must not be stricter about a field it doesn't control.
-        assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+        assertRejectedBy<SwapKitLegacyP2PKHSignerException> {
             SigningHelper.getKeysignMessages(swapKitKeysignPayload(Chain.Dogecoin, "psbt"), vault)
         }
     }

@@ -20,9 +20,9 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
-import com.vultisig.wallet.ui.models.NetworkUiModel
-import com.vultisig.wallet.ui.models.evmNetworkUiModel
-import com.vultisig.wallet.ui.models.toNetworkUiModel
+import com.vultisig.wallet.ui.models.vault.NetworkUiModel
+import com.vultisig.wallet.ui.models.vault.evmNetworkUiModel
+import com.vultisig.wallet.ui.models.vault.toNetworkUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -46,7 +46,7 @@ internal data class AddAddressEntryUiModel(
     @param:StringRes val titleRes: Int = R.string.add_address_title,
     val selectedChain: NetworkUiModel = evmNetworkUiModel,
     val chains: List<NetworkUiModel> =
-        Chain.entries.map { NetworkUiModel(chain = it, logo = it.logo, title = it.raw) },
+        Chain.entries.map { NetworkUiModel(chain = it, logo = it.logo, title = it.displayName) },
     val addressError: UiText? = null,
     val titleError: UiText? = null,
 )

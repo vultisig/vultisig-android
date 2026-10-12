@@ -225,6 +225,57 @@ internal class KeyImportChainsSetupViewModelTest {
         }
 
     @Test
+    fun `chain funded on both derivation paths appears once in activeChains`() =
+        runTest(mainDispatcher) {
+            setUpMnemonicAndScanResults(
+                results =
+                    listOf(
+                        ChainBalanceResult(
+                            chain = Chain.Ethereum,
+                            derivationPath = DerivationPath.Default,
+                            address = "0xaddr",
+                            hasBalance = true,
+                        ),
+                        ChainBalanceResult(
+                            chain = Chain.Solana,
+                            derivationPath = DerivationPath.Default,
+                            address = "default_addr",
+                            hasBalance = true,
+                        ),
+                        ChainBalanceResult(
+                            chain = Chain.Solana,
+                            derivationPath = DerivationPath.Phantom,
+                            address = "phantom_addr",
+                            hasBalance = true,
+                        ),
+                    )
+            )
+
+            val vm = createViewModelAndAwaitScan()
+            advanceUntilIdle()
+
+            val state = vm.state.value
+            assertEquals(ChainsSetupState.ActiveChains, state.screenState)
+            assertEquals(listOf(Chain.Ethereum, Chain.Solana), state.activeChains.map { it.chain })
+            assertEquals(2, state.selectedCount)
+            val activeSolana = state.activeChains.single { it.chain == Chain.Solana }
+            val allSolana = state.allChains.single { it.chain == Chain.Solana }
+            assertEquals(DerivationPath.Default, activeSolana.derivationPath)
+            assertEquals(activeSolana.derivationPath, allSolana.derivationPath)
+
+            vm.continueWithSelection()
+
+            verify {
+                keyImportRepository.setChainSettings(
+                    listOf(
+                        ChainImportSetting(Chain.Ethereum, DerivationPath.Default),
+                        ChainImportSetting(Chain.Solana, DerivationPath.Default),
+                    )
+                )
+            }
+        }
+
+    @Test
     fun `all supported chains are present in allChains after scan`() =
         runTest(mainDispatcher) {
             setUpMnemonicAndScanResults()

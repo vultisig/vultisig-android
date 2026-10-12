@@ -54,6 +54,7 @@ import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import com.vultisig.wallet.ui.models.swap.swapFeeRow
+import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -291,9 +292,13 @@ constructor(
                 // instead of the gas placeholder the else-branch above computes for `value`
                 // (#5358, #5329).
                 val isOneInchIncludedInRate = provider == SwapProvider.ONEINCH.getSwapProviderId()
-                val swapFeeForTotal =
-                    if (isOneInchIncludedInRate) networkGasFeeFiatValue
-                    else estimatedFee + networkGasFeeFiatValue
+                val swapFeeExcludingNetwork =
+                    if (isOneInchIncludedInRate) {
+                        networkGasFeeFiatValue.copy(value = BigDecimal.ZERO)
+                    } else {
+                        estimatedFee
+                    }
+                val swapFeeForTotal = swapFeeExcludingNetwork + networkGasFeeFiatValue
 
                 val feeRow =
                     evmProvider?.let {
@@ -351,12 +356,13 @@ constructor(
                                 " ${estimatedNetworkGasFee.tokenValue.unit}",
                         isNetworkFeeMax = srcToken.chain.hasSwapNetworkFeeCeiling,
                         totalFee = fiatValueToStringMapper(swapFeeForTotal, asFee = true),
+                        totalFeeExcludingNetwork = swapFeeExcludingNetwork,
                         provider = provider,
                         swapFeeIncludedInRate = isOneInchIncludedInRate,
                         swapFeePercent = feeRow.percent,
-                        // Rows follow the fee: shown only when it was grossed to the list rate, so
-                        // subtracting them lands back on the net fee the total is built from.
-                        vultBpsDiscount = vultBps?.takeIf { feeRow.isListRate },
+                        // Shown exactly when [swapFeeRow] priced a row, so the co-signer itemizes
+                        // the same discount the initiator does.
+                        vultBpsDiscount = vultBps?.takeIf { feeRow.vultDiscount != null },
                         vultBpsDiscountFiatValue =
                             feeRow.vultDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
                     )
@@ -577,6 +583,8 @@ constructor(
                 // initiator's `vultBPSDiscount`, so approximate parity holds. Skipped entirely
                 // when the row is hidden (UTXO): the fetched fee would be neither displayed nor
                 // added to the total, so the round-trip is waste (#5358 review).
+                val swapKitVultBps =
+                    getDiscountBps(vault.id, SwapProvider.SWAPKIT).takeIf { it > 0 }
                 val swapKitProviderFeeToken =
                     (payloadFee as? SwapKitPayloadFee.Stated)?.coin ?: srcToken
                 val swapKitProviderFee =
@@ -616,6 +624,8 @@ constructor(
                         currency = currency,
                         providerLabel = providerLabel,
                         swapFeeHidden = swapFeeHidden,
+                        feeProvider = SwapProvider.SWAPKIT,
+                        vultBps = swapKitVultBps,
                     )
                 JoinKeysignVerifyResult(
                     verifyUiModel =
@@ -658,8 +668,9 @@ constructor(
         // the Target Price / expiry row (#4154).
         limitOrderLabels: LimitOrderLabels? = null,
         // The provider whose affiliate rate titles the Swap Fee row, and the vault's tier in bps.
-        // Both null for a branch with no affiliate charge to label (an LP add, a SwapKit inbound
-        // cost), which leaves the row exactly as it was: the charged fee, claiming no rate.
+        // Both null for a branch with no affiliate charge to label (an LP add), which leaves the
+        // row exactly as it was: the charged fee, claiming no rate. SwapKit passes both so its
+        // VULT row is itemized, while [swapFeeRow] keeps its inbound cost ungrossed and unrated.
         feeProvider: SwapProvider? = null,
         vultBps: Int? = null,
         // Price impact read off the wire, never re-quoted: pools move between initiating and
@@ -697,6 +708,12 @@ constructor(
             } else {
                 estimatedFee
             }
+        val totalFeeExcludingNetwork =
+            if (swapFeeHidden) {
+                estimatedNetworkGasFee.fiatValue.copy(value = BigDecimal.ZERO)
+            } else {
+                feesFiatForTotal
+            }
         return SwapTransactionUiModel(
             src =
                 ValuedToken(
@@ -733,18 +750,18 @@ constructor(
             isNetworkFeeMax = srcToken.chain.hasSwapNetworkFeeCeiling,
             totalFee =
                 fiatValueToStringMapper(
-                    if (swapFeeHidden) estimatedNetworkGasFee.fiatValue
-                    else feesFiatForTotal + estimatedNetworkGasFee.fiatValue,
+                    totalFeeExcludingNetwork + estimatedNetworkGasFee.fiatValue,
                     asFee = true,
                 ),
+            totalFeeExcludingNetwork = totalFeeExcludingNetwork,
             provider = provider,
             providerLabel = providerLabel,
             externalRecipient = externalRecipient,
             swapFeeHidden = swapFeeHidden,
             swapFeePercent = feeRow.percent,
-            // Rows follow the fee: shown only when it was grossed to the list rate, so subtracting
-            // them lands back on the net fee the total is built from.
-            vultBpsDiscount = vultBps?.takeIf { feeRow.isListRate },
+            // Shown exactly when [swapFeeRow] priced a row, so the co-signer itemizes the same
+            // discount the initiator does.
+            vultBpsDiscount = vultBps?.takeIf { feeRow.vultDiscount != null },
             vultBpsDiscountFiatValue =
                 feeRow.vultDiscount?.let { fiatValueToStringMapper(it, asFee = true) },
             minPayout = minPayout?.let { mapTokenValueToDecimalUiString(it) },

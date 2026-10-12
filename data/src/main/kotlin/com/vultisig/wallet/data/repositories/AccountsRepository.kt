@@ -748,6 +748,12 @@ constructor(
         )
 
     /**
+     * The position-only receipts that carry their own price. Kamino's kTokens are deliberately
+     * absent: their vaults are priced from the position read, not from a token price.
+     */
+    private val POSITION_ONLY_RECEIPTS = listOf(Coins.ThorChain.sTCY, Coins.Ton.TSTON)
+
+    /**
      * Tokens this chain's DeFi positions are denominated in that the vault does not carry as a
      * wallet coin, stamped with the address and public key the chain's own tokens share.
      *
@@ -768,6 +774,10 @@ constructor(
             when (chain) {
                 Chain.Solana -> KaminoVaultRegistry.ALLOW_LIST.mapNotNull { it.coin }
                 Chain.ThorChain -> listOf(Coins.ThorChain.sTCY)
+                // tsTON is the Tonstakers liquid-staking receipt: holding it IS the position, so
+                // it counts on the DeFi row even for a vault that does not track it as a wallet
+                // token. A vault that does track it already carries it and is not injected twice.
+                Chain.Ton -> listOf(Coins.Ton.TSTON)
                 else -> emptyList()
             }
 
@@ -853,7 +863,7 @@ constructor(
 
     private fun injectedReceiptsFor(vaultCoins: List<Coin>): List<Coin> =
         defiOnlyReceiptsFor(vaultCoins) +
-            listOf(Coins.ThorChain.sTCY).filter { receipt ->
+            POSITION_ONLY_RECEIPTS.filter { receipt ->
                 vaultCoins.any { it.chain == receipt.chain } &&
                     vaultCoins.none { it.id.equals(receipt.id, ignoreCase = true) }
             }

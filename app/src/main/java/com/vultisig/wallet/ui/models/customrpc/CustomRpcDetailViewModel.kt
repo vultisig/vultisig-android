@@ -61,7 +61,7 @@ constructor(
         field =
             MutableStateFlow(
                 CustomRpcDetailUiState(
-                    chainName = chain.raw,
+                    chainName = chain.displayName,
                     defaultEndpoint = CustomRpcDefaultEndpoint.string(chain),
                 )
             )

@@ -10,7 +10,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
-import com.vultisig.wallet.ui.models.BackupPasswordViewModel
+import com.vultisig.wallet.ui.models.auth.BackupPasswordViewModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordUiModel
 import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordScreen
 import com.vultisig.wallet.ui.utils.RequestWriteFilePermissionOnceIfNotGranted

@@ -6,7 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalView
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
+import com.vultisig.wallet.ui.models.keysign.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel

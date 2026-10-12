@@ -69,9 +69,12 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                         payload.data.fromCoin.chain == Chain.Solana
                 ) {
                     "https://orb.helius.dev/tx/${tx}"
-                } else if (payload.data.provider == SwapProvider.KYBER.getSwapProviderId()) {
-                    // KyberSwap isn't indexed by LI.FI's scanner; use the source chain's own
-                    // explorer instead.
+                } else if (
+                    payload.data.provider == SwapProvider.KYBER.getSwapProviderId() ||
+                        payload.data.provider == SwapProvider.ONEINCH.getSwapProviderId()
+                ) {
+                    // KyberSwap and 1inch aren't indexed by LI.FI's scanner; use the source
+                    // chain's own explorer instead.
                     getTransactionLink(payload.data.fromCoin.chain, tx)
                 } else "https://scan.li.fi/tx/${tx}"
             }
@@ -103,6 +106,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
                 Chain.Polkadot -> "https://assethub-polkadot.subscan.io/extrinsic/"
                 Chain.Bittensor -> "https://taostats.io/extrinsic/"
+                Chain.Near -> "${explorerUrl}txns/"
 
                 else -> "${explorerUrl}tx/"
             }
@@ -174,6 +178,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.ThorChain -> "https://runescan.io/"
                 Chain.Polkadot -> "https://assethub-polkadot.subscan.io/"
                 Chain.Bittensor -> "https://taostats.io/"
+                Chain.Near -> "https://nearblocks.io/"
                 Chain.ZkSync -> "https://explorer.zksync.io/"
                 Chain.Sui -> "https://suiscan.xyz/mainnet/"
                 Chain.Ton -> "https://tonviewer.com/"

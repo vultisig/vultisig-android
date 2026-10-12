@@ -7,7 +7,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.models.AddressProvider
+import com.vultisig.wallet.ui.models.token.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator

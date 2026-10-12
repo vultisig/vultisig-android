@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.tss.getSignature
+import java.math.BigInteger
 import org.bouncycastle.crypto.digests.Blake2bDigest
 import tss.KeysignResponse
 import wallet.core.jni.PublicKey
@@ -48,8 +49,11 @@ internal class SwapKitCardanoSigner(private val vaultHexPublicKey: String) {
      * Cardano transaction signs one hash regardless of input count; hex-encoded to match the
      * keysign message-hash convention.
      */
-    fun getPreSignedImageHash(cborBytes: ByteArray): List<String> =
-        listOf(digest(cborBytes).toHexString())
+    fun getPreSignedImageHash(cborBytes: ByteArray, fromAmount: BigInteger): List<String> {
+        val parsed = parseEnvelope(cborBytes)
+        verifyBody(parsed.body, fromAmount)
+        return listOf(blake2b256(parsed.body).toHexString())
+    }
 
     /**
      * Assemble the signed broadcast envelope: keep items 0/2/3 verbatim and replace item 1
@@ -59,12 +63,14 @@ internal class SwapKitCardanoSigner(private val vaultHexPublicKey: String) {
      */
     fun getSignedTransaction(
         cborBytes: ByteArray,
+        fromAmount: BigInteger,
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val pubKeyData = vaultHexPublicKey.hexToByteArray()
         val publicKey = PublicKey(pubKeyData, PublicKeyType.ED25519)
 
         val parsed = parseEnvelope(cborBytes)
+        verifyBody(parsed.body, fromAmount)
         val digest = blake2b256(parsed.body)
         val key = digest.toHexString()
         val signature =
@@ -166,6 +172,212 @@ internal class SwapKitCardanoSigner(private val vaultHexPublicKey: String) {
     }
 
     /**
+     * Decodes the transaction body before signing it. Neither device's Verify screen reads the
+     * body, so it must be one the displayed quote implies: a plain payment spending the vault's
+     * UTXOs, where every output pays back to the vault except a single ADA-only deposit of at most
+     * [fromAmount], and the fee is bounded. Fields a plain payment never carries (certificates,
+     * withdrawals, minting, collateral, required signers, governance) are refused. The deposit
+     * address itself isn't pinned: SwapKit's on-chain deposit address differs from its declared
+     * `targetAddress`.
+     */
+    internal fun verifyBody(body: ByteArray, fromAmount: BigInteger) {
+        val vaultAddress = vaultEnterpriseAddress()
+        val reader = CborReader(body)
+        var outputsSeen = false
+        var fee: Long? = null
+        repeat(reader.readMapSize()) {
+            when (val key = reader.readUInt()) {
+                BODY_OUTPUTS -> {
+                    verifyOutputs(reader, vaultAddress, fromAmount)
+                    outputsSeen = true
+                }
+                BODY_FEE -> fee = reader.readUInt()
+                in PASSIVE_BODY_KEYS -> reader.skip()
+                else ->
+                    throw SwapKitCardanoSignerException(
+                        "SwapKit Cardano body carries field $key, which a plain payment never " +
+                            "uses; refusing to sign"
+                    )
+            }
+        }
+        reader.requireEnd()
+        if (!outputsSeen) throw SwapKitCardanoSignerException("SwapKit Cardano body has no outputs")
+        val signedFee =
+            fee ?: throw SwapKitCardanoSignerException("SwapKit Cardano body has no fee")
+        if (signedFee > MAX_FEE_LOVELACE) {
+            throw SwapKitCardanoSignerException(
+                "SwapKit Cardano fee $signedFee lovelace exceeds the $MAX_FEE_LOVELACE ceiling"
+            )
+        }
+    }
+
+    private fun verifyOutputs(reader: CborReader, vaultAddress: ByteArray, fromAmount: BigInteger) {
+        var deposits = 0
+        repeat(reader.readArraySize()) { index ->
+            val output = readOutput(reader)
+            if (output.address.contentEquals(vaultAddress)) return@repeat
+            deposits++
+            if (deposits > 1) {
+                throw SwapKitCardanoSignerException(
+                    "SwapKit Cardano body pays more than one output outside the vault"
+                )
+            }
+            if (output.hasAssets || output.hasExtras) {
+                throw SwapKitCardanoSignerException(
+                    "SwapKit Cardano deposit output #$index must carry plain ADA only"
+                )
+            }
+            if (BigInteger.valueOf(output.lovelace) > fromAmount) {
+                throw SwapKitCardanoSignerException(
+                    "SwapKit Cardano deposit ${output.lovelace} exceeds the quoted swap amount " +
+                        "$fromAmount; refusing to sign"
+                )
+            }
+        }
+    }
+
+    /** Legacy `[address, value, datum_hash?]` or post-Alonzo `{0: address, 1: value, …}`. */
+    private fun readOutput(reader: CborReader): Output {
+        var address: ByteArray? = null
+        var value: Pair<Long, Boolean>? = null
+        var hasExtras = false
+        when (reader.peekMajorType()) {
+            MAJOR_ARRAY -> {
+                val size = reader.readArraySize()
+                if (size < 2) throw SwapKitCardanoSignerException("Cardano output is truncated")
+                address = reader.readBytes()
+                value = readValue(reader)
+                repeat(size - 2) {
+                    hasExtras = true
+                    reader.skip()
+                }
+            }
+            MAJOR_MAP ->
+                repeat(reader.readMapSize()) {
+                    when (reader.readUInt()) {
+                        OUTPUT_ADDRESS -> address = reader.readBytes()
+                        OUTPUT_VALUE -> value = readValue(reader)
+                        else -> {
+                            hasExtras = true
+                            reader.skip()
+                        }
+                    }
+                }
+            else -> throw SwapKitCardanoSignerException("Cardano output is not an array or map")
+        }
+        val (lovelace, hasAssets) =
+            value ?: throw SwapKitCardanoSignerException("Cardano output has no value")
+        return Output(
+            address = address ?: throw SwapKitCardanoSignerException("Cardano output has no address"),
+            lovelace = lovelace,
+            hasAssets = hasAssets,
+            hasExtras = hasExtras,
+        )
+    }
+
+    /** `coin` or `[coin, multiasset]`; returns lovelace and whether native tokens are attached. */
+    private fun readValue(reader: CborReader): Pair<Long, Boolean> {
+        if (reader.peekMajorType() == MAJOR_UINT) return reader.readUInt() to false
+        if (reader.readArraySize() != 2) {
+            throw SwapKitCardanoSignerException("Cardano output value is malformed")
+        }
+        val lovelace = reader.readUInt()
+        reader.skip()
+        return lovelace to true
+    }
+
+    /** `0x61 ‖ blake2b-224(vkey)`, the mainnet enterprise address Vultisig derives for Cardano. */
+    private fun vaultEnterpriseAddress(): ByteArray {
+        val publicKey = vaultHexPublicKey.hexToByteArray()
+        if (publicKey.size != PUBLIC_KEY_LENGTH) {
+            throw SwapKitCardanoSignerException("Cardano vault key must be $PUBLIC_KEY_LENGTH bytes")
+        }
+        val blake = Blake2bDigest(224)
+        blake.update(publicKey, 0, publicKey.size)
+        val keyHash = ByteArray(blake.digestSize).also { blake.doFinal(it, 0) }
+        return byteArrayOf(ENTERPRISE_MAINNET_HEADER) + keyHash
+    }
+
+    private class Output(
+        val address: ByteArray,
+        val lovelace: Long,
+        val hasAssets: Boolean,
+        val hasExtras: Boolean,
+    )
+
+    /** Sequential reader over a definite-length CBOR item; tag 258 (set) wraps arrays in Conway. */
+    private inner class CborReader(private val data: ByteArray) {
+        private var offset = 0
+
+        fun peekMajorType(): Int {
+            skipSetTag()
+            if (offset >= data.size) throw SwapKitCardanoSignerException("CBOR truncated")
+            return (data[offset].toInt() and 0xFF) shr 5
+        }
+
+        fun readUInt(): Long = readHead(MAJOR_UINT)
+
+        fun readBytes(): ByteArray {
+            val length = readCount(MAJOR_BYTES)
+            if (length > data.size - offset) throw SwapKitCardanoSignerException("CBOR truncated")
+            return data.copyOfRange(offset, offset + length).also { offset += length }
+        }
+
+        fun readArraySize(): Int = readCount(MAJOR_ARRAY)
+
+        fun readMapSize(): Int = readCount(MAJOR_MAP)
+
+        // Every counted element takes at least one byte, so a count beyond the buffer is truncation.
+        private fun readCount(expectedMajorType: Int): Int {
+            val count = readHead(expectedMajorType)
+            if (count > data.size) throw SwapKitCardanoSignerException("CBOR truncated")
+            return count.toInt()
+        }
+
+        fun skip() {
+            offset += cborItemLength(data, offset)
+        }
+
+        fun requireEnd() {
+            if (offset != data.size) {
+                throw SwapKitCardanoSignerException("SwapKit Cardano body has trailing bytes")
+            }
+        }
+
+        private fun skipSetTag() {
+            if (offset + 2 < data.size && data[offset] == SET_TAG_HEAD && data[offset + 1] == 0x01.toByte() &&
+                data[offset + 2] == 0x02.toByte()
+            ) {
+                offset += 3
+            }
+        }
+
+        private fun readHead(expectedMajorType: Int): Long {
+            val majorType = peekMajorType()
+            if (majorType != expectedMajorType) {
+                throw SwapKitCardanoSignerException(
+                    "expected CBOR major type $expectedMajorType, got $majorType"
+                )
+            }
+            val additionalInfo = data[offset].toInt() and 0x1F
+            offset += 1
+            return when (additionalInfo) {
+                in 0..23 -> additionalInfo.toLong()
+                24 -> readBE(data, offset, 1).also { offset += 1 }
+                25 -> readBE(data, offset, 2).also { offset += 2 }
+                26 -> readBE(data, offset, 4).also { offset += 4 }
+                27 -> readBE(data, offset, 8).also { offset += 8 }
+                else ->
+                    throw SwapKitCardanoSignerException(
+                        "indefinite-length or reserved CBOR additional-info: $additionalInfo"
+                    )
+            }.also {
+                if (it < 0) throw SwapKitCardanoSignerException("CBOR integer out of range")
+            }
+        }
+    }
+
+    /**
      * Byte length of the definite-length CBOR data item at [offset]. Cardano transactions never use
      * indefinite-length items, so an indefinite/reserved header is a malformed envelope.
      */
@@ -195,6 +407,9 @@ internal class SwapKitCardanoSigner(private val vaultHexPublicKey: String) {
                     )
             }
 
+        if (majorType in 2..5 && (argument < 0 || argument > data.size))
+            throw SwapKitCardanoSignerException("CBOR truncated")
+
         return when (majorType) {
             // unsigned int / negative int / simple-or-float — header only.
             0,
@@ -203,10 +418,9 @@ internal class SwapKitCardanoSigner(private val vaultHexPublicKey: String) {
             // byte string / text string — header + `argument` bytes payload.
             2,
             3 -> {
-                val payload = argument.toInt()
-                if (cursor + payload > data.size)
+                if (argument > data.size - cursor)
                     throw SwapKitCardanoSignerException("CBOR truncated")
-                (cursor - start) + payload
+                (cursor - start) + argument.toInt()
             }
             // array: `argument` items follow.
             4 -> {
@@ -267,5 +481,30 @@ internal class SwapKitCardanoSigner(private val vaultHexPublicKey: String) {
     private companion object {
         private const val PUBLIC_KEY_LENGTH = 32
         private const val SIGNATURE_LENGTH = 64
+
+        private const val MAJOR_UINT = 0
+        private const val MAJOR_BYTES = 2
+        private const val MAJOR_ARRAY = 4
+        private const val MAJOR_MAP = 5
+        private const val SET_TAG_HEAD = 0xD9.toByte() // tag(258) = d9 01 02
+
+        private const val BODY_OUTPUTS = 1L
+        private const val BODY_FEE = 2L
+        private const val OUTPUT_ADDRESS = 0L
+        private const val OUTPUT_VALUE = 1L
+
+        /**
+         * Body fields a plain payment may carry: inputs (0), ttl (3), auxiliary-data hash (7),
+         * validity start (8) and network id (15). Outputs (1) and fee (2) are checked separately.
+         */
+        private val PASSIVE_BODY_KEYS = setOf(0L, 3L, 7L, 8L, 15L)
+
+        /**
+         * A plain Cardano payment's fee is `a + b·size`. At mainnet's current parameters (0.155381
+         * ADA + 44 lovelace/byte) even a maximum-size 16 KiB transaction costs about 0.88 ADA.
+         */
+        private const val MAX_FEE_LOVELACE = 2_000_000L
+
+        private const val ENTERPRISE_MAINNET_HEADER = 0x61.toByte()
     }
 }

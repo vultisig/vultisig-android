@@ -35,6 +35,21 @@ internal const val SOLANA_PRIORITY_FEE_LIMIT = 100000
  */
 internal const val SOLANA_MAX_PRIORITY_FEE_PRICE = 100_000_000L
 
+/**
+ * Solana's per-transaction compute-unit ceiling (`MAX_COMPUTE_UNIT_LIMIT`). A limit above this is
+ * invalid on-chain, so a relayed transaction's compute-unit limit is held here — bounding the
+ * priority fee (price × limit) a co-signer will sign to at most
+ * [SOLANA_MAX_PRIORITY_FEE_PRICE] × this.
+ */
+internal const val SOLANA_MAX_COMPUTE_UNIT_LIMIT = 1_400_000L
+
+// ComputeBudget111111111111111111111111111111
+private val COMPUTE_BUDGET_PROGRAM_ID =
+    "0306466fe5211732ffecadba72c39be7bc8ce5bbc5f7126b2c439b3a40000000".toHexByteArray()
+// ComputeBudget instruction discriminators (first data byte).
+private const val COMPUTE_BUDGET_SET_UNIT_LIMIT = 2
+private const val COMPUTE_BUDGET_SET_UNIT_PRICE = 3
+
 const val SOLANA_DEFAULT_CONTRACT_ADDRESS = "So11111111111111111111111111111111111111112"
 
 /**
@@ -181,29 +196,36 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
     }
 
     /**
-     * Applies the clamped priority-fee price + compute-unit limit shared by the transfer and
-     * staking signing inputs. Price is floored at [SOLANA_PRIORITY_FEE_PRICE] and both values are
-     * clamped to their proto field widths (price → Long, limit → Int).
+     * Applies the priority-fee price + compute-unit limit shared by the transfer and staking
+     * signing inputs. Both are bounded, not just floored: this runs on every signer including a
+     * co-signer rebuilding a relayed transaction, so a compromised initiator can't inflate
+     * `priorityFee` / `priorityLimit` to burn the balance as a priority fee that the Verify screen
+     * (a fresh estimate) never shows. A price above [SOLANA_MAX_PRIORITY_FEE_PRICE] or a limit above
+     * [SOLANA_MAX_COMPUTE_UNIT_LIMIT] is refused; the price is still floored for the lower bound.
      */
     private fun Solana.SigningInput.Builder.applyPriorityFee(
         price: BigInteger,
         limit: BigInteger,
-    ): Solana.SigningInput.Builder =
-        setPriorityFeePrice(
+    ): Solana.SigningInput.Builder {
+        // Reject (don't silently clamp) an out-of-range budget: a clamped value would diverge from
+        // an unpatched initiator's and break the ceremony opaquely, whereas a refusal is explicit
+        // and still stops the fee being signed. The price is still floored for the lower bound,
+        // matching the app's own fee sampling.
+        require(price <= BigInteger.valueOf(SOLANA_MAX_PRIORITY_FEE_PRICE)) {
+            "Solana priority-fee price $price exceeds the $SOLANA_MAX_PRIORITY_FEE_PRICE ceiling"
+        }
+        require(limit <= BigInteger.valueOf(SOLANA_MAX_COMPUTE_UNIT_LIMIT)) {
+            "Solana compute-unit limit $limit exceeds the $SOLANA_MAX_COMPUTE_UNIT_LIMIT ceiling"
+        }
+        return setPriorityFeePrice(
                 Solana.PriorityFeePrice.newBuilder()
-                    .setPrice(
-                        maxOf(
-                            price.min(BigInteger.valueOf(Long.MAX_VALUE)).toLong(),
-                            SOLANA_PRIORITY_FEE_PRICE,
-                        )
-                    )
+                    .setPrice(maxOf(price.toLong(), SOLANA_PRIORITY_FEE_PRICE))
                     .build()
             )
             .setPriorityFeeLimit(
-                Solana.PriorityFeeLimit.newBuilder()
-                    .setLimit(limit.min(BigInteger.valueOf(Int.MAX_VALUE.toLong())).toInt())
-                    .build()
+                Solana.PriorityFeeLimit.newBuilder().setLimit(limit.toInt()).build()
             )
+    }
 
     private fun getStakingPreSignedInputData(
         payload: SolanaStakingPayload,
@@ -453,7 +475,44 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         // transaction the vault can never sign — one that does not list it as a required signer —
         // is cheapest to refuse. Left to the splice, the refusal would cost a full MPC round.
         transaction.checkSignerSlot(coinHexPubKey.toHexByteArray())
+        // A raw dApp transaction carries its own ComputeBudget instructions, so the priority-fee
+        // ceilings have to be enforced here too — this path never goes through applyPriorityFee.
+        requireRawComputeBudgetWithinCeiling(transaction)
         return listOf(Numeric.toHexStringNoPrefix(transaction.message))
+    }
+
+    /**
+     * Holds a raw dApp transaction's ComputeBudget instructions to the same ceilings as the
+     * structured send path: `SetComputeUnitPrice` (u64 µlamports/CU) ≤ [SOLANA_MAX_PRIORITY_FEE_PRICE]
+     * and `SetComputeUnitLimit` (u32 CU) ≤ [SOLANA_MAX_COMPUTE_UNIT_LIMIT]. Without this a compromised
+     * initiator could make the vault (the fee payer) sign an arbitrary priority fee in a raw
+     * transaction. A tx without these instructions pays no priority fee and passes.
+     */
+    private fun requireRawComputeBudgetWithinCeiling(transaction: SolanaSignatureEnvelope) {
+        transaction.instructionDataFor(COMPUTE_BUDGET_PROGRAM_ID).forEach { data ->
+            when (data.firstOrNull()?.toInt()) {
+                COMPUTE_BUDGET_SET_UNIT_LIMIT ->
+                    require(readLeUInt(data, 1, 4) <= BigInteger.valueOf(SOLANA_MAX_COMPUTE_UNIT_LIMIT)) {
+                        "Solana raw transaction sets a compute-unit limit above the " +
+                            "$SOLANA_MAX_COMPUTE_UNIT_LIMIT ceiling"
+                    }
+                COMPUTE_BUDGET_SET_UNIT_PRICE ->
+                    require(readLeUInt(data, 1, 8) <= BigInteger.valueOf(SOLANA_MAX_PRIORITY_FEE_PRICE)) {
+                        "Solana raw transaction sets a priority-fee price above the " +
+                            "$SOLANA_MAX_PRIORITY_FEE_PRICE ceiling"
+                    }
+            }
+        }
+    }
+
+    /** Little-endian unsigned integer of [length] bytes starting at [offset]; 0 if out of range. */
+    private fun readLeUInt(data: ByteArray, offset: Int, length: Int): BigInteger {
+        if (offset + length > data.size) return BigInteger.ZERO
+        var value = BigInteger.ZERO
+        for (i in 0 until length) {
+            value = value.or(BigInteger.valueOf(data[offset + i].toLong() and 0xFF).shiftLeft(8 * i))
+        }
+        return value
     }
 
     private fun signRawTransaction(
@@ -465,6 +524,9 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         val publicKey = PublicKey(pubkeyData, PublicKeyType.ED25519)
 
         val transaction = parseRawTransaction(base64Transaction)
+        // Re-check at the splice: the hash may have been recovered from the relay, so don't trust
+        // that the pre-sign ceiling check ran on this device.
+        requireRawComputeBudgetWithinCeiling(transaction)
         val key = Numeric.toHexStringNoPrefix(transaction.message)
         val signature = signatures[key]?.getSignature() ?: error("Signature not found")
         if (!publicKey.verify(signature, transaction.message)) {

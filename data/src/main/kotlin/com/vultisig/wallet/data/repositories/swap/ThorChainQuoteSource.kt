@@ -41,7 +41,10 @@ constructor(private val thorChainApi: ThorChainApi, private val clock: Clock) : 
                 toleranceBps = request.slippageBps ?: DEFAULT_THORCHAIN_TOLERANCE_BPS,
             )
 
-        val finalData = fetchWithStreamingFallback(rapidRequest)
+        val finalData =
+            fetchWithStreamingFallback(rapidRequest).let {
+                if (request.slippageBps == null) it.withAutoSlippageLimit(srcToken.chain) else it
+            }
 
         return SwapQuoteResult.Native(
             SwapQuote.ThorChain(

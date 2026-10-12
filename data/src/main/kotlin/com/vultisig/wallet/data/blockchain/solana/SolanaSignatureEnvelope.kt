@@ -92,6 +92,62 @@ data class SolanaSignatureEnvelope(
      */
     private fun signatureOffsetOf(signer: ByteArray): Int {
         require(signer.size == PUBLIC_KEY_LENGTH) { "Solana signer key must be 32 bytes" }
+        val keys = staticAccountKeys()
+        val index =
+            (0 until requiredSignatures).firstOrNull { i ->
+                keys.keyAt(i).contentEquals(signer)
+            } ?: error("Solana transaction does not require a signature from this vault")
+        return firstSignatureOffset + index * SIGNATURE_LENGTH
+    }
+
+    /**
+     * The data of every instruction in [message] whose program is [programId], a 32-byte key, in
+     * message order.
+     *
+     * Read from the message bytes themselves, so a check over it describes exactly what gets
+     * signed. A program id is always a static account key — the runtime refuses to invoke a
+     * program loaded through an address lookup table — so the static keys are enough to recognise
+     * one.
+     *
+     * @throws IllegalStateException if the message is malformed or truncated.
+     */
+    fun instructionDataFor(programId: ByteArray): List<ByteArray> {
+        require(programId.size == PUBLIC_KEY_LENGTH) { "Solana program id must be 32 bytes" }
+        val keys = staticAccountKeys()
+        val blockhashEnd = keys.end + BLOCKHASH_LENGTH
+        check(message.size >= blockhashEnd) { "Solana message too short for its blockhash" }
+        val (instructionCount, instructionsOffset) = readCompactU16(message, start = blockhashEnd)
+        var offset = instructionsOffset
+        val matches = mutableListOf<ByteArray>()
+        repeat(instructionCount) {
+            check(offset < message.size) { "Solana message too short for its instructions" }
+            val programIndex = message[offset].toInt() and 0xFF
+            check(programIndex < keys.count) {
+                "Solana instruction references program index $programIndex outside its " +
+                    "${keys.count} static account key(s)"
+            }
+            val (accountCount, accountsOffset) = readCompactU16(message, start = offset + 1)
+            val (dataLength, dataOffset) =
+                readCompactU16(message, start = accountsOffset + accountCount)
+            check(message.size >= dataOffset + dataLength) {
+                "Solana message too short for its instruction data"
+            }
+            if (keys.keyAt(programIndex).contentEquals(programId)) {
+                matches += message.copyOfRange(dataOffset, dataOffset + dataLength)
+            }
+            offset = dataOffset + dataLength
+        }
+        return matches
+    }
+
+    /**
+     * The message's static account-key array, after checking the header that precedes it agrees
+     * with the envelope.
+     *
+     * @throws IllegalStateException if the header or the key array is malformed, or if the
+     *   envelope declares a different number of slots than the header requires.
+     */
+    private fun staticAccountKeys(): StaticKeys {
         val headerOffset = messageHeaderOffset(message)
         check(message.size >= headerOffset + HEADER_LENGTH) {
             "Solana message too short for its header"
@@ -109,12 +165,17 @@ data class SolanaSignatureEnvelope(
         check(message.size >= keysOffset + keyCount * PUBLIC_KEY_LENGTH) {
             "Solana message too short for its $keyCount account key(s)"
         }
-        val index =
-            (0 until numRequiredSignatures).firstOrNull { i ->
-                val start = keysOffset + i * PUBLIC_KEY_LENGTH
-                message.copyOfRange(start, start + PUBLIC_KEY_LENGTH).contentEquals(signer)
-            } ?: error("Solana transaction does not require a signature from this vault")
-        return firstSignatureOffset + index * SIGNATURE_LENGTH
+        return StaticKeys(offset = keysOffset, count = keyCount)
+    }
+
+    private inner class StaticKeys(val offset: Int, val count: Int) {
+        val end: Int
+            get() = offset + count * PUBLIC_KEY_LENGTH
+
+        fun keyAt(index: Int): ByteArray {
+            val start = offset + index * PUBLIC_KEY_LENGTH
+            return message.copyOfRange(start, start + PUBLIC_KEY_LENGTH)
+        }
     }
 
     // ByteArray identity would make two structurally equal envelopes compare unequal.
@@ -135,6 +196,8 @@ data class SolanaSignatureEnvelope(
         const val SIGNATURE_LENGTH = 64
 
         private const val PUBLIC_KEY_LENGTH = 32
+
+        private const val BLOCKHASH_LENGTH = 32
 
         /** `numRequiredSignatures`, `numReadonlySignedAccounts`, `numReadonlyUnsignedAccounts`. */
         private const val HEADER_LENGTH = 3

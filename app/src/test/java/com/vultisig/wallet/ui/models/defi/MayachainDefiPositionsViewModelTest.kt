@@ -22,6 +22,8 @@ import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.BondChurnReward
+import com.vultisig.wallet.data.usecases.BondRewardHistoryUseCase
 import com.vultisig.wallet.data.usecases.MayachainBondUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -37,6 +39,7 @@ import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.text.NumberFormat
+import java.util.Date
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -81,6 +84,7 @@ internal class MayachainDefiPositionsViewModelTest {
     private lateinit var defiPositionsRepository: DefiPositionsRepository
     // The real cache, not a mock: these tests assert the round trip a nav pop and a re-entry make.
     private lateinit var snapshotCache: DeFiPositionsSnapshotCache
+    private lateinit var bondRewardHistoryUseCase: BondRewardHistoryUseCase
 
     @BeforeEach
     fun setUp() {
@@ -96,8 +100,12 @@ internal class MayachainDefiPositionsViewModelTest {
         balanceVisibilityRepository = mockk(relaxed = true)
         defiPositionsRepository = mockk(relaxed = true)
         snapshotCache = DeFiPositionsSnapshotCache()
+        bondRewardHistoryUseCase = mockk()
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
+        coEvery { bondRewardHistoryUseCase.getLastReward(any(), any(), any()) } returns null
+        coEvery { bondRewardHistoryUseCase.getRewardHistory(any(), any(), any()) } returns
+            emptyList()
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
         coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
         coEvery { appCurrencyRepository.getCurrencyFormat() } returns
@@ -1061,6 +1069,27 @@ internal class MayachainDefiPositionsViewModelTest {
             )
     }
 
+    @Test
+    fun `a Maya bonded node reads its rewards in CACAO`() = runTest {
+        coEvery { bondUseCase.getActiveNodes(VAULT_ID, CACAO_ADDRESS) } returns
+            flowOf(listOf(bondedNode(amount = HUNDRED_CACAO)))
+        coEvery {
+            bondRewardHistoryUseCase.getLastReward(Chain.MayaChain, NODE_ADDRESS, CACAO_ADDRESS)
+        } returns BondChurnReward(1L, Date(0), BigInteger("35106321933"))
+        coEvery {
+            bondRewardHistoryUseCase.getRewardHistory(Chain.MayaChain, NODE_ADDRESS, CACAO_ADDRESS)
+        } returns listOf(BondChurnReward(1L, Date(0), BigInteger("35106321933")))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onClickLastReward(NODE_ADDRESS)
+
+        val data = successData(vm)
+        assertEquals(LastRewardUiModel.Paid("3.5106 CACAO"), data.bonded.nodes.single().lastReward)
+        val sheet = requireNotNull(data.rewardHistory)
+        assertEquals("1.2345 CACAO", sheet.upcoming)
+        assertEquals("3.5106 CACAO", sheet.totalEarned)
+    }
+
     private fun bondedNode(amount: BigInteger) =
         BondedNodePosition(
             id = "cacao-node",
@@ -1093,6 +1122,7 @@ internal class MayachainDefiPositionsViewModelTest {
             // end-to-end rather than asserting against a stubbed conversion.
             fiatValueCalculator = DefiFiatValueCalculator(tokenPriceRepository),
             snapshotCache = snapshotCache,
+            bondRewardsLoader = BondRewardsLoader(bondRewardHistoryUseCase),
             ioDispatcher = testDispatcher,
         )
 

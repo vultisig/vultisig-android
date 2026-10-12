@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.TokenLogo
-import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionStatusUiModel
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
 import kotlin.time.Duration.Companion.seconds

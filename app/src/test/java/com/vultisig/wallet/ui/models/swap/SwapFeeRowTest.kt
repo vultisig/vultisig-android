@@ -81,6 +81,37 @@ internal class SwapFeeRowTest {
         row.fee shouldBeUsd "0.60"
         row.percent shouldBe null
         row.isListRate shouldBe false
+    }
+
+    @Test
+    fun `itemizes the VULT discount SwapKit took off its affiliate bps`() {
+        // The tier still comes off the affiliate bps sent to SwapKit, so the row must show it,
+        // priced off the source notional like iOS' affiliateDiscountBreakdown.
+        val row =
+            swapFeeRow(
+                provider = SwapProvider.SWAPKIT,
+                netFee = usd("0.60"),
+                listRate = "0.50%",
+                srcFiat = srcFiat,
+                discounts = SwapDiscountBps(vult = GOLD_DISCOUNT_BPS, referral = 10),
+            )
+
+        row.vultDiscount shouldBeUsd "0.40"
+        row.referralDiscount shouldBeUsd null
+    }
+
+    @Test
+    fun `itemizes no SwapKit discount the source cannot price`() {
+        val row =
+            swapFeeRow(
+                provider = SwapProvider.SWAPKIT,
+                netFee = usd("0.60"),
+                listRate = "0.50%",
+                srcFiat = usd("0"),
+                discounts = SwapDiscountBps(vult = GOLD_DISCOUNT_BPS),
+            )
+
+        row.fee shouldBeUsd "0.60"
         row.vultDiscount shouldBeUsd null
     }
 

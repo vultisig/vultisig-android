@@ -50,9 +50,9 @@ import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
-import com.vultisig.wallet.ui.models.AccountUiModel
-import com.vultisig.wallet.ui.models.VaultAccountsUiModel
-import com.vultisig.wallet.ui.models.VaultAccountsViewModel
+import com.vultisig.wallet.ui.models.vault.AccountUiModel
+import com.vultisig.wallet.ui.models.vault.VaultAccountsUiModel
+import com.vultisig.wallet.ui.models.vault.VaultAccountsViewModel
 import com.vultisig.wallet.ui.screens.passcode.OnceUnlocked
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.NotificationsIntroBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultNotificationOptInBottomSheet

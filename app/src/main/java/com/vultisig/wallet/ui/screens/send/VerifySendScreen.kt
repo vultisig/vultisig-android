@@ -58,12 +58,12 @@ import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
-import com.vultisig.wallet.ui.models.TransactionScanStatus
-import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
-import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
+import com.vultisig.wallet.ui.models.transaction.VerifyTransactionUiModel
+import com.vultisig.wallet.ui.models.transaction.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.verify.VerifyAccountCards
@@ -117,6 +117,7 @@ internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewMo
         onFastSignClick = viewModel::fastSign,
         onConfirmScanning = viewModel::onConfirmScanning,
         onDismissScanning = viewModel::dismissScanningWarning,
+        onScanMarkClick = viewModel::openScanResult,
     )
 }
 
@@ -137,6 +138,7 @@ internal fun VerifySendSheet(
     onConsentLimit: (Boolean) -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
+    onScanMarkClick: () -> Unit = {},
     initiallyExpandedDetails: Boolean = false,
 ) {
     VerifyOverviewSheet(
@@ -146,6 +148,8 @@ internal fun VerifySendSheet(
         onDismissRequest = onDismissRequest,
         onContinueAnyway = onConfirmScanning,
         onDismissWarning = onDismissScanning,
+        onScanMarkClick = onScanMarkClick,
+        isContinueAnywayEnabled = state.hasAllConsents,
         footer = {
             VerifySendConsents(
                 state = state,
@@ -466,7 +470,7 @@ private fun VerifySendDetails(
                         text =
                             stringResource(
                                 R.string.substrate_dapp_transaction,
-                                tx.token.token.chain.raw,
+                                tx.token.token.chain.displayName,
                             ),
                         style = Theme.brockmann.supplementary.captionSmall,
                         color = Theme.v2.colors.text.tertiary,
@@ -481,7 +485,7 @@ private fun VerifySendDetails(
                             }
                                 ?: stringResource(
                                     R.string.substrate_dapp_transaction,
-                                    tx.token.token.chain.raw,
+                                    tx.token.token.chain.displayName,
                                 ),
                         style = Theme.brockmann.headings.title2,
                         color = Theme.v2.colors.text.primary,
@@ -791,7 +795,7 @@ private fun VerifySendDetails(
                 )
 
                 Text(
-                    text = chain.raw,
+                    text = chain.displayName,
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.End,

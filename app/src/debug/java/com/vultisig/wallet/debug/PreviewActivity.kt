@@ -58,6 +58,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.logo
@@ -90,31 +91,6 @@ import com.vultisig.wallet.ui.components.v2.fastselection.SelectPopupUiModel
 import com.vultisig.wallet.ui.components.v2.fastselection.components.ChainSelectorPickerItem
 import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectPopup
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
-import com.vultisig.wallet.ui.models.AccountUiModel
-import com.vultisig.wallet.ui.models.ChainSelectionUiModel
-import com.vultisig.wallet.ui.models.ChainTokenUiModel
-import com.vultisig.wallet.ui.models.ChainTokensUiModel
-import com.vultisig.wallet.ui.models.ChainUiModel
-import com.vultisig.wallet.ui.models.ChartPointUiModel
-import com.vultisig.wallet.ui.models.ChartUiModel
-import com.vultisig.wallet.ui.models.DeviceMeta
-import com.vultisig.wallet.ui.models.MarketStatsUiModel
-import com.vultisig.wallet.ui.models.PriceExtremesUiModel
-import com.vultisig.wallet.ui.models.TokenDetailUiModel
-import com.vultisig.wallet.ui.models.TokenInfoUiModel
-import com.vultisig.wallet.ui.models.TokenSelectionUiModel
-import com.vultisig.wallet.ui.models.TokenUiModel
-import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
-import com.vultisig.wallet.ui.models.TransactionFailureExplanation
-import com.vultisig.wallet.ui.models.TransactionHistoryGroupUiModel
-import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
-import com.vultisig.wallet.ui.models.TransactionHistoryTab
-import com.vultisig.wallet.ui.models.TransactionHistoryUiState
-import com.vultisig.wallet.ui.models.TransactionScanStatus
-import com.vultisig.wallet.ui.models.TransactionStatusUiModel
-import com.vultisig.wallet.ui.models.VaultAccountsUiModel
-import com.vultisig.wallet.ui.models.VaultDetailUiModel
-import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
@@ -173,8 +149,33 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VultTierGateUiModel
-import com.vultisig.wallet.ui.models.toNetworkUiModel
+import com.vultisig.wallet.ui.models.token.ChartPointUiModel
+import com.vultisig.wallet.ui.models.token.ChartUiModel
+import com.vultisig.wallet.ui.models.token.MarketStatsUiModel
+import com.vultisig.wallet.ui.models.token.PriceExtremesUiModel
+import com.vultisig.wallet.ui.models.token.TokenDetailUiModel
+import com.vultisig.wallet.ui.models.token.TokenInfoUiModel
+import com.vultisig.wallet.ui.models.token.TokenSelectionUiModel
+import com.vultisig.wallet.ui.models.token.TokenUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionFailureExplanation
+import com.vultisig.wallet.ui.models.transaction.TransactionHistoryGroupUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionHistoryItemUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionHistoryTab
+import com.vultisig.wallet.ui.models.transaction.TransactionHistoryUiState
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
+import com.vultisig.wallet.ui.models.transaction.TransactionStatusUiModel
+import com.vultisig.wallet.ui.models.transaction.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
+import com.vultisig.wallet.ui.models.vault.AccountUiModel
+import com.vultisig.wallet.ui.models.vault.ChainSelectionUiModel
+import com.vultisig.wallet.ui.models.vault.ChainTokenUiModel
+import com.vultisig.wallet.ui.models.vault.ChainTokensUiModel
+import com.vultisig.wallet.ui.models.vault.ChainUiModel
+import com.vultisig.wallet.ui.models.vault.DeviceMeta
+import com.vultisig.wallet.ui.models.vault.VaultAccountsUiModel
+import com.vultisig.wallet.ui.models.vault.VaultDetailUiModel
+import com.vultisig.wallet.ui.models.vault.toNetworkUiModel
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
@@ -207,6 +208,7 @@ import com.vultisig.wallet.ui.screens.select.SelectAssetUiModel
 import com.vultisig.wallet.ui.screens.send.GasSettingsScreen
 import com.vultisig.wallet.ui.screens.send.SendFormScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
+import com.vultisig.wallet.ui.screens.send.VerifySendSheet
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
@@ -214,6 +216,7 @@ import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscou
 import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.swap.VerifySwapSheet
 import com.vultisig.wallet.ui.screens.swap.components.LimitSwapForm
 import com.vultisig.wallet.ui.screens.swap.components.SwapAdvancedSettingsLockedSheet
 import com.vultisig.wallet.ui.screens.swap.preview.AdvancedExternalRecipientPreview
@@ -249,6 +252,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionScr
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
+import com.vultisig.wallet.ui.screens.v2.home.components.BottomNavigatorOverlay
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.pager.HomepagePager
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
@@ -430,6 +434,26 @@ class PreviewActivity : ComponentActivity() {
                     "kamino_deposit_form" -> KaminoAmountPreview(isWithdraw = false)
                     "kamino_withdraw_form" -> KaminoAmountPreview(isWithdraw = true)
                     "swap_confirm" -> SwapConfirmPreview()
+                    "swap_overview_sheet" -> SwapOverviewSheetPreview()
+                    "send_overview_sheet" -> SendOverviewSheetPreview()
+                    "send_overview_sheet_zec" ->
+                        SendOverviewSheetPreview(
+                            token = Coins.Zcash.ZEC,
+                            value = "0.42",
+                            srcAddress = "t1QJUBegwn5JV8iXw2kR3bqYarPm3na37YF",
+                            dstAddress = "t1PDkaBubLUuN7Ac9Fq2Z7tAkHLeJnNWw7h",
+                            networkFee = "0.0001 ZEC",
+                        )
+                    "send_overview_sheet_ada" ->
+                        SendOverviewSheetPreview(
+                            token = Coins.Cardano.ADA,
+                            value = "120",
+                            srcAddress =
+                                "addr1qxy8m4k2tqfh0z3w5a9c7n6v4sjr2e8lpg3kd5f7h9j0m2n4p6r8t0v2x4z6b8d0f2h4j6l8n0p2r4t6v8x0z2b4d6f8h0j2l4",
+                            dstAddress =
+                                "addr1q9dz8w7v6u5t4s3r2q1p0o9n8m7l6k5j4h3g2f1e0d9c8b7a6z5y4x3w2v1u0t9s8r7q6p5o4n3m2l1k0j9h8g7f6e5d4c3b2a",
+                            networkFee = "0.17 ADA",
+                        )
                     "swap_confirm_chain" -> SwapChainIndicatorPreview()
                     "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
                     "swap_confirm_external_recipient" ->
@@ -537,6 +561,7 @@ class PreviewActivity : ComponentActivity() {
                     "swap_advanced_external_recipient" -> AdvancedExternalRecipientPreview()
                     "select_asset_secured_before" -> SelectAssetSecuredPreview(showSecured = false)
                     "select_asset_secured_after" -> SelectAssetSecuredPreview(showSecured = true)
+                    "token_selection_secured" -> TokenSelectionSecuredPreview()
                     "import_seedphrase" -> ImportSeedphrasePreview()
                     "defi_account_list" -> DeFiAccountListPreview()
                     "solana_staking_positions" -> SolanaStakingPositionsLoadedPreview()
@@ -587,6 +612,7 @@ class PreviewActivity : ComponentActivity() {
                     "circle_usdc_widget" -> CircleUsdcWidgetPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
+                    "eth_detail_tokens" -> EthDetailTokensPreview()
                     "governance" -> GovernancePreview()
                     "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
                     "keysign_devices_plus_after" -> KeysignDevicesCountPreview(allowsMore = false)
@@ -614,6 +640,11 @@ class PreviewActivity : ComponentActivity() {
                     "chain_selection" -> ChainSelectionClipPreview()
                     "verify_send_empty_memo" -> VerifySendEmptyMemoPreview()
                     "verify_send_allow_death" -> VerifySendAllowDeathPreview()
+                    "overview_scan_mark_safe" -> OverviewScanMarkPreview(risk = null)
+                    "overview_scan_mark_medium" ->
+                        OverviewScanMarkPreview(risk = SecurityRiskLevel.MEDIUM)
+                    "overview_scan_mark_high" ->
+                        OverviewScanMarkPreview(risk = SecurityRiskLevel.HIGH)
                     "unbond_verify_before" -> UnbondVerifyPreview(after = false)
                     "unbond_verify_after" -> UnbondVerifyPreview(after = true)
                     "edit_folder" -> EditFolderPreview()
@@ -1144,6 +1175,89 @@ private fun SwapConfirmPreview(allConsents: Boolean = true, externalRecipient: S
         onConfirm = {},
         onBackClick = {},
     )
+}
+
+/** The initiator's swap review: the sheet over the form that produced it. */
+@Composable
+private fun SwapOverviewSheetPreview() {
+    val ethCoin = Coins.Ethereum.ETH
+    val btcCoin = Coins.Bitcoin.BTC
+    Box(modifier = Modifier.fillMaxSize()) {
+        SwapScreen(state = SwapFormUiModel(), srcAmountTextFieldState = TextFieldState("1.5"))
+        VerifySwapSheet(
+            state =
+                VerifySwapUiModel(
+                    tx =
+                        SwapTransactionUiModel(
+                            src =
+                                ValuedToken(
+                                    token = ethCoin,
+                                    value = "1.5",
+                                    fiatValue = "$3,847.50",
+                                ),
+                            dst =
+                                ValuedToken(
+                                    token = btcCoin,
+                                    value = "0.0589",
+                                    fiatValue = "$3,820.00",
+                                ),
+                            networkFee =
+                                ValuedToken(token = ethCoin, value = "0.0024", fiatValue = "$6.15"),
+                            providerFee =
+                                ValuedToken(
+                                    token = ethCoin,
+                                    value = "0.0045",
+                                    fiatValue = "$11.52",
+                                ),
+                            totalFee = "$17.67",
+                            networkFeeFormatted = "0.0024 ETH ($6.15)",
+                            providerFeeFormatted = "0.0045 ETH ($11.52)",
+                            hasConsentAllowance = false,
+                        ),
+                    consentAmount = true,
+                    consentReceiveAmount = true,
+                    hasFastSign = true,
+                    vaultName = "Main Vault",
+                ),
+            onDismissRequest = {},
+            onFastSignClick = {},
+            onConfirm = {},
+        )
+    }
+}
+
+/** The initiator's send review: the sheet over the form that produced it. */
+@Composable
+private fun SendOverviewSheetPreview(
+    token: Coin = Coins.Dash.DASH,
+    value: String = "2.5",
+    srcAddress: String = "XdN9i1nCqzUcXn1n2pQqCkrwiKRv5vJv4z",
+    dstAddress: String = "XuYfMXLt4k5NQqVZ7eGo9PSYtQbtiNd1Rg",
+    networkFee: String = "0.00000226 DASH",
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        SendFormAddressPreview()
+        VerifySendSheet(
+            state =
+                VerifyTransactionUiModel(
+                    transaction =
+                        TransactionDetailsUiModel(
+                            token = ValuedToken(token = token, value = value, fiatValue = "$63.78"),
+                            srcAddress = srcAddress,
+                            srcVaultName = "Main Vault",
+                            dstAddress = dstAddress,
+                            networkFeeTokenValue = networkFee,
+                            networkFeeFiatValue = "$0.01",
+                        ),
+                    consentAddress = true,
+                    consentAmount = true,
+                    hasFastSign = true,
+                ),
+            onDismissRequest = {},
+            onFastSignClick = {},
+            onConfirm = {},
+        )
+    }
 }
 
 @Composable
@@ -1952,7 +2066,8 @@ private fun permitSingleRows(): List<DecodedFunctionParam> =
         ),
         DecodedFunctionParam(
             label = UiText.StringResource(R.string.typed_data_approval_amount),
-            value = UiText.FormattedText(R.string.decoded_function_unlimited_amount, listOf("USDT")),
+            value =
+                UiText.FormattedText(R.string.decoded_function_unlimited_amount, listOf("USDT")),
             isWarning = true,
         ),
         DecodedFunctionParam(
@@ -2741,6 +2856,41 @@ private fun blockaidHeroUnverifiedDetails(): TransactionDetailsUiModel {
     )
 }
 
+/**
+ * The Send overview sheet with a finished scan, where tapping the header's mark opens the result.
+ */
+@Composable
+private fun OverviewScanMarkPreview(risk: SecurityRiskLevel?) {
+    var state by remember {
+        mutableStateOf(
+            blockaidHeroSendState()
+                .copy(
+                    txScanStatus =
+                        TransactionScanStatus.Scanned(
+                            SecurityScannerResult(
+                                provider = "blockaid",
+                                isSecure = risk == null,
+                                riskLevel = risk ?: SecurityRiskLevel.NONE,
+                                warnings = emptyList(),
+                                description = null,
+                                recommendations = "",
+                            )
+                        )
+                )
+        )
+    }
+    Box(Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+        VerifySendSheet(
+            state = state,
+            onDismissRequest = {},
+            onFastSignClick = {},
+            onConfirm = {},
+            onDismissScanning = { state = state.copy(showScanningWarning = false) },
+            onScanMarkClick = { state = state.copy(showScanningWarning = true) },
+        )
+    }
+}
+
 private fun blockaidHeroSendState() =
     VerifyTransactionUiModel(
         transaction = blockaidHeroSendDetails(),
@@ -2952,6 +3102,39 @@ private fun securedAssetCoin(ticker: String, contractAddress: String): Coin =
         isNativeToken = false,
         decimal = 8,
     )
+
+@Composable
+private fun TokenSelectionSecuredPreview() {
+    val coins =
+        listOf(
+            securedAssetCoin("USDC", "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"),
+            securedAssetCoin("USDT", "eth-usdt-0xdac17f958d2ee523a2206206994597c13d831ec7"),
+            securedAssetCoin("ETH", "eth-eth"),
+            securedAssetCoin("USDC", "bsc-usdc-0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"),
+            securedAssetCoin("VVV", "base-vvv-0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf"),
+            securedAssetCoin("BCH", "bch-bch"),
+            securedAssetCoin("BNB", "bsc-bnb"),
+            securedAssetCoin("BTCB", "bsc-btcb-0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c"),
+            securedAssetCoin("BUSD", "bsc-busd-0xe9e7cea3dedca5984780bafc599bd69add087d56"),
+            securedAssetCoin("ETH", "base-eth"),
+            securedAssetCoin("USDC", "avax-usdc-0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e"),
+            securedAssetCoin("USDT", "bsc-usdt-0x55d398326f99059ff775485246999027b3197955"),
+        )
+    TokenSelectionScreen(
+        searchTextFieldState = TextFieldState(),
+        state =
+            com.vultisig.wallet.ui.models.token.TokenSelectionUiModel(
+                tokens =
+                    coins.mapIndexed { index, coin ->
+                        com.vultisig.wallet.ui.models.token.TokenUiModel(
+                            isEnabled = index < 2,
+                            coin = coin,
+                        )
+                    }
+            ),
+        hasCustomToken = false,
+    )
+}
 
 /**
  * Renders the swap destination picker over the swap form. `showSecured = false` reproduces the
@@ -3352,6 +3535,66 @@ private fun BtcDetailClaimPreview() {
         onTokenClick = {},
         onClaimQbtc = {},
     )
+}
+
+/** An Ethereum chain-detail list long enough to scroll under the floating Wallet/DeFi bar. */
+@Composable
+private fun EthDetailTokensPreview() {
+    val tokens =
+        listOf(
+            "ETH" to R.drawable.ethereum,
+            "USDC" to R.drawable.usdc,
+            "USDT" to R.drawable.usdt,
+            "DAI" to R.drawable.dai,
+            "WBTC" to R.drawable.wbtc,
+            "WETH" to R.drawable.weth,
+            "LINK" to R.drawable.link,
+            "UNI" to R.drawable.uni,
+            "AAVE" to R.drawable.aave,
+            "PEPE" to R.drawable.pepe,
+            "SHIB" to R.drawable.shib,
+        )
+    BottomNavigatorOverlay(
+        isNavigatorVisible = true,
+        activeType = CryptoConnectionType.Wallet,
+        onTypeClick = {},
+        onCameraClick = {},
+    ) {
+        ChainTokensScreen(
+            uiModel =
+                ChainTokensUiModel(
+                    chainName = "Ethereum",
+                    chainAddress = "0x14f6a2b9c0e1f2a3b4c5d6e7f8a9b0c1d2e389b6",
+                    totalBalance = "$4,210.55",
+                    chainLogo = R.drawable.ethereum,
+                    explorerURL = "https://etherscan.io/",
+                    tokens =
+                        tokens.map { (symbol, logo) ->
+                            ChainTokenUiModel(
+                                id = "$symbol-Ethereum",
+                                name = symbol,
+                                balance = "12.5 $symbol",
+                                fiatBalance = "$382.78",
+                                price = "$30.62",
+                                tokenLogo = logo,
+                                chainLogo = R.drawable.ethereum,
+                            )
+                        },
+                ),
+            onBackClick = {},
+            onRefresh = {},
+            onShowSearchBar = {},
+            onHideSearchBar = {},
+            onSend = {},
+            onSwap = {},
+            onBuy = {},
+            onDeposit = {},
+            onReceive = {},
+            onHistory = {},
+            onSelectTokens = {},
+            onTokenClick = {},
+        )
+    }
 }
 
 /**

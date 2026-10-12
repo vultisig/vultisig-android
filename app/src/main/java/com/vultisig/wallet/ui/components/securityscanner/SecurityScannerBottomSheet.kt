@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -90,6 +91,7 @@ fun SecurityScannerBottomSheetContent(
     onDismissRequest: () -> Unit,
     onContinueAnyway: () -> Unit,
     modifier: Modifier = Modifier,
+    isContinueAnywayEnabled: Boolean = true,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -167,7 +169,10 @@ fun SecurityScannerBottomSheetContent(
             // zone — not a needle-thin one.
             Box(
                 modifier =
-                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { onContinueAnyway() },
+                    Modifier.fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .alpha(if (isContinueAnywayEnabled) 1f else DisabledContinueAnywayAlpha)
+                        .clickable(enabled = isContinueAnywayEnabled) { onContinueAnyway() },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -177,6 +182,55 @@ fun SecurityScannerBottomSheetContent(
                 )
             }
         }
+    }
+}
+
+/**
+ * A scan that found nothing, opened from the scanner's mark: the verdict's clean counterpart, with
+ * a single way back to the figures.
+ */
+@Composable
+internal fun SecurityScannerSafeContent(onContinue: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_security_scanner_safe_medallion),
+            contentDescription = null,
+        )
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.security_scanner_safe_title),
+                color = Theme.v2.colors.text.primary,
+                style = Theme.brockmann.headings.title2,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Text(
+                text = stringResource(R.string.security_scanner_safe_description),
+                color = Theme.v2.colors.text.tertiary,
+                style = Theme.brockmann.body.s.medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        VsButton(
+            label = stringResource(R.string.security_scanner_safe_continue),
+            variant = Primary,
+            state = Enabled,
+            size = Medium,
+            onClick = onContinue,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -238,3 +292,5 @@ data class SecurityScannerBottomSheetStyle(
     @DrawableRes val image: Int,
     val imageColor: Color,
 )
+
+private const val DisabledContinueAnywayAlpha = 0.4f

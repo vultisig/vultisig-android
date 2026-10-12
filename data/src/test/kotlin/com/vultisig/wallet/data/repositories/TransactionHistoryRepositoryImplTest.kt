@@ -5,12 +5,17 @@ import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
 import com.vultisig.wallet.data.db.models.TransactionType
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
+import com.vultisig.wallet.data.models.TransactionHistoryData
+import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
+import io.mockk.slot
+import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -135,6 +140,27 @@ internal class TransactionHistoryRepositoryImplTest {
         repository.upsertFromBackfill(entity)
 
         coVerify(exactly = 1) { dao.upsertFromBackfill(entity) }
+    }
+
+    @Test
+    fun `recordPaidNetworkFee stores the wei on a send row`() = runTest {
+        val transform = slot<(TransactionHistoryData) -> TransactionHistoryData?>()
+        coEvery { dao.transformPayload(EXPECTED_ID, capture(transform)) } returns Unit
+
+        repository.recordPaidNetworkFee(CHAIN, TX_HASH, BigInteger("904334296650000"))
+
+        val updated = transform.captured(entity(CHAIN, TX_HASH).payload)
+        assertEquals("904334296650000", (updated as SendTransactionHistoryData).paidNetworkFeeWei)
+    }
+
+    @Test
+    fun `recordPaidNetworkFee leaves an unreadable row alone`() = runTest {
+        val transform = slot<(TransactionHistoryData) -> TransactionHistoryData?>()
+        coEvery { dao.transformPayload(EXPECTED_ID, capture(transform)) } returns Unit
+
+        repository.recordPaidNetworkFee(CHAIN, TX_HASH, BigInteger.ONE)
+
+        assertNull(transform.captured(UnknownTransactionHistoryData("{}")))
     }
 
     private fun entity(chain: String, txHash: String): TransactionHistoryEntity =

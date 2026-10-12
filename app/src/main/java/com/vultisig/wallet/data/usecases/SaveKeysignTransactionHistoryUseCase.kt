@@ -32,8 +32,8 @@ constructor(private val transactionHistoryRepository: TransactionHistoryReposito
      * @param chain Chain the transaction was broadcast to.
      * @param explorerUrl Explorer (or swap-progress) link to store alongside the record.
      * @param transactionHistoryData Type-specific history payload, or null to skip persistence.
-     * @param broadcastBlockNumber Head block at broadcast for mortal extrinsics (Polkadot), else
-     *   null.
+     * @param broadcastBlockNumber Head block at broadcast for mortal extrinsics (Polkadot), the
+     *   tx's LastLedgerSequence (XRP), else null.
      */
     suspend operator fun invoke(
         vaultId: String,

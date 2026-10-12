@@ -180,6 +180,7 @@ internal class SwapKitZcashSigner(
                     "refusing to sign"
             )
         }
+        verifyVaultBinding(inputs, outputs, fromAmount)
 
         val depositAmount = outputs[0].amount
         val changeAmount = outputs.drop(1).sumOf { it.amount }
@@ -246,6 +247,40 @@ internal class SwapKitZcashSigner(
         }
 
         return signingInput.build().toByteArray()
+    }
+
+    /**
+     * Ties the PSBT to the vault before signing: every input spends from the vault, and the outputs
+     * not paying back to it don't total more than the quoted amount. Mirrors the legacy signer. The
+     * deposit recipient isn't pinned: the ZEC route's on-chain deposit address differs from
+     * SwapKit's declared `targetAddress`.
+     */
+    private fun verifyVaultBinding(
+        inputs: List<SaplingInput>,
+        outputs: List<SaplingOutput>,
+        fromAmount: BigInteger,
+    ) {
+        val vaultScript = utxo.vaultP2pkhLockScript()
+        inputs.forEachIndexed { index, input ->
+            if (!input.scriptPubKey.contentEquals(vaultScript)) {
+                throw SwapKitZcashSignerException(
+                    "SwapKit ZEC PSBT input #$index does not spend from this vault"
+                )
+            }
+        }
+        // Outputs paying the vault are change, wherever they sit; everything else leaves the vault.
+        // SwapKit doesn't fix the output order or require a change output, so only the value
+        // leaving the vault is bounded, not which index carries the deposit.
+        val leavingVault =
+            outputs
+                .filterNot { it.scriptPubKey.contentEquals(vaultScript) }
+                .sumOf { BigInteger.valueOf(it.amount) }
+        if (leavingVault > fromAmount) {
+            throw SwapKitZcashSignerException(
+                "SwapKit ZEC PSBT sends $leavingVault out of the vault, more than the quoted swap " +
+                    "amount $fromAmount; refusing to sign"
+            )
+        }
     }
 
     private fun resolvePrevUtxo(

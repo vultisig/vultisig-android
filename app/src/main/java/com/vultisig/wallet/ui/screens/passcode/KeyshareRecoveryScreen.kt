@@ -12,7 +12,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
-import com.vultisig.wallet.ui.models.FILE_ALLOWED_MIME_TYPES
+import com.vultisig.wallet.ui.models.importfile.FILE_ALLOWED_MIME_TYPES
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.models.passcode.KeyshareRecoveryUiModel
 import com.vultisig.wallet.ui.models.passcode.KeyshareRecoveryViewModel

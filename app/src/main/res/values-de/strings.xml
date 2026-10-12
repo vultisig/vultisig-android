@@ -265,6 +265,10 @@
     <string name="verify_transaction_allow_death_warning">Diese Überweisung kann das Konto des Absenders leeren. Fällt der verbleibende Kontostand unter das Existential Deposit, wird das Konto deaktiviert (geerntet) und alle verbleibenden %1$s gehen verloren.</string>
     <string name="vault_settings_delete_vault_value">Vault Wert:</string>
     <string name="join_keysign_wrong_reshare">Falsches ReShare</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Diese TON-Token-Überweisung stammt nicht aus diesem Tresor</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">Der angezeigte Token stimmt nicht mit dem Token überein, den diese Überweisung sendet</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Diese TON-Token-Überweisung konnte nicht überprüft werden. Bitte versuchen Sie es erneut.</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">Erneutes Teilen wird für Tresore mit einem QBTC-Schlüssel nicht unterstützt</string>
     <string name="swap_screen_provider_title">Anbieter</string>
     <string name="swap_form_minimum_amount">Swap-Betrag zu klein. Empfohlener Betrag %1$s %2$s</string>
     <string name="backup_password_screen_title">Sicherung</string>
@@ -350,6 +354,7 @@
     <string name="signing_error_account_not_funded">Dieses Konto existiert noch nicht on-chain.\nBitte füllen Sie zuerst das Wallet auf.</string>
     <string name="signing_error_broadcast_rejected">Transaktion vom Netzwerk abgelehnt.</string>
     <string name="signing_error_broadcast_rejected_s">Transaktion vom Netzwerk abgelehnt: %s</string>
+    <string name="signing_error_swap_tx_unsignable">Der Swap-Anbieter hat eine Transaktion geliefert, die nicht sicher signiert werden kann. Ein erneuter Versuch hilft nicht – geh zurück und fordere ein neues Swap-Angebot an.</string>
     <string name="verify_transaction_fast_sign_btn_title">Schnelle Signatur</string>
     <string name="verify_transaction_paired_btn_title">Gekoppelt</string>
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
@@ -374,6 +379,10 @@
     <string name="qr_share_label_to">Zu</string>
     <string name="qr_share_label_from">Von</string>
     <string name="qr_share_label_type">Typ</string>
+    <string name="keysign_share_qr_title">QR-Code teilen</string>
+    <string name="keysign_share_qr_copy_link">Link kopieren</string>
+    <string name="keysign_share_qr_share_image">QR-Bild teilen</string>
+    <string name="keysign_share_qr_link_copied">Link kopiert</string>
     <string name="qr_share_type_fast_vault">Schneller Tresor</string>
     <string name="qr_share_type_secure_vault">Sicherer Tresor</string>
     <string name="error_folder_must_have_at_least_one_vault">Für den Ordner ist mindestens ein ausgewählter Tresor erforderlich</string>
@@ -395,6 +404,7 @@
     <string name="deposit_error_thorchain_chain_halted">Einzahlungen auf %1$s sind derzeit auf THORChain ausgesetzt. Bitte später erneut versuchen.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">THORChain konnte nicht erreicht werden, um den eingehenden Vault zu verifizieren. Bitte erneut versuchen.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s ist derzeit nicht für Einzahlungen verfügbar.</string>
+    <string name="deposit_error_pool_staged_unpaired">Pool %1$s ist im Status „Staged“ und akzeptiert nur gepaarte Einzahlungen beider Seiten. THORChain würde diese Transaktion erstatten.</string>
     <string name="deposit_form_screen_assets">Vermögenswert</string>
     <string name="deposit_form_screen_asset_selection">Anlagenauswahl</string>
     <string name="deposit_form_screen_lpunits">LP-Einheiten</string>
@@ -495,6 +505,13 @@
     <string name="active_nodes">Aktive Knoten</string>
     <string name="next_churn">Nächster Wechsel</string>
     <string name="next_award">Nächste Belohnung</string>
+    <string name="next_reward">Nächste Belohnung</string>
+    <string name="last_reward">Letzte Belohnung</string>
+    <string name="last_reward_unavailable">k. A.</string>
+    <string name="total_rewards_earned">Insgesamt verdiente Belohnungen</string>
+    <string name="reward_history_node">Knoten: %s</string>
+    <string name="reward_history_upcoming">Anstehend</string>
+    <string name="reward_history_error">Belohnungsverlauf konnte nicht geladen werden</string>
     <string name="next_payout">Nächste Auszahlung</string>
     <string name="wait_until_node_churned_out">Warten Sie, bis der Knoten ausgeschieden ist</string>
     <string name="deposit_option_leave">Verlassen</string>
@@ -526,6 +543,9 @@
     <string name="security_scanner_transaction_scanned_by">Transaktion gescannt von</string>
     <string name="security_scanner_transaction_scanning">Wird gescannt…</string>
     <string name="security_scanner_transaction_not_scanned">Transaktion nicht gescannt von</string>
+    <string name="security_scanner_safe_title">Von Blockaid gescannt</string>
+    <string name="security_scanner_safe_description">Keine böswillige Aktivität erkannt. Diese Transaktion kann sicher signiert werden.</string>
+    <string name="security_scanner_safe_continue">Fortfahren</string>
     <string name="keygen_step_preparing_vault">Tresor wird vorbereitet</string>
     <string name="keygen_step_generating_ecdsa">Generieren des ECDSA-Schlüssels</string>
     <string name="reshare_step_generating_eddsa">Generieren eines EdDSA-Schlüssels</string>
@@ -1033,6 +1053,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Der Mindestbetrag zur Aktivierung dieser Adresse beträgt %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Der Mindestbetrag zur Aktivierung dieser Adresse beträgt %1$s %2$s (Existential Deposit).</string>
+    <string name="send_error_near_destination_not_found">Dieses NEAR-Konto existiert nicht. Prüfen Sie den Empfänger: Eine Überweisung dorthin würde nur Gas verbrauchen.</string>
+    <string name="send_error_near_unsupported_payload">Diese NEAR-Transaktion wird nicht unterstützt. Nur native NEAR-Überweisungen können signiert werden.</string>
+    <string name="send_error_near_invalid_recipient">Dies ist kein gültiges NEAR-Konto. Prüfen Sie den Empfänger.</string>
+    <string name="send_error_near_key_not_full_access">Der Schlüssel dieses Tresors hat keinen vollen Zugriff auf dieses NEAR-Konto und kann daher nicht davon senden.</string>
+    <string name="send_error_near_network">Das NEAR-Netzwerk hat einen Fehler oder eine unlesbare Antwort zurückgegeben. Bitte versuchen Sie es erneut.</string>
+    <string name="send_error_near_safety_check">Diese NEAR-Transaktion hat eine Sicherheitsprüfung nicht bestanden und wurde nicht signiert.</string>
     <string name="send_error_xrp_destination_tag_required">Diese Adresse erfordert ein Ziel-Tag. Fügen Sie eines hinzu, um fortzufahren.</string>
     <string name="send_error_xrp_destination_no_trust_line">Diese Adresse kann %1$s nicht empfangen. Der Empfänger muss dafür zuerst eine Trust-Line eröffnen.</string>
     <string name="ripple_trust_line_title">Trust Line aktivieren</string>
@@ -1070,6 +1096,15 @@
     <string name="ton_unstake_title">Unstaken %1$s</string>
     <string name="ton_staking_pool_address">Pool-Adresse</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator-Pools unterstützen nur die vollständige Abhebung. Dein gesamtes gestaktes Guthaben wird zurückgezahlt.</string>
+    <string name="ton_liquid_staking_label">Liquid Staking</string>
+    <string name="ton_liquid_deposit_fee">Einzahlungsgebühr</string>
+    <string name="ton_liquid_you_receive">Du erhältst</string>
+    <string name="ton_liquid_attached_value">Beigefügt für die Verarbeitung</string>
+    <string name="ton_liquid_stake_fee_notice">Enthält die Einzahlungsgebühr von %1$s %2$s, die Tonstakers vorab abzieht. Der vom Pool nicht genutzte Teil wird erstattet.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s werden zur Verarbeitung der Abhebung beigefügt; der ungenutzte Teil wird erstattet. Die Auszahlung erfolgt sofort, wenn der Pool über Liquidität verfügt, andernfalls am Ende der aktuellen Validierungsrunde.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s werden zur Verarbeitung der Abhebung beigefügt; der ungenutzte Teil wird erstattet. Die Auszahlung erfolgt am Ende der aktuellen Validierungsrunde.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers nimmt derzeit keine Einzahlungen an</string>
+    <string name="ton_liquid_no_position">Dieser Vault hält kein tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL ist nicht in diesem Tresor</string>
     <string name="solana_staking_total_staked_sol">Insgesamt gestaked SOL</string>
@@ -1440,6 +1475,8 @@
     <string name="transaction_status_refunded_label">Erstattet</string>
     <string name="transaction_status_failed_slippage_label">Preis hat die Slippage-Toleranz überschritten</string>
     <string name="transaction_status_failed_slippage_description">Der Preis hat sich geändert, bevor dieser Tausch ausgeführt wurde. Die Auszahlung wäre geringer ausgefallen, als Ihre Slippage-Toleranz erlaubt, und das Netzwerk hat ihn rückgängig gemacht. Erhöhen Sie Ihre Slippage-Toleranz oder versuchen Sie es erneut.</string>
+    <string name="transaction_status_failed_expired_label">Abgelaufen, bevor sie aufgenommen wurde</string>
+    <string name="transaction_status_failed_expired_description">Das Netzwerk hat diese Transaktion verworfen, bevor sie aufgenommen wurde. Es wurde nichts gesendet und keine Netzwerkgebühr berechnet. Sie können es erneut versuchen.</string>
     <string name="transaction_status_in_progress_label">In Bearbeitung…</string>
     <string name="transaction_status_signed_label">Signiert</string>
     <string name="transaction_history_to_label">An</string>
@@ -1513,6 +1550,8 @@
     <string name="ton_op_nft_transfer">NFT-Überweisung</string>
     <string name="ton_op_excess_gas_refund">Erstattung überschüssiger Gasgebühren</string>
     <string name="ton_op_transfer">Überweisung</string>
+    <string name="ton_op_liquid_staking_deposit">Liquid-Staking-Einzahlung</string>
+    <string name="ton_op_jetton_burn">Jetton-Burn</string>
     <string name="ton_forward_ton_amount">Weitergeleiteter GRAM-Betrag</string>
     <string name="ton_raw_payload">Rohes Payload</string>
 

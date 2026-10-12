@@ -265,6 +265,10 @@
     <string name="verify_transaction_allow_death_warning">Esta transferencia puede vaciar la cuenta del remitente. Si el saldo restante cae por debajo del depósito existencial, la cuenta se desactivará (se recuperará) y se perderán los %1$s restantes.</string>
     <string name="vault_settings_delete_vault_value">Valor de la Bóveda:</string>
     <string name="join_keysign_wrong_reshare">ReShare incorrecto</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Esta transferencia de token TON no proviene de esta bóveda</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">El token mostrado no coincide con el token que envía esta transferencia</string>
+    <string name="join_keysign_ton_jetton_unverifiable">No se pudo verificar esta transferencia de token TON. Inténtalo de nuevo.</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">Recompartir no es compatible con bóvedas que tienen una clave QBTC</string>
     <string name="swap_screen_provider_title">Proveedor</string>
     <string name="swap_form_minimum_amount">El monto de intercambio es demasiado pequeño. El monto recomendado es %1$s %2$s</string>
     <string name="backup_password_screen_title">Respaldo</string>
@@ -350,6 +354,7 @@
     <string name="signing_error_account_not_funded">Esta cuenta todavía no existe en cadena.\nPor favor, cargue la billetera primero.</string>
     <string name="signing_error_broadcast_rejected">Transacción rechazada por la red.</string>
     <string name="signing_error_broadcast_rejected_s">Transacción rechazada por la red: %s</string>
+    <string name="signing_error_swap_tx_unsignable">El proveedor del swap devolvió una transacción que no se puede firmar de forma segura. Volver a intentarlo no servirá: vuelve atrás y solicita una nueva cotización.</string>
     <string name="verify_transaction_fast_sign_btn_title">Firma rápida</string>
     <string name="verify_transaction_paired_btn_title">Emparejado</string>
     <string name="keysign_sign_transaction">Firmar transacción</string>
@@ -374,6 +379,10 @@
     <string name="qr_share_label_to">Para</string>
     <string name="qr_share_label_from">Desde</string>
     <string name="qr_share_label_type">Tipo</string>
+    <string name="keysign_share_qr_title">Compartir código QR</string>
+    <string name="keysign_share_qr_copy_link">Copiar enlace</string>
+    <string name="keysign_share_qr_share_image">Compartir imagen QR</string>
+    <string name="keysign_share_qr_link_copied">Enlace copiado</string>
     <string name="qr_share_type_fast_vault">Bóveda rápida</string>
     <string name="qr_share_type_secure_vault">Bóveda segura</string>
     <string name="error_folder_must_have_at_least_one_vault">La carpeta necesita al menos una bóveda seleccionada</string>
@@ -395,6 +404,7 @@
     <string name="deposit_error_thorchain_chain_halted">Los depósitos en %1$s están actualmente detenidos en THORChain. Por favor, inténtelo de nuevo más tarde.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">No se pudo conectar con THORChain para verificar la bóveda de entrada. Por favor, inténtelo de nuevo.</string>
     <string name="deposit_error_pool_not_available">El pool %1$s no está disponible actualmente para depósitos.</string>
+    <string name="deposit_error_pool_staged_unpaired">El pool %1$s está en estado «staged» y solo acepta depósitos emparejados con el otro lado. THORChain reembolsaría esta transacción.</string>
     <string name="deposit_form_screen_assets">Activo</string>
     <string name="deposit_form_screen_asset_selection">Selección de activos</string>
     <string name="deposit_form_screen_lpunits">Unidades LP</string>
@@ -495,6 +505,13 @@
     <string name="active_nodes">Nodos Activos</string>
     <string name="next_churn">Próxima Rotación</string>
     <string name="next_award">Próxima recompensa</string>
+    <string name="next_reward">Próxima recompensa</string>
+    <string name="last_reward">Última recompensa</string>
+    <string name="last_reward_unavailable">N/D</string>
+    <string name="total_rewards_earned">Recompensas totales obtenidas</string>
+    <string name="reward_history_node">Nodo: %s</string>
+    <string name="reward_history_upcoming">Próxima</string>
+    <string name="reward_history_error">No se pudo cargar el historial de recompensas</string>
     <string name="next_payout">Próximo Pago</string>
     <string name="wait_until_node_churned_out">Espere hasta que el nodo sea expulsado</string>
     <string name="deposit_option_leave">Salir</string>
@@ -526,6 +543,9 @@
     <string name="security_scanner_transaction_scanned_by">Transacción escaneada por</string>
     <string name="security_scanner_transaction_scanning">Escaneando…</string>
     <string name="security_scanner_transaction_not_scanned">Transacción no escaneada por</string>
+    <string name="security_scanner_safe_title">Escaneado por Blockaid</string>
+    <string name="security_scanner_safe_description">No se detectó actividad maliciosa. Esta transacción es segura para firmar.</string>
+    <string name="security_scanner_safe_continue">Continuar</string>
     <string name="keygen_step_preparing_vault">Preparando la bóveda</string>
     <string name="keygen_step_generating_ecdsa">Generación de clave ECDSA</string>
     <string name="keygen_step_generating_eddsa">Generación de clave EdDSA</string>
@@ -1031,6 +1051,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">La cantidad mínima para activar esta dirección es %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">La cantidad mínima para activar esta dirección es %1$s %2$s (depósito existencial).</string>
+    <string name="send_error_near_destination_not_found">Esta cuenta NEAR no existe. Revisa el destinatario: una transferencia a ella solo consumiría gas.</string>
+    <string name="send_error_near_unsupported_payload">Esta transacción de NEAR no es compatible. Solo se pueden firmar transferencias nativas de NEAR.</string>
+    <string name="send_error_near_invalid_recipient">Esta no es una cuenta NEAR válida. Revisa el destinatario.</string>
+    <string name="send_error_near_key_not_full_access">La clave de esta bóveda no tiene acceso completo a esta cuenta NEAR, por lo que no puede enviar desde ella.</string>
+    <string name="send_error_near_network">La red NEAR devolvió un error o una respuesta ilegible. Inténtalo de nuevo.</string>
+    <string name="send_error_near_safety_check">Esta transacción de NEAR no superó una comprobación de seguridad y no se firmó.</string>
     <string name="send_error_xrp_destination_tag_required">Esta dirección requiere una etiqueta de destino. Añade una para continuar.</string>
     <string name="send_error_xrp_destination_no_trust_line">Esta dirección no puede recibir %1$s. El destinatario debe abrir antes una línea de confianza para este activo.</string>
     <string name="ripple_trust_line_title">Activar línea de confianza</string>
@@ -1068,6 +1094,15 @@
     <string name="ton_unstake_title">Retirar stake de %1$s</string>
     <string name="ton_staking_pool_address">Dirección del pool</string>
     <string name="ton_unstake_full_withdrawal_notice">Los pools de nominadores solo permiten el retiro completo. Se devolverá todo tu saldo en staking.</string>
+    <string name="ton_liquid_staking_label">Staking líquido</string>
+    <string name="ton_liquid_deposit_fee">Comisión de depósito</string>
+    <string name="ton_liquid_you_receive">Recibirás</string>
+    <string name="ton_liquid_attached_value">Adjunto para el procesamiento</string>
+    <string name="ton_liquid_stake_fee_notice">Incluye la comisión de depósito de %1$s %2$s que Tonstakers descuenta por adelantado. La parte que el pool no utilice se reembolsa.</string>
+    <string name="ton_liquid_unstake_notice">Se adjuntan %1$s %2$s para procesar el retiro; la parte no utilizada se reembolsa. El pago es inmediato cuando el pool tiene liquidez; de lo contrario, al final de la ronda de validación actual.</string>
+    <string name="ton_liquid_unstake_notice_round_end">Se adjuntan %1$s %2$s para procesar el retiro; la parte no utilizada se reembolsa. El pago se realiza al final de la ronda de validación actual.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers no acepta depósitos en este momento</string>
+    <string name="ton_liquid_no_position">Esta bóveda no tiene tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL no está en esta bóveda</string>
     <string name="solana_staking_total_staked_sol">Total en staking de SOL</string>
@@ -1439,6 +1474,8 @@
     <string name="transaction_status_refunded_label">Reembolsada</string>
     <string name="transaction_status_failed_slippage_label">El precio superó la tolerancia de deslizamiento</string>
     <string name="transaction_status_failed_slippage_description">El precio cambió antes de que se ejecutara este intercambio, por lo que el pago habría sido inferior a lo permitido por su tolerancia de deslizamiento y la red lo revirtió. Aumente la tolerancia de deslizamiento o inténtelo de nuevo.</string>
+    <string name="transaction_status_failed_expired_label">Caducó antes de ser incluida</string>
+    <string name="transaction_status_failed_expired_description">La red descartó esta transacción antes de incluirla, por lo que no se envió nada y no se cobró ninguna tarifa de red. Puede intentarlo de nuevo.</string>
     <string name="transaction_status_in_progress_label">En progreso…</string>
     <string name="transaction_status_signed_label">Firmada</string>
     <string name="transaction_history_to_label">Para</string>
@@ -1512,6 +1549,8 @@
     <string name="ton_op_nft_transfer">Transferencia de NFT</string>
     <string name="ton_op_excess_gas_refund">Reembolso de gas sobrante</string>
     <string name="ton_op_transfer">Transferencia</string>
+    <string name="ton_op_liquid_staking_deposit">Depósito de staking líquido</string>
+    <string name="ton_op_jetton_burn">Quema de Jetton</string>
     <string name="ton_forward_ton_amount">Cantidad de GRAM reenviada</string>
     <string name="ton_raw_payload">Payload sin procesar</string>
 

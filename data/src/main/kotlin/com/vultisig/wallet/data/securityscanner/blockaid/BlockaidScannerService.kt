@@ -33,6 +33,7 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
     private suspend fun scanEvmTransaction(
         transaction: SecurityScannerTransaction
     ): SecurityScannerResult {
+        if (transaction.precedingTransactions.isNotEmpty()) return scanEvmTransactionBulk(transaction)
         return runSecurityScan(transaction) {
             blockaidRpcClient
                 .scanEVMTransaction(
@@ -43,6 +44,38 @@ class BlockaidScannerService(private val blockaidRpcClient: BlockaidRpcClientCon
                     data = transaction.data,
                 )
                 .toSecurityScannerResult(PROVIDER_NAME)
+        }
+    }
+
+    /**
+     * Scans the preceding transactions and [transaction] in signing order, so a swap is simulated
+     * with its approve already applied. The verdict is the least secure entry; an entry that fails
+     * to scan (or a wrong entry count) fails the scan.
+     */
+    private suspend fun scanEvmTransactionBulk(
+        transaction: SecurityScannerTransaction
+    ): SecurityScannerResult {
+        val transactions = transaction.precedingTransactions + transaction
+        return runSecurityScan(transaction) {
+            val responses =
+                blockaidRpcClient.scanEVMTransactionBulk(
+                    chain = transaction.chain,
+                    transactions =
+                        transactions.map {
+                            EthereumScanTransactionRequestJson.DataJson(
+                                from = it.from,
+                                to = it.to,
+                                data = it.data,
+                                value = it.amount.toHexString(),
+                            )
+                        },
+                )
+            check(responses.size == transactions.size) {
+                "Expected ${transactions.size} bulk scan results, got ${responses.size}"
+            }
+            val results = responses.map { it.toSecurityScannerResult(PROVIDER_NAME) }
+            // reversed so a tie resolves to the swap (last entry), not the approve
+            results.asReversed().maxBy { it.riskLevel }.copy(warnings = results.flatMap { it.warnings })
         }
     }
 

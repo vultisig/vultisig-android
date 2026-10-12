@@ -7,10 +7,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -31,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
 import com.vultisig.wallet.R
@@ -43,19 +49,16 @@ import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.launch
 
 /**
- * The floating overview card: off the radius scale for the same reason as [V2SheetShape] — it is
- * the design kit's sheet frame, not an authored Vultisig surface.
+ * The overview card's top corners: off the radius scale for the same reason as [V2SheetShape] — it
+ * is the design kit's sheet frame, not an authored Vultisig surface.
  */
-private val OverviewSheetShape = RoundedCornerShape(34.dp)
-
-/** The gap between the card and the window edges, on all three sides that touch one. */
-private val OverviewSheetInset = 16.dp
+private val OverviewSheetShape = RoundedCornerShape(topStart = 34.dp, topEnd = 34.dp)
 
 /** The diameter of the two round controls flanking the title. */
 internal val OverviewSheetControlSize = 32.dp
 
 /**
- * A transaction overview presented as a card floating over the form that produced it, so the
+ * A transaction overview presented as a full-width card over the form that produced it, so the
  * figures being confirmed stay visible, dimmed, behind the confirmation.
  *
  * The card wraps its content and grows with it, up to the status bar; past that [content] scrolls
@@ -90,24 +93,31 @@ internal fun OverviewBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         modifier = modifier.statusBarsPadding(),
+        // Past the Material3 default sheetMaxWidth (640.dp) the sheet itself would stop at that
+        // cap regardless of the card's own fillMaxWidth(), leaving it short of the edges on
+        // tablets/large screens.
+        sheetMaxWidth = Dp.Unspecified,
         containerColor = Color.Transparent,
         contentColor = Theme.v2.colors.text.primary,
         shape = RectangleShape,
         dragHandle = null,
         scrimColor = OverviewSheetScrim,
+        // The card runs under the navigation bar and pads its own content clear of it instead;
+        // the default would inset the whole card and leave a strip of scrim below it.
+        contentWindowInsets = { WindowInsets(0) },
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier =
                 Modifier.fillMaxWidth()
-                    .padding(
-                        start = OverviewSheetInset,
-                        end = OverviewSheetInset,
-                        bottom = OverviewSheetInset,
-                    )
                     .clip(OverviewSheetShape)
                     .background(Theme.v2.colors.backgrounds.surface1)
                     .border(width = 1.dp, color = OverviewSheetBorder, shape = OverviewSheetShape)
+                    .windowInsetsPadding(
+                        WindowInsets.safeDrawing.only(
+                            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom,
+                        ),
+                    )
                     .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 32.dp),
         ) {
             DragHandler(color = Theme.v2.colors.vibrant.primary)

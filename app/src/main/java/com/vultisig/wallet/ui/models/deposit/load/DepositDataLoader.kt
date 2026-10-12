@@ -199,7 +199,7 @@ constructor(
             }
         state.update {
             it.copy(
-                depositMessage = R.string.deposit_message_deposit_title.asUiText(chain.raw),
+                depositMessage = R.string.deposit_message_deposit_title.asUiText(chain.displayName),
                 depositOptions = depositOptions,
                 depositOption = depositOption,
                 depositChain = chain,

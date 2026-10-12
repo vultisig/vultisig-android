@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
@@ -71,7 +72,7 @@ internal fun PasscodeInputField(
 
     LaunchedEffect(enabled) { if (enabled) focusRequester.requestFocus() }
 
-    Box(modifier = modifier) {
+    Box(contentAlignment = Alignment.Center, modifier = modifier) {
         BasicTextField(
             state = textFieldState,
             enabled = enabled,
@@ -113,8 +114,7 @@ internal fun PasscodeInputField(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier =
-                        Modifier.weight(1f)
-                            .height(PASSCODE_CELL_HEIGHT)
+                        Modifier.size(PASSCODE_CELL_WIDTH, PASSCODE_CELL_HEIGHT)
                             .background(
                                 color = Theme.v2.colors.backgrounds.surface1,
                                 shape = PasscodeCellShape,
@@ -132,11 +132,13 @@ internal fun PasscodeInputField(
                             ),
                 ) {
                     when {
+                        // A drawn dot, not a "•" glyph: font metrics center bullets on cap-height,
+                        // not the cell, so text always sits a hair high.
                         isFilled ->
-                            Text(
-                                text = FILLED_MARK,
-                                color = Theme.v2.colors.text.primary,
-                                style = Theme.brockmann.body.m.medium,
+                            Box(
+                                modifier =
+                                    Modifier.size(FILLED_MARK_SIZE)
+                                        .background(Theme.v2.colors.text.primary, CircleShape),
                             )
                         isActive ->
                             Text(
@@ -162,12 +164,13 @@ internal fun PasscodeInputField(
 }
 
 private val PASSCODE_CELL_HEIGHT = 51.dp
+private val PASSCODE_CELL_WIDTH = 36.dp
+private val FILLED_MARK_SIZE = 8.dp
 private val PasscodeCellShape = V2.radius.md
 
 /** Figma uses a flat 10% white hairline on the idle cells rather than a theme border token. */
 private val PasscodeCellBorder = Color.White.copy(alpha = 0.1f)
 
-private const val FILLED_MARK = "•"
 private const val CARET_MARK = "|"
 
 internal const val PASSCODE_INPUT_FIELD_TAG = "passcodeInputField"

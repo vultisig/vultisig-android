@@ -156,8 +156,8 @@ internal data class SwapDiscountBps(val vult: Int? = null, val referral: Int? = 
  *
  * [isListRate] says the amount was grossed back up to the list rate, so subtracting the discount
  * rows lands on the net fee the Total Fee is built from — which is what makes those rows safe to
- * show. It is not the same as [percent] being non-null: a caller with no rate string to display
- * still grosses the amount.
+ * show. SwapKit's VULT row is the one exception; see [swapFeeRow]. It is not the same as [percent]
+ * being non-null: a caller with no rate string to display still grosses the amount.
  */
 internal data class SwapFeeRow(
     val fee: FiatValue,
@@ -171,15 +171,18 @@ internal data class SwapFeeRow(
  * Resolves the Swap Fee row — amount, rate, and the discount rows under it — from one price
  * snapshot ([srcFiat]), so no two of the three can be derived from different numbers.
  *
- * The row keeps the provider's own charged figure, drops the rate, and itemizes nothing in the
- * three cases below. They share a shape: a discount applies that this row has no way to show, and a
+ * SwapKit reports its source-chain inbound (deposit) cost as the quote's fee and bakes its
+ * affiliate fee into the quoted destination amount instead. Grossing a tier discount onto that cost
+ * would invent a discount on a network fee, and titling it with an affiliate rate would be wrong
+ * however it is valued, so the row keeps the charged figure with no rate. The VULT discount was
+ * still taken off the affiliate bps sent to SwapKit, though, so it is itemized on its own, priced
+ * like iOS' `affiliateDiscountBreakdown`: source fiat × tier bps. It does not reconcile against the
+ * row above it, since the affiliate fee it came off is not itemized anywhere.
+ *
+ * Every other provider keeps its charged figure, drops the rate, and itemizes nothing in the two
+ * cases below. They share a shape: a discount applies that this row has no way to show, and a
  * "0.50%" title over a fee that was never grossed restates the double-billing read the row exists
  * to fix (#5803).
- * - **The itemized amount is not an affiliate charge.** SwapKit reports its source-chain inbound
- *   (deposit) cost as the quote's fee and bakes its affiliate fee into the quoted destination
- *   amount instead, so adding a tier discount there would invent a discount on a network cost and
- *   inflate the row on every tiered cross-chain route — and titling that cost with an affiliate
- *   rate would be wrong however it is valued, discount or none.
  * - **[feeIncludedInRate] and a discount applies.** 1inch itemizes no affiliate fee at all; the row
  *   renders "included in quoted rate" where the amount would go. There is no figure to gross, so a
  *   discount row beneath it would subtract from nothing. Undiscounted, the list rate is exactly
@@ -196,7 +199,9 @@ internal fun swapFeeRow(
     feeIncludedInRate: Boolean = false,
 ): SwapFeeRow {
     val charged = SwapFeeRow(fee = netFee, percent = null, isListRate = false)
-    if (provider == SwapProvider.SWAPKIT) return charged
+    if (provider == SwapProvider.SWAPKIT) {
+        return charged.copy(vultDiscount = bpsOfSourceFiat(srcFiat, discounts.vult))
+    }
     // Nothing was discounted, so the charged fee already is the list rate: no grossing and no rows,
     // and the title states the rate the provider actually took.
     if (discounts.applied == 0) {

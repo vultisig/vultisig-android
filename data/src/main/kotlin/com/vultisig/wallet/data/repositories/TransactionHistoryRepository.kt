@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.buildTransactionHistoryId
 import com.vultisig.wallet.data.models.toEntity
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
+import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
@@ -27,6 +28,12 @@ interface TransactionHistoryRepository {
     suspend fun updateTransactionStatus(chain: String, txHash: String, result: TransactionResult)
 
     suspend fun getTransaction(chain: String, txHash: String): TransactionHistoryEntity?
+
+    /**
+     * Stores the network fee [txHash] actually paid, replacing the pre-sign estimate the row shows. A no-op
+     * for a missing row or one whose payload carries no network fee.
+     */
+    suspend fun recordPaidNetworkFee(chain: String, txHash: String, feeWei: BigInteger)
 
     fun observeTransactions(
         vaultId: String,
@@ -105,6 +112,21 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
     override suspend fun getTransaction(chain: String, txHash: String): TransactionHistoryEntity? =
         dao.getById(buildTransactionHistoryId(chain, txHash))
 
+    override suspend fun recordPaidNetworkFee(
+        chain: String,
+        txHash: String,
+        feeWei: BigInteger,
+    ) {
+        val fee = feeWei.toString()
+        dao.transformPayload(buildTransactionHistoryId(chain, txHash)) { payload ->
+            when (payload) {
+                is SendTransactionHistoryData -> payload.copy(paidNetworkFeeWei = fee)
+                is SwapTransactionHistoryData -> payload.copy(paidNetworkFeeWei = fee)
+                is UnknownTransactionHistoryData -> null
+            }
+        }
+    }
+
     override fun observeTransactions(
         vaultId: String,
         type: TransactionHistoryType,
@@ -130,14 +152,6 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
             .filter { it.payload.fromAddressOrNull == address }
             .mapTo(HashSet()) { it.txHash }
 
-    private val TransactionHistoryData.fromAddressOrNull: String?
-        get() =
-            when (this) {
-                is SendTransactionHistoryData -> fromAddress
-                is SwapTransactionHistoryData -> fromAddress.takeIf { it.isNotEmpty() }
-                is UnknownTransactionHistoryData -> null
-            }
-
     override suspend fun upsertFromBackfill(entity: TransactionHistoryEntity) =
         dao.upsertFromBackfill(entity)
 
@@ -154,3 +168,12 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
         dao.incrementRetryCount(id = id, lastCheckedAt = now)
     }
 }
+
+/** The sending address a history record carries, when its payload type records one. */
+internal val TransactionHistoryData.fromAddressOrNull: String?
+    get() =
+        when (this) {
+            is SendTransactionHistoryData -> fromAddress
+            is SwapTransactionHistoryData -> fromAddress.takeIf { it.isNotEmpty() }
+            is UnknownTransactionHistoryData -> null
+        }

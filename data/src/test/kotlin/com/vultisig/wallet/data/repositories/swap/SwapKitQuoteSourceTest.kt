@@ -1,8 +1,10 @@
 package com.vultisig.wallet.data.repositories.swap
 
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.SwapKitApprovalTx
 import com.vultisig.wallet.data.api.models.quotes.SwapKitFee
+import com.vultisig.wallet.data.api.models.quotes.SwapKitProviderError
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitRoute
@@ -11,6 +13,8 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTxMeta
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
+import com.vultisig.wallet.data.chains.helpers.SwapKitLegacyPsbtVersion
+import com.vultisig.wallet.data.chains.helpers.SwapKitPsbtParser
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
@@ -35,6 +39,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -239,6 +244,112 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
+    fun `fetch surfaces the provider minimum when no route comes back for a too-small amount`() =
+        runTest {
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    providerErrors = listOf(tooSmall(provider = "NEAR", minAmount = "73.40788248"))
+                )
+
+            val error =
+                assertThrows<SwapException.SmallSwapAmount> {
+                    source().fetch(request(tokenValue = ethAmount("38.99636006")))
+                }
+            assertEquals("73.40788248", error.message)
+        }
+
+    @Test
+    fun `fetch surfaces the lowest provider minimum`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors =
+                    listOf(
+                        tooSmall(provider = "NEAR", minAmount = "73.40788248"),
+                        tooSmall(provider = "CHAINFLIP", minAmount = "50.000"),
+                        SwapKitProviderError(provider = "GARDEN", errorCode = "noRoutesFound"),
+                    )
+            )
+
+        val error =
+            assertThrows<SwapException.SmallSwapAmount> {
+                source().fetch(request(tokenValue = ethAmount("1")))
+            }
+        assertEquals("50", error.message)
+    }
+
+    @Test
+    fun `fetch ignores a Thor or Maya minimum since those routes are filtered out`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors =
+                    listOf(
+                        tooSmall(provider = "THORCHAIN_STREAMING", minAmount = "10"),
+                        tooSmall(provider = "MAYACHAIN", minAmount = "10"),
+                    )
+            )
+
+        assertThrows<SwapKitError.NoRoutes> { source().fetch(request(tokenValue = ethAmount("1"))) }
+    }
+
+    @Test
+    fun `fetch ignores a minimum that names no provider`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors = listOf(tooSmall(provider = null, minAmount = "10"))
+            )
+
+        assertThrows<SwapKitError.NoRoutes> { source().fetch(request(tokenValue = ethAmount("1"))) }
+    }
+
+    @Test
+    fun `fetch keeps NoRoutes when the amount already meets the reported minimum`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors = listOf(tooSmall(provider = "NEAR", minAmount = "73.40788248"))
+            )
+
+        assertThrows<SwapKitError.NoRoutes> {
+            source().fetch(request(tokenValue = ethAmount("73.40788248")))
+        }
+    }
+
+    @Test
+    fun `fetch keeps NoRoutes when the too-small error carries no usable minimum`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                providerErrors =
+                    listOf(
+                        tooSmall(provider = "NEAR", minAmount = null),
+                        tooSmall(provider = "CHAINFLIP", minAmount = "n/a"),
+                    )
+            )
+
+        assertThrows<SwapKitError.NoRoutes> { source().fetch(request(tokenValue = ethAmount("1"))) }
+    }
+
+    @Test
+    fun `fetch surfaces the provider minimum when the only routes are filtered out`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "thor", providers = listOf("THORCHAIN"))),
+                providerErrors = listOf(tooSmall(provider = "NEAR", minAmount = "73.40788248")),
+            )
+
+        val error =
+            assertThrows<SwapException.SmallSwapAmount> {
+                source().fetch(request(tokenValue = ethAmount("1")))
+            }
+        assertEquals("73.40788248", error.message)
+    }
+
+    @Test
     fun `fetch maps EVM tx response and surfaces sub-provider from swap response`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
@@ -358,6 +469,35 @@ internal class SwapKitQuoteSourceTest {
 
         assertThrows<SwapKitError.Decoding> { source().fetch(request()) }
     }
+
+    @Test
+    fun `fetch accepts a NEAR Intents ERC-20 deposit that transfers the sold amount to targetAddress`() =
+        runTest {
+            stubErc20Deposit()
+
+            val result = source().fetch(usdtDepositRequest()) as SwapQuoteResult.Evm
+
+            assertEquals(USDT_CONTRACT, result.data.tx.to)
+            assertEquals(USDT_DEPOSIT_DATA, result.data.tx.data)
+        }
+
+    @Test
+    fun `fetch refuses an ERC-20 deposit whose calldata recipient is not targetAddress`() =
+        runTest {
+            stubErc20Deposit(targetAddress = "0x000000000000000000000000000000000000dEaD")
+
+            assertThrows<SwapKitError.Decoding> { source().fetch(usdtDepositRequest()) }
+        }
+
+    @Test
+    fun `fetch refuses an ERC-20 deposit for another amount than the one sold as Decoding`() =
+        runTest {
+            stubErc20Deposit()
+
+            assertThrows<SwapKitError.Decoding> {
+                source().fetch(usdtDepositRequest(amount = BigInteger.valueOf(19_000_000)))
+            }
+        }
 
     @Test
     fun `fetch decodes Solana base64 from JsonPrimitive at the tx root`() = runTest {
@@ -1710,6 +1850,65 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch rewrites a live version-2 DOGE PSBT to version 1 before staging it`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        val livePsbt = liveV2Psbt("DOGE")
+        stubDogePsbtRoute(livePsbt)
+
+        val result =
+            source().fetch(request(srcToken = dogeCoin(), dstToken = ethCoin()))
+                as SwapQuoteResult.Native
+        val payload = (result.quote as SwapQuote.SwapKit).data
+
+        assertEquals(SwapKitSwapPayloadJson.TX_TYPE_PSBT_DOGE, payload.txType)
+        val offset = SwapKitPsbtParser.unsignedTxOffset(payload.txPayload)
+        assertEquals(1, payload.txPayload[offset].toInt())
+        assertTrue(
+            SwapKitLegacyPsbtVersion.normalizeToV1(livePsbt).contentEquals(payload.txPayload)
+        )
+    }
+
+    @Test
+    fun `fetch throws Decoding for a DOGE PSBT that can't be signed as version 1`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        // Live v2 PSBT with its single input's sequence lowered to 10: BIP68 is now enabled.
+        val psbt = liveV2Psbt("DOGE")
+        val sequenceOffset = SwapKitPsbtParser.unsignedTxOffset(psbt) + 4 + 1 + 36 + 1
+        byteArrayOf(0x0A, 0, 0, 0).copyInto(psbt, sequenceOffset)
+        stubDogePsbtRoute(psbt)
+
+        assertThrows<SwapKitError.Decoding> {
+            source().fetch(request(srcToken = dogeCoin(), dstToken = ethCoin()))
+        }
+    }
+
+    private fun stubDogePsbtRoute(psbt: ByteArray) {
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-doge", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive(Base64.getEncoder().encodeToString(psbt)),
+                meta = SwapKitTxMeta(txType = "PSBT"),
+                targetAddress = "DtargetAddress",
+                expectedBuyAmount = "1",
+                providers = listOf("NEAR"),
+            )
+    }
+
+    private fun liveV2Psbt(chain: String): ByteArray {
+        val text =
+            requireNotNull(javaClass.getResourceAsStream("/swapkit/legacy-psbt-v2.json")) {
+                    "missing /swapkit/legacy-psbt-v2.json"
+                }
+                .bufferedReader()
+                .use { it.readText() }
+        return Base64.getDecoder()
+            .decode(Json.parseToJsonElement(text).jsonObject.getValue(chain).jsonPrimitive.content)
+    }
+
+    @Test
     fun `fetch throws Decoding when a non-EVM response has no targetAddress`() = runTest {
         // Deposit-only chains (Cardano / XRP) route entirely on `targetAddress`, so a null value
         // would stage an unspendable quote. The tx itself is valid base64 here, so this pins the
@@ -2137,6 +2336,18 @@ internal class SwapKitQuoteSourceTest {
 
     // ---- helpers ----
 
+    private fun tooSmall(provider: String?, minAmount: String?) =
+        SwapKitProviderError(
+            provider = provider,
+            errorCode = "sellAssetAmountTooSmall",
+            minAmount = minAmount,
+        )
+
+    private fun ethAmount(decimal: String): TokenValue {
+        val eth = ethCoin()
+        return TokenValue(value = BigDecimal(decimal).movePointRight(eth.decimal).toBigIntegerExact(), token = eth)
+    }
+
     private fun request(
         srcToken: Coin = ethCoin(),
         dstToken: Coin = solanaCoin(),
@@ -2153,6 +2364,41 @@ internal class SwapKitQuoteSourceTest {
             affiliateBps = affiliateBps,
             slippageBps = slippageBps,
         )
+
+    private fun stubErc20Deposit(
+        targetAddress: String = USDT_DEPOSIT_TARGET,
+        gas: String = "0x12c25",
+    ) {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r", providers = listOf("NEAR"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            evmSwapResponse(
+                gas = gas,
+                to = USDT_CONTRACT,
+                data = USDT_DEPOSIT_DATA,
+                value = "0x0",
+                providers = listOf("NEAR"),
+                targetAddress = targetAddress,
+            )
+    }
+
+    /** 20 USDT, the amount the real NEAR Intents deposit calldata transfers. */
+    private fun usdtDepositRequest(
+        amount: BigInteger = BigInteger.valueOf(20_000_000)
+    ): SwapQuoteRequest {
+        val usdt =
+            ethCoin()
+                .copy(
+                    ticker = "USDT",
+                    decimal = 6,
+                    contractAddress = USDT_CONTRACT,
+                    isNativeToken = false,
+                )
+        return request(srcToken = usdt, tokenValue = TokenValue(value = amount, token = usdt))
+    }
 
     private fun route(
         routeId: String,
@@ -2183,9 +2429,11 @@ internal class SwapKitQuoteSourceTest {
         approvalAddress: String? = null,
         approvalTx: SwapKitApprovalTx? = null,
         fees: List<SwapKitFee> = emptyList(),
+        targetAddress: String? = null,
     ) =
         SwapKitSwapResponseJson(
             swapId = "swap-id",
+            targetAddress = targetAddress,
             tx =
                 buildJsonObject {
                     from?.let { put("from", JsonPrimitive(it)) }
@@ -2273,6 +2521,19 @@ internal class SwapKitQuoteSourceTest {
             isNativeToken = true,
         )
 
+    private fun dogeCoin() =
+        Coin(
+            chain = Chain.Dogecoin,
+            ticker = "DOGE",
+            logo = "",
+            address = "DH5yaieqoZN36fDVciNyRueRGvGLR3mr7L",
+            decimal = 8,
+            hexPublicKey = "pub",
+            priceProviderID = "dogecoin",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     private fun tronCoin() =
         Coin(
             chain = Chain.Tron,
@@ -2337,4 +2598,14 @@ internal class SwapKitQuoteSourceTest {
             contractAddress = "",
             isNativeToken = true,
         )
+
+    private companion object {
+        // Real `/v3/swap` NEAR Intents reply for 20 USDT -> SOL (vultisig-ios
+        // `v3-real-usdt-sol-swap.json`).
+        const val USDT_CONTRACT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+        const val USDT_DEPOSIT_TARGET = "0xCB2aC797EFf13Ee982453F5722B74aB5c56741Af"
+        const val USDT_DEPOSIT_DATA =
+            "0xa9059cbb000000000000000000000000cb2ac797eff13ee982453f5722b74ab5c56741af" +
+                "0000000000000000000000000000000000000000000000000000000001312d00"
+    }
 }

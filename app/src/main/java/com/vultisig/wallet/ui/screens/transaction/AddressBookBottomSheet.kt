@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -31,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -42,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.animatePlacementInScope
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
@@ -162,29 +165,38 @@ private fun AddressToggle(
     onAddressClick: () -> Unit,
     onVaultClick: () -> Unit,
 ) {
-    Box(modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min)) {
+    Box(
+        modifier =
+            Modifier.height(intrinsicSize = IntrinsicSize.Min)
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = Theme.v2.radius.pill,
+                )
+                .padding(4.dp)
+    ) {
         LookaheadScope {
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier =
-                    Modifier.border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.light,
-                            shape = Theme.v2.radius.pill,
-                        )
-                        .padding(4.dp)
-                        .fillMaxWidth(),
-            ) {
+            Box(
+                Modifier.animatePlacementInScope(lookaheadScope = this@LookaheadScope)
+                    .fillMaxWidth(0.5f)
+                    .fillMaxHeight()
+                    .background(
+                        color = Theme.v2.colors.variables.buttonsCTAPrimary,
+                        shape = Theme.v2.radius.pill,
+                    )
+                    .align(if (isShowingAddresses) Alignment.CenterStart else Alignment.CenterEnd)
+            )
+
+            Row(modifier = Modifier.fillMaxWidth()) {
                 PickerItem(
                     title = stringResource(R.string.address_book_saved_addresses),
                     onClick = onAddressClick,
-                    isSelected = isShowingAddresses,
                 )
 
                 PickerItem(
                     title = stringResource(R.string.address_book_my_vaults),
                     onClick = onVaultClick,
-                    isSelected = !isShowingAddresses,
                 )
             }
         }
@@ -192,8 +204,7 @@ private fun AddressToggle(
 }
 
 @Composable
-private fun RowScope.PickerItem(title: String, onClick: () -> Unit, isSelected: Boolean) {
-
+private fun RowScope.PickerItem(title: String, onClick: () -> Unit) {
     Text(
         text = title,
         style = Theme.brockmann.supplementary.footnote,
@@ -202,14 +213,9 @@ private fun RowScope.PickerItem(title: String, onClick: () -> Unit, isSelected: 
         overflow = TextOverflow.MiddleEllipsis,
         maxLines = 1,
         modifier =
-            Modifier.width(160.dp)
+            Modifier.weight(1f)
                 .height(42.dp)
-                .background(
-                    color =
-                        if (isSelected) Theme.v2.colors.variables.buttonsCTAPrimary
-                        else Theme.v2.colors.backgrounds.transparent,
-                    shape = Theme.v2.radius.pill,
-                )
+                .clip(Theme.v2.radius.pill)
                 .clickable(onClick = onClick)
                 .padding(vertical = 12.dp, horizontal = 20.dp),
     )

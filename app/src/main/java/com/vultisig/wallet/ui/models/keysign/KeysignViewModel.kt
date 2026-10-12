@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
+import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.keygen.DKLSKeysign
@@ -20,10 +21,10 @@ import com.vultisig.wallet.data.keygen.MaliciousPartyException
 import com.vultisig.wallet.data.keygen.MldsaKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
@@ -58,10 +59,11 @@ import com.vultisig.wallet.data.usecases.AwaitApprovalConfirmationUseCase
 import com.vultisig.wallet.data.usecases.BroadcastKeysignUseCase
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.usecases.FetchPaidNetworkFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.KeysignBroadcastResult
 import com.vultisig.wallet.data.usecases.SaveKeysignTransactionHistoryUseCase
-import com.vultisig.wallet.data.usecases.UpdateEvmActualFeeUseCase
+import com.vultisig.wallet.data.usecases.UpdateActualNetworkFeeUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
@@ -69,13 +71,14 @@ import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.hero.retitled
-import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
-import com.vultisig.wallet.ui.models.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.SwapRetry
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.toSwapRetry
+import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.transactiondecoding.DoneTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -83,6 +86,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import com.vultisig.wallet.ui.utils.or
 import com.vultisig.wallet.ui.utils.resolveDstVaultName
 import dagger.assisted.Assisted
@@ -353,6 +357,8 @@ constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val fetchPaidNetworkFee: FetchPaidNetworkFeeUseCase,
+    private val fiatValueToString: FiatValueToStringMapper,
     private val inAppReviewRepository: InAppReviewRepository,
     private val pendingLimitOrderRepository: PendingLimitOrderRepository,
     private val utxoInFlightRepository: UtxoInFlightRepository,
@@ -437,7 +443,8 @@ constructor(
 
     private val saveKeysignTransactionHistory =
         SaveKeysignTransactionHistoryUseCase(transactionHistoryRepository)
-    private val updateEvmActualFee = UpdateEvmActualFeeUseCase(evmApiFactory, gasFeeToEstimatedFee)
+    private val updateActualNetworkFee =
+        UpdateActualNetworkFeeUseCase(fetchPaidNetworkFee, gasFeeToEstimatedFee)
     private val broadcastKeysign =
         BroadcastKeysignUseCase(
             broadcastTx = broadcastTx,
@@ -817,7 +824,12 @@ constructor(
         } catch (e: Exception) {
             Timber.e(e)
             state.update {
-                it.copy(signingState = KeysignState.Error(e.message or R.string.unknown_error))
+                it.copy(
+                    signingState =
+                        KeysignState.Error(
+                            e.nearErrorTextOrNull() ?: (e.message or R.string.unknown_error)
+                        )
+                )
             }
         }
     }
@@ -1146,25 +1158,35 @@ constructor(
             transactionHistoryData = transactionHistoryData,
             // Polkadot extrinsics are mortal: persist the head block at broadcast so the status
             // poller can scan the absolute inclusion window instead of a head-relative one that
-            // drifts out of reach. Null for other chains.
+            // drifts out of reach. XRP persists the tx's LastLedgerSequence, past which the
+            // poller can call a never-validated tx expired. Null for other chains.
             broadcastBlockNumber =
-                (keysignPayload?.blockChainSpecific as? BlockChainSpecific.Polkadot)
-                    ?.currentBlockNumber
-                    ?.toLong(),
+                keysignPayload?.let { payload ->
+                    when (val specific = payload.blockChainSpecific) {
+                        is BlockChainSpecific.Polkadot -> specific.currentBlockNumber.toLong()
+                        is BlockChainSpecific.Ripple -> RippleHelper.lastLedgerSequence(payload)
+                        else -> null
+                    }
+                },
         )
     }
 
     /**
      * Starts foreground transaction-status polling, delegating the status-service / SwapKit polling
      * strategies to [txStatusPoller]. Mirrors each observed status into [state] and, once a
-     * terminal status is reached, replaces the estimated EVM fee with the actual burned fee.
+     * terminal status is reached, replaces the estimated network fee with the fee actually paid.
      */
     private fun startForegroundPolling(txHash: String, chain: Chain) {
         pollingTxStatusJob?.cancel()
         pollingTxStatusJob =
             viewModelScope.safeLaunch {
                 val outcome =
-                    txStatusPoller.poll(txHash, chain, isSwapKitSwap = isSwapKitSwap()) { result ->
+                    txStatusPoller.poll(
+                        txHash,
+                        chain,
+                        isSwapKitSwap = isSwapKitSwap(),
+                        senderAccountId = keysignPayload?.coin?.address,
+                    ) { result ->
                         state.update {
                             it.copy(
                                 signingState =
@@ -1175,7 +1197,7 @@ constructor(
                         }
                     }
                 when (outcome) {
-                    TxStatusPollOutcome.Terminal -> tryUpdateEvmActualFee(txHash, chain)
+                    TxStatusPollOutcome.Terminal -> tryUpdateActualNetworkFee(txHash, chain)
                     // The done screen has no watcher left, so it must not keep advertising a
                     // status that can never advance — land where a broadcast with nothing to poll
                     // lands. The history row is still settled by the tx-history poller (#5510).
@@ -1198,29 +1220,32 @@ constructor(
             SwapProvider.SWAPKIT.getSwapProviderId()
 
     /**
-     * After confirmation, fetches the receipt and replaces the estimated fee with the actual burned
-     * fee (`gasUsed × effectiveGasPrice`). Falls back silently to the estimate on any error.
+     * After confirmation, replaces the estimated fee with the fee actually paid on the done screen
+     * and the history row: `gasUsed × effectiveGasPrice` from the EVM receipt, the wallet
+     * transaction's `total_fees` on TON. An approval broadcast before a swap is a separate
+     * transaction and is not added in. Falls back silently to the estimate on any error.
      */
-    internal fun tryUpdateEvmActualFee(txHash: String, chain: Chain) {
-        if (chain.standard != TokenStandard.EVM) return
-        val coin = keysignPayload?.coin ?: return
+    internal fun tryUpdateActualNetworkFee(txHash: String, chain: Chain) {
+        if (!fetchPaidNetworkFee.supports(chain)) return
 
         viewModelScope.safeLaunch(
-            onError = { e -> Timber.w(e, "Failed to update EVM actual fee for %s", txHash) }
+            onError = { e -> Timber.w(e, "Failed to update the paid network fee for %s", txHash) }
         ) {
-            val estimatedFee = updateEvmActualFee(txHash, chain, coin) ?: return@safeLaunch
+            val paidFee = updateActualNetworkFee(txHash, chain) ?: return@safeLaunch
+            transactionHistoryRepository.recordPaidNetworkFee(
+                chain = chain.raw,
+                txHash = txHash,
+                feeWei = paidFee.tokenValue.value,
+            )
+            val paidTotalFee =
+                (state.value.transactionUiModel as? TransactionTypeUiModel.Swap)
+                    ?.swapTransactionUiModel
+                    ?.totalFeeExcludingNetwork
+                    ?.let { fiatValueToString(it + paidFee.fiatValue, asFee = true) }
             state.update { current ->
-                val sendTx =
-                    current.transactionUiModel as? TransactionTypeUiModel.Send
-                        ?: return@update current
                 current.copy(
                     transactionUiModel =
-                        TransactionTypeUiModel.Send(
-                            sendTx.tx.copy(
-                                networkFeeTokenValue = estimatedFee.formattedTokenValue,
-                                networkFeeFiatValue = estimatedFee.formattedFiatValue,
-                            )
-                        )
+                        current.transactionUiModel?.withPaidNetworkFee(paidFee, paidTotalFee)
                 )
             }
         }
@@ -1297,6 +1322,45 @@ constructor(
         super.onCleared()
     }
 }
+
+/**
+ * Replaces the network fee with the [fee] actually paid. A swap also drops its "max" label and
+ * takes [totalFee], the total rebuilt around the paid gas; without one its total is kept.
+ */
+private fun TransactionTypeUiModel.withPaidNetworkFee(
+    fee: EstimatedGasFee,
+    totalFee: String?,
+): TransactionTypeUiModel =
+    when (this) {
+        is TransactionTypeUiModel.Send ->
+            TransactionTypeUiModel.Send(
+                tx.copy(
+                    networkFeeTokenValue = fee.formattedTokenValue,
+                    networkFeeFiatValue = fee.formattedFiatValue,
+                )
+            )
+        is TransactionTypeUiModel.Swap ->
+            TransactionTypeUiModel.Swap(
+                swapTransactionUiModel.copy(
+                    networkFee =
+                        swapTransactionUiModel.networkFee.copy(
+                            value = fee.tokenValue.decimal.stripTrailingZeros().toPlainString(),
+                            fiatValue = fee.formattedFiatValue,
+                        ),
+                    networkFeeFormatted = fee.formattedTokenValue,
+                    isNetworkFeeMax = false,
+                    totalFee = totalFee ?: swapTransactionUiModel.totalFee,
+                )
+            )
+        is TransactionTypeUiModel.Deposit ->
+            TransactionTypeUiModel.Deposit(
+                depositTransactionUiModel.copy(
+                    networkFeeTokenValue = fee.formattedTokenValue,
+                    networkFeeFiatValue = fee.formattedFiatValue,
+                )
+            )
+        is TransactionTypeUiModel.SignMessage -> this
+    }
 
 /** The (chain, destination) pair whose address-book labels the done screen resolves. */
 private data class AddressBookTarget(val chain: Chain, val dstAddress: String)

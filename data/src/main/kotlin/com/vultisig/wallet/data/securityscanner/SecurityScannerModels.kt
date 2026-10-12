@@ -10,6 +10,11 @@ data class SecurityScannerTransaction(
     val to: String,
     val amount: BigInteger = BigInteger.ZERO,
     val data: String = "0x",
+    /**
+     * Transactions signed ahead of this one (e.g. ERC-20 approves), scanned with it in order so the
+     * simulation sees their state changes.
+     */
+    val precedingTransactions: List<SecurityScannerTransaction> = emptyList(),
 )
 
 data class SecurityScannerMetadata(

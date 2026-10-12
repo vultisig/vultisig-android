@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
+import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
@@ -11,7 +12,7 @@ import org.junit.jupiter.api.Test
 
 class GetAvailableTokenBalanceUseCaseTest {
 
-    private val useCase = GetAvailableTokenBalanceUseCaseImpl()
+    private val useCase = GetAvailableTokenBalanceUseCaseImpl(nearApi = mockk())
 
     private fun coin(
         chain: Chain,

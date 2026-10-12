@@ -233,7 +233,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
     ): KeysignViewModel {
         val onStatus = slot<suspend (TransactionResult) -> Unit>()
         every { txStatusConfigurationProvider.supportTxStatus(any()) } returns true
-        coEvery { txStatusPoller.poll(any(), any(), any(), capture(onStatus)) } coAnswers
+        coEvery { txStatusPoller.poll(any(), any(), any(), any(), capture(onStatus)) } coAnswers
             {
                 poll(onStatus.captured)
             }
@@ -272,6 +272,8 @@ internal class KeysignViewModelApplyBroadcastResultTest {
             balanceRepository = mockk(relaxed = true),
             inAppReviewRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),
+            fetchPaidNetworkFee = mockk(relaxed = true),
+            fiatValueToString = mockk(relaxed = true),
             pendingLimitOrderRepository = mockk(relaxed = true),
             utxoInFlightRepository = mockk(relaxed = true),
             doneTransactionPresentation = mockk(relaxed = true),

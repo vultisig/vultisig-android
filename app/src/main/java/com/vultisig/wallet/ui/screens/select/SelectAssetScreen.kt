@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -37,6 +38,7 @@ import com.vultisig.wallet.ui.components.VsCenterHighlightCarousel
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
+import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.theme.Theme
@@ -86,7 +88,14 @@ internal fun SelectAssetScreen(
         },
         content = {
             val assets = state.assets
-            if (assets.isEmpty()) {
+            if (assets.isEmpty() && state.isLoadingTokens) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxWidth().padding(all = 16.dp),
+                ) {
+                    V2Loading(modifier = Modifier.size(24.dp))
+                }
+            } else if (assets.isEmpty()) {
                 // 4.dp here plus the CTA's own 12.dp keeps Figma's 16.dp gap while giving the
                 // 12.sp label a tappable height.
                 Column(

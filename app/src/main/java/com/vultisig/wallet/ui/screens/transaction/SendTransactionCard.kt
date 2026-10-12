@@ -27,8 +27,8 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
-import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionHistoryItemUiModel
+import com.vultisig.wallet.ui.models.transaction.TransactionStatusUiModel
 import com.vultisig.wallet.ui.screens.transaction.components.SendAmountText
 import com.vultisig.wallet.ui.screens.transaction.components.ToSeparator
 import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle

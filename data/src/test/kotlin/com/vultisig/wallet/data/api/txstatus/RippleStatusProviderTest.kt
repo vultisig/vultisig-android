@@ -5,9 +5,13 @@ import RippleBroadcastSuccessResultJson
 import RippleBroadcastSuccessTransactionJson
 import RippleTxMetaJson
 import com.vultisig.wallet.data.api.RippleApi
+import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
@@ -17,7 +21,19 @@ import org.junit.jupiter.api.Test
 class RippleStatusProviderTest {
 
     private val rippleApi = mockk<RippleApi>()
-    private val provider = RippleStatusProvider(rippleApi)
+    private val historyRepository =
+        mockk<TransactionHistoryRepository> {
+            coEvery { getTransaction(any(), any()) } returns null
+        }
+    private val provider = RippleStatusProvider(rippleApi, historyRepository)
+
+    private fun persistLastLedgerSequence(lastLedgerSequence: Long?) {
+        val row =
+            mockk<TransactionHistoryEntity> {
+                every { broadcastBlockNumber } returns lastLedgerSequence
+            }
+        coEvery { historyRepository.getTransaction(Chain.Ripple.raw, "h") } returns row
+    }
 
     private fun response(validated: Boolean, transactionResult: String?) =
         RippleBroadcastSuccessResponseJson(
@@ -79,6 +95,63 @@ class RippleStatusProviderTest {
         coEvery { rippleApi.getTsStatus(any()) } returns null
 
         assertEquals(TransactionResult.Pending, provider.checkStatus("h", Chain.Ripple))
+    }
+
+    @Test
+    fun `not found past its LastLedgerSequence is terminal Failed (expired)`() = runTest {
+        coEvery { rippleApi.getTsStatus(any()) } returns null
+        persistLastLedgerSequence(107_426_542)
+        coEvery { rippleApi.isExpiredPastLastLedger("h", 107_426_542) } returns true
+
+        assertEquals(
+            TransactionResult.Failed(RippleStatusProvider.EXPIRED_REASON),
+            provider.checkStatus("h", Chain.Ripple),
+        )
+    }
+
+    @Test
+    fun `not found before its LastLedgerSequence is validated keeps polling`() = runTest {
+        coEvery { rippleApi.getTsStatus(any()) } returns null
+        persistLastLedgerSequence(107_426_542)
+        coEvery { rippleApi.isExpiredPastLastLedger(any(), any()) } returns false
+
+        assertEquals(TransactionResult.Pending, provider.checkStatus("h", Chain.Ripple))
+    }
+
+    @Test
+    fun `not found without a stored LastLedgerSequence stays Pending and skips the expiry lookup`() =
+        runTest {
+            coEvery { rippleApi.getTsStatus(any()) } returns null
+            persistLastLedgerSequence(null)
+
+            assertEquals(TransactionResult.Pending, provider.checkStatus("h", Chain.Ripple))
+            coVerify(exactly = 0) { rippleApi.isExpiredPastLastLedger(any(), any()) }
+        }
+
+    @Test
+    fun `not found with no history row stays Pending`() = runTest {
+        coEvery { rippleApi.getTsStatus(any()) } returns null
+
+        assertEquals(TransactionResult.Pending, provider.checkStatus("h", Chain.Ripple))
+        coVerify(exactly = 0) { rippleApi.isExpiredPastLastLedger(any(), any()) }
+    }
+
+    @Test
+    fun `failed expiry lookup stays Pending`() = runTest {
+        coEvery { rippleApi.getTsStatus(any()) } returns null
+        persistLastLedgerSequence(107_426_542)
+        coEvery { rippleApi.isExpiredPastLastLedger(any(), any()) } throws RuntimeException("net")
+
+        assertEquals(TransactionResult.Pending, provider.checkStatus("h", Chain.Ripple))
+    }
+
+    @Test
+    fun `unvalidated tx is never checked for expiry`() = runTest {
+        coEvery { rippleApi.getTsStatus(any()) } returns response(false, "tesSUCCESS")
+        persistLastLedgerSequence(107_426_542)
+
+        assertEquals(TransactionResult.Pending, provider.checkStatus("h", Chain.Ripple))
+        coVerify(exactly = 0) { rippleApi.isExpiredPastLastLedger(any(), any()) }
     }
 
     @Test

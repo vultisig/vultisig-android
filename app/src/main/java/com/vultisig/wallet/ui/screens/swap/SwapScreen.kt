@@ -245,7 +245,8 @@ internal fun SwapScreen(
             var flipButtonBottomCenter by remember { mutableStateOf(Offset.Zero) }
             var inputBlockTopLeft by remember { mutableStateOf(Offset.Zero) }
 
-            val error = state.error ?: state.formError
+            val isFlipLoading = state.isLoading || state.isLoadingNextScreen
+            val error = if (isFlipLoading) null else state.error ?: state.formError
 
             Box {
                 Column(
@@ -404,7 +405,7 @@ internal fun SwapScreen(
                                         },
                                     )
                                     SwapTokenFlipButton(
-                                        isLoading = state.isLoading || state.isLoadingNextScreen,
+                                        isLoading = isFlipLoading,
                                         hasError = error != null,
                                         topCenter = topCenter,
                                         bottomCenter = bottomCenter,

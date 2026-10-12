@@ -23,6 +23,12 @@ interface BlockaidRpcClientContract {
         data: String,
     ): BlockaidTransactionScanResponseJson
 
+    /** Scans [transactions] in order on one simulated state; returns one entry per transaction. */
+    suspend fun scanEVMTransactionBulk(
+        chain: Chain,
+        transactions: List<EthereumScanTransactionRequestJson.DataJson>,
+    ): List<BlockaidTransactionScanResponseJson>
+
     suspend fun scanSolanaTransaction(
         address: String,
         serializedMessage: String,

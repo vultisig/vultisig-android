@@ -54,6 +54,14 @@ interface RippleApi {
     suspend fun fetchServerState(): RippleServerStateResponseJson
 
     suspend fun getTsStatus(txHash: String): RippleBroadcastSuccessResponseJson?
+
+    /**
+     * True when [txHash] can never be included: every validated ledger up to its
+     * [lastLedgerSequence] has been searched and none holds it. XRPL drops a transaction once the
+     * validated ledger passes its `LastLedgerSequence`, so this is a terminal verdict. False while
+     * that ledger isn't validated yet, the server lacks part of the range, or the tx was found.
+     */
+    suspend fun isExpiredPastLastLedger(txHash: String, lastLedgerSequence: Long): Boolean
 }
 
 /**
@@ -157,6 +165,43 @@ constructor(private val http: HttpClient, timeSource: TimeSource) : RippleApi {
         }
 
         return body
+    }
+
+    override suspend fun isExpiredPastLastLedger(
+        txHash: String,
+        lastLedgerSequence: Long,
+    ): Boolean {
+        val payload =
+            RpcPayload(
+                method = "tx",
+                params =
+                    buildJsonArray {
+                        addJsonObject {
+                            put("transaction", txHash)
+                            put("binary", false)
+                            put("api_version", 2)
+                            // `searched_all` is only reported for a bounded range, capped at 1000
+                            // ledgers. The range ends at the last ledger the tx could land in; a
+                            // tx found anywhere is still returned, the range bounds only the
+                            // search.
+                            put(
+                                "min_ledger",
+                                (lastLedgerSequence - MAX_TX_LEDGER_RANGE + 1).coerceAtLeast(1L),
+                            )
+                            put("max_ledger", lastLedgerSequence)
+                        }
+                    },
+            )
+
+        val result =
+            http
+                .post(BASE_XRP_CLUSTER) { setBody(payload) }
+                .bodyOrThrow<RippleBroadcastSuccessResponseJson>()
+                .result
+
+        val notFound =
+            result.error == RIPPLE_TXN_NOT_FOUND || result.errorCode == RIPPLE_TXN_NOT_FOUND_CODE
+        return notFound && result.searchedAll == true
     }
 
     // A network failure (timeout / no connectivity) must propagate so the balance layer can keep
@@ -300,6 +345,7 @@ constructor(private val http: HttpClient, timeSource: TimeSource) : RippleApi {
         const val BASE_XRP_CLUSTER: String = "https://xrplcluster.com"
         const val RIPPLE_TXN_NOT_FOUND: String = "txnNotFound"
         const val RIPPLE_TXN_NOT_FOUND_CODE: Int = 29
+        const val MAX_TX_LEDGER_RANGE: Long = 1000
         const val ACCOUNT_LINES_PAGE_SIZE: Int = 400
         const val MAX_ACCOUNT_LINES_PAGES: Int = 25
         const val ACCOUNT_NOT_FOUND_ERROR: String = "actNotFound"

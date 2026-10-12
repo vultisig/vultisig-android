@@ -39,10 +39,11 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
-import com.vultisig.wallet.ui.models.DeviceMeta
-import com.vultisig.wallet.ui.models.VaultDetailUiModel
-import com.vultisig.wallet.ui.models.VaultDetailViewModel
+import com.vultisig.wallet.ui.models.vault.DeviceMeta
+import com.vultisig.wallet.ui.models.vault.VaultDetailUiModel
+import com.vultisig.wallet.ui.models.vault.VaultDetailViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsClipboardService
 
 /** Caps the height of the long MLDSA public key row before it ellipsizes. */
 private const val MLDSA_KEY_MAX_LINES = 4
@@ -117,12 +118,18 @@ internal fun VaultDetailScreen(
                     KeyItem(
                         type = "ECDSA",
                         value = state.pubKeyECDSA,
-                        onCopyCompleted = { snackBarState.show(ecdsaKeyCopiedMessage) },
+                        onCopyCompleted = {
+                            if (VsClipboardService.needsCopyConfirmation())
+                                snackBarState.show(ecdsaKeyCopiedMessage)
+                        },
                     )
                     KeyItem(
                         type = "EdDSA",
                         value = state.pubKeyEDDSA,
-                        onCopyCompleted = { snackBarState.show(eddsaKeyCopiedMessage) },
+                        onCopyCompleted = {
+                            if (VsClipboardService.needsCopyConfirmation())
+                                snackBarState.show(eddsaKeyCopiedMessage)
+                        },
                     )
                     if (state.pubKeyMLDSA.isNotBlank()) {
                         KeyItem(
@@ -132,7 +139,10 @@ internal fun VaultDetailScreen(
                             // height and ellipsize so it doesn't blow up the row. The full value is
                             // still copyable via the copy icon.
                             maxValueLines = MLDSA_KEY_MAX_LINES,
-                            onCopyCompleted = { snackBarState.show(mldsaKeyCopiedMessage) },
+                            onCopyCompleted = {
+                                if (VsClipboardService.needsCopyConfirmation())
+                                    snackBarState.show(mldsaKeyCopiedMessage)
+                            },
                         )
                     }
                 }

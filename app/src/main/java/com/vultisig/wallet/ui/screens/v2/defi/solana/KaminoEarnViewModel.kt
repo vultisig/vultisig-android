@@ -467,6 +467,14 @@ constructor(
         // Unsigned like the token figure beside it: the row's label already says whether this was
         // earned or lost, and a minus sign in front of "Lost" would state it twice.
         val pnlAbsolute = pnlToken?.abs()
+        val deposited =
+            when {
+                tokenAmount == null -> null
+                tokenAmount.signum() == 0 -> tokenAmount
+                // A PnL outage must not take the holding off the card: show the value instead.
+                pnlToken == null -> tokenAmount
+                else -> KaminoPositionMath.principal(tokenAmount, pnlToken, vault.tokenDecimals)
+            }
 
         KaminoEarnRow(
             vaultAddress = vault.address,
@@ -476,10 +484,10 @@ constructor(
             tokenLogo = coin?.logo.orEmpty(),
             tokenTicker = coin?.ticker.orEmpty(),
             depositedDisplay =
-                tokenAmount?.let { it.stripTrailingZeros().formatTokenAmount(coin?.ticker).trim() }
+                deposited?.let { it.stripTrailingZeros().formatTokenAmount(coin?.ticker).trim() }
                     ?: FIAT_VALUE_UNAVAILABLE,
             depositedFiat =
-                tokenAmount?.let { amount -> coin?.let { fiatOrNull(amount, it, currency) } },
+                deposited?.let { amount -> coin?.let { fiatOrNull(amount, it, currency) } },
             apyDisplay = apy?.formatPercent(),
             pnlDisplay =
                 pnlAbsolute?.let {

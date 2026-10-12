@@ -40,7 +40,12 @@ internal class AddressToUiModelMapperDefiPositionsTest {
             every { it.invoke(any()) } answers
                 {
                     val chain = firstArg<Chain>()
-                    DefiChainUiModel(logo = 0, raw = chain.raw, chain = chain)
+                    DefiChainUiModel(
+                        logo = 0,
+                        raw = chain.raw,
+                        chain = chain,
+                        displayName = chain.displayName,
+                    )
                 }
         }
 

@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.models.transaction
 
-import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.intl.Locale
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,7 +15,7 @@ import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.utils.safeLaunch
-import com.vultisig.wallet.ui.models.evmNetworkUiModel
+import com.vultisig.wallet.ui.models.vault.evmNetworkUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -116,7 +114,7 @@ constructor(
                                 if (it.chain.standard == TokenStandard.EVM) {
                                     evmNetworkUiModel.title
                                 } else {
-                                    it.chain.name.capitalize(Locale.current)
+                                    it.chain.displayName
                                 },
                             address = it.address,
                         )

@@ -16,6 +16,7 @@ constructor(
     @ZkSyncFee private val zkFeeService: FeeService,
     @PolkadotFee private val polkadotFeeService: FeeService,
     @BittensorFee private val bittensorFeeService: FeeService,
+    @NearFee private val nearFeeService: FeeService,
     @RippleFee private val rippleFeeService: FeeService,
     @SuiFee private val suiFeeService: FeeService,
     @TonFee private val tonFeeService: FeeService,
@@ -56,6 +57,7 @@ constructor(
         return when {
             chain == Chain.ZkSync -> zkFeeService
             chain == Chain.Bittensor -> bittensorFeeService
+            chain == Chain.Near -> nearFeeService
             chain.standard == TokenStandard.COSMOS -> cosmosFeeService
             chain.standard == TokenStandard.EVM -> ethereumFeeService
             chain.standard == TokenStandard.SUBSTRATE -> polkadotFeeService

@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiUiState
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
+import com.vultisig.wallet.ui.screens.v2.defi.BondRewardHistorySheet
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.LpTabContent
@@ -99,6 +100,8 @@ internal fun MayachainDefiPositionsScreen(
                 onClickBondToNode = model::bondToNode,
                 onClickBond = { model.onClickBond(it) },
                 onClickUnbond = { model.onClickUnBond(it) },
+                onClickLastReward = model::onClickLastReward,
+                onDismissRewardHistory = model::onDismissRewardHistory,
                 onTabSelected = model::onTabSelected,
                 onEditPositionClick = { model.setPositionSelectionDialogVisibility(true) },
                 onCancelEditPositionClick = { model.setPositionSelectionDialogVisibility(false) },
@@ -124,6 +127,8 @@ internal fun MayachainDefiPositionsScreenContent(
     onClickBondToNode: () -> Unit = {},
     onClickBond: (String) -> Unit = {},
     onClickUnbond: (String) -> Unit = {},
+    onClickLastReward: (String) -> Unit = {},
+    onDismissRewardHistory: () -> Unit = {},
     onTabSelected: (DeFiTab) -> Unit = {},
     onEditPositionClick: () -> Unit = {},
     onCancelEditPositionClick: () -> Unit = {},
@@ -193,6 +198,15 @@ internal fun MayachainDefiPositionsScreenContent(
                 )
             }
 
+            state.rewardHistory?.let { rewardHistory ->
+                BondRewardHistorySheet(
+                    model = rewardHistory,
+                    coinIconRes = R.drawable.cacao,
+                    isBalanceVisible = state.isBalanceVisible,
+                    onDismissRequest = onDismissRewardHistory,
+                )
+            }
+
             Column(modifier = Modifier.fillMaxWidth()) {
                 when (state.selectedTab) {
                     DeFiTab.BONDED.displayNameRes if !state.selectedPositions.hasBondPositions() ->
@@ -210,6 +224,7 @@ internal fun MayachainDefiPositionsScreenContent(
                                 ),
                             onClickBond = onClickBond,
                             onClickUnbond = onClickUnbond,
+                            onClickLastReward = onClickLastReward,
                             coinName = "CACAO",
                             coinIconRes = R.drawable.cacao,
                         )

@@ -15,10 +15,10 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.models.NetworkUiModel
-import com.vultisig.wallet.ui.models.consolidateEvm
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
-import com.vultisig.wallet.ui.models.toNetworkUiModel
+import com.vultisig.wallet.ui.models.vault.NetworkUiModel
+import com.vultisig.wallet.ui.models.vault.consolidateEvm
+import com.vultisig.wallet.ui.models.vault.toNetworkUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -110,7 +110,7 @@ constructor(
                         .asSequence()
                         .filter { (chain) ->
                             val matchesQuery =
-                                chain.raw.contains(query, ignoreCase = true) ||
+                                chain.matchesSearch(query) ||
                                     chain.nativeTokenTicker.contains(query, ignoreCase = true)
                             val matchesFilter =
                                 when (args.filters) {

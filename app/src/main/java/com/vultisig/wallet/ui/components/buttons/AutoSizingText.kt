@@ -54,7 +54,7 @@ internal fun AutoSizingText(
         // If it fits, use original size
         if (originalWidth <= maxWidth) {
             val finalPlaceable = originalPlaceables.firstOrNull()
-            if (finalPlaceable != null) {
+            return@SubcomposeLayout if (finalPlaceable != null) {
                 layout(finalPlaceable.width, finalPlaceable.height) { finalPlaceable.place(0, 0) }
             } else {
                 layout(0, 0) {}
@@ -66,7 +66,7 @@ internal fun AutoSizingText(
         var high = style.fontSize.value
         var bestStyle = style
 
-        repeat(10) { iteration ->
+        for (iteration in 0 until 10) {
             val mid = (low + high) / 2
             val testStyle = style.copy(fontSize = mid.sp)
 
@@ -86,7 +86,7 @@ internal fun AutoSizingText(
                 high = mid
             }
 
-            if ((high - low) < 0.5f) return@repeat
+            if ((high - low) < 0.5f) break
         }
 
         val finalMeasurable =

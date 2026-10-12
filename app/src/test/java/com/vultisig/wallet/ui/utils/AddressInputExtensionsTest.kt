@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.utils
 
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import org.junit.jupiter.api.Test
 
 /** Tests for [CharSequence.asAddressInput]. */
@@ -95,6 +96,50 @@ internal class AddressInputExtensionsTest {
         assertEquals(EVM_ADDRESS, "ethereum:$EVM_ADDRESS?value=10".asAddressInput())
     }
 
+    /**
+     * An EIP-681 ERC-20 transfer link resolves to the `address` parameter (the real recipient), not
+     * the leading token contract. Sending to the contract would lose the funds.
+     */
+    @Test
+    fun `eip681 transfer resolves the address parameter not the token contract`() {
+        val link = "ethereum:$TOKEN_CONTRACT@1/transfer?address=$EVM_ADDRESS&uint256=1000000"
+        assertEquals(EVM_ADDRESS, link.asAddressInput())
+    }
+
+    /** The transfer recipient is resolved even without a chain id on the target. */
+    @Test
+    fun `eip681 transfer without chain id resolves the address parameter`() {
+        val link = "ethereum:$TOKEN_CONTRACT/transfer?address=$EVM_ADDRESS&uint256=1"
+        assertEquals(EVM_ADDRESS, link.asAddressInput())
+    }
+
+    /**
+     * A transfer link with no `address` parameter must not fall back to the token contract; it
+     * returns the unresolved text, which fails address validation.
+     */
+    @Test
+    fun `eip681 transfer without address param does not yield the contract`() {
+        val link = "ethereum:$TOKEN_CONTRACT@1/transfer?uint256=1000000"
+        assertNotEquals(TOKEN_CONTRACT, link.asAddressInput())
+    }
+
+    /** A non-transfer function call must not silently resolve to the token contract. */
+    @Test
+    fun `eip681 approve does not yield the contract address`() {
+        val link = "ethereum:$TOKEN_CONTRACT@1/approve?address=$EVM_ADDRESS&uint256=1000000"
+        assertNotEquals(TOKEN_CONTRACT, link.asAddressInput())
+    }
+
+    /**
+     * EIP-681 function parsing is gated on the `ethereum:` scheme, so a non-Ethereum URI with a
+     * `/transfer?address=…` path must not have its `address` query taken as the recipient.
+     */
+    @Test
+    fun `non-ethereum scheme does not extract the address parameter`() {
+        val link = "https://evil.example/transfer?address=$EVM_ADDRESS&uint256=1"
+        assertNotEquals(EVM_ADDRESS, link.asAddressInput())
+    }
+
     /** Verifies that a non-URI identifier like a THORName is not modified. */
     @Test
     fun `thorname passes through unchanged`() {
@@ -117,5 +162,6 @@ internal class AddressInputExtensionsTest {
     companion object {
         private const val EVM_ADDRESS = "0xAf6a0cB4bA76B4720D345d09dCdB58B9a2570982"
         private const val BTC_ADDRESS = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+        private const val TOKEN_CONTRACT = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
     }
 }

@@ -49,6 +49,13 @@
     <string name="active_nodes">Active Nodes</string>
     <string name="next_churn">Next Churn</string>
     <string name="next_award">Next Award</string>
+    <string name="next_reward">Next Reward</string>
+    <string name="last_reward">Last Reward</string>
+    <string name="last_reward_unavailable">N/A</string>
+    <string name="total_rewards_earned">Total Rewards Earned</string>
+    <string name="reward_history_node">Node: %s</string>
+    <string name="reward_history_upcoming">Upcoming</string>
+    <string name="reward_history_error">Couldn\'t load reward history</string>
     <string name="next_payout">Next Payout</string>
     <string name="wait_until_node_churned_out">Wait until node is churned out</string>
     <string name="deposit_option_leave">Leave</string>
@@ -369,6 +376,10 @@
     <string name="verify_transaction_memo_title">Memo</string>
     <string name="verify_transaction_allow_death_warning">This transfer may empty the sender\'s account. If the remaining balance falls below the Existential Deposit, the account will be deactivated (reaped) and any remaining %1$s will be lost.</string>
     <string name="join_keysign_wrong_reshare">Wrong ReShare</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">This TON token transfer isn\'t from this vault</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">The token shown doesn\'t match the token this transfer sends</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Couldn\'t verify this TON token transfer. Please try again.</string>
+    <string name="join_key_gen_mldsa_reshare_unsupported">Reshare isn\'t supported for vaults with a QBTC key</string>
     <string name="swap_screen_provider_title">Provider</string>
     <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
     <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>
@@ -474,6 +485,7 @@
     <string name="signing_error_account_not_funded">This account doesn\'t exist on-chain yet.\nPlease fund the wallet first.</string>
     <string name="signing_error_broadcast_rejected">Transaction rejected by the network.</string>
     <string name="signing_error_broadcast_rejected_s">Transaction rejected by the network: %s</string>
+    <string name="signing_error_swap_tx_unsignable">The swap provider returned a transaction that can\'t be signed safely. Trying again won\'t help — go back and request a new quote.</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
     <string name="verify_transaction_paired_btn_title">Paired</string>
     <string name="keysign_sign_transaction">Sign transaction</string>
@@ -498,6 +510,10 @@
     <string name="qr_share_label_to">To</string>
     <string name="qr_share_label_from">From</string>
     <string name="qr_share_label_type">Type</string>
+    <string name="keysign_share_qr_title">Share QR Code</string>
+    <string name="keysign_share_qr_copy_link">Copy Link</string>
+    <string name="keysign_share_qr_share_image">Share QR Image</string>
+    <string name="keysign_share_qr_link_copied">Link copied</string>
     <string name="qr_share_type_fast_vault">Fast Vault</string>
     <string name="qr_share_type_secure_vault">Secure Vault</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
@@ -519,6 +535,7 @@
     <string name="deposit_error_thorchain_chain_halted">Deposits on %1$s are currently halted on THORChain. Please try again later.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">Could not reach THORChain to verify the inbound vault. Please try again.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s is not currently available for deposits.</string>
+    <string name="deposit_error_pool_staged_unpaired">Pool %1$s is staged and only accepts adds paired with the other side. THORChain would refund this transaction.</string>
     <string name="deposit_form_screen_assets">Asset</string>
     <string name="deposit_form_screen_asset_selection">Asset selection</string>
     <string name="deposit_form_screen_lpunits">LP Units</string>
@@ -596,6 +613,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Minimum amount to activate this address is %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Minimum amount to activate this address is %1$s %2$s (Existential Deposit).</string>
+    <string name="send_error_near_destination_not_found">This NEAR account doesn\'t exist. Check the recipient: a transfer to it would only burn gas.</string>
+    <string name="send_error_near_unsupported_payload">This NEAR transaction isn\'t supported. Only native NEAR transfers can be signed.</string>
+    <string name="send_error_near_invalid_recipient">This isn\'t a valid NEAR account. Check the recipient.</string>
+    <string name="send_error_near_key_not_full_access">This vault\'s key has no full access to this NEAR account, so it can\'t send from it.</string>
+    <string name="send_error_near_network">The NEAR network returned an error or an unreadable answer. Try again.</string>
+    <string name="send_error_near_safety_check">This NEAR transaction failed a safety check and was not signed.</string>
     <string name="send_error_xrp_destination_tag_required">This address requires a destination tag. Add one to continue.</string>
     <string name="send_error_xrp_destination_no_trust_line">This address can’t receive %1$s. The recipient needs to open a trust line for it first.</string>
     <string name="ripple_trust_line_title">Activate trust line</string>
@@ -616,7 +639,6 @@
     <string name="error_invalid_chain">Chain is invalid</string>
     <string name="ton_stake_error_unsupported_pool">This staking pool isn\'t supported</string>
     <string name="ton_stake_error_min_amount">Minimum stake for this pool is %1$s %2$s</string>
-    <string name="ton" translatable="false">TON</string>
     <string name="ton_defi_error_ton_not_in_vault">GRAM isn\'t in this vault</string>
     <string name="ton_defi_pending_withdrawal">Pending withdrawal</string>
     <string name="ton_defi_unlock_ready">Ready to withdraw</string>
@@ -634,6 +656,15 @@
     <string name="ton_unstake_title">Unstake %1$s</string>
     <string name="ton_staking_pool_address">Pool Address</string>
     <string name="ton_unstake_full_withdrawal_notice">Nominator pools support full withdrawal only. Your entire staked balance will be returned.</string>
+    <string name="ton_liquid_staking_label">Liquid staking</string>
+    <string name="ton_liquid_deposit_fee">Deposit fee</string>
+    <string name="ton_liquid_you_receive">You\'ll receive</string>
+    <string name="ton_liquid_attached_value">Attached for processing</string>
+    <string name="ton_liquid_stake_fee_notice">Includes the %1$s %2$s deposit fee Tonstakers takes off the top. The part the pool doesn\'t use is refunded.</string>
+    <string name="ton_liquid_unstake_notice">%1$s %2$s is attached to process the withdrawal; the unused part is refunded. You\'re paid out immediately when the pool has liquidity, otherwise at the end of the current validation round.</string>
+    <string name="ton_liquid_unstake_notice_round_end">%1$s %2$s is attached to process the withdrawal; the unused part is refunded. You\'re paid out at the end of the current validation round.</string>
+    <string name="ton_liquid_deposits_closed">Tonstakers isn\'t accepting deposits right now</string>
+    <string name="ton_liquid_no_position">This vault holds no tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">SOL isn\'t in this vault</string>
     <string name="solana_staking_total_staked_sol">Total Staked SOL</string>
@@ -901,6 +932,9 @@
     <string name="security_scanner_transaction_scanned_by">Transaction scanned by</string>
     <string name="security_scanner_transaction_scanning">Scanning…</string>
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
+    <string name="security_scanner_safe_title">Scanned by Blockaid</string>
+    <string name="security_scanner_safe_description">No malicious activity detected. This transaction is safe to sign.</string>
+    <string name="security_scanner_safe_continue">Continue</string>
 
     <string name="tx_transaction_successful_screen_title">Transaction successful</string>
     <string name="tx_overview_screen_tx_hash">Transaction Hash</string>
@@ -1524,6 +1558,8 @@
     <string name="transaction_status_refunded_label">Refunded</string>
     <string name="transaction_status_failed_slippage_label">Price moved past slippage tolerance</string>
     <string name="transaction_status_failed_slippage_description">The price moved before this swap landed, so it would have paid out less than your slippage tolerance allowed and the network reverted it. Raise your slippage tolerance or try again.</string>
+    <string name="transaction_status_failed_expired_label">Expired before it was included</string>
+    <string name="transaction_status_failed_expired_description">The network dropped this transaction before including it, so nothing was sent and no network fee was charged. You can try again.</string>
     <string name="transaction_status_in_progress_label">In progress…</string>
     <string name="transaction_status_signed_label">Signed</string>
     <string name="transaction_history_to_label">To</string>
@@ -1591,6 +1627,8 @@
     <string name="ton_op_nft_transfer">NFT Transfer</string>
     <string name="ton_op_excess_gas_refund">Excess Gas Refund</string>
     <string name="ton_op_transfer">Transfer</string>
+    <string name="ton_op_liquid_staking_deposit">Liquid Staking Deposit</string>
+    <string name="ton_op_jetton_burn">Jetton Burn</string>
     <string name="ton_forward_ton_amount">Forward GRAM Amount</string>
     <string name="ton_raw_payload">Raw Payload</string>
     <string name="key_import_error_title">Key Import Failed</string>

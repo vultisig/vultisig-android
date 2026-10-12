@@ -33,10 +33,10 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.NetworkUiModel
-import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.models.transaction.AddAddressEntryUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressEntryViewModel
+import com.vultisig.wallet.ui.models.vault.NetworkUiModel
+import com.vultisig.wallet.ui.models.vault.toNetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString

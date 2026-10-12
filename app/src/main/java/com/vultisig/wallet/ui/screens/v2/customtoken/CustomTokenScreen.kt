@@ -23,8 +23,8 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
-import com.vultisig.wallet.ui.models.CustomTokenUiModel
-import com.vultisig.wallet.ui.models.CustomTokenViewModel
+import com.vultisig.wallet.ui.models.token.CustomTokenUiModel
+import com.vultisig.wallet.ui.models.token.CustomTokenViewModel
 import com.vultisig.wallet.ui.screens.v2.customtoken.components.CustomTokenSearchBar
 import com.vultisig.wallet.ui.screens.v2.customtoken.components.LoadingSearchCustomToken
 import com.vultisig.wallet.ui.screens.v2.customtoken.components.SearchTokenResult

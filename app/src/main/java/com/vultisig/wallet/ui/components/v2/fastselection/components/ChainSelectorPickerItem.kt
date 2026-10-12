@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.models.NetworkUiModel
+import com.vultisig.wallet.ui.models.vault.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -37,7 +37,7 @@ internal fun ChainSelectorPickerItem(
             UiSpacer(size = 10.dp)
 
             Text(
-                text = item.chain.raw,
+                text = item.chain.displayName,
                 color = Theme.v2.colors.text.primary,
                 style = Theme.brockmann.body.m.medium,
             )

@@ -35,10 +35,10 @@ import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
-import com.vultisig.wallet.ui.models.AccountUiModel
-import com.vultisig.wallet.ui.models.VaultAccountsViewModel
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.vault.AccountUiModel
+import com.vultisig.wallet.ui.models.vault.VaultAccountsViewModel
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator

@@ -2,20 +2,24 @@ package com.vultisig.wallet.ui.screens.v2.defi
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,8 +27,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
+import com.vultisig.wallet.ui.models.defi.LastRewardUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.theme.Theme
@@ -36,6 +42,7 @@ internal fun BondedTabContent(
     state: ThorchainDefiPositionsUiModel,
     onClickBond: (String) -> Unit,
     onClickUnbond: (String) -> Unit,
+    onClickLastReward: (String) -> Unit,
     coinName: String = "RUNE",
     coinIconRes: Int = R.drawable.rune,
 ) {
@@ -56,6 +63,7 @@ internal fun BondedTabContent(
                 nodes = state.bonded.nodes,
                 onClickBond = onClickBond,
                 onClickUnbond = onClickUnbond,
+                onClickLastReward = onClickLastReward,
                 isBalanceVisible = state.isBalanceVisible,
             )
         }
@@ -67,6 +75,7 @@ internal fun ActiveNodesWidget(
     nodes: List<BondedNodeUiModel>,
     onClickBond: (String) -> Unit,
     onClickUnbond: (String) -> Unit,
+    onClickLastReward: (String) -> Unit,
     isBalanceVisible: Boolean = true,
 ) {
     Column(
@@ -113,6 +122,7 @@ internal fun ActiveNodesWidget(
                 node = node,
                 onClickBond = { onClickBond(node.fullAddress) },
                 onClickUnbond = { onClickUnbond(node.fullAddress) },
+                onClickLastReward = { onClickLastReward(node.fullAddress) },
                 isBalanceVisible = isBalanceVisible,
             )
         }
@@ -124,6 +134,7 @@ private fun NodeContent(
     node: BondedNodeUiModel,
     onClickBond: () -> Unit,
     onClickUnbond: () -> Unit,
+    onClickLastReward: () -> Unit,
     isBalanceVisible: Boolean = true,
 ) {
     Column {
@@ -167,29 +178,46 @@ private fun NodeContent(
 
         UiSpacer(16.dp)
 
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            InfoItem(
+                icon = R.drawable.calendar_days,
+                label = stringResource(R.string.next_churn),
+                value = null,
+            )
+
+            UiSpacer(1f)
+
+            Text(
+                text = node.nextChurn,
+                style = Theme.brockmann.body.m.medium,
+                color = Theme.v2.colors.text.secondary,
+            )
+        }
+
+        UiSpacer(16.dp)
+
         UiHorizontalDivider(color = Theme.v2.colors.border.light)
 
         UiSpacer(16.dp)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Box(modifier = Modifier.weight(1f)) {
                 InfoItem(
-                    icon = R.drawable.calendar_days,
-                    label = stringResource(R.string.next_churn),
-                    value = node.nextChurn,
-                )
-            }
-
-            Box(modifier = Modifier.weight(1f)) {
-                InfoItem(
-                    icon = R.drawable.ic_cup,
-                    label = stringResource(R.string.next_award),
+                    icon = R.drawable.ic_trophy,
+                    label = stringResource(R.string.next_reward),
                     value = if (isBalanceVisible) node.nextAward else HIDE_BALANCE_CHARS,
                 )
             }
+
+            LastRewardItem(
+                lastReward = node.lastReward,
+                isBalanceVisible = isBalanceVisible,
+                onClick = onClickLastReward,
+                modifier = Modifier.weight(1f),
+            )
         }
 
         UiSpacer(16.dp)
@@ -224,6 +252,53 @@ private fun NodeContent(
                 text = stringResource(R.string.wait_until_node_churned_out),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
+            )
+        }
+    }
+}
+
+/** The Last Reward cell; tapping it opens the node's Total Rewards Earned sheet. */
+@Composable
+private fun LastRewardItem(
+    lastReward: LastRewardUiModel,
+    isBalanceVisible: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier =
+            modifier.clip(Theme.v2.radius.xs).clickable(role = Role.Button, onClick = onClick)
+    ) {
+        InfoItem(
+            icon = R.drawable.ic_bag_clock,
+            label = stringResource(R.string.last_reward),
+            value = null,
+        )
+
+        UiSpacer(6.dp)
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (lastReward is LastRewardUiModel.Loading) {
+                UiPlaceholderLoader(modifier = Modifier.size(width = 72.dp, height = 24.dp))
+            } else {
+                Text(
+                    text =
+                        when {
+                            !isBalanceVisible -> HIDE_BALANCE_CHARS
+                            lastReward is LastRewardUiModel.Paid -> lastReward.amount
+                            else -> stringResource(R.string.last_reward_unavailable)
+                        },
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.v2.colors.text.secondary,
+                )
+            }
+
+            UiSpacer(4.dp)
+
+            UiIcon(
+                drawableResId = R.drawable.ic_chevron_right_16,
+                size = 16.dp,
+                tint = Theme.v2.colors.text.primary,
             )
         }
     }
@@ -308,6 +383,7 @@ private fun BondedTabContentPreview() {
         bondToNodeOnClick = {},
         onClickBond = {},
         onClickUnbond = {},
+        onClickLastReward = {},
     )
 }
 
@@ -327,6 +403,7 @@ private fun BondedTabContentLoadingPreview() {
         bondToNodeOnClick = {},
         onClickBond = {},
         onClickUnbond = {},
+        onClickLastReward = {},
     )
 }
 
@@ -346,6 +423,7 @@ private fun BondedTabContentEmptyPreview() {
         bondToNodeOnClick = {},
         onClickBond = {},
         onClickUnbond = {},
+        onClickLastReward = {},
     )
 }
 
@@ -400,7 +478,12 @@ private fun ActiveNodesWidgetPreview() {
             ),
         )
 
-    ActiveNodesWidget(nodes = mockNodes, onClickBond = {}, onClickUnbond = {})
+    ActiveNodesWidget(
+        nodes = mockNodes,
+        onClickBond = {},
+        onClickUnbond = {},
+        onClickLastReward = {},
+    )
 }
 
 private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()

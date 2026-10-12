@@ -40,6 +40,7 @@ import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
+import com.vultisig.wallet.ui.screens.v2.defi.BondRewardHistorySheet
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.LpTabContent
@@ -90,6 +91,8 @@ internal fun ThorchainDefiPositionsScreen(
         onClickBondToNode = model::bondToNode,
         onClickUnbond = { model.onClickUnBond(it) },
         onClickBond = { model.onClickBond(it) },
+        onClickLastReward = model::onClickLastReward,
+        onDismissRewardHistory = model::onDismissRewardHistory,
         onTabSelected = model::onTabSelected,
         onEditPositionClick = { model.setPositionSelectionDialogVisibility(true) },
         onCancelEditPositionClick = { model.setPositionSelectionDialogVisibility(false) },
@@ -115,6 +118,8 @@ internal fun ThorchainDefiPositionScreenContent(
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
     onClickBond: (String) -> Unit,
+    onClickLastReward: (String) -> Unit = {},
+    onDismissRewardHistory: () -> Unit = {},
     onEditPositionClick: () -> Unit = {},
     onCancelEditPositionClick: () -> Unit = {},
     onDonePositionClick: () -> Unit = {},
@@ -188,6 +193,15 @@ internal fun ThorchainDefiPositionScreenContent(
                 )
             }
 
+            state.rewardHistory?.let { rewardHistory ->
+                BondRewardHistorySheet(
+                    model = rewardHistory,
+                    coinIconRes = R.drawable.rune,
+                    isBalanceVisible = state.isBalanceVisible,
+                    onDismissRequest = onDismissRewardHistory,
+                )
+            }
+
             Column(modifier = Modifier.fillMaxWidth()) {
                 when (state.selectedTab) {
                     DeFiTab.BONDED.displayNameRes if !state.selectedPositions.hasBondPositions() ->
@@ -199,6 +213,7 @@ internal fun ThorchainDefiPositionScreenContent(
                             state = state,
                             onClickUnbond = onClickUnbond,
                             onClickBond = onClickBond,
+                            onClickLastReward = onClickLastReward,
                         )
 
                     DeFiTab.STAKED.displayNameRes if

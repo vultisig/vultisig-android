@@ -151,4 +151,66 @@ internal class TonMessageBodyDecoderTest {
     fun `decode returns null when the NFT transfer body is truncated`() {
         assertNull(TonMessageBodyDecoder.decode(nftTransferTruncated))
     }
+
+    // Liquid-staking fixtures (@ton/core). The burn's response address is [liquidStakingOwner].
+    private val liquidStakingOwner =
+        "0:5fc1eb0442d7baf8e9e756846ba17836161b3990a42d7c821318fdb6086f7cf9"
+    private val liquidStakingDeposit = "te6cckEBAQEADgAAGEfVQ5EAAAAAAAAAAOnBhlQ="
+    private val jettonBurnWithWithdrawalFlags =
+        "te6cckEBAgEAOQABZllfB7wAAAAAAAAAAFAQBMywCAC/g9YIha918dPOrQjXQvBsLDZzIUha+QQmMftsEN758wEAASBjtrI+"
+    private val jettonBurnWithBothFlagsSet =
+        "te6cckEBAgEANQABXllfB7wAAAAAAAAABxAYAL+D1giFr3Xx086tCNdC8GwsNnMhSFr5BCYx+2wQ3vnzAQAB4Eeqi4w="
+    private val jettonBurnWithoutPayload =
+        "te6cckEBAQEANQAAZllfB7wAAAAAAAAAAFAQBMywCAC/g9YIha918dPOrQjXQvBsLDZzIUha+QQmMftsEN758sFLF30="
+
+    @Test
+    fun `decode reads a liquid-staking pool deposit`() {
+        assertEquals(
+            TonMessageBodyIntent.LiquidStakingDeposit(queryId = BigInteger.ZERO),
+            TonMessageBodyDecoder.decode(liquidStakingDeposit),
+        )
+    }
+
+    @Test
+    fun `decode reads a jetton burn and its liquid-staking withdrawal flags`() {
+        val intent = TonMessageBodyDecoder.decode(jettonBurnWithWithdrawalFlags)
+
+        assertTrue(intent is TonMessageBodyIntent.JettonBurn)
+        assertEquals(BigInteger.ZERO, intent.queryId)
+        assertEquals(BigInteger("4300000000"), intent.amount)
+        assertEquals(liquidStakingOwner, intent.responseDestination)
+        assertEquals(
+            TonMessageBodyIntent.LiquidStakingWithdrawal(
+                waitTillRoundEnd = false,
+                fillOrKill = false,
+            ),
+            intent.liquidStakingWithdrawal,
+        )
+    }
+
+    @Test
+    fun `decode keeps the withdrawal flags in the pool's bit order`() {
+        val intent = TonMessageBodyDecoder.decode(jettonBurnWithBothFlagsSet)
+
+        assertTrue(intent is TonMessageBodyIntent.JettonBurn)
+        assertEquals(BigInteger.valueOf(7), intent.queryId)
+        assertEquals(BigInteger.ONE, intent.amount)
+        assertEquals(
+            TonMessageBodyIntent.LiquidStakingWithdrawal(
+                waitTillRoundEnd = true,
+                fillOrKill = true,
+            ),
+            intent.liquidStakingWithdrawal,
+        )
+    }
+
+    @Test
+    fun `decode reads a plain jetton burn without a withdrawal payload`() {
+        val intent = TonMessageBodyDecoder.decode(jettonBurnWithoutPayload)
+
+        assertTrue(intent is TonMessageBodyIntent.JettonBurn)
+        assertEquals(BigInteger("4300000000"), intent.amount)
+        assertEquals(liquidStakingOwner, intent.responseDestination)
+        assertNull(intent.liquidStakingWithdrawal)
+    }
 }

@@ -34,7 +34,7 @@ import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
-import com.vultisig.wallet.ui.models.NetworkUiModel
+import com.vultisig.wallet.ui.models.vault.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable

@@ -132,6 +132,10 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindBondRewardHistoryUseCase(impl: BondRewardHistoryUseCaseImpl): BondRewardHistoryUseCase
+
+    @Binds
+    @Singleton
     fun bindGetGlobalBackupReminderStatus(
         impl: IsGlobalBackupReminderRequiredUseCaseImpl
     ): IsGlobalBackupReminderRequiredUseCase
@@ -265,6 +269,18 @@ internal interface DataUsecasesModule {
     fun bindRefreshPendingTransactionsUseCase(
         impl: RefreshPendingTransactionsUseCaseImpl
     ): RefreshPendingTransactionsUseCase
+
+    @Binds
+    @Singleton
+    fun bindRecordPaidNetworkFeeUseCase(
+        impl: RecordPaidNetworkFeeUseCaseImpl
+    ): RecordPaidNetworkFeeUseCase
+
+    @Binds
+    @Singleton
+    fun bindFetchPaidNetworkFeeUseCase(
+        impl: FetchPaidNetworkFeeUseCaseImpl
+    ): FetchPaidNetworkFeeUseCase
 
     @Binds
     @Singleton

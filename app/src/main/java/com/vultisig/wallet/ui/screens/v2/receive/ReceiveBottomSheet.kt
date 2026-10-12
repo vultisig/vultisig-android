@@ -32,9 +32,9 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
-import com.vultisig.wallet.ui.models.ChainToReceiveUiModel
-import com.vultisig.wallet.ui.models.ReceiveUiModel
-import com.vultisig.wallet.ui.models.ReceiveViewModel
+import com.vultisig.wallet.ui.models.receive.ChainToReceiveUiModel
+import com.vultisig.wallet.ui.models.receive.ReceiveUiModel
+import com.vultisig.wallet.ui.models.receive.ReceiveViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)

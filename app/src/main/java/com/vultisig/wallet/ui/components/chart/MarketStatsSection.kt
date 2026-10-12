@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.models.MarketStatsUiModel
+import com.vultisig.wallet.ui.models.token.MarketStatsUiModel
 
 /**
  * Market cap, rank, volume, FDV and supply. While [isLoading] and [stats] is still null, shows a

@@ -26,10 +26,10 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
-import com.vultisig.wallet.ui.models.NetworkUiModel
-import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
+import com.vultisig.wallet.ui.models.token.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
+import com.vultisig.wallet.ui.models.vault.NetworkUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -39,12 +39,14 @@ import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -57,6 +59,7 @@ internal data class SelectAssetUiModel(
     val chains: List<NetworkUiModel> = emptyList(),
     val assets: List<AssetUiModel> = emptyList(),
     val canAddCustomToken: Boolean = false,
+    val isLoadingTokens: Boolean = false,
 )
 
 internal data class AssetUiModel(
@@ -135,16 +138,17 @@ constructor(
                                             token = coin,
                                             logo = getCoinLogo(coin.logo),
                                             title = coin.ticker,
-                                            subtitle = coin.chain.raw,
+                                            subtitle = coin.chain.displayName,
                                             amount = "0",
                                             value = "0",
                                             isDisabled = true,
                                             isSecuredAsset = coin.isSecuredAsset(),
                                         )
                                     }
-                            },
+                            }
+                            .withLoadingFlag(),
                         searchFieldState.textAsFlow().map { it.toString() },
-                    ) { account, allTokens, query ->
+                    ) { account, (allTokens, isLoadingTokens), query ->
                         val filteredAssets =
                             account.accounts
                                 .asSequence()
@@ -163,7 +167,7 @@ constructor(
                                         token = it.token,
                                         logo = getCoinLogo(it.token.logo),
                                         title = it.token.ticker,
-                                        subtitle = it.token.chain.raw,
+                                        subtitle = it.token.chain.displayName,
                                         amount =
                                             it.tokenValue?.let(mapTokenValueToDecimalUiString)
                                                 ?: "0",
@@ -180,10 +184,12 @@ constructor(
                                 it.token.matchesSearch(query) && it.token.id !in filteredTokenIds
                             }
 
-                        filteredAssets + additionalAssets
+                        (filteredAssets + additionalAssets) to isLoadingTokens
                     }
                 }
-                .onEach { assets -> state.update { it.copy(assets = assets) } }
+                .onEach { (assets, isLoadingTokens) ->
+                    state.update { it.copy(assets = assets, isLoadingTokens = isLoadingTokens) }
+                }
                 .launchIn(this)
         }
     }
@@ -245,7 +251,7 @@ constructor(
                     .getEnabledChains(vaultId)
                     .first()
                     .map { chain ->
-                        NetworkUiModel(chain = chain, logo = chain.logo, title = chain.name)
+                        NetworkUiModel(chain = chain, logo = chain.logo, title = chain.displayName)
                     }
                     .filter {
                         when (filter) {
@@ -258,6 +264,20 @@ constructor(
             state.update { it.copy(chains = availableChains) }
         }
     }
+}
+
+/**
+ * Pairs every emission with whether the source is still running, so the catalog's later, slower
+ * longtail emission (Jupiter, 1inch) isn't mistaken for "nothing matches" while it is in flight.
+ */
+private fun <T> Flow<List<T>>.withLoadingFlag(): Flow<Pair<List<T>, Boolean>> = flow {
+    var latest = emptyList<T>()
+    emit(latest to true)
+    collect {
+        latest = it
+        emit(it to true)
+    }
+    emit(latest to false)
 }
 
 data class AssetSelected(val token: Coin, val isDisabled: Boolean)

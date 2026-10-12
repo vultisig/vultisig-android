@@ -21,7 +21,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.VaultRenameViewModel
+import com.vultisig.wallet.ui.models.vault.VaultRenameViewModel
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable

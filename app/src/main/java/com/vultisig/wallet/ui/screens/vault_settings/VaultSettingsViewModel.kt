@@ -316,7 +316,8 @@ constructor(
 
                                     is VaultSettingsItem.Migrate ->
                                         it.copy(isEnabled = hasMigration)
-                                    // Reshare not supported for MLDSA vaults yet
+                                    // Reshare regenerates only ECDSA/EdDSA, so the MLDSA share
+                                    // would stay tied to the old committee.
                                     is VaultSettingsItem.Reshare ->
                                         it.copy(isEnabled = !hasFastSign && !hasMldsaKey)
                                     is VaultSettingsItem.DilithiumKeygen ->

@@ -5,6 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,6 +25,7 @@ import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.send.SendViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
+import com.vultisig.wallet.ui.screens.keysign.KeysignShareQrSheet
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -36,6 +40,7 @@ internal fun SignMessageScreen(
     val context = LocalContext.current
 
     val keysignShareViewModel: KeysignShareViewModel = hiltViewModel(context as MainActivity)
+    var showShareSheet by remember { mutableStateOf(false) }
 
     val isKeysignFinished by viewModel.isKeysignFinished.collectAsState()
 
@@ -64,7 +69,7 @@ internal fun SignMessageScreen(
         isKeysignFinished = isKeysignFinished,
         rightIcon = qr?.let { R.drawable.qr_share },
         onBackClick = { viewModel.navigateToHome(useMainNavigator) },
-        onRightIconClick = { keysignShareViewModel.shareQRCode(context) },
+        onRightIconClick = { showShareSheet = true },
     ) {
         NavHost(
             navController = sendNav,
@@ -82,6 +87,13 @@ internal fun SignMessageScreen(
                 VerifySignMessageScreen()
             }
         }
+    }
+
+    if (showShareSheet) {
+        KeysignShareQrSheet(
+            viewModel = keysignShareViewModel,
+            onDismiss = { showShareSheet = false },
+        )
     }
 }
 

@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.VaultId
@@ -22,9 +23,9 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
-import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -53,6 +54,9 @@ internal data class SwapTransactionUiModel(
     // form's breakdown instead of folding the outbound fee into "Swap Fee" (#5061).
     val outboundFee: String? = null,
     val totalFee: String = "",
+    // The part of [totalFee] that is not network gas, so the total can be rebuilt once the gas
+    // actually paid replaces the estimate. Null when unknown; the total is then left as built.
+    val totalFeeExcludingNetwork: FiatValue? = null,
     val networkFeeFormatted: String = "",
     // True when [networkFee] is the most the transaction can cost rather than what it will (EVM
     // gas is quoted at maxFeePerGas × limit); the row is then labelled as a maximum.
@@ -396,6 +400,16 @@ constructor(
 
     fun onDismissSecurityScanner() {
         state.update { it.copy(showScanningWarning = false) }
+    }
+
+    /**
+     * Opens the finished scan from the header's mark. "Continue anyway" then signs the way the wide
+     * sign button does: Fast Sign when the vault has it, the paired devices otherwise.
+     */
+    fun openScanResult() {
+        if (state.value.txScanStatus !is TransactionScanStatus.Scanned) return
+        _fastSign = state.value.hasFastSign
+        state.update { it.copy(showScanningWarning = true) }
     }
 
     fun joinKeySign() {

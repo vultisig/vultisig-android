@@ -89,8 +89,8 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.utils.roundToPx
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.components.v3.V3Topbar
-import com.vultisig.wallet.ui.models.ScanQrUiModel
-import com.vultisig.wallet.ui.models.ScanQrViewModel
+import com.vultisig.wallet.ui.models.scan.ScanQrUiModel
+import com.vultisig.wallet.ui.models.scan.ScanQrViewModel
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.addWhiteBorder

@@ -49,8 +49,17 @@ class ERC20Helper(
 
     private fun buildErc20TokenTransfer(
         keysignPayload: KeysignPayload
-    ): Ethereum.SigningInput.Builder =
-        Ethereum.SigningInput.newBuilder()
+    ): Ethereum.SigningInput.Builder {
+        // Runs on every signer (initiator and co-signer) from the relayed payload, so it also
+        // guards a co-signer whose initiator built `toAddress` on an older/other build. Sending an
+        // ERC-20 to its own contract burns the tokens; an EIP-681 `transfer` link whose recipient
+        // was misresolved to the token contract is the common way this happens. Refuse it.
+        require(
+            !keysignPayload.toAddress.equals(keysignPayload.coin.contractAddress, ignoreCase = true)
+        ) {
+            "ERC-20 transfer recipient is the token's own contract; refusing to sign"
+        }
+        return Ethereum.SigningInput.newBuilder()
             .setToAddress(keysignPayload.coin.contractAddress)
             .setTransaction(
                 Ethereum.Transaction.newBuilder()
@@ -62,6 +71,7 @@ class ERC20Helper(
                     )
                     .build()
             )
+    }
 
     private fun buildUsdcWithdraw(keysignPayload: KeysignPayload): Ethereum.SigningInput.Builder {
         require(!keysignPayload.memo.isNullOrBlank()) { "Empty memo for usdc withdraw" }

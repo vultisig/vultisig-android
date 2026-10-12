@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.screens.v2.home.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.models.VaultAccountsUiModel
+import com.vultisig.wallet.ui.models.vault.VaultAccountsUiModel
 
 @Composable
 internal fun WalletExpandedTopbarContent(
