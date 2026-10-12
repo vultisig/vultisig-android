@@ -75,8 +75,9 @@ private fun Coin.isContractQualifiedCustomToken(): Boolean =
 
 /**
  * Whether [query] should surface this coin in a search: a case-insensitive substring of the
- * [Coin.ticker], the [Coin.name] or the [Coin.contractAddress]. Blank matches everything, so a
- * search field can be piped through unconditionally.
+ * [Coin.ticker], the [Coin.name] or the [Coin.contractAddress], or — for a THORChain secured asset
+ * — of the chain it is pegged to ([Chain.matchesSearch]). Blank matches everything, so a search
+ * field can be piped through unconditionally.
  *
  * Name is what makes the native asset findable on the chains that call it something else — "eth" is
  * the only ticker on Base, Arbitrum, Optimism and zkSync, but a user looking for it types
@@ -88,7 +89,8 @@ fun Coin.matchesSearch(query: String): Boolean {
     if (needle.isEmpty()) return true
     return ticker.contains(needle, ignoreCase = true) ||
         name.contains(needle, ignoreCase = true) ||
-        contractAddress.contains(needle, ignoreCase = true)
+        contractAddress.contains(needle, ignoreCase = true) ||
+        securedAssetUnderlyingChain()?.matchesSearch(needle) == true
 }
 
 /**
@@ -225,14 +227,19 @@ private fun Coin.thorChainSecuredAssetSwapName(): String {
 }
 
 /**
- * True when this secured asset's underlying chain (per [securedAssetChain]) uses the EVM standard.
- * Reuses [Chain.swapAssetName] — the same chain-code table the native-coin comparison side is built
- * from — so the two sides of [swapAssetComparisonName] stay in sync.
+ * The L1 chain this THORChain secured asset is pegged to (e.g. `bsc-usdc-0x8ac7…` →
+ * [Chain.BscChain]), or null when this is not a secured asset or its chain code is not one Vultisig
+ * supports. Resolves through [Chain.swapAssetName] — the same chain-code table the native-coin side
+ * of [swapAssetComparisonName] is built from — so the two stay in sync.
  */
-private fun Coin.securedAssetUnderlyingIsEvm(): Boolean {
+fun Coin.securedAssetUnderlyingChain(): Chain? {
+    if (!isSecuredAsset()) return null
     val chainCode = securedAssetChain()
-    return Chain.entries.any { it.standard == TokenStandard.EVM && it.swapAssetName() == chainCode }
+    return Chain.entries.firstOrNull { it.swapAssetName() == chainCode }
 }
+
+private fun Coin.securedAssetUnderlyingIsEvm(): Boolean =
+    securedAssetUnderlyingChain()?.standard == TokenStandard.EVM
 
 /**
  * Normalizes this coin's asset name for same-asset identity comparisons (e.g. guarding against

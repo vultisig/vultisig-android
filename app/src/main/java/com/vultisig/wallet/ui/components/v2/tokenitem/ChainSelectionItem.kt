@@ -45,6 +45,7 @@ internal sealed interface TokenSelectionUiModel {
         val name: String,
         val logo: ImageModel,
         val chainLogo: ImageModel? = null,
+        val chainName: String? = null,
         val errorLetter: String? = null,
     ) : TokenSelectionUiModel
 
@@ -256,7 +257,7 @@ private fun TokenUiGridLogo(modifier: Modifier = Modifier, size: Dp = 36.dp, tok
             ) {
                 AsyncImage(
                     model = token.chainLogo,
-                    contentDescription = null,
+                    contentDescription = token.chainName,
                     modifier = Modifier.size(size * 0.42f).clip(CircleShape),
                 )
             }
