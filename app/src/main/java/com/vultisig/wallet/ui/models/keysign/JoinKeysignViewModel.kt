@@ -68,6 +68,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
@@ -1092,14 +1093,22 @@ constructor(
 
                 updateSwapUiModel { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 
-                val scannerResult =
+                val result =
                     try {
                         withContext(Dispatchers.IO) { blockaidSimulationService.scan(payload) }
-                            .scannerResult
                     } catch (e: Exception) {
                         if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.w(e, "Blockaid scan failed for Solana swap")
                         null
+                    }
+                val scannerResult = result?.scannerResult
+                val hero =
+                    result?.let {
+                        buildHeroContent(
+                            simulation = it.simulation,
+                            decodedFunctionName = null,
+                            didLoadSimulation = it.didLoadSimulation,
+                        )
                     }
                 // No verdict (network failure, undecodable tx, unparsable validation) surfaces as a
                 // scan error, never as a clean result.
@@ -1109,8 +1118,32 @@ constructor(
                     } else {
                         TransactionScanStatus.Error("Security Scanner Failed", BLOCKAID_PROVIDER)
                     }
-                updateSwapUiModel { it.copy(txScanStatus = scanStatus) }
+                updateSwapUiModel { it.copy(txScanStatus = scanStatus, heroContent = hero) }
             }
+    }
+
+    /**
+     * Joins the swap keysign unless the scan flagged the swap, in which case its warning is shown
+     * first, mirroring the initiator's gate.
+     */
+    fun joinSwapKeysign() {
+        val model = (verifyUiModel.value as? VerifyUiModel.Swap)?.model ?: return joinKeysign()
+        handleSigningFlowCommon(
+            txScanStatus = model.txScanStatus,
+            showWarning = { updateSwapUiModel { it.copy(showScanningWarning = true) } },
+            onSign = { joinKeysign() },
+        )
+    }
+
+    /** Joins the swap keysign after the user chose "Continue anyway" on the scan warning. */
+    fun joinSwapKeysignSkippingWarning() {
+        dismissSwapScanWarning()
+        joinKeysign()
+    }
+
+    /** Hides the swap scan warning without signing. */
+    fun dismissSwapScanWarning() {
+        updateSwapUiModel { it.copy(showScanningWarning = false) }
     }
 
     private fun updateSwapUiModel(updateBlock: (VerifySwapUiModel) -> VerifySwapUiModel) {

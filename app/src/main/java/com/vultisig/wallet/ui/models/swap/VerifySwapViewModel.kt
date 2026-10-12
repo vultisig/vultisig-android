@@ -20,10 +20,12 @@ import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
@@ -147,6 +149,8 @@ internal data class VerifySwapUiModel(
     val hasFastSign: Boolean = false,
     val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
     val showScanningWarning: Boolean = false,
+    /** What a Blockaid simulation of the signed tx shows it moving; null when not simulated. */
+    val heroContent: HeroContent? = null,
     val vaultName: String = "",
     val isSigning: Boolean = false,
 ) {
@@ -331,7 +335,11 @@ constructor(
                         supportedChains.isChainSupported(chain)
 
                 if (!isSupported) {
-                    scanExternalRecipient(transaction, supportedChains)
+                    scanExternalRecipient(transaction, supportedChains)?.let { result ->
+                        state.update {
+                            it.copy(txScanStatus = TransactionScanStatus.Scanned(result))
+                        }
+                    }
                     return@launch
                 }
 
@@ -344,8 +352,22 @@ constructor(
                     withContext(ioDispatcher) {
                         securityScannerService.scanTransaction(securityScannerTransaction)
                     }
+                // SwapKit stages Solana routes on the EVM-shaped payload, whose external
+                // recipient the Solana tx scan doesn't screen, so the worse verdict wins.
+                val recipientResult =
+                    if (isSolanaAggregatorSwap) {
+                        scanExternalRecipient(transaction, supportedChains)
+                    } else {
+                        null
+                    }
+                val worstResult =
+                    if (recipientResult != null && recipientResult.riskLevel > result.riskLevel) {
+                        recipientResult
+                    } else {
+                        result
+                    }
 
-                state.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
+                state.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(worstResult)) }
             } catch (t: Throwable) {
                 if (t is kotlinx.coroutines.CancellationException) throw t
                 val errorMessage = "Security Scanner Failed"
@@ -367,10 +389,12 @@ constructor(
 
     /**
      * Fallback screening for swaps whose source chain can't be scanned as a full transaction (e.g.
-     * a Solana-source swap): the funds still leave the vault to an external recipient, so that
-     * address is screened on its own on the destination chain (#5348).
+     * a Solana-source THORChain swap): the funds still leave the vault to an external recipient, so
+     * that address is screened on its own on the destination chain (#5348). Also runs alongside a
+     * Solana aggregator swap scan, which doesn't screen the recipient.
      *
-     * Silently skipped when there is no external recipient — a swap back into the vault's own
+     * Returns the recipient verdict, or null when skipped. Skipped when there is no external
+     * recipient — a swap back into the vault's own
      * address needs no address screening — or when the destination chain isn't an EVM chain the
      * provider covers, which is the only address-shaped scan Blockaid offers. Provider-side AML
      * screening remains the backstop there.
@@ -378,16 +402,16 @@ constructor(
     private suspend fun scanExternalRecipient(
         transaction: SwapTransaction,
         supportedChains: List<SecurityScannerSupport>,
-    ) {
+    ): SecurityScannerResult? {
         val hasExternalRecipient =
             (transaction as? SwapTransaction.RegularSwapTransaction)
                 ?.externalRecipient
                 ?.isNotBlank() == true
-        if (!hasExternalRecipient) return
+        if (!hasExternalRecipient) return null
 
         val dstChain = transaction.dstToken.chain
         if (dstChain.standard != TokenStandard.EVM || !supportedChains.isChainSupported(dstChain)) {
-            return
+            return null
         }
 
         state.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
@@ -395,12 +419,9 @@ constructor(
         val recipientScannerTransaction =
             securityScannerService.createRecipientSecurityScannerTransaction(transaction)
 
-        val result =
-            withContext(ioDispatcher) {
-                securityScannerService.scanTransaction(recipientScannerTransaction)
-            }
-
-        state.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
+        return withContext(ioDispatcher) {
+            securityScannerService.scanTransaction(recipientScannerTransaction)
+        }
     }
 
     fun onDismissSecurityScanner() {

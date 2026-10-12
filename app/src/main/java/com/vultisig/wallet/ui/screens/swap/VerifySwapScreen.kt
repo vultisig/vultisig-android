@@ -63,6 +63,8 @@ import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.dapp.DappRequestBanner
+import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.hero.HeroContentView
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
@@ -481,6 +483,7 @@ internal fun VerifySwapScreen(
         tx = state.tx,
         scanStatus = state.txScanStatus,
         hasToShowWarningScanning = state.showScanningWarning,
+        heroContent = state.heroContent,
         hasAllConsents = state.hasAllConsents,
         isSigning = state.isSigning,
         consentAmount = state.consentAmount,
@@ -508,6 +511,7 @@ private fun VerifySwapScreen(
     tx: SwapTransactionUiModel,
     scanStatus: TransactionScanStatus,
     hasToShowWarningScanning: Boolean,
+    heroContent: HeroContent? = null,
     hasAllConsents: Boolean,
     isSigning: Boolean,
     consentAmount: Boolean,
@@ -566,55 +570,60 @@ private fun VerifySwapScreen(
 
                     UiSpacer(24.dp)
 
-                    SwapToken(valuedToken = tx.src, isSwap = true)
+                    // What Blockaid simulates the signed tx moving, in place of the quoted legs.
+                    if (heroContent != null) {
+                        HeroContentView(content = heroContent)
+                    } else {
+                        SwapToken(valuedToken = tx.src, isSwap = true)
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            VerticalDivider(
-                                thickness = 1.dp,
-                                color = Theme.v2.colors.border.light,
-                                modifier = Modifier.height(16.dp),
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                VerticalDivider(
+                                    thickness = 1.dp,
+                                    color = Theme.v2.colors.border.light,
+                                    modifier = Modifier.height(16.dp),
+                                )
+
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_arrow_down),
+                                    contentDescription = null,
+                                    tint = Theme.v2.colors.primary.accent4,
+                                    modifier =
+                                        Modifier.size(24.dp)
+                                            .background(
+                                                color = Theme.v2.colors.backgrounds.tertiary_2,
+                                                shape = CircleShape,
+                                            )
+                                            .padding(6.dp),
+                                )
+
+                                VerticalDivider(
+                                    thickness = 1.dp,
+                                    color = Theme.v2.colors.border.light,
+                                    modifier = Modifier.height(16.dp),
+                                )
+                            }
+
+                            Text(
+                                stringResource(R.string.swap_form_dst_token_title),
+                                style = Theme.brockmann.supplementary.captionSmall,
+                                color = Theme.v2.colors.text.tertiary,
                             )
 
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrow_down),
-                                contentDescription = null,
-                                tint = Theme.v2.colors.primary.accent4,
-                                modifier =
-                                    Modifier.size(24.dp)
-                                        .background(
-                                            color = Theme.v2.colors.backgrounds.tertiary_2,
-                                            shape = CircleShape,
-                                        )
-                                        .padding(6.dp),
-                            )
-
-                            VerticalDivider(
-                                thickness = 1.dp,
-                                color = Theme.v2.colors.border.light,
-                                modifier = Modifier.height(16.dp),
-                            )
+                            HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.light)
                         }
 
-                        Text(
-                            stringResource(R.string.swap_form_dst_token_title),
-                            style = Theme.brockmann.supplementary.captionSmall,
-                            color = Theme.v2.colors.text.tertiary,
+                        SwapToken(
+                            valuedToken = tx.dst,
+                            isSwap = true,
+                            isDestinationToken = true,
+                            isLimitOrder = tx.isLimitOrder,
+                            minPayout = tx.minPayout,
                         )
-
-                        HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.light)
                     }
-
-                    SwapToken(
-                        valuedToken = tx.dst,
-                        isSwap = true,
-                        isDestinationToken = true,
-                        isLimitOrder = tx.isLimitOrder,
-                        minPayout = tx.minPayout,
-                    )
 
                     if (tx.isLimitOrder && tx.limitTargetPriceLabel != null) {
                         UiSpacer(16.dp)

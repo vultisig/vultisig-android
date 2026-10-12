@@ -119,10 +119,13 @@ sealed interface BlockaidSimulationCacheKey {
  * fields — so a Blockaid scan describes exactly what gets signed.
  */
 internal fun KeysignPayload.solanaRawTransactionsBase64(): List<String>? {
-    signSolana?.rawTransactions?.takeIf { it.isNotEmpty() }?.let { return it }
-    if (coin.chain != Chain.Solana) return null
-    val swap = swapPayload as? SwapPayload.EVM ?: return null
-    return swap.data.quote.tx.data.takeIf { it.isNotBlank() }?.let(::listOf)
+    // The swap tx goes first: the signer hashes only `quote.tx.data` for a Solana EVM-shaped swap,
+    // so a `signSolana` riding alongside it is never signed and must not supply the verdict.
+    val swap = swapPayload as? SwapPayload.EVM
+    if (coin.chain == Chain.Solana && swap != null) {
+        return swap.data.quote.tx.data.takeIf { it.isNotBlank() }?.let(::listOf)
+    }
+    return signSolana?.rawTransactions?.takeIf { it.isNotEmpty() }
 }
 
 /**
