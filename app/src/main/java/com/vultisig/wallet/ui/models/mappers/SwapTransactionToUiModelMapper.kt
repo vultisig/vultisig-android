@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.mappers
 
+import com.vultisig.wallet.data.api.swapAggregators.swapKitDepositRecipient
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
@@ -238,6 +239,10 @@ constructor(
             expectedDstDecimal = from.expectedDstTokenValue.decimal.toPlainString(),
             externalRecipient =
                 (from as? SwapTransaction.RegularSwapTransaction)?.externalRecipient,
+            depositAddress =
+                (from.payload as? SwapPayload.EVM)
+                    ?.data
+                    ?.swapKitDepositRecipient(from.srcToken.chain),
             // Resolved here rather than read off the transaction: the fee above is re-valued at
             // the current price, and a source that has lost its price since Continue can no longer
             // be grossed up — so the rate the form recorded would then sit over a discounted

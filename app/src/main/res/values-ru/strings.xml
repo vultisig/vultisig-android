@@ -1235,6 +1235,7 @@
     <string name="swap_external_recipient_invalid">Недействительный адрес получателя</string>
     <string name="swap_external_recipient_unsupported">Внешний получатель недоступен для этого обмена. Отключите его, чтобы продолжить.</string>
     <string name="verify_swap_recipient">Получатель</string>
+    <string name="verify_swap_deposit_address">Адрес депозита</string>
     <string name="keygen_benefit_1_template">Удаление единой точки отказа</string>
     <string name="keygen_benefit_1_emphasized">Многофакторная безопасность</string>
     <string name="keygen_benefit_2_template">предоставляет полный контроль над вашими активами</string>
