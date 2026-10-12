@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.DashApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -29,9 +30,15 @@ import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.TronFees
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.blockchain.near.NearAccountId
+import com.vultisig.wallet.data.blockchain.near.NearFees
+import com.vultisig.wallet.data.blockchain.near.NearRefusal
+import com.vultisig.wallet.data.blockchain.near.NearRefusalException
+import com.vultisig.wallet.data.blockchain.near.requireNear
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.blockchain.utxo.SpendableUtxos
 import com.vultisig.wallet.data.chains.helpers.CardanoHelper
+import com.vultisig.wallet.data.chains.helpers.NearHelper
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_PRICE
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
@@ -105,6 +112,7 @@ constructor(
     private val zcashApi: ZcashApi,
     private val polkadotApi: PolkadotApi,
     private val bittensorApi: BittensorApi,
+    private val nearApi: NearApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
@@ -620,6 +628,50 @@ constructor(
                         utxos = emptyList(),
                     )
                 }
+
+            TokenStandard.NEAR -> {
+                requireNear(token.isNativeToken, NearRefusal.TOKENS_UNSUPPORTED)
+                // The upfront gas depends on the receiver: a 64-hex implicit receiver reserves
+                // account-creation gas whether or not it exists.
+                val recipient = dstAddress.orEmpty()
+                requireNear(
+                    NearAccountId.isValid(recipient),
+                    NearRefusal.INVALID_RECIPIENT,
+                    recipient,
+                )
+                requireNear(
+                    NearAccountId.isImplicit(address),
+                    NearRefusal.SENDER_NOT_IMPLICIT,
+                    address,
+                )
+                coroutineScope {
+                    val accessKeyDeferred = async {
+                        nearApi.getAccessKey(address, token.hexPublicKey)
+                    }
+                    val blockDeferred = async { nearApi.getFinalBlock() }
+                    val feesDeferred = async { nearApi.getFeeConfig() }
+
+                    val accessKey =
+                        accessKeyDeferred.await()
+                            ?: throw NearRefusalException(NearRefusal.UNKNOWN_ACCESS_KEY, address)
+                    requireNear(accessKey.isFullAccess, NearRefusal.FUNCTION_CALL_KEY, address)
+                    val block = blockDeferred.await()
+
+                    BlockChainSpecificAndUtxo(
+                        BlockChainSpecific.Near(
+                            nonce = NearHelper.transactionNonce(accessKey.nonce),
+                            blockHash = block.hash,
+                            gasFee =
+                                NearFees.gasReservation(
+                                    config = feesDeferred.await(),
+                                    gasPrice = block.gasPrice,
+                                    senderIsReceiver = address == recipient,
+                                    receiverIsImplicit = NearAccountId.isImplicit(recipient),
+                                ),
+                        )
+                    )
+                }
+            }
 
             TokenStandard.TON -> {
                 coroutineScope {

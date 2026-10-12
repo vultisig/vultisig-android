@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.isRecognizedAs
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -297,7 +298,7 @@ internal class TokenNetworkSelectionDelegate(
         val chainValidForAddress =
             preSelectedChainId?.let { Chain.fromRawOrNull(it) }?.let(::listOf)
                 ?: Chain.entries.filter { chain ->
-                    chainAccountAddressRepository.isValid(chain, qrCode)
+                    chainAccountAddressRepository.isRecognizedAs(chain, qrCode)
                 }
 
         val selectedChain = selectedTokenValue?.chain

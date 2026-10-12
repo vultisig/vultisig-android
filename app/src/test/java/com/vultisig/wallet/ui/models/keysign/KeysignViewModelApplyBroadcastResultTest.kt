@@ -233,7 +233,7 @@ internal class KeysignViewModelApplyBroadcastResultTest {
     ): KeysignViewModel {
         val onStatus = slot<suspend (TransactionResult) -> Unit>()
         every { txStatusConfigurationProvider.supportTxStatus(any()) } returns true
-        coEvery { txStatusPoller.poll(any(), any(), any(), capture(onStatus)) } coAnswers
+        coEvery { txStatusPoller.poll(any(), any(), any(), any(), capture(onStatus)) } coAnswers
             {
                 poll(onStatus.captured)
             }

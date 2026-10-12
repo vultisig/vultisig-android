@@ -7,6 +7,8 @@ import com.vultisig.wallet.data.api.CardanoTransactionAlreadyBroadcastException
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.NearApi
+import com.vultisig.wallet.data.api.NearMalformedResponseException
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -15,6 +17,7 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
+import com.vultisig.wallet.data.chains.helpers.NearHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Chain.Akash
 import com.vultisig.wallet.data.models.Chain.Arbitrum
@@ -50,6 +53,7 @@ import com.vultisig.wallet.data.models.Chain.ZkSync
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
+import java.util.Base64
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
@@ -70,6 +74,7 @@ constructor(
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
     private val bittensorApi: BittensorApi,
+    private val nearApi: NearApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
@@ -204,6 +209,25 @@ constructor(
                     verify = { hash -> isLandedOnChain(hash, chain) },
                 )
 
+            // The node may acknowledge without a hash (at INCLUDED); when it names one it must be
+            // the locally derived hash, so another transaction is never reported as this one.
+            Chain.Near -> {
+                val sender = NearHelper.signerId(Base64.getDecoder().decode(tx.rawTransaction))
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        val returned = nearApi.sendTransaction(tx.rawTransaction)
+                        if (returned != null && returned != tx.transactionHash) {
+                            throw NearMalformedResponseException(
+                                "send_tx returned $returned for ${tx.transactionHash}"
+                            )
+                        }
+                        tx.transactionHash
+                    },
+                    verify = { hash -> isLandedOnChain(hash, chain, sender) },
+                )
+            }
+
             // Sui digest is not pre-computable from the raw transaction, so transactionHash
             // is always blank and recovery cannot work; broadcast directly.
             Sui -> suiApi.executeTransactionBlock(tx.rawTransaction, tx.signature ?: "")
@@ -308,8 +332,12 @@ constructor(
      * our tx isn't on chain yet, in which case the rejection must propagate rather than have the
      * user re-send a landed transaction.
      */
-    private suspend fun isLandedOnChain(hash: String, chain: Chain): Boolean =
-        when (transactionStatusRepository.checkTransactionStatus(hash, chain)) {
+    private suspend fun isLandedOnChain(
+        hash: String,
+        chain: Chain,
+        senderAccountId: String? = null,
+    ): Boolean =
+        when (transactionStatusRepository.checkTransactionStatus(hash, chain, senderAccountId)) {
             is TransactionResult.Confirmed,
             is TransactionResult.Refunded,
             is TransactionResult.Failed -> true

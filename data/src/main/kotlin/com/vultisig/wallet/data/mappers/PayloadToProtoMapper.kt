@@ -16,6 +16,7 @@ import vultisig.keysign.v1.CosmosSpecific
 import vultisig.keysign.v1.Erc20ApprovePayload
 import vultisig.keysign.v1.EthereumSpecific
 import vultisig.keysign.v1.MAYAChainSpecific
+import vultisig.keysign.v1.NearSpecific
 import vultisig.keysign.v1.OneInchQuote
 import vultisig.keysign.v1.OneInchSwapPayload
 import vultisig.keysign.v1.OneInchTransaction
@@ -179,6 +180,14 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         byteFee = specific.byteFee,
                         sendMaxAmount = specific.sendMaxAmount,
                         ttl = specific.ttl,
+                    )
+                } else null,
+            nearSpecific =
+                if (specific is BlockChainSpecific.Near) {
+                    NearSpecific(
+                        nonce = specific.nonce,
+                        blockHash = specific.blockHash,
+                        gasFee = specific.gasFee.toString(),
                     )
                 } else null,
             thorchainSwapPayload =

@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -167,6 +168,7 @@ constructor(
     private val tronResourceDataSource: TronResourceDataSource,
     private val polkadotApi: PolkadotApi,
     private val bittensorApi: BittensorApi,
+    private val nearApi: NearApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
@@ -483,6 +485,14 @@ constructor(
                 TokenValue(value = it.toBigInteger(), unit = coin.ticker, decimals = coin.decimal)
             }
 
+    /**
+     * The account's raw `amount`: a balance with the storage stake taken out is indistinguishable
+     * from a lost one, so the reserve is applied only where a send is sized. An unfunded account
+     * (UNKNOWN_ACCOUNT) holds zero; a failed read throws.
+     */
+    private suspend fun nearBalance(address: String): BigInteger =
+        nearApi.getAccount(address)?.amount ?: BigInteger.ZERO
+
     override fun getTokenValue(address: String, coin: Coin): Flow<TokenValue> =
         flow {
                 emit(
@@ -606,6 +616,8 @@ constructor(
                                     ?: splTokenRepository.getCachedBalance(coin)
                             Polkadot -> polkadotApi.getBalance(address)
                             Chain.Bittensor -> bittensorApi.getBalance(address)
+                            Chain.Near if coin.isNativeToken -> nearBalance(address)
+                            Chain.Near -> error("NEAR tokens have no balance reader")
 
                             Sui -> suiApi.getBalance(address, coin.contractAddress)
 

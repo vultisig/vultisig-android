@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.SolanaAccountOwnership
 import com.vultisig.wallet.data.api.SolanaApi
+import com.vultisig.wallet.data.blockchain.near.NearAccountId
 import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
@@ -23,6 +24,13 @@ import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
+
+/**
+ * Whether a scanned or pasted [address] should select [chain] on its own: valid for the chain, and
+ * for NEAR a 64-hex implicit account. The named grammar also admits ENS names and THORNames.
+ */
+fun ChainAccountAddressRepository.isRecognizedAs(chain: Chain, address: String): Boolean =
+    isValid(chain, address) && (chain != Chain.Near || NearAccountId.isImplicit(address))
 
 interface ChainAccountAddressRepository {
 
@@ -66,7 +74,8 @@ enum class RecipientValidity {
 
     /**
      * A well-formed address that provably nobody holds the key to, so funds sent there are
-     * destroyed: on Bittensor, the all-zero Substrate AccountId ([BittensorHelper.BURN_ADDRESS]).
+     * destroyed: on Bittensor, the all-zero Substrate AccountId ([BittensorHelper.BURN_ADDRESS]);
+     * on NEAR, the all-zero implicit account ([NearAccountId.BURN_ACCOUNT_ID]).
      *
      * Distinct from [NotAWalletAddress] because the two are not the same claim and do not deserve
      * the same wording: a Solana token account is real and owned, it just strands the transfer,
@@ -188,6 +197,9 @@ constructor(private val solanaApi: SolanaApi) : ChainAccountAddressRepository {
 
             Chain.Bittensor -> AnyAddress.isValidSS58(address, CoinType.POLKADOT, 42)
 
+            // WalletCore refuses every named NEAR account; the account-id grammar is authoritative.
+            Chain.Near -> NearAccountId.isValid(address)
+
             else -> chain.coinType.validate(address)
         }
 
@@ -195,6 +207,8 @@ constructor(private val solanaApi: SolanaApi) : ChainAccountAddressRepository {
         when {
             !isValid(chain, address) -> RecipientValidity.InvalidForChain
             chain == Chain.Bittensor && address == BittensorHelper.BURN_ADDRESS ->
+                RecipientValidity.BurnAddress
+            chain == Chain.Near && address == NearAccountId.BURN_ACCOUNT_ID ->
                 RecipientValidity.BurnAddress
             chain != Chain.Solana -> RecipientValidity.Valid
             else -> solanaRecipientVerdict(address)

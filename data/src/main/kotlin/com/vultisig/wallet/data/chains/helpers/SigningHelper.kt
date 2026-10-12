@@ -442,6 +442,8 @@ object SigningHelper {
                     Chain.Cardano -> {
                         CardanoHelper.getPreSignedImageHash(payload)
                     }
+
+                    Chain.Near -> NearHelper(eddsaKey).getPreSignedImageHash(payload)
                 }
         }
 
@@ -758,6 +760,10 @@ object SigningHelper {
                     keysignPayload = keysignPayload,
                     signatures = signatures,
                 )
+            }
+
+            Chain.Near -> {
+                return NearHelper(eddsaKey).getSignedTransaction(keysignPayload, signatures)
             }
         }
     }
