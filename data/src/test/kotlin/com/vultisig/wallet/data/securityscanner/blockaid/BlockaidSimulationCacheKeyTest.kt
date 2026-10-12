@@ -224,6 +224,7 @@ internal class BlockaidSimulationCacheKeyTest {
             every { this@mockk.coin } returns coin
             every { memo } returns null
             every { signSolana } returns solana
+            every { swapPayload } returns null
         }
     }
 }
