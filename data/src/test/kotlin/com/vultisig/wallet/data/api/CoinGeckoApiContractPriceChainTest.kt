@@ -43,7 +43,7 @@ class CoinGeckoApiContractPriceChainTest {
                     headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
             )
         }
-        val api = CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
+        val api = CoinGeckoApiImpl(priceClient(engine))
 
         api.getContractsPrice(Chain.Mantle, listOf("0xabc"), listOf("usd"))
 
@@ -64,7 +64,7 @@ class CoinGeckoApiContractPriceChainTest {
                     headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
             )
         }
-        val api = CoinGeckoApiImpl(HttpClient(engine) { install(ContentNegotiation) { json() } })
+        val api = CoinGeckoApiImpl(priceClient(engine))
 
         api.getContractsPrice(
             Chain.Sui,
@@ -143,23 +143,7 @@ class CoinGeckoApiContractPriceChainTest {
                     headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
             )
         }
-        val api =
-            CoinGeckoApiImpl(
-                HttpClient(engine) {
-                    install(ContentNegotiation) {
-                        json(
-                            Json {
-                                ignoreUnknownKeys = true
-                                explicitNulls = false
-                                serializersModule =
-                                    SerializersModule {
-                                        contextual(BigDecimal::class, BigDecimalSerializerImpl())
-                                    }
-                            }
-                        )
-                    }
-                }
-            )
+        val api = CoinGeckoApiImpl(priceClient(engine))
 
         val result = api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
 
@@ -174,27 +158,26 @@ class CoinGeckoApiContractPriceChainTest {
             calls += 1
             respond(content = "{}", status = HttpStatusCode.OK)
         }
-        val api =
-            CoinGeckoApiImpl(
-                HttpClient(engine) {
-                    install(ContentNegotiation) {
-                        json(
-                            Json {
-                                ignoreUnknownKeys = true
-                                explicitNulls = false
-                                serializersModule =
-                                    SerializersModule {
-                                        contextual(BigDecimal::class, BigDecimalSerializerImpl())
-                                    }
-                            }
-                        )
-                    }
-                }
-            )
+        val api = CoinGeckoApiImpl(priceClient(engine))
 
         assertFailsWith<NetworkException> {
             api.getContractsPrice(Chain.Ethereum, listOf("0xabc"), listOf("usd"))
         }
         assertEquals(2, calls)
     }
+
+    private fun priceClient(engine: MockEngine) =
+        HttpClient(engine) {
+            install(ContentNegotiation) {
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                        explicitNulls = false
+                        serializersModule = SerializersModule {
+                            contextual(BigDecimal::class, BigDecimalSerializerImpl())
+                        }
+                    }
+                )
+            }
+        }
 }
