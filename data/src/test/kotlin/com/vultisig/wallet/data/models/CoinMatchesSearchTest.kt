@@ -40,6 +40,28 @@ internal class CoinMatchesSearchTest {
     }
 
     @Test
+    fun `a secured asset matches the name of the chain it is pegged to`() {
+        val bscUsdc =
+            Coins.ThorChain.RUNE.copy(
+                ticker = "USDC",
+                name = "",
+                contractAddress = "bsc-usdc-0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+                isNativeToken = false,
+            )
+        val avaxUsdc =
+            bscUsdc.copy(contractAddress = "avax-usdc-0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e")
+
+        assertTrue(avaxUsdc.matchesSearch("avalanche"))
+        assertFalse(bscUsdc.matchesSearch("avalanche"))
+        assertTrue(bscUsdc.matchesSearch("bsc"))
+    }
+
+    @Test
+    fun `a plain THORChain token does not match on the THORChain name`() {
+        assertFalse(Coins.ThorChain.TCY.matchesSearch("ethereum"))
+    }
+
+    @Test
     fun `blank and whitespace queries match everything`() {
         val nameless = Coins.Bitcoin.BTC.copy(name = "")
 
