@@ -32,6 +32,7 @@ import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.transaction_decoding.asSignedTransactionContent
@@ -704,7 +705,7 @@ constructor(
         // has any use for.
         val kamino = if (swapPayload == null) resolveKaminoIntent(payload) else null
         when {
-            swapPayload != null ->
+            swapPayload != null -> {
                 applyVerifyResult(
                     joinSwapUiModelBuilder.build(
                         payload = payload,
@@ -713,6 +714,10 @@ constructor(
                         currency = currency,
                     )
                 )
+                if (payload.coin.chain == Chain.Solana && swapPayload is SwapPayload.EVM) {
+                    scanSolanaSwap(payload)
+                }
+            }
 
             // A Kamino payload states none of what it is in a field — no memo, no deposit flag —
             // so it reaches the deposit screen on the strength of its own bytes or not at all.
@@ -1065,6 +1070,55 @@ constructor(
                             )
                     )
                 }
+            }
+        }
+    }
+
+    /**
+     * Scans a Solana aggregator swap (Jupiter, LI.FI, SwapKit) through Blockaid using the exact
+     * transaction it signs — the swap quote's `tx.data` — and publishes the verdict on the swap
+     * verify screen, so the co-signer gets an independent read on the bytes rather than relying on
+     * the initiator's swap summary. One simulate call returns both simulation and validation.
+     */
+    private fun scanSolanaSwap(payload: KeysignPayload) {
+        blockaidSimulationJob?.cancel()
+        blockaidSimulationJob =
+            viewModelScope.launch {
+                val chain = payload.coin.chain
+                val isChainSupported =
+                    securityScannerService.getSupportedChainsByFeature().isChainSupported(chain) &&
+                        securityScannerService.isSecurityServiceEnabled()
+                if (!isChainSupported) return@launch
+
+                updateSwapUiModel { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
+
+                val scannerResult =
+                    try {
+                        withContext(Dispatchers.IO) { blockaidSimulationService.scan(payload) }
+                            .scannerResult
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        Timber.w(e, "Blockaid scan failed for Solana swap")
+                        null
+                    }
+                // No verdict (network failure, undecodable tx, unparsable validation) surfaces as a
+                // scan error, never as a clean result.
+                val scanStatus =
+                    if (scannerResult != null) {
+                        TransactionScanStatus.Scanned(scannerResult)
+                    } else {
+                        TransactionScanStatus.Error("Security Scanner Failed", BLOCKAID_PROVIDER)
+                    }
+                updateSwapUiModel { it.copy(txScanStatus = scanStatus) }
+            }
+    }
+
+    private fun updateSwapUiModel(updateBlock: (VerifySwapUiModel) -> VerifySwapUiModel) {
+        verifyUiModel.update { current ->
+            if (current is VerifyUiModel.Swap) {
+                VerifyUiModel.Swap(updateBlock(current.model))
+            } else {
+                current
             }
         }
     }

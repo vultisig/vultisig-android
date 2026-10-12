@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
@@ -320,9 +321,13 @@ constructor(
                 if (!securityScannerService.isSecurityServiceEnabled()) return@launch
 
                 val supportedChains = securityScannerService.getSupportedChainsByFeature()
+                // A Solana aggregator swap carries the signed tx on the EVM-shaped payload's
+                // `quote.tx.data`, so it is scanned as that transaction rather than skipped.
+                val isSolanaAggregatorSwap =
+                    chain == Chain.Solana && transaction.payload is SwapPayload.EVM
                 val isSupported =
                     !isThorchainOrMaya &&
-                        chain.standard == TokenStandard.EVM &&
+                        (chain.standard == TokenStandard.EVM || isSolanaAggregatorSwap) &&
                         supportedChains.isChainSupported(chain)
 
                 if (!isSupported) {
