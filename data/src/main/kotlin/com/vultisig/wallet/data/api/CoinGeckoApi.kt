@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.models.CoinMarketStatsJson
 import com.vultisig.wallet.data.api.models.MarketChartResponseJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.coinGeckoAssetPlatformId
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -13,7 +14,11 @@ import io.ktor.client.request.parameter
 import io.ktor.http.appendPathSegments
 import java.math.BigDecimal
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
 import timber.log.Timber
+
+internal val coinGeckoPriceRetryDelay = 1.seconds
 
 typealias CurrencyToPrice = Map<String, BigDecimal>
 
@@ -57,10 +62,11 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
         val priceProviderIdsParam = priceProviderIds.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
         return try {
-            fetchPrices(priceProviderIdsParam, currenciesParam)
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.d(e, "error occurred in getCryptoPrices")
+            retryOnce("CoinGecko price lookup") {
+                fetchPrices(priceProviderIdsParam, currenciesParam)
+            }
+        } catch (e: NetworkException) {
+            Timber.w(e, "%s failed", "CoinGecko price lookup")
             emptyMap()
         }
     }
@@ -77,14 +83,23 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
         val platformId = chain.coinGeckoAssetPlatformId() ?: return emptyMap()
         val priceProviderIdsParam = contractAddresses.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-        return try {
+        return retryOnce("CoinGecko contract price lookup for $chain") {
             fetchContractPrices(platformId, priceProviderIdsParam, currenciesParam)
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.d(e, "error occurred in getContractsPrice")
-            emptyMap()
         }
     }
+
+    private suspend fun <T> retryOnce(label: String, fetch: suspend () -> T): T =
+        try {
+            fetch()
+        } catch (e: NetworkException) {
+            if (e.isPermanentClientError) throw e
+            Timber.w(e, "%s failed, retrying once", label)
+            delay(coinGeckoPriceRetryDelay)
+            fetch()
+        }
+
+    private val NetworkException.isPermanentClientError
+        get() = httpStatusCode in 400..499 && httpStatusCode != 408 && httpStatusCode != 429
 
     private suspend fun fetchPrices(coins: String, fiats: String): Map<String, CurrencyToPrice> =
         http
@@ -93,7 +108,7 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
                 parameter("vs_currencies", fiats)
                 header("Content-Type", "application/json")
             }
-            .body()
+            .bodyOrThrow()
 
     private suspend fun fetchContractPrices(
         chainId: String,
@@ -106,7 +121,7 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
                 parameter("vs_currencies", fiats)
                 header("Content-Type", "application/json")
             }
-            .body()
+            .bodyOrThrow()
 
     override suspend fun getMarketChart(
         id: String,
