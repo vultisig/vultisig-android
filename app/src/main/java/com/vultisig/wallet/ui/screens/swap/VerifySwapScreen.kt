@@ -1092,6 +1092,7 @@ private fun VerifyDepositAddressRow(address: String) {
     VerifyCardDetails(
         title = stringResource(R.string.verify_swap_deposit_address),
         subtitle = address,
+        showAllContent = true,
     )
 }
 
