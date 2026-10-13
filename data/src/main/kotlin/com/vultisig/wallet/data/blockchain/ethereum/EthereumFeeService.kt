@@ -159,7 +159,15 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
         val chain = transaction.coin.chain
-        val defaultLimit = getDefaultLimit(transaction)
+        // Reached when the estimate failed, so the memo's calldata is not priced anywhere else; the
+        // signing path adds the same amount (BlockChainSpecificRepository) so preview and signed
+        // limit agree.
+        val defaultLimit =
+            if (transaction is Transfer && transaction.coin.isNativeToken) {
+                getDefaultLimit(transaction) + memoCallDataGas(transaction.memo)
+            } else {
+                getDefaultLimit(transaction)
+            }
         val isSwap = transaction is Swap
         val evmApi = evmApiFactory.createEvmApi(chain)
 

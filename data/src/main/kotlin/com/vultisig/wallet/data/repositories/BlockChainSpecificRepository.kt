@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
+import com.vultisig.wallet.data.blockchain.ethereum.memoCallDataGas
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
@@ -251,7 +252,11 @@ constructor(
                                             e,
                                             "native EVM gas estimate failed; using default limit",
                                         )
-                                        defaultGasLimit
+                                        // Matches EthereumFeeService.calculateDefaultFees, which
+                                        // prices only a Transfer's memo, so the preview stays equal
+                                        // to the signed limit.
+                                        if (isSwap) defaultGasLimit
+                                        else defaultGasLimit + memoCallDataGas(memo)
                                     }
                                 else ->
                                     evmApi

@@ -46,3 +46,20 @@ internal fun decodeErc20TransferCallData(data: String): Erc20Transfer? {
 internal fun memoCallData(memo: String?): ByteArray =
     memo?.takeIf { it.isNotEmpty() }?.let { if (it.isHex()) it.toHexBytes() else it.toByteArray() }
         ?: ByteArray(0)
+
+/**
+ * The gas [memoCallData] adds to a native send under the EIP-7623 calldata floor: 10 per zero byte
+ * and 40 per non-zero byte, so 0 without a memo. Only the fallback limit used when
+ * `eth_estimateGas` fails adds it — a node refuses a limit below the intrinsic cost outright, and
+ * the 23,000 default covers a memo of at most 50 non-zero bytes. A successful estimate already
+ * prices the calldata.
+ */
+internal fun memoCallDataGas(memo: String?): BigInteger {
+    val data = memoCallData(memo)
+    val zeroBytes = data.count { it == 0.toByte() }
+    val gas = zeroBytes * ZERO_BYTE_FLOOR_GAS + (data.size - zeroBytes) * NON_ZERO_BYTE_FLOOR_GAS
+    return gas.toBigInteger()
+}
+
+private const val ZERO_BYTE_FLOOR_GAS = 10L
+private const val NON_ZERO_BYTE_FLOOR_GAS = 40L

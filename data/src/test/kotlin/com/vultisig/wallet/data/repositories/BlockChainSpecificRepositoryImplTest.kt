@@ -177,6 +177,86 @@ internal class BlockChainSpecificRepositoryImplTest {
         }
 
     @Test
+    fun `native EVM fallback gas limit covers the memo calldata when gas estimation fails`() =
+        runTest {
+            val destination = "0xdestination"
+            val coin = evmCoin(chain = Chain.Ethereum, isNativeToken = true)
+            val result =
+                repository(
+                        evmApi =
+                            evmApi(
+                                nativeGasErrorsByRecipient =
+                                    mapOf(
+                                        destination to
+                                            NetworkException(
+                                                httpStatusCode = 429,
+                                                message = "too many requests",
+                                            )
+                                    )
+                            ),
+                        evmFeeService =
+                            evmFeeService(
+                                feesByRecipient =
+                                    mapOf(destination to (BigInteger("111") to BigInteger("22")))
+                            ),
+                    )
+                    .getSpecific(
+                        chain = Chain.Ethereum,
+                        address = SOURCE_ADDRESS,
+                        token = coin,
+                        gasFee = TokenValue(BigInteger.ONE, coin),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = true,
+                        dstAddress = destination,
+                        tokenAmountValue = BigInteger.TEN,
+                        memo = SECURED_ASSET_MEMO,
+                    )
+
+            assertEthereumSpecific(
+                result = result,
+                gasLimit = BigInteger("25040"), // 23000 + 51 non-zero bytes * 40
+                maxFeePerGas = BigInteger("111"),
+                priorityFee = BigInteger("22"),
+            )
+        }
+
+    @Test
+    fun `native EVM successful estimate with a memo is signed unchanged`() = runTest {
+        val destination = "0xdestination"
+        val coin = evmCoin(chain = Chain.Ethereum, isNativeToken = true)
+        val result =
+            repository(
+                    evmApi =
+                        evmApi(nativeGasByRecipient = mapOf(destination to BigInteger("23376"))),
+                    evmFeeService =
+                        evmFeeService(
+                            feesByRecipient =
+                                mapOf(destination to (BigInteger("111") to BigInteger("22")))
+                        ),
+                )
+                .getSpecific(
+                    chain = Chain.Ethereum,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    dstAddress = destination,
+                    tokenAmountValue = BigInteger.TEN,
+                    memo = SECURED_ASSET_MEMO,
+                )
+
+        assertEthereumSpecific(
+            result = result,
+            gasLimit = BigInteger("23376"),
+            maxFeePerGas = BigInteger("111"),
+            priorityFee = BigInteger("22"),
+        )
+    }
+
+    @Test
     fun `Zcash UTXO specific carries the live branch id fetched from ZcashApi`() = runTest {
         val coin = zcashCoin()
         val zcashApi = mockk<ZcashApi> { coEvery { getConsensusBranchIdHex() } returns "30f33754" }
@@ -1618,6 +1698,8 @@ internal class BlockChainSpecificRepositoryImplTest {
     private companion object {
         val NONCE: BigInteger = BigInteger("7")
         const val SOURCE_ADDRESS = "0xsource"
+        // SECURE+ mint memo: 51 non-zero bytes, past the 50 the 23,000 default covers.
+        const val SECURED_ASSET_MEMO = "SECURE+:thor1dheycdevq39qlkxs2a6wuuzyn4aqxhve4qxtxt"
         // One STON.fi v2 router account in its three spellings: bounceable, non-bounceable,
         // and raw (which declares no bounceability at all).
         const val TON_EQ = "EQABT9GCyDI60CbC4c6uS33HFDwaqd6MddiwIIw7CXTgNR3A"

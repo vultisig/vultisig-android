@@ -282,6 +282,25 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
+    fun `default fees for a native transfer with a memo add the memo calldata gas to the limit`() =
+        runTest {
+            val transfer =
+                transfer(Chain.Ethereum)
+                    .copy(memo = "SECURE+:thor1dheycdevq39qlkxs2a6wuuzyn4aqxhve4qxtxt")
+
+            val fee = service.calculateDefaultFees(transfer) as Eip1559
+
+            assertEquals(BigInteger("25040"), fee.limit) // 23000 + 51 non-zero bytes * 40
+        }
+
+    @Test
+    fun `default fees for a memo-less native transfer keep the 23000 limit`() = runTest {
+        val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
+
+        assertEquals(DEFAULT_COIN_TRANSFER_LIMIT, fee.limit)
+    }
+
+    @Test
     fun `Ethereum swap keeps the x1_8 broadcast ceiling for the MPC sign window`() = runTest {
         // Ethereum swaps bump the base 50% (networkPrice = 150); calculateMaxFeePerGas adds 20% →
         // baseFee × 1.8 + priorityFee. A lower bump left the ceiling under the base fee by
