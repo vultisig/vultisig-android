@@ -12,7 +12,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 
-/** Mimir override for the blocks MayaChain holds a half-deposit before refunding it. */
+/** Mimir override for the blocks MayaChain holds a half-deposit before committing it alone. */
 private const val PENDING_LIQUIDITY_AGE_LIMIT_MIMIR = "PENDINGLIQUIDITYAGELIMIT"
 
 /**
@@ -59,14 +59,14 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
         }
         if (found.isEmpty()) return emptyList()
 
-        return withRefundCountdown(found)
+        return withAgeLimitCountdown(found)
     }
 
     private fun MayaNodePool.holdsPendingLiquidity(): Boolean =
         (pendingInboundCacao.toBigIntegerOrNull()?.signum() ?: 0) > 0 ||
             (pendingInboundAsset.toBigIntegerOrNull()?.signum() ?: 0) > 0
 
-    private suspend fun withRefundCountdown(
+    private suspend fun withAgeLimitCountdown(
         pending: List<PendingFetch>
     ): List<MayaChainPendingLpDeposit> {
         val (ageLimit, currentHeight) =
@@ -91,7 +91,8 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
             if (ageLimit == null || currentHeight == null || lastAddHeight == null) deposit
             else
                 deposit.copy(
-                    blocksUntilRefund = (lastAddHeight + ageLimit - currentHeight).coerceAtLeast(0L)
+                    blocksUntilAddedAlone =
+                        (lastAddHeight + ageLimit - currentHeight).coerceAtLeast(0L)
                 )
         }
     }
@@ -115,7 +116,7 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
                     pairedAddress =
                         if (cacaoPending.signum() > 0) assetAddress?.takeIf { it.isNotBlank() }
                         else cacaoAddress?.takeIf { it.isNotBlank() },
-                    blocksUntilRefund = null,
+                    blocksUntilAddedAlone = null,
                 ),
             lastAddHeight = lastAddHeight?.takeIf { it > 0 },
         )

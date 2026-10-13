@@ -1178,6 +1178,28 @@ internal class MayachainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `editing a selection with no LP pools keeps the pending cards`() = runTest {
+        val saved = MutableStateFlow(setOf(MAYA_BOND_CACAO_KEY, MAYA_STAKE_CACAO_KEY))
+        coEvery { defiPositionsRepository.getSelectedPositions(Chain.MayaChain, VAULT_ID) } returns
+            saved
+        coEvery {
+            defiPositionsRepository.saveSelectedPositions(Chain.MayaChain, VAULT_ID, any())
+        } answers { saved.value = thirdArg<List<String>>().toSet() }
+        coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
+            listOf(pending("BTC.BTC", cacao = "3000000000"))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        assertEquals(1, successData(vm).lp.pendingDeposits.size)
+
+        vm.setPositionSelectionDialogVisibility(true)
+        vm.onPositionSelectionChange(MAYA_STAKE_CACAO_KEY, selected = false)
+        vm.onPositionSelectionDone()
+
+        val data = successData(vm)
+        assertEquals(listOf(MAYA_BOND_CACAO_KEY), data.selectedPositions)
+        assertEquals("BTC.BTC", data.lp.pendingDeposits.single().poolId)
+    }
+
+    @Test
     fun `a failed rescan keeps the cards but withdraws Complete`() = runTest {
         coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
             listOf(pending("BTC.BTC", cacao = "3000000000"))
@@ -1204,7 +1226,7 @@ internal class MayachainDefiPositionsViewModelTest {
             pendingAsset = BigInteger(asset),
             pendingTxId = "TX",
             pairedAddress = pairedAddress,
-            blocksUntilRefund = 1_000L,
+            blocksUntilAddedAlone = 1_000L,
         )
 
     private fun successData(vm: MayachainDefiPositionsViewModel): MayachainDefiPositionsUiModel {

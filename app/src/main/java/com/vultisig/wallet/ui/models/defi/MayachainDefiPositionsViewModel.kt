@@ -15,7 +15,7 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.MayaChainPendingLpDeposit
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.usecases.GetMayaChainPendingLpDepositsUseCase
-import com.vultisig.wallet.ui.utils.lpRefundsInUiText
+import com.vultisig.wallet.ui.utils.lpPendingTimeLeftUiText
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.lpAssetLogoRes
@@ -221,9 +221,9 @@ constructor(
     }
 
     /**
-     * Re-scans for pending half-deposits when the screen returns to the foreground: their refund
+     * Re-scans for pending half-deposits when the screen returns to the foreground: their age-limit
      * timer keeps running while the app is backgrounded, so a stale card could offer Complete on a
-     * deposit MayaChain has already refunded.
+     * deposit MayaChain has already committed to the pool on its own.
      */
     fun onScreenResumed() {
         if (!::vaultId.isInitialized) return
@@ -233,7 +233,7 @@ constructor(
     /**
      * Loads half-finished paired adds. Independent of the LP cards, which only cover the pools the
      * user picked in Manage Positions: a deposit stuck in any other pool is exactly the one that
-     * would otherwise be refunded unseen.
+     * would otherwise end up as a one-sided position unseen.
      */
     private fun loadPendingLpDeposits() {
         loadPendingLpJob?.cancel()
@@ -272,8 +272,9 @@ constructor(
     }
 
     /**
-     * Settles the scan without erasing cards an earlier scan found — the refund timer is running on
-     * them — but withdraws Complete, since nothing confirms MayaChain has not refunded them since.
+     * Settles the scan without erasing cards an earlier scan found — the age-limit timer is running
+     * on them — but withdraws Complete, since nothing confirms MayaChain has not committed them
+     * since.
      */
     private fun markPendingLpDepositsSettled() {
         updateModel {
@@ -337,9 +338,9 @@ constructor(
             awaitedTicker = awaitedTicker,
             depositedAmount = depositedAmount,
             pairedAddress = pairedAddress?.formatAddress(),
-            refundsIn =
-                blocksUntilRefund?.let {
-                    lpRefundsInUiText(it * MAYACHAIN_BLOCK_MILLIS / MILLIS_PER_SECOND)
+            addedAloneIn =
+                blocksUntilAddedAlone?.let {
+                    lpPendingTimeLeftUiText(it * MAYACHAIN_BLOCK_MILLIS / MILLIS_PER_SECOND)
                 },
             canComplete = canComplete,
             protocolName = Chain.MayaChain.raw,
@@ -935,6 +936,25 @@ constructor(
         }
     }
 
+    /**
+     * Empties the LP leg for a selection with no pools in it. Copies the tab rather than rebuilding
+     * it: the pending half-deposits are deliberately not gated on the selection.
+     */
+    private fun clearLpPositions() {
+        loadLpJob?.cancel()
+        updateModel {
+            it.copy(
+                lp =
+                    it.lp.copy(
+                        isLoading = false,
+                        positions = emptyList(),
+                        livePoolKeys = emptySet(),
+                    )
+            )
+        }
+        loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
+    }
+
     private fun reloadLpTab() {
         val model = currentModel
         val selectedKeys = model.selectedPositions.toSet()
@@ -942,9 +962,7 @@ constructor(
         val selectedPools = model.lpPositionsDialog.filter { it.positionKey in selectedKeys }
 
         if (selectedLpKeys.isEmpty()) {
-            loadLpJob?.cancel()
-            updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
-            loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
+            clearLpPositions()
             return
         }
 
@@ -957,9 +975,7 @@ constructor(
         }
 
         if (selectedPools.isEmpty()) {
-            loadLpJob?.cancel()
-            updateModel { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
-            loadLpJob = viewModelScope.launch { reportLpFiat(BigDecimal.ZERO) }
+            clearLpPositions()
             return
         }
 
@@ -1357,7 +1373,7 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
 private const val MAYA_FIXED_POINT_DECIMALS = 8
 
 // MayaChain's average block time (5.83 s over 10,000 blocks, 2026-10-04), rounded down so the
-// refund countdown never promises more time than the deposit has.
+// age-limit countdown never promises more time than the deposit has.
 private const val MAYACHAIN_BLOCK_MILLIS = 5_800L
 private const val MILLIS_PER_SECOND = 1_000L
 

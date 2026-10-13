@@ -45,7 +45,7 @@ internal fun LpTabContent(
     onClickCompletePending: (String) -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        // Above the positions: a half-deposit is on a refund timer, so it is the one thing on this
+        // Above the positions: a half-deposit is on a timer, so it is the one thing on this
         // tab the user may need to act on before it expires.
         state.pendingDeposits.forEach { pending ->
             PendingLpWidget(
@@ -66,9 +66,9 @@ internal fun LpTabContent(
 }
 
 /**
- * A symmetric add that THORChain or MayaChain is still holding because only one side arrived. Shows what was
- * deposited, the address the missing half has to come from, and how long is left before the deposit
- * is refunded.
+ * A symmetric add that THORChain or MayaChain is still holding because only one side arrived. Shows
+ * what was deposited, the address the missing half has to come from, and how long is left before
+ * the deposit is added to the pool on its own.
  */
 @Composable
 internal fun PendingLpWidget(state: PendingLpDepositUiModel, onClickComplete: () -> Unit) {
@@ -133,10 +133,9 @@ internal fun PendingLpWidget(state: PendingLpDepositUiModel, onClickComplete: ()
         UiSpacer(8.dp)
 
         PendingLpRow(
-            label = stringResource(R.string.lp_pending_refunds_in),
+            label = stringResource(R.string.lp_pending_added_alone_in),
             value =
-                state.refundsIn?.asString()
-                    ?: stringResource(R.string.lp_pending_refund_time_unknown),
+                state.addedAloneIn?.asString() ?: stringResource(R.string.lp_pending_time_unknown),
             valueColor = Theme.v2.colors.alerts.warning,
         )
 

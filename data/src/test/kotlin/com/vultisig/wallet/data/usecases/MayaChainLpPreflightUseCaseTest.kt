@@ -65,6 +65,61 @@ internal class MayaChainLpPreflightUseCaseTest {
     }
 
     @Test
+    fun `a trading halt on the pool itself blocks`() = runTest {
+        coEvery { api.getMayaConstants() } returns
+            mapOf("HALTTRADING-BTC-BTC" to HEIGHT - 1, "HALTTRADING-ETH-ETH" to 0L)
+
+        assertEquals(MayaChainLpPreflightBlock.LpPaused(POOL), useCase(POOL, isPairedAdd = true))
+    }
+
+    @Test
+    fun `a trading halt on another pool does not block`() = runTest {
+        coEvery { api.getMayaConstants() } returns mapOf("HALTTRADING-ETH-ETH" to HEIGHT - 1)
+
+        assertNull(useCase(POOL, isPairedAdd = true))
+    }
+
+    @Test
+    fun `a token pool's trading halt key keeps its contract suffix`() = runTest {
+        val tokenPool = "ETH.USDC-0xA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"
+        coEvery { api.getPool(tokenPool) } returns pool(tokenPool, "Available")
+        coEvery { api.getInboundAddresses() } returns listOf(inbound("ETH"))
+        coEvery { api.getMayaConstants() } returns
+            mapOf("HALTTRADING-ETH-USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48" to 1L)
+
+        assertEquals(
+            MayaChainLpPreflightBlock.LpPaused(tokenPool),
+            useCase(tokenPool, isPairedAdd = true),
+        )
+    }
+
+    @Test
+    fun `chain and global trading halts block`() = runTest {
+        coEvery { api.getMayaConstants() } returns mapOf("HALTBTCTRADING" to 1L)
+        assertEquals(MayaChainLpPreflightBlock.LpPaused(POOL), useCase(POOL, isPairedAdd = true))
+
+        coEvery { api.getMayaConstants() } returns mapOf("HALTTRADING" to 1L)
+        assertEquals(MayaChainLpPreflightBlock.LpPaused(POOL), useCase(POOL, isPairedAdd = true))
+    }
+
+    @Test
+    fun `inbound reporting trading paused blocks`() = runTest {
+        coEvery { api.getInboundAddresses() } returns
+            listOf(inbound("BTC").copy(chainTradingPaused = true))
+        assertEquals(
+            MayaChainLpPreflightBlock.ChainHalted("BTC"),
+            useCase(POOL, isPairedAdd = true),
+        )
+
+        coEvery { api.getInboundAddresses() } returns
+            listOf(inbound("BTC").copy(globalTradingPaused = true))
+        assertEquals(
+            MayaChainLpPreflightBlock.ChainHalted("BTC"),
+            useCase(POOL, isPairedAdd = true),
+        )
+    }
+
+    @Test
     fun `halted asset-chain inbound blocks`() = runTest {
         coEvery { api.getInboundAddresses() } returns listOf(inbound("BTC", halted = true))
 

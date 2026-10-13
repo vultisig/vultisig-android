@@ -1327,13 +1327,13 @@
     <string name="verify_swap_youre_swapping_title">Sie tauschen</string>
     <string name="keysign_app_version_text">Version %1$s (%2$s)</string>
     <string name="lp_pending_title">Warte auf passende %1$s-Einzahlung</string>
-    <string name="lp_pending_subtitle">%1$s hält diese Einzahlung, bis die passende Seite eintrifft, und erstattet sie andernfalls zurück.</string>
+    <string name="lp_pending_subtitle">%1$s hält diese Einzahlung, bis die passende Seite eintrifft. Trifft sie nicht ein, fügt %1$s sie einseitig dem Pool hinzu.</string>
     <string name="lp_pending_deposited">Eingezahlt</string>
     <string name="lp_pending_from">Von</string>
-    <string name="lp_pending_refunds_in">Rückerstattung in</string>
+    <string name="lp_pending_added_alone_in">Einseitig hinzugefügt in</string>
     <string name="lp_pending_duration_days_hours_format">%1$dT %2$dStd</string>
     <string name="lp_pending_duration_hours_minutes_format">%1$dStd %2$dMin</string>
-    <string name="lp_pending_refund_time_unknown">Unbekannt</string>
+    <string name="lp_pending_time_unknown">Unbekannt</string>
     <string name="lp_pending_complete_deposit">Einzahlung abschließen</string>
     <string name="lp_position">Position</string>
     <string name="add">Hinzufügen</string>
