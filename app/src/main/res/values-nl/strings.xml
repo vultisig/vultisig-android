@@ -298,6 +298,9 @@
     <string name="deposit_form_operator_fee_title">Operator-kosten (Basispunten)</string>
     <string name="deposit_message_deposit_title">%s bericht storting</string>
     <string name="deposit_form_custom_memo_title">Aangepaste memo</string>
+    <string name="deposit_form_proposal_id_title">Voorstel-ID</string>
+    <string name="deposit_form_proposal_id_error">Voer een geldig voorstel-ID in</string>
+    <string name="deposit_form_vote_option_error">Selecteer een stemoptie</string>
     <string name="swap_screen_same_asset_error_message">Bron- en bestemmingsactiva kunnen niet hetzelfde zijn.</string>
     <string name="address_book_toolbar_title">Adresboek</string>
     <string name="address_book_settings_title">Adresboek</string>
@@ -1855,6 +1858,7 @@
     <string name="verify_verb_merging">Je voegt samen</string>
     <string name="verify_verb_unmerging">Je splitst</string>
     <string name="verify_verb_bridging">Je bridget</string>
+    <string name="verify_verb_voting">Je stemt</string>
     <string name="scope_your_whole_stake">je volledige stake</string>
     <string name="scope_rewards_accrued_so_far">tot nu toe opgebouwde beloningen</string>
     <string name="scope_delegated_amount_after_rent">het gedelegeerde bedrag na de huurreserve</string>

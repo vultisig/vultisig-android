@@ -299,6 +299,9 @@
     <string name="deposit_form_operator_fee_title">Commissioni operatore (Punti base)</string>
     <string name="deposit_message_deposit_title">%s messaggio di deposito</string>
     <string name="deposit_form_custom_memo_title">Promemoria personalizzato</string>
+    <string name="deposit_form_proposal_id_title">ID proposta</string>
+    <string name="deposit_form_proposal_id_error">Inserisci un ID di proposta valido</string>
+    <string name="deposit_form_vote_option_error">Seleziona un\'opzione di voto</string>
     <string name="swap_screen_same_asset_error_message">Le risorse di origine e di destinazione non possono essere le stesse.</string>
     <string name="address_book_toolbar_title">Rubrica</string>
     <string name="address_book_settings_title">Rubrica</string>
@@ -1866,6 +1869,7 @@
     <string name="verify_verb_merging">Stai unendo</string>
     <string name="verify_verb_unmerging">Stai separando</string>
     <string name="verify_verb_bridging">Stai trasferendo tra catene</string>
+    <string name="verify_verb_voting">Stai votando</string>
     <string name="scope_your_whole_stake">tutto il tuo stake</string>
     <string name="scope_rewards_accrued_so_far">ricompense maturate finora</string>
     <string name="scope_delegated_amount_after_rent">l’importo delegato dopo la riserva di affitto</string>

@@ -52,6 +52,7 @@ import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositViewModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
+import com.vultisig.wallet.ui.screens.function.labelRes
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.SwapToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
@@ -424,6 +425,18 @@ private fun VerifyDepositDetails(
                 title = stringResource(R.string.verify_transaction_to_title),
                 subtitle = toDstLabel ?: tx.dstAddress,
                 bracketValue = toDstLabel?.let { tx.dstAddress },
+            )
+            rowDivider()
+        }
+        tx.governanceVote?.let { vote ->
+            VerifyCardDetails(
+                title = stringResource(R.string.deposit_form_proposal_id_title),
+                subtitle = vote.proposalId.toString(),
+            )
+            rowDivider()
+            VerifyCardDetails(
+                title = stringResource(R.string.governance_vote),
+                subtitle = stringResource(vote.option.labelRes),
             )
             rowDivider()
         }

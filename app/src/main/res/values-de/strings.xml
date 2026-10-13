@@ -299,6 +299,9 @@
     <string name="deposit_form_operator_fee_title">Betreiber-Gebühren (Basispunkte)</string>
     <string name="deposit_message_deposit_title">%s Nachricht Einzahlung</string>
     <string name="deposit_form_custom_memo_title">Benutzerdefiniertes Memo</string>
+    <string name="deposit_form_proposal_id_title">Vorschlags-ID</string>
+    <string name="deposit_form_proposal_id_error">Geben Sie eine gültige Vorschlags-ID ein</string>
+    <string name="deposit_form_vote_option_error">Wählen Sie eine Abstimmungsoption</string>
     <string name="swap_screen_same_asset_error_message">Quell- und Ziel-Assets können nicht identisch sein.</string>
     <string name="address_book_toolbar_title">Adressbuch</string>
     <string name="address_book_settings_title">Adressbuch</string>
@@ -1863,6 +1866,7 @@
     <string name="verify_verb_merging">Du führst zusammen</string>
     <string name="verify_verb_unmerging">Du trennst</string>
     <string name="verify_verb_bridging">Du überträgst kettenübergreifend</string>
+    <string name="verify_verb_voting">Du stimmst ab</string>
     <string name="scope_your_whole_stake">dein gesamter Stake</string>
     <string name="scope_rewards_accrued_so_far">bisher angefallene Belohnungen</string>
     <string name="scope_delegated_amount_after_rent">der delegierte Betrag nach Abzug der Mietreserve</string>

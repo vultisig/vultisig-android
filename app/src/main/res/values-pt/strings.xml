@@ -301,6 +301,9 @@
     <string name="deposit_form_operator_fee_title">Taxas do operador (Pontos base)</string>
     <string name="deposit_message_deposit_title">%s depósito de mensagens</string>
     <string name="deposit_form_custom_memo_title">Memorando personalizado</string>
+    <string name="deposit_form_proposal_id_title">ID da proposta</string>
+    <string name="deposit_form_proposal_id_error">Insira um ID de proposta válido</string>
+    <string name="deposit_form_vote_option_error">Selecione uma opção de voto</string>
     <string name="swap_screen_same_asset_error_message">Os ativos de origem e de destino não podem ser iguais.</string>
     <string name="address_book_toolbar_title">Catálogo de endereços</string>
     <string name="address_book_settings_title">Catálogo de endereços</string>
@@ -1860,6 +1863,7 @@
     <string name="verify_verb_merging">Você está mesclando</string>
     <string name="verify_verb_unmerging">Você está separando</string>
     <string name="verify_verb_bridging">Você está transferindo entre cadeias</string>
+    <string name="verify_verb_voting">Você está votando</string>
     <string name="scope_your_whole_stake">todo o seu stake</string>
     <string name="scope_rewards_accrued_so_far">recompensas acumuladas até agora</string>
     <string name="scope_delegated_amount_after_rent">o valor delegado após a reserva de aluguel</string>

@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosVoteOption
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -60,6 +61,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -355,6 +357,49 @@ internal class DepositFormViewModelTest {
             listOf(DepositOption.Leave, DepositOption.Custom),
             vm.state.value.depositOptions,
         )
+    }
+
+    @Test
+    fun `loadData for dYdX offers Vote with no ballot preselected`() = runTest {
+        val vm = buildViewModel()
+
+        vm.loadData("vault1", Chain.Dydx.raw, null, null)
+        advanceUntilIdle()
+
+        assertEquals(listOf(DepositOption.Vote), vm.state.value.depositOptions)
+        assertEquals(DepositOption.Vote, vm.state.value.depositOption)
+        assertNull(vm.state.value.selectedVoteOption)
+    }
+
+    @Test
+    fun `deposit for Vote flags a missing ballot and proposal id without building`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.Dydx.raw, null, null)
+        advanceUntilIdle()
+
+        vm.deposit()
+        advanceUntilIdle()
+
+        assertNotNull(vm.state.value.voteOptionError)
+        assertNotNull(vm.state.value.proposalIdError)
+        assertNull(vm.state.value.errorText)
+    }
+
+    @Test
+    fun `selecting a ballot clears its error and a valid proposal id clears its own`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.Dydx.raw, null, null)
+        advanceUntilIdle()
+        vm.deposit()
+        advanceUntilIdle()
+
+        vm.selectVoteOption(CosmosVoteOption.ABSTAIN)
+        vm.proposalIdFieldState.setTextAndPlaceCursorAtEnd("12")
+        vm.validateProposalId()
+
+        assertEquals(CosmosVoteOption.ABSTAIN, vm.state.value.selectedVoteOption)
+        assertNull(vm.state.value.voteOptionError)
+        assertNull(vm.state.value.proposalIdError)
     }
 
     @Test

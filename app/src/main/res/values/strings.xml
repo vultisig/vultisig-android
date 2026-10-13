@@ -422,6 +422,9 @@
     <string name="slippage_hint">Slippage percentage</string>
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
+    <string name="deposit_form_proposal_id_title">Proposal ID</string>
+    <string name="deposit_form_proposal_id_error">Enter a valid proposal ID</string>
+    <string name="deposit_form_vote_option_error">Select a vote option</string>
     <string name="deposit_form_unstake_percentage_hint">Enter percentage to unstake</string>
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same.</string>
     <string name="address_book_toolbar_title">Address Book</string>
@@ -1919,6 +1922,7 @@
     <string name="verify_verb_merging">You’re merging</string>
     <string name="verify_verb_unmerging">You’re unmerging</string>
     <string name="verify_verb_bridging">You’re bridging</string>
+    <string name="verify_verb_voting">You’re voting</string>
     <string name="scope_your_whole_stake">your whole stake</string>
     <string name="scope_rewards_accrued_so_far">rewards accrued so far</string>
     <string name="scope_delegated_amount_after_rent">the delegated amount after deducting the rent reserve</string>
