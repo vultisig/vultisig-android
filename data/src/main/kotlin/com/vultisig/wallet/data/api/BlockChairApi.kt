@@ -168,15 +168,14 @@ constructor(
             }
         if (response.status == HttpStatusCode.NotFound) return null
         // {"data": {"<hash>": {"raw_transaction": "<hex>", …}}, "context": {…}}
-        return response
-            .bodyOrThrow<JsonObject>()["data"]
-            ?.let { it as? JsonObject }
-            ?.values
-            ?.firstOrNull()
-            ?.let { it as? JsonObject }
-            ?.get("raw_transaction")
-            ?.jsonPrimitive
-            ?.contentOrNull
+        val body = response.bodyOrThrow<JsonObject>()
+        val raw =
+            ((body["data"] as? JsonObject)?.get(txHash) as? JsonObject)
+                ?.get("raw_transaction")
+                ?.jsonPrimitive
+                ?.contentOrNull
+        if (raw == null) Timber.w("Unexpected Blockchair raw transaction response for %s", txHash)
+        return raw
     }
 
     override suspend fun getBlockChairStats(chain: Chain): BigInteger {

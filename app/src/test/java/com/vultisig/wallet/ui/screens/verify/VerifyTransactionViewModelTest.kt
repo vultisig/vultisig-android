@@ -135,7 +135,6 @@ internal class VerifyTransactionViewModelTest {
         VerifyTransactionViewModel(
             savedStateHandle = SavedStateHandle(),
             navigator = navigator,
-            verifyUtxoInputAmounts = mockk(relaxed = true),
             mapTransactionToUiModel = mapTransactionToUiModel,
             transactionRepository = transactionRepository,
             vaultPasswordRepository = vaultPasswordRepository,

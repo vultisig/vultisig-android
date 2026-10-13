@@ -1020,6 +1020,7 @@
     <string name="error_view_default_description">Произошла ошибка</string>
     <!-- Friendly error screen (issue #4996) -->
     <string name="signing_error_transaction_failed_title">Транзакция не удалась</string>
+    <string name="keysign_utxo_inputs_unverified">Подписание отклонено: не удалось проверить входы транзакции по блокчейну.</string>
     <string name="signing_error_transaction_failed_description">Одно из ваших устройств не ответило вовремя. Проверьте соединение и попробуйте снова.</string>
     <string name="error_insufficient_funds_title">Недостаточно средств</string>
     <string name="error_same_vault_share_title">Тот же общий доступ к хранилищу</string>

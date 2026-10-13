@@ -1014,6 +1014,7 @@
     <string name="error_view_default_description">Er is een fout opgetreden</string>
     <!-- Friendly error screen (issue #4996) -->
     <string name="signing_error_transaction_failed_title">Transactie mislukt</string>
+    <string name="keysign_utxo_inputs_unverified">Ondertekenen geweigerd: de invoer van de transactie kon niet worden geverifieerd op de blockchain.</string>
     <string name="signing_error_transaction_failed_description">Een van je apparaten reageerde niet op tijd. Controleer je verbinding en probeer het opnieuw.</string>
     <string name="error_insufficient_funds_title">Onvoldoende saldo</string>
     <string name="error_same_vault_share_title">Zelfde kluisshare</string>

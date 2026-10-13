@@ -11,7 +11,8 @@ import java.security.MessageDigest
  * to match the outpoint that names it. Dash special transactions (DIP-2) carry their type in the
  * version field and append their payload after the lock time, so inputs and outputs read the same.
  */
-internal class LegacyRawTransaction private constructor(val txid: String, val outputs: List<Output>) {
+internal class LegacyRawTransaction
+private constructor(val txid: String, val outputs: List<Output>) {
 
     class Output(val value: Long, val script: ByteArray)
 
@@ -23,18 +24,16 @@ internal class LegacyRawTransaction private constructor(val txid: String, val ou
         private fun parse(bytes: ByteArray): LegacyRawTransaction {
             val reader = Reader(bytes)
             reader.skip(4) // version (and the DIP-2 type on Dash)
-            val inputCount = reader.varInt()
-            // A zero input count is the segwit marker; DOGE and DASH have no segwit.
-            require(inputCount > 0) { "No inputs, or a segwit transaction" }
-            repeat(inputCount.toInt()) {
+            // Dash AssetUnlock (DIP-27) transactions have no inputs; misread bytes fail the txid.
+            repeat(reader.varInt()) {
                 reader.skip(32 + 4) // previous outpoint
-                reader.skip(reader.varInt().toInt()) // scriptSig
+                reader.skip(reader.varInt()) // scriptSig
                 reader.skip(4) // sequence
             }
             val outputs =
-                List(reader.varInt().toInt()) {
+                List(reader.varInt()) {
                     val value = reader.uint64Le()
-                    Output(value = value, script = reader.take(reader.varInt().toInt()))
+                    Output(value = value, script = reader.take(reader.varInt()))
                 }
             reader.skip(4) // lock time; any Dash special payload follows and is not read
             val digest = MessageDigest.getInstance("SHA-256")
@@ -61,18 +60,20 @@ internal class LegacyRawTransaction private constructor(val txid: String, val ou
             return value.toLong()
         }
 
-        fun varInt(): Long {
+        /** A count or length, bounded by the bytes left: each counted item takes at least one. */
+        fun varInt(): Int {
             val first = take(1)[0].toInt() and 0xff
             val width =
                 when (first) {
                     0xfd -> 2
                     0xfe -> 4
                     0xff -> 8
-                    else -> return first.toLong()
+                    else -> 0
                 }
-            val value = BigInteger(1, take(width).reversedArray())
-            require(value.bitLength() < 32) { "Count out of range" }
-            return value.toLong()
+            val value =
+                if (width == 0) first.toBigInteger() else BigInteger(1, take(width).reversedArray())
+            require(value <= (bytes.size - position).toBigInteger()) { "Count out of range" }
+            return value.toInt()
         }
     }
 }

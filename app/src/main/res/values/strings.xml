@@ -790,6 +790,7 @@
     <string name="error_view_default_description">An error occurred</string>
     <!-- Friendly error screen (issue #4996) -->
     <string name="signing_error_transaction_failed_title">Transaction failed</string>
+    <string name="keysign_utxo_inputs_unverified">Signing was refused: the transaction inputs couldn\'t be verified against the blockchain.</string>
     <string name="signing_error_transaction_failed_description">One of your devices didn\'t respond in time. Check your connection and try again.</string>
     <string name="error_insufficient_funds_title">Insufficient funds</string>
     <string name="error_same_vault_share_title">Same vault share</string>

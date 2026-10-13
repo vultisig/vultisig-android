@@ -1017,6 +1017,7 @@
     <string name="error_view_default_description">Ein Fehler ist aufgetreten</string>
     <!-- Friendly error screen (issue #4996) -->
     <string name="signing_error_transaction_failed_title">Transaktion fehlgeschlagen</string>
+    <string name="keysign_utxo_inputs_unverified">Signieren abgelehnt: Die Eingänge der Transaktion konnten nicht mit der Blockchain abgeglichen werden.</string>
     <string name="signing_error_transaction_failed_description">Eines deiner Geräte hat nicht rechtzeitig geantwortet. Überprüfe deine Verbindung und versuche es erneut.</string>
     <string name="error_insufficient_funds_title">Unzureichendes Guthaben</string>
     <string name="error_same_vault_share_title">Dieselbe Tresorfreigabe</string>

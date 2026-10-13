@@ -42,8 +42,8 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
-import com.vultisig.wallet.data.usecases.VerifyUtxoInputAmountsUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
+import com.vultisig.wallet.data.usecases.VerifyUtxoInputAmountsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -140,6 +140,10 @@ sealed class JoinKeysignError(val message: UiText) {
      */
     data object MissingQbtcClaimAccount :
         JoinKeysignError(R.string.join_keysign_qbtc_claim_missing_account.asUiText())
+
+    /** A DOGE/DASH input didn't match the transaction that created it, or couldn't be checked. */
+    data object UtxoInputsUnverified :
+        JoinKeysignError(R.string.keysign_utxo_inputs_unverified.asUiText())
 }
 
 /** Raised when the messages to sign cannot be prepared once the ceremony starts. */
@@ -644,15 +648,12 @@ constructor(
         // DOGE/DASH signatures don't commit to input amounts; refuse inputs that don't match the
         // transactions that created them before showing anything to approve.
         try {
-            verifyUtxoInputAmounts(ksPayload.coin, ksPayload.utxos)
+            verifyUtxoInputAmounts(_currentVault, ksPayload.coin.chain, ksPayload.utxos)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Timber.w(e, "UTXO inputs failed verification")
-            currentState.value =
-                JoinKeysignState.Error(
-                    JoinKeysignError.FailedToCheck(e.message ?: "Couldn't verify the inputs")
-                )
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.UtxoInputsUnverified)
             return false
         }
 

@@ -1017,6 +1017,7 @@
     <string name="error_view_default_description">Si è verificato un errore</string>
     <!-- Friendly error screen (issue #4996) -->
     <string name="signing_error_transaction_failed_title">Transazione fallita</string>
+    <string name="keysign_utxo_inputs_unverified">Firma rifiutata: non è stato possibile verificare gli input della transazione sulla blockchain.</string>
     <string name="signing_error_transaction_failed_description">Uno dei tuoi dispositivi non ha risposto in tempo. Controlla la connessione e riprova.</string>
     <string name="error_insufficient_funds_title">Fondi insufficienti</string>
     <string name="error_same_vault_share_title">Stessa condivisione del vault</string>

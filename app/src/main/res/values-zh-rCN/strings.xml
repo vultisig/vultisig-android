@@ -1349,6 +1349,7 @@
     <string name="error_view_default_description">发生错误</string>
     <!-- Friendly error screen (issue #4996) -->
     <string name="signing_error_transaction_failed_title">交易失败</string>
+    <string name="keysign_utxo_inputs_unverified">已拒绝签名：无法在区块链上验证交易输入。</string>
     <string name="signing_error_transaction_failed_description">您的某个设备未及时响应。请检查您的连接并重试。</string>
     <string name="error_insufficient_funds_title">余额不足</string>
     <string name="error_same_vault_share_title">相同的保险库份额</string>

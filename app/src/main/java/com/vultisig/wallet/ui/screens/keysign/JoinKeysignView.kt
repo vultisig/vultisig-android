@@ -259,6 +259,13 @@ internal fun JoinKeysignView() {
                             )
                     }
 
+                    is JoinKeysignError.UtxoInputsUnverified -> {
+                        title = stringResource(R.string.signing_error_transaction_failed_title)
+                        description = error.errorType.message.asString()
+                        errorState = ErrorState.CRITICAL
+                        buttonText = stringResource(R.string.try_again)
+                    }
+
                     else -> {
                         val rawMessage = error.errorType.message.asString()
                         val signingError = resolveSigningError(rawMessage)
