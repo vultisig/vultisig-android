@@ -182,8 +182,27 @@ internal class AddMayaLiquidityStrategyTest {
         }
 
         tokenAmount.setTextAndPlaceCursorAtEnd("0.0001")
+        assertFormattedError(R.string.send_form_minimum_send_amount_is_requires_this) {
+            build(Chain.Ethereum).build()
+        }
+
+        tokenAmount.setTextAndPlaceCursorAtEnd("0.00010001")
         assertEquals(ETH_INBOUND, build(Chain.Ethereum).build().dstAddress)
     }
+
+    @Test
+    fun `a deposit of exactly the dust threshold is refused, naming the first credited amount`() =
+        runTest {
+            givenNativeAccount(Chain.Bitcoin, decimals = 8, address = BTC_ADDRESS)
+            tokenAmount.setTextAndPlaceCursorAtEnd("0.0001")
+
+            val text =
+                assertFailsWith<InvalidTransactionDataException> { build(Chain.Bitcoin).build() }
+                    .text
+            assertTrue(text is UiText.FormattedText)
+            assertEquals(R.string.send_form_minimum_send_amount_is_requires_this, text.resId)
+            assertEquals("0.00010001", text.formatArgs.first())
+        }
 
     @Test
     fun `a preflight block stops the build before the inbound is fetched`() = runTest {
@@ -220,6 +239,18 @@ internal class AddMayaLiquidityStrategyTest {
             build(Chain.Bitcoin).build()
         }
     }
+
+    @Test
+    fun `an asset deposit into a live position paired with another asset address is refused`() =
+        runTest {
+            givenNativeAccount(Chain.Bitcoin, decimals = 8, address = BTC_ADDRESS)
+            coEvery { checkPairing("BTC.BTC", CACAO_ADDRESS, BTC_ADDRESS) } returns
+                MayaLpPairing.PairedWithOtherAddress
+
+            assertFormattedError(R.string.deposit_error_maya_lp_address_mismatch) {
+                build(Chain.Bitcoin).build()
+            }
+        }
 
     @Test
     fun `an asset deposit refuses when the record cannot be read`() = runTest {

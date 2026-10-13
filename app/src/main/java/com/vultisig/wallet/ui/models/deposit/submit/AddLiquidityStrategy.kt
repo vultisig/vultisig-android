@@ -90,14 +90,16 @@ internal class AddLiquidityStrategy(
 
         val pairedAddress = resolvePairedAddress(chain, vaultId, poolId)
         val isMayaChainLpAdd = chain == Chain.MayaChain
-        // mayanode only records an asset address on a zero-unit record, so a pool where the vault
-        // already holds a CACAO-only position refunds any add naming one. There the CACAO side
-        // stays the single-sided add it always was; see [CheckMayaLpPairingUseCase].
+        // mayanode only records an asset address on a zero-unit record, so a live position refunds
+        // any add naming a different one — but checks it only when the add names one. There the
+        // CACAO side stays the single-sided add it always was; a pending half has fixed both
+        // addresses and refunds either way. See [CheckMayaLpPairingUseCase].
         val memoPairedAddress =
             if (isMayaChainLpAdd && pairedAddress != null) {
                 when (checkMayaPairing(poolId, selectedToken.address, pairedAddress)) {
                     MayaLpPairing.Pairable -> pairedAddress
-                    MayaLpPairing.SingleSidedPosition -> null
+                    MayaLpPairing.SingleSidedPosition,
+                    MayaLpPairing.PairedWithOtherAddress -> null
                     MayaLpPairing.AddressMismatch ->
                         throw InvalidTransactionDataException(
                             UiText.FormattedText(

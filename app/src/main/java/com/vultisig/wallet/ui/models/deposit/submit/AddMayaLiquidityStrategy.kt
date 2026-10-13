@@ -170,6 +170,7 @@ internal class AddMayaLiquidityStrategy(
                 MayaLpPairing.Pairable -> return
                 MayaLpPairing.SingleSidedPosition ->
                     R.string.deposit_error_maya_lp_single_sided_position
+                MayaLpPairing.PairedWithOtherAddress,
                 MayaLpPairing.AddressMismatch -> R.string.deposit_error_maya_lp_address_mismatch
             }
         throw InvalidTransactionDataException(UiText.FormattedText(reason, listOf(pool)))
@@ -217,9 +218,9 @@ internal class AddMayaLiquidityStrategy(
     }
 
     /**
-     * Bifrost ignores an inbound below the chain's `dust_threshold`, published in MayaChain's 1e8
-     * fixed point whatever the coin's own decimals — such a deposit confirms on the source chain and
-     * is never credited.
+     * Bifrost ignores an inbound at or below the chain's `dust_threshold`, published in MayaChain's
+     * 1e8 fixed point whatever the coin's own decimals — such a deposit confirms on the source
+     * chain and is never credited. The minimum shown is therefore one fixed-point unit above it.
      */
     private fun requireAboveInboundDust(
         amount: BigInteger,
@@ -231,12 +232,12 @@ internal class AddMayaLiquidityStrategy(
         val dust = inbound.dustThreshold?.toBigIntegerOrNull() ?: return
         if (dust <= BigInteger.ZERO) return
         val amountFixed8 = BigDecimal(amount).movePointLeft(decimals - MAYA_FIXED_POINT_DECIMALS)
-        if (amountFixed8 < BigDecimal(dust)) {
+        if (amountFixed8 <= BigDecimal(dust)) {
             throw InvalidTransactionDataException(
                 UiText.FormattedText(
                     R.string.send_form_minimum_send_amount_is_requires_this,
                     listOf(
-                        BigDecimal(dust)
+                        BigDecimal(dust + BigInteger.ONE)
                             .movePointLeft(MAYA_FIXED_POINT_DECIMALS)
                             .stripTrailingZeros()
                             .toPlainString(),

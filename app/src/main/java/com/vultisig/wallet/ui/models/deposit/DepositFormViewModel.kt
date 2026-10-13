@@ -743,7 +743,8 @@ constructor(
      * neither half — callers treat that as "cannot build this memo".
      *
      * A CACAO-side MayaChain add pairs only where [mayaLpPairedChain] says the app can deposit the
-     * other half; every other Maya pool stays single-sided and gets `null`.
+     * other half; every other Maya pool stays single-sided and gets `null`. So does a vault holding
+     * no coin on the other chain — see [pairedLpAddress].
      */
     private suspend fun resolvePairedAddress(
         chain: Chain,
@@ -764,8 +765,7 @@ constructor(
                 }
             }
         return try {
-            val vault = vaultRepository.get(vaultId) ?: return null
-            chainAccountAddressRepository.getAddress(chain = pairedChain, vault = vault).first
+            vaultRepository.get(vaultId)?.pairedLpAddress(pairedChain)
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to resolve paired address for $poolId")

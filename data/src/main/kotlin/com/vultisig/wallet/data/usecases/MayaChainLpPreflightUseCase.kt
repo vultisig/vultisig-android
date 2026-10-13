@@ -13,10 +13,14 @@ import kotlinx.coroutines.coroutineScope
  * accept the inbound, refund it, and leave the user out the inbound gas.
  */
 sealed class MayaChainLpPreflightBlock {
-    /** Add-liquidity is paused via mimir `PAUSELP` (global) or `PAUSELP<CHAIN>`. */
+    /**
+     * Add-liquidity is paused via mimir `PAUSELP` (global) or `PAUSELP<CHAIN>`, or trading is
+     * halted for the pool (`HALTTRADING-<POOL>`), its chain (`HALT<CHAIN>TRADING`) or globally
+     * (`HALTTRADING`) — mayanode refunds an add under any trading halt.
+     */
     data class LpPaused(val pool: String) : MayaChainLpPreflightBlock()
 
-    /** The pool's asset chain is halted, or its inbound reports LP actions paused. */
+    /** The pool's asset chain is halted, or its inbound reports LP actions or trading paused. */
     data class ChainHalted(val chainPrefix: String) : MayaChainLpPreflightBlock()
 
     /** Pool is missing or its `status` takes no adds at all (typically `Suspended`). */
@@ -74,13 +78,22 @@ constructor(private val mayaChainApi: MayaChainApi) : MayaChainLpPreflightUseCas
             if (
                 mimir != null &&
                     (isActive(mimir[KEY_PAUSE_LP], height) ||
-                        isActive(mimir[KEY_PAUSE_LP + chainPrefix], height))
+                        isActive(mimir[KEY_PAUSE_LP + chainPrefix], height) ||
+                        isActive(mimir[KEY_HALT_TRADING], height) ||
+                        isActive(mimir["$KEY_HALT$chainPrefix$KEY_TRADING"], height) ||
+                        isActive(mimir[poolHaltTradingKey(pool)], height))
             ) {
                 return@coroutineScope MayaChainLpPreflightBlock.LpPaused(pool)
             }
 
             val inbound = inboundDeferred.await()
-            if (inbound != null && (inbound.halted || inbound.chainLPActionsPaused)) {
+            if (
+                inbound != null &&
+                    (inbound.halted ||
+                        inbound.chainLPActionsPaused ||
+                        inbound.chainTradingPaused ||
+                        inbound.globalTradingPaused)
+            ) {
                 return@coroutineScope MayaChainLpPreflightBlock.ChainHalted(chainPrefix)
             }
 
@@ -101,6 +114,10 @@ constructor(private val mayaChainApi: MayaChainApi) : MayaChainLpPreflightUseCas
     private fun isActive(value: Long?, height: Long?): Boolean =
         value != null && value > 0 && (height == null || value < height)
 
+    /** mayanode's `HaltTrading-<asset.MimirString()>`: chain and symbol joined by a dash. */
+    private fun poolHaltTradingKey(pool: String): String =
+        KEY_HALT_TRADING + "-" + pool.uppercase().replaceFirst('.', '-')
+
     private suspend fun <T> probe(block: suspend () -> T): T? =
         try {
             block()
@@ -112,6 +129,9 @@ constructor(private val mayaChainApi: MayaChainApi) : MayaChainLpPreflightUseCas
 
     private companion object {
         const val KEY_PAUSE_LP = "PAUSELP"
+        const val KEY_HALT_TRADING = "HALTTRADING"
+        const val KEY_HALT = "HALT"
+        const val KEY_TRADING = "TRADING"
         const val MAYA_CHAIN_PREFIX = "MAYA"
         const val POOL_STATUS_AVAILABLE = "Available"
         const val POOL_STATUS_STAGED = "Staged"

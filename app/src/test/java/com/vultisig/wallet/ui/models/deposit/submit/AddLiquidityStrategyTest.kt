@@ -208,7 +208,19 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
-    fun `CACAO add into a record paired elsewhere is refused`() = runTest {
+    fun `CACAO add into a live position paired elsewhere falls back to single-sided`() = runTest {
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+        coEvery { checkPairing(MAYA_BTC_POOL, CACAO_ADDRESS, BTC_ADDRESS) } returns
+            MayaLpPairing.PairedWithOtherAddress
+
+        val tx = build(Chain.MayaChain, pairedAddress = BTC_ADDRESS, pool = MAYA_BTC_POOL).build()
+
+        assertEquals("+:$MAYA_BTC_POOL", tx.memo)
+        assertEquals("", tx.pairedAddress)
+    }
+
+    @Test
+    fun `CACAO add against a pending half fixed to other addresses is refused`() = runTest {
         givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
         coEvery { checkPairing(MAYA_BTC_POOL, CACAO_ADDRESS, BTC_ADDRESS) } returns
             MayaLpPairing.AddressMismatch

@@ -58,7 +58,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.thorchainSupportStakingDeFi
 import com.vultisig.wallet.ui.screens.v2.defi.toUiModel
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.formatTokenAmount
-import com.vultisig.wallet.ui.utils.lpRefundsInUiText
+import com.vultisig.wallet.ui.utils.lpPendingTimeLeftUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -638,13 +638,14 @@ constructor(
     /**
      * Loads half-finished symmetric adds. Deliberately independent of [reloadLpTab]: those are
      * gated on the pools the user picked in Manage Positions, and a deposit stuck in a pool they
-     * never selected is exactly the one that would otherwise be refunded unseen.
+     * never selected is exactly the one that would otherwise end up as a one-sided position unseen.
      */
     private fun loadPendingLpDeposits() {
         loadPendingLpJob?.cancel()
         // Re-arm the gate only when there is a list that could now be wrong. A deposit found before
-        // the app was backgrounded may already have been refunded, and Complete Deposit on a
-        // refunded one just burns inbound gas — so hide it behind the spinner until this scan
+        // the app was backgrounded may already have been committed to the pool on its own, and
+        // Complete Deposit on that one lands as a second one-sided add — so hide it behind the
+        // spinner until this scan
         // confirms it. With nothing pending there is nothing to invalidate, and re-arming would
         // flash the whole tab to a spinner on every resume for the users who have no half-deposit
         // at all.
@@ -680,12 +681,12 @@ constructor(
 
     /**
      * Marks the scan as settled without erasing [LpTabUiModel.pendingDeposits]: a failed reload
-     * must still show a list an earlier one found, because the refund timer is running on it and
+     * must still show a list an earlier one found, because the age-limit timer is running on it and
      * the user needs to know. Completion is withdrawn instead — the whole point of re-scanning is
-     * that THORChain may already have refunded the deposit, and nothing downstream re-checks:
-     * onClickCompletePendingLp reads this list directly, and the add-liquidity preflight only asks
-     * about pool-wide pause and status, never about this record. A card the scan could not confirm
-     * therefore stays visible but cannot spend inbound gas on a dead deposit.
+     * that THORChain may already have committed the deposit alone, and nothing downstream
+     * re-checks: onClickCompletePendingLp reads this list directly, and the add-liquidity preflight
+     * only asks about pool-wide pause and status, never about this record. A card the scan could
+     * not confirm therefore stays visible but cannot spend inbound gas on a settled deposit.
      */
     private fun markPendingLpDepositsSettled() {
         state.update {
@@ -704,9 +705,9 @@ constructor(
 
     /**
      * Re-scans for pending half-deposits when the screen comes back to the foreground. They sit on
-     * a refund timer that keeps running while the app is backgrounded, so a stale list can offer
-     * Complete Deposit on a deposit THORChain has already refunded. Positions are left to
-     * pull-to-refresh; only this leg goes stale on its own.
+     * an age-limit timer that keeps running while the app is backgrounded, so a stale list can
+     * offer Complete Deposit on a deposit THORChain has already committed alone. Positions are left
+     * to pull-to-refresh; only this leg goes stale on its own.
      */
     fun onScreenResumed() {
         if (!::vaultId.isInitialized) return
@@ -759,7 +760,10 @@ constructor(
             awaitedTicker = awaitedTicker,
             depositedAmount = depositedAmount,
             pairedAddress = pairedAddress?.shortenForDisplay(),
-            refundsIn = blocksUntilRefund?.let { lpRefundsInUiText(it * THORCHAIN_BLOCK_SECONDS) },
+            addedAloneIn =
+                blocksUntilAddedAlone?.let {
+                    lpPendingTimeLeftUiText(it * THORCHAIN_BLOCK_SECONDS)
+                },
             // Completing means sending the missing side, which needs an account on its chain. When
             // RUNE is the missing half the vault always has one.
             canComplete = !isRunePending || assetAddress != null,

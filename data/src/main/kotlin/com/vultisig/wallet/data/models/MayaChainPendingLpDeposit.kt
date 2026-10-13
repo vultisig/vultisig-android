@@ -7,7 +7,8 @@ import java.math.BigInteger
  *
  * Like THORChain's ([ThorChainPendingLpDeposit]), a paired add mints no LP units until both sides
  * arrive, so the record reads as an empty position until then. If the matching side never arrives,
- * MayaChain refunds the deposit at `lastAddHeight + PendingLiquidityAgeLimit`.
+ * MayaChain does not refund it: at `lastAddHeight + PendingLiquidityAgeLimit` it commits the
+ * deposit to the pool on its own, as an asymmetric add.
  *
  * [pendingCacao] is in CACAO's 1e10 base units; [pendingAsset] in MayaChain's 1e8 fixed point.
  */
@@ -22,8 +23,11 @@ data class MayaChainPendingLpDeposit(
      * CACAO is pending, the CACAO address when the asset is pending.
      */
     val pairedAddress: String?,
-    /** Blocks left before the pending side is refunded, clamped at zero, or `null` when unknown. */
-    val blocksUntilRefund: Long?,
+    /**
+     * Blocks left before the pending side is added to the pool on its own, clamped at zero, or
+     * `null` when unknown.
+     */
+    val blocksUntilAddedAlone: Long?,
 ) {
     /** True while MayaChain still holds the CACAO half — the asset half is the one missing. */
     val isCacaoPending: Boolean

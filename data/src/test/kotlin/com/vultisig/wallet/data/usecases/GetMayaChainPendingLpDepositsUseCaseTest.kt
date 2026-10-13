@@ -74,21 +74,21 @@ internal class GetMayaChainPendingLpDepositsUseCaseTest {
     fun `the refund countdown uses the default age limit without a mimir override`() = runTest {
         val deposit = useCase(CACAO_ADDRESS).single()
 
-        assertEquals(100_800L - 800L, deposit.blocksUntilRefund)
+        assertEquals(100_800L - 800L, deposit.blocksUntilAddedAlone)
     }
 
     @Test
     fun `a mimir override replaces the default age limit`() = runTest {
         coEvery { api.getMayaConstants() } returns mapOf("PENDINGLIQUIDITYAGELIMIT" to 1_000L)
 
-        assertEquals(200L, useCase(CACAO_ADDRESS).single().blocksUntilRefund)
+        assertEquals(200L, useCase(CACAO_ADDRESS).single().blocksUntilAddedAlone)
     }
 
     @Test
     fun `an unreadable height leaves the countdown unknown`() = runTest {
         coEvery { api.getLatestBlock() } throws RuntimeException("timeout")
 
-        assertNull(useCase(CACAO_ADDRESS).single().blocksUntilRefund)
+        assertNull(useCase(CACAO_ADDRESS).single().blocksUntilAddedAlone)
     }
 
     @Test
