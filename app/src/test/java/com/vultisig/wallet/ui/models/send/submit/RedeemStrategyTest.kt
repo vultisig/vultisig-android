@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.send.submit
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -269,6 +270,7 @@ internal class RedeemStrategyTest {
                 ChainValidationService(
                     rippleApi = mockk(relaxed = true),
                     bittensorApi = mockk(relaxed = true),
+                    nearApi = mockk<NearApi>(),
                 ),
             depositTransactionRepository = depositTransactionRepository,
             navigator = navigator,

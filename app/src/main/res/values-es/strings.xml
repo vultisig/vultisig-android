@@ -265,6 +265,9 @@
     <string name="verify_transaction_allow_death_warning">Esta transferencia puede vaciar la cuenta del remitente. Si el saldo restante cae por debajo del depósito existencial, la cuenta se desactivará (se recuperará) y se perderán los %1$s restantes.</string>
     <string name="vault_settings_delete_vault_value">Valor de la Bóveda:</string>
     <string name="join_keysign_wrong_reshare">ReShare incorrecto</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Esta transferencia de token TON no proviene de esta bóveda</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">El token mostrado no coincide con el token que envía esta transferencia</string>
+    <string name="join_keysign_ton_jetton_unverifiable">No se pudo verificar esta transferencia de token TON. Inténtalo de nuevo.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">Recompartir no es compatible con bóvedas que tienen una clave QBTC</string>
     <string name="swap_screen_provider_title">Proveedor</string>
     <string name="swap_form_minimum_amount">El monto de intercambio es demasiado pequeño. El monto recomendado es %1$s %2$s</string>
@@ -1049,6 +1052,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">La cantidad mínima para activar esta dirección es %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">La cantidad mínima para activar esta dirección es %1$s %2$s (depósito existencial).</string>
+    <string name="send_error_near_destination_not_found">Esta cuenta NEAR no existe. Revisa el destinatario: una transferencia a ella solo consumiría gas.</string>
+    <string name="send_error_near_unsupported_payload">Esta transacción de NEAR no es compatible. Solo se pueden firmar transferencias nativas de NEAR.</string>
+    <string name="send_error_near_invalid_recipient">Esta no es una cuenta NEAR válida. Revisa el destinatario.</string>
+    <string name="send_error_near_key_not_full_access">La clave de esta bóveda no tiene acceso completo a esta cuenta NEAR, por lo que no puede enviar desde ella.</string>
+    <string name="send_error_near_network">La red NEAR devolvió un error o una respuesta ilegible. Inténtalo de nuevo.</string>
+    <string name="send_error_near_safety_check">Esta transacción de NEAR no superó una comprobación de seguridad y no se firmó.</string>
     <string name="send_error_xrp_destination_tag_required">Esta dirección requiere una etiqueta de destino. Añade una para continuar.</string>
     <string name="send_error_xrp_destination_no_trust_line">Esta dirección no puede recibir %1$s. El destinatario debe abrir antes una línea de confianza para este activo.</string>
     <string name="ripple_trust_line_title">Activar línea de confianza</string>
@@ -1222,6 +1231,7 @@
     <string name="swap_external_recipient_invalid">Dirección de destinatario no válida</string>
     <string name="swap_external_recipient_unsupported">El destinatario externo no está disponible para este intercambio. Desactívalo para continuar.</string>
     <string name="verify_swap_recipient">Destinatario</string>
+    <string name="verify_swap_deposit_address">Dirección de depósito</string>
     <string name="keygen_benefit_1_template">Eliminando el único punto de fallo</string>
     <string name="keygen_benefit_1_emphasized">Seguridad multifactor</string>
     <string name="keygen_benefit_2_template">Control total sobre tus activos</string>

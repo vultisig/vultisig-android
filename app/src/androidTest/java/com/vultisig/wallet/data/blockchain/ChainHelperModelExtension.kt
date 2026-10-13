@@ -317,6 +317,15 @@ fun BlockchainSpecific.toBlockChainSpecific(
                 gasFeeEstimation = trc20Specific.gasFeeEstimation.toULong(),
             )
         }
+
+        TokenStandard.NEAR -> {
+            val nearSpecific = this.nearSpecific ?: error("NearSpecific empty $this")
+            BlockChainSpecific.Near(
+                nonce = nearSpecific.nonce.toULong(),
+                blockHash = java.util.Base64.getDecoder().decode(nearSpecific.blockHash),
+                gasFee = nearSpecific.gasFee.toBigInteger(),
+            )
+        }
     }
 }
 

@@ -12,6 +12,7 @@ import java.util.Base64
 import javax.inject.Inject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.contentOrNull
 import wallet.core.jni.TONAddressConverter
 
 /** Display metadata for a jetton, resolved from its master contract. */
@@ -184,23 +185,47 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             .getMasterAddress(jettonWalletAddress, ::tonUserFriendlyAddress)
 
     override suspend fun getJettonMetadata(masterAddress: String): TonJettonMetadata? {
-        val content =
+        val response =
             http
                 .get("$BASE_URL/v3/jetton/masters") {
                     parameter("address", masterAddress)
                     parameter("limit", 1)
                 }
                 .bodyOrThrow<JettonMastersJson>()
-                .jettonMasters
-                .firstOrNull()
-                ?.jettonContent ?: return null
-        val ticker = content.symbol?.takeIf { it.isNotBlank() } ?: return null
-        // toncenter returns decimals as a string; default to 9 (TON's native scale) when absent.
+        val master = response.jettonMasters.firstOrNull() ?: return null
+        val content = master.jettonContent
+        // Off-chain metadata (the common case) leaves `jetton_content` holding only a `uri`; the
+        // resolved values are in toncenter's `metadata` block instead.
+        val info =
+            master.address
+                ?.let { address ->
+                    response.metadata.entries.firstOrNull { it.key.equals(address, true) }
+                }
+                ?.value
+                ?.tokenInfo
+                ?.firstOrNull { it.valid }
+        val ticker =
+            content?.symbol?.takeIf { it.isNotBlank() }
+                ?: info?.symbol?.takeIf { it.isNotBlank() }
+                ?: return null
+        // toncenter returns decimals as a string. TEP-64 makes 9 the default only when the field
+        // is omitted; a value that is present but unreadable leaves the decimals unknown, and a
+        // guess would let a token be shown at the wrong scale.
+        val rawDecimals =
+            content?.decimals?.takeIf { it.isNotBlank() }
+                ?: info?.extra?.decimals?.contentOrNull?.takeIf { it.isNotBlank() }
+        val decimals =
+            if (rawDecimals == null) DEFAULT_JETTON_DECIMALS
+            else rawDecimals.trim().toIntOrNull()?.takeIf { it >= 0 } ?: return null
         return TonJettonMetadata(
             ticker = ticker,
-            decimals = content.decimals?.trim()?.toIntOrNull() ?: 9,
-            logo = content.image?.takeIf { it.isNotBlank() },
-            name = content.name?.trim()?.takeIf { it.isNotBlank() },
+            decimals = decimals,
+            logo =
+                content?.image?.takeIf { it.isNotBlank() }
+                    ?: info?.image?.takeIf { it.isNotBlank() },
+            name =
+                content?.name?.trim()?.takeIf { it.isNotBlank() }
+                    ?: info?.name?.trim()?.takeIf { it.isNotBlank() },
         )
     }
 
@@ -302,6 +327,8 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             .maxOrNull() ?: BigInteger.ZERO
 
     private companion object {
+        /** TEP-64's decimals when a jetton's metadata omits the field. */
+        const val DEFAULT_JETTON_DECIMALS = 9
         const val BASE_URL = "https://api.vultisig.com/ton"
         const val DUPLICATE_MESSAGE_MARKER = "duplicate message"
         // Bounds the settlement-scan pages (newest-first) so the genuine refund/fill transfer is

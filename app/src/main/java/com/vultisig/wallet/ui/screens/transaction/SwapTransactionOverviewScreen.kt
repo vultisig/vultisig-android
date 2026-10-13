@@ -108,6 +108,7 @@ internal fun SwapTransactionOverviewScreen(
                                 cutoutRadius = 18.dp,
                             ),
                         modifier = Modifier.weight(1f),
+                        alwaysShowChainLogo = true,
                     )
 
                     VsOverviewToken(
@@ -120,6 +121,7 @@ internal fun SwapTransactionOverviewScreen(
                                 cutoutRadius = 18.dp,
                             ),
                         modifier = Modifier.weight(1f),
+                        alwaysShowChainLogo = true,
                     )
                 }
 

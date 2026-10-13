@@ -152,14 +152,6 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
             .filter { it.payload.fromAddressOrNull == address }
             .mapTo(HashSet()) { it.txHash }
 
-    private val TransactionHistoryData.fromAddressOrNull: String?
-        get() =
-            when (this) {
-                is SendTransactionHistoryData -> fromAddress
-                is SwapTransactionHistoryData -> fromAddress.takeIf { it.isNotEmpty() }
-                is UnknownTransactionHistoryData -> null
-            }
-
     override suspend fun upsertFromBackfill(entity: TransactionHistoryEntity) =
         dao.upsertFromBackfill(entity)
 
@@ -176,3 +168,12 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
         dao.incrementRetryCount(id = id, lastCheckedAt = now)
     }
 }
+
+/** The sending address a history record carries, when its payload type records one. */
+internal val TransactionHistoryData.fromAddressOrNull: String?
+    get() =
+        when (this) {
+            is SendTransactionHistoryData -> fromAddress
+            is SwapTransactionHistoryData -> fromAddress.takeIf { it.isNotEmpty() }
+            is UnknownTransactionHistoryData -> null
+        }

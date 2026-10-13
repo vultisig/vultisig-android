@@ -264,6 +264,9 @@
     <string name="verify_transaction_memo_title">Memo</string>
     <string name="verify_transaction_allow_death_warning">Deze overboeking kan de rekening van de afzender leegmaken. Als het resterende saldo onder de Existential Deposit zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende %1$s verloren.</string>
     <string name="join_keysign_wrong_reshare">Verkeerde ReShare</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Deze TON-tokenoverdracht komt niet uit deze kluis</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">Het getoonde token komt niet overeen met het token dat deze overdracht verstuurt</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Deze TON-tokenoverdracht kon niet worden geverifieerd. Probeer het opnieuw.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">Opnieuw delen wordt niet ondersteund voor kluizen met een QBTC-sleutel</string>
     <string name="swap_screen_provider_title">Leverancier</string>
     <string name="swap_form_minimum_amount">Wisselbedrag te klein. Aanbevolen bedrag: %1$s %2$s</string>
@@ -1046,6 +1049,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Het minimumbedrag om dit adres te activeren is %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Het minimumbedrag om dit adres te activeren is %1$s %2$s (Existential Deposit).</string>
+    <string name="send_error_near_destination_not_found">Dit NEAR-account bestaat niet. Controleer de ontvanger: een overboeking ernaartoe verbruikt alleen gas.</string>
+    <string name="send_error_near_unsupported_payload">Deze NEAR-transactie wordt niet ondersteund. Alleen native NEAR-overboekingen kunnen worden ondertekend.</string>
+    <string name="send_error_near_invalid_recipient">Dit is geen geldig NEAR-account. Controleer de ontvanger.</string>
+    <string name="send_error_near_key_not_full_access">De sleutel van deze kluis heeft geen volledige toegang tot dit NEAR-account en kan er dus niet vanaf verzenden.</string>
+    <string name="send_error_near_network">Het NEAR-netwerk gaf een fout of een onleesbaar antwoord. Probeer het opnieuw.</string>
+    <string name="send_error_near_safety_check">Deze NEAR-transactie heeft een veiligheidscontrole niet doorstaan en is niet ondertekend.</string>
     <string name="send_error_xrp_destination_tag_required">Dit adres vereist een bestemmingstag. Voeg er een toe om door te gaan.</string>
     <string name="send_error_xrp_destination_no_trust_line">Dit adres kan geen %1$s ontvangen. De ontvanger moet daarvoor eerst een trustline openen.</string>
     <string name="ripple_trust_line_title">Trustline activeren</string>
@@ -1219,6 +1228,7 @@
     <string name="swap_external_recipient_invalid">Ongeldig ontvangeradres</string>
     <string name="swap_external_recipient_unsupported">Externe ontvanger is niet beschikbaar voor deze swap. Schakel het uit om door te gaan.</string>
     <string name="verify_swap_recipient">Ontvanger</string>
+    <string name="verify_swap_deposit_address">Stortingsadres</string>
     <string name="keygen_benefit_1_template">Verwijder het single point of failure</string>
     <string name="keygen_benefit_1_emphasized">Multifactorbeveiliging</string>
     <string name="keygen_benefit_2_template">Geeft volledige controle over uw vermogen</string>

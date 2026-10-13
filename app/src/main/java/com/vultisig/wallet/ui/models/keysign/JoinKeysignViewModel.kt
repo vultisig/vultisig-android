@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import android.net.nsd.NsdManager
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -42,6 +43,8 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.data.usecases.TonJettonTransferRefusedException
+import com.vultisig.wallet.data.usecases.VerifyTonJettonTransferUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.usecases.VerifyUtxoInputAmountsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -65,6 +68,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import java.net.SocketException
@@ -102,6 +106,9 @@ import wallet.core.jni.TONAddressConverter
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
+
+    /** The payload's messages to sign could not be prepared. */
+    data class FailedToPrepare(val reason: UiText) : JoinKeysignError(reason)
 
     data object MissingRequiredVault :
         JoinKeysignError(R.string.join_keysign_missing_required_vault.asUiText())
@@ -144,10 +151,31 @@ sealed class JoinKeysignError(val message: UiText) {
     /** A DOGE/DASH input didn't match the transaction that created it, or couldn't be checked. */
     data object UtxoInputsUnverified :
         JoinKeysignError(R.string.keysign_utxo_inputs_unverified.asUiText())
+
+    /** A TON jetton transfer that doesn't move what it shows, or that couldn't be checked. */
+    data class TonJettonTransferRefused(@StringRes val reason: Int) :
+        JoinKeysignError(reason.asUiText()) {
+        companion object {
+            fun from(error: Exception) =
+                TonJettonTransferRefused(
+                    when ((error as? TonJettonTransferRefusedException)?.reason) {
+                        TonJettonTransferRefusedException.Reason.NotThisVault ->
+                            R.string.join_keysign_ton_jetton_not_this_vault
+                        TonJettonTransferRefusedException.Reason.TokenMismatch ->
+                            R.string.join_keysign_ton_jetton_token_mismatch
+                        TonJettonTransferRefusedException.Reason.Unverifiable,
+                        null -> R.string.join_keysign_ton_jetton_unverifiable
+                    }
+                )
+        }
+    }
 }
 
 /** Raised when the messages to sign cannot be prepared once the ceremony starts. */
-internal class KeysignMessagesException(message: String) : Exception(message)
+internal class KeysignMessagesException(
+    message: String,
+    val text: UiText = UiText.DynamicString(message),
+) : Exception(message)
 
 /** Raised when polling the relay for committee membership fails (network/relay error). */
 internal class KeysignCheckException(message: String) : Exception(message)
@@ -158,7 +186,7 @@ internal sealed interface KeysignStartOutcome {
     data object Started : KeysignStartOutcome
 
     /** Preparing the messages to sign failed; carries the reason for the error state. */
-    data class FailedToPrepare(val message: String) : KeysignStartOutcome
+    data class FailedToPrepare(val text: UiText) : KeysignStartOutcome
 
     /** Polling the relay for the committee failed; carries the reason for the error state. */
     data class FailedToCheck(val message: String) : KeysignStartOutcome
@@ -188,9 +216,7 @@ internal suspend fun awaitKeysignStart(
                     return@withTimeoutOrNull KeysignStartOutcome.Started
                 }
             } catch (e: KeysignMessagesException) {
-                return@withTimeoutOrNull KeysignStartOutcome.FailedToPrepare(
-                    e.message ?: "Failed to prepare messages to sign"
-                )
+                return@withTimeoutOrNull KeysignStartOutcome.FailedToPrepare(e.text)
             } catch (e: KeysignCheckException) {
                 return@withTimeoutOrNull KeysignStartOutcome.FailedToCheck(
                     e.message ?: "Failed to check keysign start"
@@ -293,6 +319,7 @@ constructor(
     private val joinSwapUiModelBuilder: JoinSwapUiModelBuilder,
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
+    private val verifyTonJettonTransfer: VerifyTonJettonTransferUseCase,
     private val verifyUtxoInputAmounts: VerifyUtxoInputAmountsUseCase,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
@@ -637,6 +664,32 @@ constructor(
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongReShare)
                 return false
             }
+        }
+
+        // A TON jetton transfer is signed from the jetton wallet the payload names, not from the
+        // token it shows; refuse one whose sender, wallet or token details aren't this vault's own.
+        try {
+            verifyTonJettonTransfer(ksPayload, _currentVault)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "TON jetton transfer failed verification")
+            currentState.value =
+                JoinKeysignState.Error(JoinKeysignError.TonJettonTransferRefused.from(e))
+            return false
+        }
+
+        // A swap selling another coin than the one signed never reaches approval (iOS and the
+        // extension refuse it before their review screens too).
+        try {
+            ksPayload.swapPayload?.requireSellsSigningCoin(ksPayload.coin)
+        } catch (e: IllegalArgumentException) {
+            Timber.e(e, "Swap payload sells another coin than the one signed")
+            currentState.value =
+                JoinKeysignState.Error(
+                    JoinKeysignError.FailedToPrepare(UiText.DynamicString(e.message.orEmpty()))
+                )
+            return false
         }
 
         this@JoinKeysignViewModel._keysignPayload = ksPayload
@@ -1277,7 +1330,7 @@ constructor(
                             Timber.e("Failed to prepare messages to sign")
                             currentState.value =
                                 JoinKeysignState.Error(
-                                    JoinKeysignError.FailedToCheck(outcome.message)
+                                    JoinKeysignError.FailedToPrepare(outcome.text)
                                 )
                         }
 
@@ -1356,7 +1409,11 @@ constructor(
         } catch (ce: CancellationException) {
             throw ce
         } catch (e: Exception) {
-            throw KeysignMessagesException(e.message ?: "Failed to resolve messages to sign")
+            val message = e.message ?: "Failed to resolve messages to sign"
+            throw KeysignMessagesException(
+                message,
+                e.nearErrorTextOrNull() ?: UiText.DynamicString(message),
+            )
         }
     }
 

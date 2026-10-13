@@ -471,6 +471,35 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch accepts a NEAR Intents ERC-20 deposit that transfers the sold amount to targetAddress`() =
+        runTest {
+            stubErc20Deposit()
+
+            val result = source().fetch(usdtDepositRequest()) as SwapQuoteResult.Evm
+
+            assertEquals(USDT_CONTRACT, result.data.tx.to)
+            assertEquals(USDT_DEPOSIT_DATA, result.data.tx.data)
+        }
+
+    @Test
+    fun `fetch refuses an ERC-20 deposit whose calldata recipient is not targetAddress`() =
+        runTest {
+            stubErc20Deposit(targetAddress = "0x000000000000000000000000000000000000dEaD")
+
+            assertThrows<SwapKitError.Decoding> { source().fetch(usdtDepositRequest()) }
+        }
+
+    @Test
+    fun `fetch refuses an ERC-20 deposit for another amount than the one sold as Decoding`() =
+        runTest {
+            stubErc20Deposit()
+
+            assertThrows<SwapKitError.Decoding> {
+                source().fetch(usdtDepositRequest(amount = BigInteger.valueOf(19_000_000)))
+            }
+        }
+
+    @Test
     fun `fetch decodes Solana base64 from JsonPrimitive at the tx root`() = runTest {
         // SwapKit V3 returns the Solana tx as a bare base64 string on `tx`, not an object with
         // swapTransaction/message. The legacy wrapper-object decoder masked this bug in earlier
@@ -2336,6 +2365,41 @@ internal class SwapKitQuoteSourceTest {
             slippageBps = slippageBps,
         )
 
+    private fun stubErc20Deposit(
+        targetAddress: String = USDT_DEPOSIT_TARGET,
+        gas: String = "0x12c25",
+    ) {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r", providers = listOf("NEAR"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            evmSwapResponse(
+                gas = gas,
+                to = USDT_CONTRACT,
+                data = USDT_DEPOSIT_DATA,
+                value = "0x0",
+                providers = listOf("NEAR"),
+                targetAddress = targetAddress,
+            )
+    }
+
+    /** 20 USDT, the amount the real NEAR Intents deposit calldata transfers. */
+    private fun usdtDepositRequest(
+        amount: BigInteger = BigInteger.valueOf(20_000_000)
+    ): SwapQuoteRequest {
+        val usdt =
+            ethCoin()
+                .copy(
+                    ticker = "USDT",
+                    decimal = 6,
+                    contractAddress = USDT_CONTRACT,
+                    isNativeToken = false,
+                )
+        return request(srcToken = usdt, tokenValue = TokenValue(value = amount, token = usdt))
+    }
+
     private fun route(
         routeId: String,
         providers: List<String>,
@@ -2365,9 +2429,11 @@ internal class SwapKitQuoteSourceTest {
         approvalAddress: String? = null,
         approvalTx: SwapKitApprovalTx? = null,
         fees: List<SwapKitFee> = emptyList(),
+        targetAddress: String? = null,
     ) =
         SwapKitSwapResponseJson(
             swapId = "swap-id",
+            targetAddress = targetAddress,
             tx =
                 buildJsonObject {
                     from?.let { put("from", JsonPrimitive(it)) }
@@ -2532,4 +2598,14 @@ internal class SwapKitQuoteSourceTest {
             contractAddress = "",
             isNativeToken = true,
         )
+
+    private companion object {
+        // Real `/v3/swap` NEAR Intents reply for 20 USDT -> SOL (vultisig-ios
+        // `v3-real-usdt-sol-swap.json`).
+        const val USDT_CONTRACT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+        const val USDT_DEPOSIT_TARGET = "0xCB2aC797EFf13Ee982453F5722B74aB5c56741Af"
+        const val USDT_DEPOSIT_DATA =
+            "0xa9059cbb000000000000000000000000cb2ac797eff13ee982453f5722b74ab5c56741af" +
+                "0000000000000000000000000000000000000000000000000000000001312d00"
+    }
 }

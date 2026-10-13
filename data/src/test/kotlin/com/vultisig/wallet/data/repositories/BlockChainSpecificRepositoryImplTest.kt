@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.DashApi
 import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -1503,6 +1504,7 @@ internal class BlockChainSpecificRepositoryImplTest {
             zcashApi = zcashApi,
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
             bittensorApi = mockk<BittensorApi>(relaxed = true),
+            nearApi = mockk<NearApi>(),
             suiApi = suiApi,
             tonApi = tonApi,
             rippleApi = mockk<RippleApi>(relaxed = true),
@@ -1515,6 +1517,7 @@ internal class BlockChainSpecificRepositoryImplTest {
                     zkFeeService = ZkFeeService(evmApiFactory),
                     polkadotFeeService = NoOpFeeService,
                     bittensorFeeService = NoOpFeeService,
+                    nearFeeService = NoOpFeeService,
                     rippleFeeService = NoOpFeeService,
                     suiFeeService = suiFeeService,
                     tonFeeService = NoOpFeeService,

@@ -265,6 +265,9 @@
     <string name="verify_transaction_allow_death_warning">Diese Überweisung kann das Konto des Absenders leeren. Fällt der verbleibende Kontostand unter das Existential Deposit, wird das Konto deaktiviert (geerntet) und alle verbleibenden %1$s gehen verloren.</string>
     <string name="vault_settings_delete_vault_value">Vault Wert:</string>
     <string name="join_keysign_wrong_reshare">Falsches ReShare</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">Diese TON-Token-Überweisung stammt nicht aus diesem Tresor</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">Der angezeigte Token stimmt nicht mit dem Token überein, den diese Überweisung sendet</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Diese TON-Token-Überweisung konnte nicht überprüft werden. Bitte versuchen Sie es erneut.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">Erneutes Teilen wird für Tresore mit einem QBTC-Schlüssel nicht unterstützt</string>
     <string name="swap_screen_provider_title">Anbieter</string>
     <string name="swap_form_minimum_amount">Swap-Betrag zu klein. Empfohlener Betrag %1$s %2$s</string>
@@ -1051,6 +1054,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Der Mindestbetrag zur Aktivierung dieser Adresse beträgt %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Der Mindestbetrag zur Aktivierung dieser Adresse beträgt %1$s %2$s (Existential Deposit).</string>
+    <string name="send_error_near_destination_not_found">Dieses NEAR-Konto existiert nicht. Prüfen Sie den Empfänger: Eine Überweisung dorthin würde nur Gas verbrauchen.</string>
+    <string name="send_error_near_unsupported_payload">Diese NEAR-Transaktion wird nicht unterstützt. Nur native NEAR-Überweisungen können signiert werden.</string>
+    <string name="send_error_near_invalid_recipient">Dies ist kein gültiges NEAR-Konto. Prüfen Sie den Empfänger.</string>
+    <string name="send_error_near_key_not_full_access">Der Schlüssel dieses Tresors hat keinen vollen Zugriff auf dieses NEAR-Konto und kann daher nicht davon senden.</string>
+    <string name="send_error_near_network">Das NEAR-Netzwerk hat einen Fehler oder eine unlesbare Antwort zurückgegeben. Bitte versuchen Sie es erneut.</string>
+    <string name="send_error_near_safety_check">Diese NEAR-Transaktion hat eine Sicherheitsprüfung nicht bestanden und wurde nicht signiert.</string>
     <string name="send_error_xrp_destination_tag_required">Diese Adresse erfordert ein Ziel-Tag. Fügen Sie eines hinzu, um fortzufahren.</string>
     <string name="send_error_xrp_destination_no_trust_line">Diese Adresse kann %1$s nicht empfangen. Der Empfänger muss dafür zuerst eine Trust-Line eröffnen.</string>
     <string name="ripple_trust_line_title">Trust Line aktivieren</string>
@@ -1224,6 +1233,7 @@
     <string name="swap_external_recipient_invalid">Ungültige Empfängeradresse</string>
     <string name="swap_external_recipient_unsupported">Externer Empfänger ist für diesen Swap nicht verfügbar. Deaktiviere ihn, um fortzufahren.</string>
     <string name="verify_swap_recipient">Empfänger</string>
+    <string name="verify_swap_deposit_address">Einzahlungsadresse</string>
     <string name="keygen_benefit_1_template">Beseitigung des Single Point of Failure</string>
     <string name="keygen_benefit_1_emphasized">Multifaktor-Sicherheit</string>
     <string name="keygen_benefit_2_template">Volle Kontrolle über Ihre Vermögenswerte</string>

@@ -14,7 +14,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 
-fun interface PollingTxStatusUseCase : (Chain, String) -> Flow<TransactionResult>
+interface PollingTxStatusUseCase {
+    /** [senderAccountId] is required where the chain looks transactions up by sender (NEAR). */
+    operator fun invoke(
+        chain: Chain,
+        txHash: String,
+        senderAccountId: String?,
+    ): Flow<TransactionResult>
+}
 
 internal class PollingTxStatusUseCaseImpl
 @Inject
@@ -24,7 +31,7 @@ constructor(
     private val timeSource: TimeSource,
 ) : PollingTxStatusUseCase {
 
-    override fun invoke(chain: Chain, txHash: String) = flow {
+    override fun invoke(chain: Chain, txHash: String, senderAccountId: String?) = flow {
         val config = txStatusConfigurationProvider.getConfigurationForChain(chain)
         val deadline = timeSource.markNow() + config.maxWaitSeconds.seconds
 
@@ -43,7 +50,12 @@ constructor(
             }
 
             try {
-                val result = transactionStatusRepository.checkTransactionStatus(txHash, chain)
+                val result =
+                    transactionStatusRepository.checkTransactionStatus(
+                        txHash,
+                        chain,
+                        senderAccountId,
+                    )
                 errorCount = 0
                 backoffAttempt = 0
                 emit(result)

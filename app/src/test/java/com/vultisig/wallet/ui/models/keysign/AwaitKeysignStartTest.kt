@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.keysign
 
+import com.vultisig.wallet.ui.utils.UiText
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -83,7 +84,10 @@ internal class AwaitKeysignStartTest {
                 throw KeysignMessagesException("cannot prepare messages")
             }
 
-        assertEquals(KeysignStartOutcome.FailedToPrepare("cannot prepare messages"), outcome)
+        assertEquals(
+            KeysignStartOutcome.FailedToPrepare(UiText.DynamicString("cannot prepare messages")),
+            outcome,
+        )
         assertEquals(0L, currentTime)
     }
 }

@@ -457,6 +457,9 @@
 
     <!-- Join Keysign -->
     <string name="join_keysign_wrong_reshare">错误的重新分享</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">此 TON 代币转账并非来自此保险库</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">显示的代币与此转账发送的代币不一致</string>
+    <string name="join_keysign_ton_jetton_unverifiable">无法验证此 TON 代币转账，请重试。</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">带有 QBTC 密钥的保险库不支持重新分享</string>
 
     <!-- Swap Screen -->
@@ -1380,6 +1383,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">激活此地址所需的最低金额为 %1$s %2$s。</string>
     <string name="send_error_tao_destination_below_existential_deposit">激活此地址所需的最低金额为 %1$s %2$s（存在性存款）。</string>
+    <string name="send_error_near_destination_not_found">此 NEAR 账户不存在。请检查收款方：向其转账只会消耗 Gas。</string>
+    <string name="send_error_near_unsupported_payload">不支持此 NEAR 交易。只能签署原生 NEAR 转账。</string>
+    <string name="send_error_near_invalid_recipient">这不是有效的 NEAR 账户。请检查收款方。</string>
+    <string name="send_error_near_key_not_full_access">此保险库的密钥对该 NEAR 账户没有完全访问权限，因此无法从该账户发送。</string>
+    <string name="send_error_near_network">NEAR 网络返回了错误或无法读取的响应。请重试。</string>
+    <string name="send_error_near_safety_check">此 NEAR 交易未通过安全检查，未被签署。</string>
     <string name="send_error_xrp_destination_tag_required">此地址需要目标标签。请添加后继续。</string>
     <string name="send_error_xrp_destination_no_trust_line">此地址无法接收 %1$s。收款方需要先为该资产开通信任线。</string>
     <string name="ripple_trust_line_title">激活信任线</string>
@@ -1553,6 +1562,7 @@
     <string name="swap_external_recipient_invalid">收款地址无效</string>
     <string name="swap_external_recipient_unsupported">此兑换不支持外部收款人。请将其关闭以继续。</string>
     <string name="verify_swap_recipient">接收方</string>
+    <string name="verify_swap_deposit_address">充值地址</string>
     <string name="keygen_benefit_1_template">消除单点故障</string>
     <string name="keygen_benefit_1_emphasized">多重身份验证</string>
     <string name="keygen_benefit_2_template">完全掌控您的资产</string>

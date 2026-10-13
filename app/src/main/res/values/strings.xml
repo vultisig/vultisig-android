@@ -376,6 +376,9 @@
     <string name="verify_transaction_memo_title">Memo</string>
     <string name="verify_transaction_allow_death_warning">This transfer may empty the sender\'s account. If the remaining balance falls below the Existential Deposit, the account will be deactivated (reaped) and any remaining %1$s will be lost.</string>
     <string name="join_keysign_wrong_reshare">Wrong ReShare</string>
+    <string name="join_keysign_ton_jetton_not_this_vault">This TON token transfer isn\'t from this vault</string>
+    <string name="join_keysign_ton_jetton_token_mismatch">The token shown doesn\'t match the token this transfer sends</string>
+    <string name="join_keysign_ton_jetton_unverifiable">Couldn\'t verify this TON token transfer. Please try again.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">Reshare isn\'t supported for vaults with a QBTC key</string>
     <string name="swap_screen_provider_title">Provider</string>
     <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
@@ -610,6 +613,12 @@
     </plurals>
     <string name="send_error_xrp_destination_not_activated">Minimum amount to activate this address is %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Minimum amount to activate this address is %1$s %2$s (Existential Deposit).</string>
+    <string name="send_error_near_destination_not_found">This NEAR account doesn\'t exist. Check the recipient: a transfer to it would only burn gas.</string>
+    <string name="send_error_near_unsupported_payload">This NEAR transaction isn\'t supported. Only native NEAR transfers can be signed.</string>
+    <string name="send_error_near_invalid_recipient">This isn\'t a valid NEAR account. Check the recipient.</string>
+    <string name="send_error_near_key_not_full_access">This vault\'s key has no full access to this NEAR account, so it can\'t send from it.</string>
+    <string name="send_error_near_network">The NEAR network returned an error or an unreadable answer. Try again.</string>
+    <string name="send_error_near_safety_check">This NEAR transaction failed a safety check and was not signed.</string>
     <string name="send_error_xrp_destination_tag_required">This address requires a destination tag. Add one to continue.</string>
     <string name="send_error_xrp_destination_no_trust_line">This address can’t receive %1$s. The recipient needs to open a trust line for it first.</string>
     <string name="ripple_trust_line_title">Activate trust line</string>
@@ -874,6 +883,7 @@
     <string name="swap_external_recipient_invalid">Invalid recipient address</string>
     <string name="swap_external_recipient_unsupported">External recipient isn’t available for this swap. Turn it off to continue.</string>
     <string name="verify_swap_recipient">Recipient</string>
+    <string name="verify_swap_deposit_address">Deposit Address</string>
     <string name="select_asset_title">Select asset</string>
     <string name="select_asset_no_result">No result found.</string>
     <string name="select_asset_no_token_found">No token found</string>

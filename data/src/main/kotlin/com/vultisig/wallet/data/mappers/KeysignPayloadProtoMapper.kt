@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.proto.v1.ThorChainSwapPayloadProto
 import com.vultisig.wallet.data.models.swapProviderFromWireId
+import com.vultisig.wallet.data.utils.isUnsignedDecimal
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -34,6 +35,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
 
     override fun invoke(from: KeysignPayloadProto): KeysignPayload {
         val coin = requireNotNull(from.coin).toCoin()
+        if (coin.chain == Chain.Near) from.requireNearWireAmounts()
         return KeysignPayload(
             vaultLocalPartyID = from.vaultLocalPartyId,
             vaultPublicKeyECDSA = from.vaultPublicKeyEcdsa,
@@ -324,6 +326,15 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                             )
                         }
 
+                    from.nearSpecific != null ->
+                        from.nearSpecific.let {
+                            BlockChainSpecific.Near(
+                                nonce = it.nonce,
+                                blockHash = it.blockHash,
+                                gasFee = BigInteger(it.gasFee),
+                            )
+                        }
+
                     else -> error("No supported BlockChainSpecific in proto $from")
                 },
             tronTransferContractPayload = from.tronTransferContractPayload,
@@ -331,6 +342,21 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             tronTriggerSmartContractPayload = from.tronTriggerSmartContractPayload,
             dappMetadata = DAppMetadata.fromProto(from.dappMetadata),
         )
+    }
+
+    /**
+     * Refuses the NEAR amount spellings the SDK signer refuses: anything but a plain unsigned
+     * decimal.
+     */
+    private fun KeysignPayloadProto.requireNearWireAmounts() {
+        require(toAmount.isUnsignedDecimal()) {
+            "NEAR transfer amount is not an unsigned decimal integer: $toAmount"
+        }
+        nearSpecific?.let {
+            require(it.gasFee.isUnsignedDecimal()) {
+                "NEAR gas fee is not an unsigned decimal integer: ${it.gasFee}"
+            }
+        }
     }
 
     /**
