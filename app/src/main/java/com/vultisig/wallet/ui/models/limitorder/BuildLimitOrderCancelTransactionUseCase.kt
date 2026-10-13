@@ -150,21 +150,23 @@ constructor(
 
         // Priced AFTER the specific, because on a UTXO chain `gasFee` is a per-byte RATE, not a
         // total — comparing a balance against it would wave through a cancel the vault cannot pay
-        // for. The plan gives the real fee for the exact inputs and OP_RETURN this cancel will
-        // carry.
-        assertAffordable(
-            vaultId = vaultId,
-            chain = sourceChain,
-            signingCoin = signingCoin,
-            amount = amount,
-            gasFee = gasFee,
-            destination = destination,
-            specific = specific,
-            memo = memo,
-        )
+        // for, and showing it would put a fee of a few sats on the review screen while the
+        // co-signer shows the planned total. The plan gives the real fee for the exact inputs and
+        // OP_RETURN this cancel will carry.
+        val fee =
+            assertAffordable(
+                vaultId = vaultId,
+                chain = sourceChain,
+                signingCoin = signingCoin,
+                amount = amount,
+                gasFee = gasFee,
+                destination = destination,
+                specific = specific,
+                memo = memo,
+            )
 
         val estimatedFee =
-            depositGasFeeHelper.getFeesFiatValue(sourceChain, specific, gasFee, signingCoin)
+            depositGasFeeHelper.getFeesFiatValue(sourceChain, specific, fee, signingCoin)
 
         return DepositTransaction(
             id = Uuid.random().toString(),
@@ -174,7 +176,7 @@ constructor(
             dstAddress = destination?.address.orEmpty(),
             memo = memo,
             srcTokenValue = TokenValue(value = amount, token = signingCoin),
-            estimatedFees = gasFee,
+            estimatedFees = fee,
             estimateFeesFiat = estimatedFee.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
             utxos = specific.utxos,
@@ -250,6 +252,9 @@ constructor(
      * user can afford on the strength of a failed lookup. The FEE is still priced first even so — a
      * planner that answers "cannot select inputs" is a refusal in its own right, and it must not be
      * skipped just because the balance behind it was unavailable.
+     *
+     * @return the fee this cancel pays as a total, for display: on a UTXO chain the planned fee
+     *   rather than the per-byte rate in [gasFee].
      */
     private suspend fun assertAffordable(
         vaultId: String,
@@ -260,16 +265,17 @@ constructor(
         destination: InboundVault?,
         specific: BlockChainSpecificAndUtxo,
         memo: String,
-    ) {
+    ): TokenValue {
         val totalFee =
             totalFee(vaultId, chain, signingCoin, amount, gasFee, destination, specific, memo)
-        val balance = nativeBalance(vaultId, signingCoin) ?: return
-        if (balance < amount + totalFee) {
+        val balance = nativeBalance(vaultId, signingCoin)
+        if (balance != null && balance < amount + totalFee) {
             throw LimitOrderCancelException(
                 LimitOrderCancelFailure.InsufficientBalance,
                 "vault cannot cover the cancel on $chain",
             )
         }
+        return gasFee.copy(value = totalFee)
     }
 
     /**

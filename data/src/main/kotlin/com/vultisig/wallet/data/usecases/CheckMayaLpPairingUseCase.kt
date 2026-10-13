@@ -17,7 +17,14 @@ sealed interface MayaLpPairing {
      */
     data object SingleSidedPosition : MayaLpPairing
 
-    /** The record is keyed to addresses other than the ones this add would name. */
+    /**
+     * The vault holds a live position paired with another asset address. mayanode checks the asset
+     * address only when an add names one, so a single-sided CACAO add (`+:POOL`) is still credited;
+     * an add naming this asset address is refunded.
+     */
+    data object PairedWithOtherAddress : MayaLpPairing
+
+    /** A pending half fixed addresses other than the ones this add would name. */
     data object AddressMismatch : MayaLpPairing
 }
 
@@ -81,6 +88,6 @@ internal fun MayaLiquidityProviderJson.pairingFor(
     return when {
         recordedAsset.isEmpty() -> MayaLpPairing.SingleSidedPosition
         recordedAsset.equals(assetAddress, ignoreCase = true) -> MayaLpPairing.Pairable
-        else -> MayaLpPairing.AddressMismatch
+        else -> MayaLpPairing.PairedWithOtherAddress
     }
 }
