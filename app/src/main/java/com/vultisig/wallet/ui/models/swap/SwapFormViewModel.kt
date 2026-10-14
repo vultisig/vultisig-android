@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.swap.SwapMode
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -1044,12 +1045,29 @@ constructor(
                 BigInteger.ZERO
             }
         srcPercentageJob?.cancel()
+        val amountAtTap = srcAmountState.text.toString()
         srcPercentageJob = viewModelScope.launch {
+            // An amount typed or a source picked while the NEAR reserve was read owns the field.
+            fun tapStillApplies() =
+                selectedSrc.value?.account?.token?.id == srcToken.id &&
+                    srcAmountState.text.toString() == amountAtTap
+
             val maxUsableTokenAmount =
-                maxUsableSrcAmount(selectedSrcAccount, srcTokenValue, reservedNetworkFee)
-                    ?: return@launch
-            // A source picked while the NEAR reserve was read owns the field now.
-            if (selectedSrc.value?.account?.token?.id != srcToken.id) return@launch
+                try {
+                    maxUsableSrcAmount(selectedSrcAccount, srcTokenValue, reservedNetworkFee)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to size the selected swap amount fraction")
+                    if (tapStillApplies()) {
+                        showError(
+                            e.nearErrorTextOrNull()
+                                ?: UiText.StringResource(R.string.network_connection_lost)
+                        )
+                    }
+                    return@launch
+                }
+            if (!tapStillApplies()) return@launch
 
             if (maxUsableTokenAmount <= BigInteger.ZERO) {
                 // Empty (not "0"): the empty-field path clears the stale quote silently,
@@ -1082,24 +1100,15 @@ constructor(
 
     /**
      * The source balance a percentage tap sizes from, less [reservedNetworkFee]. NEAR shows its raw
-     * balance, so its storage reserve is read live and kept behind; null once a failed read has
-     * been shown as an error.
+     * balance, so its storage reserve is read live and kept behind; that read throws on failure.
      */
     private suspend fun maxUsableSrcAmount(
         account: Account,
         srcTokenValue: TokenValue,
         reservedNetworkFee: BigInteger,
-    ): BigInteger? {
+    ): BigInteger {
         if (account.token.chain != Chain.Near) return srcTokenValue.value - reservedNetworkFee
-        return try {
-            checkNotNull(getAvailableTokenBalance(account, reservedNetworkFee)).value
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to size the selected swap amount fraction")
-            showError(UiText.StringResource(R.string.network_connection_lost))
-            null
-        }
+        return checkNotNull(getAvailableTokenBalance(account, reservedNetworkFee)).value
     }
 
     fun loadData(vaultId: String, chainId: String?, srcTokenId: String?, dstTokenId: String?) {

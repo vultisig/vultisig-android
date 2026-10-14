@@ -48,4 +48,14 @@ internal class SwapNetworkFeeLabelTest {
             it.hasSwapNetworkFeeCeiling shouldBe true
         }
     }
+
+    @Test
+    fun `a SwapKit inbound fee is the network fee on UTXO chains and NEAR`() {
+        listOf(Chain.Bitcoin, Chain.Cardano, Chain.Near).forEach {
+            it.swapKitInboundFeeIsNetworkFee shouldBe true
+        }
+        listOf(Chain.Ethereum, Chain.Solana, Chain.Tron, Chain.ThorChain).forEach {
+            it.swapKitInboundFeeIsNetworkFee shouldBe false
+        }
+    }
 }

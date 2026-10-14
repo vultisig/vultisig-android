@@ -22,3 +22,11 @@ import com.vultisig.wallet.data.models.isOpStackL2
  */
 internal val Chain.hasSwapNetworkFeeCeiling: Boolean
     get() = (standard == TokenStandard.EVM && !isOpStackL2) || this == Chain.Near
+
+/**
+ * Whether SwapKit's wire inbound fee for a deposit out of this chain is that deposit's own network
+ * cost (a UTXO or Cardano miner fee, NEAR's upfront gas). The Network Fee row already shows it, so
+ * the Swap Fee row is hidden rather than counting it twice, as iOS `SwapCryptoLogic.fee` does.
+ */
+internal val Chain.swapKitInboundFeeIsNetworkFee: Boolean
+    get() = standard == TokenStandard.UTXO || this == Chain.Near

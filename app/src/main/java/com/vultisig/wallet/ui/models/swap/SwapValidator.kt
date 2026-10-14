@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -97,7 +98,8 @@ constructor(private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCas
                             throw e
                         } catch (e: Exception) {
                             Timber.e(e, "Failed to read the NEAR storage reserve")
-                            return UiText.StringResource(R.string.network_connection_lost)
+                            return e.nearErrorTextOrNull()
+                                ?: UiText.StringResource(R.string.network_connection_lost)
                         }
                     spendable == null || srcAmountValue > spendable
                 } else {
