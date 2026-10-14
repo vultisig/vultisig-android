@@ -84,6 +84,9 @@ internal data class SwapTransactionUiModel(
     // For native THORChain/MayaChain swaps this is resolved from the signed memo's destination
     // segment rather than form state, so it reflects what's actually signed (#4972).
     val externalRecipient: String? = null,
+    // Address a SwapKit ERC-20 deposit transfers the sold token to, decoded from the signed
+    // calldata; null for every other swap. The tx itself is addressed to the token.
+    val depositAddress: String? = null,
     // Display name of the vault the source funds leave from, or null when unresolved. Rendered on
     // the transaction-complete screen as `VaultName (Address)` so the source account is
     // identifiable rather than a bare address (#5333).

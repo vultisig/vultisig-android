@@ -34,6 +34,15 @@ internal class PriceImpactTest {
     }
 
     @Test
+    fun `negated SwapKit loss renders as a negative Average impact`() {
+        // SwapKit's -0.0167 (1.67% value lost) reaches the formatter as 0.0167 after the source
+        // flips it into the positive-is-cost convention.
+        val display = formatPriceImpact(BigDecimal("0.0167"))!!
+        assertEquals("-1.67%", display.percent)
+        assertEquals(PriceImpactLevel.AVERAGE, display.level)
+    }
+
+    @Test
     fun `large slippage is tagged High`() {
         // 5% impact → -5.00%, below the -3% Average floor.
         val display = formatPriceImpact(BigDecimal("0.05"))!!

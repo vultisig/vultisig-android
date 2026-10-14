@@ -9,10 +9,8 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getPubKeyByChain
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
@@ -120,28 +118,24 @@ constructor(
     }
 
     /**
-     * Converts a raw [gasFee] into a displayable [EstimatedGasFee] (token + fiat), applying the EVM
-     * gas-limit from [specific] when [chain] is EVM and a unit limit otherwise.
+     * Converts [gasFee] into a displayable [EstimatedGasFee] (token + fiat). [gasFee] is the fee
+     * total from [calculateGasFee] — on EVM already `gasPrice × gasLimit` (plus any L1 data fee) —
+     * so it is priced with a unit limit on every chain rather than multiplied by the gas limit
+     * again.
      */
     suspend fun getFeesFiatValue(
         chain: Chain?,
         specific: BlockChainSpecificAndUtxo,
         gasFee: TokenValue,
         selectedToken: Coin,
-    ): EstimatedGasFee {
-        return gasFeeToEstimatedFee(
+    ): EstimatedGasFee =
+        gasFeeToEstimatedFee(
             GasFeeParams(
-                gasLimit =
-                    if (chain?.standard == TokenStandard.EVM) {
-                        (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                    } else {
-                        BigInteger.valueOf(1)
-                    },
+                gasLimit = BigInteger.ONE,
                 gasFee = gasFee,
                 selectedToken = selectedToken,
             )
         )
-    }
 
     /**
      * Builds the Bitcoin (UTXO) transaction plan used to size fees and select inputs for a deposit.

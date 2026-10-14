@@ -143,11 +143,10 @@ data class SwapKitRouteMeta(
     @SerialName("assets") val assets: List<SwapKitMetaAsset> = emptyList(),
     @SerialName("tags") val tags: List<String> = emptyList(),
     /**
-     * Signed fractional price impact for this route (e.g. `0.0133` == +1.33% cost, a negative value
-     * == a favorable trade). Distinct from [SwapKitRoute.totalSlippageBps]: that is the same
-     * directional slippage expressed in bps (also signed — negative for favorable routes), whereas
-     * this is the fraction the user actually sees. iOS reads this same field (`meta.priceImpact`)
-     * for the Price Impact row, and the source falls back to `totalSlippageBps` when it is absent.
+     * Signed fractional price impact for this route, `outUSD / inUSD - 1` (e.g. `-0.0167` == the
+     * user receives 1.67% less value). [SwapKitRoute.totalSlippageBps] carries the same signed
+     * value in bps. iOS reads this same field (`meta.priceImpact`) for the Price Impact row, and
+     * the source falls back to `totalSlippageBps` when it is absent.
      */
     @SerialName("priceImpact") val priceImpact: Double? = null,
 )
