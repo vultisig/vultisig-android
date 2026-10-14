@@ -1084,12 +1084,25 @@ constructor(
     private fun scanSolanaSwap(payload: KeysignPayload) {
         blockaidSimulationJob?.cancel()
         blockaidSimulationJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch(
+                onError = {
+                    Timber.w(it, "Solana swap scan failed")
+                    updateSwapUiModel { model ->
+                        model.copy(
+                            txScanStatus =
+                                TransactionScanStatus.Error(
+                                    "Security Scanner Failed",
+                                    BLOCKAID_PROVIDER,
+                                )
+                        )
+                    }
+                }
+            ) {
                 val chain = payload.coin.chain
                 val isChainSupported =
                     securityScannerService.getSupportedChainsByFeature().isChainSupported(chain) &&
                         securityScannerService.isSecurityServiceEnabled()
-                if (!isChainSupported) return@launch
+                if (!isChainSupported) return@safeLaunch
 
                 updateSwapUiModel { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 

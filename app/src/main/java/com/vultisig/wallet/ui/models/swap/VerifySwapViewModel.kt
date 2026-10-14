@@ -356,7 +356,15 @@ constructor(
                 // recipient the Solana tx scan doesn't screen, so the worse verdict wins.
                 val recipientResult =
                     if (isSolanaAggregatorSwap) {
-                        scanExternalRecipient(transaction, supportedChains)
+                        // A failed recipient lookup must not discard the tx verdict.
+                        try {
+                            scanExternalRecipient(transaction, supportedChains)
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Timber.w(e, "Recipient scan failed for Solana swap")
+                            null
+                        }
                     } else {
                         null
                     }

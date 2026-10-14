@@ -340,6 +340,34 @@ internal class VerifySwapViewModelTest {
             coVerify(exactly = 1) { securityScannerService.scanTransaction(swapScan) }
         }
 
+    /** A failed recipient lookup must not discard the swap's own verdict. */
+    @Test
+    fun `a failing recipient scan keeps the Solana aggregator swap verdict`() =
+        runTest(testDispatcher) {
+            val swapResult = mockk<SecurityScannerResult>(relaxed = true)
+            val swapScan = mockk<SecurityScannerTransaction>(relaxed = true)
+            val recipientScan = mockk<SecurityScannerTransaction>(relaxed = true)
+            givenNonEvmSourceSwap(
+                dstChain = Chain.Ethereum,
+                externalRecipient = RECIPIENT,
+                swapPayload = mockk<SwapPayload.EVM>(relaxed = true),
+            )
+            coEvery {
+                securityScannerService.createSecurityScannerTransaction(any<SwapTransaction>())
+            } returns swapScan
+            every {
+                securityScannerService.createRecipientSecurityScannerTransaction(any())
+            } returns recipientScan
+            coEvery { securityScannerService.scanTransaction(swapScan) } returns swapResult
+            coEvery { securityScannerService.scanTransaction(recipientScan) } throws
+                SecurityScannerException("timeout")
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.txScanStatus shouldBe TransactionScanStatus.Scanned(swapResult)
+        }
+
     /** A swap that lands back in the vault's own address has no external address to screen. */
     @Test
     fun `a non-scannable source swap without an external recipient stays unscanned`() =
