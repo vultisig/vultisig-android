@@ -244,19 +244,15 @@ constructor(
             swapResponse.providers.firstOrNull()?.takeIf { it.isNotBlank() }
                 ?: swapResponse.meta.subProvider?.takeIf { it.isNotBlank() }
 
-        // Signed fractional price impact (e.g. 0.0133 == +1.33% cost, negative == favorable) for
-        // the
-        // Price Impact row. Prefer the route's `meta.priceImpact` — the field iOS reads
-        // (SwapQuote.swift), already a fraction. The Vultisig SwapKit proxy doesn't always populate
-        // it (NEAR Intents routes omit it), so fall back to the route's `totalSlippageBps`, which
-        // it
-        // does return, mapping bps -> fraction; without the fallback the row vanishes for those
-        // routes. Each source is passed verbatim to the formatter, so the API's own sign is kept
-        // (observed on-device: a NEAR BTC->TRX route reported a negative slippage -> a favorable
-        // +x.xx%).
+        // Fractional price impact for the Price Impact row. Prefer the route's `meta.priceImpact`
+        // (the field iOS reads, already a fraction) and fall back to `totalSlippageBps` mapped
+        // bps -> fraction, since the proxy omits the former on NEAR Intents routes. SwapKit signs
+        // both as `outUSD / inUSD - 1` (negative == the user receives less), while [SwapQuote]
+        // carries THORChain's `slippage_bps` convention (positive == cost), so negate once here.
         val priceImpact =
-            best.meta?.priceImpact?.let { BigDecimal.valueOf(it) }
-                ?: best.totalSlippageBps?.let { BigDecimal.valueOf(it).movePointLeft(4) }
+            (best.meta?.priceImpact?.let { BigDecimal.valueOf(it) }
+                    ?: best.totalSlippageBps?.let { BigDecimal.valueOf(it).movePointLeft(4) })
+                ?.negate()
 
         // EVM + Solana ride the EVMSwapQuoteJson envelope (Solana signers pull the base64 blob
         // from `tx.data`, matching how JupiterQuoteSource stages a Solana swap). PSBT (Bitcoin),
