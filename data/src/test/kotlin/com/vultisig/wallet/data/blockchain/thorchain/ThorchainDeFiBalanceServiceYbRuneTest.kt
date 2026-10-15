@@ -80,7 +80,7 @@ internal class ThorchainDeFiBalanceServiceYbRuneTest {
 
     @Test
     fun `fetched bonded nodes reach the DeFi balances`() = runTest {
-        coEvery { bondUseCase.getActiveNodes(VAULT_ID, ADDRESS) } returns
+        coEvery { bondUseCase.getActiveNodes(vaultId = VAULT_ID, address = ADDRESS) } returns
             flowOf(listOf(bondedNode(BigInteger("300000000000"))))
 
         val balances = service.getRemoteDeFiBalance(ADDRESS, VAULT_ID)

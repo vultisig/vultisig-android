@@ -22,16 +22,13 @@ internal fun TabBarSurface(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val rimEdge = Theme.v2.colors.backgrounds.secondary
+    val edge = Theme.v2.colors.backgrounds.secondary
+    val accent = Theme.v2.colors.backgrounds.gradientMid
+    val rim = Brush.sweepGradient(colors = listOf(edge, accent, accent, accent, edge, edge))
     Box(
         modifier =
             Modifier.clip(CircleShape)
-                .background(
-                    brush =
-                        Brush.sweepGradient(
-                            colors = listOf(rimEdge, RimAccent, RimAccent, RimAccent, rimEdge, rimEdge)
-                        )
-                )
+                .background(brush = rim)
                 .padding(1.dp)
     ) {
         Box(
@@ -48,7 +45,5 @@ internal fun TabBarSurface(
 }
 
 private val TabWidth = 92.dp
-
-private val RimAccent = Color(0xFF284570)
 
 private val TrackColor = Color(0xFF0d2446)

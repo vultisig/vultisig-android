@@ -48,7 +48,7 @@ internal fun CryptoConnectionSelect(
                     isHighlighted = index == indicator.highlightedIndex,
                     isBounceEnabled = !isReduceMotion,
                     onClick = {
-                        indicator.isTapPending = index != activeIndex
+                        indicator.onTap(index)
                         onTypeClick(type)
                     },
                 )
@@ -59,7 +59,7 @@ internal fun CryptoConnectionSelect(
 
 @Preview
 @Composable
-private fun PreviewWalletEarnSelect() {
+private fun PreviewCryptoConnectionSelect() {
     CryptoConnectionSelect(
         activeType = CryptoConnectionType.Defi,
         onTypeClick = {},

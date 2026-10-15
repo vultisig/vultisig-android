@@ -46,7 +46,7 @@ internal fun CryptoConnectionTab(
         iconScale.animateTo(ICON_BOUNCE_SCALE, tween(ICON_BOUNCE_OUT_MILLIS))
         iconScale.animateTo(
             1f,
-            spring(dampingRatio = ICON_BOUNCE_DAMPING, stiffness = BOUNCY_STIFFNESS),
+            spring(dampingRatio = ICON_BOUNCE_DAMPING, stiffness = ICON_BOUNCE_STIFFNESS),
         )
     }
 
@@ -97,5 +97,8 @@ private val CryptoConnectionType.icon: Int
         }
 
 private const val ICON_BOUNCE_SCALE = 1.22f
+
+// iOS keyframes: out, then `.bouncy` back; damping = 1 − bounce, stiffness = (2π / 0.5 s)².
 private const val ICON_BOUNCE_OUT_MILLIS = 140
 private const val ICON_BOUNCE_DAMPING = 0.45f
+private const val ICON_BOUNCE_STIFFNESS = 158f

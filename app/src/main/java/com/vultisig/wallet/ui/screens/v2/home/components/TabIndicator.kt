@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
@@ -36,19 +35,17 @@ import kotlin.math.sign
 import kotlin.math.sin
 
 /**
- * Where the selection pill sits, as a fractional tab index. Set [isTapPending] before a tap changes
- * the selection so the pill lands with a swing.
+ * Where the selection pill sits, as a fractional tab index. Call [onTap] before a tap changes the
+ * selection so the pill lands with a swing.
  */
 @Stable
 internal class TabIndicatorState(
     val position: () -> Float,
     highlightedIndex: State<Int>,
-    tapPending: MutableState<Boolean>,
+    val onTap: (index: Int) -> Unit,
 ) {
     /** The tab the pill is closest to. */
     val highlightedIndex: Int by highlightedIndex
-
-    var isTapPending: Boolean by tapPending
 }
 
 /**
@@ -67,19 +64,19 @@ internal fun rememberTabIndicator(
     val wobble = remember { Animatable(0f) }
     var landingDirection by remember { mutableFloatStateOf(0f) }
     var landedIndex by remember { mutableIntStateOf(activeIndex) }
-    val tapPending = remember { mutableStateOf(false) }
+    var isTapPending by remember { mutableStateOf(false) }
 
     LaunchedEffect(activeIndex) {
         val direction = sign((activeIndex - landedIndex).toFloat())
         landedIndex = activeIndex
-        val wasTapped = tapPending.value
-        tapPending.value = false
+        val wasTapped = isTapPending
+        isTapPending = false
         if (indicatorPosition == null) restingPosition.animateTo(activeIndex.toFloat())
         if (direction == 0f || isReduceMotion || !wasTapped) return@LaunchedEffect
         landingDirection = direction
         wobble.snapTo(0f)
         wobble.animateTo(LANDING_OVERSHOOT, tween(LANDING_OUT_MILLIS, easing = FastOutSlowInEasing))
-        wobble.animateTo(0f, spring(dampingRatio = LANDING_DAMPING, stiffness = BOUNCY_STIFFNESS))
+        wobble.animateTo(0f, spring(dampingRatio = LANDING_DAMPING, stiffness = LANDING_STIFFNESS))
     }
 
     val position: () -> Float =
@@ -95,8 +92,8 @@ internal fun rememberTabIndicator(
     val highlightedIndex =
         remember(position) { derivedStateOf { position().roundToInt().coerceIn(0, lastIndex) } }
 
-    return remember(position, highlightedIndex) {
-        TabIndicatorState(position, highlightedIndex, tapPending)
+    return remember(position) {
+        TabIndicatorState(position, highlightedIndex, onTap = { isTapPending = it != landedIndex })
     }
 }
 
@@ -153,4 +150,4 @@ private const val LANDING_OVERSHOOT = 0.12f
 // iOS keyframes: `.snappy` out, `.bouncy` back; damping = 1 − bounce, stiffness = (2π / 0.5 s)².
 private const val LANDING_OUT_MILLIS = 120
 private const val LANDING_DAMPING = 0.5f
-internal const val BOUNCY_STIFFNESS = 158f
+private const val LANDING_STIFFNESS = 158f
