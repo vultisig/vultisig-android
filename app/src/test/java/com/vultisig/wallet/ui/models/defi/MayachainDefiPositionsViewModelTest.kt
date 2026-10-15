@@ -11,8 +11,8 @@ import com.vultisig.wallet.data.blockchain.maya.MayaCacaoStakingService
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
-import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.MayaChainPendingLpDeposit
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -23,9 +23,9 @@ import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.GetMayaChainPendingLpDepositsUseCase
 import com.vultisig.wallet.data.usecases.BondChurnReward
 import com.vultisig.wallet.data.usecases.BondRewardHistoryUseCase
+import com.vultisig.wallet.data.usecases.GetMayaChainPendingLpDepositsUseCase
 import com.vultisig.wallet.data.usecases.MayachainBondUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -1176,6 +1176,20 @@ internal class MayachainDefiPositionsViewModelTest {
 
         coVerify(exactly = 0) { navigator.route(any<Route.Deposit>()) }
     }
+
+    @Test
+    fun `a pending CACAO half naming an address the vault does not hold cannot be completed`() =
+        runTest {
+            coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
+                listOf(pending("BTC.BTC", cacao = "3000000000", pairedAddress = "bc1qelsewhere"))
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            assertFalse(successData(vm).lp.pendingDeposits.single().canComplete)
+
+            vm.onClickCompletePendingLp("BTC.BTC")
+
+            coVerify(exactly = 0) { navigator.route(any<Route.Deposit>()) }
+        }
 
     @Test
     fun `editing a selection with no LP pools keeps the pending cards`() = runTest {

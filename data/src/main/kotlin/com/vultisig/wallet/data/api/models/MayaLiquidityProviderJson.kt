@@ -19,6 +19,6 @@ data class MayaLiquidityProviderJson(
     @SerialName("pending_asset") val pendingAsset: String = "0",
     // Inbound hash of the side that arrived first; only set while the add is half-open.
     @SerialName("pending_tx_id") val pendingTxId: String? = null,
-    // Refund happens at `lastAddHeight + PendingLiquidityAgeLimit`.
+    // The pending half is added alone at `lastAddHeight + PendingLiquidityAgeLimit`.
     @SerialName("last_add_height") val lastAddHeight: Long? = null,
 )
