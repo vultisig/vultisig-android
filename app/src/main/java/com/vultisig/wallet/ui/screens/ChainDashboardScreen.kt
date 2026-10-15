@@ -7,7 +7,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,6 +34,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionPager
 import com.vultisig.wallet.ui.screens.v2.home.components.ONLY_WALLET
 import com.vultisig.wallet.ui.screens.v2.home.components.rememberCryptoConnectionPagerState
 import com.vultisig.wallet.ui.screens.v2.home.components.rememberCryptoConnectionTabClick
+import com.vultisig.wallet.ui.screens.v2.home.components.rememberPagerIndicatorPosition
 
 @Composable
 internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewModel()) {
@@ -88,8 +88,7 @@ private fun ChainDashboardScreen(
     val types = uiModel.availableCryptoTypes
     val pagerState = rememberCryptoConnectionPagerState(types, uiModel.cryptoConnectionType)
     val onTabClick = rememberCryptoConnectionTabClick(pagerState, types)
-    val indicatorPosition =
-        remember(pagerState) { { pagerState.currentPage + pagerState.currentPageOffsetFraction } }
+    val indicatorPosition = rememberPagerIndicatorPosition(pagerState)
 
     BottomNavigatorOverlay(
         isNavigatorVisible = uiModel.isBottomBarVisible,

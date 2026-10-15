@@ -49,6 +49,11 @@ internal fun rememberCryptoConnectionPagerState(
 ): PagerState =
     rememberPagerState(initialPage = types.indexOf(selectedType).coerceAtLeast(0)) { types.size }
 
+/** Where [state] sits as a fractional page index, for the bottom navigator's pill to follow. */
+@Composable
+internal fun rememberPagerIndicatorPosition(state: PagerState): () -> Float =
+    remember(state) { { state.currentPage + state.currentPageOffsetFraction } }
+
 /**
  * What a tap on a bottom-navigator tab does: slides the pager there the way a swipe would, or jumps
  * there when the system has animations removed.

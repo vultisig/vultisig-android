@@ -159,13 +159,13 @@ internal fun CryptoConnectionSelect(
  */
 @Composable
 private fun SelectionPill(tabCount: Int, position: () -> Float, isReduceMotion: Boolean) {
+    fun stretch(): Float = if (isReduceMotion) 0f else stretchAt(position())
     Box(
         modifier =
             Modifier.fillMaxHeight()
                 .layout { measurable, constraints ->
                     val tabWidth = constraints.maxWidth / tabCount
-                    val stretch = if (isReduceMotion) 0f else stretchAt(position())
-                    val width = (tabWidth * (1 + PILL_STRETCH * stretch)).roundToInt()
+                    val width = (tabWidth * (1 + PILL_STRETCH * stretch())).roundToInt()
                     val placeable =
                         measurable.measure(Constraints.fixed(width, constraints.maxHeight))
                     layout(constraints.maxWidth, constraints.maxHeight) {
@@ -174,9 +174,7 @@ private fun SelectionPill(tabCount: Int, position: () -> Float, isReduceMotion: 
                         placeable.place(x.roundToInt(), 0)
                     }
                 }
-                .graphicsLayer {
-                    scaleY = 1 - PILL_SQUASH * if (isReduceMotion) 0f else stretchAt(position())
-                }
+                .graphicsLayer { scaleY = 1 - PILL_SQUASH * stretch() }
                 .clip(CircleShape)
                 .background(Color(0xFF1e3250))
                 .shadow(

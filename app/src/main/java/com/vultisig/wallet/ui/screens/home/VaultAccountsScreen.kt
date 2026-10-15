@@ -77,6 +77,7 @@ import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
 import com.vultisig.wallet.ui.screens.v2.home.components.rememberCryptoConnectionPagerState
 import com.vultisig.wallet.ui.screens.v2.home.components.rememberCryptoConnectionTabClick
+import com.vultisig.wallet.ui.screens.v2.home.components.rememberPagerIndicatorPosition
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -189,8 +190,7 @@ internal fun VaultAccountsScreen(
     val types = BOTH_CRYPTO_CONNECTION_TYPES
     val pagerState = rememberCryptoConnectionPagerState(types, state.cryptoConnectionType)
     val onTabClick = rememberCryptoConnectionTabClick(pagerState, types)
-    val indicatorPosition =
-        remember(pagerState) { { pagerState.currentPage + pagerState.currentPageOffsetFraction } }
+    val indicatorPosition = rememberPagerIndicatorPosition(pagerState)
     var swipeHintAnchorTop by remember { mutableFloatStateOf(Float.NaN) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -289,7 +289,7 @@ internal fun VaultAccountsScreen(
                         HomeAccountsPage(
                             type = type,
                             state = state,
-                            // The search opens on the selected tab only; the held page keeps its menu.
+                            // Search opens on the selected tab only; the held page keeps its menu.
                             isTabMenu = isTabMenu || type != state.cryptoConnectionType,
                             snackbarState = snackbarState,
                             onSearchClick = { isTabMenu = false },
