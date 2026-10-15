@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
+import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -58,6 +59,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkStatic
 import java.math.BigDecimal
@@ -4161,6 +4163,145 @@ internal class SwapFormViewModelTest {
                 vm.uiState.value.error,
             )
             coVerify(exactly = 0) { swapTransactionRepository.addTransaction(any()) }
+        }
+
+    @Test
+    fun `swap stages the amount and quote on screen at the tap when the amount changes during the recipient check`() =
+        runTest(mainDispatcher) {
+            val recipient = "bc1qvalidrecipient"
+            val quoteForTappedAmount =
+                createThorChainQuote(
+                    expectedDstValue = TokenValue(value = BigInteger("111"), token = BTC_COIN)
+                )
+            val quoteForEditedAmount =
+                createThorChainQuote(
+                    expectedDstValue = TokenValue(value = BigInteger("222"), token = BTC_COIN)
+                )
+            // The builder parses these, and a relaxed mock answers an empty string.
+            listOf(quoteForTappedAmount, quoteForEditedAmount).forEach { quote ->
+                every { quote.data.fees.affiliate } returns "0"
+                every { quote.data.fees.outbound } returns "0"
+            }
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returnsMany
+                listOf(
+                    createDefaultQuoteFetchResult(quote = quoteForTappedAmount),
+                    createDefaultQuoteFetchResult(quote = quoteForEditedAmount),
+                )
+            val staged = slot<SwapTransaction>()
+            coEvery { swapTransactionRepository.addTransaction(capture(staged)) } returns Unit
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+            vm.setExternalRecipient(recipient)
+            advanceUntilIdle()
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.5")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            // The tap's recipient check waits on the cluster while the user edits the amount.
+            val swapVerdict = CompletableDeferred<Unit>()
+            coEvery {
+                chainAccountAddressRepository.validateRecipient(Chain.Bitcoin, recipient)
+            } coAnswers
+                {
+                    swapVerdict.await()
+                    RecipientValidity.Valid
+                }
+            vm.swap()
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.6")
+            Snapshot.sendApplyNotifications()
+            swapVerdict.complete(Unit)
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertTrue(staged.isCaptured)
+            assertEquals(BigInteger("500000000000000000"), staged.captured.srcTokenValue.value)
+            assertEquals(
+                quoteForTappedAmount.expectedDstValue,
+                staged.captured.expectedDstTokenValue,
+            )
+        }
+
+    @Test
+    fun `a second swap tap during the recipient check stages nothing`() =
+        runTest(mainDispatcher) {
+            val recipient = "bc1qvalidrecipient"
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+            vm.setExternalRecipient(recipient)
+            advanceUntilIdle()
+            val verdict = CompletableDeferred<Unit>()
+            var lookups = 0
+            coEvery {
+                chainAccountAddressRepository.validateRecipient(Chain.Bitcoin, recipient)
+            } coAnswers
+                {
+                    lookups++
+                    verdict.await()
+                    RecipientValidity.Valid
+                }
+
+            vm.swap()
+            assertTrue(vm.uiState.value.isLoadingNextScreen)
+            vm.swap()
+
+            assertEquals(1, lookups)
+            verdict.complete(Unit)
+            advanceUntilIdle()
+            // No amount was entered, so the one staging attempt fails on the form and clears the
+            // flag; what matters is that the second tap never started a lookup of its own.
+            assertFalse(vm.uiState.value.isLoadingNextScreen)
+        }
+
+    @Test
+    fun `a second placeLimitOrder tap during the recipient check places nothing`() =
+        runTest(mainDispatcher) {
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isLimitSwapEnabled = true)
+            coEvery {
+                limitMarketPriceRepository.getMarketPrice(any(), any(), any(), any())
+            } returns BigDecimal("0.05")
+            val recipient = "bc1qvalidrecipient"
+            val verdict = CompletableDeferred<Unit>()
+
+            val vm = createViewModelWithSwapTokens()
+            vm.onSelectSwapMode(SwapMode.Limit)
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+            vm.setExternalRecipient(recipient)
+            advanceUntilIdle()
+            var lookups = 0
+            coEvery {
+                chainAccountAddressRepository.validateRecipient(Chain.Bitcoin, recipient)
+            } coAnswers
+                {
+                    lookups++
+                    verdict.await()
+                    RecipientValidity.Valid
+                }
+
+            vm.placeLimitOrder()
+            assertTrue(vm.uiState.value.isLoadingNextScreen)
+            vm.placeLimitOrder()
+
+            assertEquals(1, lookups)
+            verdict.complete(Unit)
+            advanceUntilIdle()
+            assertFalse(vm.uiState.value.isLoadingNextScreen)
         }
 
     @Test
