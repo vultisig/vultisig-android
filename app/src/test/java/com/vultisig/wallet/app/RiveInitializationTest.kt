@@ -40,6 +40,7 @@ internal class RiveInitializationTest {
                 storedVersion
             }
         every { prefs.edit() } returns editor
+        every { editor.putInt(any(), any()) } returns editor
         val captured = slot<Int>()
         every { editor.putInt("rive_init_in_flight_version", capture(captured)) } answers
             {
@@ -127,11 +128,23 @@ internal class RiveInitializationTest {
         // the stored version equals the current versionCode, which is exactly the on-disk shape a
         // SIGABRT during the previous launch would leave behind.
         storedVersion = BuildConfig.VERSION_CODE
+        every { prefs.getInt("rive_init_crashes", any()) } returns MAX_RIVE_INIT_CRASHES
 
         initializeRive(context)
 
         isRiveInitialized.shouldBeFalse()
         verify(exactly = 0) { Rive.init(any(), any()) }
+    }
+
+    @Test
+    fun `first crashes retry on the next restart`() {
+        storedVersion = BuildConfig.VERSION_CODE
+        every { prefs.getInt("rive_init_crashes", any()) } returns MAX_RIVE_INIT_CRASHES - 1
+        every { Rive.init(any(), any()) } returns Unit
+
+        initializeRive(context)
+
+        isRiveInitialized.shouldBeTrue()
     }
 
     @Test
