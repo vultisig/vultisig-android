@@ -1123,6 +1123,9 @@ constructor(
                             didLoadSimulation = it.didLoadSimulation,
                         )
                     }
+                    // A cross-chain swap only has its outflow on Solana, so the simulation reads as
+                    // a Send; showing that would replace the quoted legs and hide the destination.
+                    ?.takeIf { it is HeroContent.Swap }
                 // No verdict (network failure, undecodable tx, unparsable validation) surfaces as a
                 // scan error, never as a clean result.
                 val scanStatus =
