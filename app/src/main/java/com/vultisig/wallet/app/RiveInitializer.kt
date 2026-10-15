@@ -17,7 +17,12 @@ internal fun resetRiveInitialized() {
 
 private const val RIVE_GUARD_PREFS = "rive_init_guard"
 private const val KEY_RIVE_INIT_IN_FLIGHT_VERSION = "rive_init_in_flight_version"
+private const val KEY_RIVE_INIT_CRASHES = "rive_init_crashes"
 internal const val NO_IN_FLIGHT_VERSION = -1
+
+// A native crash only disables Rive after this many consecutive ones; until then every restart
+// re-inits. Past it, Rive stays off until the next versionCode bump.
+internal const val MAX_RIVE_INIT_CRASHES = 3
 
 /**
  * Returns the [SharedPreferences] backing the Rive crash-loop guard.
@@ -39,13 +44,15 @@ internal fun riveGuardPrefs(context: Context): SharedPreferences =
  * uncatchable process death inside the native call leaves the stored version set, causing the next
  * launch at the *same* version to short-circuit and leave [isRiveInitialized] `false` so
  * composables fall back to a [androidx.compose.foundation.layout.Spacer]. A later install that
- * bumps `versionCode` (e.g. ships a fixed Rive lib) will not match the stored version, so Rive is
- * re-attempted automatically without a manual reset.
+ * bumps `versionCode` (e.g. ships a fixed Rive lib) re-attempts Rive automatically without a manual
+ * reset. Up to [MAX_RIVE_INIT_CRASHES] consecutive crashes are retried on restart first.
  */
 internal fun initializeRive(context: Context) {
     val prefs = riveGuardPrefs(context)
     val storedVersion = prefs.getInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, NO_IN_FLIGHT_VERSION)
-    if (storedVersion == BuildConfig.VERSION_CODE) {
+    val crashed = storedVersion == BuildConfig.VERSION_CODE
+    val crashes = if (crashed) prefs.getInt(KEY_RIVE_INIT_CRASHES, 0) + 1 else 0
+    if (crashes > MAX_RIVE_INIT_CRASHES) {
         Timber.w(
             "Skipping Rive init: previous launch at version %d did not complete Rive.init " +
                 "(likely native crash)",
@@ -59,7 +66,11 @@ internal fun initializeRive(context: Context) {
     // the guard could not detect a native crash next launch, so running unguarded risks a crash
     // loop. We leave isRiveInitialized false and composables fall back gracefully.
     val committed =
-        prefs.edit().putInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, BuildConfig.VERSION_CODE).commit()
+        prefs
+            .edit()
+            .putInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, BuildConfig.VERSION_CODE)
+            .putInt(KEY_RIVE_INIT_CRASHES, crashes)
+            .commit()
     if (!committed) {
         Timber.w("Skipping Rive init: failed to durably persist the in-flight crash-loop marker")
         return
@@ -77,6 +88,10 @@ internal fun initializeRive(context: Context) {
         // apply() is fine on the clear path — we only need durability for the *set* (which races
         // SIGABRT). On normal return the next read happens after this process writes, so async is
         // safe and keeps the cold-start path off a second blocking disk write.
-        prefs.edit().putInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, NO_IN_FLIGHT_VERSION).apply()
+        prefs
+            .edit()
+            .putInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, NO_IN_FLIGHT_VERSION)
+            .putInt(KEY_RIVE_INIT_CRASHES, 0)
+            .apply()
     }
 }
