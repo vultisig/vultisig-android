@@ -1,6 +1,14 @@
 package com.vultisig.wallet.ui.screens.v2.home.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,12 +16,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.ToggleVisibilityText
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
@@ -33,12 +45,29 @@ internal fun BalanceBanner(
         modifier = modifier,
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
     ) {
-        LoadableValue(
-            value = balance,
-            isVisible = isVisible,
-            color = Theme.v2.colors.text.primary,
-            style = Theme.satoshi.price.largeTitle,
-        )
+        // Placeholder and figure cross-fade; one figure replacing another rolls its digits in
+        // place.
+        AnimatedContent(
+            targetState = balance,
+            contentKey = { it != null },
+            transitionSpec = { fadeIn() togetherWith fadeOut() using null },
+        ) { value ->
+            if (value == null) {
+                LoadableValue(
+                    value = null,
+                    isVisible = isVisible,
+                    color = Theme.v2.colors.text.primary,
+                    style = Theme.satoshi.price.largeTitle,
+                )
+            } else {
+                RollingText(
+                    text = value,
+                    isVisible = isVisible,
+                    color = Theme.v2.colors.text.primary,
+                    style = Theme.satoshi.price.largeTitle,
+                )
+            }
+        }
 
         UiSpacer(size = 12.dp)
 
@@ -48,6 +77,41 @@ internal fun BalanceBanner(
             hideText = hideText,
             showText = showText,
         )
+    }
+}
+
+/**
+ * [text] with each character rolling vertically when it changes, digits up for a larger digit and
+ * down for a smaller one. Characters are matched from the end, so the cents stay put when the
+ * figure gains a digit. Instant when the system has animations removed.
+ */
+@Composable
+private fun RollingText(text: String, isVisible: Boolean, color: Color, style: TextStyle) {
+    if (!isVisible) {
+        ToggleVisibilityText(text = text, isVisible = false, color = color, style = style)
+        return
+    }
+    val isReduceMotion = rememberIsReduceMotionEnabled()
+    Row {
+        text.forEachIndexed { index, char ->
+            key(text.length - index) {
+                AnimatedContent(
+                    targetState = char,
+                    transitionSpec = {
+                        if (isReduceMotion) {
+                            EnterTransition.None togetherWith ExitTransition.None
+                        } else {
+                            val direction = if (targetState > initialState) 1 else -1
+                            (slideInVertically { it * direction } + fadeIn()) togetherWith
+                                (slideOutVertically { -it * direction } + fadeOut()) using
+                                SizeTransform(clip = false)
+                        }
+                    },
+                ) { shown ->
+                    Text(text = shown.toString(), color = color, style = style)
+                }
+            }
+        }
     }
 }
 

@@ -1140,7 +1140,16 @@
     <string name="keygen_benefit_3_emphasized">Cross-chain</string>
     <string name="upgrade_banner_title">Atualize o seu cofre agora</string>
     <string name="deposit_form_custom_memo_optional_title">Nota personalizada (opcional)</string>
-    <string name="home_defi_portfolio">Portfólio DeFi</string>
+    <string name="home_display">Tela inicial</string>
+    <string name="home_display_separate_title">Carteira e DeFi separados</string>
+    <string name="home_display_separate_description">A aba Carteira mostra apenas o saldo da carteira e a aba DeFi mostra o saldo DeFi.</string>
+    <string name="home_display_combined_title">Carteira + DeFi</string>
+    <string name="home_display_combined_description">As duas abas mostram o saldo combinado da carteira e do DeFi.</string>
+    <string name="home_balance_display">Exibição do saldo</string>
+    <string name="home_swipe_hint_title">Deslize para alternar</string>
+    <string name="home_swipe_hint_description">Deslize para a esquerda ou para a direita para alternar entre as abas da carteira e DeFi.</string>
+    <string name="home_positions">Posições</string>
+    <string name="home_swipe_hint_got_it">Entendi</string>
     <string name="backup_password_request_with_password_action">Usar palavra-passe</string>
     <string name="backup_password_topbar_title">Palavra-passe</string>
     <string name="function_transfer_ibc_dst_address_input_title">Endereço de destino</string>

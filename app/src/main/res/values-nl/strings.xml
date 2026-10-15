@@ -1138,7 +1138,16 @@
     <string name="keygen_benefit_3_emphasized">Cross-chain,</string>
     <string name="upgrade_banner_title">Upgrade nu uw kluis</string>
     <string name="deposit_form_custom_memo_optional_title">Aangepast memo (optioneel)</string>
-    <string name="home_defi_portfolio">DeFi-portfolio</string>
+    <string name="home_display">Startscherm</string>
+    <string name="home_display_separate_title">Wallet &amp; DeFi gescheiden</string>
+    <string name="home_display_separate_description">Je Wallet-tab toont alleen je walletsaldo en je DeFi-tab toont je DeFi-saldo.</string>
+    <string name="home_display_combined_title">Wallet + DeFi</string>
+    <string name="home_display_combined_description">Beide tabs tonen je gecombineerde wallet- en DeFi-saldo.</string>
+    <string name="home_balance_display">Saldoweergave</string>
+    <string name="home_swipe_hint_title">Veeg om te wisselen</string>
+    <string name="home_swipe_hint_description">Veeg naar links of rechts om tussen je wallet- en DeFi-tab te wisselen.</string>
+    <string name="home_positions">Posities</string>
+    <string name="home_swipe_hint_got_it">Begrepen</string>
     <string name="backup_password_request_with_password_action">Wachtwoord gebruiken</string>
     <string name="backup_password_topbar_title">Wachtwoord</string>
     <string name="function_transfer_ibc_dst_address_input_title">Bestemmingsadres</string>

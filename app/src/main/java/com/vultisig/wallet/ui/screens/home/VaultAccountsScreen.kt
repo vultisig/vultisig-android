@@ -4,7 +4,6 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -25,16 +24,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -44,10 +50,10 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.v2.animation.slideAndFadeSpec
 import com.vultisig.wallet.ui.components.v2.containers.ExpandedTopbarContainer
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
+import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.components.v2.texts.LoadableValue
 import com.vultisig.wallet.ui.models.vault.AccountUiModel
@@ -57,16 +63,20 @@ import com.vultisig.wallet.ui.screens.passcode.OnceUnlocked
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.NotificationsIntroBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultNotificationOptInBottomSheet
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
+import com.vultisig.wallet.ui.screens.v2.home.components.BOTH_CRYPTO_CONNECTION_TYPES
 import com.vultisig.wallet.ui.screens.v2.home.components.Banners
 import com.vultisig.wallet.ui.screens.v2.home.components.BottomNavigatorOverlay
 import com.vultisig.wallet.ui.screens.v2.home.components.ChooseVaultButton
-import com.vultisig.wallet.ui.screens.v2.home.components.DefiExpandedTopbarContent
+import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionPager
+import com.vultisig.wallet.ui.screens.v2.home.components.HomeExpandedTopbarContent
 import com.vultisig.wallet.ui.screens.v2.home.components.HomePageTabMenuAndSearchBar
+import com.vultisig.wallet.ui.screens.v2.home.components.HomeSwipeHint
 import com.vultisig.wallet.ui.screens.v2.home.components.LocalBottomNavigatorPadding
 import com.vultisig.wallet.ui.screens.v2.home.components.NoChainFound
 import com.vultisig.wallet.ui.screens.v2.home.components.NotEnabledContainer
 import com.vultisig.wallet.ui.screens.v2.home.components.TopRow
-import com.vultisig.wallet.ui.screens.v2.home.components.WalletExpandedTopbarContent
+import com.vultisig.wallet.ui.screens.v2.home.components.rememberCryptoConnectionPagerState
+import com.vultisig.wallet.ui.screens.v2.home.components.rememberCryptoConnectionTabClick
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.HomeBannerType
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -146,7 +156,8 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
         onChooseChains = viewModel::openAddChainAccount,
         onBannerClick = viewModel::onBannerClick,
         onBannerDismiss = viewModel::onBannerDismiss,
-        onCryptoConnectionTypeClick = viewModel::setCryptoConnectionType,
+        onCryptoConnectionTypeSettle = viewModel::setCryptoConnectionType,
+        onDismissSwipeHint = viewModel::dismissSwipeHint,
     )
 }
 
@@ -168,191 +179,267 @@ internal fun VaultAccountsScreen(
     onChooseChains: () -> Unit = {},
     onBannerClick: (HomeBannerType) -> Unit = {},
     onBannerDismiss: (HomeBannerType) -> Unit = {},
-    onCryptoConnectionTypeClick: (CryptoConnectionType) -> Unit = {},
+    onCryptoConnectionTypeSettle: (CryptoConnectionType) -> Unit = {},
+    onDismissSwipeHint: () -> Unit = {},
 ) {
 
     val snackbarState = rememberVsSnackbarState()
     var isTabMenu by remember { mutableStateOf(true) }
-    val isBottomBarVisible = remember { derivedStateOf { isTabMenu } }
 
-    val isShowingSearchResult = remember { derivedStateOf { isTabMenu.not() } }
+    val types = BOTH_CRYPTO_CONNECTION_TYPES
+    val pagerState = rememberCryptoConnectionPagerState(types, state.cryptoConnectionType)
+    val onTabClick = rememberCryptoConnectionTabClick(pagerState, types)
+    val indicatorPosition =
+        remember(pagerState) { { pagerState.currentPage + pagerState.currentPageOffsetFraction } }
+    var swipeHintAnchorTop by remember { mutableFloatStateOf(Float.NaN) }
 
-    val isWallet = state.cryptoConnectionType == CryptoConnectionType.Wallet
+    Box(modifier = Modifier.fillMaxSize()) {
+        BottomNavigatorOverlay(
+            isNavigatorVisible = isTabMenu,
+            activeType = state.cryptoConnectionType,
+            onTypeClick = onTabClick,
+            indicatorPosition = indicatorPosition,
+            onCameraClick = openCamera,
+        ) {
+            ScaffoldWithExpandableTopBar(
+                snackbarState = snackbarState,
+                isRefreshing = state.isRefreshing,
+                onRefresh = onRefresh,
+                topBarCollapsedContent = {
+                    Column(modifier = Modifier.padding(top = 16.dp)) {
+                        Row(
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .background(Theme.v2.colors.backgrounds.primary)
+                                    .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            ChooseVaultButton(
+                                vaultName = state.vaultName,
+                                isFastVault = state.isFastVault,
+                                onClick = onToggleVaultListClick,
+                            )
 
-    val context = LocalContext.current
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = stringResource(R.string.home_portfolio_balance),
+                                    color = Theme.v2.colors.text.tertiary,
+                                    style = Theme.brockmann.body.s.medium,
+                                )
+                                UiSpacer(size = 2.dp)
 
-    BottomNavigatorOverlay(
-        isNavigatorVisible = isBottomBarVisible.value,
-        activeType = state.cryptoConnectionType,
-        onTypeClick = onCryptoConnectionTypeClick,
-        onCameraClick = openCamera,
-    ) {
-        ScaffoldWithExpandableTopBar(
-            snackbarState = snackbarState,
-            isRefreshing = state.isRefreshing,
-            onRefresh = onRefresh,
-            topBarCollapsedContent = {
-                Column(modifier = Modifier.padding(top = 16.dp)) {
-                    Row(
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .background(Theme.v2.colors.backgrounds.primary)
-                                .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        ChooseVaultButton(
+                                LoadableValue(
+                                    value = state.headerFiatValue,
+                                    isVisible = state.isBalanceValueVisible,
+                                    style = Theme.satoshi.price.bodyS,
+                                    color = Theme.v2.colors.text.primary,
+                                )
+                            }
+                        }
+
+                        UiSpacer(size = 16.dp)
+
+                        UiHorizontalDivider(color = Theme.v2.colors.border.light)
+
+                        UiSpacer(size = 16.dp)
+                    }
+                },
+                topBarExpandedContent = {
+                    ExpandedTopbarContainer {
+                        TopRow(
+                            onOpenHistoryClick = onOpenHistoryClick,
+                            onOpenSettingsClick = onOpenSettingsClick,
+                            onToggleVaultListClick = onToggleVaultListClick,
                             vaultName = state.vaultName,
                             isFastVault = state.isFastVault,
-                            onClick = onToggleVaultListClick,
                         )
-
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = stringResource(R.string.home_portfolio_balance),
-                                color = Theme.v2.colors.text.tertiary,
-                                style = Theme.brockmann.body.s.medium,
-                            )
-                            UiSpacer(size = 2.dp)
-
-                            LoadableValue(
-                                value = state.totalFiatValue,
-                                isVisible = state.isBalanceValueVisible,
-                                style = Theme.satoshi.price.bodyS,
-                                color = Theme.v2.colors.text.primary,
-                            )
-                        }
-                    }
-
-                    UiSpacer(size = 16.dp)
-
-                    UiHorizontalDivider(color = Theme.v2.colors.border.light)
-
-                    UiSpacer(size = 16.dp)
-                }
-            },
-            topBarExpandedContent = {
-                ExpandedTopbarContainer {
-                    TopRow(
-                        onOpenHistoryClick = onOpenHistoryClick,
-                        onOpenSettingsClick = onOpenSettingsClick,
-                        onToggleVaultListClick = onToggleVaultListClick,
-                        vaultName = state.vaultName,
-                        isFastVault = state.isFastVault,
-                    )
-                    AnimatedContent(targetState = isWallet, transitionSpec = slideAndFadeSpec()) {
-                        isWalletTabSelected ->
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             UiSpacer(size = 24.dp)
-                            if (isWalletTabSelected) {
-                                WalletExpandedTopbarContent(
-                                    state = state,
-                                    onToggleBalanceVisibility = onToggleBalanceVisibility,
-                                    onSend = onSend,
-                                    onSwap = onSwap,
-                                    onBuy = onBuy,
-                                    onReceive = onReceive,
-                                )
-                            } else {
-                                DefiExpandedTopbarContent(
-                                    state = state,
-                                    onToggleBalanceVisibility = onToggleBalanceVisibility,
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            content = { innerPadding ->
-                Box(
-                    modifier =
-                        Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())
-                ) {
-                    LazyColumn(
-                        modifier =
-                            Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = LocalBottomNavigatorPadding.current),
-                    ) {
-                        item {
-                            AnimatedVisibility(
-                                visible =
-                                    state.banners.isNotEmpty() &&
-                                        state.cryptoConnectionType == CryptoConnectionType.Wallet,
-                                enter = fadeIn() + expandVertically(),
-                                exit = fadeOut() + shrinkVertically(),
-                            ) {
-                                Banners(
-                                    modifier =
-                                        Modifier.padding(horizontal = 16.dp)
-                                            .padding(bottom = 16.dp),
-                                    banners = state.banners,
-                                    onBannerClick = onBannerClick,
-                                    onBannerDismiss = onBannerDismiss,
-                                    context = context,
-                                )
-                            }
-                        }
-
-                        item {
-                            HomePageTabMenuAndSearchBar(
-                                modifier =
-                                    Modifier.animateItem()
-                                        .padding(horizontal = 16.dp)
-                                        .padding(bottom = 16.dp),
-                                onEditClick = onChooseChains,
-                                isTabMenu = isTabMenu,
-                                onSearchClick = { isTabMenu = false },
-                                onCancelSearchClick = { isTabMenu = true },
-                                searchTextFieldState = state.searchTextFieldState,
+                            HomeExpandedTopbarContent(
+                                balance = state.headerFiatValue,
+                                isBalanceVisible = state.isBalanceValueVisible,
+                                isSwapEnabled = state.isSwapEnabled,
+                                onToggleBalanceVisibility = onToggleBalanceVisibility,
+                                onSend = onSend,
+                                onSwap = onSwap,
+                                onBuy = onBuy,
+                                onReceive = onReceive,
                             )
                         }
-
-                        item {
-                            TopShineContainer(modifier = Modifier.padding(horizontal = 16.dp)) {
-                                when {
-                                    isShowingSearchResult.value && state.noChainFound ->
-                                        NoChainFound(onChooseChains = onChooseChains)
-
-                                    // Only once the accounts flow has emitted does an
-                                    // empty list mean the user disabled every chain;
-                                    // before that it just means the addresses are still
-                                    // being derived, which on a cold start with many
-                                    // chains takes seconds.
-                                    state.areAccountsLoaded && state.getAccounts.isEmpty() ->
-                                        NotEnabledContainer(
-                                            title =
-                                                stringResource(
-                                                    R.string.home_page_no_chains_enabled
-                                                ),
-                                            content =
-                                                stringResource(
-                                                    R.string.home_page_no_chain_enabled_desc
-                                                ),
-                                            // Rendered inside the chain-list container above, so it
-                                            // steps down rather than matching it.
-                                            radius = Theme.v2.radius.md,
-                                        )
-
-                                    else ->
-                                        AccountList(
-                                            onAccountClick = onAccountClick,
-                                            snackbarState = snackbarState,
-                                            isBalanceVisible = state.isBalanceValueVisible,
-                                            accounts = state.getAccounts,
-                                            showAddress = isWallet,
-                                        )
-                                }
-                            }
-                        }
                     }
-                }
-            },
-        )
+                },
+                content = { innerPadding ->
+                    CryptoConnectionPager(
+                        state = pagerState,
+                        types = types,
+                        selectedType = state.cryptoConnectionType,
+                        onSettle = onCryptoConnectionTypeSettle,
+                        // A search is scoped to the tab it was opened on.
+                        userScrollEnabled = isTabMenu,
+                        // Both pages read the one view model, so holding the other one costs no
+                        // loads, and it comes back at its own scroll position, carousel included.
+                        keepsOtherPageComposed = true,
+                        modifier =
+                            Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding()),
+                    ) { type ->
+                        HomeAccountsPage(
+                            type = type,
+                            state = state,
+                            // The search opens on the selected tab only; the held page keeps its menu.
+                            isTabMenu = isTabMenu || type != state.cryptoConnectionType,
+                            snackbarState = snackbarState,
+                            onSearchClick = { isTabMenu = false },
+                            onCancelSearchClick = { isTabMenu = true },
+                            onChooseChains = onChooseChains,
+                            onAccountClick = onAccountClick,
+                            onBannerClick = onBannerClick,
+                            onBannerDismiss = onBannerDismiss,
+                            onSectionHeaderPositioned = { swipeHintAnchorTop = it },
+                        )
+                    }
+                },
+            )
+        }
+
+        if (state.showSwipeHint && !swipeHintAnchorTop.isNaN()) {
+            HomeSwipeHint(
+                anchorTopInWindow = swipeHintAnchorTop,
+                onDismiss = onDismissSwipeHint,
+                onSwipe = { towardsNextTab ->
+                    val current = types.indexOf(state.cryptoConnectionType)
+                    val target =
+                        (current + if (towardsNextTab) 1 else -1).coerceIn(0, types.lastIndex)
+                    onTabClick(types[target])
+                    onDismissSwipeHint()
+                },
+            )
+        }
     }
 }
+
+/** One tab's page: the promo carousel (Wallet only), the section header and its chain list. */
+@Composable
+private fun HomeAccountsPage(
+    type: CryptoConnectionType,
+    state: VaultAccountsUiModel,
+    isTabMenu: Boolean,
+    snackbarState: VSSnackbarState,
+    onSearchClick: () -> Unit,
+    onCancelSearchClick: () -> Unit,
+    onChooseChains: () -> Unit,
+    onAccountClick: (AccountUiModel) -> Unit,
+    onBannerClick: (HomeBannerType) -> Unit,
+    onBannerDismiss: (HomeBannerType) -> Unit,
+    onSectionHeaderPositioned: (topInWindow: Float) -> Unit,
+) {
+    val context = LocalContext.current
+    val isWallet = type == CryptoConnectionType.Wallet
+    val accounts = state.accountsOf(type)
+
+    LazyColumn(
+        modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).fillMaxSize(),
+        contentPadding = PaddingValues(bottom = LocalBottomNavigatorPadding.current),
+    ) {
+        if (isWallet) {
+            item(key = BANNERS_KEY) {
+                AnimatedVisibility(
+                    visible = state.banners.isNotEmpty(),
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    Banners(
+                        modifier =
+                            Modifier.padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp)
+                                // A swipe that starts on the carousel stays on it, rather than
+                                // paging the tabs once the carousel runs out of banners.
+                                .nestedScroll(HorizontalScrollSink),
+                        banners = state.banners,
+                        onBannerClick = onBannerClick,
+                        onBannerDismiss = onBannerDismiss,
+                        context = context,
+                    )
+                }
+            }
+        }
+
+        item(key = SECTION_HEADER_KEY) {
+            HomePageTabMenuAndSearchBar(
+                modifier =
+                    Modifier.animateItem()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp)
+                        .then(
+                            if (isWallet)
+                                Modifier.onGloballyPositioned {
+                                    onSectionHeaderPositioned(it.positionInWindow().y)
+                                }
+                            else Modifier
+                        ),
+                title =
+                    stringResource(
+                        if (isWallet) R.string.search_bar_portfolio else R.string.home_positions
+                    ),
+                onEditClick = onChooseChains,
+                isTabMenu = isTabMenu,
+                onSearchClick = onSearchClick,
+                onCancelSearchClick = onCancelSearchClick,
+                searchTextFieldState = state.searchTextFieldState,
+            )
+        }
+
+        item(key = ACCOUNTS_KEY) {
+            TopShineContainer(modifier = Modifier.padding(horizontal = 16.dp)) {
+                when {
+                    !isTabMenu && state.noChainFound(type) ->
+                        NoChainFound(onChooseChains = onChooseChains)
+
+                    // Only once the accounts flow has emitted does an empty list mean the user
+                    // disabled every chain; before that it just means the addresses are still
+                    // being derived, which on a cold start with many chains takes seconds.
+                    state.areAccountsLoaded(type) && accounts.isEmpty() ->
+                        NotEnabledContainer(
+                            title = stringResource(R.string.home_page_no_chains_enabled),
+                            content = stringResource(R.string.home_page_no_chain_enabled_desc),
+                            // Rendered inside the chain-list container above, so it steps down
+                            // rather than matching it.
+                            radius = Theme.v2.radius.md,
+                        )
+
+                    else ->
+                        AccountList(
+                            onAccountClick = onAccountClick,
+                            snackbarState = snackbarState,
+                            isBalanceVisible = state.isBalanceValueVisible,
+                            accounts = accounts,
+                            showAddress = isWallet,
+                        )
+                }
+            }
+        }
+    }
+}
+
+/** Takes whatever horizontal scroll a child leaves over, so it never reaches the tab pager. */
+private val HorizontalScrollSink =
+    object : NestedScrollConnection {
+        override fun onPostScroll(
+            consumed: Offset,
+            available: Offset,
+            source: NestedScrollSource,
+        ): Offset = Offset(available.x, 0f)
+
+        override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity =
+            Velocity(available.x, 0f)
+    }
+
+private const val BANNERS_KEY = "banners"
+private const val SECTION_HEADER_KEY = "section_header"
+private const val ACCOUNTS_KEY = "accounts"
 
 @Preview
 @Composable

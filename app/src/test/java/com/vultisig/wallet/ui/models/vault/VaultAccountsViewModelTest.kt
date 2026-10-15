@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.vault
 import androidx.lifecycle.SavedStateHandle
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.HomeBalanceDisplay
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -280,16 +281,16 @@ internal class VaultAccountsViewModelTest {
             // start
             // with many chains; until that first emission lands, an empty list says nothing about
             // which chains the user enabled.
-            viewModel.uiState.value.getAccounts.shouldBeEmpty()
-            viewModel.uiState.value.areAccountsLoaded shouldBe false
+            viewModel.uiState.value.accountsOf(CryptoConnectionType.Wallet).shouldBeEmpty()
+            viewModel.uiState.value.areAccountsLoaded(CryptoConnectionType.Wallet) shouldBe false
 
             balances.send(AddressBalancesUpdate(addresses = emptyList(), isComplete = false))
             advanceUntilIdle()
 
             // The cached snapshot is the first emission, so the guard lifts without waiting on the
             // network — a vault that really has every chain disabled still reads as such.
-            viewModel.uiState.value.getAccounts.shouldBeEmpty()
-            viewModel.uiState.value.areAccountsLoaded shouldBe true
+            viewModel.uiState.value.accountsOf(CryptoConnectionType.Wallet).shouldBeEmpty()
+            viewModel.uiState.value.areAccountsLoaded(CryptoConnectionType.Wallet) shouldBe true
         }
 
     @Test
@@ -311,14 +312,14 @@ internal class VaultAccountsViewModelTest {
         val viewModel = viewModel()
         advanceUntilIdle()
 
-        viewModel.uiState.value.areAccountsLoaded shouldBe true
+        viewModel.uiState.value.areAccountsLoaded(CryptoConnectionType.Wallet) shouldBe true
 
         vaultIds.emit(OTHER_VAULT_ID)
         advanceUntilIdle()
 
         // The previous vault's rows are dropped on the switch, so the empty list left behind is
         // once again "not loaded yet" rather than "this vault has no chains".
-        viewModel.uiState.value.areAccountsLoaded shouldBe false
+        viewModel.uiState.value.areAccountsLoaded(CryptoConnectionType.Wallet) shouldBe false
     }
 
     @Test
@@ -334,12 +335,12 @@ internal class VaultAccountsViewModelTest {
         val viewModel = viewModel()
         advanceUntilIdle()
 
-        viewModel.uiState.value.areAccountsLoaded shouldBe false
+        viewModel.uiState.value.areAccountsLoaded(CryptoConnectionType.Defi) shouldBe false
 
         deFiAddresses.send(emptyList())
         advanceUntilIdle()
 
-        viewModel.uiState.value.areAccountsLoaded shouldBe true
+        viewModel.uiState.value.areAccountsLoaded(CryptoConnectionType.Defi) shouldBe true
     }
 
     private fun viewModel() =
@@ -362,6 +363,11 @@ internal class VaultAccountsViewModelTest {
             referralCodeSettingsRepository = mockk(relaxed = true),
             cryptoConnectionTypeRepository = cryptoConnectionTypeRepository,
             defaultDeFiChainsRepository = defaultDeFiChainsRepository,
+            homeDisplayRepository =
+                mockk {
+                    every { balanceDisplay } returns flowOf(HomeBalanceDisplay.Separate)
+                    coEvery { hasSeenSwipeHint() } returns true
+                },
             hasCircleAccount = hasCircleAccount,
             tiersNFTRepository = mockk(relaxed = true),
             remoteNFTService = mockk(relaxed = true),

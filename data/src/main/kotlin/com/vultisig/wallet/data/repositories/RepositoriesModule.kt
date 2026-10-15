@@ -376,6 +376,10 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindHomeDisplayRepository(impl: HomeDisplayRepositoryImpl): HomeDisplayRepository
+
+    @Binds
+    @Singleton
     fun bindPreventScreenshotsRepository(
         impl: PreventScreenshotsRepositoryImpl
     ): PreventScreenshotsRepository

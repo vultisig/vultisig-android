@@ -5,7 +5,9 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.v2.tab.TabMenuAndSearchBar
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -20,6 +22,7 @@ internal fun HomePageTabMenuAndSearchBar(
     onSearchClick: () -> Unit,
     onCancelSearchClick: () -> Unit,
     isTabMenu: Boolean,
+    title: String = stringResource(R.string.search_bar_portfolio),
 ) {
     TabMenuAndSearchBar(
         modifier = modifier,
@@ -31,6 +34,7 @@ internal fun HomePageTabMenuAndSearchBar(
             HomePageTabMenu(
                 modifier = modifier,
                 //                onTNFTsClick = onTNFTsClick,
+                title = title,
                 onPortfolioClick = onPortfolioClick,
                 onEditClick = onEditClick,
                 isEditVisible = isEditVisible,

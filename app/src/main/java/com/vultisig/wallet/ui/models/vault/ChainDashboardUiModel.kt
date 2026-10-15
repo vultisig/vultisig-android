@@ -31,7 +31,8 @@ import kotlinx.coroutines.launch
 data class ChainDashboardUiModel(
     val isBottomBarVisible: Boolean = true,
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
-    val route: ChainDashboardRoute? = null,
+    /** The screen each tab of [availableCryptoTypes] shows, side by side in the pager. */
+    val routes: Map<CryptoConnectionType, ChainDashboardRoute> = emptyMap(),
     val availableCryptoTypes: List<CryptoConnectionType> = BOTH_CRYPTO_CONNECTION_TYPES,
 )
 
@@ -51,8 +52,7 @@ constructor(
         )
     private lateinit var vaultId: VaultId
     private var chainId: ChainId? = null
-    // The rendered route is rebuilt from the connection flow below, which would otherwise drop the
-    // tab the caller asked for, so it is held here and put back on every rebuild.
+    // The THORChain DeFi page opens on the tab the caller asked for.
     private var thorchainTab: DeFiTab? = null
 
     val uiState = MutableStateFlow(ChainDashboardUiModel())
@@ -60,8 +60,9 @@ constructor(
     init {
         initData()
         initAvailableCryptoTypes()
+        initRoutes()
         collectBottomBarVisibility()
-        collectActiveRoute()
+        collectActiveType()
     }
 
     private fun initData() {
@@ -140,45 +141,39 @@ constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun collectActiveRoute() {
-        cryptoConnectionTypeRepository.activeCryptoConnectionFlow
-            .onEach { type ->
-                val activeRoute =
-                    when (type) {
-                        CryptoConnectionType.Wallet ->
-                            ChainDashboardRoute.Wallet(
-                                vaultId = vaultId,
-                                chainId = requireNotNull(chainId),
-                            )
+    private fun initRoutes() {
+        val routes = uiState.value.availableCryptoTypes.associateWith(::routeFor)
+        uiState.update { it.copy(routes = routes) }
+    }
 
-                        CryptoConnectionType.Defi -> {
-                            when (chainId) {
-                                Chain.ThorChain.id ->
-                                    ChainDashboardRoute.PositionTokens(
-                                        vaultId = vaultId,
-                                        tab = thorchainTab,
-                                    )
-                                Chain.MayaChain.id ->
-                                    ChainDashboardRoute.PositionMaya(vaultId = vaultId)
-                                Chain.Tron.id -> ChainDashboardRoute.PositionTron(vaultId = vaultId)
-                                Chain.Ton.id -> ChainDashboardRoute.PositionTon(vaultId = vaultId)
-                                Chain.Solana.id ->
-                                    ChainDashboardRoute.PositionSolana(vaultId = vaultId)
-                                Chain.Terra.id,
-                                Chain.TerraClassic.id,
-                                Chain.Qbtc.id ->
-                                    ChainDashboardRoute.PositionCosmosStaking(
-                                        vaultId = vaultId,
-                                        chainId = requireNotNull(chainId),
-                                    )
-                                else -> ChainDashboardRoute.PositionCircle(vaultId = vaultId)
-                            }
-                        }
-                    }
-                uiState.update { state ->
-                    state.copy(route = activeRoute, cryptoConnectionType = type)
+    private fun routeFor(type: CryptoConnectionType): ChainDashboardRoute =
+        when (type) {
+            CryptoConnectionType.Wallet ->
+                ChainDashboardRoute.Wallet(vaultId = vaultId, chainId = requireNotNull(chainId))
+
+            CryptoConnectionType.Defi -> {
+                when (chainId) {
+                    Chain.ThorChain.id ->
+                        ChainDashboardRoute.PositionTokens(vaultId = vaultId, tab = thorchainTab)
+                    Chain.MayaChain.id -> ChainDashboardRoute.PositionMaya(vaultId = vaultId)
+                    Chain.Tron.id -> ChainDashboardRoute.PositionTron(vaultId = vaultId)
+                    Chain.Ton.id -> ChainDashboardRoute.PositionTon(vaultId = vaultId)
+                    Chain.Solana.id -> ChainDashboardRoute.PositionSolana(vaultId = vaultId)
+                    Chain.Terra.id,
+                    Chain.TerraClassic.id,
+                    Chain.Qbtc.id ->
+                        ChainDashboardRoute.PositionCosmosStaking(
+                            vaultId = vaultId,
+                            chainId = requireNotNull(chainId),
+                        )
+                    else -> ChainDashboardRoute.PositionCircle(vaultId = vaultId)
                 }
             }
+        }
+
+    private fun collectActiveType() {
+        cryptoConnectionTypeRepository.activeCryptoConnectionFlow
+            .onEach { type -> uiState.update { it.copy(cryptoConnectionType = type) } }
             .launchIn(viewModelScope)
     }
 

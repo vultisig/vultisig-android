@@ -590,6 +590,8 @@ internal sealed class Route {
 
     @Serializable data object CurrencyUnitSetting
 
+    @Serializable data object HomeDisplaySetting
+
     @Serializable data object PasscodeSettings
 
     @Serializable data object AutoLockSetting

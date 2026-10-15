@@ -4875,6 +4875,18 @@ object Coins {
     fun isDefiOnly(coin: Coin): Boolean = defiOnly.any { it.id.equals(coin.id, ignoreCase = true) }
 
     /**
+     * DeFi positions whose size is the vault's own wallet balance of the coin: the receipt held is
+     * the position. A vault tracking one of these as a wallet token counts it in the wallet total
+     * as well as the DeFi total.
+     */
+    val walletHeldDefiReceipts: List<Coin> =
+        listOf(ThorChain.sTCY, ThorChain.yRUNE, ThorChain.yTCY, Ton.TSTON)
+
+    fun isWalletHeldDefiReceipt(coin: Coin): Boolean = walletHeldDefiReceipts.any {
+        it.id.equals(coin.id, ignoreCase = true)
+    }
+
+    /**
      * The coins that read another coin's price row instead of holding one of their own, keyed by
      * the id they are asked for.
      */

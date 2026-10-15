@@ -1268,7 +1268,16 @@
     <string name="referral_rewards_banner_title">Add your referral code</string>
     <string name="kamino_banner_caption">New on Solana</string>
     <string name="kamino_banner_title">Start earning with Kamino</string>
-    <string name="home_defi_portfolio">DeFi Portfolio</string>
+    <string name="home_display">Home display</string>
+    <string name="home_display_separate_title">Wallet &amp; DeFi separate</string>
+    <string name="home_display_separate_description">Your Wallet tab shows your wallet balance only, and your DeFi tab shows your DeFi balance.</string>
+    <string name="home_display_combined_title">Wallet + DeFi</string>
+    <string name="home_display_combined_description">Both tabs show your combined wallet and DeFi balance.</string>
+    <string name="home_balance_display">Balance display</string>
+    <string name="home_swipe_hint_title">Swipe to switch</string>
+    <string name="home_swipe_hint_description">Swipe left or right to move between your wallet and DeFi tabs.</string>
+    <string name="home_positions">Positions</string>
+    <string name="home_swipe_hint_got_it">Got it</string>
     <string name="home_page_no_chains_enabled">No chains enabled</string>
     <string name="home_page_no_chain_enabled_desc">You’ve disabled all chains. Make sure that at least one chain is enabled.</string>
     <string name="address_book_saved_addresses">Saved Addresses</string>

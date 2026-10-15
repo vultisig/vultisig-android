@@ -14,6 +14,8 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.HomeBalanceDisplay
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
@@ -28,6 +30,7 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
+import com.vultisig.wallet.data.repositories.HomeDisplayRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.PromoBannerDismissalRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
@@ -96,6 +99,10 @@ internal data class VaultAccountsUiModel(
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
     val totalDeFiValue: String? = null,
+    // Wallet total plus the DeFi value the wallet total does not already hold.
+    val combinedFiatValue: String? = null,
+    val balanceDisplay: HomeBalanceDisplay = HomeBalanceDisplay.Separate,
+    val showSwipeHint: Boolean = false,
     val isBalanceValueVisible: Boolean = true,
     val accounts: List<AccountUiModel> = emptyList(),
     val defiAccounts: List<AccountUiModel> = emptyList(),
@@ -113,24 +120,33 @@ internal data class VaultAccountsUiModel(
     val isChainSelectionEnabled: Boolean = true,
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.isSwapSupported }
-    val noChainFound: Boolean
-        get() = searchTextFieldState.text.isNotEmpty() && accounts.isEmpty()
 
-    val getAccounts: List<AccountUiModel>
+    /** The header total for the selected tab under the chosen [balanceDisplay]. */
+    val headerFiatValue: String?
         get() =
-            if (cryptoConnectionType == CryptoConnectionType.Wallet) {
-                accounts
-            } else {
-                defiAccounts
+            when (balanceDisplay) {
+                HomeBalanceDisplay.Combined -> combinedFiatValue
+                HomeBalanceDisplay.Separate ->
+                    when (cryptoConnectionType) {
+                        CryptoConnectionType.Wallet -> totalFiatValue
+                        CryptoConnectionType.Defi -> totalDeFiValue
+                    }
             }
 
-    val areAccountsLoaded: Boolean
-        get() =
-            if (cryptoConnectionType == CryptoConnectionType.Wallet) {
-                hasLoadedAccounts
-            } else {
-                hasLoadedDeFiAccounts
-            }
+    fun accountsOf(type: CryptoConnectionType): List<AccountUiModel> =
+        when (type) {
+            CryptoConnectionType.Wallet -> accounts
+            CryptoConnectionType.Defi -> defiAccounts
+        }
+
+    fun areAccountsLoaded(type: CryptoConnectionType): Boolean =
+        when (type) {
+            CryptoConnectionType.Wallet -> hasLoadedAccounts
+            CryptoConnectionType.Defi -> hasLoadedDeFiAccounts
+        }
+
+    fun noChainFound(type: CryptoConnectionType): Boolean =
+        searchTextFieldState.text.isNotEmpty() && accountsOf(type).isEmpty()
 }
 
 @Immutable
@@ -174,6 +190,7 @@ constructor(
     private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
     private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
+    private val homeDisplayRepository: HomeDisplayRepository,
     private val hasCircleAccount: HasCircleAccountUseCase,
     private val tiersNFTRepository: TiersNFTRepository,
     private val remoteNFTService: TierRemoteNFTService,
@@ -207,12 +224,38 @@ constructor(
     private var lastWalletAddresses: List<Address> = emptyList()
     private var lastDeFiAddresses: List<Address> = emptyList()
 
+    // The raw figures behind combinedFiatValue, kept so it is summed before formatting.
+    private var walletTotal: FiatValue? = null
+    private var deFiNotInWalletTotal: FiatValue? = null
+
     private val _requestNotificationPermission = Channel<Unit>(Channel.BUFFERED)
     val requestNotificationPermission = _requestNotificationPermission.receiveAsFlow()
 
     init {
         collectCryptoConnectionType()
         collectLastOpenedVault()
+        collectBalanceDisplay()
+        showSwipeHintIfUnseen()
+    }
+
+    private fun collectBalanceDisplay() {
+        homeDisplayRepository.balanceDisplay
+            .onEach { display -> uiState.update { it.copy(balanceDisplay = display) } }
+            .launchIn(viewModelScope)
+    }
+
+    private fun showSwipeHintIfUnseen() {
+        viewModelScope.safeLaunch {
+            if (!homeDisplayRepository.hasSeenSwipeHint()) {
+                uiState.update { it.copy(showSwipeHint = true) }
+            }
+        }
+    }
+
+    fun dismissSwipeHint() {
+        if (!uiState.value.showSwipeHint) return
+        uiState.update { it.copy(showSwipeHint = false) }
+        viewModelScope.safeLaunch { homeDisplayRepository.markSwipeHintSeen() }
     }
 
     private fun collectBannerVisibility(vaultId: VaultId) {
@@ -319,6 +362,8 @@ constructor(
             // one vault's totals or rows under the next (#4768).
             lastWalletAddresses = emptyList()
             lastDeFiAddresses = emptyList()
+            walletTotal = null
+            deFiNotInWalletTotal = null
             uiState.update {
                 it.copy(
                     accounts = emptyList(),
@@ -327,6 +372,7 @@ constructor(
                     hasLoadedDeFiAccounts = false,
                     totalFiatValue = null,
                     totalDeFiValue = null,
+                    combinedFiatValue = null,
                     // Several banners are vault-scoped (GG20, chain presence, referral code);
                     // clear them eagerly so the previous vault's CTAs can't flash before
                     // collectBannerVisibility re-evaluates against the new one.
@@ -669,19 +715,8 @@ constructor(
                                 Timber.e(it)
                             },
                         uiState.value.searchTextFieldState.textAsFlow(),
-                        uiState.map { it.cryptoConnectionType }.distinctUntilChanged(),
-                    ) { accounts, searchQuery, cryptoConnectionType ->
-                        accounts
-                            .filter {
-                                when (cryptoConnectionType) {
-                                    CryptoConnectionType.Wallet -> true
-                                    CryptoConnectionType.Defi ->
-                                        cryptoConnectionTypeRepository.hasDeFiPositionsScreen(
-                                            it.chain
-                                        )
-                                }
-                            }
-                            .updateUiStateFromList(searchQuery = searchQuery.toString())
+                    ) { accounts, searchQuery ->
+                        accounts.updateUiStateFromList(searchQuery = searchQuery.toString())
                     }
                     .launchIn(this)
             }
@@ -792,15 +827,19 @@ constructor(
             }
         if (isDefi) lastDeFiAddresses = merged else lastWalletAddresses = merged
 
-        val totalFiatValue =
-            merged.calculateAddressesPartialFiatValue()?.let { fiatValueToStringMapper(it) }
+        val total = merged.calculateAddressesPartialFiatValue()
+        val totalFiatValue = total?.let { fiatValueToStringMapper(it) }
         val accountsUiModel =
             merged.map { addressToUiModelMapper(it) }.filteredAccounts(searchQuery)
+
+        if (isDefi) deFiNotInWalletTotal = merged.deFiNotInWalletTotal() else walletTotal = total
+        val combinedFiatValue = combinedTotal()?.let { fiatValueToStringMapper(it) }
 
         uiState.update { state ->
             if (!isDefi) {
                 state.copy(
                     totalFiatValue = totalFiatValue,
+                    combinedFiatValue = combinedFiatValue,
                     accounts = accountsUiModel,
                     hasLoadedAccounts = true,
                 )
@@ -809,6 +848,7 @@ constructor(
                 // clearing the header instead of stranding a stale figure over zero rows (#4768).
                 state.copy(
                     totalDeFiValue = totalFiatValue,
+                    combinedFiatValue = combinedFiatValue,
                     defiAccounts = accountsUiModel,
                     hasLoadedDeFiAccounts = true,
                 )
@@ -816,6 +856,26 @@ constructor(
         }
 
         Timber.d("Update updateUiStateFromList: %s", "$this")
+    }
+
+    /**
+     * The DeFi total less the positions the wallet total already counts: a receipt the vault tracks
+     * as a wallet token (yRUNE, sTCY, ...) is valued in both lists, while one injected only for its
+     * position ([Account.isPositionOnly]) is not in the wallet.
+     */
+    private fun List<Address>.deFiNotInWalletTotal(): FiatValue? =
+        flatMap { it.accounts }
+            .filterNot { !it.isPositionOnly && Coins.isWalletHeldDefiReceipt(it.token) }
+            .calculateAccountsPartialFiatValue()
+
+    /**
+     * Wallet plus DeFi-not-in-wallet; waits for the wallet total, and reads a DeFi side with nothing
+     * resolved (no DeFi chains, or not loaded yet) as adding nothing.
+     */
+    private fun combinedTotal(): FiatValue? {
+        val wallet = walletTotal ?: return null
+        val deFi = deFiNotInWalletTotal ?: return wallet
+        return FiatValue(wallet.value + deFi.value, wallet.currency)
     }
 
     /**
@@ -980,7 +1040,10 @@ constructor(
         }
     }
 
+    /** The pager settled on [type]; a no-op when it already is the selected tab. */
     fun setCryptoConnectionType(type: CryptoConnectionType) {
+        if (type == uiState.value.cryptoConnectionType) return
+        dismissSwipeHint()
         cryptoConnectionTypeRepository.setActiveCryptoConnection(type)
         uiState.update { it.copy(cryptoConnectionType = type) }
 

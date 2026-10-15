@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -240,7 +241,8 @@ internal fun SettingItem(
             item.trailingIcon?.let { trailingIcon ->
                 Image(
                     imageVector = ImageVector.vectorResource(trailingIcon),
-                    modifier = Modifier.size(16.dp),
+                    modifier =
+                        Modifier.size(16.dp).alpha(if (item.isTrailingIconVisible) 1f else 0f),
                     contentDescription = "trailing icon",
                 )
             }

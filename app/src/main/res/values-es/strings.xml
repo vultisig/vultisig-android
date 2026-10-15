@@ -1141,7 +1141,16 @@
     <string name="keygen_benefit_3_emphasized">Multicadena</string>
     <string name="upgrade_banner_title">Actualiza tu bóveda ahora</string>
     <string name="deposit_form_custom_memo_optional_title">Memo personalizado (opcional)</string>
-    <string name="home_defi_portfolio">Portafolio DeFi</string>
+    <string name="home_display">Pantalla de inicio</string>
+    <string name="home_display_separate_title">Monedero y DeFi por separado</string>
+    <string name="home_display_separate_description">La pestaña Monedero muestra solo el saldo de tu monedero y la pestaña DeFi muestra tu saldo DeFi.</string>
+    <string name="home_display_combined_title">Monedero + DeFi</string>
+    <string name="home_display_combined_description">Ambas pestañas muestran tu saldo combinado de monedero y DeFi.</string>
+    <string name="home_balance_display">Visualización del saldo</string>
+    <string name="home_swipe_hint_title">Desliza para cambiar</string>
+    <string name="home_swipe_hint_description">Desliza a la izquierda o a la derecha para moverte entre las pestañas de monedero y DeFi.</string>
+    <string name="home_positions">Posiciones</string>
+    <string name="home_swipe_hint_got_it">Entendido</string>
     <string name="backup_password_request_with_password_action">Usar contraseña</string>
     <string name="backup_password_topbar_title">Contraseña</string>
     <string name="function_transfer_ibc_dst_address_input_title">Dirección de destino</string>
