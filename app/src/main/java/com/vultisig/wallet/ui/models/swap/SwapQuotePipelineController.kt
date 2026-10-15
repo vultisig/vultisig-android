@@ -535,6 +535,7 @@ constructor(
         // Published together with the quote it belongs to, not before the suspension above: a
         // re-price or a pick that ran meanwhile read the context and quoteState as a pair, and
         // both must still describe the quote on screen.
+        val previousSrcTokenId = routeContext?.input?.address?.first?.account?.token?.id
         routeContext = RouteContext(input, result)
         quoteState.provider = result.provider
         quoteState.quote = result.quote
@@ -542,6 +543,12 @@ constructor(
         quoteState.honorsGasLimitOverride.value = result.quote is SwapQuote.OneInch
         result.referralCodeToStore?.let { rc -> referralCode.update { rc } }
         quoteState.swapFeeFiat.value = result.swapFeeFiat
+        // A native NEAR source's balance check reads its storage reserve live in resolveNetworkFee
+        // below, so Swap stays disabled until that read lands, and the verdict of the previous
+        // quote for this same source stands meanwhile.
+        val srcToken = src.account.token
+        val awaitsNearReserve = srcToken.chain == Chain.Near && srcToken.isNativeToken
+        val keepsFormError = awaitsNearReserve && previousSrcTokenId == srcToken.id
 
         uiState.update {
             it.copy(
@@ -565,8 +572,8 @@ constructor(
                         priceImpactLevel = result.priceImpactLevel,
                     ),
                 discountInfo = result.discountInfo,
-                formError = null,
-                isSwapDisabled = result.isUtxoSwap,
+                formError = if (keepsFormError) it.formError else null,
+                isSwapDisabled = result.isUtxoSwap || awaitsNearReserve,
                 isLoading = false,
                 routeOptions = routeOptions,
                 isRouteManuallySelected = isManualRoutePick,
@@ -660,13 +667,14 @@ constructor(
                     }
                 // Mirrors buildSuccess's fee treatment so a row never advertises a fee that
                 // vanishes from the breakdown the moment the route is picked: SwapKit UTXO-family
-                // deposits surface their cost once as the Network Fee (the wire inbound fee would
-                // double-count it), and 1inch bakes the affiliate fee into the quoted rate — in
-                // both cases there is no separate amount to show, so the segment is dropped.
+                // and NEAR deposits surface their cost once as the Network Fee (the wire inbound
+                // fee would double-count it), and 1inch bakes the affiliate fee into the quoted
+                // rate — in both cases there is no separate amount to show, so the segment is
+                // dropped.
                 val hidesSwapFee =
                     fetch.swapFeeIncludedInRate ||
                         (fetch.quote is SwapQuote.SwapKit &&
-                            srcToken.chain.standard == TokenStandard.UTXO)
+                            srcToken.chain.swapKitInboundFeeIsNetworkFee)
                 // Grossed to the list rate exactly as the breakdown this row opens does, so a route
                 // can't advertise one fee in the picker and a larger one a tap later. Whatever the
                 // breakdown adds back onto the charged fee is added here too, off the same source

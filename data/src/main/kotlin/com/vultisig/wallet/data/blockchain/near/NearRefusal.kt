@@ -31,7 +31,19 @@ enum class NearRefusal(internal val english: String) {
     ),
     SIGNATURE_VERIFICATION_FAILED("NEAR signature verification failed"),
     MALFORMED_SIGNED_TRANSACTION("NEAR signed transaction is malformed"),
-    SWAP_PAYLOAD("NEAR native transfers cannot carry a swap"),
+    SWAPKIT_DEPOSIT_ONLY("NEAR native transfers support SwapKit deposit swaps only"),
+    SWAPKIT_NOT_NATIVE_NEAR("NEAR SwapKit deposit must sell native NEAR"),
+    SWAPKIT_DEPOSIT_NOT_IMPLICIT("NEAR SwapKit deposit address %1\$s is not an implicit account"),
+    SWAPKIT_DEPOSIT_RECEIVER_MISMATCH(
+        "NEAR SwapKit deposit address %1\$s is not the transfer receiver %2\$s"
+    ),
+    SWAPKIT_DEPOSIT_AMOUNT_MISMATCH(
+        "NEAR SwapKit deposit amount %1\$s is not the transfer amount %2\$s"
+    ),
+    SWAPKIT_DEPOSIT_PREBUILT(
+        "NEAR SwapKit deposits are plain transfers and cannot carry a pre-built transaction"
+    ),
+    SWAPKIT_DEPOSIT_MEMO("NEAR SwapKit deposits cannot carry a memo"),
 }
 
 /** A NEAR transaction this device refuses to build or sign; [args] fill the log text. */

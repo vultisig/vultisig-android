@@ -8,9 +8,10 @@ import org.junit.jupiter.api.Test
 
 /**
  * Only EVM quotes its swap network fee as a ceiling (maxFeePerGas × gas limit); every other chain
- * charges exactly what it quotes, so only EVM rows are labelled "Max. Network Fee". Within EVM the
- * OP-stack L2s stay plain: their row is priced at the flat default limit plus an oracle-quoted L1
- * data fee, neither of which bounds what the signer ends up paying.
+ * charges exactly what it quotes, so only EVM rows (and NEAR, whose fee is its upfront gas
+ * reservation) are labelled "Max. Network Fee". Within EVM the OP-stack L2s stay plain: their row
+ * is priced at the flat default limit plus an oracle-quoted L1 data fee, neither of which bounds
+ * what the signer ends up paying.
  */
 internal class SwapNetworkFeeLabelTest {
 
@@ -31,7 +32,7 @@ internal class SwapNetworkFeeLabelTest {
     @Test
     fun `no other chain has a fee ceiling`() {
         Chain.entries
-            .filter { it.standard != TokenStandard.EVM }
+            .filter { it.standard != TokenStandard.EVM && it != Chain.Near }
             .forEach { chain -> chain.hasSwapNetworkFeeCeiling shouldBe false }
     }
 
@@ -45,6 +46,16 @@ internal class SwapNetworkFeeLabelTest {
         }
         listOf(Chain.Ethereum, Chain.Arbitrum, Chain.BscChain).forEach {
             it.hasSwapNetworkFeeCeiling shouldBe true
+        }
+    }
+
+    @Test
+    fun `a SwapKit inbound fee is the network fee on UTXO chains and NEAR`() {
+        listOf(Chain.Bitcoin, Chain.Cardano, Chain.Near).forEach {
+            it.swapKitInboundFeeIsNetworkFee shouldBe true
+        }
+        listOf(Chain.Ethereum, Chain.Solana, Chain.Tron, Chain.ThorChain).forEach {
+            it.swapKitInboundFeeIsNetworkFee shouldBe false
         }
     }
 }

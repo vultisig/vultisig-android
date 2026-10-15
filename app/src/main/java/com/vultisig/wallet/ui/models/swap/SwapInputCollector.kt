@@ -34,7 +34,7 @@ constructor(
      *   vault/source/destination, unusable gas fee, same-asset pair, invalid/zero amount,
      *   insufficient balance, missing quote, or a failed preflight check).
      */
-    fun collect(
+    suspend fun collect(
         vaultId: String?,
         selectedSrc: SendSrc?,
         selectedDst: SendSrc?,

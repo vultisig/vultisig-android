@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
+import com.vultisig.wallet.data.blockchain.model.Swap
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.async
@@ -20,12 +21,14 @@ internal class NearFeeService @Inject constructor(private val nearApi: NearApi) 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = coroutineScope {
         val config = async { nearApi.getFeeConfig() }
         val block = async { nearApi.getFinalBlock() }
+        // A swap deposit always goes to a fresh implicit account, whatever `to` the estimate names.
+        val isSwap = transaction is Swap
         BasicFee(
             NearFees.gasReservation(
                 config = config.await(),
                 gasPrice = block.await().gasPrice,
-                senderIsReceiver = transaction.coin.address == transaction.to,
-                receiverIsImplicit = NearAccountId.isImplicit(transaction.to),
+                senderIsReceiver = !isSwap && transaction.coin.address == transaction.to,
+                receiverIsImplicit = isSwap || NearAccountId.isImplicit(transaction.to),
             )
         )
     }

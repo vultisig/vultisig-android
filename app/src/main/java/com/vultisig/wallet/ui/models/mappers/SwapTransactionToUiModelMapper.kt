@@ -4,7 +4,6 @@ import com.vultisig.wallet.data.api.swapAggregators.swapKitDepositRecipient
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -21,6 +20,7 @@ import com.vultisig.wallet.ui.models.swap.hasSwapNetworkFeeCeiling
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import com.vultisig.wallet.ui.models.swap.swapFeeRow
+import com.vultisig.wallet.ui.models.swap.swapKitInboundFeeIsNetworkFee
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
@@ -72,15 +72,15 @@ constructor(
                 SwapProvider.SWAPKIT -> tokenRepository.getNativeToken(from.srcToken.chain.id)
             }
 
-        // SwapKit UTXO-family sources (Bitcoin PSBT deposit, Cardano CBOR deposit) settle by
-        // broadcasting a deposit whose on-chain miner fee is the only network cost, already
+        // SwapKit UTXO-family and NEAR sources (BTC PSBT, Cardano CBOR, NEAR transfer) settle by
+        // broadcasting a deposit whose on-chain network fee is the only network cost, already
         // surfaced
         // as the Network Fee. SwapKit reports that same deposit cost as its wire inbound fee, so
         // showing it again as a Swap Fee here would double-count the source-chain network cost in
         // the total — exactly what the swap form avoids by hiding the row (#5321). Mirror the form:
         // hide the Swap Fee row and drop its contribution to the total (#5358).
-        val isSwapKitUtxoSwap =
-            provider == SwapProvider.SWAPKIT && from.srcToken.chain.standard == TokenStandard.UTXO
+        val hidesSwapKitInboundFee =
+            provider == SwapProvider.SWAPKIT && from.srcToken.chain.swapKitInboundFeeIsNetworkFee
 
         val quotesFeesFiat = convertTokenValueToFiat(tokenValue, from.estimatedFees, currency)
 
@@ -189,7 +189,7 @@ constructor(
         // opaque `estimatedFees` (gas for 1inch, the deposit cost for SwapKit UTXO) would be
         // counted a second time on top of the Network Fee (#5358, #5334, #5335, #5321).
         val totalFeeExcludingNetwork =
-            if (from.swapFeeIncludedInRate || isSwapKitUtxoSwap) {
+            if (from.swapFeeIncludedInRate || hidesSwapKitInboundFee) {
                 from.gasFeeFiatValue.copy(value = BigDecimal.ZERO)
             } else {
                 feesFiatForTotal
@@ -249,7 +249,7 @@ constructor(
             // amount (see [swapFeeRow]).
             swapFeePercent = feeRow.percent,
             swapFeeIncludedInRate = from.swapFeeIncludedInRate,
-            swapFeeHidden = isSwapKitUtxoSwap,
+            swapFeeHidden = hidesSwapKitInboundFee,
             vultBpsDiscount = from.vultBpsDiscount,
             // Priced by [swapFeeRow] off the same snapshot as the fee above, and non-null only when
             // that fee was grossed to the list rate or the route is SwapKit's. Never falls back to

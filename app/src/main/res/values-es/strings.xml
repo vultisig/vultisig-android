@@ -1052,7 +1052,7 @@
     <string name="send_error_xrp_destination_not_activated">La cantidad mínima para activar esta dirección es %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">La cantidad mínima para activar esta dirección es %1$s %2$s (depósito existencial).</string>
     <string name="send_error_near_destination_not_found">Esta cuenta NEAR no existe. Revisa el destinatario: una transferencia a ella solo consumiría gas.</string>
-    <string name="send_error_near_unsupported_payload">Esta transacción de NEAR no es compatible. Solo se pueden firmar transferencias nativas de NEAR.</string>
+    <string name="send_error_near_unsupported_payload">Esta transacción de NEAR no es compatible. Solo se pueden firmar transferencias nativas de NEAR y depósitos de SwapKit.</string>
     <string name="send_error_near_invalid_recipient">Esta no es una cuenta NEAR válida. Revisa el destinatario.</string>
     <string name="send_error_near_key_not_full_access">La clave de esta bóveda no tiene acceso completo a esta cuenta NEAR, por lo que no puede enviar desde ella.</string>
     <string name="send_error_near_network">La red NEAR devolvió un error o una respuesta ilegible. Inténtalo de nuevo.</string>
