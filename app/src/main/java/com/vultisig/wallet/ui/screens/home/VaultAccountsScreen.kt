@@ -64,7 +64,7 @@ import com.vultisig.wallet.ui.screens.passcode.OnceUnlocked
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.NotificationsIntroBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultNotificationOptInBottomSheet
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
-import com.vultisig.wallet.ui.screens.v2.home.components.BOTH_CRYPTO_CONNECTION_TYPES
+import com.vultisig.wallet.ui.models.vault.BOTH_CRYPTO_CONNECTION_TYPES
 import com.vultisig.wallet.ui.screens.v2.home.components.Banners
 import com.vultisig.wallet.ui.screens.v2.home.components.BottomNavigatorOverlay
 import com.vultisig.wallet.ui.screens.v2.home.components.ChooseVaultButton

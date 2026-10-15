@@ -239,8 +239,8 @@ constructor(
     }
 
     private fun collectBalanceDisplay() {
-        homeDisplayRepository.balanceDisplay
-            .onEach { display ->
+        viewModelScope.safeLaunch {
+            homeDisplayRepository.balanceDisplay.collect { display ->
                 uiState.update { it.copy(balanceDisplay = display) }
                 // The combined total needs DeFi on the Wallet tab too, where the cache-only load
                 // finds nothing for a vault whose DeFi was never opened.
@@ -249,7 +249,7 @@ constructor(
                     loadDeFiBalances(vaultId, isRefresh = true)
                 }
             }
-            .launchIn(viewModelScope)
+        }
     }
 
     private fun showSwipeHintIfUnseen() {

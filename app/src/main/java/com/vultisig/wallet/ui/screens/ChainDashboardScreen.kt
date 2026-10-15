@@ -31,7 +31,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.ton.TonDeFiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.defi.tron.TronDeFiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.home.components.BottomNavigatorOverlay
 import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionPager
-import com.vultisig.wallet.ui.screens.v2.home.components.ONLY_WALLET
+import com.vultisig.wallet.ui.models.vault.ONLY_WALLET
 import com.vultisig.wallet.ui.screens.v2.home.components.rememberCryptoConnectionPagerState
 import com.vultisig.wallet.ui.screens.v2.home.components.rememberCryptoConnectionTabClick
 import com.vultisig.wallet.ui.screens.v2.home.components.rememberPagerIndicatorPosition

@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.ui.models.vault.BOTH_CRYPTO_CONNECTION_TYPES
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
