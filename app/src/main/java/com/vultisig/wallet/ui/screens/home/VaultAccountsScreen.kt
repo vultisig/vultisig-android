@@ -48,6 +48,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.HomeBalanceDisplay
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.containers.ExpandedTopbarContainer
@@ -262,6 +263,8 @@ internal fun VaultAccountsScreen(
                             HomeExpandedTopbarContent(
                                 balance = state.headerFiatValue,
                                 isBalanceVisible = state.isBalanceValueVisible,
+                                isTotalBalance =
+                                    state.balanceDisplay == HomeBalanceDisplay.Combined,
                                 isSwapEnabled = state.isSwapEnabled,
                                 onToggleBalanceVisibility = onToggleBalanceVisibility,
                                 onSend = onSend,

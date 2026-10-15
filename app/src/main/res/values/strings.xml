@@ -1206,6 +1206,8 @@
     <string name="governance_voting_closed">Voting has ended for this proposal</string>
     <string name="hide_balance">Hide balance</string>
     <string name="show_balance">Show balance</string>
+    <string name="hide_total_balance">Hide total balance</string>
+    <string name="show_total_balance">Show total balance</string>
     <string name="no_chains_found">No chains found</string>
     <string name="no_chain_make_sure_that">Make sure that the chain you’re looking for is enabled.</string>
     <string name="no_chain_customize_chains">Customize chains</string>

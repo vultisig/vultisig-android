@@ -867,6 +867,8 @@ constructor(
     private fun combinedTotal(): FiatValue? {
         val wallet = walletTotal ?: return null
         val deFi = deFiNotInWalletTotal ?: return wallet
+        // The two load separately, so one can still be in the previous currency.
+        if (deFi.currency != wallet.currency) return null
         return FiatValue(wallet.value + deFi.value, wallet.currency)
     }
 

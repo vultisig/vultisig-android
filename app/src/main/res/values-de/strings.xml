@@ -859,6 +859,8 @@
     <string name="governance_voting_closed">Die Abstimmung für diesen Vorschlag ist beendet</string>
     <string name="hide_balance">Guthaben verbergen</string>
     <string name="show_balance">Guthaben anzeigen</string>
+    <string name="hide_total_balance">Gesamtguthaben verbergen</string>
+    <string name="show_total_balance">Gesamtguthaben anzeigen</string>
     <string name="no_chains_found">Keine Blockchains gefunden</string>
     <string name="no_chain_make_sure_that">Stellen Sie sicher, dass die gesuchte Blockchain aktiviert ist.</string>
     <string name="no_chain_customize_chains">Blockchains anpassen</string>

@@ -857,6 +857,8 @@
     <string name="governance_voting_closed">La votazione per questa proposta è terminata</string>
     <string name="hide_balance">Nascondi saldo</string>
     <string name="show_balance">Mostra saldo</string>
+    <string name="hide_total_balance">Nascondi saldo totale</string>
+    <string name="show_total_balance">Mostra saldo totale</string>
     <string name="no_chains_found">Nessuna catena trovata</string>
     <string name="no_chain_make_sure_that">Assicurati che la catena che stai cercando sia abilitata.</string>
     <string name="no_chain_customize_chains">Personalizza catene</string>

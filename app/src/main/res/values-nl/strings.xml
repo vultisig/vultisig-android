@@ -854,6 +854,8 @@
     <string name="governance_voting_closed">De stemming voor dit voorstel is beëindigd</string>
     <string name="hide_balance">Saldo verbergen</string>
     <string name="show_balance">Saldo weergeven</string>
+    <string name="hide_total_balance">Totaal saldo verbergen</string>
+    <string name="show_total_balance">Totaal saldo weergeven</string>
     <string name="no_chains_found">Geen kettingen gevonden</string>
     <string name="no_chain_make_sure_that">Zorg ervoor dat de keten die u zoekt is ingeschakeld.</string>
     <string name="no_chain_customize_chains">Ketens aanpassen</string>

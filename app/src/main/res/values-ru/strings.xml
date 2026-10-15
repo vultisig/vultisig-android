@@ -860,6 +860,8 @@
     <string name="governance_voting_closed">Голосование по этому предложению завершено</string>
     <string name="hide_balance">Скрыть баланс</string>
     <string name="show_balance">Показать баланс</string>
+    <string name="hide_total_balance">Скрыть общий баланс</string>
+    <string name="show_total_balance">Показать общий баланс</string>
     <string name="no_chains_found">Сети не найдены.</string>
     <string name="no_chain_make_sure_that">Убедитесь, что искомая сеть включена.</string>
     <string name="no_chain_customize_chains">Настроить сети</string>

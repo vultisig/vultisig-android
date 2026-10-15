@@ -856,6 +856,8 @@
     <string name="governance_voting_closed">A votação desta proposta terminou</string>
     <string name="hide_balance">Ocultar saldo</string>
     <string name="show_balance">Mostrar saldo</string>
+    <string name="hide_total_balance">Ocultar saldo total</string>
+    <string name="show_total_balance">Mostrar saldo total</string>
     <string name="no_chains_found">Nenhuma cadeia encontrada</string>
     <string name="no_chain_make_sure_that">Certifique-se de que a corrente que procura está ativada.</string>
     <string name="no_chain_customize_chains">Personalizar correntes</string>

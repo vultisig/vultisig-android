@@ -860,6 +860,8 @@
     <string name="governance_voting_closed">Glasanje za ovaj prijedlog je završeno</string>
     <string name="hide_balance">Sakrij stanje</string>
     <string name="show_balance">Prikaži stanje</string>
+    <string name="hide_total_balance">Sakrij ukupno stanje</string>
+    <string name="show_total_balance">Prikaži ukupno stanje</string>
     <string name="no_chains_found">Nisu pronađeni lanci</string>
     <string name="no_chain_make_sure_that">Provjerite je li lanac koji tražite omogućen.</string>
     <string name="no_chain_customize_chains">Prilagodi lance</string>

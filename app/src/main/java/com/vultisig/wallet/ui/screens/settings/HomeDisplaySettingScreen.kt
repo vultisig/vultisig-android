@@ -47,6 +47,7 @@ internal fun HomeDisplaySettingScreen(
                         ),
                     onClick = { onSelect(option) },
                     isLastItem = index == options.lastIndex,
+                    isSelected = option == selected,
                 )
             }
         }
