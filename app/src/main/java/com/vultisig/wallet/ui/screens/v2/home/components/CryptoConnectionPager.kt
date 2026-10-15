@@ -21,11 +21,7 @@ import com.vultisig.wallet.data.models.CryptoConnectionType
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
-/**
- * A tab tap's slide: lands a little past the page and settles back. Matches iOS
- * `HomeTabPager.tabSwitchAnimation`, `spring(response: 0.5, dampingFraction: 0.72)`; stiffness is
- * (2π / response)².
- */
+/** iOS `HomeTabPager.tabSwitchAnimation` (response 0.5); stiffness is (2π / response)². */
 private val TabSwitchSpring: AnimationSpec<Float> = spring(dampingRatio = 0.72f, stiffness = 158f)
 
 /** Whether the system "Remove animations" accessibility setting is on. */
@@ -41,7 +37,6 @@ internal fun rememberIsReduceMotionEnabled(): Boolean {
     }
 }
 
-/** A pager over [types], opened on [selectedType]. */
 @Composable
 internal fun rememberCryptoConnectionPagerState(
     types: List<CryptoConnectionType>,
@@ -54,10 +49,6 @@ internal fun rememberCryptoConnectionPagerState(
 internal fun rememberPagerIndicatorPosition(state: PagerState): () -> Float =
     remember(state) { { state.currentPage + state.currentPageOffsetFraction } }
 
-/**
- * What a tap on a bottom-navigator tab does: slides the pager there the way a swipe would, or jumps
- * there when the system has animations removed.
- */
 @Composable
 internal fun rememberCryptoConnectionTabClick(
     state: PagerState,
@@ -79,13 +70,8 @@ internal fun rememberCryptoConnectionTabClick(
 }
 
 /**
- * The Wallet and DeFi pages side by side: a drag follows the finger, a flick switches, and the page
- * the pager comes to rest on, once it differs from the one it opened on, is reported through
- * [onSettle]. When [selectedType] moves while the pager is idle (another screen switched the shared
- * toggle) the pager jumps there.
- *
- * [keepsOtherPageComposed] holds the off-screen page alive, so it neither rebuilds nor reloads when
- * swiped back to; it is then hidden from accessibility. Without it only the page on screen exists.
+ * [onSettle] fires only for a page other than the one the pager opened on. [keepsOtherPageComposed]
+ * keeps the off-screen page alive, hidden from accessibility, so it never reloads when swiped back.
  */
 @Composable
 internal fun CryptoConnectionPager(

@@ -73,10 +73,6 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
     )
 }
 
-/**
- * The chain's Wallet and DeFi screens in one pager under a single bottom navigator, so a tab tap
- * slides between them like a swipe does.
- */
 @Composable
 private fun ChainDashboardScreen(
     uiModel: ChainDashboardUiModel,

@@ -398,9 +398,7 @@ private fun HomeAccountsPage(
                     !isTabMenu && state.noChainFound(type) ->
                         NoChainFound(onChooseChains = onChooseChains)
 
-                    // Only once the accounts flow has emitted does an empty list mean the user
-                    // disabled every chain; before that it just means the addresses are still
-                    // being derived, which on a cold start with many chains takes seconds.
+                    // Before the accounts flow emits, empty means still deriving, not all disabled.
                     state.areAccountsLoaded(type) && accounts.isEmpty() ->
                         NotEnabledContainer(
                             title = stringResource(R.string.home_page_no_chains_enabled),

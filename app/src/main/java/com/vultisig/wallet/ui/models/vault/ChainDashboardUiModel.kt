@@ -31,7 +31,6 @@ import kotlinx.coroutines.launch
 data class ChainDashboardUiModel(
     val isBottomBarVisible: Boolean = true,
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
-    /** The screen each tab of [availableCryptoTypes] shows, side by side in the pager. */
     val routes: Map<CryptoConnectionType, ChainDashboardRoute> = emptyMap(),
     val availableCryptoTypes: List<CryptoConnectionType> = BOTH_CRYPTO_CONNECTION_TYPES,
 )
@@ -52,7 +51,6 @@ constructor(
         )
     private lateinit var vaultId: VaultId
     private var chainId: ChainId? = null
-    // The THORChain DeFi page opens on the tab the caller asked for.
     private var thorchainTab: DeFiTab? = null
 
     val uiState = MutableStateFlow(ChainDashboardUiModel())

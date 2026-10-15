@@ -127,8 +127,7 @@ fun VsExpandableTopBar(
             previousOffsetLimit.floatValue = offsetLimit
         }
 
-        // Read where it is used — in layout, draw and gesture callbacks — so a scroll moves the
-        // bar without recomposing it, or the contents passed in, on every frame.
+        // Read only in layout, draw and gesture callbacks so a scroll never recomposes the bar.
         val expandedFraction: () -> Float =
             remember(offsetLimit) {
                 {

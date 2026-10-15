@@ -56,12 +56,8 @@ val BOTH_CRYPTO_CONNECTION_TYPES = listOf(CryptoConnectionType.Wallet, CryptoCon
 val ONLY_WALLET = listOf(CryptoConnectionType.Wallet)
 
 /**
- * The Wallet / DeFi pill. [indicatorPosition] is where the selection sits as a fractional tab index
- * (whole numbers at rest, in between while a pager is dragged); without it the selection springs to
- * [activeType]. A tap that lands on a new [activeType] swings the pill past it and back, standing
- * in for the overshoot of iOS's tap spring, which a pager clamps at its ends; a swipe lands without
- * it. The newly highlighted icon bounces. Motion mirrors iOS `VultiTabBarControls` and
- * `HomePagerTabBar`.
+ * [indicatorPosition] is the selection as a fractional tab index. A tap swings the pill past its
+ * tab and back, standing in for iOS's tap-spring overshoot that a pager clamps at its ends.
  */
 @Composable
 internal fun CryptoConnectionSelect(
@@ -275,9 +271,7 @@ private const val LANDING_OVERSHOOT = 0.12f
 
 private const val ICON_BOUNCE_SCALE = 1.22f
 
-// iOS keyframes: a `.snappy` spring out over 0.12–0.14 s, then `.bouncy` back. A SwiftUI spring's
-// damping ratio is 1 − bounce, and `.bouncy(extraBounce:)` adds to its 0.3 bounce; stiffness is
-// (2π / 0.5 s response)².
+// iOS keyframes: `.snappy` out, `.bouncy` back; damping = 1 − bounce, stiffness = (2π / 0.5 s)².
 private const val LANDING_OUT_MILLIS = 120
 private const val LANDING_DAMPING = 0.5f
 private const val ICON_BOUNCE_OUT_MILLIS = 140

@@ -80,11 +80,7 @@ internal fun BalanceBanner(
     }
 }
 
-/**
- * [text] with each character rolling vertically when it changes, digits up for a larger digit and
- * down for a smaller one. Characters are matched from the end, so the cents stay put when the
- * figure gains a digit. Instant when the system has animations removed.
- */
+/** Characters are matched from the end, so the cents stay put when the figure gains a digit. */
 @Composable
 private fun RollingText(text: String, isVisible: Boolean, color: Color, style: TextStyle) {
     if (!isVisible) {

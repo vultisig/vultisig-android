@@ -121,7 +121,6 @@ internal data class VaultAccountsUiModel(
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.isSwapSupported }
 
-    /** The header total for the selected tab under the chosen [balanceDisplay]. */
     val headerFiatValue: String?
         get() =
             when (balanceDisplay) {
@@ -855,11 +854,7 @@ constructor(
         Timber.d("Update updateUiStateFromList: %s", "$this")
     }
 
-    /**
-     * The DeFi total less the positions the wallet total already counts: a receipt the vault tracks
-     * as a wallet token (yRUNE, sTCY, ...) is valued in both lists, while one injected only for its
-     * position ([Account.isPositionOnly]) is not in the wallet.
-     */
+    /** Excludes receipts the wallet total already counts; position-only accounts are not in it. */
     private fun List<Address>.deFiNotInWalletTotal(): FiatValue? =
         flatMap { it.accounts }
             .filterNot { !it.isPositionOnly && Coins.isWalletHeldDefiReceipt(it.token) }
@@ -1035,7 +1030,6 @@ constructor(
         }
     }
 
-    /** The pager settled on [type]; a no-op when it already is the selected tab. */
     fun setCryptoConnectionType(type: CryptoConnectionType) {
         if (type == uiState.value.cryptoConnectionType) return
         dismissSwipeHint()

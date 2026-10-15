@@ -4575,16 +4575,7 @@ private fun HomeTopBarPreview() {
     )
 }
 
-/**
- * Vault home with both tabs in the pager, state held here so a swipe or tab tap settles the way
- * `VaultAccountsViewModel` does. Without extras the balance display and the swipe hint come from
- * the real, persisted `HomeDisplayRepository`, and dismissing the hint marks it seen there; `--es
- * display combined|separate` and `--ez hint true|false` override them.
- *
- * ```
- * adb shell am start -n com.vultisig.wallet/.debug.PreviewActivity --es screen home_swipe
- * ```
- */
+/** `--es display combined|separate` and `--ez hint true|false` override the persisted values. */
 @Composable
 private fun HomeSwipePreview(displayOverride: HomeBalanceDisplay?, hintOverride: Boolean?) {
     val repository = rememberHomeDisplayRepository()

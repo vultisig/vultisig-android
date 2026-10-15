@@ -48,12 +48,7 @@ import kotlin.math.roundToInt
 
 internal const val HomeSwipeHintTestTag = "home_swipe_hint"
 
-/**
- * One-time hint that the home's tabs can be swiped. Dims the screen and points down at
- * [anchorTopInWindow], the top of the wallet page's section header. A tap dismisses it; a
- * horizontal swipe on the dim does what it teaches and reports the direction. Mirrors iOS
- * `HomeSwipeHintView`.
- */
+/** Mirrors iOS `HomeSwipeHintView`. */
 @Composable
 internal fun HomeSwipeHint(
     anchorTopInWindow: Float,
