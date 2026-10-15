@@ -227,6 +227,7 @@ constructor(
     // The raw figures behind combinedFiatValue, kept so it is summed before formatting.
     private var walletTotal: FiatValue? = null
     private var deFiNotInWalletTotal: FiatValue? = null
+    private var isSwipeHintDismissed = false
 
     private val _requestNotificationPermission = Channel<Unit>(Channel.BUFFERED)
     val requestNotificationPermission = _requestNotificationPermission.receiveAsFlow()
@@ -240,80 +241,84 @@ constructor(
 
     private fun collectBalanceDisplay() {
         homeDisplayRepository.balanceDisplay
-            .onEach { display -> uiState.update { it.copy(balanceDisplay = display) } }
+            .onEach { display ->
+                uiState.update { it.copy(balanceDisplay = display) }
+                // The combined total needs DeFi on the Wallet tab too, where the cache-only load
+                // finds nothing for a vault whose DeFi was never opened.
+                val vaultId = vaultId
+                if (display == HomeBalanceDisplay.Combined && vaultId != null) {
+                    loadDeFiBalances(vaultId, isRefresh = true)
+                }
+            }
             .launchIn(viewModelScope)
     }
 
     private fun showSwipeHintIfUnseen() {
         viewModelScope.safeLaunch {
-            if (!homeDisplayRepository.hasSeenSwipeHint()) {
+            // A tab switch made while the flag was being read already did what the hint teaches.
+            if (!homeDisplayRepository.hasSeenSwipeHint() && !isSwipeHintDismissed) {
                 uiState.update { it.copy(showSwipeHint = true) }
             }
         }
     }
 
     fun dismissSwipeHint() {
-        if (!uiState.value.showSwipeHint) return
+        if (isSwipeHintDismissed) return
+        isSwipeHintDismissed = true
         uiState.update { it.copy(showSwipeHint = false) }
         viewModelScope.safeLaunch { homeDisplayRepository.markSwipeHintSeen() }
     }
 
     private fun collectBannerVisibility(vaultId: VaultId) {
         bannerJob?.cancel()
-        bannerJob =
-            viewModelScope.safeLaunch {
-                // Re-evaluated per vault so an expired TTL, a newly enabled chain or a referral
-                // code entered elsewhere are all picked up on vault switch / home re-entry.
-                val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
-                val chains = vault?.coins?.mapTo(mutableSetOf()) { it.chain }.orEmpty()
-                val hasReferralCode =
-                    withContext(ioDispatcher) {
-                        !referralCodeSettingsRepository
-                            .getExternalReferralBy(vaultId)
-                            .isNullOrEmpty()
+        bannerJob = viewModelScope.safeLaunch {
+            // Re-evaluated per vault so an expired TTL, a newly enabled chain or a referral
+            // code entered elsewhere are all picked up on vault switch / home re-entry.
+            val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) }
+            val chains = vault?.coins?.mapTo(mutableSetOf()) { it.chain }.orEmpty()
+            val hasReferralCode =
+                withContext(ioDispatcher) {
+                    !referralCodeSettingsRepository.getExternalReferralBy(vaultId).isNullOrEmpty()
+                }
+
+            val eligible =
+                HomeBannerType.entries.filter { banner ->
+                    when (banner) {
+                        HomeBannerType.UpgradeVault -> vault?.libType == SigningLibType.GG20
+                        // Chain-gated because these two open that chain's DeFi screen, and on a
+                        // vault without it there would be nowhere for them to go.
+                        HomeBannerType.KaminoEarn -> Chain.Solana in chains
+                        HomeBannerType.RujiraStaking -> Chain.ThorChain in chains
+                        HomeBannerType.ReferralRewards -> !hasReferralCode
+                        // Backup is gated on the backup flow below rather than here, because it
+                        // is the one fact that can change while home is on screen.
+                        HomeBannerType.BackupVault -> true
+                        HomeBannerType.FollowX,
+                        HomeBannerType.BuyVult -> true
+                    }
+                }
+
+            // combine() over an empty list never emits, so the carousel would keep whatever it
+            // last showed instead of emptying.
+            val dismissals =
+                if (eligible.isEmpty()) flowOf(emptyList())
+                else
+                    combine(
+                        eligible.map { promoBannerDismissalRepository.isDismissed(it.promoBanner) }
+                    ) {
+                        it.toList()
                     }
 
-                val eligible =
-                    HomeBannerType.entries.filter { banner ->
-                        when (banner) {
-                            HomeBannerType.UpgradeVault -> vault?.libType == SigningLibType.GG20
-                            // Chain-gated because these two open that chain's DeFi screen, and on a
-                            // vault without it there would be nowhere for them to go.
-                            HomeBannerType.KaminoEarn -> Chain.Solana in chains
-                            HomeBannerType.RujiraStaking -> Chain.ThorChain in chains
-                            HomeBannerType.ReferralRewards -> !hasReferralCode
-                            // Backup is gated on the backup flow below rather than here, because it
-                            // is the one fact that can change while home is on screen.
-                            HomeBannerType.BackupVault -> true
-                            HomeBannerType.FollowX,
-                            HomeBannerType.BuyVult -> true
-                        }
+            combine(dismissals, vaultDataStoreRepository.readBackupStatus(vaultId)) {
+                    dismissed,
+                    isBackedUp ->
+                    eligible.filterIndexed { index, banner ->
+                        !dismissed[index] && (banner != HomeBannerType.BackupVault || !isBackedUp)
                     }
-
-                // combine() over an empty list never emits, so the carousel would keep whatever it
-                // last showed instead of emptying.
-                val dismissals =
-                    if (eligible.isEmpty()) flowOf(emptyList())
-                    else
-                        combine(
-                            eligible.map {
-                                promoBannerDismissalRepository.isDismissed(it.promoBanner)
-                            }
-                        ) {
-                            it.toList()
-                        }
-
-                combine(dismissals, vaultDataStoreRepository.readBackupStatus(vaultId)) {
-                        dismissed,
-                        isBackedUp ->
-                        eligible.filterIndexed { index, banner ->
-                            !dismissed[index] &&
-                                (banner != HomeBannerType.BackupVault || !isBackedUp)
-                        }
-                    }
-                    .distinctUntilChanged()
-                    .collect { banners -> uiState.update { it.copy(banners = banners) } }
-            }
+                }
+                .distinctUntilChanged()
+                .collect { banners -> uiState.update { it.copy(banners = banners) } }
+        }
     }
 
     private fun collectCryptoConnectionType() {
@@ -387,7 +392,10 @@ constructor(
         showGlobalBackupReminder()
         showVerifyFastVaultPasswordReminderIfRequired(vaultId)
         enableVultTokenIfNeeded(vaultId)
-        loadDeFiBalances(vaultId, vaultChanged)
+        loadDeFiBalances(
+            vaultId,
+            isRefresh = vaultChanged || uiState.value.balanceDisplay == HomeBalanceDisplay.Combined,
+        )
         checkNotificationPrompt(vaultId)
     }
 
@@ -672,54 +680,50 @@ constructor(
 
     private fun loadVaultNameAndShowBackup(vaultId: String) {
         loadVaultNameJob?.cancel()
-        loadVaultNameJob =
-            viewModelScope.safeLaunch {
-                val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
-                uiState.update {
-                    it.copy(
-                        vaultName = vault.name,
-                        isFastVault = vault.isFastVault(),
-                        // KeyImport vaults have a fixed set of chains chosen during import,
-                        // so chain selection is disabled on the home screen
-                        isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
-                    )
-                }
-                // Collected, not read once: backing the vault up is what takes this warning
-                // down, and it happens on another screen while this one is still alive.
-                vaultDataStoreRepository.readBackupStatus(vaultId).distinctUntilChanged().collect {
-                    isBackedUp ->
-                    uiState.update { it.copy(showBackupWarning = !isBackedUp) }
-                }
+        loadVaultNameJob = viewModelScope.safeLaunch {
+            val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
+            uiState.update {
+                it.copy(
+                    vaultName = vault.name,
+                    isFastVault = vault.isFastVault(),
+                    // KeyImport vaults have a fixed set of chains chosen during import,
+                    // so chain selection is disabled on the home screen
+                    isChainSelectionEnabled = vault.libType != SigningLibType.KeyImport,
+                )
             }
+            // Collected, not read once: backing the vault up is what takes this warning
+            // down, and it happens on another screen while this one is still alive.
+            vaultDataStoreRepository.readBackupStatus(vaultId).distinctUntilChanged().collect {
+                isBackedUp ->
+                uiState.update { it.copy(showBackupWarning = !isBackedUp) }
+            }
+        }
     }
 
     private fun loadAccounts(vaultId: String) {
         loadAccountsJob?.cancel()
-        loadAccountsJob =
-            viewModelScope.safeLaunch {
-                combine(
-                        accountsRepository
-                            .loadAddressBalances(vaultId)
-                            // Leading debounce: coalesce the burst of per-chain updates so the rows
-                            // settle once per window instead of reordering on every chain arrival
-                            // (matches the leading debounce iOS added in #4337).
-                            .throttleLatest(BALANCE_RENDER_WINDOW) { it.isComplete }
-                            // Keep the pull-to-refresh spinner up until every chain has resolved,
-                            // matching iOS/Windows, instead of clearing it on the cached snapshot.
-                            .onEach {
-                                if (it.isComplete) finishRefreshing(CryptoConnectionType.Wallet)
-                            }
-                            .map { it.addresses.sortByAccountsTotalFiatValue() }
-                            .catch {
-                                finishRefreshing(CryptoConnectionType.Wallet)
-                                Timber.e(it)
-                            },
-                        uiState.value.searchTextFieldState.textAsFlow(),
-                    ) { accounts, searchQuery ->
-                        accounts.updateUiStateFromList(searchQuery = searchQuery.toString())
-                    }
-                    .launchIn(this)
-            }
+        loadAccountsJob = viewModelScope.safeLaunch {
+            combine(
+                    accountsRepository
+                        .loadAddressBalances(vaultId)
+                        // Leading debounce: coalesce the burst of per-chain updates so the rows
+                        // settle once per window instead of reordering on every chain arrival
+                        // (matches the leading debounce iOS added in #4337).
+                        .throttleLatest(BALANCE_RENDER_WINDOW) { it.isComplete }
+                        // Keep the pull-to-refresh spinner up until every chain has resolved,
+                        // matching iOS/Windows, instead of clearing it on the cached snapshot.
+                        .onEach { if (it.isComplete) finishRefreshing(CryptoConnectionType.Wallet) }
+                        .map { it.addresses.sortByAccountsTotalFiatValue() }
+                        .catch {
+                            finishRefreshing(CryptoConnectionType.Wallet)
+                            Timber.e(it)
+                        },
+                    uiState.value.searchTextFieldState.textAsFlow(),
+                ) { accounts, searchQuery ->
+                    accounts.updateUiStateFromList(searchQuery = searchQuery.toString())
+                }
+                .launchIn(this)
+        }
     }
 
     private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
@@ -732,57 +736,50 @@ constructor(
         // Only a network read covers a later resume; the cached-only load fetches nothing, so it
         // must not stand in for one.
         if (readsNetwork) throttleDeFiRefresh()
-        loadDeFiBalancesJob =
-            viewModelScope.safeLaunch {
-                combine(
-                        accountsRepository
-                            .loadDeFiAddresses(vaultId, readsNetwork)
-                            .catch { error ->
-                                Timber.e(
-                                    error,
-                                    "Error loading DeFi balances for vault: %s",
-                                    vaultId,
-                                )
+        loadDeFiBalancesJob = viewModelScope.safeLaunch {
+            combine(
+                    accountsRepository
+                        .loadDeFiAddresses(vaultId, readsNetwork)
+                        .catch { error ->
+                            Timber.e(error, "Error loading DeFi balances for vault: %s", vaultId)
+                        }
+                        // This load, not the wallet stream, is what a pull on the DeFi tab is
+                        // waiting on. A cancelled one is superseded by the load that replaced
+                        // it, which clears the spinner in its turn. Gated on the network
+                        // read so a cache-only load can't clear the spinner off the cache
+                        // instead of the fetch the pull is waiting on.
+                        .onCompletion { cause ->
+                            if (cause == null && readsNetwork) {
+                                finishRefreshing(CryptoConnectionType.Defi)
                             }
-                            // This load, not the wallet stream, is what a pull on the DeFi tab is
-                            // waiting on. A cancelled one is superseded by the load that replaced
-                            // it, which clears the spinner in its turn. Gated on the network
-                            // read so a cache-only load can't clear the spinner off the cache
-                            // instead of the fetch the pull is waiting on.
-                            .onCompletion { cause ->
-                                if (cause == null && readsNetwork) {
-                                    finishRefreshing(CryptoConnectionType.Defi)
-                                }
-                            },
-                        uiState.value.searchTextFieldState.textAsFlow(),
-                        defaultDeFiChainsRepository.getDefaultChains(vaultId),
-                        flow { emit(hasCircleAccount(vaultId)) }.flowOn(ioDispatcher),
-                    ) { accounts, searchQuery, selectedDeFiChains, hasCircleAccount ->
-                        Timber.d(
-                            "DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts, selected chains: ${selectedDeFiChains.map { it.raw }}"
-                        )
+                        },
+                    uiState.value.searchTextFieldState.textAsFlow(),
+                    defaultDeFiChainsRepository.getDefaultChains(vaultId),
+                    flow { emit(hasCircleAccount(vaultId)) }.flowOn(ioDispatcher),
+                ) { accounts, searchQuery, selectedDeFiChains, hasCircleAccount ->
+                    Timber.d(
+                        "DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts, selected chains: ${selectedDeFiChains.map { it.raw }}"
+                    )
 
-                        val filteredAccounts =
-                            accounts.filter { address ->
-                                val isSelected = selectedDeFiChains.contains(address.chain)
-                                // New Circle (USDC yield) deposits are disabled: only surface the
-                                // Circle (Ethereum DeFi) row for vaults that already opened an
-                                // account, so they can still withdraw.
-                                val isCircleAllowed =
-                                    address.chain != Chain.Ethereum || hasCircleAccount
-                                Timber.d("Chain ${address.chain.raw} is selected: $isSelected")
-                                isSelected && isCircleAllowed
-                            }
-
-                        Timber.d("Filtered DeFi accounts: ${filteredAccounts.size} accounts")
-
-                        filteredAccounts.updateUiStateFromList(
-                            searchQuery = searchQuery.toString(),
-                            isDefi = true,
-                        )
+                    val filteredAccounts = accounts.filter { address ->
+                        val isSelected = selectedDeFiChains.contains(address.chain)
+                        // New Circle (USDC yield) deposits are disabled: only surface the
+                        // Circle (Ethereum DeFi) row for vaults that already opened an
+                        // account, so they can still withdraw.
+                        val isCircleAllowed = address.chain != Chain.Ethereum || hasCircleAccount
+                        Timber.d("Chain ${address.chain.raw} is selected: $isSelected")
+                        isSelected && isCircleAllowed
                     }
-                    .launchIn(this)
-            }
+
+                    Timber.d("Filtered DeFi accounts: ${filteredAccounts.size} accounts")
+
+                    filteredAccounts.updateUiStateFromList(
+                        searchQuery = searchQuery.toString(),
+                        isDefi = true,
+                    )
+                }
+                .launchIn(this)
+        }
     }
 
     private fun List<Address>.sortByAccountsTotalFiatValue() =
@@ -869,8 +866,8 @@ constructor(
             .calculateAccountsPartialFiatValue()
 
     /**
-     * Wallet plus DeFi-not-in-wallet; waits for the wallet total, and reads a DeFi side with nothing
-     * resolved (no DeFi chains, or not loaded yet) as adding nothing.
+     * Wallet plus DeFi-not-in-wallet; waits for the wallet total, and reads a DeFi side with
+     * nothing resolved (no DeFi chains, or not loaded yet) as adding nothing.
      */
     private fun combinedTotal(): FiatValue? {
         val wallet = walletTotal ?: return null
@@ -943,11 +940,10 @@ constructor(
     private fun throttleDeFiRefresh() {
         deFiRefreshThrottleJob?.cancel()
         isDeFiRefreshThrottled = true
-        deFiRefreshThrottleJob =
-            viewModelScope.launch {
-                delay(DEFI_REFRESH_THROTTLE)
-                isDeFiRefreshThrottled = false
-            }
+        deFiRefreshThrottleJob = viewModelScope.launch {
+            delay(DEFI_REFRESH_THROTTLE)
+            isDeFiRefreshThrottled = false
+        }
     }
 
     fun toggleBalanceVisibility() {
@@ -986,11 +982,10 @@ constructor(
         uiState.update { it.copy(showMonthlyBackupReminder = false) }
     }
 
-    fun doNotRemindBackup() =
-        viewModelScope.safeLaunch {
-            setNeverShowGlobalBackupReminder()
-            dismissBackupReminder()
-        }
+    fun doNotRemindBackup() = viewModelScope.safeLaunch {
+        setNeverShowGlobalBackupReminder()
+        dismissBackupReminder()
+    }
 
     fun openHistory() {
         vaultId?.let { vaultId ->
@@ -1065,15 +1060,14 @@ constructor(
                 return@safeLaunch
 
             val eligibleVaults = vaultRepository.getAll().filter { it.isSecureVault() }
-            val introVaults =
-                eligibleVaults.map { vault ->
-                    VaultIntroItem(
-                        vaultId = vault.id,
-                        vaultName = vault.name,
-                        isEnabled = pushNotificationManager.isVaultOptedIn(vault.id),
-                        isFastVault = vault.isFastVault(),
-                    )
-                }
+            val introVaults = eligibleVaults.map { vault ->
+                VaultIntroItem(
+                    vaultId = vault.id,
+                    vaultName = vault.name,
+                    isEnabled = pushNotificationManager.isVaultOptedIn(vault.id),
+                    isFastVault = vault.isFastVault(),
+                )
+            }
             uiState.update {
                 it.copy(showNotificationIntroSheet = true, notificationIntroVaults = introVaults)
             }
