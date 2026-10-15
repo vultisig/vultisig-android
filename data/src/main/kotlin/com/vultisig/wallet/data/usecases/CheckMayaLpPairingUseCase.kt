@@ -73,7 +73,7 @@ internal fun MayaLiquidityProviderJson.pairingFor(
 
     if (!hasUnits) {
         // A fresh record takes the addresses the add names.
-        if (pendingTxId.isNullOrBlank()) return MayaLpPairing.Pairable
+        if (!hasPendingHalf()) return MayaLpPairing.Pairable
         // A pending half fixed both addresses when it arrived.
         return if (
             recordedCacao.equals(cacaoAddress, ignoreCase = true) &&
@@ -91,3 +91,8 @@ internal fun MayaLiquidityProviderJson.pairingFor(
         else -> MayaLpPairing.PairedWithOtherAddress
     }
 }
+
+private fun MayaLiquidityProviderJson.hasPendingHalf(): Boolean =
+    !pendingTxId.isNullOrBlank() ||
+        (pendingCacao.toBigIntegerOrNull()?.signum() ?: 0) > 0 ||
+        (pendingAsset.toBigIntegerOrNull()?.signum() ?: 0) > 0
