@@ -293,7 +293,8 @@ constructor(
 
     /**
      * Whether the app can send [deposit]'s missing half: only into a pool it pairs (see
-     * [MAYA_NATIVE_LP_POOLS]), and only from an account the vault holds on that half's chain.
+     * [MAYA_NATIVE_LP_POOLS]), and only from the account on that half's chain the pending half
+     * names, when it names one.
      */
     private fun Vault.canCompleteMayaPending(deposit: MayaChainPendingLpDeposit): Boolean {
         val assetChain =
@@ -301,7 +302,12 @@ constructor(
                 .firstOrNull { it.value.equals(deposit.pool, ignoreCase = true) }
                 ?.key ?: return false
         val missingChain = if (deposit.isCacaoPending) assetChain else Chain.MayaChain
-        return coins.any { it.chain == missingChain && it.isNativeToken }
+        val pairedAddress = deposit.pairedAddress
+        return coins.any {
+            it.chain == missingChain &&
+                it.isNativeToken &&
+                (pairedAddress == null || it.address.equals(pairedAddress, ignoreCase = true))
+        }
     }
 
     private fun MayaChainPendingLpDeposit.toUiModel(canComplete: Boolean): PendingLpDepositUiModel {

@@ -66,6 +66,17 @@ internal class CheckMayaLpPairingUseCaseTest {
     }
 
     @Test
+    fun `a pending amount without a tx id still fixes the addresses`() = runTest {
+        coEvery { api.getLiquidityProvider(POOL, CACAO) } returns
+            record(pendingCacao = "3000000000", cacaoAddress = CACAO, assetAddress = "t1other")
+        assertEquals(MayaLpPairing.AddressMismatch, useCase(POOL, CACAO, ASSET))
+
+        coEvery { api.getLiquidityProvider(POOL, CACAO) } returns
+            record(pendingAsset = "20000", cacaoAddress = CACAO, assetAddress = "t1other")
+        assertEquals(MayaLpPairing.AddressMismatch, useCase(POOL, CACAO, ASSET))
+    }
+
+    @Test
     fun `an unreadable record propagates rather than guessing`() = runTest {
         coEvery { api.getLiquidityProvider(POOL, CACAO) } throws RuntimeException("timeout")
 
@@ -75,6 +86,8 @@ internal class CheckMayaLpPairingUseCaseTest {
     private fun record(
         units: String = "0",
         pendingTxId: String? = null,
+        pendingCacao: String = "0",
+        pendingAsset: String = "0",
         cacaoAddress: String? = CACAO,
         assetAddress: String? = null,
     ) =
@@ -83,6 +96,8 @@ internal class CheckMayaLpPairingUseCaseTest {
             cacaoAddress = cacaoAddress,
             assetAddress = assetAddress,
             units = units,
+            pendingCacao = pendingCacao,
+            pendingAsset = pendingAsset,
             pendingTxId = pendingTxId,
         )
 
