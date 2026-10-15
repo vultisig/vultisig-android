@@ -30,8 +30,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -51,6 +54,7 @@ internal class AmountFractionManager(
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val vaultProvider: () -> Vault?,
     private val accountProvider: () -> Account?,
+    private val selectedAccount: Flow<Account?>,
     private val currentTronFrozenBalanceProvider: () -> BigDecimal?,
     private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase,
     private val feeServiceComposite: FeeServiceComposite,
@@ -60,6 +64,39 @@ internal class AmountFractionManager(
     private val amountManager: AmountManager,
 ) {
     private var chooseAmountFractionJob: Job? = null
+
+    /**
+     * Set when the last percentage/MAX tap came out as zero because the fee is larger than the
+     * balance. While set, [start] keeps `feeShortfallError` in step with the live balance and fee,
+     * and drops it once they leave room for a non-zero amount.
+     */
+    private val feeShortfallArmed = MutableStateFlow(false)
+
+    fun start() {
+        scope.launch {
+            combine(feeShortfallArmed, selectedAccount, gasFee) { armed, account, fee ->
+                    Triple(armed, account, fee)
+                }
+                .collectLatest { (armed, account, fee) ->
+                    if (!armed || account == null || fee == null) {
+                        uiState.update { it.copy(feeShortfallError = null) }
+                        return@collectLatest
+                    }
+                    val error =
+                        try {
+                            feeShortfallErrorOrNull(account, fee)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            // NEAR reads its storage reserve live; keep the current verdict.
+                            Timber.w(e, "Failed to read the available balance for the fee check")
+                            return@collectLatest
+                        }
+                    if (error == null) feeShortfallArmed.value = false
+                    uiState.update { it.copy(feeShortfallError = error) }
+                }
+        }
+    }
 
     /**
      * Cancels any in-flight percentage/max calculation so callers (e.g. the Tron resource toggle)
@@ -73,6 +110,7 @@ internal class AmountFractionManager(
     fun cancel() {
         chooseAmountFractionJob?.cancel()
         chooseAmountFractionJob = null
+        feeShortfallArmed.value = false
         uiState.update { it.copy(isAmountSelectionLoading = false) }
     }
 
@@ -86,6 +124,7 @@ internal class AmountFractionManager(
         chooseAmountFractionJob?.cancel()
         chooseAmountFractionJob =
             scope.launch {
+                feeShortfallArmed.value = false
                 uiState.update {
                     it.copy(
                         selectedAmountFraction = AmountFraction.F100,
@@ -109,6 +148,7 @@ internal class AmountFractionManager(
                 currentCoroutineContext().ensureActive()
                 amountManager.markMax(amount)
                 tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
+                armFeeShortfallIfZero(amount)
             }
     }
 
@@ -122,6 +162,7 @@ internal class AmountFractionManager(
         chooseAmountFractionJob?.cancel()
         chooseAmountFractionJob =
             scope.launch {
+                feeShortfallArmed.value = false
                 uiState.update {
                     it.copy(
                         selectedAmountFraction = amountFraction,
@@ -138,7 +179,27 @@ internal class AmountFractionManager(
                     } ?: return@launch
                 currentCoroutineContext().ensureActive()
                 tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
+                armFeeShortfallIfZero(amount)
             }
+    }
+
+    private fun armFeeShortfallIfZero(amount: BigDecimal) {
+        if (amount.signum() == 0 && reservesFeeFromBalance(defiTypeProvider())) {
+            feeShortfallArmed.value = true
+        }
+    }
+
+    /**
+     * Non-null when the account holds a balance that the fee alone takes down to zero. Tokens whose
+     * fee is paid in another coin come back unchanged from [getAvailableTokenBalance], so they
+     * never produce this error.
+     */
+    private suspend fun feeShortfallErrorOrNull(account: Account, fee: TokenValue): UiText? {
+        val beforeFee = getAvailableTokenBalance(account, BigInteger.ZERO)?.value ?: return null
+        if (beforeFee.signum() <= 0) return null
+        val afterFee = getAvailableTokenBalance(account, fee.value)?.value ?: return null
+        if (afterFee.signum() > 0) return null
+        return UiText.FormattedText(R.string.insufficient_native_token, listOf(fee.unit))
     }
 
     /**
@@ -328,18 +389,7 @@ internal class AmountFractionManager(
         }
 
         val availableTokenBalance =
-            if (
-                defiType == null ||
-                    defiType == DeFiNavActions.STAKE_RUJI ||
-                    defiType == DeFiNavActions.STAKE_SRUJI ||
-                    defiType == DeFiNavActions.STAKE_TCY ||
-                    defiType == DeFiNavActions.STAKE_STCY ||
-                    defiType == DeFiNavActions.MINT_YRUNE ||
-                    defiType == DeFiNavActions.REDEEM_YRUNE ||
-                    defiType == DeFiNavActions.MINT_YTCY ||
-                    defiType == DeFiNavActions.REDEEM_YTCY ||
-                    defiType == DeFiNavActions.FREEZE_TRX
-            ) {
+            if (reservesFeeFromBalance(defiType)) {
                 getAvailableTokenBalance(selectedAccount, currentGasFee.value)
             } else {
                 getAvailableTokenBalance(
@@ -355,6 +405,18 @@ internal class AmountFractionManager(
             ?.setScale(selectedAccount.token.decimal, RoundingMode.DOWN)
             ?.stripTrailingZeros() ?: BigDecimal.ZERO
     }
+
+    private fun reservesFeeFromBalance(defiType: DeFiNavActions?): Boolean =
+        defiType == null ||
+            defiType == DeFiNavActions.STAKE_RUJI ||
+            defiType == DeFiNavActions.STAKE_SRUJI ||
+            defiType == DeFiNavActions.STAKE_TCY ||
+            defiType == DeFiNavActions.STAKE_STCY ||
+            defiType == DeFiNavActions.MINT_YRUNE ||
+            defiType == DeFiNavActions.REDEEM_YRUNE ||
+            defiType == DeFiNavActions.MINT_YTCY ||
+            defiType == DeFiNavActions.REDEEM_YTCY ||
+            defiType == DeFiNavActions.FREEZE_TRX
 
     private fun frozenTrxFraction(percentage: Float, decimals: Int): BigDecimal {
         val frozen = currentTronFrozenBalanceProvider() ?: return BigDecimal.ZERO

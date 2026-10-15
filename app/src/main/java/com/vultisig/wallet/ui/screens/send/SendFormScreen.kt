@@ -419,7 +419,7 @@ private fun SendFormContent(
 
     UiSpacer(24.dp)
 
-    ReapingErrorMessage(error = state.reapingError)
+    ReapingErrorMessage(error = state.feeShortfallError ?: state.reapingError)
 }
 
 /**

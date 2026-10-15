@@ -184,6 +184,7 @@ constructor(
         graph.gasFeeOrchestrator.start()
         graph.addressManager.start()
         graph.amountManager.start()
+        graph.amountFractionManager.start()
         graph.bindUiState()
     }
 
