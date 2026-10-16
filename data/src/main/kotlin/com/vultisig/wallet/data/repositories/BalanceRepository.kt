@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
+import com.vultisig.wallet.data.api.CosmosBalanceCache
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.NearApi
@@ -189,6 +190,10 @@ constructor(
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12.seconds, timeSource)
 
+    // One THORChain or Maya bank list answers every token of an address, so a vault refresh shares
+    // it. Kept here rather than in the APIs: unstake sizing reads those directly and needs it live.
+    private val bankBalanceCache = CosmosBalanceCache(timeSource)
+
     private val defiLocks = ConcurrentHashMap<String, Mutex>()
 
     private fun lockFor(address: String) = defiLocks.computeIfAbsent(address) { Mutex() }
@@ -202,6 +207,7 @@ constructor(
     }
 
     override suspend fun invalidateBalance(address: String, coin: Coin) {
+        bankBalanceCache.invalidate(bankCacheKey(coin.chain, address))
         tokenValueDao.deleteTokenValue(
             chainId = coin.chain.id,
             address = address,
@@ -219,6 +225,8 @@ constructor(
         val mutex = lockFor(key)
         mutex.withLock { defiBalanceCache.remove(key) }
     }
+
+    private fun bankCacheKey(chain: Chain, address: String) = "${chain.id}|$address"
 
     private fun deFiCacheKey(address: String, chain: Chain, vaultId: String): String? =
         when (chain) {
@@ -499,7 +507,10 @@ constructor(
                     TokenValue(
                         when (coin.chain) {
                             ThorChain -> {
-                                val listCosmosBalance = thorChainApi.getBalance(address)
+                                val listCosmosBalance =
+                                    bankBalanceCache.getOrFetch(bankCacheKey(ThorChain, address)) {
+                                        thorChainApi.getBalance(address)
+                                    }
                                 val balance =
                                     listCosmosBalance.find {
                                         it.denom.equals(coin.ticker, ignoreCase = true) ||
@@ -509,7 +520,10 @@ constructor(
                             }
 
                             MayaChain -> {
-                                val listCosmosBalance = mayaChainApi.getBalance(address)
+                                val listCosmosBalance =
+                                    bankBalanceCache.getOrFetch(bankCacheKey(MayaChain, address)) {
+                                        mayaChainApi.getBalance(address)
+                                    }
                                 val balance =
                                     listCosmosBalance.find {
                                         it.denom.equals(coin.ticker, ignoreCase = true)
