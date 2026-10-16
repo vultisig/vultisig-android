@@ -225,12 +225,21 @@ constructor(
                     // at $0.00.
                     val tokenIdsByContractAddress =
                         tokens.associate { it.contractAddress.lowercase() to it.id }
-                    val pricesWithContractAddress =
-                        fetchPricesWithContractAddress(
+                    val fetchedPrices =
+                        try {
+                            fetchPricesWithContractAddress(
                                 chain = chain,
                                 contractAddresses = tokens.map { it.contractAddress },
                                 currencies = currencies,
                             )
+                        } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
+                            // One chain's failure keeps its last saved prices, not every chain's.
+                            Timber.e(e, "Contract price lookup failed for %s", chain)
+                            return@async
+                        }
+                    val pricesWithContractAddress =
+                        fetchedPrices
                             .asSequence()
                             .mapNotNull { (contractAddress, value) ->
                                 val tokenId = tokenIdsByContractAddress[contractAddress.lowercase()]
