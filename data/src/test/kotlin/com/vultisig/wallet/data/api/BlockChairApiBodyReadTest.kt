@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.utils.UTXOStatusResponseSerializerImpl
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import kotlin.test.assertFailsWith
+import kotlin.time.TimeSource
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -48,6 +49,7 @@ class BlockChairApiBodyReadTest {
             json = json,
             httpClient = MockHttpClient.respondingWith(HttpStatusCode.OK, body, json),
             utxoStatusResponseSerializer = UTXOStatusResponseSerializerImpl(json),
+            timeSource = TimeSource.Monotonic,
         )
 
     // -------------------------------------------------------------------------
@@ -107,6 +109,7 @@ class BlockChairApiBodyReadTest {
                 json = json,
                 httpClient = MockHttpClient.respondingWith(HttpStatusCode.Forbidden, ""),
                 utxoStatusResponseSerializer = UTXOStatusResponseSerializerImpl(json),
+                timeSource = TimeSource.Monotonic,
             )
 
         assertFailsWith<NetworkException> {

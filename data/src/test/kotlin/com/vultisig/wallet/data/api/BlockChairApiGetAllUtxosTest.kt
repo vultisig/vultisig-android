@@ -11,6 +11,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import kotlin.time.TimeSource
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -72,6 +73,7 @@ class BlockChairApiGetAllUtxosTest {
                 json = json,
                 httpClient = client,
                 utxoStatusResponseSerializer = UTXOStatusResponseSerializerImpl(json),
+                timeSource = TimeSource.Monotonic,
             )
         return api to requestedOffsets
     }
