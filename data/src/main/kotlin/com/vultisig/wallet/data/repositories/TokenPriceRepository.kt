@@ -17,9 +17,12 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.evmChainId
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.utils.NetworkException
+import com.vultisig.wallet.data.utils.SimpleCache
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -30,6 +33,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 /** One over-long contract query used to fail the whole chain and leave every last-saved price in place. */
@@ -78,9 +83,13 @@ constructor(
     private val thorApi: ThorChainApi,
     private val mayaApi: MayaChainApi,
     private val tokenPriceDao: TokenPriceDao,
+    timeSource: TimeSource,
 ) : TokenPriceRepository {
 
     private val tokenIdToPrice = MutableStateFlow(mapOf<String, CurrencyToPrice>())
+
+    private val tetherRateCache = SimpleCache<String, BigDecimal>(TETHER_RATE_TTL, timeSource)
+    private val tetherRateMutex = Mutex()
 
     override suspend fun getCachedPrice(tokenId: String, appCurrency: AppCurrency): BigDecimal? =
         tokenPriceDao.getTokenPrice(Coins.pricedAs(tokenId), appCurrency.ticker.lowercase())?.let {
@@ -112,7 +121,7 @@ constructor(
         }
     }
 
-    override suspend fun refresh(tokens: List<Coin>) {
+    override suspend fun refresh(tokens: List<Coin>): Unit = supervisorScope {
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
         val currencies = listOf(currency)
 
@@ -122,6 +131,9 @@ constructor(
         // substitution can collapse two requests onto one row — a vault holding RUJI alongside the
         // auto-compounding position — and a duplicate would be sent to CoinGecko twice.
         val pricedTokens = tokens.map(Coins::pricedAs).distinctBy { it.id.lowercase() }
+
+        // Fetched early, saved after the provider batch: both may price a token; last save wins.
+        val thorPoolPrices = async { fetchThorPoolPrices(pricedTokens, currency) }
 
         // A NAV-priced receipt is deliberately kept out of the generic routes below.
         // [fetchThorContractPrices] is the only thing that may price these denoms, and sTCY
@@ -203,35 +215,42 @@ constructor(
             }
         }
 
-        chainContractAddresses.map { (chain, tokens) ->
-            // Resolve ids from this chain's tokens only: the same contractAddress can exist on
-            // multiple chains (e.g. ezETH on Arbitrum, Base and Optimism), so a global
-            // address->token map would collapse them onto a single id and leave the rest at $0.00.
-            val tokenIdsByContractAddress =
-                tokens.associate { it.contractAddress.lowercase() to it.id }
-            val pricesWithContractAddress =
-                fetchPricesWithContractAddress(
-                        chain = chain,
-                        contractAddresses = tokens.map { it.contractAddress },
-                        currencies = currencies,
-                    )
-                    .asSequence()
-                    .mapNotNull { (contractAddress, value) ->
-                        val tokenId = tokenIdsByContractAddress[contractAddress.lowercase()]
-                        if (
-                            tokenId != null &&
-                                value.filter { it.value != BigDecimal.ZERO }.isNotEmpty()
-                        ) {
-                            tokenId to value
-                        } else null
-                    }
-                    .toMap()
+        // Each chain prices a disjoint set of tokens, so the chains are looked up concurrently.
+        chainContractAddresses
+            .map { (chain, tokens) ->
+                async {
+                    // Resolve ids from this chain's tokens only: the same contractAddress can exist
+                    // on multiple chains (e.g. ezETH on Arbitrum, Base and Optimism), so a global
+                    // address->token map would collapse them onto a single id and leave the rest
+                    // at $0.00.
+                    val tokenIdsByContractAddress =
+                        tokens.associate { it.contractAddress.lowercase() to it.id }
+                    val pricesWithContractAddress =
+                        fetchPricesWithContractAddress(
+                                chain = chain,
+                                contractAddresses = tokens.map { it.contractAddress },
+                                currencies = currencies,
+                            )
+                            .asSequence()
+                            .mapNotNull { (contractAddress, value) ->
+                                val tokenId = tokenIdsByContractAddress[contractAddress.lowercase()]
+                                if (
+                                    tokenId != null &&
+                                        value.filter { it.value != BigDecimal.ZERO }.isNotEmpty()
+                                ) {
+                                    tokenId to value
+                                } else null
+                            }
+                            .toMap()
 
-            savePrices(pricesWithContractAddress, currency)
-        }
+                    savePrices(pricesWithContractAddress, currency)
+                }
+            }
+            .awaitAll()
 
-        fetchThorPoolPrices(tokenList = pricedTokens, currency = currency)
+        savePrices(thorPoolPrices.await(), currency)
 
+        // Maya pool and NAV prices read the CACAO, RUNE and TCY rows saved above, so they wait.
         fetchMayaPoolPrices(tokenList = pricedTokens, currency = currency)
 
         fetchThorContractPrices(currency = currency, tokenList = pricedTokens)
@@ -553,13 +572,24 @@ constructor(
      */
     private suspend fun tetherPriceFor(currency: String): BigDecimal =
         if (currency.equals(AppCurrency.USD.ticker, ignoreCase = true)) BigDecimal.ONE
-        else fetchTetherPrice(currency)
+        else
+            tetherRateMutex.withLock {
+                // A zero rate is never reused.
+                tetherRateCache.get(currency)
+                    ?: fetchTetherPrice(currency).also {
+                        if (it.signum() > 0) tetherRateCache.put(currency, it)
+                    }
+            }
 
-    private suspend fun fetchThorPoolPrices(tokenList: List<Coin>, currency: String) {
+    /** Prices for [tokenList]'s THORChain tokens from pool depth; empty when nothing resolved. */
+    private suspend fun fetchThorPoolPrices(
+        tokenList: List<Coin>,
+        currency: String,
+    ): Map<TokenId, CurrencyToPrice> =
         supervisorScope {
             // if we have any thorchain tokens, then fetch their pool prices
             val thorTokens = tokenList.filter { it.chain == Chain.ThorChain && !it.isNativeToken }
-            if (thorTokens.isEmpty()) return@supervisorScope // no tokens, no api request
+            if (thorTokens.isEmpty()) return@supervisorScope emptyMap() // no tokens, no api request
 
             val poolAssetToPriceMap =
                 try {
@@ -567,7 +597,7 @@ constructor(
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e, "Failed to fetch prices from pools")
-                    return@supervisorScope
+                    return@supervisorScope emptyMap()
                 }
 
             // Same failure the single-contract route was fixed for: a CoinGecko miss answers ZERO,
@@ -580,7 +610,7 @@ constructor(
                     "No %s/USD rate available, leaving THORChain pool prices unresolved",
                     currency,
                 )
-                return@supervisorScope
+                return@supervisorScope emptyMap()
             }
 
             val tokenIdToPrices =
@@ -611,9 +641,8 @@ constructor(
                     }
                     .toMap()
 
-            savePrices(tokenIdToPrices, currency)
+            tokenIdToPrices
         }
-    }
 
     private suspend fun fetchMayaPoolPrices(tokenList: List<Coin>, currency: String) {
         supervisorScope {
@@ -881,6 +910,7 @@ constructor(
     companion object {
         private const val TETHER_PRICE_PROVIDER_ID = "tether"
         private const val CACAO_DECIMALS = 10
+        private val TETHER_RATE_TTL = 60.seconds
 
         // Single source of truth: the curated denoms in Coins.kt.
         private val BRUNE_DENOM = Coins.ThorChain.bRUNE.contractAddress

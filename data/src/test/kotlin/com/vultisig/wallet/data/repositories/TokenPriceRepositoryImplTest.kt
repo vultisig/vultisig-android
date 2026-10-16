@@ -19,6 +19,7 @@ import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.time.TimeSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -58,6 +59,7 @@ internal class TokenPriceRepositoryImplTest {
                 thorApi = thorApi,
                 mayaApi = mayaApi,
                 tokenPriceDao = tokenPriceDao,
+                timeSource = TimeSource.Monotonic,
             )
     }
 
