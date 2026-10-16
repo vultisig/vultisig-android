@@ -190,8 +190,7 @@ constructor(
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12.seconds, timeSource)
 
-    // One THORChain or Maya bank list answers every token of an address, so a vault refresh shares
-    // it. Kept here rather than in the APIs: unstake sizing reads those directly and needs it live.
+    // Display path only: unstake sizing reads the chain APIs directly and needs them live.
     private val bankBalanceCache = CosmosBalanceCache(timeSource)
 
     private val defiLocks = ConcurrentHashMap<String, Mutex>()

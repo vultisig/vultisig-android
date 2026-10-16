@@ -192,8 +192,7 @@ internal class CosmosBalanceCache(
                     ?: fetch().also { entries[key] = Entry(it, timeSource.markNow() + ttl) }
             }
 
-    // Waits out a fetch already in flight, which would otherwise store its pre-broadcast list after
-    // the removal.
+    // Under the key's lock so an in-flight fetch cannot re-store its pre-broadcast list.
     suspend fun invalidate(key: String) {
         locks.computeIfAbsent(key) { Mutex() }.withLock { entries.remove(key) }
     }
