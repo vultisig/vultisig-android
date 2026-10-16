@@ -167,18 +167,17 @@ constructor(
         )
     }
 
-    override suspend fun getBlockChairStats(chain: Chain): BigInteger = statsMutex.withLock {
-        statsCache.get(chain)
-            ?: run {
-                val response =
-                    httpClient.get("$BASE_URL/${getChainName(chain)}/stats") {
-                        header("Content-Type", "application/json")
-                    }
-                // A zero rate is never reused.
-                response.bodyOrThrow<SuggestedTransactionFeeDataJson>().data.value.also {
-                    if (it.signum() > 0) statsCache.put(chain, it)
-                }
+    override suspend fun getBlockChairStats(chain: Chain): BigInteger {
+        val cached = statsMutex.withLock { statsCache.get(chain) }
+        if (cached != null) return cached
+        val response =
+            httpClient.get("$BASE_URL/${getChainName(chain)}/stats") {
+                header("Content-Type", "application/json")
             }
+        val rate = response.bodyOrThrow<SuggestedTransactionFeeDataJson>().data.value
+        // A zero rate is never reused.
+        if (rate.signum() > 0) statsMutex.withLock { statsCache.put(chain, rate) }
+        return rate
     }
 
     suspend fun broadcastTransactionMempool(signedTransaction: String): String {
