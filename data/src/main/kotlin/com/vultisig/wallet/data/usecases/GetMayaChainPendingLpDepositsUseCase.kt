@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.MayaNodePool
 import com.vultisig.wallet.data.api.models.MayaLiquidityProviderJson
 import com.vultisig.wallet.data.models.MayaChainPendingLpDeposit
+import com.vultisig.wallet.data.utils.NetworkException
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -28,6 +29,12 @@ interface GetMayaChainPendingLpDepositsUseCase {
      * The scan starts from `/mayachain/pools`, whose `pending_inbound_*` fields say which pools hold
      * anyone's pending liquidity; only those are then read for [cacaoAddress], the address mayanode
      * keys every paired add by.
+     *
+     * The scan is all-or-nothing: a failed pool scan or a failed read on any candidate pool throws,
+     * because a partial list cannot be told apart from "that pool is no longer pending". A pool
+     * with no record for the address (404) is skipped. Only the age-limit countdown is best-effort.
+     *
+     * @throws NetworkException when the pool scan or any candidate pool's LP read fails.
      */
     suspend operator fun invoke(cacaoAddress: String): List<MayaChainPendingLpDeposit>
 }
@@ -37,21 +44,16 @@ internal class GetMayaChainPendingLpDepositsUseCaseImpl
 constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepositsUseCase {
 
     override suspend fun invoke(cacaoAddress: String): List<MayaChainPendingLpDeposit> {
-        val candidates =
-            probe("scan pools for pending liquidity") {
-                mayaChainApi.getMayaNodePools().filter { it.holdsPendingLiquidity() }
-            } ?: return emptyList()
+        val candidates = mayaChainApi.getMayaNodePools().filter { it.holdsPendingLiquidity() }
         if (candidates.isEmpty()) return emptyList()
 
         val found = coroutineScope {
             candidates
                 .map { pool ->
                     async {
-                        probe("read pending liquidity for ${pool.asset}") {
-                            mayaChainApi
-                                .getLiquidityProvider(pool.asset, cacaoAddress)
-                                ?.toPendingFetch(pool.asset)
-                        }
+                        mayaChainApi
+                            .getLiquidityProvider(pool.asset, cacaoAddress)
+                            ?.toPendingFetch(pool.asset)
                     }
                 }
                 .awaitAll()
@@ -116,13 +118,14 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
                     pairedAddress =
                         if (cacaoPending.signum() > 0) assetAddress?.takeIf { it.isNotBlank() }
                         else cacaoAddress?.takeIf { it.isNotBlank() },
+                    assetAddress = assetAddress?.takeIf { it.isNotBlank() },
                     blocksUntilAddedAlone = null,
                 ),
             lastAddHeight = lastAddHeight?.takeIf { it > 0 },
         )
     }
 
-    /** A failed read is logged and dropped; cancellation still propagates. */
+    /** A failed countdown read is logged and dropped; cancellation still propagates. */
     private suspend fun <T> probe(what: String, block: suspend () -> T): T? =
         try {
             block()

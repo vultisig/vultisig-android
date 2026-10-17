@@ -1110,7 +1110,14 @@ internal class MayachainDefiPositionsViewModelTest {
     fun `a pending CACAO half shows a card awaiting the asset, completed from Functions`() =
         runTest {
             coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
-                listOf(pending("BTC.BTC", cacao = "3000000000", pairedAddress = "bc1qbtcaddress"))
+                listOf(
+                    pending(
+                        "BTC.BTC",
+                        cacao = "3000000000",
+                        pairedAddress = "bc1qbtcaddress",
+                        assetAddress = "bc1qbtcaddress",
+                    )
+                )
             val vm = createViewModel().also { it.setData(VAULT_ID) }
 
             val card = successData(vm).lp.pendingDeposits.single()
@@ -1135,14 +1142,21 @@ internal class MayachainDefiPositionsViewModelTest {
     @Test
     fun `a pending asset half is completed from the CACAO Add LP screen`() = runTest {
         coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
-            listOf(pending("ETH.ETH", asset = "20000", pairedAddress = CACAO_ADDRESS))
+            listOf(
+                pending(
+                    "BTC.BTC",
+                    asset = "20000",
+                    pairedAddress = CACAO_ADDRESS,
+                    assetAddress = "bc1qbtcaddress",
+                )
+            )
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         val card = successData(vm).lp.pendingDeposits.single()
         assertEquals("CACAO", card.awaitedTicker)
         assertTrue(card.canComplete)
 
-        vm.onClickCompletePendingLp("ETH.ETH")
+        vm.onClickCompletePendingLp("BTC.BTC")
 
         coVerify(exactly = 1) {
             navigator.route(
@@ -1150,7 +1164,7 @@ internal class MayachainDefiPositionsViewModelTest {
                     vaultId = VAULT_ID,
                     chainId = Chain.MayaChain.id,
                     depositType = DeFiNavActions.ADD_LP.type,
-                    poolId = "ETH.ETH",
+                    poolId = "BTC.BTC",
                 )
             )
         }
@@ -1181,12 +1195,49 @@ internal class MayachainDefiPositionsViewModelTest {
     fun `a pending CACAO half naming an address the vault does not hold cannot be completed`() =
         runTest {
             coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
-                listOf(pending("BTC.BTC", cacao = "3000000000", pairedAddress = "bc1qelsewhere"))
+                listOf(
+                    pending(
+                        "BTC.BTC",
+                        cacao = "3000000000",
+                        pairedAddress = "bc1qelsewhere",
+                        assetAddress = "bc1qelsewhere",
+                    )
+                )
             val vm = createViewModel().also { it.setData(VAULT_ID) }
 
             assertFalse(successData(vm).lp.pendingDeposits.single().canComplete)
 
             vm.onClickCompletePendingLp("BTC.BTC")
+
+            coVerify(exactly = 0) { navigator.route(any<Route.Deposit>()) }
+        }
+
+    @Test
+    fun `a pending asset half the vault's asset account did not send cannot be completed`() =
+        runTest {
+            coEvery { getPendingLpDeposits(CACAO_ADDRESS) } returns
+                listOf(
+                    // The CACAO add would name the vault's BTC address, not the one on the record.
+                    pending(
+                        "BTC.BTC",
+                        asset = "20000",
+                        pairedAddress = CACAO_ADDRESS,
+                        assetAddress = "bc1qelsewhere",
+                    ),
+                    // The vault holds no Ethereum account for the CACAO add to name.
+                    pending(
+                        "ETH.ETH",
+                        asset = "20000",
+                        pairedAddress = CACAO_ADDRESS,
+                        assetAddress = "0xelsewhere",
+                    ),
+                )
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            assertTrue(successData(vm).lp.pendingDeposits.none { it.canComplete })
+
+            vm.onClickCompletePendingLp("BTC.BTC")
+            vm.onClickCompletePendingLp("ETH.ETH")
 
             coVerify(exactly = 0) { navigator.route(any<Route.Deposit>()) }
         }
@@ -1233,6 +1284,7 @@ internal class MayachainDefiPositionsViewModelTest {
         cacao: String = "0",
         asset: String = "0",
         pairedAddress: String? = null,
+        assetAddress: String? = null,
     ) =
         MayaChainPendingLpDeposit(
             pool = pool,
@@ -1240,6 +1292,7 @@ internal class MayachainDefiPositionsViewModelTest {
             pendingAsset = BigInteger(asset),
             pendingTxId = "TX",
             pairedAddress = pairedAddress,
+            assetAddress = assetAddress,
             blocksUntilAddedAlone = 1_000L,
         )
 
