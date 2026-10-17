@@ -5,7 +5,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.errors.ErrorState
+import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.models.keysign.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
@@ -49,6 +54,20 @@ internal fun KeysignScreen(
             KeysignErrorScreen(
                 errorMessage = state.errorMessage,
                 tryAgain = viewModel::tryAgain,
+                onBack = viewModel::back,
+            )
+        }
+
+        is KeysignFlowState.UtxoInputsUnverified -> {
+            ErrorView(
+                title = stringResource(R.string.signing_error_transaction_failed_title),
+                description = stringResource(R.string.keysign_utxo_inputs_unverified),
+                errorState = ErrorState.CRITICAL,
+                buttonUiModel =
+                    ErrorViewButtonUiModel(
+                        text = stringResource(R.string.try_again),
+                        onClick = viewModel::tryAgain,
+                    ),
                 onBack = viewModel::back,
             )
         }

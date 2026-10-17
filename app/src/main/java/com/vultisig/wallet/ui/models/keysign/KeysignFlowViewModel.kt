@@ -72,6 +72,9 @@ internal sealed class KeysignFlowState {
     data object Keysign : KeysignFlowState()
 
     data class Error(val errorMessage: UiText) : KeysignFlowState()
+
+    /** A DOGE/DASH input didn't match the transaction that created it, or couldn't be checked. */
+    data object UtxoInputsUnverified : KeysignFlowState()
 }
 
 @Immutable
@@ -237,7 +240,7 @@ constructor(
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.w(e, "UTXO inputs failed verification")
-                    moveToState(Error(R.string.keysign_utxo_inputs_unverified.asUiText()))
+                    moveToState(KeysignFlowState.UtxoInputsUnverified)
                     return
                 }
             }
