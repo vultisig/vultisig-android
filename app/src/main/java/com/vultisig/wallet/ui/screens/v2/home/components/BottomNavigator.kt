@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.ui.models.vault.BOTH_CRYPTO_CONNECTION_TYPES
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
@@ -43,6 +44,7 @@ internal const val BottomNavigatorTestTag = "bottom_navigator"
 /**
  * Draws [content] full-bleed with the Wallet/DeFi pill and the camera button floating over its
  * bottom edge, above a fade into the background so content passing underneath stays legible.
+ * [indicatorPosition] lets a pager drive the pill; see [CryptoConnectionSelect].
  */
 @Composable
 internal fun BottomNavigatorOverlay(
@@ -52,6 +54,7 @@ internal fun BottomNavigatorOverlay(
     onCameraClick: () -> Unit,
     modifier: Modifier = Modifier,
     availableCryptoTypes: List<CryptoConnectionType> = BOTH_CRYPTO_CONNECTION_TYPES,
+    indicatorPosition: (() -> Float)? = null,
     content: @Composable () -> Unit,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -80,6 +83,7 @@ internal fun BottomNavigatorOverlay(
                 CryptoConnectionSelect(
                     activeType = activeType,
                     availableCryptoTypes = availableCryptoTypes,
+                    indicatorPosition = indicatorPosition,
                     onTypeClick = onTypeClick,
                 )
                 CameraButton(onClick = onCameraClick)

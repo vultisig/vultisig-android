@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -29,6 +30,11 @@ import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionsSc
 import com.vultisig.wallet.ui.screens.v2.defi.ton.TonDeFiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.defi.tron.TronDeFiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.home.components.BottomNavigatorOverlay
+import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionPager
+import com.vultisig.wallet.ui.models.vault.ONLY_WALLET
+import com.vultisig.wallet.ui.screens.v2.home.components.rememberCryptoConnectionPagerState
+import com.vultisig.wallet.ui.screens.v2.home.components.rememberCryptoConnectionTabClick
+import com.vultisig.wallet.ui.screens.v2.home.components.rememberPagerIndicatorPosition
 
 @Composable
 internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewModel()) {
@@ -36,16 +42,15 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
 
     ChainDashboardScreen(
         uiModel = uiModel,
-        onTypeClick = viewModel::updateCryptoConnectionType,
+        onTypeSettle = viewModel::updateCryptoConnectionType,
         onCameraClick = viewModel::openCamera,
         onBackClick = viewModel::back,
-        content = {
-            when (val route = uiModel.route) {
+        page = { route ->
+            when (route) {
                 is PositionCircle -> CircleDeFiPositionsScreen(vaultId = route.vaultId)
                 is PositionTokens ->
                     ThorchainDefiPositionsScreen(vaultId = route.vaultId, initialTab = route.tab)
-                is PositionMaya ->
-                    MayachainDefiPositionsScreen(vaultId = (uiModel.route as PositionMaya).vaultId)
+                is PositionMaya -> MayachainDefiPositionsScreen(vaultId = route.vaultId)
                 is PositionTron -> TronDeFiPositionsScreen(vaultId = route.vaultId)
                 is PositionTon -> TonDeFiPositionsScreen(vaultId = route.vaultId)
                 is ChainDashboardRoute.PositionSolana ->
@@ -63,7 +68,6 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
                         chainId = route.chainId,
                         onBackClick = viewModel::back,
                     )
-                null -> Unit
             }
         },
     )
@@ -72,27 +76,44 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
 @Composable
 private fun ChainDashboardScreen(
     uiModel: ChainDashboardUiModel,
-    onTypeClick: (CryptoConnectionType) -> Unit,
+    onTypeSettle: (CryptoConnectionType) -> Unit,
     onCameraClick: () -> Unit,
     onBackClick: () -> Unit,
-    content: @Composable () -> Unit = {},
+    page: @Composable (ChainDashboardRoute) -> Unit = {},
 ) {
+    val types = uiModel.availableCryptoTypes
+    val pagerState = rememberCryptoConnectionPagerState(types, uiModel.cryptoConnectionType)
+    val onTabClick = rememberCryptoConnectionTabClick(pagerState, types)
+    val indicatorPosition = rememberPagerIndicatorPosition(pagerState)
+
     BottomNavigatorOverlay(
         isNavigatorVisible = uiModel.isBottomBarVisible,
         activeType = uiModel.cryptoConnectionType,
-        availableCryptoTypes = uiModel.availableCryptoTypes,
-        onTypeClick = onTypeClick,
+        availableCryptoTypes = types,
+        indicatorPosition = indicatorPosition,
+        onTypeClick = onTabClick,
         onCameraClick = onCameraClick,
     ) {
-        Scaffold(
-            topBar = {
-                if (uiModel.route !is Wallet) {
-                    V2Topbar(title = null, onBackClick = onBackClick)
+        CryptoConnectionPager(
+            state = pagerState,
+            types = types,
+            selectedType = uiModel.cryptoConnectionType,
+            onSettle = onTypeSettle,
+            // The navigator hides while the token search is open; the search keeps its tab.
+            userScrollEnabled = uiModel.isBottomBarVisible,
+            modifier = Modifier.fillMaxSize(),
+        ) { type ->
+            val route = uiModel.routes.getValue(type)
+            Scaffold(
+                topBar = {
+                    if (route !is Wallet) {
+                        V2Topbar(title = null, onBackClick = onBackClick)
+                    }
                 }
-            }
-        ) { paddingValues ->
-            Box(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
-                content()
+            ) { paddingValues ->
+                Box(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
+                    page(route)
+                }
             }
         }
     }
@@ -102,11 +123,15 @@ private fun ChainDashboardScreen(
 @Composable
 private fun ChainDashboardScreenPreview() {
     ChainDashboardScreen(
-        uiModel = ChainDashboardUiModel(route = Wallet(vaultId = "sdsda", "007")),
-        onTypeClick = {},
+        uiModel =
+            ChainDashboardUiModel(
+                routes = mapOf(CryptoConnectionType.Wallet to Wallet(vaultId = "sdsda", "007")),
+                availableCryptoTypes = ONLY_WALLET,
+            ),
+        onTypeSettle = {},
         onCameraClick = {},
         onBackClick = {},
-        content = {
+        page = {
             ChainTokensScreen(
                 uiModel =
                     ChainTokensUiModel(

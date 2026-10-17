@@ -1237,6 +1237,8 @@
     <string name="governance_voting_closed">此提案的投票已结束</string>
     <string name="hide_balance">隐藏余额</string>
     <string name="show_balance">显示余额</string>
+    <string name="hide_total_balance">隐藏总余额</string>
+    <string name="show_total_balance">显示总余额</string>
     <string name="no_chains_found">未找到区块链</string>
     <string name="no_chain_make_sure_that">确保您要查找的链已启用。</string>
     <string name="no_chain_customize_chains">自定义区块链</string>
@@ -1472,7 +1474,16 @@
     <string name="keygen_benefit_3_emphasized">跨链</string>
     <string name="upgrade_banner_title">立即升级您的保险库</string>
     <string name="deposit_form_custom_memo_optional_title">自定义备注（可选）</string>
-    <string name="home_defi_portfolio">DeFi 投资组合</string>
+    <string name="home_display">首页显示</string>
+    <string name="home_display_separate_title">钱包与 DeFi 分开显示</string>
+    <string name="home_display_separate_description">钱包标签页仅显示钱包余额，DeFi 标签页显示 DeFi 余额。</string>
+    <string name="home_display_combined_title">钱包 + DeFi</string>
+    <string name="home_display_combined_description">两个标签页都显示钱包与 DeFi 的合计余额。</string>
+    <string name="home_balance_display">余额显示</string>
+    <string name="home_swipe_hint_title">滑动切换</string>
+    <string name="home_swipe_hint_description">向左或向右滑动，在钱包和 DeFi 标签页之间切换。</string>
+    <string name="home_positions">仓位</string>
+    <string name="home_swipe_hint_got_it">知道了</string>
     <string name="backup_password_request_with_password_action">使用密码</string>
     <string name="backup_password_topbar_title">密码</string>
     <string name="function_transfer_ibc_dst_address_input_title">目标地址</string>

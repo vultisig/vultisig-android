@@ -4874,6 +4874,14 @@ object Coins {
      */
     fun isDefiOnly(coin: Coin): Boolean = defiOnly.any { it.id.equals(coin.id, ignoreCase = true) }
 
+    /** Receipts that are the position itself, so a vault tracking one counts it in both totals. */
+    val walletHeldDefiReceipts: List<Coin> =
+        listOf(ThorChain.sTCY, ThorChain.yRUNE, ThorChain.yTCY, Ton.TSTON)
+
+    fun isWalletHeldDefiReceipt(coin: Coin): Boolean = walletHeldDefiReceipts.any {
+        it.id.equals(coin.id, ignoreCase = true)
+    }
+
     /**
      * The coins that read another coin's price row instead of holding one of their own, keyed by
      * the id they are asked for.

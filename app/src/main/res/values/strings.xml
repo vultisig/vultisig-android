@@ -1206,6 +1206,8 @@
     <string name="governance_voting_closed">Voting has ended for this proposal</string>
     <string name="hide_balance">Hide balance</string>
     <string name="show_balance">Show balance</string>
+    <string name="hide_total_balance">Hide total balance</string>
+    <string name="show_total_balance">Show total balance</string>
     <string name="no_chains_found">No chains found</string>
     <string name="no_chain_make_sure_that">Make sure that the chain you’re looking for is enabled.</string>
     <string name="no_chain_customize_chains">Customize chains</string>
@@ -1268,7 +1270,16 @@
     <string name="referral_rewards_banner_title">Add your referral code</string>
     <string name="kamino_banner_caption">New on Solana</string>
     <string name="kamino_banner_title">Start earning with Kamino</string>
-    <string name="home_defi_portfolio">DeFi Portfolio</string>
+    <string name="home_display">Home display</string>
+    <string name="home_display_separate_title">Wallet &amp; DeFi separate</string>
+    <string name="home_display_separate_description">Your Wallet tab shows your wallet balance only, and your DeFi tab shows your DeFi balance.</string>
+    <string name="home_display_combined_title">Wallet + DeFi</string>
+    <string name="home_display_combined_description">Both tabs show your combined wallet and DeFi balance.</string>
+    <string name="home_balance_display">Balance display</string>
+    <string name="home_swipe_hint_title">Swipe to switch</string>
+    <string name="home_swipe_hint_description">Swipe left or right to move between your wallet and DeFi tabs.</string>
+    <string name="home_positions">Positions</string>
+    <string name="home_swipe_hint_got_it">Got it</string>
     <string name="home_page_no_chains_enabled">No chains enabled</string>
     <string name="home_page_no_chain_enabled_desc">You’ve disabled all chains. Make sure that at least one chain is enabled.</string>
     <string name="address_book_saved_addresses">Saved Addresses</string>

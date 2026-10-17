@@ -1185,6 +1185,8 @@
     <string name="governance_voting_closed">이 제안에 대한 투표가 종료되었습니다</string>
     <string name="hide_balance">잔액 숨기기</string>
     <string name="show_balance">잔액 표시</string>
+    <string name="hide_total_balance">총 잔액 숨기기</string>
+    <string name="show_total_balance">총 잔액 표시</string>
     <string name="no_chains_found">체인을 찾을 수 없습니다</string>
     <string name="no_chain_make_sure_that">찾고 있는 체인이 활성화되어 있는지 확인하세요.</string>
     <string name="no_chain_customize_chains">체인 사용자 정의</string>
@@ -1240,7 +1242,16 @@
     <string name="referral_rewards_banner_title">추천 코드를 추가하세요</string>
     <string name="kamino_banner_caption">솔라나 신규</string>
     <string name="kamino_banner_title">Kamino로 수익을 시작하세요</string>
-    <string name="home_defi_portfolio">DeFi 포트폴리오</string>
+    <string name="home_display">홈 화면 표시</string>
+    <string name="home_display_separate_title">지갑과 DeFi 분리</string>
+    <string name="home_display_separate_description">지갑 탭에는 지갑 잔액만, DeFi 탭에는 DeFi 잔액이 표시됩니다.</string>
+    <string name="home_display_combined_title">지갑 + DeFi</string>
+    <string name="home_display_combined_description">두 탭 모두 지갑과 DeFi를 합친 잔액을 표시합니다.</string>
+    <string name="home_balance_display">잔액 표시</string>
+    <string name="home_swipe_hint_title">스와이프하여 전환</string>
+    <string name="home_swipe_hint_description">좌우로 스와이프하여 지갑 탭과 DeFi 탭 사이를 이동하세요.</string>
+    <string name="home_positions">포지션</string>
+    <string name="home_swipe_hint_got_it">알겠습니다</string>
     <string name="home_page_no_chains_enabled">활성화된 체인 없음</string>
     <string name="home_page_no_chain_enabled_desc">모든 체인을 비활성화했습니다. 최소 하나의 체인을 활성화해 주세요.</string>
     <string name="address_book_saved_addresses">저장된 주소</string>
