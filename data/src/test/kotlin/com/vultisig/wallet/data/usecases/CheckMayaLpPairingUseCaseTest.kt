@@ -55,6 +55,17 @@ internal class CheckMayaLpPairingUseCaseTest {
         }
 
     @Test
+    fun `without an asset address a live position still takes a single-sided add`() = runTest {
+        coEvery { api.getLiquidityProvider(POOL, CACAO) } returns
+            record(units = "1005094031", assetAddress = null)
+        assertEquals(MayaLpPairing.SingleSidedPosition, useCase(POOL, CACAO, null))
+
+        coEvery { api.getLiquidityProvider(POOL, CACAO) } returns
+            record(units = "1", assetAddress = "t1other")
+        assertEquals(MayaLpPairing.PairedWithOtherAddress, useCase(POOL, CACAO, null))
+    }
+
+    @Test
     fun `a pending half pairs only with the addresses it fixed`() = runTest {
         coEvery { api.getLiquidityProvider(POOL, CACAO) } returns
             record(pendingTxId = "TX", cacaoAddress = CACAO, assetAddress = ASSET)

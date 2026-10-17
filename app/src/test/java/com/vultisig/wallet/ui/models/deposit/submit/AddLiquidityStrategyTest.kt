@@ -181,6 +181,19 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
+    fun `CACAO top-up of a live position needs no asset chain enabled`() = runTest {
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+        coEvery { checkPairing(MAYA_BTC_POOL, CACAO_ADDRESS, null) } returns
+            MayaLpPairing.SingleSidedPosition
+
+        val tx = build(Chain.MayaChain, pairedAddress = null, pool = MAYA_BTC_POOL).build()
+
+        assertEquals("+:$MAYA_BTC_POOL", tx.memo)
+        assertEquals("", tx.pairedAddress)
+        coVerify(exactly = 1) { mayaPreflight(MAYA_BTC_POOL, false) }
+    }
+
+    @Test
     fun `CACAO add against a pending half fixed to other addresses is refused`() = runTest {
         givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
         coEvery { checkPairing(MAYA_BTC_POOL, CACAO_ADDRESS, BTC_ADDRESS) } returns
