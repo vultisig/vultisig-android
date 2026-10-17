@@ -294,7 +294,7 @@ object CosmosStakingSignDataResolver {
      * input up-front — uncompressed or off-curve keys would otherwise burn an MPC ceremony and be
      * rejected on-chain after signing.
      */
-    private fun decodePubKey(hex: String): ByteArray? {
+    internal fun decodePubKey(hex: String): ByteArray? {
         val bytes = hex.hexToByteArrayOrNull() ?: return null
         if (bytes.size != 33) return null
         val prefix = bytes[0].toInt() and 0xFF

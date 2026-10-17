@@ -299,6 +299,9 @@
     <string name="deposit_form_operator_fee_title">Naknade operatora (Bazni bodovi)</string>
     <string name="deposit_message_deposit_title">%s depozit poruke</string>
     <string name="deposit_form_custom_memo_title">Prilagođeni dopis</string>
+    <string name="deposit_form_proposal_id_title">ID prijedloga</string>
+    <string name="deposit_form_proposal_id_error">Unesite važeći ID prijedloga</string>
+    <string name="deposit_form_vote_option_error">Odaberite opciju glasanja</string>
     <string name="swap_screen_same_asset_error_message">Izvorna i odredišna imovina ne mogu biti ista.</string>
     <string name="address_book_toolbar_title">Adresar</string>
     <string name="address_book_settings_title">Adresar</string>
@@ -1873,6 +1876,7 @@
     <string name="verify_verb_merging">Spajate</string>
     <string name="verify_verb_unmerging">Razdvajate</string>
     <string name="verify_verb_bridging">Premošćujete</string>
+    <string name="verify_verb_voting">Glasate</string>
     <string name="scope_your_whole_stake">cijeli vaš ulog</string>
     <string name="scope_rewards_accrued_so_far">do sada stečene nagrade</string>
     <string name="scope_delegated_amount_after_rent">delegirani iznos nakon rezerve za najam</string>

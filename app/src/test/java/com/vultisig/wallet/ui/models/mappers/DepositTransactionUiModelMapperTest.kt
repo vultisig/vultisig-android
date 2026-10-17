@@ -91,6 +91,12 @@ internal class DepositTransactionUiModelMapperTest {
     }
 
     @Test
+    fun `title reads voting for a governance vote`() {
+        depositVerifyTitleRes(operation = "", isGovernanceVote = true) shouldBe
+            R.string.verify_verb_voting
+    }
+
+    @Test
     fun `title falls back to the generic sending label for non-Unbond operations`() {
         depositVerifyTitleRes(OPERATION_BOND) shouldBe R.string.verify_deposit_sending
         depositVerifyTitleRes(operation = "") shouldBe R.string.verify_deposit_sending

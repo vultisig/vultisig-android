@@ -36,8 +36,13 @@ internal interface DepositTransactionToUiModelMapper :
  * via ThorchainMemoParser.
  */
 @StringRes
-internal fun depositVerifyTitleRes(operation: String, memo: String = ""): Int =
+internal fun depositVerifyTitleRes(
+    operation: String,
+    memo: String = "",
+    isGovernanceVote: Boolean = false,
+): Int =
     when {
+        isGovernanceVote -> R.string.verify_verb_voting
         LimitOrderCancelPresentation.isCancel(memo) -> R.string.verify_limit_order_cancel_title
         operation == OPERATION_KAMINO_DEPOSIT -> R.string.verify_deposit_depositing
         operation == OPERATION_KAMINO_WITHDRAW -> R.string.verify_deposit_withdrawing
@@ -103,7 +108,13 @@ constructor(
             pool = from.pool,
             validatorName = from.validatorName.orEmpty(),
             signSolana = from.signSolana?.rawTransactions.orEmpty(),
-            titleRes = depositVerifyTitleRes(from.operation, from.memo),
+            governanceVote = from.governanceVote,
+            titleRes =
+                depositVerifyTitleRes(
+                    operation = from.operation,
+                    memo = from.memo,
+                    isGovernanceVote = from.governanceVote != null,
+                ),
             limitCancelPair = LimitOrderCancelPresentation.pairCaption(from.memo),
             limitCancelDonatesDust =
                 LimitOrderCancelPresentation.donatesDust(

@@ -3,7 +3,8 @@ package com.vultisig.wallet.data.blockchain.cosmos.staking
 import java.io.ByteArrayOutputStream
 
 /**
- * Pure stateless byte-builder for Cosmos-SDK x/staking + x/distribution messages.
+ * Pure stateless byte-builder for Cosmos-SDK x/staking + x/distribution messages, plus the x/gov
+ * `MsgVote` the deposit-flow governance vote signs.
  *
  * Byte-equal port of iOS `CosmosStakingHelper.swift` (vultisig-ios PR #4432). Each `encode*` method
  * returns the `Any`-wrapped message bytes (`{ type_url, value }`) ready to drop into a TxBody.
@@ -19,6 +20,7 @@ object CosmosStakingHelper {
     const val MSG_BEGIN_REDELEGATE_TYPE_URL = "/cosmos.staking.v1beta1.MsgBeginRedelegate"
     const val MSG_WITHDRAW_DELEGATOR_REWARD_TYPE_URL =
         "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward"
+    const val MSG_VOTE_TYPE_URL = "/cosmos.gov.v1beta1.MsgVote"
     const val PUBKEY_TYPE_URL = "/cosmos.crypto.secp256k1.PubKey"
 
     /**
@@ -92,6 +94,19 @@ object CosmosStakingHelper {
         msg.appendProtoString(1, delegator)
         msg.appendProtoString(2, validator)
         return wrapAny(MSG_WITHDRAW_DELEGATOR_REWARD_TYPE_URL, msg.toByteArray())
+    }
+
+    /**
+     * Encodes an x/gov `MsgVote`. Wire shape of `value`: `{ proposal_id(1, uint64), voter(2),
+     * option(3, enum) }`. [proposalId] carries the uint64 bit pattern, so ids above
+     * [Long.MAX_VALUE] encode as their unsigned value.
+     */
+    fun encodeVote(proposalId: Long, voter: String, option: Long): ByteArray {
+        val msg = ByteArrayOutputStream()
+        msg.appendProtoVarint(1, proposalId)
+        msg.appendProtoString(2, voter)
+        msg.appendProtoVarint(3, option)
+        return wrapAny(MSG_VOTE_TYPE_URL, msg.toByteArray())
     }
 
     /**
