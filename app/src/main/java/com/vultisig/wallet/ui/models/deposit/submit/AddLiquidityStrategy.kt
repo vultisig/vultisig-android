@@ -93,24 +93,26 @@ internal class AddLiquidityStrategy(
         // mayanode only records an asset address on a zero-unit record, so a live position refunds
         // any add naming a different one — but checks it only when the add names one. There the
         // CACAO side stays the single-sided add it always was; a pending half has fixed both
-        // addresses and refunds either way. See [CheckMayaLpPairingUseCase].
-        val memoPairedAddress =
-            if (isMayaChainLpAdd && pairedAddress != null) {
-                when (checkMayaPairing(poolId, selectedToken.address, pairedAddress)) {
-                    MayaLpPairing.Pairable -> pairedAddress
-                    MayaLpPairing.SingleSidedPosition,
-                    MayaLpPairing.PairedWithOtherAddress -> null
-                    MayaLpPairing.AddressMismatch ->
-                        throw InvalidTransactionDataException(
-                            UiText.FormattedText(
-                                R.string.deposit_error_maya_lp_address_mismatch,
-                                listOf(poolId),
-                            )
-                        )
-                }
+        // addresses and refunds either way. See [CheckMayaLpPairingUseCase]. The record is read
+        // even without an asset address: a live position takes a `+:POOL` top-up as it is.
+        val mayaPairing =
+            if (
+                isMayaChainLpAdd &&
+                    (pairedAddress != null || mayaLpPairedChain(chain, poolId) != null)
+            ) {
+                checkMayaPairing(poolId, selectedToken.address, pairedAddress)
             } else {
-                pairedAddress
+                null
             }
+        val acceptsSingleSided =
+            mayaPairing == MayaLpPairing.SingleSidedPosition ||
+                mayaPairing == MayaLpPairing.PairedWithOtherAddress
+        if (mayaPairing == MayaLpPairing.AddressMismatch && pairedAddress != null) {
+            throw InvalidTransactionDataException(
+                UiText.FormattedText(R.string.deposit_error_maya_lp_address_mismatch, listOf(poolId))
+            )
+        }
+        val memoPairedAddress = if (acceptsSingleSided) null else pairedAddress
 
         // Preflight against THORChain network state — pool status and the relevant mimir pause
         // keys. Refuses to build the keysign payload when the network would refund the inbound,
@@ -145,8 +147,9 @@ internal class AddLiquidityStrategy(
         // as well as the pool shape: isSymmetricPool alone would reject every Maya pool add, while
         // isThorChainLpAdd alone would reject a THOR.* pool that has no paired side at all. A CACAO
         // add pairs exactly where mayaLpPairedChain says the app can deposit the asset half; an
-        // unresolved address there must not quietly turn the add single-sided. The address comes
-        // from a coin the vault holds, so a missing one means that chain is not enabled.
+        // unresolved address there must not quietly turn a fresh add single-sided — a live position
+        // already is one. The address comes from a coin the vault holds, so a missing one means
+        // that chain is not enabled.
         val pairedChain =
             when {
                 isMayaChainLpAdd -> mayaLpPairedChain(chain, poolId)
@@ -154,7 +157,7 @@ internal class AddLiquidityStrategy(
                     if (chain == Chain.ThorChain) assetChain else Chain.ThorChain
                 else -> null
             }
-        if (pairedChain != null && pairedAddress == null) {
+        if (pairedChain != null && pairedAddress == null && !acceptsSingleSided) {
             throw InvalidTransactionDataException(
                 UiText.FormattedText(
                     R.string.deposit_error_lp_paired_chain_not_enabled,
@@ -198,7 +201,7 @@ internal class AddLiquidityStrategy(
     private suspend fun checkMayaPairing(
         pool: String,
         cacaoAddress: String,
-        assetAddress: String,
+        assetAddress: String?,
     ): MayaLpPairing =
         try {
             checkMayaLpPairing(pool, cacaoAddress, assetAddress)

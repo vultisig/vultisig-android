@@ -5,7 +5,10 @@ import com.vultisig.wallet.data.api.models.MayaLiquidityProviderJson
 import java.math.BigInteger
 import javax.inject.Inject
 
-/** Whether MayaChain will accept a paired add naming a given CACAO and asset address. */
+/**
+ * Whether MayaChain will accept a paired add naming a given CACAO and asset address, or — with no
+ * asset address — whether a live position takes a single-sided CACAO add.
+ */
 sealed interface MayaLpPairing {
     /** A paired add is credited (or held pending) against this record. */
     data object Pairable : MayaLpPairing
@@ -38,13 +41,16 @@ sealed interface MayaLpPairing {
  */
 interface CheckMayaLpPairingUseCase {
     /**
+     * @param assetAddress the asset address the add would name, or `null` when the vault has none.
+     *   A live record then reads as [MayaLpPairing.SingleSidedPosition] or
+     *   [MayaLpPairing.PairedWithOtherAddress], both of which take a `+:POOL` add.
      * @throws Exception when the record cannot be read; a caller about to move funds must not
      *   guess.
      */
     suspend operator fun invoke(
         pool: String,
         cacaoAddress: String,
-        assetAddress: String,
+        assetAddress: String?,
     ): MayaLpPairing
 }
 
@@ -55,7 +61,7 @@ constructor(private val mayaChainApi: MayaChainApi) : CheckMayaLpPairingUseCase 
     override suspend fun invoke(
         pool: String,
         cacaoAddress: String,
-        assetAddress: String,
+        assetAddress: String?,
     ): MayaLpPairing {
         val record =
             mayaChainApi.getLiquidityProvider(pool, cacaoAddress) ?: return MayaLpPairing.Pairable
@@ -65,7 +71,7 @@ constructor(private val mayaChainApi: MayaChainApi) : CheckMayaLpPairingUseCase 
 
 internal fun MayaLiquidityProviderJson.pairingFor(
     cacaoAddress: String,
-    assetAddress: String,
+    assetAddress: String?,
 ): MayaLpPairing {
     val hasUnits = (units.toBigIntegerOrNull() ?: BigInteger.ZERO).signum() > 0
     val recordedCacao = this.cacaoAddress.orEmpty()
