@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.models.SuggestedTransactionFeeDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashRequestBodyJson
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.utils.SimpleCache
 import com.vultisig.wallet.data.utils.UTXOStatusResponseSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
@@ -20,6 +21,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 
@@ -33,6 +38,10 @@ interface BlockChairApi {
      */
     suspend fun getAllUtxos(chain: Chain, address: String): BlockChairInfo
 
+    /**
+     * Blockchair's suggested fee per byte for [chain]. A positive rate is reused for up to a
+     * minute; a zero rate is returned as read but not reused, and a failed read throws.
+     */
     suspend fun getBlockChairStats(chain: Chain): BigInteger
 
     suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String
@@ -46,10 +55,16 @@ constructor(
     private val json: Json,
     private val httpClient: HttpClient,
     private val utxoStatusResponseSerializer: UTXOStatusResponseSerializer,
+    timeSource: TimeSource,
 ) : BlockChairApi {
+
+    private val statsCache = SimpleCache<Chain, BigInteger>(STATS_TTL, timeSource)
+    private val statsMutex = Mutex()
+
     companion object {
         private const val BASE_URL = "https://api.vultisig.com/blockchair"
         private const val UTXO_PAGE_SIZE = 1000
+        private val STATS_TTL = 60.seconds
 
         // A standard transaction tops out near ~1400 P2WPKH inputs at Bitcoin's 100kvB
         // standardness limit, so an address with more UTXOs than this cap covers has nothing
@@ -153,11 +168,16 @@ constructor(
     }
 
     override suspend fun getBlockChairStats(chain: Chain): BigInteger {
+        val cached = statsMutex.withLock { statsCache.get(chain) }
+        if (cached != null) return cached
         val response =
             httpClient.get("$BASE_URL/${getChainName(chain)}/stats") {
                 header("Content-Type", "application/json")
             }
-        return response.bodyOrThrow<SuggestedTransactionFeeDataJson>().data.value
+        val rate = response.bodyOrThrow<SuggestedTransactionFeeDataJson>().data.value
+        // A zero rate is never reused.
+        if (rate.signum() > 0) statsMutex.withLock { statsCache.put(chain, rate) }
+        return rate
     }
 
     suspend fun broadcastTransactionMempool(signedTransaction: String): String {
