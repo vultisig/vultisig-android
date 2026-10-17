@@ -4,6 +4,8 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositMemo
@@ -20,6 +22,7 @@ import com.vultisig.wallet.ui.models.deposit.toError
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.first
@@ -33,6 +36,8 @@ internal class AddLiquidityStrategy(
     private val accountsRepository: AccountsRepository,
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase,
     private val resolvePairedAddress: suspend (Chain, String, String) -> String?,
+    private val addressProvider: () -> Address?,
+    private val requireTokenAmount: (Coin, Account, Address, TokenValue) -> BigInteger,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val calculateGasFee: suspend (Chain, Coin, String) -> TokenValue,
     private val getFeesFiatValue:
@@ -96,6 +101,8 @@ internal class AddLiquidityStrategy(
 
         val srcAddress = selectedToken.address
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
+        requireCoveredByFormBalance(addressProvider(), selectedToken, gasFee, requireTokenAmount)
+
         // Either half of a symmetric THORChain add MUST name the other half's address, or
         // THORChain opens a separate asymmetric position rather than crediting the pair: a
         // RUNE-side add carries the asset address, and the asset-side add that completes a pending
