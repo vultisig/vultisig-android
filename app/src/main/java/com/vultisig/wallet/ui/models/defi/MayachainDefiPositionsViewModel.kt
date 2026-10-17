@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.MayachainBondUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.toValue
+import com.vultisig.wallet.ui.models.deposit.pairedLpAddress
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -293,21 +294,20 @@ constructor(
 
     /**
      * Whether the app can send [deposit]'s missing half: only into a pool it pairs (see
-     * [MAYA_NATIVE_LP_POOLS]), and only from the account on that half's chain the pending half
-     * names, when it names one.
+     * [MAYA_NATIVE_LP_POOLS]), and only when the vault's account on the asset chain is the one the
+     * record names. That holds for either half: the asset add is sent from that account, and the
+     * CACAO add names it in its memo — the CACAO side always matches, since the scan reads the
+     * record by the vault's own CACAO address.
      */
     private fun Vault.canCompleteMayaPending(deposit: MayaChainPendingLpDeposit): Boolean {
         val assetChain =
             MAYA_NATIVE_LP_POOLS.entries
                 .firstOrNull { it.value.equals(deposit.pool, ignoreCase = true) }
                 ?.key ?: return false
-        val missingChain = if (deposit.isCacaoPending) assetChain else Chain.MayaChain
-        val pairedAddress = deposit.pairedAddress
-        return coins.any {
-            it.chain == missingChain &&
-                it.isNativeToken &&
-                (pairedAddress == null || it.address.equals(pairedAddress, ignoreCase = true))
-        }
+        val vaultAssetAddress = pairedLpAddress(assetChain) ?: return false
+        val recordAssetAddress = deposit.assetAddress
+        return recordAssetAddress == null ||
+            vaultAssetAddress.equals(recordAssetAddress, ignoreCase = true)
     }
 
     private fun MayaChainPendingLpDeposit.toUiModel(canComplete: Boolean): PendingLpDepositUiModel {

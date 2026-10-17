@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.MayaNodePool
 import com.vultisig.wallet.data.api.models.MayaLatestBlockInfoResponse
 import com.vultisig.wallet.data.api.models.MayaLiquidityProviderJson
+import com.vultisig.wallet.data.utils.NetworkException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -56,18 +57,25 @@ internal class GetMayaChainPendingLpDepositsUseCaseTest {
         assertTrue(deposit.isCacaoPending)
         assertEquals(BigInteger("3000000000"), deposit.pendingCacao)
         assertEquals("bc1qself", deposit.pairedAddress)
+        assertEquals("bc1qself", deposit.assetAddress)
     }
 
     @Test
     fun `a pending asset half names the CACAO address it waits on`() = runTest {
         coEvery { api.getMayaNodePools() } returns listOf(pool("ETH.ETH", pendingAsset = "20000"))
         coEvery { api.getLiquidityProvider("ETH.ETH", CACAO_ADDRESS) } returns
-            record("ETH.ETH", pendingAsset = "20000", cacaoAddress = CACAO_ADDRESS)
+            record(
+                "ETH.ETH",
+                pendingAsset = "20000",
+                cacaoAddress = CACAO_ADDRESS,
+                assetAddress = "0xself",
+            )
 
         val deposit = useCase(CACAO_ADDRESS).single()
 
         assertEquals(false, deposit.isCacaoPending)
         assertEquals(CACAO_ADDRESS, deposit.pairedAddress)
+        assertEquals("0xself", deposit.assetAddress)
     }
 
     @Test
@@ -100,10 +108,35 @@ internal class GetMayaChainPendingLpDepositsUseCaseTest {
     }
 
     @Test
-    fun `a failed pool scan reports nothing`() = runTest {
-        coEvery { api.getMayaNodePools() } throws RuntimeException("mayanode down")
+    fun `a failed pool scan throws`() = runTest {
+        coEvery { api.getMayaNodePools() } throws NetworkException(503, "mayanode down")
 
-        assertTrue(useCase(CACAO_ADDRESS).isEmpty())
+        assertFailsWith<NetworkException> { useCase(CACAO_ADDRESS) }
+    }
+
+    @Test
+    fun `a failed read on one candidate pool throws`() = runTest {
+        coEvery { api.getMayaNodePools() } returns
+            listOf(
+                pool("BTC.BTC", pendingCacao = "3000000000"),
+                pool("ETH.ETH", pendingAsset = "20000"),
+            )
+        coEvery { api.getLiquidityProvider("ETH.ETH", CACAO_ADDRESS) } throws
+            NetworkException(429, "rate limited")
+
+        assertFailsWith<NetworkException> { useCase(CACAO_ADDRESS) }
+    }
+
+    @Test
+    fun `a pool with no record for the address is skipped`() = runTest {
+        coEvery { api.getMayaNodePools() } returns
+            listOf(
+                pool("BTC.BTC", pendingCacao = "3000000000"),
+                pool("ETH.ETH", pendingAsset = "20000"),
+            )
+        coEvery { api.getLiquidityProvider("ETH.ETH", CACAO_ADDRESS) } returns null
+
+        assertEquals(listOf("BTC.BTC"), useCase(CACAO_ADDRESS).map { it.pool })
     }
 
     @Test

@@ -138,13 +138,21 @@ internal class AddLiquidityStrategy(
         // as well as the pool shape: isSymmetricPool alone would reject every Maya pool add, while
         // isThorChainLpAdd alone would reject a THOR.* pool that has no paired side at all. A CACAO
         // add pairs exactly where mayaLpPairedChain says the app can deposit the asset half; an
-        // unresolved address there must not quietly turn the add single-sided.
-        val requiresPairedAddress =
-            (isSymmetricPool && isThorChainLpAdd) ||
-                (isMayaChainLpAdd && mayaLpPairedChain(chain, poolId) != null)
-        if (requiresPairedAddress && pairedAddress == null) {
+        // unresolved address there must not quietly turn the add single-sided. The address comes
+        // from a coin the vault holds, so a missing one means that chain is not enabled.
+        val pairedChain =
+            when {
+                isMayaChainLpAdd -> mayaLpPairedChain(chain, poolId)
+                isSymmetricPool && isThorChainLpAdd ->
+                    if (chain == Chain.ThorChain) assetChain else Chain.ThorChain
+                else -> null
+            }
+        if (pairedChain != null && pairedAddress == null) {
             throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
+                UiText.FormattedText(
+                    R.string.deposit_error_lp_paired_chain_not_enabled,
+                    listOf(pairedChain.raw, poolId),
+                )
             )
         }
         val memo = DepositMemo.AddLiquidity(poolId, memoPairedAddress)
