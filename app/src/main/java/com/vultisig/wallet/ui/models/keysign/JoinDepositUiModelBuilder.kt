@@ -9,12 +9,17 @@ import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRelayedIntent
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRentReserve
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.blockchain.solana.kamino.kaminoNetworkFeeLamports
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
 import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -33,8 +38,11 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
+import wallet.core.jni.proto.Common.SigningError
 
 /**
  * Builds the [VerifyUiModel.Deposit] model for the join-keysign verify screen. Extracted verbatim
@@ -121,6 +129,7 @@ constructor(
         val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
         val estimatedTokenFees =
             kamino?.let { kaminoNetworkFee(it, payload, nativeCoin) }
+                ?: plannedUtxoFee(payload, vault, nativeCoin)
                 ?: feeResolver.resolveJoinKeysignNetworkFee(
                     payload = payload,
                     chain = chain,
@@ -263,5 +272,38 @@ constructor(
                 ),
             token = nativeCoin,
         )
+    }
+
+    /**
+     * What a UTXO deposit actually pays, read from the same plan the signer builds — as the send
+     * screen does. The fee service only knows a per-byte rate (or Zcash's flat seed), which the
+     * planner turns into the real total, including the charge a memo output adds.
+     */
+    private fun plannedUtxoFee(
+        payload: KeysignPayload,
+        vault: Vault,
+        nativeCoin: Coin,
+    ): TokenValue? {
+        val chain = payload.coin.chain
+        if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) return null
+        if (payload.blockChainSpecific !is BlockChainSpecific.UTXO) return null
+        val plan =
+            try {
+                UtxoHelper.getHelper(vault, payload.coin.coinType)
+                    .getBitcoinTransactionPlan(payload)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "UTXO deposit plan threw; falling back to the fee service")
+                return null
+            }
+        if (plan.error != SigningError.OK || plan.fee <= 0L) {
+            Timber.w(
+                "UTXO deposit plan unavailable (%s); falling back to the fee service",
+                plan.error.name,
+            )
+            return null
+        }
+        return TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
     }
 }
