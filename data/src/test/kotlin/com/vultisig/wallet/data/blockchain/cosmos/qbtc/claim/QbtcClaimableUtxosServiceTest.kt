@@ -137,5 +137,7 @@ class QbtcClaimableUtxosServiceTest {
             chain: Chain,
             txHash: String,
         ): BlockChainStatusDeserialized? = null
+
+        override suspend fun getRawTransaction(chain: Chain, txHash: String): String? = null
     }
 }

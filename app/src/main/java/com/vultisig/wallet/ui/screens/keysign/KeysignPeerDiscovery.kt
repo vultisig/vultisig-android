@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
@@ -29,6 +30,7 @@ import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.usecases.QrShareField
 import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.ui.components.KeepScreenOn
+import com.vultisig.wallet.ui.components.v2.loading.V2Loading
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
@@ -88,8 +90,14 @@ internal fun KeysignPeerDiscovery(
         KeysignLoadingScreen()
     }
     if (vault == null) {
+        // The vault lands only after the UTXO input check, which can take a while offline.
         if (!isLookingForVultiServer) {
-            Box(Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary))
+            Box(
+                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+                contentAlignment = Alignment.Center,
+            ) {
+                V2Loading()
+            }
         }
         return
     }

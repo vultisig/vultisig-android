@@ -1024,6 +1024,7 @@
     <string name="error_view_default_description">Dogodila se pogreška</string>
     <!-- Friendly error screen (issue #4996) -->
     <string name="signing_error_transaction_failed_title">Transakcija nije uspjela</string>
+    <string name="keysign_utxo_inputs_unverified">Potpisivanje je odbijeno: ulazi transakcije nisu mogli biti provjereni na blockchainu.</string>
     <string name="signing_error_transaction_failed_description">Jedan od tvojih uređaja nije odgovorio na vrijeme. Provjeri vezu i pokušaj ponovno.</string>
     <string name="error_insufficient_funds_title">Nedovoljno sredstava</string>
     <string name="error_same_vault_share_title">Isti dio trezora</string>

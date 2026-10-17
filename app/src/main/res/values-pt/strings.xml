@@ -1019,6 +1019,7 @@
     <string name="error_view_default_description">Um erro ocorreu</string>
     <!-- Friendly error screen (issue #4996) -->
     <string name="signing_error_transaction_failed_title">Transação falhou</string>
+    <string name="keysign_utxo_inputs_unverified">Assinatura recusada: não foi possível verificar as entradas da transação na blockchain.</string>
     <string name="signing_error_transaction_failed_description">Um dos seus dispositivos não respondeu a tempo. Verifique a sua conexão e tente novamente.</string>
     <string name="error_insufficient_funds_title">Fundos insuficientes</string>
     <string name="error_same_vault_share_title">A mesma partilha do cofre</string>

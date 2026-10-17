@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.models.tokenLogoRes
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.usecases.GenerateServiceName
+import com.vultisig.wallet.data.usecases.VerifyUtxoInputAmountsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
@@ -71,6 +72,9 @@ internal sealed class KeysignFlowState {
     data object Keysign : KeysignFlowState()
 
     data class Error(val errorMessage: UiText) : KeysignFlowState()
+
+    /** A DOGE/DASH input didn't match the transaction that created it, or couldn't be checked. */
+    data object UtxoInputsUnverified : KeysignFlowState()
 }
 
 @Immutable
@@ -107,6 +111,7 @@ constructor(
     private val buildKeysignMessage: BuildKeysignMessageUseCase,
     private val updateSolanaKeysignPayload: UpdateSolanaKeysignPayloadUseCase,
     private val buildKeysignTransactionUiModel: BuildKeysignTransactionUiModelUseCase,
+    private val verifyUtxoInputAmounts: VerifyUtxoInputAmountsUseCase,
 ) : ViewModel() {
     private val _sessionID: String = Uuid.random().toString()
     private val _serviceName: String = generateServiceName()
@@ -227,6 +232,18 @@ constructor(
             val vault = shareViewModel.vault ?: return
             _currentVault = vault
             val keysignPayload = shareViewModel.keysignPayload
+            // DOGE/DASH signatures don't commit to input amounts; an understated one would turn
+            // the difference into miner fee, so check before the payload is shared or co-signed.
+            if (keysignPayload != null) {
+                try {
+                    verifyUtxoInputAmounts(vault, keysignPayload.coin.chain, keysignPayload.utxos)
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    Timber.w(e, "UTXO inputs failed verification")
+                    moveToState(KeysignFlowState.UtxoInputsUnverified)
+                    return
+                }
+            }
             val modifiedKeysignPayload = updateSolanaKeysignPayload(keysignPayload)
             _keysignPayload = modifiedKeysignPayload
             val customMessagePayload = shareViewModel.customMessagePayload

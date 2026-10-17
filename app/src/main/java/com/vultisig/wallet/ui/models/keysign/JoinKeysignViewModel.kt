@@ -47,6 +47,7 @@ import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.TonJettonTransferRefusedException
 import com.vultisig.wallet.data.usecases.VerifyTonJettonTransferUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
+import com.vultisig.wallet.data.usecases.VerifyUtxoInputAmountsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -148,6 +149,10 @@ sealed class JoinKeysignError(val message: UiText) {
      */
     data object MissingQbtcClaimAccount :
         JoinKeysignError(R.string.join_keysign_qbtc_claim_missing_account.asUiText())
+
+    /** A DOGE/DASH input didn't match the transaction that created it, or couldn't be checked. */
+    data object UtxoInputsUnverified :
+        JoinKeysignError(R.string.keysign_utxo_inputs_unverified.asUiText())
 
     /** A TON jetton transfer that doesn't move what it shows, or that couldn't be checked. */
     data class TonJettonTransferRefused(@StringRes val reason: Int) :
@@ -317,6 +322,7 @@ constructor(
     private val joinDepositUiModelBuilder: JoinDepositUiModelBuilder,
     private val joinSendUiModelBuilder: JoinSendUiModelBuilder,
     private val verifyTonJettonTransfer: VerifyTonJettonTransferUseCase,
+    private val verifyUtxoInputAmounts: VerifyUtxoInputAmountsUseCase,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
 ) : ViewModel() {
@@ -693,6 +699,18 @@ constructor(
         // A QBTC claim payload is a flag carrier with no real tx body — skip the Send/verify
         // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
         if (ksPayload.isQbtcClaim) return true
+
+        // DOGE/DASH signatures don't commit to input amounts; refuse inputs that don't match the
+        // transactions that created them before showing anything to approve.
+        try {
+            verifyUtxoInputAmounts(_currentVault, ksPayload.coin.chain, ksPayload.utxos)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "UTXO inputs failed verification")
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.UtxoInputsUnverified)
+            return false
+        }
 
         loadTransaction(ksPayload)
         return true

@@ -1020,6 +1020,7 @@
     <string name="error_view_default_description">Ocurrió un error</string>
     <!-- Friendly error screen (issue #4996) -->
     <string name="signing_error_transaction_failed_title">Transacción fallida</string>
+    <string name="keysign_utxo_inputs_unverified">Firma rechazada: no se pudieron verificar las entradas de la transacción con la blockchain.</string>
     <string name="signing_error_transaction_failed_description">Uno de tus dispositivos no respondió a tiempo. Comprueba tu conexión e inténtalo de nuevo.</string>
     <string name="error_insufficient_funds_title">Fondos insuficientes</string>
     <string name="error_same_vault_share_title">Misma bóveda compartida</string>
