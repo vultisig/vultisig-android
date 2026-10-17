@@ -42,7 +42,7 @@ internal class GetThorChainPendingLpDepositsUseCaseTest {
         assertEquals("BTC.BTC", btc.pool)
         assertEquals(BigInteger("100"), btc.pendingRune)
         assertEquals(BTC_ADDR, btc.pairedAddress)
-        assertEquals(LAST_ADD_HEIGHT + AGE_LIMIT - CURRENT_HEIGHT, btc.blocksUntilRefund)
+        assertEquals(LAST_ADD_HEIGHT + AGE_LIMIT - CURRENT_HEIGHT, btc.blocksUntilAddedAlone)
         coVerify(exactly = 0) { api.getLiquidityProvider("ETH.ETH", any()) }
     }
 
@@ -97,7 +97,7 @@ internal class GetThorChainPendingLpDepositsUseCaseTest {
         val btc = useCase(RUNE_ADDR).single()
 
         assertEquals("BTC.BTC", btc.pool)
-        assertNull(btc.blocksUntilRefund)
+        assertNull(btc.blocksUntilAddedAlone)
     }
 
     private fun pool(asset: String, pendingRune: String = "0", pendingAsset: String = "0") =

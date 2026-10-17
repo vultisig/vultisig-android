@@ -155,18 +155,20 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
-    fun `CACAO add to a native Maya pool without a resolved asset address is refused`() = runTest {
-        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+    fun `CACAO add to a native Maya pool without the asset chain enabled names that chain`() =
+        runTest {
+            givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
 
-        val error =
-            assertFailsWith<InvalidTransactionDataException> {
-                build(Chain.MayaChain, pairedAddress = null, pool = MAYA_BTC_POOL).build()
-            }
+            val error =
+                assertFailsWith<InvalidTransactionDataException> {
+                    build(Chain.MayaChain, pairedAddress = null, pool = MAYA_BTC_POOL).build()
+                }
 
-        val text = error.text
-        assertTrue(text is UiText.StringResource)
-        assertEquals(R.string.send_error_no_address, text.resId)
-    }
+            val text = error.text
+            assertTrue(text is UiText.FormattedText)
+            assertEquals(R.string.deposit_error_lp_paired_chain_not_enabled, text.resId)
+            assertEquals(listOf(Chain.Bitcoin.raw, MAYA_BTC_POOL), text.formatArgs)
+        }
 
     @Test
     fun `CACAO add to a Maya pool the app cannot pair stays single-sided`() = runTest {

@@ -532,6 +532,7 @@
     <string name="deposit_error_amount_exceeds_bonded">Exceeds the RUNE bonded to this node</string>
     <string name="deposit_error_invalid_assets">Assets are invalid</string>
     <string name="deposit_error_chain_not_enabled">Enable %1$s in this vault to withdraw %2$s</string>
+    <string name="deposit_error_lp_paired_chain_not_enabled">Enable %1$s in this vault to add liquidity to %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">This deposit has not reached its maturity period yet</string>
     <string name="deposit_error_lp_paused_pool">Add liquidity is paused for %1$s. THORChain would refund this transaction.</string>
     <string name="deposit_error_lp_halted_chain">Liquidity actions on %1$s are currently halted. THORChain would refund this transaction.</string>
