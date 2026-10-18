@@ -266,7 +266,12 @@ class QBTCTransactionHelper {
         val pubKeyBytes = keysignPayload.coin.hexPublicKey.hexToByteArray()
 
         val signerInfo = buildSignerInfo(pubKeyBytes, cosmosSpecific.sequence.toLong())
-        val feeBytes = buildFee(cosmosSpecific.gas.toLong())
+        // The gas limit is part of the SignDoc, so every co-signer must resolve the same value.
+        val feeBytes =
+            buildFee(
+                gasAmount = cosmosSpecific.gas.toLong(),
+                gasLimit = cosmosSpecific.effectiveGasLimit(default = GAS_LIMIT),
+            )
 
         val result = mutableListOf<Byte>()
         result.addAll(protoBytes(1, signerInfo))
@@ -303,11 +308,11 @@ class QBTCTransactionHelper {
         return result.toByteArray()
     }
 
-    private fun buildFee(gasAmount: Long): ByteArray {
+    private fun buildFee(gasAmount: Long, gasLimit: Long): ByteArray {
         val coinBytes = buildCoin(DENOM, gasAmount.toString())
         val result = mutableListOf<Byte>()
         result.addAll(protoBytes(1, coinBytes))
-        result.addAll(protoVarint(2, GAS_LIMIT))
+        result.addAll(protoVarint(2, gasLimit))
         return result.toByteArray()
     }
 

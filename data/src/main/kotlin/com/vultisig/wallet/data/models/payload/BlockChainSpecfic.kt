@@ -58,7 +58,24 @@ sealed class BlockChainSpecific {
         // limit". It is part of the SignDoc, so every co-signing device must apply it
         // identically or the MPC signature fails.
         val gasLimit: BigInteger? = null,
-    ) : BlockChainSpecific()
+    ) : BlockChainSpecific() {
+        /**
+         * The relayed [gasLimit] when an initiator set one, otherwise [default]. An explicit 0 is
+         * treated as unset: proto3 elides it, so signing it would give a zero-gas tx.
+         */
+        fun effectiveGasLimit(default: Long): Long =
+            gasLimit
+                ?.takeIf { it.signum() > 0 }
+                ?.let {
+                    // BigInteger.longValueExact() is API 31+, but minSdk is 26. Reject out-of-range
+                    // values ourselves so a truncated gas value can never diverge between
+                    // co-signers.
+                    require(it.bitLength() < Long.SIZE_BITS) {
+                        "Relayed gas limit $it exceeds the supported range"
+                    }
+                    it.toLong()
+                } ?: default
+    }
 
     data class Solana(
         val recentBlockHash: String,
