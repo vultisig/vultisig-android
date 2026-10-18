@@ -56,6 +56,7 @@ class QBTCTransactionHelperTest {
         gas: BigInteger = BigInteger("7500"),
         transactionType: TransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
         ibcDenomTrace: CosmosIbcDenomTrace? = null,
+        gasLimit: BigInteger? = null,
     ) =
         BlockChainSpecific.Cosmos(
             accountNumber = accountNumber,
@@ -63,6 +64,7 @@ class QBTCTransactionHelperTest {
             gas = gas,
             ibcDenomTraces = ibcDenomTrace,
             transactionType = transactionType,
+            gasLimit = gasLimit,
         )
 
     private fun payload(
@@ -348,6 +350,35 @@ class QBTCTransactionHelperTest {
     @Test
     fun `gas limit is 300000 for large MLDSA signatures`() {
         assertEquals(300_000L, QBTCTransactionHelper.GAS_LIMIT)
+    }
+
+    private fun hashWithGasLimit(gasLimit: BigInteger?) =
+        helper.getPreSignedImageHash(
+            payload(blockChainSpecific = cosmosSpecific(gasLimit = gasLimit))
+        )
+
+    @Test
+    fun `unset relayed gas limit signs the 300000 default`() {
+        assertEquals(hashWithGasLimit(BigInteger.valueOf(300_000)), hashWithGasLimit(null))
+    }
+
+    @Test
+    fun `relayed gas limit replaces the default in the SignDoc`() {
+        assertNotEquals(hashWithGasLimit(null), hashWithGasLimit(BigInteger.valueOf(550_000)))
+        assertNotEquals(
+            hashWithGasLimit(BigInteger.valueOf(550_000)),
+            hashWithGasLimit(BigInteger.valueOf(550_001)),
+        )
+    }
+
+    @Test
+    fun `explicit zero relayed gas limit falls back to the default`() {
+        assertEquals(hashWithGasLimit(null), hashWithGasLimit(BigInteger.ZERO))
+    }
+
+    @Test
+    fun `out-of-range relayed gas limit is rejected`() {
+        assertThrows<IllegalArgumentException> { hashWithGasLimit(BigInteger.ONE.shiftLeft(64)) }
     }
 
     @Test
