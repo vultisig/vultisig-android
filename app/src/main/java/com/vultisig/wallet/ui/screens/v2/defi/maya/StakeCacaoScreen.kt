@@ -32,6 +32,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.PercentageChip
 import com.vultisig.wallet.ui.components.TokenAmountInput
 import com.vultisig.wallet.ui.components.TokenFiatToggle
+import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -59,6 +60,16 @@ internal fun StakeCacaoScreen(
             depositType = DeFiNavActions.STAKE_CACAO.type,
             bondAddress = null,
             poolId = null,
+        )
+    }
+
+    val errorText = state.errorText
+    if (errorText != null) {
+        UiAlertDialog(
+            title = stringResource(R.string.dialog_default_error_title),
+            text = errorText.asString(),
+            confirmTitle = stringResource(R.string.try_again),
+            onDismiss = viewModel::dismissError,
         )
     }
 
