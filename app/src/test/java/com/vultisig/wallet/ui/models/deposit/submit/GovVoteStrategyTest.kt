@@ -1,9 +1,12 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosGovVote
 import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosVoteOption
+import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -21,6 +24,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.protobuf.ProtoBuf
+import kotlinx.serialization.protobuf.ProtoNumber
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -49,10 +57,22 @@ internal class GovVoteStrategyTest {
         assertEquals("9", signDirect.accountNumber)
         val cosmos = tx.blockChainSpecific as BlockChainSpecific.Cosmos
         assertEquals(TransactionType.TRANSACTION_TYPE_UNSPECIFIED, cosmos.transactionType)
-        // The body carries the vote: the proposal id, voter and ballot all appear in it.
-        val body = Base64.getDecoder().decode(signDirect.bodyBytes)
-        assert(String(body, Charsets.ISO_8859_1).contains("/cosmos.gov.v1beta1.MsgVote"))
-        assert(String(body, Charsets.ISO_8859_1).contains(VOTER))
+
+        val body = ProtoBuf.decodeFromByteArray<TestTxBody>(decode(signDirect.bodyBytes))
+        assertEquals("", body.memo)
+        val any = body.messages.single()
+        assertEquals("/cosmos.gov.v1beta1.MsgVote", any.typeUrl)
+        val msg = ProtoBuf.decodeFromByteArray<TestMsgVote>(any.value)
+        assertEquals(312L, msg.proposalId)
+        assertEquals(VOTER, msg.voter)
+        assertEquals(CosmosVoteOption.NO_WITH_VETO.protoValue, msg.option)
+
+        val fee =
+            assertNotNull(
+                ProtoBuf.decodeFromByteArray<TestAuthInfo>(decode(signDirect.authInfoBytes)).fee
+            )
+        assertEquals(listOf(TestCoin("adydx", FEE.toString())), fee.amount)
+        assertEquals(CosmosHelper.getChainGasLimit(Chain.Dydx), fee.gasLimit)
     }
 
     @Test
@@ -128,6 +148,41 @@ internal class GovVoteStrategyTest {
             contractAddress = "",
             isNativeToken = true,
         )
+
+    private fun decode(base64: String) = Base64.getDecoder().decode(base64)
+
+    @Serializable
+    private class TestAny(
+        @ProtoNumber(1) val typeUrl: String = "",
+        @ProtoNumber(2) val value: ByteArray = ByteArray(0),
+    )
+
+    @Serializable
+    private class TestTxBody(
+        @ProtoNumber(1) val messages: List<TestAny> = emptyList(),
+        @ProtoNumber(2) val memo: String = "",
+    )
+
+    @Serializable
+    private class TestMsgVote(
+        @ProtoNumber(1) val proposalId: Long = 0,
+        @ProtoNumber(2) val voter: String = "",
+        @ProtoNumber(3) val option: Long = 0,
+    )
+
+    @Serializable
+    private data class TestCoin(
+        @ProtoNumber(1) val denom: String = "",
+        @ProtoNumber(2) val amount: String = "",
+    )
+
+    @Serializable
+    private class TestFee(
+        @ProtoNumber(1) val amount: List<TestCoin> = emptyList(),
+        @ProtoNumber(2) val gasLimit: Long = 0,
+    )
+
+    @Serializable private class TestAuthInfo(@ProtoNumber(2) val fee: TestFee? = null)
 
     private companion object {
         const val VOTER = "dydx1voter0000000000000000000000000000000"

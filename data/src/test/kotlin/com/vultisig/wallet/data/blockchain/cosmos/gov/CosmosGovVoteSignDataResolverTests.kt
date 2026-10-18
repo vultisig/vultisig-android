@@ -21,14 +21,13 @@ class CosmosGovVoteSignDataResolverTests {
     private val pubKeyHex = "03" + "11".repeat(32)
     private val dydxFee = BigInteger("2500000000000000")
 
-    private fun specific(gasLimit: BigInteger? = null) =
+    private fun specific() =
         BlockChainSpecific.Cosmos(
             accountNumber = BigInteger.valueOf(123456),
             sequence = BigInteger.valueOf(42),
             gas = dydxFee,
             ibcDenomTraces = null,
             transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
-            gasLimit = gasLimit,
         )
 
     private fun resolve(
@@ -112,14 +111,6 @@ class CosmosGovVoteSignDataResolverTests {
         assertEquals("adydx", coin.string(1))
         assertEquals("2500000000000000", coin.string(2))
         assertEquals(200_000L, fee.varint(2))
-    }
-
-    @Test
-    fun `a relayed gas limit replaces the static one`() {
-        val signDirect = resolve(chainSpecific = specific(gasLimit = BigInteger.valueOf(260_000)))
-
-        val authInfo = Proto.fields(Base64.getDecoder().decode(signDirect.authInfoBytes))
-        assertEquals(260_000L, Proto.fields(authInfo.bytes(2)).varint(2))
     }
 
     @Test

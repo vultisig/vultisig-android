@@ -419,7 +419,8 @@ private fun VerifyDepositDetails(
             )
             rowDivider()
         }
-        if (tx.dstAddress.isNotEmpty()) {
+        // A vote names the voter as dstAddress only for iOS; MsgVote has no recipient.
+        if (tx.dstAddress.isNotEmpty() && tx.governanceVote == null) {
             val toDstLabel = tx.dstVaultName ?: tx.dstAddressBookTitle
             VerifyCardDetails(
                 title = stringResource(R.string.verify_transaction_to_title),

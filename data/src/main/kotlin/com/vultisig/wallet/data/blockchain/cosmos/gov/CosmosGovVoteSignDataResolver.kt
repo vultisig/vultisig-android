@@ -23,10 +23,10 @@ object CosmosGovVoteSignDataResolver {
      * @param hexPublicKey the voter's compressed secp256k1 public key.
      * @param chainId the Cosmos chain id the SignDoc is bound to.
      * @param chainSpecific the freshly fetched account number + sequence; its `gas` is the fee
-     *   amount and its relayed `gasLimit`, when set, the gas limit.
+     *   amount.
      * @param feeDenom the denom the fee is paid in.
-     * @param staticGasLimit the chain's gas limit when no limit was relayed — the same fallback
-     *   `CosmosHelper` resolves, so the fee signed is the fee shown.
+     * @param staticGasLimit the chain's gas limit — the same one `CosmosHelper` resolves, so the
+     *   fee signed is the fee shown.
      */
     fun resolve(
         vote: CosmosGovVote,
@@ -44,15 +44,6 @@ object CosmosGovVoteSignDataResolver {
                 "Public key must be a compressed secp256k1 pubkey (33 bytes, 0x02/0x03 prefix)"
             }
 
-        val gasLimit =
-            chainSpecific.gasLimit
-                ?.takeIf { it.signum() > 0 }
-                ?.let {
-                    require(it.bitLength() < Long.SIZE_BITS) {
-                        "Relayed gas limit $it exceeds the supported range"
-                    }
-                    it.toLong()
-                } ?: staticGasLimit
         require(chainSpecific.gas.signum() > 0 && chainSpecific.gas.bitLength() < Long.SIZE_BITS) {
             "Fee amount ${chainSpecific.gas} is out of range"
         }
@@ -72,7 +63,7 @@ object CosmosGovVoteSignDataResolver {
             CosmosStakingHelper.buildAuthInfo(
                 pubKey = pubKey,
                 sequence = chainSpecific.sequence.toLong(),
-                gasLimit = gasLimit,
+                gasLimit = staticGasLimit,
                 feeDenom = feeDenom,
                 feeAmount = chainSpecific.gas.toLong(),
             )

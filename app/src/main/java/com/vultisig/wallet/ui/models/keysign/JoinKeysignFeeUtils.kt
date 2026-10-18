@@ -128,8 +128,8 @@ internal fun KeysignPayload.dappSuppliedNativeFee(
 }
 
 /**
- * The Cosmos staking / distribution message type URLs whose presence in a signed body marks the
- * payload as a delegation deposit (delegate / undelegate / redelegate / withdraw-reward).
+ * The Cosmos staking / distribution / governance message type URLs whose presence in a signed body
+ * marks the payload as a deposit (delegate / undelegate / redelegate / withdraw-reward / vote).
  */
 private val COSMOS_STAKING_DEPOSIT_TYPE_URLS =
     setOf(
@@ -137,6 +137,7 @@ private val COSMOS_STAKING_DEPOSIT_TYPE_URLS =
         CosmosStakingHelper.MSG_UNDELEGATE_TYPE_URL,
         CosmosStakingHelper.MSG_BEGIN_REDELEGATE_TYPE_URL,
         CosmosStakingHelper.MSG_WITHDRAW_DELEGATOR_REWARD_TYPE_URL,
+        CosmosStakingHelper.MSG_VOTE_TYPE_URL,
     )
 
 /**
