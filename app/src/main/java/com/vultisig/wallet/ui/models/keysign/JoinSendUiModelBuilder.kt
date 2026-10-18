@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
+import com.vultisig.wallet.data.models.cosmosNativeDenom
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -117,7 +118,12 @@ constructor(
         // body isn't a single bank `MsgSend` (staking, multi-message, dApp calls) no simple To/
         // amount is shown; the full decoded SignDoc is rendered below in the Direct Sign card.
         val signDirectMessage = payload.signDirect?.let { parseCosmosMessage(it) }
-        val signDirectTransfer = signDirectMessage?.singleMsgSendTransfer()
+        // The signed coin's denom has to match what the row will be labelled with, or the signed
+        // integer would render under the wrong ticker/decimals. Native sends carry the chain's
+        // native denom; other Cosmos assets carry their denom in the coin's contract address.
+        val expectedSignDirectDenom =
+            if (payloadToken.isNativeToken) chain.cosmosNativeDenom else payloadToken.contractAddress
+        val signDirectTransfer = signDirectMessage?.singleMsgSendTransfer(expectedSignDirectDenom)
 
         val dstAddress =
             when {
@@ -370,18 +376,22 @@ constructor(
 
     /**
      * Pulls the recipient and amount out of a decoded `signDirect` SignDoc, but only when the body
-     * is exactly one bank `MsgSend` carrying a single coin. That is the one case where a simple
-     * "To / amount" row can faithfully stand in for the signed bytes. Anything else — staking,
-     * governance, multi-message or dApp bodies — returns null so the verify screen shows no
-     * spoofable To/amount and relies on the full Direct Sign card instead. The address is taken
-     * verbatim from the signed bytes, so what the co-signer sees is always what it signs.
+     * is exactly one bank `MsgSend` carrying a single coin whose denom is [expectedDenom]. That is
+     * the one case where a simple "To / amount" row can faithfully stand in for the signed bytes.
+     * Anything else — staking, governance, multi-message or dApp bodies, or a coin in a denom that
+     * doesn't match what the row would be labelled with — returns null so the verify screen shows
+     * no spoofable To/amount and relies on the full Direct Sign card instead. The recipient and
+     * amount are taken verbatim from the signed bytes, so what the co-signer sees is what it signs.
      */
-    private fun CosmosMessage.singleMsgSendTransfer(): SignDirectTransfer? {
+    private fun CosmosMessage.singleMsgSendTransfer(expectedDenom: String?): SignDirectTransfer? {
+        if (expectedDenom.isNullOrEmpty()) return null
         val message = messages.singleOrNull() ?: return null
         if (message.typeUrl != MSG_SEND_TYPE_URL) return null
         val body = message.value as? JsonObject ?: return null
         val recipient = (body["toAddress"] as? JsonPrimitive)?.content ?: return null
         val coin = (body["amount"] as? JsonArray)?.singleOrNull() as? JsonObject ?: return null
+        val denom = (coin["denom"] as? JsonPrimitive)?.content ?: return null
+        if (!denom.equals(expectedDenom, ignoreCase = true)) return null
         val amount = (coin["amount"] as? JsonPrimitive)?.content?.toBigIntegerOrNull() ?: return null
         return SignDirectTransfer(recipient = recipient, amount = amount)
     }
