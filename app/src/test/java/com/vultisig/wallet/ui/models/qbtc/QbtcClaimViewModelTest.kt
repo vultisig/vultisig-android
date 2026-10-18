@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkCheck
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ClaimProofResponse
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ClaimableUtxo
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.LoadClaimableQbtcUtxosUseCase
@@ -76,6 +77,7 @@ internal class QbtcClaimViewModelTest {
     private lateinit var encryption: Encryption
     private lateinit var protoBuf: ProtoBuf
     private lateinit var json: Json
+    private lateinit var qbtcNetworkCheck: QbtcNetworkCheck
 
     @BeforeEach
     fun setUp() {
@@ -99,6 +101,8 @@ internal class QbtcClaimViewModelTest {
         encryption = mockk(relaxed = true)
         protoBuf = mockk(relaxed = true)
         json = mockk(relaxed = true)
+        qbtcNetworkCheck = mockk()
+        coEvery { qbtcNetworkCheck.isAppOutdated() } returns false
         coEvery { vaultRepository.get(VAULT_ID) } returns fastVault()
         coEvery { resolveQbtcClaimCoins(any()) } returns
             QbtcClaimCoins(btc = btcCoin(), qbtc = qbtcCoin())
@@ -130,6 +134,7 @@ internal class QbtcClaimViewModelTest {
             encryption = encryption,
             protoBuf = protoBuf,
             json = json,
+            qbtcNetworkCheck = qbtcNetworkCheck,
         )
 
     @Test
@@ -290,6 +295,44 @@ internal class QbtcClaimViewModelTest {
 
             assertEquals(QbtcClaimUiState.Failed(QbtcClaimError.GENERIC), vm.uiState.value)
             coVerify(exactly = 0) { proofService.generateProof(any()) }
+        }
+
+    @Test
+    fun `confirm blocks with update required when the network changed after load`() =
+        runTest(testDispatcher) {
+            coEvery { loadClaimableUtxos(BTC_ADDRESS) } returns
+                QbtcClaimLoadResult.Available(utxos(2))
+            val vm = viewModel()
+            advanceUntilIdle()
+            coEvery { qbtcNetworkCheck.isAppOutdated() } returns true
+
+            vm.confirm(fastVaultPassword = "pw")
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { roundRunner.run(any()) }
+            assertEquals(
+                QbtcClaimUiState.Blocked(QbtcClaimBlockedReason.UpdateRequired),
+                vm.uiState.value,
+            )
+        }
+
+    @Test
+    fun `secure vault claim blocks with update required before pairing`() =
+        runTest(testDispatcher) {
+            coEvery { loadClaimableUtxos(BTC_ADDRESS) } returns
+                QbtcClaimLoadResult.Available(utxos(2))
+            val vm = viewModel()
+            advanceUntilIdle()
+            coEvery { qbtcNetworkCheck.isAppOutdated() } returns true
+
+            vm.startSecureVaultClaim()
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { sessionApi.startSession(any(), any(), any()) }
+            assertEquals(
+                QbtcClaimUiState.Blocked(QbtcClaimBlockedReason.UpdateRequired),
+                vm.uiState.value,
+            )
         }
 
     @Test

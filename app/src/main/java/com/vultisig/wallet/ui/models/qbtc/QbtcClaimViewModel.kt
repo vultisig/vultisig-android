@@ -14,6 +14,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkCheck
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ClaimableUtxo
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.LoadClaimableQbtcUtxosUseCase
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimAmountFormatter
@@ -153,6 +154,7 @@ constructor(
     private val encryption: Encryption,
     private val protoBuf: ProtoBuf,
     private val json: Json,
+    private val qbtcNetworkCheck: QbtcNetworkCheck,
 ) : ViewModel() {
 
     private val vaultId = savedStateHandle.toRoute<Route.QbtcClaim>().vaultId
@@ -251,6 +253,7 @@ constructor(
         passwordError = null
         claimJob =
             viewModelScope.safeLaunch {
+                if (blockIfAppOutdated()) return@safeLaunch
                 runOrchestrator(
                     claim.vault,
                     claim.btcCoin,
@@ -268,6 +271,7 @@ constructor(
         val claim = readyClaim() ?: return
         claimJob =
             viewModelScope.safeLaunch {
+                if (blockIfAppOutdated()) return@safeLaunch
                 val session = pairAndKickoff(claim.vault, claim.btcCoin)
                 if (session == null) {
                     uiState.value = QbtcClaimUiState.Failed(QbtcClaimError.PAIRING_TIMEOUT)
@@ -297,6 +301,16 @@ constructor(
         val btcCoin = btcCoin ?: return null
         val qbtcCoin = qbtcCoin ?: return null
         return ReadyClaim(vault, btcCoin, qbtcCoin, selectedUtxos())
+    }
+
+    /**
+     * Re-checks the QBTC network when a claim starts: the screen may have loaded before the network
+     * changed, and a Fast Vault claim has no co-signing device to check it.
+     */
+    private suspend fun blockIfAppOutdated(): Boolean {
+        if (!qbtcNetworkCheck.isAppOutdated()) return false
+        uiState.value = QbtcClaimUiState.Blocked(QbtcClaimBlockedReason.UpdateRequired)
+        return true
     }
 
     fun retry() = load()
