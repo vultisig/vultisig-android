@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.securityscanner.blockaid.solanaBase64ToBase58
 import java.math.BigInteger
 import kotlinx.coroutines.coroutineScope
 import vultisig.keysign.v1.SignSui
@@ -52,6 +53,7 @@ class SecurityScannerTransactionFactory(
         val chain = transaction.srcToken.chain
         return when (chain.standard) {
             TokenStandard.EVM -> createEVMSecurityScannerTransaction(transaction)
+            TokenStandard.SOL -> createSOLSecurityScannerTransaction(transaction)
             else -> throw SecurityScannerException("Security Scanner: Not supported ${chain.name}")
         }
     }
@@ -59,7 +61,7 @@ class SecurityScannerTransactionFactory(
     /**
      * Builds a recipient-only scan for a swap: a native transfer to the swap's external recipient
      * on the DESTINATION chain, so Blockaid screens the address the funds land on even when the
-     * source-chain swap transaction can't be scanned (e.g. a Solana-source swap, #5348).
+     * source-chain swap transaction can't be scanned (e.g. a non-EVM, non-Solana source, #5348).
      *
      * Only EVM destinations are modelled — they are the one address-shaped scan the provider takes;
      * the Bitcoin/Solana/Sui endpoints need a serialized transaction, which doesn't exist for an
@@ -111,6 +113,32 @@ class SecurityScannerTransactionFactory(
 
             else -> throw SecurityScannerException("Not supported provider for EVM")
         }
+    }
+
+    /**
+     * Scans the Solana aggregator swap (Jupiter, LI.FI, SwapKit) exactly as it is signed: the
+     * base64 transaction on the quote's `tx.data`, transcoded to the base58 form Blockaid takes.
+     * Never rebuilt from the swap's display fields.
+     */
+    private fun createSOLSecurityScannerTransaction(
+        transaction: SwapTransaction
+    ): SecurityScannerTransaction {
+        val payload =
+            transaction.payload as? SwapPayload.EVM
+                ?: throw SecurityScannerException("Not supported provider for Solana")
+        val tx = payload.data.quote.tx
+        if (tx.data.isBlank()) {
+            throw SecurityScannerException("Security Scanner: Solana swap has no transaction")
+        }
+        val srcToken = transaction.srcToken
+        return SecurityScannerTransaction(
+            chain = srcToken.chain,
+            type = SecurityTransactionType.SWAP,
+            from = srcToken.address,
+            to = tx.to.ifBlank { srcToken.address },
+            amount = BigInteger.ZERO, // encoded in tx
+            data = solanaBase64ToBase58(tx.data),
+        )
     }
 
     /**

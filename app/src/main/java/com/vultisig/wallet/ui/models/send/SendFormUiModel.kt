@@ -71,6 +71,8 @@ internal data class SendFormUiModel(
     val tokenAmountError: UiText? = null,
     val memoError: UiText? = null,
     val reapingError: UiText? = null,
+    // A percentage/MAX tap came out as zero because the network fee is larger than the balance.
+    val feeShortfallError: UiText? = null,
     val hasMemo: Boolean = false,
     // XRP: show a dedicated destination-tag field instead of the free-text memo field.
     val isDestinationTag: Boolean = false,

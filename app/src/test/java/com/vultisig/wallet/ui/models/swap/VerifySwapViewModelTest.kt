@@ -9,9 +9,11 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerException
 import com.vultisig.wallet.data.securityscanner.SecurityScannerFeaturesType
@@ -299,6 +301,73 @@ internal class VerifySwapViewModelTest {
             vm.state.value.txScanStatus shouldBe TransactionScanStatus.Scanned(result)
         }
 
+    /**
+     * SwapKit stages Solana routes on [SwapPayload.EVM]: the signed tx is scanned and the external
+     * recipient is still screened, keeping the worse of the two verdicts.
+     */
+    @Test
+    fun `a Solana aggregator swap also screens its external recipient and keeps the worse verdict`() =
+        runTest(testDispatcher) {
+            val swapResult =
+                mockk<SecurityScannerResult>(relaxed = true) {
+                    every { riskLevel } returns SecurityRiskLevel.NONE
+                }
+            val recipientResult =
+                mockk<SecurityScannerResult>(relaxed = true) {
+                    every { riskLevel } returns SecurityRiskLevel.HIGH
+                }
+            val swapScan = mockk<SecurityScannerTransaction>(relaxed = true)
+            val recipientScan = mockk<SecurityScannerTransaction>(relaxed = true)
+            givenNonEvmSourceSwap(
+                dstChain = Chain.Ethereum,
+                externalRecipient = RECIPIENT,
+                swapPayload = mockk<SwapPayload.EVM>(relaxed = true),
+            )
+            coEvery {
+                securityScannerService.createSecurityScannerTransaction(any<SwapTransaction>())
+            } returns swapScan
+            every {
+                securityScannerService.createRecipientSecurityScannerTransaction(any())
+            } returns recipientScan
+            coEvery { securityScannerService.scanTransaction(swapScan) } returns swapResult
+            coEvery { securityScannerService.scanTransaction(recipientScan) } returns
+                recipientResult
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.txScanStatus shouldBe TransactionScanStatus.Scanned(recipientResult)
+            coVerify(exactly = 1) { securityScannerService.scanTransaction(swapScan) }
+        }
+
+    /** A failed recipient lookup must not discard the swap's own verdict. */
+    @Test
+    fun `a failing recipient scan keeps the Solana aggregator swap verdict`() =
+        runTest(testDispatcher) {
+            val swapResult = mockk<SecurityScannerResult>(relaxed = true)
+            val swapScan = mockk<SecurityScannerTransaction>(relaxed = true)
+            val recipientScan = mockk<SecurityScannerTransaction>(relaxed = true)
+            givenNonEvmSourceSwap(
+                dstChain = Chain.Ethereum,
+                externalRecipient = RECIPIENT,
+                swapPayload = mockk<SwapPayload.EVM>(relaxed = true),
+            )
+            coEvery {
+                securityScannerService.createSecurityScannerTransaction(any<SwapTransaction>())
+            } returns swapScan
+            every {
+                securityScannerService.createRecipientSecurityScannerTransaction(any())
+            } returns recipientScan
+            coEvery { securityScannerService.scanTransaction(swapScan) } returns swapResult
+            coEvery { securityScannerService.scanTransaction(recipientScan) } throws
+                SecurityScannerException("timeout")
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.state.value.txScanStatus shouldBe TransactionScanStatus.Scanned(swapResult)
+        }
+
     /** A swap that lands back in the vault's own address has no external address to screen. */
     @Test
     fun `a non-scannable source swap without an external recipient stays unscanned`() =
@@ -448,14 +517,19 @@ internal class VerifySwapViewModelTest {
     }
 
     /**
-     * Drives `init` with a Solana-source swap: the source chain is Blockaid-supported but isn't
-     * EVM, so the full-transaction path is skipped and only the recipient fallback can run.
+     * Drives `init` with a THORChain swap from native SOL: the source chain is Blockaid-supported
+     * but the swap isn't scannable as a full transaction, so only the recipient fallback can run.
      */
-    private fun givenNonEvmSourceSwap(dstChain: Chain, externalRecipient: String?) {
+    private fun givenNonEvmSourceSwap(
+        dstChain: Chain,
+        externalRecipient: String?,
+        swapPayload: SwapPayload = mockk<SwapPayload.ThorChain>(relaxed = true),
+    ) {
         val tx =
             mockk<SwapTransaction.RegularSwapTransaction>(relaxed = true) {
                 every { isApprovalRequired } returns false
                 every { memo } returns null
+                every { payload } returns swapPayload
                 every { srcToken } returns
                     mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.Solana }
                 every { dstToken } returns

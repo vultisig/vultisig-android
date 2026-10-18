@@ -55,6 +55,7 @@ import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import com.vultisig.wallet.ui.models.swap.swapFeeRow
+import com.vultisig.wallet.ui.models.swap.swapKitInboundFeeIsNetworkFee
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -562,7 +563,7 @@ constructor(
                 // purpose is to state the cost.
                 val payloadFee =
                     swapKitPayloadFee(swapPayload.data, srcToken, dstToken, nativeToken)
-                // BTC/Cardano SwapKit deposits report the deposit cost as their inbound fee,
+                // BTC/Cardano/NEAR SwapKit deposits report the deposit cost as their inbound fee,
                 // already shown as the Network Fee — hide the Swap Fee row so it isn't
                 // double-counted, matching the initiator and the form (#5358, #5321). A provider
                 // fee stated on the wire is a separate charge and shows on every source chain.
@@ -570,7 +571,7 @@ constructor(
                     when (payloadFee) {
                         is SwapKitPayloadFee.Stated -> false
                         SwapKitPayloadFee.NotRenderable -> true
-                        SwapKitPayloadFee.Absent -> srcToken.chain.standard == TokenStandard.UTXO
+                        SwapKitPayloadFee.Absent -> srcToken.chain.swapKitInboundFeeIsNetworkFee
                     }
                 // For a sender that predates the field, re-fetch only the SwapKit inbound fee at
                 // join time so the co-signer sees the same non-zero swap fee as the initiator
@@ -584,7 +585,7 @@ constructor(
                 // initiator's `affiliateBps` / `srcAddress` are intentionally omitted — the inbound
                 // fee doesn't depend on the affiliate fee and the join device can't know the
                 // initiator's `vultBPSDiscount`, so approximate parity holds. Skipped entirely
-                // when the row is hidden (UTXO): the fetched fee would be neither displayed nor
+                // when the row is hidden (UTXO, NEAR): the fetched fee would be neither shown nor
                 // added to the total, so the round-trip is waste (#5358 review).
                 val swapKitVultBps =
                     getDiscountBps(vault.id, SwapProvider.SWAPKIT).takeIf { it > 0 }
