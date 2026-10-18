@@ -20,15 +20,19 @@ class ExplorerLinkRepositoryImplTest {
     private val repository = ExplorerLinkRepositoryImpl()
 
     @Test
-    fun `QBTC transaction link is empty when explorer does not exist`() {
-        val link = repository.getTransactionLink(Chain.Qbtc, "ABCDEF123456")
-        assertTrue(link.isBlank(), "QBTC tx link should be blank, was: $link")
+    fun `QBTC transaction link points at explorer qbtc net`() {
+        assertEquals(
+            "https://explorer.qbtc.net/qbtc/tx/ABCDEF123456",
+            repository.getTransactionLink(Chain.Qbtc, "ABCDEF123456"),
+        )
     }
 
     @Test
-    fun `QBTC address link is empty when explorer does not exist`() {
-        val link = repository.getAddressLink(Chain.Qbtc, "qbtc1someaddress")
-        assertTrue(link.isBlank(), "QBTC address link should be blank, was: $link")
+    fun `QBTC address link uses the account path`() {
+        assertEquals(
+            "https://explorer.qbtc.net/qbtc/account/qbtc1someaddress",
+            repository.getAddressLink(Chain.Qbtc, "qbtc1someaddress"),
+        )
     }
 
     @Test
@@ -66,12 +70,7 @@ class ExplorerLinkRepositoryImplTest {
     fun `all chains produce transaction links without throwing`() {
         for (chain in Chain.entries) {
             val link = repository.getTransactionLink(chain, "test_hash")
-            if (chain != Chain.Qbtc) {
-                assertTrue(
-                    link.isNotEmpty(),
-                    "Transaction link for ${chain.name} should not be empty",
-                )
-            }
+            assertTrue(link.isNotEmpty(), "Transaction link for ${chain.name} should not be empty")
         }
     }
 
@@ -175,9 +174,7 @@ class ExplorerLinkRepositoryImplTest {
     fun `all chains produce address links without throwing`() {
         for (chain in Chain.entries) {
             val link = repository.getAddressLink(chain, "test_address")
-            if (chain != Chain.Qbtc) {
-                assertTrue(link.isNotEmpty(), "Address link for ${chain.name} should not be empty")
-            }
+            assertTrue(link.isNotEmpty(), "Address link for ${chain.name} should not be empty")
         }
     }
 

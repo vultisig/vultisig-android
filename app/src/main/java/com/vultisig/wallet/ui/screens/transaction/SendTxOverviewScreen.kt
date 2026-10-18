@@ -659,7 +659,7 @@ internal fun TxDetails(
                 modifier = Modifier.widthIn(max = 100.dp),
             )
 
-            // Copy explorer URL when available, fall back to raw hash (e.g. QBTC has no explorer)
+            // Copy explorer URL when available, fall back to raw hash
             CopyIcon(
                 textToCopy = link.ifEmpty { hash },
                 size = 12.dp,
