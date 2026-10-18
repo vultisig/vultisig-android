@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosGovVote
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosVoteOption
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingHelper
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.models.Chain
@@ -10,6 +12,8 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import java.math.BigInteger
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import timber.log.Timber
 
 /**
@@ -160,6 +164,34 @@ internal fun KeysignPayload.isCosmosStakingDeposit(
             return false
         }
     return message.messages.any { it.typeUrl in COSMOS_STAKING_DEPOSIT_TYPE_URLS }
+}
+
+/**
+ * The governance vote this Cosmos payload's signed body carries, so a joining device can show the
+ * proposal and ballot the initiator does. `null` unless the body is exactly one readable `MsgVote`.
+ */
+internal fun KeysignPayload.cosmosGovVote(
+    parseCosmosMessage: ParseCosmosMessageUseCase
+): CosmosGovVote? {
+    val direct = signDirect ?: return null
+    val message =
+        try {
+            parseCosmosMessage(direct)
+        } catch (e: IllegalArgumentException) {
+            Timber.w("Failed to parse cosmos message for vote detection: %s", e.message)
+            return null
+        }
+    val vote =
+        message.messages.singleOrNull()?.takeIf {
+            it.typeUrl == CosmosStakingHelper.MSG_VOTE_TYPE_URL
+        } ?: return null
+    val fields = vote.value as? JsonObject ?: return null
+    val proposalId =
+        (fields["proposalId"] as? JsonPrimitive)?.content?.toULongOrNull()?.takeIf { it > 0uL }
+            ?: return null
+    val optionName = (fields["option"] as? JsonPrimitive)?.content ?: return null
+    val option = CosmosVoteOption.entries.firstOrNull { it.name == optionName } ?: return null
+    return CosmosGovVote(proposalId = proposalId, option = option)
 }
 
 /** Sums the raw Cosmos fee amounts, or `null` if any entry is missing or not a valid integer. */
