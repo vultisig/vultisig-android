@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosVoteOption
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
@@ -121,6 +122,8 @@ internal class ParseCosmosMessageUseCaseImpl(
                     JSON.encodeToJsonElement(decodeChecked<MsgBeginRedelegateBody>(value))
                 "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" ->
                     JSON.encodeToJsonElement(decodeChecked<MsgWithdrawDelegatorRewardBody>(value))
+                "/cosmos.gov.v1beta1.MsgVote" ->
+                    JSON.encodeToJsonElement(decodeChecked<MsgVoteBody>(value).toRendered())
                 "/cosmwasm.wasm.v1.MsgExecuteContract" ->
                     JSON.encodeToJsonElement(
                         decodeChecked<MsgExecuteContractBody>(value).toRendered()
@@ -194,6 +197,16 @@ private fun MsgExecuteContractBody.toRendered() =
         funds = funds,
     )
 
+// `proposal_id` is a uint64; it decodes into a Long and renders back as its unsigned value.
+private fun MsgVoteBody.toRendered() =
+    RenderedMsgVote(
+        proposalId = proposalId.toULong().toString(),
+        voter = voter,
+        option =
+            CosmosVoteOption.entries.firstOrNull { it.protoValue == option.toLong() }?.name
+                ?: option.toString(),
+    )
+
 @Serializable
 internal data class MsgSendBody(
     @ProtoNumber(1) val fromAddress: String = "",
@@ -231,6 +244,13 @@ internal data class MsgBeginRedelegateBody(
 internal data class MsgWithdrawDelegatorRewardBody(
     @ProtoNumber(1) val delegatorAddress: String = "",
     @ProtoNumber(2) val validatorAddress: String = "",
+)
+
+@Serializable
+internal data class MsgVoteBody(
+    @ProtoNumber(1) val proposalId: Long = 0,
+    @ProtoNumber(2) val voter: String = "",
+    @ProtoNumber(3) val option: Int = 0,
 )
 
 @Serializable
@@ -353,6 +373,9 @@ private data class RenderedThorMsgDeposit(
     val memo: String,
     val signer: String,
 )
+
+@Serializable
+private data class RenderedMsgVote(val proposalId: String, val voter: String, val option: String)
 
 @Serializable
 private data class RenderedMsgExecuteContract(

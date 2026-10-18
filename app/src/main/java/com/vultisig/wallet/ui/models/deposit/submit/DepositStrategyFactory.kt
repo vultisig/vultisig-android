@@ -222,6 +222,17 @@ constructor(
                         gasFeeToEstimate = gasFeeToEstimate,
                         getBitcoinTransactionPlan = context.getBitcoinTransactionPlan,
                     ),
+                DepositOption.Vote to
+                    GovVoteStrategy(
+                        vaultIdProvider = context.vaultId,
+                        chainProvider = context.chain,
+                        stateProvider = context.state,
+                        selectedTokenProvider = context.selectedToken,
+                        proposalIdFieldState = fields.proposalIdFieldState,
+                        blockChainSpecificRepository = context.blockChainSpecificRepository,
+                        calculateGasFee = context.calculateGasFee,
+                        getFeesFiatValue = context.getFeesFiatValue,
+                    ),
                 DepositOption.WithdrawSecuredAsset to
                     WithdrawSecuredAssetStrategy(
                         vaultIdProvider = context.vaultId,

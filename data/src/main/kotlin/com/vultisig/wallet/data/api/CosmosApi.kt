@@ -192,6 +192,11 @@ internal class CosmosBalanceCache(
                     ?: fetch().also { entries[key] = Entry(it, timeSource.markNow() + ttl) }
             }
 
+    // Under the key's lock so an in-flight fetch cannot re-store its pre-broadcast list.
+    suspend fun invalidate(key: String) {
+        locks.computeIfAbsent(key) { Mutex() }.withLock { entries.remove(key) }
+    }
+
     companion object {
         // Long enough to absorb the per-token fan-out for one address, short enough that a later
         // manual refresh still fetches fresh balances.

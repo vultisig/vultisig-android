@@ -3768,7 +3768,7 @@ private fun QbtcClaimDonePreview() {
                 txHash = "774365959AC251DA340851945A053D508A5F2F6CE98861556F83783C72E9CAFC",
                 totalSats = 5607L,
                 explorerUrl =
-                    "https://explorer.qbtc.network/tx/774365959AC251DA340851945A053D508A5F2F6CE98861556F83783C72E9CAFC",
+                    "https://explorer.qbtc.net/qbtc/tx/774365959AC251DA340851945A053D508A5F2F6CE98861556F83783C72E9CAFC",
             ),
         isFastVault = true,
         onBackClick = {},

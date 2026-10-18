@@ -411,6 +411,9 @@
     <string name="slippage_hint">슬리피지 비율</string>
     <string name="deposit_message_deposit_title">%s 메시지 예치</string>
     <string name="deposit_form_custom_memo_title">사용자 정의 메모</string>
+    <string name="deposit_form_proposal_id_title">제안 ID</string>
+    <string name="deposit_form_proposal_id_error">유효한 제안 ID를 입력하세요</string>
+    <string name="deposit_form_vote_option_error">투표 옵션을 선택하세요</string>
     <string name="deposit_form_unstake_percentage_hint">언스테이킹할 비율 입력</string>
     <string name="swap_screen_same_asset_error_message">출발 자산과 도착 자산이 같을 수 없습니다. </string>
     <string name="address_book_toolbar_title">주소록</string>
@@ -1877,6 +1880,7 @@
     <string name="verify_verb_merging">병합 중</string>
     <string name="verify_verb_unmerging">병합 해제 중</string>
     <string name="verify_verb_bridging">브리지 중</string>
+    <string name="verify_verb_voting">투표 중</string>
     <string name="scope_your_whole_stake">스테이킹 전액</string>
     <string name="scope_rewards_accrued_so_far">현재까지 누적된 보상</string>
     <string name="scope_delegated_amount_after_rent">임대 예치금을 제외한 위임 금액</string>

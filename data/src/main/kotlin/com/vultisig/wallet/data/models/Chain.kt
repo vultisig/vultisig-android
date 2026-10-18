@@ -271,6 +271,7 @@ val Chain.isDepositSupported: Boolean
             // flow — mirroring iOS, which removed TON from the Functions flow.
             Chain.GaiaChain,
             Chain.Osmosis,
+            Chain.Dydx,
             Chain.Bitcoin,
             Chain.BitcoinCash,
             Chain.Ethereum,

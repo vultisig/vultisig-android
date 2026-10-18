@@ -24,4 +24,5 @@ internal class DepositFieldStates {
     val thorAddressFieldState = TextFieldState()
     val rewardsAmountFieldState = TextFieldState()
     val slippageFieldState = TextFieldState()
+    val proposalIdFieldState = TextFieldState()
 }

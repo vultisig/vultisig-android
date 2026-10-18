@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosGovVote
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosVoteOption
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingHelper
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.models.Chain
@@ -10,6 +12,8 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import java.math.BigInteger
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import timber.log.Timber
 
 /**
@@ -128,8 +132,8 @@ internal fun KeysignPayload.dappSuppliedNativeFee(
 }
 
 /**
- * The Cosmos staking / distribution message type URLs whose presence in a signed body marks the
- * payload as a delegation deposit (delegate / undelegate / redelegate / withdraw-reward).
+ * The Cosmos staking / distribution / governance message type URLs whose presence in a signed body
+ * marks the payload as a deposit (delegate / undelegate / redelegate / withdraw-reward / vote).
  */
 private val COSMOS_STAKING_DEPOSIT_TYPE_URLS =
     setOf(
@@ -137,6 +141,7 @@ private val COSMOS_STAKING_DEPOSIT_TYPE_URLS =
         CosmosStakingHelper.MSG_UNDELEGATE_TYPE_URL,
         CosmosStakingHelper.MSG_BEGIN_REDELEGATE_TYPE_URL,
         CosmosStakingHelper.MSG_WITHDRAW_DELEGATOR_REWARD_TYPE_URL,
+        CosmosStakingHelper.MSG_VOTE_TYPE_URL,
     )
 
 /**
@@ -158,7 +163,41 @@ internal fun KeysignPayload.isCosmosStakingDeposit(
             Timber.w("Failed to parse cosmos message for deposit detection: %s", e.message)
             return false
         }
+    // A vote's deposit screen shows only the ballot, so it must be the whole body: any sibling
+    // message would be signed unseen. Such a body falls back to the Send screen, which lists the
+    // SignDoc.
+    if (message.messages.any { it.typeUrl == CosmosStakingHelper.MSG_VOTE_TYPE_URL }) {
+        return message.messages.size == 1
+    }
     return message.messages.any { it.typeUrl in COSMOS_STAKING_DEPOSIT_TYPE_URLS }
+}
+
+/**
+ * The governance vote this Cosmos payload's signed body carries, so a joining device can show the
+ * proposal and ballot the initiator does. `null` unless the body is exactly one readable `MsgVote`.
+ */
+internal fun KeysignPayload.cosmosGovVote(
+    parseCosmosMessage: ParseCosmosMessageUseCase
+): CosmosGovVote? {
+    val direct = signDirect ?: return null
+    val message =
+        try {
+            parseCosmosMessage(direct)
+        } catch (e: IllegalArgumentException) {
+            Timber.w("Failed to parse cosmos message for vote detection: %s", e.message)
+            return null
+        }
+    val vote =
+        message.messages.singleOrNull()?.takeIf {
+            it.typeUrl == CosmosStakingHelper.MSG_VOTE_TYPE_URL
+        } ?: return null
+    val fields = vote.value as? JsonObject ?: return null
+    val proposalId =
+        (fields["proposalId"] as? JsonPrimitive)?.content?.toULongOrNull()?.takeIf { it > 0uL }
+            ?: return null
+    val optionName = (fields["option"] as? JsonPrimitive)?.content ?: return null
+    val option = CosmosVoteOption.entries.firstOrNull { it.name == optionName } ?: return null
+    return CosmosGovVote(proposalId = proposalId, option = option)
 }
 
 /** Sums the raw Cosmos fee amounts, or `null` if any entry is missing or not a valid integer. */

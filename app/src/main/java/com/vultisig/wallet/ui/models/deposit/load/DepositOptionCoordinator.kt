@@ -378,6 +378,7 @@ constructor(
         fields.lpUnitsFieldState.clearText()
         fields.assetsFieldState.clearText()
         fields.rewardsAmountFieldState.clearText()
+        fields.proposalIdFieldState.clearText()
         state.update {
             it.copy(
                 tokenAmountError = null,
@@ -385,6 +386,9 @@ constructor(
                 dstAddressError = null,
                 operatorFeeError = null,
                 providerError = null,
+                selectedVoteOption = null,
+                voteOptionError = null,
+                proposalIdError = null,
             )
         }
     }

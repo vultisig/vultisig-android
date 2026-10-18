@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.deposit.load
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosGovVote
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
@@ -167,6 +168,31 @@ constructor(
         val text = fields.slippageFieldState.text.toString()
         val errorText = fieldValidator.validateSlippage(text)
         state.update { it.copy(slippageError = errorText) }
+    }
+
+    /** Validates the governance-vote proposal id: a positive integer within `uint64`. */
+    fun validateProposalId() {
+        val proposalId = CosmosGovVote.parseProposalId(fields.proposalIdFieldState.text.toString())
+        state.update {
+            it.copy(
+                proposalIdError =
+                    if (proposalId == null)
+                        UiText.StringResource(R.string.deposit_form_proposal_id_error)
+                    else null
+            )
+        }
+    }
+
+    /** Requires a ballot: nothing is preselected, so an untouched picker is an error on submit. */
+    fun validateVoteOption() {
+        state.update {
+            it.copy(
+                voteOptionError =
+                    if (it.selectedVoteOption == null)
+                        UiText.StringResource(R.string.deposit_form_vote_option_error)
+                    else null
+            )
+        }
     }
 
     /** Validates the assets field, surfacing inline errors. */

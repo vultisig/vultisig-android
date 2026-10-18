@@ -298,6 +298,9 @@
     <string name="deposit_form_operator_fee_title">Комиссии оператора (Базисные пункты)</string>
     <string name="deposit_message_deposit_title">%s сообщение депозит</string>
     <string name="deposit_form_custom_memo_title">Пользовательская записка</string>
+    <string name="deposit_form_proposal_id_title">ID предложения</string>
+    <string name="deposit_form_proposal_id_error">Введите действительный ID предложения</string>
+    <string name="deposit_form_vote_option_error">Выберите вариант голосования</string>
     <string name="swap_screen_same_asset_error_message">Исходные и целевые активы не могут быть одинаковыми.</string>
     <string name="address_book_toolbar_title">Адресная книга</string>
     <string name="address_book_settings_title">Адресная книга</string>
@@ -1876,6 +1879,7 @@
     <string name="verify_verb_merging">Вы объединяете</string>
     <string name="verify_verb_unmerging">Вы отменяете объединение</string>
     <string name="verify_verb_bridging">Вы переводите между сетями</string>
+    <string name="verify_verb_voting">Вы голосуете</string>
     <string name="scope_your_whole_stake">весь ваш стейк</string>
     <string name="scope_rewards_accrued_so_far">накопленные на данный момент награды</string>
     <string name="scope_delegated_amount_after_rent">делегированная сумма за вычетом резерва за аренду</string>
