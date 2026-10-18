@@ -4223,8 +4223,10 @@ internal class SwapFormViewModelTest {
             vm.swap()
             vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.6")
             Snapshot.sendApplyNotifications()
-            swapVerdict.complete(Unit)
+            // Let the edited quote land first so only a quote captured at the tap can be staged.
             advanceTimeBy(500)
+            runCurrent()
+            swapVerdict.complete(Unit)
             advanceUntilIdle()
 
             assertTrue(staged.isCaptured)
