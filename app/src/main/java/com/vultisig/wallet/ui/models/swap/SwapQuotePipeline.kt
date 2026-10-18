@@ -229,10 +229,9 @@ internal class SwapQuotePipeline(
                 eligibleProviders
                     .map { p ->
                         async {
-                            val discount =
-                                vaultId?.let { id ->
-                                    getDiscountBpsUseCase.invoke(id, p).takeIf { bps -> bps != 0 }
-                                }
+                            val discount = vaultId?.let { id ->
+                                getDiscountBpsUseCase.invoke(id, p).takeIf { bps -> bps != 0 }
+                            }
                             QuoteCandidate(
                                 provider = p,
                                 vultBPSDiscount = discount,
@@ -432,8 +431,8 @@ internal class SwapQuotePipeline(
                 tierType = vultResult.tierType,
             )
 
-        // SwapKit UTXO-family sources (Bitcoin PSBT deposit, Cardano CBOR deposit) settle by
-        // broadcasting a deposit whose on-chain miner fee is the only network cost, already
+        // SwapKit UTXO-family and NEAR sources (BTC PSBT, Cardano CBOR, NEAR transfer) settle by
+        // broadcasting a deposit whose on-chain network fee is the only network cost, already
         // surfaced on the Network Fee row (BTC via the UTXO plan below; Cardano via the flat
         // send-style plan fee — Cardano is excluded from the plan path in `isUtxoSwap`). SwapKit
         // reports that same deposit cost as its wire inbound fee, so counting it again as a swap
@@ -442,10 +441,10 @@ internal class SwapQuotePipeline(
         // (`SwapCryptoLogic.fee`), so zero the swap-fee contribution and its breakdown row; the
         // affiliate fee is already baked into expectedDstValue.
         val quote = quoteResult.quote
-        val isSwapKitUtxoSwap =
-            quote is SwapQuote.SwapKit && srcToken.chain.standard == TokenStandard.UTXO
+        val hidesSwapKitInboundFee =
+            quote is SwapQuote.SwapKit && srcToken.chain.swapKitInboundFeeIsNetworkFee
         val effectiveSwapFeeFiat =
-            if (isSwapKitUtxoSwap) FiatValue(BigDecimal.ZERO, quoteResult.swapFeeFiat.currency)
+            if (hidesSwapKitInboundFee) FiatValue(BigDecimal.ZERO, quoteResult.swapFeeFiat.currency)
             else quoteResult.swapFeeFiat
         // The row is titled with the list rate, so its amount is the fee the provider charged plus
         // every discount the rows below it itemize: together they are what the swap would have
@@ -484,13 +483,13 @@ internal class SwapQuotePipeline(
         // quoted rate itemizes no amount to gross up and keeps its "included in quoted rate" copy.
         val feeText =
             when {
-                isSwapKitUtxoSwap -> ""
+                hidesSwapKitInboundFee -> ""
                 quoteResult.swapFeeIncludedInRate -> quoteResult.feeText
                 else -> fiatValueToString(feeRow.fee, asFee = true)
             }
         // The SwapKit UTXO/Cardano deposit cost is shown once as the Network Fee and the Swap Fee
         // row is hidden entirely, so drop its percentage too (there is no row to label).
-        val swapFeePercent = if (isSwapKitUtxoSwap) null else feeRow.percent
+        val swapFeePercent = if (hidesSwapKitInboundFee) null else feeRow.percent
 
         val priceImpactDisplay = formatPriceImpact(quoteResult.priceImpact)
 

@@ -55,6 +55,8 @@ internal object SwapKitCapability {
             Chain.Sui,
             // Plain native deposit transfer signed through TonHelper.
             Chain.Ton,
+            // NEAR Intents deposit: a plain transfer to the per-swap implicit account, NearHelper.
+            Chain.Near,
             // TronWeb object → sha256 of raw_data_hex, via SwapKitTronSigner.
             Chain.Tron,
         )

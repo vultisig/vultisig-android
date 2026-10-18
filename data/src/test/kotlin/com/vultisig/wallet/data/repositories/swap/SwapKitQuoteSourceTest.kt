@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitProviderError
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitRoute
+import com.vultisig.wallet.data.api.models.quotes.SwapKitRouteMeta
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer
@@ -385,6 +386,37 @@ internal class SwapKitQuoteSourceTest {
         assertEquals("20", result.data.tx.gasPrice)
         assertEquals(200000L, result.data.tx.gas)
         assertEquals("CHAINFLIP", result.subProvider)
+    }
+
+    @Test
+    fun `fetch negates SwapKit meta priceImpact so a value-losing route reads as a cost`() =
+        runTest {
+            // Live NEAR -> ETH response: $24.15 in, $23.75 out, reported as -0.0167.
+            val result = fetchEvmWithRoute(route("r", listOf("NEAR"), priceImpact = -0.0167))
+
+            assertEquals(0, BigDecimal("0.0167").compareTo(result.priceImpact))
+        }
+
+    @Test
+    fun `fetch negates the totalSlippageBps fallback when meta priceImpact is absent`() = runTest {
+        val result = fetchEvmWithRoute(route("r", listOf("NEAR"), totalSlippageBps = -167.0))
+
+        assertEquals(0, BigDecimal("0.0167").compareTo(result.priceImpact))
+    }
+
+    @Test
+    fun `fetch prefers meta priceImpact over totalSlippageBps and flips a gain negative`() = runTest {
+        val result =
+            fetchEvmWithRoute(
+                route("r", listOf("NEAR"), priceImpact = 0.002, totalSlippageBps = -500.0)
+            )
+
+        assertEquals(0, BigDecimal("-0.002").compareTo(result.priceImpact))
+    }
+
+    @Test
+    fun `fetch leaves price impact null when SwapKit reports neither field`() = runTest {
+        assertNull(fetchEvmWithRoute(route("r", listOf("NEAR"))).priceImpact)
     }
 
     @Test
@@ -2406,6 +2438,8 @@ internal class SwapKitQuoteSourceTest {
         expectedBuy: String? = "1",
         fees: List<SwapKitFee> = emptyList(),
         maxSlippage: String? = null,
+        priceImpact: Double? = null,
+        totalSlippageBps: Double? = null,
     ) =
         SwapKitRoute(
             routeId = routeId,
@@ -2413,7 +2447,16 @@ internal class SwapKitQuoteSourceTest {
             expectedBuyAmount = expectedBuy,
             expectedBuyAmountMaxSlippage = maxSlippage,
             fees = fees,
+            totalSlippageBps = totalSlippageBps,
+            meta = priceImpact?.let { SwapKitRouteMeta(priceImpact = it) },
         )
+
+    private suspend fun fetchEvmWithRoute(route: SwapKitRoute): SwapQuoteResult.Evm {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns SwapKitQuoteResponseJson(routes = listOf(route))
+        coEvery { api.swap(any()) } returns evmSwapResponse(providers = route.providers)
+        return source().fetch(request()) as SwapQuoteResult.Evm
+    }
 
     private fun evmSwapResponse(
         gas: String? = "200000",

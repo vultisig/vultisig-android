@@ -107,7 +107,9 @@ internal fun JoinKeysignView() {
                     confirmTitle = stringResource(R.string.verify_swap_sign_button),
                     isConsentsEnabled = false,
                     onFastSignClick = {},
-                    onConfirm = viewModel::joinKeysign,
+                    onConfirm = viewModel::joinSwapKeysign,
+                    onContinueAnyway = viewModel::joinSwapKeysignSkippingWarning,
+                    onDismissRequest = viewModel::dismissSwapScanWarning,
                 )
             }
 

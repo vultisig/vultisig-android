@@ -422,6 +422,9 @@
     <string name="slippage_hint">Slippage percentage</string>
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
+    <string name="deposit_form_proposal_id_title">Proposal ID</string>
+    <string name="deposit_form_proposal_id_error">Enter a valid proposal ID</string>
+    <string name="deposit_form_vote_option_error">Select a vote option</string>
     <string name="deposit_form_unstake_percentage_hint">Enter percentage to unstake</string>
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same.</string>
     <string name="address_book_toolbar_title">Address Book</string>
@@ -614,7 +617,7 @@
     <string name="send_error_xrp_destination_not_activated">Minimum amount to activate this address is %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Minimum amount to activate this address is %1$s %2$s (Existential Deposit).</string>
     <string name="send_error_near_destination_not_found">This NEAR account doesn\'t exist. Check the recipient: a transfer to it would only burn gas.</string>
-    <string name="send_error_near_unsupported_payload">This NEAR transaction isn\'t supported. Only native NEAR transfers can be signed.</string>
+    <string name="send_error_near_unsupported_payload">This NEAR transaction isn\'t supported. Only native NEAR transfers and SwapKit deposits can be signed.</string>
     <string name="send_error_near_invalid_recipient">This isn\'t a valid NEAR account. Check the recipient.</string>
     <string name="send_error_near_key_not_full_access">This vault\'s key has no full access to this NEAR account, so it can\'t send from it.</string>
     <string name="send_error_near_network">The NEAR network returned an error or an unreadable answer. Try again.</string>
@@ -1920,6 +1923,7 @@
     <string name="verify_verb_merging">You’re merging</string>
     <string name="verify_verb_unmerging">You’re unmerging</string>
     <string name="verify_verb_bridging">You’re bridging</string>
+    <string name="verify_verb_voting">You’re voting</string>
     <string name="scope_your_whole_stake">your whole stake</string>
     <string name="scope_rewards_accrued_so_far">rewards accrued so far</string>
     <string name="scope_delegated_amount_after_rent">the delegated amount after deducting the rent reserve</string>

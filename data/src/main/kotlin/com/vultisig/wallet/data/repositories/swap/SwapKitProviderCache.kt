@@ -226,6 +226,7 @@ constructor(private val api: SwapKitApi, private val timeSource: TimeSource) :
                 "cardano" -> Chain.Cardano
                 "ton" -> Chain.Ton
                 "sui" -> Chain.Sui
+                "near" -> Chain.Near
                 else -> null
             }
         }

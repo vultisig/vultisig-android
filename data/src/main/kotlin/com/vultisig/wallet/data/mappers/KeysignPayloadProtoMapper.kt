@@ -346,7 +346,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
 
     /**
      * Refuses the NEAR amount spellings the SDK signer refuses: anything but a plain unsigned
-     * decimal.
+     * decimal, and a SwapKit deposit amount that is not the transfer amount verbatim.
      */
     private fun KeysignPayloadProto.requireNearWireAmounts() {
         require(toAmount.isUnsignedDecimal()) {
@@ -355,6 +355,11 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
         nearSpecific?.let {
             require(it.gasFee.isUnsignedDecimal()) {
                 "NEAR gas fee is not an unsigned decimal integer: ${it.gasFee}"
+            }
+        }
+        swapkitSwapPayload?.let {
+            require(it.fromAmount == toAmount) {
+                "NEAR SwapKit deposit amount ${it.fromAmount} is not the transfer amount $toAmount"
             }
         }
     }

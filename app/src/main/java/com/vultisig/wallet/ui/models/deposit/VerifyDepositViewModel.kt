@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosGovVote
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
@@ -102,6 +103,8 @@ internal data class DepositTransactionUiModel(
      * an unbond — and for every reading the decoder is deliberately silent on.
      */
     val heroContent: HeroContent? = null,
+    /** The proposal and ballot of a governance vote, shown as their own rows. Null otherwise. */
+    val governanceVote: CosmosGovVote? = null,
 )
 
 internal data class VerifyDepositUiModel(
@@ -166,7 +169,13 @@ constructor(
                         nodeAddress = transaction.nodeAddress,
                         pairedAddress = transaction.pairedAddress,
                         pool = transaction.pool,
-                        titleRes = depositVerifyTitleRes(transaction.operation, transaction.memo),
+                        governanceVote = transaction.governanceVote,
+                        titleRes =
+                            depositVerifyTitleRes(
+                                operation = transaction.operation,
+                                memo = transaction.memo,
+                                isGovernanceVote = transaction.governanceVote != null,
+                            ),
                         limitCancelPair =
                             LimitOrderCancelPresentation.pairCaption(transaction.memo),
                         limitCancelDonatesDust =
@@ -225,7 +234,11 @@ constructor(
     private fun loadDecodedHero(transaction: DepositTransaction) {
         if (
             !depositVerifyAcceptsDecodedHero(
-                depositVerifyTitleRes(transaction.operation, transaction.memo)
+                depositVerifyTitleRes(
+                    operation = transaction.operation,
+                    memo = transaction.memo,
+                    isGovernanceVote = transaction.governanceVote != null,
+                )
             )
         ) {
             return

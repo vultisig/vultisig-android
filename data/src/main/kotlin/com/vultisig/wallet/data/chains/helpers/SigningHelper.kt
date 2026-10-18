@@ -203,7 +203,12 @@ object SigningHelper {
                     // See SwapKitSwapPayloadJson.isUtxoPsbtTxType for why the UTXO family is keyed
                     // off `chain` rather than `txType`.
                     messages +=
-                        if (SwapKitSwapPayloadJson.isUtxoPsbtTxType(txType)) {
+                        // NEAR Intents deposit: no txType (see TX_TYPE_NEAR_DEPOSIT), signed as
+                        // the plain transfer whose deposit binding NearHelper asserts. Checked
+                        // before the PSBT branch, where a blank txType means a UTXO PSBT.
+                        if (chain == Chain.Near) {
+                            NearHelper(eddsaKey).getPreSignedImageHash(payload)
+                        } else if (SwapKitSwapPayloadJson.isUtxoPsbtTxType(txType)) {
                             rejectingSwapKitPsbt {
                                 when (chain) {
                                     // Segwit PSBT (BTC + LTC). CoinType is picked from the source
@@ -533,7 +538,9 @@ object SigningHelper {
                     val txType = swapPayload.data.txType
                     // See the matching dispatcher in getKeysignMessages for why the UTXO family is
                     // keyed off `chain` rather than `txType`.
-                    return if (SwapKitSwapPayloadJson.isUtxoPsbtTxType(txType)) {
+                    return if (chain == Chain.Near) {
+                        NearHelper(eddsaKey).getSignedTransaction(keysignPayload, signatures)
+                    } else if (SwapKitSwapPayloadJson.isUtxoPsbtTxType(txType)) {
                         when (chain) {
                             Chain.Bitcoin,
                             Chain.Litecoin ->

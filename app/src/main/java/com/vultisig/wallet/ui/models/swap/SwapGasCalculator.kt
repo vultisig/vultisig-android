@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -215,8 +216,10 @@ constructor(
         } catch (e: Exception) {
             if (e is kotlin.coroutines.cancellation.CancellationException) throw e
             Timber.d(e)
+            // A NEAR refusal names what to fix, as it does on the send path.
             throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.swap_screen_invalid_specific_and_utxo)
+                e.nearErrorTextOrNull()
+                    ?: UiText.StringResource(R.string.swap_screen_invalid_specific_and_utxo)
             )
         }
 
