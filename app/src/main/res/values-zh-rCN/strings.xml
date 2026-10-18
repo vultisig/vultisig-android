@@ -2079,7 +2079,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">全新量子安全</string>
     <string name="qbtc_intro_subtitle">经典密钥可能被量子计算机破解。启用 QBTC 需要生成新的密钥对。</string>
-    <string name="qbtc_intro_key_warning">启用 QBTC 会创建新的量子密钥和 QBTC 地址。如果此保险库此前已在其他设备上或通过导入拥有量子密钥，之前的 QBTC 资金可能无法从新地址访问。生成后请备份此保险库。</string>
+    <string name="qbtc_intro_key_warning">启用 QBTC 会创建新的量子密钥和新的 QBTC 地址。如果此保险库之前有量子密钥，请找到正确的备份并从中恢复。</string>
     <string name="qbtc_intro_generate_title">生成您的量子密钥对</string>
     <string name="qbtc_intro_generate_desc">Vultisig 在您的保险库设备之间运行本地 MPC 仪式，以生成新的密钥对。</string>
     <string name="qbtc_intro_link_title">将其关联到您现有的保险库</string>

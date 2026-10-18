@@ -1757,7 +1757,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Nueva seguridad cuántica</string>
     <string name="qbtc_intro_subtitle">Las claves clásicas pueden ser vulneradas por computadoras cuánticas. Habilitar QBTC requiere generar un nuevo par de claves.</string>
-    <string name="qbtc_intro_key_warning">Habilitar QBTC crea una nueva clave cuántica y una nueva dirección QBTC. Si esta bóveda ya tenía una clave cuántica en otro dispositivo o importación, es posible que los fondos QBTC anteriores no sean accesibles desde la nueva dirección. Haz una copia de seguridad de esta bóveda después de la generación.</string>
+    <string name="qbtc_intro_key_warning">Habilitar QBTC crea una nueva clave cuántica y una nueva dirección QBTC. Si esta bóveda tenía antes una clave cuántica, busca la copia de seguridad correcta y restáurala.</string>
     <string name="qbtc_intro_generate_title">Genera tu par de claves cuánticas</string>
     <string name="qbtc_intro_generate_desc">Vultisig ejecuta una ceremonia MPC local entre los dispositivos de tu bóveda para producir un nuevo par de claves.</string>
     <string name="qbtc_intro_link_title">Vincúlalo a tu bóveda existente</string>

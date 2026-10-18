@@ -1772,7 +1772,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">새로운 양자 보안</string>
     <string name="qbtc_intro_subtitle">고전적 키는 양자 컴퓨터로 해독될 수 있습니다. QBTC를 사용하려면 새 키 쌍을 생성해야 합니다.</string>
-    <string name="qbtc_intro_key_warning">QBTC를 활성화하면 새 양자 키와 QBTC 주소가 생성됩니다. 이 볼트에 다른 기기나 가져오기를 통해 이미 양자 키가 있었다면, 이전 QBTC 자금은 새 주소에서 접근하지 못할 수 있습니다. 생성 후 이 볼트를 백업하세요.</string>
+    <string name="qbtc_intro_key_warning">QBTC를 활성화하면 새 양자 키와 새 QBTC 주소가 생성됩니다. 이 볼트에 이전에 양자 키가 있었다면, 올바른 백업을 찾아 복원하세요.</string>
     <string name="qbtc_intro_generate_title">양자 키 쌍 생성</string>
     <string name="qbtc_intro_generate_desc">Vultisig는 볼트 기기 전반에서 로컬 MPC 절차를 실행하여 새 키 쌍을 생성합니다.</string>
     <string name="qbtc_intro_link_title">기존 볼트에 연결</string>

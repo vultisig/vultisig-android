@@ -1761,7 +1761,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Nuova sicurezza quantistica</string>
     <string name="qbtc_intro_subtitle">Le chiavi classiche possono essere violate dai computer quantistici. Abilitare QBTC richiede la generazione di una nuova coppia di chiavi.</string>
-    <string name="qbtc_intro_key_warning">L\'abilitazione di QBTC crea una nuova chiave quantistica e un nuovo indirizzo QBTC. Se questo vault aveva già una chiave quantistica su un altro dispositivo o da un\'importazione, i fondi QBTC precedenti potrebbero non essere accessibili dal nuovo indirizzo. Esegui un backup di questo vault dopo la generazione.</string>
+    <string name="qbtc_intro_key_warning">L\'abilitazione di QBTC crea una nuova chiave quantistica e un nuovo indirizzo QBTC. Se questo vault aveva in precedenza una chiave quantistica, trova il backup corretto e ripristinalo.</string>
     <string name="qbtc_intro_generate_title">Genera la tua coppia di chiavi quantistica</string>
     <string name="qbtc_intro_generate_desc">Vultisig esegue una cerimonia MPC locale tra i dispositivi del tuo vault per produrre una nuova coppia di chiavi.</string>
     <string name="qbtc_intro_link_title">Collegalo al tuo vault esistente</string>

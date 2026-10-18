@@ -1768,7 +1768,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Nova kvantna sigurnost</string>
     <string name="qbtc_intro_subtitle">Klasične ključeve mogu razbiti kvantna računala. Omogućavanje QBTC-a zahtijeva generiranje novog para ključeva.</string>
-    <string name="qbtc_intro_key_warning">Omogućavanje QBTC-a stvara novi kvantni ključ i novu QBTC adresu. Ako je ovaj trezor već imao kvantni ključ na drugom uređaju ili iz uvoza, ranija QBTC sredstva možda neće biti dostupna s nove adrese. Napravite sigurnosnu kopiju ovog trezora nakon generiranja.</string>
+    <string name="qbtc_intro_key_warning">Omogućavanje QBTC-a stvara novi kvantni ključ i novu QBTC adresu. Ako je ovaj trezor prethodno imao kvantni ključ, pronađite ispravnu sigurnosnu kopiju i vratite je.</string>
     <string name="qbtc_intro_generate_title">Generirajte svoj kvantni par ključeva</string>
     <string name="qbtc_intro_generate_desc">Vultisig pokreće lokalnu MPC ceremoniju na uređajima vašeg trezora kako bi proizveo novi par ključeva.</string>
     <string name="qbtc_intro_link_title">Povežite ga sa svojim postojećim trezorom</string>
