@@ -227,7 +227,8 @@ private val stakeDefiTypes =
  */
 internal fun SendFormUiModel.exceedsStakeBalance(amount: String): Boolean {
     if (defiType !in stakeDefiTypes) return false
-    val balance = selectedCoin?.balance?.toBigDecimalOrNull() ?: return false
+    // The raw value: `balance` is locale-formatted for display ("1,234.5", "2.5M").
+    val balance = selectedCoin?.model?.account?.tokenValue?.decimal ?: return false
     // Nothing to stake: Max on an empty balance fills 0, which must not enable Continue.
     if (balance.signum() <= 0) return true
     val entered = amount.toBigDecimalOrNull() ?: return false

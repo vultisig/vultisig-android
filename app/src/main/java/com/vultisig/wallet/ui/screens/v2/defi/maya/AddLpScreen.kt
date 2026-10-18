@@ -85,6 +85,7 @@ internal fun AddLpScreen(
         estimatedFee = state.estimatedFee.asString(),
         balance = state.balance.asString(),
         rawBalance = state.balanceDecimal,
+        gasFee = state.gasFeeDecimal,
         isLoading = state.isLoading,
         tokenAmountError = state.tokenAmountError?.asString(),
         onDeposit = {
@@ -107,6 +108,7 @@ private fun AddLpContent(
     estimatedFee: String,
     balance: String,
     rawBalance: BigDecimal? = null,
+    gasFee: BigDecimal? = null,
     isLoading: Boolean,
     tokenAmountError: String?,
     onDeposit: () -> Unit,
@@ -114,10 +116,13 @@ private fun AddLpContent(
 ) {
     var selectedPercentageIndex by remember { mutableIntStateOf(initialSelectedPercentageIndex) }
     var usingTokenAmountInput by remember { mutableStateOf(true) }
+    // CACAO pays the fee from the same balance, so Max leaves the fee behind.
+    val fee = gasFee ?: BigDecimal.ZERO
     val exceedsBalance =
         rawBalance != null &&
-            tokenAmountFieldState.text.toString().toBigDecimalOrNull()?.let { it > rawBalance } ==
-                true
+            tokenAmountFieldState.text.toString().toBigDecimalOrNull()?.let {
+                it + fee > rawBalance
+            } == true
     val shownError =
         tokenAmountError
             ?: stringResource(R.string.send_error_insufficient_balance).takeIf { exceedsBalance }
@@ -206,7 +211,8 @@ private fun AddLpContent(
                                     selectedPercentageIndex = index
                                     val percent = percentages[index]
                                     val amount =
-                                        rawBalance
+                                        (if (percent == 100) (rawBalance - fee).max(BigDecimal.ZERO)
+                                            else rawBalance)
                                             .multiply(percent.toBigDecimal())
                                             .divide(100.toBigDecimal())
                                             .stripTrailingZeros()
@@ -260,7 +266,9 @@ private fun AddLpContent(
 
         VsButton(
             label = stringResource(R.string.send_continue_button),
-            state = if (isLoading || exceedsBalance) VsButtonState.Disabled else VsButtonState.Enabled,
+            state =
+                if (isLoading || exceedsBalance) VsButtonState.Disabled
+                else VsButtonState.Enabled,
             onClick = onDeposit,
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
         )
