@@ -93,6 +93,24 @@ internal class IsCosmosStakingDepositTest {
     }
 
     @Test
+    fun `a vote with a sibling message is not a deposit`() {
+        val payload = cosmosPayload(signDirect = signDirect())
+
+        payload.isCosmosStakingDeposit(
+            parseReturning(
+                CosmosStakingHelper.MSG_VOTE_TYPE_URL,
+                "/cosmos.bank.v1beta1.MsgSend",
+            )
+        ) shouldBe false
+        payload.isCosmosStakingDeposit(
+            parseReturning(
+                CosmosStakingHelper.MSG_VOTE_TYPE_URL,
+                CosmosStakingHelper.MSG_DELEGATE_TYPE_URL,
+            )
+        ) shouldBe false
+    }
+
+    @Test
     fun `an unreadable vote or a non-vote body yields no governance vote`() {
         val payload = cosmosPayload(signDirect = signDirect())
 

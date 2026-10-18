@@ -163,6 +163,12 @@ internal fun KeysignPayload.isCosmosStakingDeposit(
             Timber.w("Failed to parse cosmos message for deposit detection: %s", e.message)
             return false
         }
+    // A vote's deposit screen shows only the ballot, so it must be the whole body: any sibling
+    // message would be signed unseen. Such a body falls back to the Send screen, which lists the
+    // SignDoc.
+    if (message.messages.any { it.typeUrl == CosmosStakingHelper.MSG_VOTE_TYPE_URL }) {
+        return message.messages.size == 1
+    }
     return message.messages.any { it.typeUrl in COSMOS_STAKING_DEPOSIT_TYPE_URLS }
 }
 
