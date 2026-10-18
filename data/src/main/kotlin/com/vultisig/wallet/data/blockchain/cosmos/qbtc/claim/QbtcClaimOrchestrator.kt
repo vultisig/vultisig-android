@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import com.vultisig.wallet.data.common.hexToByteArrayOrNull
 import com.vultisig.wallet.data.common.toHex
 import com.vultisig.wallet.data.models.Coin
@@ -73,7 +74,7 @@ class QbtcClaimOrchestrator(
     private val proofService: QbtcProofService,
     private val btcRoundRunner: QbtcClaimBtcRoundRunner,
     private val peerResultPusher: QbtcClaimPeerResultPusher? = null,
-    private val chainId: String = QbtcClaimConfig.CHAIN_ID,
+    private val chainId: String = QbtcNetworkConfig.CHAIN_ID,
 ) {
     val phase: StateFlow<QbtcClaimPhase>
         field = MutableStateFlow<QbtcClaimPhase>(QbtcClaimPhase.Idle)

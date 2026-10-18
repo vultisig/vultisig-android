@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.staking
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import com.vultisig.wallet.data.models.Chain
 
 /**
@@ -74,7 +75,7 @@ object CosmosStakingConfig {
             // redelegate (see below) and its 7_500 fee overpays the verified 800 min_tx_fee.
             Chain.Qbtc to
                 Entry(
-                    chainId = "qbtc",
+                    chainId = QbtcNetworkConfig.CHAIN_ID,
                     // Lowercase, not a micro-denom — QBTC's bond_denom is the bare `qbtc` (8 dp).
                     bondDenom = "qbtc",
                     feeDenom = "qbtc",

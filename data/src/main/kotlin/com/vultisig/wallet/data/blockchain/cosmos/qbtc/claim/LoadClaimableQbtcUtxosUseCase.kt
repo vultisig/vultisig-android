@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkCheck
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
@@ -13,6 +14,9 @@ sealed interface QbtcClaimBlockedReason {
     data class UtxoFetchFailed(val message: String) : QbtcClaimBlockedReason
 
     data object NoUtxos : QbtcClaimBlockedReason
+
+    /** The QBTC node runs another network than this build signs for, so the app needs updating. */
+    data object UpdateRequired : QbtcClaimBlockedReason
 }
 
 sealed interface QbtcClaimLoadResult {
@@ -29,10 +33,10 @@ sealed interface QbtcClaimLoadResult {
 }
 
 /**
- * Runs the claim eligibility pipeline for a Bitcoin address: address-type guard, kill-switch check,
- * Blockchair UTXO fetch, then the chain's already-claimed cross-check. Any failure that would block
- * a real claim collapses to a [QbtcClaimLoadResult.Blocked] reason so the UI never lies about
- * what's claimable. Mirrors iOS `QBTCClaimViewModel.load`.
+ * Runs the claim eligibility pipeline for a Bitcoin address: address-type guard, network check,
+ * kill-switch check, Blockchair UTXO fetch, then the chain's already-claimed cross-check. Any
+ * failure that would block a real claim collapses to a [QbtcClaimLoadResult.Blocked] reason so the
+ * UI never lies about what's claimable. Mirrors iOS `QBTCClaimViewModel.load`.
  */
 interface LoadClaimableQbtcUtxosUseCase {
     suspend operator fun invoke(btcAddress: String): QbtcClaimLoadResult
@@ -43,6 +47,7 @@ internal class LoadClaimableQbtcUtxosUseCaseImpl
 constructor(
     private val chainService: QbtcClaimChainService,
     private val utxosService: QbtcClaimableUtxosService,
+    private val networkCheck: QbtcNetworkCheck,
 ) : LoadClaimableQbtcUtxosUseCase {
 
     override suspend fun invoke(btcAddress: String): QbtcClaimLoadResult {
@@ -53,6 +58,12 @@ constructor(
             return QbtcClaimLoadResult.Blocked(
                 QbtcClaimBlockedReason.UnsupportedBtcAddress(e.message.orEmpty())
             )
+        }
+
+        // The chain id is hashed into the claim, so an outdated build would sign a claim the chain
+        // rejects only after the proof round.
+        if (networkCheck.isAppOutdated()) {
+            return QbtcClaimLoadResult.Blocked(QbtcClaimBlockedReason.UpdateRequired)
         }
 
         // Kill-switch fails CLOSED: if we can't confirm it's open, don't offer the claim.

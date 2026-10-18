@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkCheck
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -24,6 +25,20 @@ class LoadClaimableQbtcUtxosUseCaseTest {
         assertTrue(
             (result as QbtcClaimLoadResult.Blocked).reason
                 is QbtcClaimBlockedReason.UnsupportedBtcAddress
+        )
+        assertEquals(0, chain.disabledCalls)
+        assertEquals(0, utxos.fetchCalls)
+    }
+
+    @Test
+    fun `outdated network blocks before the kill switch and utxo fetch`() = runTest {
+        val chain = FakeChainService()
+        val utxos = FakeUtxosService(listOf(candidate))
+        val result = useCase(chain, utxos, appOutdated = true).invoke(p2wpkh)
+
+        assertEquals(
+            QbtcClaimBlockedReason.UpdateRequired,
+            (result as QbtcClaimLoadResult.Blocked).reason,
         )
         assertEquals(0, chain.disabledCalls)
         assertEquals(0, utxos.fetchCalls)
@@ -182,8 +197,15 @@ class LoadClaimableQbtcUtxosUseCaseTest {
         assertEquals(listOf(mature), chain.filteredArgument)
     }
 
-    private fun useCase(chain: FakeChainService, utxos: FakeUtxosService) =
-        LoadClaimableQbtcUtxosUseCaseImpl(chain, utxos)
+    private fun useCase(
+        chain: FakeChainService,
+        utxos: FakeUtxosService,
+        appOutdated: Boolean = false,
+    ) = LoadClaimableQbtcUtxosUseCaseImpl(chain, utxos, FakeNetworkCheck(appOutdated))
+
+    private class FakeNetworkCheck(private val appOutdated: Boolean) : QbtcNetworkCheck {
+        override suspend fun isAppOutdated(): Boolean = appOutdated
+    }
 
     private class FakeChainService(
         private val disabled: Boolean = false,

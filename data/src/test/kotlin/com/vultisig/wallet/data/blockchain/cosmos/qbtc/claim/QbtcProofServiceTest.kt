@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import com.vultisig.wallet.data.utils.NetworkException
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -42,7 +43,7 @@ class QbtcProofServiceTest {
             compressedPubkeyHex = "03".repeat(33),
             utxos = listOf(ClaimableUtxo(txid = "aa".repeat(32), vout = 0, amount = 1_000)),
             claimerAddress = "qbtc1abc",
-            chainId = QbtcClaimConfig.CHAIN_ID,
+            chainId = QbtcNetworkConfig.CHAIN_ID,
         )
 
     @Test

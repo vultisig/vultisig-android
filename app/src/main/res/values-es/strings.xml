@@ -1740,6 +1740,8 @@
     <string name="qbtc_claim_failed_to_load_title">No se pudieron cargar los UTXOs reclamables</string>
     <string name="qbtc_claim_no_utxos_title">Nada que reclamar</string>
     <string name="qbtc_claim_no_utxos_detail">No tienes UTXOs de Bitcoin elegibles para reclamar como QBTC.</string>
+    <string name="qbtc_update_required_title">Actualización necesaria</string>
+    <string name="qbtc_update_required_detail">La red QBTC se ha actualizado. Actualiza Vultisig para firmar transacciones y reclamaciones de QBTC.</string>
     <string name="qbtc_claim_error_invalid_btc_key">Clave pública de Bitcoin no válida.</string>
     <string name="qbtc_claim_error_proof_mismatch">El servicio de prueba devolvió datos no coincidentes. La reclamación no se envió.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">No se pudo transmitir la reclamación. Por favor, inténtalo de nuevo más tarde.</string>

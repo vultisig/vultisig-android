@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.staking
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
@@ -170,7 +171,7 @@ internal class CosmosStakingServiceImpl @Inject constructor(private val httpClie
             mapOf(
                 Chain.Terra to "https://terra-lcd.publicnode.com",
                 Chain.TerraClassic to "https://terra-classic-lcd.publicnode.com",
-                Chain.Qbtc to "https://api.vultisig.com/qbtc-rpc",
+                Chain.Qbtc to QbtcNetworkConfig.REST_URL,
             )
     }
 }

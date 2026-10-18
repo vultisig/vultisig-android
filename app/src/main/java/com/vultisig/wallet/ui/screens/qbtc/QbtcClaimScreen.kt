@@ -505,6 +505,8 @@ private fun ClaimBlockedScreen(
             is QbtcClaimBlockedReason.UtxoFetchFailed ->
                 stringResource(R.string.qbtc_claim_failed_to_load_title)
             QbtcClaimBlockedReason.NoUtxos -> stringResource(R.string.qbtc_claim_no_utxos_title)
+            QbtcClaimBlockedReason.UpdateRequired ->
+                stringResource(R.string.qbtc_update_required_title)
         }
     val detail =
         when (reason) {
@@ -513,6 +515,8 @@ private fun ClaimBlockedScreen(
             is QbtcClaimBlockedReason.UnsupportedBtcAddress -> reason.detail
             is QbtcClaimBlockedReason.UtxoFetchFailed -> reason.message
             QbtcClaimBlockedReason.NoUtxos -> stringResource(R.string.qbtc_claim_no_utxos_detail)
+            QbtcClaimBlockedReason.UpdateRequired ->
+                stringResource(R.string.qbtc_update_required_detail)
         }
     // Only a transient fetch failure is worth a retry; the rest are terminal for this session.
     val retryButton =

@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
-import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -52,7 +52,7 @@ internal class QbtcClaimChainServiceImpl @Inject constructor(private val httpCli
     override suspend fun isClaimWithProofDisabled(): Boolean {
         val response =
             httpClient
-                .get("${Endpoints.QBTC_REST_URL}/qbtc/v1/params/ClaimWithProofDisabled")
+                .get("${QbtcNetworkConfig.REST_URL}/qbtc/v1/params/ClaimWithProofDisabled")
                 .bodyOrThrow<QbtcParamResponseJson>()
         val value =
             response.param.value.toIntOrNull()
@@ -84,7 +84,7 @@ internal class QbtcClaimChainServiceImpl @Inject constructor(private val httpCli
     /** Returns the UTXO status, or `null` on a transient (non-404) failure. */
     private suspend fun fetchStatus(txid: String, vout: Int): QbtcUtxoStatus? =
         try {
-            val response = httpClient.get("${Endpoints.QBTC_REST_URL}/qbtc/v1/utxo/$txid/$vout")
+            val response = httpClient.get("${QbtcNetworkConfig.REST_URL}/qbtc/v1/utxo/$txid/$vout")
             if (response.status == HttpStatusCode.NotFound) {
                 QbtcUtxoStatus.NotIndexed
             } else {

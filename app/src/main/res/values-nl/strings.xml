@@ -1733,6 +1733,8 @@
     <string name="qbtc_claim_failed_to_load_title">Kan claimbare UTXO\'s niet laden</string>
     <string name="qbtc_claim_no_utxos_title">Niets om te claimen</string>
     <string name="qbtc_claim_no_utxos_detail">U heeft geen Bitcoin-UTXO\'s die in aanmerking komen om als QBTC te claimen.</string>
+    <string name="qbtc_update_required_title">Update vereist</string>
+    <string name="qbtc_update_required_detail">Het QBTC-netwerk is geüpgraded. Werk Vultisig bij om QBTC-transacties en -claims te ondertekenen.</string>
     <string name="qbtc_claim_error_invalid_btc_key">Ongeldige openbare Bitcoin-sleutel.</string>
     <string name="qbtc_claim_error_proof_mismatch">De bewijsservice heeft niet-overeenkomende gegevens geretourneerd. De claim is niet ingediend.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">De claim kon niet worden uitgezonden. Probeer het later opnieuw.</string>

@@ -1738,6 +1738,8 @@
     <string name="qbtc_claim_failed_to_load_title">Não foi possível carregar os UTXOs resgatáveis</string>
     <string name="qbtc_claim_no_utxos_title">Nada para resgatar</string>
     <string name="qbtc_claim_no_utxos_detail">Não tem UTXOs de Bitcoin elegíveis para resgatar como QBTC.</string>
+    <string name="qbtc_update_required_title">Atualização necessária</string>
+    <string name="qbtc_update_required_detail">A rede QBTC foi atualizada. Atualize o Vultisig para assinar transações e resgates de QBTC.</string>
     <string name="qbtc_claim_error_invalid_btc_key">Chave pública de Bitcoin inválida.</string>
     <string name="qbtc_claim_error_proof_mismatch">O serviço de prova devolveu dados não correspondentes. O resgate não foi submetido.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">Não foi possível transmitir o resgate. Por favor, tente novamente mais tarde.</string>
