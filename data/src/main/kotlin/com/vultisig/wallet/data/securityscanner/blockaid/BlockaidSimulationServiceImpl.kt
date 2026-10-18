@@ -4,7 +4,6 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.toEvenLengthHexString
-import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
@@ -12,7 +11,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import wallet.core.jni.Base58
 
 /**
  * Cache + inflight-coalescing implementation of [BlockaidSimulationService].
@@ -165,16 +163,14 @@ internal class BlockaidSimulationServiceImpl(private val rpcClient: BlockaidRpcC
 
     private suspend fun scanSolana(payload: KeysignPayload): BlockaidKeysignScanResult {
         // The Android keysign payload carries Solana raw transactions as base64
-        // (matches the proto definition `SignSolana.raw_transactions`). The
-        // Blockaid simulate endpoint expects base58, so we transcode here.
-        val rawBase64 = payload.signSolana?.rawTransactions.orEmpty()
+        // (matches the proto definition `SignSolana.raw_transactions`, and the
+        // aggregator swap quote's `tx.data`). The Blockaid simulate endpoint
+        // expects base58, so we transcode here.
+        val rawBase64 = payload.solanaRawTransactionsBase64().orEmpty()
         if (rawBase64.isEmpty()) return BlockaidKeysignScanResult.EMPTY
         val rawBase58 =
             rawBase64.map { base64 ->
-                // encodeNoCheck rather than encode: these are raw transactions, not
-                // addresses, so the 4-byte SHA-256 checksum that Base58Check appends
-                // would corrupt the payload Blockaid receives.
-                runCatching { Base58.encodeNoCheck(base64.decodeBase64Bytes()) }
+                runCatching { solanaBase64ToBase58(base64) }
                     .getOrElse {
                         Timber.w(it, "Solana raw transaction base64 decode failed")
                         // FAILED, not EMPTY: a malformed payload never reached Blockaid, so this

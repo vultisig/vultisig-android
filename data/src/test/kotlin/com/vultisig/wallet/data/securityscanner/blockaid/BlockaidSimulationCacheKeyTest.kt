@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.securityscanner.blockaid
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
@@ -156,6 +157,21 @@ internal class BlockaidSimulationCacheKeyTest {
     }
 
     @Test
+    fun `solana aggregator swap keys on the swap tx, not a signSolana riding alongside it`() {
+        val swapOnly = solanaPayload(rawTransactions = listOf("swapTx"))
+        val withDecoy = solanaPayload(rawTransactions = listOf("decoy"))
+        val swap =
+            mockk<SwapPayload.EVM>(relaxed = true) { every { data.quote.tx.data } returns "swapTx" }
+        every { withDecoy.swapPayload } returns swap
+
+        assertEquals(listOf("swapTx"), withDecoy.solanaRawTransactionsBase64())
+        assertEquals(
+            BlockaidSimulationCacheKey.from(swapOnly),
+            BlockaidSimulationCacheKey.from(withDecoy),
+        )
+    }
+
+    @Test
     fun `unsupported chain returns null`() {
         val coin =
             mockk<Coin>(relaxed = true) {
@@ -208,6 +224,7 @@ internal class BlockaidSimulationCacheKeyTest {
             every { this@mockk.coin } returns coin
             every { memo } returns null
             every { signSolana } returns solana
+            every { swapPayload } returns null
         }
     }
 }

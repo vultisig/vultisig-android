@@ -281,6 +281,10 @@ internal class SendFormGraph(
             defiTypeProvider = defiTypeProvider,
             vaultProvider = vaultProvider,
             accountProvider = selectedAccountProvider,
+            selectedAccount =
+                combine(selectedToken, accounts) { token, accounts ->
+                    accounts.find { it.token.id.equals(token?.id, true) }
+                },
             currentTronFrozenBalanceProvider = tronStakingService::currentFrozenBalance,
             getAvailableTokenBalance = getAvailableTokenBalance,
             feeServiceComposite = feeServiceComposite,

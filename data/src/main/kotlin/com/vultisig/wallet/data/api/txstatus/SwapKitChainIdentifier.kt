@@ -25,6 +25,7 @@ internal object SwapKitChainIdentifier {
                 Chain.Tron -> "728126428"
                 Chain.Cardano -> "cardano"
                 Chain.Ton -> "ton"
+                Chain.Near -> "near"
                 Chain.Solana -> "solana"
                 Chain.Bitcoin -> "bitcoin"
                 Chain.BitcoinCash -> "bitcoincash"

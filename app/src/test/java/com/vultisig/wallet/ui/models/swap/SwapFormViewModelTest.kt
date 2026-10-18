@@ -38,9 +38,11 @@ import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
 import com.vultisig.wallet.data.swap.limit.LimitSwapMarketPriceRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
+import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.send.ChainValidationService
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.findCurrentSrc
 import com.vultisig.wallet.ui.models.send.firstSendSrc
@@ -101,6 +103,7 @@ internal class SwapFormViewModelTest {
     // self-re-arming timer off the main scheduler so advanceUntilIdle() can't loop on it).
     private val inertIoDispatcher = StandardTestDispatcher()
     private val createdViewModels = mutableListOf<SwapFormViewModel>()
+    private var getAvailableTokenBalance: GetAvailableTokenBalanceUseCase = mockk()
 
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var navigator: Navigator<Destination>
@@ -196,7 +199,7 @@ internal class SwapFormViewModelTest {
         limitMarketPriceRepository = mockk(relaxed = true)
         buildLimitSwapTransactionUseCase = mockk(relaxed = true)
 
-        swapValidator = SwapValidator()
+        swapValidator = SwapValidator(getAvailableTokenBalance = mockk())
         swapDiscountChecker = mockk(relaxed = true)
         every { swapDiscountChecker.checkVultBpsDiscount(any()) } returns
             VultDiscountResult(null, null)
@@ -300,6 +303,8 @@ internal class SwapFormViewModelTest {
                 convertTokenValueToFiat = convertTokenValueToFiat,
                 fiatValueToString = fiatValueToString,
                 tokenPriceRepository = tokenPriceRepository,
+                getAvailableTokenBalance = getAvailableTokenBalance,
+                chainValidationService = ChainValidationService(mockk(), mockk(), mockk()),
             )
             .also { createdViewModels += it }
 
@@ -694,6 +699,62 @@ internal class SwapFormViewModelTest {
 
             assertEquals("1", vm.srcAmountState.text.toString())
         }
+
+    @Test
+    fun `a NEAR percentage tap sizes from the balance its reserve read leaves`() =
+        runTest(mainDispatcher) {
+            val reserveRead = CompletableDeferred<TokenValue?>()
+            val vm = createNearViewModel(reserveRead)
+            advanceUntilIdle()
+
+            vm.selectSrcPercentage(0.5f)
+            reserveRead.complete(TokenValue(value = NEAR_SPENDABLE, token = NEAR_COIN))
+            advanceUntilIdle()
+
+            assertEquals("4", vm.srcAmountState.text.toString())
+        }
+
+    @Test
+    fun `a NEAR percentage tap whose reserve read lands after an edit keeps the typed amount`() =
+        runTest(mainDispatcher) {
+            val reserveRead = CompletableDeferred<TokenValue?>()
+            val vm = createNearViewModel(reserveRead)
+            advanceUntilIdle()
+
+            vm.selectSrcPercentage(0.5f)
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("3")
+            reserveRead.complete(TokenValue(value = NEAR_SPENDABLE, token = NEAR_COIN))
+            advanceUntilIdle()
+
+            assertEquals("3", vm.srcAmountState.text.toString())
+        }
+
+    @Test
+    fun `a NEAR percentage tap whose reserve read fails after an edit shows no error`() =
+        runTest(mainDispatcher) {
+            val reserveRead = CompletableDeferred<TokenValue?>()
+            val vm = createNearViewModel(reserveRead)
+            advanceUntilIdle()
+
+            vm.selectSrcPercentage(0.5f)
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("3")
+            reserveRead.completeExceptionally(IllegalStateException("node down"))
+            advanceUntilIdle()
+
+            assertEquals("3", vm.srcAmountState.text.toString())
+            assertNull(vm.uiState.value.error)
+        }
+
+    private fun createNearViewModel(
+        reserveRead: CompletableDeferred<TokenValue?>
+    ): SwapFormViewModel {
+        getAvailableTokenBalance =
+            object : GetAvailableTokenBalanceUseCase {
+                override suspend fun invoke(account: Account, gasCost: BigInteger) =
+                    reserveRead.await()
+            }
+        return createViewModelWithAddresses(listOf(nearAddress(NEAR_BALANCE)))
+    }
 
     @Test
     fun `selectSrcPercentage with zero balance clears the amount and shows an error`() =
@@ -4633,6 +4694,23 @@ internal class SwapFormViewModelTest {
                 isNativeToken = true,
             )
 
+        // 10 NEAR held, 8 NEAR spendable once the storage reserve stays behind.
+        val NEAR_BALANCE = BigInteger("10000000000000000000000000")
+        val NEAR_SPENDABLE = BigInteger("8000000000000000000000000")
+
+        val NEAR_COIN =
+            Coin(
+                chain = Chain.Near,
+                ticker = "NEAR",
+                logo = "near",
+                address = "nearaddress",
+                decimal = 24,
+                hexPublicKey = "hex",
+                priceProviderID = "near",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+
         val SOL_COIN =
             Coin(
                 chain = Chain.Solana,
@@ -4697,6 +4775,13 @@ internal class SwapFormViewModelTest {
             chain = Chain.Bitcoin,
             address = "bc1qbtcaddress",
             accounts = listOf(createAccount(BTC_COIN, BigInteger("100000000"))),
+        )
+
+    private fun nearAddress(balance: BigInteger): Address =
+        Address(
+            chain = Chain.Near,
+            address = "nearaddress",
+            accounts = listOf(createAccount(NEAR_COIN, balance)),
         )
 
     private fun solanaAddress(): Address =
