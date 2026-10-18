@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.TokenMetadataResolver
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
+import com.vultisig.wallet.data.usecases.CosmosMessage
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
@@ -39,6 +40,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
@@ -105,15 +109,27 @@ constructor(
                     )
                 }
                 ?.transfer
+
+        // A Cosmos `signDirect` request is signed as the SignDoc bytes, so the recipient and
+        // amount must be read out of those bytes — never from the wire `toAddress` / `toAmount`,
+        // which are the initiator's unverified display copy. A compromised initiator could
+        // otherwise show the co-signer one recipient while the signed body pays another. When the
+        // body isn't a single bank `MsgSend` (staking, multi-message, dApp calls) no simple To/
+        // amount is shown; the full decoded SignDoc is rendered below in the Direct Sign card.
+        val signDirectMessage = payload.signDirect?.let { parseCosmosMessage(it) }
+        val signDirectTransfer = signDirectMessage?.singleMsgSendTransfer()
+
         val dstAddress =
             when {
-                substrateDapp == null -> payload.toAddress
-                else -> substrateTransfer?.recipient.orEmpty()
+                substrateDapp != null -> substrateTransfer?.recipient.orEmpty()
+                payload.signDirect != null -> signDirectTransfer?.recipient.orEmpty()
+                else -> payload.toAddress
             }
         val amount =
             when {
-                substrateDapp == null -> payload.toAmount
-                else -> substrateTransfer?.amount ?: BigInteger.ZERO
+                substrateDapp != null -> substrateTransfer?.amount ?: BigInteger.ZERO
+                payload.signDirect != null -> signDirectTransfer?.amount ?: BigInteger.ZERO
+                else -> payload.toAmount
             }
 
         val tokenValue =
@@ -215,8 +231,7 @@ constructor(
             json.encodeToString(normalizedSignAminoJson).takeIf {
                 !normalizedSignAminoJson.isEmpty()
             } ?: ""
-        val signDirect =
-            payload.signDirect?.let { json.encodeToString(parseCosmosMessage(it)) } ?: ""
+        val signDirect = signDirectMessage?.let { json.encodeToString(it) } ?: ""
 
         val signSolana = payload.signSolana?.rawTransactions.orEmpty()
         val signSui = payload.signSui?.unsignedTxMsg?.takeIf { it.isNotEmpty() }
@@ -352,4 +367,28 @@ constructor(
             Timber.w(e, "Failed to resolve native token for %s", chainId)
             null
         }
+
+    /**
+     * Pulls the recipient and amount out of a decoded `signDirect` SignDoc, but only when the body
+     * is exactly one bank `MsgSend` carrying a single coin. That is the one case where a simple
+     * "To / amount" row can faithfully stand in for the signed bytes. Anything else — staking,
+     * governance, multi-message or dApp bodies — returns null so the verify screen shows no
+     * spoofable To/amount and relies on the full Direct Sign card instead. The address is taken
+     * verbatim from the signed bytes, so what the co-signer sees is always what it signs.
+     */
+    private fun CosmosMessage.singleMsgSendTransfer(): SignDirectTransfer? {
+        val message = messages.singleOrNull() ?: return null
+        if (message.typeUrl != MSG_SEND_TYPE_URL) return null
+        val body = message.value as? JsonObject ?: return null
+        val recipient = (body["toAddress"] as? JsonPrimitive)?.content ?: return null
+        val coin = (body["amount"] as? JsonArray)?.singleOrNull() as? JsonObject ?: return null
+        val amount = (coin["amount"] as? JsonPrimitive)?.content?.toBigIntegerOrNull() ?: return null
+        return SignDirectTransfer(recipient = recipient, amount = amount)
+    }
+
+    private data class SignDirectTransfer(val recipient: String, val amount: BigInteger)
+
+    private companion object {
+        const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
+    }
 }
