@@ -24,6 +24,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.banners.Banner
+import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.util.dashedBorder
@@ -71,6 +73,14 @@ internal fun QuantumSecurityIntroScreenContent(
                     text = stringResource(R.string.qbtc_intro_subtitle),
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.secondary,
+                )
+
+                UiSpacer(24.dp)
+
+                Banner(
+                    text = stringResource(R.string.qbtc_intro_key_warning),
+                    variant = BannerVariant.Warning,
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 UiSpacer(24.dp)

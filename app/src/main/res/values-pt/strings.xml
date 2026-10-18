@@ -1755,6 +1755,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Nova segurança quântica</string>
     <string name="qbtc_intro_subtitle">As chaves clássicas podem ser quebradas por computadores quânticos. Ativar o QBTC requer gerar um novo par de chaves.</string>
+    <string name="qbtc_intro_key_warning">Ativar o QBTC cria uma nova chave quântica e um novo endereço QBTC. Se este cofre já tinha uma chave quântica noutro dispositivo ou importação, os fundos QBTC anteriores podem não estar acessíveis a partir do novo endereço. Faça uma cópia de segurança deste cofre após a geração.</string>
     <string name="qbtc_intro_generate_title">Gere o seu par de chaves quântico</string>
     <string name="qbtc_intro_generate_desc">A Vultisig executa uma cerimónia MPC local nos dispositivos do seu cofre para produzir um novo par de chaves.</string>
     <string name="qbtc_intro_link_title">Vincule-o ao seu cofre existente</string>
