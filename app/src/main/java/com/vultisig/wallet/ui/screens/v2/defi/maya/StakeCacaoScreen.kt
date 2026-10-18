@@ -101,6 +101,13 @@ private fun StakeCacaoContent(
 ) {
     var selectedPercentageIndex by remember { mutableIntStateOf(initialSelectedPercentageIndex) }
     var usingTokenAmountInput by remember { mutableStateOf(true) }
+    val exceedsBalance =
+        rawBalance != null &&
+            tokenAmountFieldState.text.toString().toBigDecimalOrNull()?.let { it > rawBalance } ==
+                true
+    val shownError =
+        tokenAmountError
+            ?: stringResource(R.string.send_error_insufficient_balance).takeIf { exceedsBalance }
 
     LaunchedEffect(balance) { selectedPercentageIndex = initialSelectedPercentageIndex }
 
@@ -154,7 +161,6 @@ private fun StakeCacaoContent(
                         primaryFieldState = primaryFieldState,
                         primaryLabel = primaryLabel,
                         secondaryText = secondaryText,
-                        maxBalance = if (usingTokenAmountInput) rawBalance else null,
                         modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
                     )
 
@@ -213,10 +219,10 @@ private fun StakeCacaoContent(
                 }
             }
 
-            if (tokenAmountError != null) {
+            if (shownError != null) {
                 UiSpacer(size = 8.dp)
                 Text(
-                    text = tokenAmountError,
+                    text = shownError,
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.alerts.error,
                     modifier = Modifier.padding(horizontal = 4.dp),
@@ -226,7 +232,7 @@ private fun StakeCacaoContent(
 
         VsButton(
             label = stringResource(R.string.send_continue_button),
-            state = if (isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
+            state = if (isLoading || exceedsBalance) VsButtonState.Disabled else VsButtonState.Enabled,
             onClick = onDeposit,
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
         )
