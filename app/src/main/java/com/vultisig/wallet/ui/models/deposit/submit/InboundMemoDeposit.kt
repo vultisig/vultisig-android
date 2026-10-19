@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.deposit.submit
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
@@ -23,6 +24,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import java.math.BigDecimal
 import java.math.BigInteger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -109,8 +111,10 @@ internal suspend fun planInboundMemoTransfer(
     // The planner's fee is what the signer pays: on Zcash it already includes the ZIP-317 charge a
     // memo output adds, which the flat seed above knows nothing about.
     val gasFee =
-        plan?.fee?.takeIf { it > 0 }?.let { TokenValue(value = BigInteger.valueOf(it), token = nativeCoin) }
-            ?: feeRate
+        plan
+            ?.fee
+            ?.takeIf { it > 0 }
+            ?.let { TokenValue(value = BigInteger.valueOf(it), token = nativeCoin) } ?: feeRate
 
     val estimatedGasFee =
         gasFeeToEstimate(
@@ -154,7 +158,11 @@ internal fun selectPlannedUtxos(
  * Validates that [amount] is above the chain dust threshold and that [plan] resolved successfully,
  * throwing [InvalidTransactionDataException] otherwise.
  */
-internal fun validateBtcLikeAmount(amount: BigInteger, chain: Chain, plan: Bitcoin.TransactionPlan?) {
+internal fun validateBtcLikeAmount(
+    amount: BigInteger,
+    chain: Chain,
+    plan: Bitcoin.TransactionPlan?,
+) {
     val minAmount = chain.getDustThreshold
     if (amount < minAmount) {
         throw InvalidTransactionDataException(
@@ -168,3 +176,38 @@ internal fun validateBtcLikeAmount(amount: BigInteger, chain: Chain, plan: Bitco
         throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
     }
 }
+
+/**
+ * Bifrost ignores an inbound at or below the chain's `dust_threshold`, published by THORChain and
+ * MayaChain alike in 1e8 fixed point whatever the coin's own decimals — such a deposit confirms on
+ * the source chain and is never credited. The minimum shown is therefore one fixed-point unit above
+ * it.
+ */
+internal fun requireAboveInboundDust(
+    amount: BigInteger,
+    decimals: Int,
+    ticker: String,
+    inbound: THORChainInboundAddress,
+    chain: Chain,
+) {
+    val dust = inbound.dustThreshold?.toBigIntegerOrNull() ?: return
+    if (dust <= BigInteger.ZERO) return
+    val amountFixed8 = BigDecimal(amount).movePointLeft(decimals - INBOUND_FIXED_POINT_DECIMALS)
+    if (amountFixed8 <= BigDecimal(dust)) {
+        throw InvalidTransactionDataException(
+            UiText.FormattedText(
+                R.string.send_form_minimum_send_amount_is_requires_this,
+                listOf(
+                    BigDecimal(dust + BigInteger.ONE)
+                        .movePointLeft(INBOUND_FIXED_POINT_DECIMALS)
+                        .stripTrailingZeros()
+                        .toPlainString(),
+                    ticker,
+                    chain.raw,
+                ),
+            )
+        )
+    }
+}
+
+private const val INBOUND_FIXED_POINT_DECIMALS = 8

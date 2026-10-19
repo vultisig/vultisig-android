@@ -172,8 +172,6 @@ internal class TokenPreselectionService(
             // two directions start from different tokens — as with the RUJI pair above.
             DeFiNavActions.STAKE_YBRUNE -> Coins.ThorChain.bRUNE
             DeFiNavActions.UNSTAKE_YBRUNE -> Coins.ThorChain.ybRUNE
-            // The EVM asset side of a pool add is the one case ADD_LP still submits through the
-            // Send flow (the Deposit flow's AddLiquidityStrategy only covers the RUNE/CACAO side).
             DeFiNavActions.ADD_LP,
             DeFiNavActions.STAKE_CACAO,
             DeFiNavActions.UNSTAKE_CACAO,
