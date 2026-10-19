@@ -298,6 +298,9 @@
     <string name="deposit_form_operator_fee_title">Operator-kosten (Basispunten)</string>
     <string name="deposit_message_deposit_title">%s bericht storting</string>
     <string name="deposit_form_custom_memo_title">Aangepaste memo</string>
+    <string name="deposit_form_proposal_id_title">Voorstel-ID</string>
+    <string name="deposit_form_proposal_id_error">Voer een geldig voorstel-ID in</string>
+    <string name="deposit_form_vote_option_error">Selecteer een stemoptie</string>
     <string name="swap_screen_same_asset_error_message">Bron- en bestemmingsactiva kunnen niet hetzelfde zijn.</string>
     <string name="address_book_toolbar_title">Adresboek</string>
     <string name="address_book_settings_title">Adresboek</string>
@@ -757,6 +760,7 @@
     <string name="swapkit_error_decoding">Kon SwapKit-respons niet verwerken</string>
     <string name="swapkit_error_server">SwapKit-serverfout (HTTP %1$d)</string>
     <string name="sign_message_continue">Doorgaan</string>
+    <string name="sign_message_unsupported_evm_format">Niet-ondersteund berichtformaat. Alleen personal_sign met een geldige EIP-191-envelop en eth_signTypedData_v4 kunnen worden ondertekend.</string>
     <string name="hint_signing_method">Ondertekeningsmethode</string>
     <string name="verify_sign_message_signing_method" >Ondertekeningsmethode</string>
     <string name="signing_error_transaction_timeout">Transactie is verlopen vanwege trage ondertekening. Probeer het opnieuw.</string>
@@ -854,6 +858,8 @@
     <string name="governance_voting_closed">De stemming voor dit voorstel is beëindigd</string>
     <string name="hide_balance">Saldo verbergen</string>
     <string name="show_balance">Saldo weergeven</string>
+    <string name="hide_total_balance">Totaal saldo verbergen</string>
+    <string name="show_total_balance">Totaal saldo weergeven</string>
     <string name="no_chains_found">Geen kettingen gevonden</string>
     <string name="no_chain_make_sure_that">Zorg ervoor dat de keten die u zoekt is ingeschakeld.</string>
     <string name="no_chain_customize_chains">Ketens aanpassen</string>
@@ -1138,7 +1144,16 @@
     <string name="keygen_benefit_3_emphasized">Cross-chain,</string>
     <string name="upgrade_banner_title">Upgrade nu uw kluis</string>
     <string name="deposit_form_custom_memo_optional_title">Aangepast memo (optioneel)</string>
-    <string name="home_defi_portfolio">DeFi-portfolio</string>
+    <string name="home_display">Startscherm</string>
+    <string name="home_display_separate_title">Wallet &amp; DeFi gescheiden</string>
+    <string name="home_display_separate_description">Je Wallet-tab toont alleen je walletsaldo en je DeFi-tab toont je DeFi-saldo.</string>
+    <string name="home_display_combined_title">Wallet + DeFi</string>
+    <string name="home_display_combined_description">Beide tabs tonen je gecombineerde wallet- en DeFi-saldo.</string>
+    <string name="home_balance_display">Saldoweergave</string>
+    <string name="home_swipe_hint_title">Veeg om te wisselen</string>
+    <string name="home_swipe_hint_description">Veeg naar links of rechts om tussen je wallet- en DeFi-tab te wisselen.</string>
+    <string name="home_positions">Posities</string>
+    <string name="home_swipe_hint_got_it">Begrepen</string>
     <string name="backup_password_request_with_password_action">Wachtwoord gebruiken</string>
     <string name="backup_password_topbar_title">Wachtwoord</string>
     <string name="function_transfer_ibc_dst_address_input_title">Bestemmingsadres</string>
@@ -1748,6 +1763,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Nieuwe kwantumbeveiliging</string>
     <string name="qbtc_intro_subtitle">Klassieke sleutels kunnen worden gekraakt door kwantumcomputers. Voor het inschakelen van QBTC moet een nieuw sleutelpaar worden gegenereerd.</string>
+    <string name="qbtc_intro_key_warning">Door QBTC in te schakelen worden een nieuwe kwantumsleutel en een nieuw QBTC-adres aangemaakt. Had deze kluis eerder een kwantumsleutel, zoek dan de juiste back-up en herstel die.</string>
     <string name="qbtc_intro_generate_title">Genereer uw kwantumsleutelpaar</string>
     <string name="qbtc_intro_generate_desc">Vultisig voert een lokale MPC-ceremonie uit op de apparaten van uw kluis om een nieuw sleutelpaar te maken.</string>
     <string name="qbtc_intro_link_title">Koppel het aan uw bestaande kluis</string>
@@ -1856,6 +1872,7 @@
     <string name="verify_verb_merging">Je voegt samen</string>
     <string name="verify_verb_unmerging">Je splitst</string>
     <string name="verify_verb_bridging">Je bridget</string>
+    <string name="verify_verb_voting">Je stemt</string>
     <string name="scope_your_whole_stake">je volledige stake</string>
     <string name="scope_rewards_accrued_so_far">tot nu toe opgebouwde beloningen</string>
     <string name="scope_delegated_amount_after_rent">het gedelegeerde bedrag na de huurreserve</string>

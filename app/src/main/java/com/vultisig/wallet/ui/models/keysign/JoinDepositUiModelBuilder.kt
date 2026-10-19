@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.usecases.ThorchainMemoParser
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
@@ -54,6 +55,7 @@ constructor(
     private val feeResolver: JoinKeysignFeeResolver,
     private val rentReserve: KaminoRentReserve,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
+    private val parseCosmosMessage: ParseCosmosMessageUseCase,
 ) {
 
     /**
@@ -162,6 +164,8 @@ constructor(
                 // Renders the instruction breakdown the initiating device shows, which for a
                 // pre-built transaction is the only place its real work is visible.
                 signSolana = payload.signSolana,
+                // Shows the proposal and ballot rows, and drops the To row, as the initiator does.
+                governanceVote = payload.cosmosGovVote(parseCosmosMessage),
             )
         // Resolve the same From/To labels the initiator renders (issue #5301), so the joining
         // co-signer sees "VaultName (address)" instead of raw thor1… addresses. Mirrors

@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
+import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -421,10 +422,14 @@ constructor(
      * swap queue. Placement flows through the same verify → keysign path as a market swap.
      */
     fun placeLimitOrder() {
-        // Re-entry guard: the CTA disables off isLoadingNextScreen, but that flips inside this
-        // method, so a fast second tap could otherwise start a second placement (a duplicate
-        // on-chain deposit) before the UI updates.
+        // Re-entry guard: a second tap while this placement is staging would otherwise place a
+        // duplicate on-chain deposit. The flag goes up before the recipient check suspends, so
+        // the guard and the disabled CTA cover the lookup too.
         if (isLoadingNextScreen) return
+        val form = snapshotForm()
+        val targetPrice = limitTargetPrice.value
+        val expiryHours = limitExpiry.value.hours
+        isLoadingNextScreen = true
 
         viewModelScope.safeLaunch(
             onError = { e ->
@@ -444,27 +449,15 @@ constructor(
             // and it stays the first thing checked so its error is the one the user sees.
             val recipient = validatedExternalRecipient()
 
-            val targetPrice = limitTargetPrice.value
             if (targetPrice == null) {
+                isLoadingNextScreen = false
                 showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
                 return@safeLaunch
             }
 
             val inputs =
                 try {
-                    isLoadingNextScreen = true
-                    swapInputCollector.collect(
-                        vaultId = vaultId,
-                        selectedSrc = selectedSrc.value,
-                        selectedDst = selectedDst.value,
-                        srcAmount = srcAmountState.text.toString(),
-                        quote = quoteState.quote,
-                        gasFee = quotePipeline.gasFee.value,
-                        estimatedNetworkFeeTokenValue =
-                            quotePipeline.estimatedNetworkFeeTokenValue.value,
-                        estimatedNetworkFeeFiatValue =
-                            quotePipeline.estimatedNetworkFeeFiatValue.value,
-                    )
+                    collectInputs(form)
                 } catch (e: InvalidTransactionDataException) {
                     isLoadingNextScreen = false
                     showError(e.text)
@@ -489,7 +482,7 @@ constructor(
                         // Fail-safe: the memo only accepts 8 fractional digits, and rejects
                         // anything longer with an exception rather than rounding it itself.
                         targetPrice = LimitOrderPricing.toMemoScale(targetPrice),
-                        expiryHours = limitExpiry.value.hours,
+                        expiryHours = expiryHours,
                         destinationAddress = recipient ?: inputs.dstToken.address,
                         gasFee = inputs.gasFee,
                         gasFeeFiatValue = inputs.gasFeeFiatValue,
@@ -692,6 +685,48 @@ constructor(
     }
 
     /**
+     * Everything a staged swap or limit order is built from, read at the tap. The recipient check
+     * that follows can wait on the cluster while the amount field and the quote pipeline stay live,
+     * so reading these afterwards could pair an amount with a quote fetched for another amount, or
+     * attach a later quote's fee label and discounts (#5358) to this transaction.
+     */
+    private fun snapshotForm(): SwapFormSnapshot {
+        val state = uiState.value
+        return SwapFormSnapshot(
+            vaultId = vaultId,
+            selectedSrc = selectedSrc.value,
+            selectedDst = selectedDst.value,
+            srcAmount = srcAmountState.text.toString(),
+            quote = quoteState.quote,
+            gasFee = quotePipeline.gasFee.value,
+            estimatedNetworkFeeTokenValue = quotePipeline.estimatedNetworkFeeTokenValue.value,
+            estimatedNetworkFeeFiatValue = quotePipeline.estimatedNetworkFeeFiatValue.value,
+            gasLimitOverride = gasLimitOverride.value,
+            feeDisplay =
+                SwapFeeDisplay(
+                    swapFeePercent = state.feeBreakdown.swapFeePercent,
+                    swapFeeIncludedInRate = state.feeBreakdown.swapFeeIncludedInRate,
+                    vultBpsDiscount = state.discountInfo.vultBpsDiscount,
+                    vultBpsDiscountFiatValue = state.discountInfo.vultBpsDiscountFiatValue,
+                    referralBpsDiscount = state.discountInfo.referralBpsDiscount,
+                    referralBpsDiscountFiatValue = state.discountInfo.referralBpsDiscountFiatValue,
+                ),
+        )
+    }
+
+    private suspend fun collectInputs(form: SwapFormSnapshot) =
+        swapInputCollector.collect(
+            vaultId = form.vaultId,
+            selectedSrc = form.selectedSrc,
+            selectedDst = form.selectedDst,
+            srcAmount = form.srcAmount,
+            quote = form.quote,
+            gasFee = form.gasFee,
+            estimatedNetworkFeeTokenValue = form.estimatedNetworkFeeTokenValue,
+            estimatedNetworkFeeFiatValue = form.estimatedNetworkFeeFiatValue,
+        )
+
+    /**
      * The external recipient the transaction may be built with — `null` when the recipient is off —
      * throwing [InvalidTransactionDataException] when it cannot receive the swap.
      *
@@ -733,10 +768,12 @@ constructor(
     }
 
     fun swap() {
-        // Re-entry guard, as in placeLimitOrder(): isLoadingNextScreen now flips inside the
-        // coroutine, and the recipient check ahead of it can wait on the cluster, so a fast second
-        // tap could otherwise stage the same swap twice before the CTA disables.
+        // Re-entry guard, as in placeLimitOrder(): the recipient check can wait on the cluster, so
+        // the flag goes up before it, or a second tap during the lookup stages the same swap
+        // twice.
         if (isLoadingNextScreen) return
+        val form = snapshotForm()
+        isLoadingNextScreen = true
 
         viewModelScope.safeLaunch(
             onError = { e ->
@@ -758,19 +795,7 @@ constructor(
 
             val inputs =
                 try {
-                    isLoadingNextScreen = true
-                    swapInputCollector.collect(
-                        vaultId = vaultId,
-                        selectedSrc = selectedSrc.value,
-                        selectedDst = selectedDst.value,
-                        srcAmount = srcAmountState.text.toString(),
-                        quote = quoteState.quote,
-                        gasFee = quotePipeline.gasFee.value,
-                        estimatedNetworkFeeTokenValue =
-                            quotePipeline.estimatedNetworkFeeTokenValue.value,
-                        estimatedNetworkFeeFiatValue =
-                            quotePipeline.estimatedNetworkFeeFiatValue.value,
-                    )
+                    collectInputs(form)
                 } catch (e: InvalidTransactionDataException) {
                     isLoadingNextScreen = false
                     showError(e.text)
@@ -782,22 +807,6 @@ constructor(
                     Timber.e(e)
                     showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
                     return@safeLaunch
-                }
-
-            // Snapshot the fee/discount display alongside `inputs`, before the build. Reading
-            // uiState.value after it could attach a later quote's fee label or discounts to this
-            // transaction if polling lands a new quote in the meantime (#5358).
-            val feeDisplay =
-                uiState.value.let { state ->
-                    SwapFeeDisplay(
-                        swapFeePercent = state.feeBreakdown.swapFeePercent,
-                        swapFeeIncludedInRate = state.feeBreakdown.swapFeeIncludedInRate,
-                        vultBpsDiscount = state.discountInfo.vultBpsDiscount,
-                        vultBpsDiscountFiatValue = state.discountInfo.vultBpsDiscountFiatValue,
-                        referralBpsDiscount = state.discountInfo.referralBpsDiscount,
-                        referralBpsDiscountFiatValue =
-                            state.discountInfo.referralBpsDiscountFiatValue,
-                    )
                 }
 
             val transaction =
@@ -812,9 +821,9 @@ constructor(
                     gasFeeFiatValue = inputs.gasFeeFiatValue,
                     estimatedNetworkFeeTokenValue = inputs.estimatedNetworkFeeTokenValue,
                     estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
-                    gasLimitOverride = gasLimitOverride.value,
+                    gasLimitOverride = form.gasLimitOverride,
                     externalRecipient = recipient,
-                    feeDisplay = feeDisplay,
+                    feeDisplay = form.feeDisplay,
                 )
 
             chainValidationService.validateNearSendAffordable(
@@ -1310,3 +1319,16 @@ constructor(
             DecimalFormat("#,##0.########").apply { roundingMode = RoundingMode.DOWN }
     }
 }
+
+private data class SwapFormSnapshot(
+    val vaultId: String?,
+    val selectedSrc: SendSrc?,
+    val selectedDst: SendSrc?,
+    val srcAmount: String,
+    val quote: SwapQuote?,
+    val gasFee: TokenValue?,
+    val estimatedNetworkFeeTokenValue: TokenValue?,
+    val estimatedNetworkFeeFiatValue: FiatValue?,
+    val gasLimitOverride: Long?,
+    val feeDisplay: SwapFeeDisplay,
+)

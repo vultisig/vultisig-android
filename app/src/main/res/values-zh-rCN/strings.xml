@@ -520,6 +520,9 @@
     <!-- Deposit -->
     <string name="deposit_message_deposit_title">%s 存款消息</string>
     <string name="deposit_form_custom_memo_title">自定义备注</string>
+    <string name="deposit_form_proposal_id_title">提案 ID</string>
+    <string name="deposit_form_proposal_id_error">请输入有效的提案 ID</string>
+    <string name="deposit_form_vote_option_error">请选择投票选项</string>
     <string name="deposit_form_unstake_percentage_hint">输入要取消质押的百分比</string>
 
     <!-- Swap Screen -->
@@ -1015,6 +1018,7 @@
 
     <!-- Sign Message -->
     <string name="sign_message_continue">继续</string>
+    <string name="sign_message_unsupported_evm_format">不支持的消息格式。仅支持带有有效 EIP-191 封装的 personal_sign，以及 eth_signTypedData_v4。</string>
 
     <!-- Address Book -->
     <string name="address_book_empty_description">将所有重要地址整理在一个地方。</string>
@@ -1237,6 +1241,8 @@
     <string name="governance_voting_closed">此提案的投票已结束</string>
     <string name="hide_balance">隐藏余额</string>
     <string name="show_balance">显示余额</string>
+    <string name="hide_total_balance">隐藏总余额</string>
+    <string name="show_total_balance">显示总余额</string>
     <string name="no_chains_found">未找到区块链</string>
     <string name="no_chain_make_sure_that">确保您要查找的链已启用。</string>
     <string name="no_chain_customize_chains">自定义区块链</string>
@@ -1472,7 +1478,16 @@
     <string name="keygen_benefit_3_emphasized">跨链</string>
     <string name="upgrade_banner_title">立即升级您的保险库</string>
     <string name="deposit_form_custom_memo_optional_title">自定义备注（可选）</string>
-    <string name="home_defi_portfolio">DeFi 投资组合</string>
+    <string name="home_display">首页显示</string>
+    <string name="home_display_separate_title">钱包与 DeFi 分开显示</string>
+    <string name="home_display_separate_description">钱包标签页仅显示钱包余额，DeFi 标签页显示 DeFi 余额。</string>
+    <string name="home_display_combined_title">钱包 + DeFi</string>
+    <string name="home_display_combined_description">两个标签页都显示钱包与 DeFi 的合计余额。</string>
+    <string name="home_balance_display">余额显示</string>
+    <string name="home_swipe_hint_title">滑动切换</string>
+    <string name="home_swipe_hint_description">向左或向右滑动，在钱包和 DeFi 标签页之间切换。</string>
+    <string name="home_positions">仓位</string>
+    <string name="home_swipe_hint_got_it">知道了</string>
     <string name="backup_password_request_with_password_action">使用密码</string>
     <string name="backup_password_topbar_title">密码</string>
     <string name="function_transfer_ibc_dst_address_input_title">目标地址</string>
@@ -2077,6 +2092,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">全新量子安全</string>
     <string name="qbtc_intro_subtitle">经典密钥可能被量子计算机破解。启用 QBTC 需要生成新的密钥对。</string>
+    <string name="qbtc_intro_key_warning">启用 QBTC 会创建新的量子密钥和新的 QBTC 地址。如果此保险库之前有量子密钥，请找到正确的备份并从中恢复。</string>
     <string name="qbtc_intro_generate_title">生成您的量子密钥对</string>
     <string name="qbtc_intro_generate_desc">Vultisig 在您的保险库设备之间运行本地 MPC 仪式，以生成新的密钥对。</string>
     <string name="qbtc_intro_link_title">将其关联到您现有的保险库</string>
@@ -2185,6 +2201,7 @@
     <string name="verify_verb_merging">您正在合并</string>
     <string name="verify_verb_unmerging">您正在取消合并</string>
     <string name="verify_verb_bridging">您正在跨链转账</string>
+    <string name="verify_verb_voting">您正在投票</string>
     <string name="scope_your_whole_stake">您的全部质押</string>
     <string name="scope_rewards_accrued_so_far">至今累积的奖励</string>
     <string name="scope_delegated_amount_after_rent">扣除租金储备后的委托金额</string>

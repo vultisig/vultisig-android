@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosVoteOption
 import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.PasteIcon
@@ -46,6 +47,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
 import com.vultisig.wallet.ui.models.deposit.bondedUnitsCeiling
+import com.vultisig.wallet.ui.screens.function.GovVoteFunctionScreen
 import com.vultisig.wallet.ui.screens.function.TransferIbcFunctionScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -105,6 +107,9 @@ internal fun DepositFormScreen(
         onSelectBondAsset = model::selectBondAsset,
         onSetMaxLpUnits = model::setMaxLpUnits,
         onRetryLoadBondAssets = model::retryLoadBondAssets,
+        proposalIdFieldState = model.proposalIdFieldState,
+        onProposalIdLostFocus = model::validateProposalId,
+        onSelectVoteOption = model::selectVoteOption,
     )
 }
 
@@ -151,6 +156,9 @@ internal fun DepositFormScreen(
     onSelectBondAsset: (String) -> Unit = {},
     onSetMaxLpUnits: () -> Unit = {},
     onRetryLoadBondAssets: () -> Unit = {},
+    proposalIdFieldState: TextFieldState = TextFieldState(),
+    onProposalIdLostFocus: () -> Unit = {},
+    onSelectVoteOption: (CosmosVoteOption) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -207,6 +215,7 @@ internal fun DepositFormScreen(
                             stringResource(R.string.deposit_option_secured_assets)
                         DepositOption.WithdrawSecuredAsset ->
                             stringResource(R.string.deposit_option_withdraw_secured)
+                        DepositOption.Vote -> stringResource(R.string.governance_vote)
                     }
                 },
             )
@@ -231,6 +240,17 @@ internal fun DepositFormScreen(
                         memoFieldState = memoFieldState,
                         onMemoLostFocus = onMemoLostFocus,
                         memoError = state.memoError,
+                    )
+                }
+
+                DepositOption.Vote -> {
+                    GovVoteFunctionScreen(
+                        selectedOption = state.selectedVoteOption,
+                        onSelectOption = onSelectVoteOption,
+                        optionError = state.voteOptionError,
+                        proposalIdFieldState = proposalIdFieldState,
+                        onProposalIdLostFocus = onProposalIdLostFocus,
+                        proposalIdError = state.proposalIdError,
                     )
                 }
 

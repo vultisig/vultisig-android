@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
@@ -66,7 +67,9 @@ internal class SecuredAssetStrategy(
     private val thorAddressFieldState: TextFieldState,
     private val tokenAmountFieldState: TextFieldState,
     private val selectedAccountProvider: () -> Account?,
+    private val addressProvider: () -> Address?,
     private val resolveInboundAddress: suspend (Coin) -> String,
+    private val requireTokenAmount: (Coin, Account, Address, TokenValue) -> BigInteger,
     private val vaultRepository: VaultRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val tokenRepository: TokenRepository,
@@ -163,6 +166,17 @@ internal class SecuredAssetStrategy(
             )
         val gasFee = TokenValue(value = fees.amount, token = nativeCoin)
 
+        val isPlannedUtxo = chain.standard == TokenStandard.UTXO && chain != Chain.Cardano
+        // A UTXO plan already refuses an amount its inputs cannot cover, with its own error.
+        if (!isPlannedUtxo) {
+            val address =
+                addressProvider()
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+        }
+
         val specific =
             blockChainSpecificRepository
                 .getSpecific(
@@ -178,7 +192,7 @@ internal class SecuredAssetStrategy(
                     tokenAmountValue = tokenAmountInt,
                 )
                 .let { specific ->
-                    if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                    if (isPlannedUtxo) {
                         planBtc
                             ?: getBitcoinTransactionPlan(
                                     vaultId,
@@ -195,7 +209,7 @@ internal class SecuredAssetStrategy(
                         specific
                     }
                 }
-        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+        if (isPlannedUtxo) {
             validateBtcLikeAmount(tokenAmountInt, chain)
         }
         val estimatedGasFee = gasFeeToEstimate(fromGas)

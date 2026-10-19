@@ -10,7 +10,6 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
-import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.hasValidMldsaKey
 import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -510,23 +509,8 @@ constructor(
             if (vault.hasValidMldsaKey() || vault.libType == SigningLibType.KeyImport) {
                 return@launch
             }
-            if (hasFastSign) {
-                navigator.route(
-                    Route.VerifyExistingVault(
-                        name = vault.name,
-                        tssAction = TssAction.SingleKeygen,
-                        vaultId = vaultId,
-                    )
-                )
-            } else {
-                navigator.route(
-                    Route.Keygen.PeerDiscovery(
-                        action = TssAction.SingleKeygen,
-                        vaultName = vault.name,
-                        vaultId = vaultId,
-                    )
-                )
-            }
+            // The intro carries the new-QBTC-address warning; its "Get started" starts keygen.
+            navigator.route(Route.QuantumSecurityIntro(vaultId = vaultId))
         }
     }
 

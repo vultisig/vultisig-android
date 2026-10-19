@@ -299,6 +299,9 @@
     <string name="deposit_form_operator_fee_title">Betreiber-Gebühren (Basispunkte)</string>
     <string name="deposit_message_deposit_title">%s Nachricht Einzahlung</string>
     <string name="deposit_form_custom_memo_title">Benutzerdefiniertes Memo</string>
+    <string name="deposit_form_proposal_id_title">Vorschlags-ID</string>
+    <string name="deposit_form_proposal_id_error">Geben Sie eine gültige Vorschlags-ID ein</string>
+    <string name="deposit_form_vote_option_error">Wählen Sie eine Abstimmungsoption</string>
     <string name="swap_screen_same_asset_error_message">Quell- und Ziel-Assets können nicht identisch sein.</string>
     <string name="address_book_toolbar_title">Adressbuch</string>
     <string name="address_book_settings_title">Adressbuch</string>
@@ -760,6 +763,7 @@
     <string name="swapkit_error_decoding">SwapKit-Antwort konnte nicht verarbeitet werden</string>
     <string name="swapkit_error_server">SwapKit-Serverfehler (HTTP %1$d)</string>
     <string name="sign_message_continue">Weiter</string>
+    <string name="sign_message_unsupported_evm_format">Nicht unterstütztes Nachrichtenformat. Nur personal_sign mit gültigem EIP-191-Umschlag und eth_signTypedData_v4 können signiert werden.</string>
     <string name="hint_signing_method">Signaturmethode</string>
     <string name="verify_sign_message_signing_method" >Signaturmethode</string>
     <string name="signing_error_transaction_timeout">Die Transaktion ist aufgrund langsamer Signierung fehlgeschlagen. Bitte versuchen Sie es erneut.</string>
@@ -859,6 +863,8 @@
     <string name="governance_voting_closed">Die Abstimmung für diesen Vorschlag ist beendet</string>
     <string name="hide_balance">Guthaben verbergen</string>
     <string name="show_balance">Guthaben anzeigen</string>
+    <string name="hide_total_balance">Gesamtguthaben verbergen</string>
+    <string name="show_total_balance">Gesamtguthaben anzeigen</string>
     <string name="no_chains_found">Keine Blockchains gefunden</string>
     <string name="no_chain_make_sure_that">Stellen Sie sicher, dass die gesuchte Blockchain aktiviert ist.</string>
     <string name="no_chain_customize_chains">Blockchains anpassen</string>
@@ -1143,7 +1149,16 @@
     <string name="keygen_benefit_3_emphasized">Chainübergreifend</string>
     <string name="upgrade_banner_title">Jetzt Ihren Tresor upgraden</string>
     <string name="deposit_form_custom_memo_optional_title">Benutzerdefiniertes Memo (optional)</string>
-    <string name="home_defi_portfolio">DeFi-Portfolio</string>
+    <string name="home_display">Startbildschirm</string>
+    <string name="home_display_separate_title">Wallet &amp; DeFi getrennt</string>
+    <string name="home_display_separate_description">Der Wallet-Tab zeigt nur dein Wallet-Guthaben, der DeFi-Tab dein DeFi-Guthaben.</string>
+    <string name="home_display_combined_title">Wallet + DeFi</string>
+    <string name="home_display_combined_description">Beide Tabs zeigen dein kombiniertes Wallet- und DeFi-Guthaben.</string>
+    <string name="home_balance_display">Saldoanzeige</string>
+    <string name="home_swipe_hint_title">Wischen zum Wechseln</string>
+    <string name="home_swipe_hint_description">Wische nach links oder rechts, um zwischen Wallet- und DeFi-Tab zu wechseln.</string>
+    <string name="home_positions">Positionen</string>
+    <string name="home_swipe_hint_got_it">Verstanden</string>
     <string name="backup_password_request_with_password_action">Passwort verwenden</string>
     <string name="backup_password_topbar_title">Passwort</string>
     <string name="function_transfer_ibc_dst_address_input_title">Zieladresse</string>
@@ -1756,6 +1771,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Neue Quantensicherheit</string>
     <string name="qbtc_intro_subtitle">Klassische Schlüssel können von Quantencomputern gebrochen werden. Zum Aktivieren von QBTC muss ein neues Schlüsselpaar generiert werden.</string>
+    <string name="qbtc_intro_key_warning">Durch das Aktivieren von QBTC werden ein neuer Quantenschlüssel und eine neue QBTC-Adresse erstellt. Falls dieser Tresor zuvor einen Quantenschlüssel hatte, suchen Sie bitte das richtige Backup und stellen Sie es wieder her.</string>
     <string name="qbtc_intro_generate_title">Generieren Sie Ihr Quanten-Schlüsselpaar</string>
     <string name="qbtc_intro_generate_desc">Vultisig führt eine lokale MPC-Zeremonie über Ihre Tresor-Geräte aus, um ein neues Schlüsselpaar zu erzeugen.</string>
     <string name="qbtc_intro_link_title">Verknüpfen Sie es mit Ihrem vorhandenen Tresor</string>
@@ -1864,6 +1880,7 @@
     <string name="verify_verb_merging">Du führst zusammen</string>
     <string name="verify_verb_unmerging">Du trennst</string>
     <string name="verify_verb_bridging">Du überträgst kettenübergreifend</string>
+    <string name="verify_verb_voting">Du stimmst ab</string>
     <string name="scope_your_whole_stake">dein gesamter Stake</string>
     <string name="scope_rewards_accrued_so_far">bisher angefallene Belohnungen</string>
     <string name="scope_delegated_amount_after_rent">der delegierte Betrag nach Abzug der Mietreserve</string>

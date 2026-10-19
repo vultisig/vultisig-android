@@ -26,18 +26,12 @@ interface ExplorerLinkRepository {
 internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRepository {
 
     override fun getTransactionLink(chain: Chain, transactionHash: String): String {
-        chain.explorerUrl.ifEmpty {
-            return ""
-        }
         val hash =
             if (chain == Chain.ThorChain) transactionHash.removePrefix("0x") else transactionHash
         return "${chain.transactionExplorerUrl}$hash"
     }
 
     override fun getAddressLink(chain: Chain, address: String): String {
-        chain.explorerUrl.ifEmpty {
-            return ""
-        }
         return "${chain.blockExplorerUrl}$address"
     }
 
@@ -150,7 +144,9 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Ton -> explorerUrl
                 Chain.Ripple,
                 Chain.Polkadot,
-                Chain.Bittensor -> "${explorerUrl}account/"
+                Chain.Bittensor,
+                // explorer.qbtc.net has no /address/ route; accounts live under /account/.
+                Chain.Qbtc -> "${explorerUrl}account/"
                 else -> "${explorerUrl}address/"
             }
 
@@ -198,6 +194,6 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 // (code=358). hyperevmscan is Etherscan-style, so /tx/ and /address/ resolve via
                 // the generic paths below with no special-casing.
                 Chain.Hyperliquid -> "https://hyperevmscan.io/"
-                Chain.Qbtc -> "" // no public explorer yet
+                Chain.Qbtc -> "https://explorer.qbtc.net/qbtc/"
             }
 }

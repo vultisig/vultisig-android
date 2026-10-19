@@ -422,6 +422,9 @@
     <string name="slippage_hint">Slippage percentage</string>
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
+    <string name="deposit_form_proposal_id_title">Proposal ID</string>
+    <string name="deposit_form_proposal_id_error">Enter a valid proposal ID</string>
+    <string name="deposit_form_vote_option_error">Select a vote option</string>
     <string name="deposit_form_unstake_percentage_hint">Enter percentage to unstake</string>
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same.</string>
     <string name="address_book_toolbar_title">Address Book</string>
@@ -1111,6 +1114,7 @@
     <string name="swapkit_error_decoding">Could not parse SwapKit response</string>
     <string name="swapkit_error_server">SwapKit server error (HTTP %1$d)</string>
     <string name="sign_message_continue">Continue</string>
+    <string name="sign_message_unsupported_evm_format">Unsupported message format. Only personal_sign with a valid EIP-191 envelope and eth_signTypedData_v4 can be signed.</string>
     <string name="address_book_empty_description">Keep all your important addresses organized in one place.</string>
     <string name="address_book_empty_title">Your Address Book is empty</string>
     <string name="check_updates_settings_title">Check for Updates</string>
@@ -1206,6 +1210,8 @@
     <string name="governance_voting_closed">Voting has ended for this proposal</string>
     <string name="hide_balance">Hide balance</string>
     <string name="show_balance">Show balance</string>
+    <string name="hide_total_balance">Hide total balance</string>
+    <string name="show_total_balance">Show total balance</string>
     <string name="no_chains_found">No chains found</string>
     <string name="no_chain_make_sure_that">Make sure that the chain you’re looking for is enabled.</string>
     <string name="no_chain_customize_chains">Customize chains</string>
@@ -1268,7 +1274,16 @@
     <string name="referral_rewards_banner_title">Add your referral code</string>
     <string name="kamino_banner_caption">New on Solana</string>
     <string name="kamino_banner_title">Start earning with Kamino</string>
-    <string name="home_defi_portfolio">DeFi Portfolio</string>
+    <string name="home_display">Home display</string>
+    <string name="home_display_separate_title">Wallet &amp; DeFi separate</string>
+    <string name="home_display_separate_description">Your Wallet tab shows your wallet balance only, and your DeFi tab shows your DeFi balance.</string>
+    <string name="home_display_combined_title">Wallet + DeFi</string>
+    <string name="home_display_combined_description">Both tabs show your combined wallet and DeFi balance.</string>
+    <string name="home_balance_display">Balance display</string>
+    <string name="home_swipe_hint_title">Swipe to switch</string>
+    <string name="home_swipe_hint_description">Swipe left or right to move between your wallet and DeFi tabs.</string>
+    <string name="home_positions">Positions</string>
+    <string name="home_swipe_hint_got_it">Got it</string>
     <string name="home_page_no_chains_enabled">No chains enabled</string>
     <string name="home_page_no_chain_enabled_desc">You’ve disabled all chains. Make sure that at least one chain is enabled.</string>
     <string name="address_book_saved_addresses">Saved Addresses</string>
@@ -1812,6 +1827,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">New quantum security</string>
     <string name="qbtc_intro_subtitle">Classical keys can be broken by quantum computers. Enabling QBTC requires generating a new key pair.</string>
+    <string name="qbtc_intro_key_warning">Enabling QBTC creates a new quantum key and a new QBTC address. If this vault previously had a quantum key, please find the correct backup and restore from it.</string>
     <string name="qbtc_intro_generate_title">Generate your quantum key pair</string>
     <string name="qbtc_intro_generate_desc">Vultisig runs a local MPC ceremony across your vault devices to produce a new key pair.</string>
     <string name="qbtc_intro_link_title">Link it to your existing vault</string>
@@ -1920,6 +1936,7 @@
     <string name="verify_verb_merging">You’re merging</string>
     <string name="verify_verb_unmerging">You’re unmerging</string>
     <string name="verify_verb_bridging">You’re bridging</string>
+    <string name="verify_verb_voting">You’re voting</string>
     <string name="scope_your_whole_stake">your whole stake</string>
     <string name="scope_rewards_accrued_so_far">rewards accrued so far</string>
     <string name="scope_delegated_amount_after_rent">the delegated amount after deducting the rent reserve</string>

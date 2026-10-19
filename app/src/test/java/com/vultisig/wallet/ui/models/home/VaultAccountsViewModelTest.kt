@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.HomeBalanceDisplay
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
@@ -177,6 +178,11 @@ internal class VaultAccountsViewModelTest {
             referralCodeSettingsRepository = referralCodeSettingsRepository,
             cryptoConnectionTypeRepository = cryptoConnectionTypeRepository,
             defaultDeFiChainsRepository = defaultDeFiChainsRepository,
+            homeDisplayRepository =
+                mockk {
+                    every { balanceDisplay } returns flowOf(HomeBalanceDisplay.Separate)
+                    coEvery { hasSeenSwipeHint() } returns true
+                },
             hasCircleAccount = hasCircleAccount,
             tiersNFTRepository = tiersNFTRepository,
             remoteNFTService = remoteNFTService,

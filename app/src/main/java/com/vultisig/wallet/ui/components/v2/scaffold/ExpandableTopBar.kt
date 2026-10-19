@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarScrollBehavior
@@ -35,10 +34,12 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Velocity
+import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 
 @Composable
 fun VsExpandableTopBar(
@@ -50,7 +51,6 @@ fun VsExpandableTopBar(
 ) {
     var expandedHeightPx by remember { mutableIntStateOf(0) }
     var collapsedHeightPx by remember { mutableIntStateOf(0) }
-    val density = LocalDensity.current
     var isMeasuring by remember { mutableStateOf(true) }
 
     if (isMeasuring) {
@@ -127,22 +127,22 @@ fun VsExpandableTopBar(
             previousOffsetLimit.floatValue = offsetLimit
         }
 
-        val offset by remember { derivedStateOf { scrollBehavior.state.heightOffset } }
-
-        val collapseFraction =
-            remember(offset, offsetLimit) {
-                if (offsetLimit < 0f) {
-                    (offset / offsetLimit).coerceIn(0f, 1f)
-                } else {
-                    0f
+        // Read only in layout, draw and gesture callbacks so a scroll never recomposes the bar.
+        val expandedFraction: () -> Float =
+            remember(offsetLimit) {
+                {
+                    if (offsetLimit < 0f) {
+                        1f - (scrollBehavior.state.heightOffset / offsetLimit).coerceIn(0f, 1f)
+                    } else {
+                        1f
+                    }
                 }
             }
-
-        val expandedFraction = remember(collapseFraction) { 1f - collapseFraction }
-        val currentHeightPx =
-            remember(expandedFraction, expandedHeightPx, collapsedHeightPx) {
-                collapsedHeightPx + (expandedHeightPx - collapsedHeightPx) * expandedFraction
-            }
+        // Only crossing the midpoint changes which content is composed.
+        val isExpandedShown by
+            remember(expandedFraction) { derivedStateOf { expandedFraction() > 0.5f } }
+        val isCollapsedShown by
+            remember(expandedFraction) { derivedStateOf { expandedFraction() < 0.5f } }
 
         // Bridges the bar's own drag gesture into the nested-scroll system. When the bar is at a
         // bound (fully expanded and over-dragged downward), the unused delta is dispatched to the
@@ -168,7 +168,17 @@ fun VsExpandableTopBar(
         Surface(
             modifier =
                 modifier
-                    .height(with(density) { currentHeightPx.toDp() })
+                    .layout { measurable, constraints ->
+                        val height =
+                            constraints.constrainHeight(
+                                (collapsedHeightPx + heightDiffPx * expandedFraction()).roundToInt()
+                            )
+                        val placeable =
+                            measurable.measure(
+                                constraints.copy(minHeight = height, maxHeight = height)
+                            )
+                        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                    }
                     .nestedScroll(connection = noOpConnection, dispatcher = nestedScrollDispatcher)
                     .draggable(
                         orientation = Orientation.Vertical,
@@ -191,7 +201,7 @@ fun VsExpandableTopBar(
                                 // We do NOT dispatch the fling to the parent here — doing so would
                                 // let exitUntilCollapsed.onPostFling settle the bar too, producing
                                 // a settle-then-jump-back double animation on the shared offset.
-                                val target = if (expandedFraction < 0.5f) offsetLimit else 0f
+                                val target = if (expandedFraction() < 0.5f) offsetLimit else 0f
                                 animate(
                                     initialValue = scrollBehavior.state.heightOffset,
                                     targetValue = target,
@@ -213,19 +223,22 @@ fun VsExpandableTopBar(
             // over cleanly and follow the drag in both directions rather than snapping on a
             // threshold. Each is skipped entirely at zero alpha so an invisible content never
             // holds a click target.
-            val expandedAlpha = ((expandedFraction - 0.5f) * 2f).coerceIn(0f, 1f)
-            val collapsedAlpha = ((0.5f - expandedFraction) * 2f).coerceIn(0f, 1f)
-
             Box(modifier = Modifier.fillMaxSize()) {
-                if (expandedAlpha > 0f) {
+                if (isExpandedShown) {
                     Box(
-                        modifier = Modifier.fillMaxSize().graphicsLayer { alpha = expandedAlpha },
+                        modifier =
+                            Modifier.fillMaxSize().graphicsLayer {
+                                alpha = ((expandedFraction() - 0.5f) * 2f).coerceIn(0f, 1f)
+                            },
                         content = expandedContent,
                     )
                 }
-                if (collapsedAlpha > 0f) {
+                if (isCollapsedShown) {
                     Box(
-                        modifier = Modifier.fillMaxSize().graphicsLayer { alpha = collapsedAlpha },
+                        modifier =
+                            Modifier.fillMaxSize().graphicsLayer {
+                                alpha = ((0.5f - expandedFraction()) * 2f).coerceIn(0f, 1f)
+                            },
                         content = collapsedContent,
                     )
                 }

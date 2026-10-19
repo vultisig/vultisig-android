@@ -411,6 +411,9 @@
     <string name="slippage_hint">슬리피지 비율</string>
     <string name="deposit_message_deposit_title">%s 메시지 예치</string>
     <string name="deposit_form_custom_memo_title">사용자 정의 메모</string>
+    <string name="deposit_form_proposal_id_title">제안 ID</string>
+    <string name="deposit_form_proposal_id_error">유효한 제안 ID를 입력하세요</string>
+    <string name="deposit_form_vote_option_error">투표 옵션을 선택하세요</string>
     <string name="deposit_form_unstake_percentage_hint">언스테이킹할 비율 입력</string>
     <string name="swap_screen_same_asset_error_message">출발 자산과 도착 자산이 같을 수 없습니다. </string>
     <string name="address_book_toolbar_title">주소록</string>
@@ -1099,6 +1102,7 @@
     <string name="swapkit_error_decoding">SwapKit 응답을 파싱할 수 없습니다</string>
     <string name="swapkit_error_server">SwapKit 서버 오류 (HTTP %1$d)</string>
     <string name="sign_message_continue">계속</string>
+    <string name="sign_message_unsupported_evm_format">지원되지 않는 메시지 형식입니다. 유효한 EIP-191 봉투의 personal_sign과 eth_signTypedData_v4만 서명할 수 있습니다.</string>
     <string name="address_book_empty_description">모든 중요한 주소를 한곳에서 관리하세요.</string>
     <string name="address_book_empty_title">주소록이 비어 있습니다</string>
     <string name="check_updates_settings_title">업데이트 확인</string>
@@ -1185,6 +1189,8 @@
     <string name="governance_voting_closed">이 제안에 대한 투표가 종료되었습니다</string>
     <string name="hide_balance">잔액 숨기기</string>
     <string name="show_balance">잔액 표시</string>
+    <string name="hide_total_balance">총 잔액 숨기기</string>
+    <string name="show_total_balance">총 잔액 표시</string>
     <string name="no_chains_found">체인을 찾을 수 없습니다</string>
     <string name="no_chain_make_sure_that">찾고 있는 체인이 활성화되어 있는지 확인하세요.</string>
     <string name="no_chain_customize_chains">체인 사용자 정의</string>
@@ -1240,7 +1246,16 @@
     <string name="referral_rewards_banner_title">추천 코드를 추가하세요</string>
     <string name="kamino_banner_caption">솔라나 신규</string>
     <string name="kamino_banner_title">Kamino로 수익을 시작하세요</string>
-    <string name="home_defi_portfolio">DeFi 포트폴리오</string>
+    <string name="home_display">홈 화면 표시</string>
+    <string name="home_display_separate_title">지갑과 DeFi 분리</string>
+    <string name="home_display_separate_description">지갑 탭에는 지갑 잔액만, DeFi 탭에는 DeFi 잔액이 표시됩니다.</string>
+    <string name="home_display_combined_title">지갑 + DeFi</string>
+    <string name="home_display_combined_description">두 탭 모두 지갑과 DeFi를 합친 잔액을 표시합니다.</string>
+    <string name="home_balance_display">잔액 표시</string>
+    <string name="home_swipe_hint_title">스와이프하여 전환</string>
+    <string name="home_swipe_hint_description">좌우로 스와이프하여 지갑 탭과 DeFi 탭 사이를 이동하세요.</string>
+    <string name="home_positions">포지션</string>
+    <string name="home_swipe_hint_got_it">알겠습니다</string>
     <string name="home_page_no_chains_enabled">활성화된 체인 없음</string>
     <string name="home_page_no_chain_enabled_desc">모든 체인을 비활성화했습니다. 최소 하나의 체인을 활성화해 주세요.</string>
     <string name="address_book_saved_addresses">저장된 주소</string>
@@ -1770,6 +1785,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">새로운 양자 보안</string>
     <string name="qbtc_intro_subtitle">고전적 키는 양자 컴퓨터로 해독될 수 있습니다. QBTC를 사용하려면 새 키 쌍을 생성해야 합니다.</string>
+    <string name="qbtc_intro_key_warning">QBTC를 활성화하면 새 양자 키와 새 QBTC 주소가 생성됩니다. 이 볼트에 이전에 양자 키가 있었다면, 올바른 백업을 찾아 복원하세요.</string>
     <string name="qbtc_intro_generate_title">양자 키 쌍 생성</string>
     <string name="qbtc_intro_generate_desc">Vultisig는 볼트 기기 전반에서 로컬 MPC 절차를 실행하여 새 키 쌍을 생성합니다.</string>
     <string name="qbtc_intro_link_title">기존 볼트에 연결</string>
@@ -1878,6 +1894,7 @@
     <string name="verify_verb_merging">병합 중</string>
     <string name="verify_verb_unmerging">병합 해제 중</string>
     <string name="verify_verb_bridging">브리지 중</string>
+    <string name="verify_verb_voting">투표 중</string>
     <string name="scope_your_whole_stake">스테이킹 전액</string>
     <string name="scope_rewards_accrued_so_far">현재까지 누적된 보상</string>
     <string name="scope_delegated_amount_after_rent">임대 예치금을 제외한 위임 금액</string>

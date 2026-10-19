@@ -300,6 +300,9 @@
     <string name="deposit_form_operator_fee_title">Comisiones del operador (Puntos base)</string>
     <string name="deposit_message_deposit_title">%s mensaje de deposito</string>
     <string name="deposit_form_custom_memo_title">Memo personalizado</string>
+    <string name="deposit_form_proposal_id_title">ID de propuesta</string>
+    <string name="deposit_form_proposal_id_error">Introduce un ID de propuesta válido</string>
+    <string name="deposit_form_vote_option_error">Selecciona una opción de voto</string>
     <string name="swap_screen_same_asset_error_message">Los activos de origen y destino no pueden ser los mismos.</string>
     <string name="address_book_toolbar_title">Libreta de direcciones</string>
     <string name="address_book_settings_title">Libreta de direcciones</string>
@@ -762,6 +765,7 @@
     <string name="swapkit_error_decoding">No se pudo procesar la respuesta de SwapKit</string>
     <string name="swapkit_error_server">Error del servidor SwapKit (HTTP %1$d)</string>
     <string name="sign_message_continue">Continuar</string>
+    <string name="sign_message_unsupported_evm_format">Formato de mensaje no compatible. Solo se pueden firmar personal_sign con un sobre EIP-191 válido y eth_signTypedData_v4.</string>
     <string name="hint_signing_method">Método de firma</string>
     <string name="verify_sign_message_signing_method" >Método de firma</string>
     <string name="signing_error_transaction_timeout">La transacción caducó por firma lenta. Inténtalo de nuevo.</string>
@@ -859,6 +863,8 @@
     <string name="governance_voting_closed">La votación de esta propuesta ha finalizado</string>
     <string name="hide_balance">Ocultar saldo</string>
     <string name="show_balance">Mostrar saldo</string>
+    <string name="hide_total_balance">Ocultar saldo total</string>
+    <string name="show_total_balance">Mostrar saldo total</string>
     <string name="no_chains_found">No se encontraron cadenas</string>
     <string name="no_chain_make_sure_that">Asegúrate de que la cadena que buscas esté activada.</string>
     <string name="no_chain_customize_chains">Personalizar cadenas</string>
@@ -1141,7 +1147,16 @@
     <string name="keygen_benefit_3_emphasized">Multicadena</string>
     <string name="upgrade_banner_title">Actualiza tu bóveda ahora</string>
     <string name="deposit_form_custom_memo_optional_title">Memo personalizado (opcional)</string>
-    <string name="home_defi_portfolio">Portafolio DeFi</string>
+    <string name="home_display">Pantalla de inicio</string>
+    <string name="home_display_separate_title">Monedero y DeFi por separado</string>
+    <string name="home_display_separate_description">La pestaña Monedero muestra solo el saldo de tu monedero y la pestaña DeFi muestra tu saldo DeFi.</string>
+    <string name="home_display_combined_title">Monedero + DeFi</string>
+    <string name="home_display_combined_description">Ambas pestañas muestran tu saldo combinado de monedero y DeFi.</string>
+    <string name="home_balance_display">Visualización del saldo</string>
+    <string name="home_swipe_hint_title">Desliza para cambiar</string>
+    <string name="home_swipe_hint_description">Desliza a la izquierda o a la derecha para moverte entre las pestañas de monedero y DeFi.</string>
+    <string name="home_positions">Posiciones</string>
+    <string name="home_swipe_hint_got_it">Entendido</string>
     <string name="backup_password_request_with_password_action">Usar contraseña</string>
     <string name="backup_password_topbar_title">Contraseña</string>
     <string name="function_transfer_ibc_dst_address_input_title">Dirección de destino</string>
@@ -1755,6 +1770,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Nueva seguridad cuántica</string>
     <string name="qbtc_intro_subtitle">Las claves clásicas pueden ser vulneradas por computadoras cuánticas. Habilitar QBTC requiere generar un nuevo par de claves.</string>
+    <string name="qbtc_intro_key_warning">Habilitar QBTC crea una nueva clave cuántica y una nueva dirección QBTC. Si esta bóveda tenía antes una clave cuántica, busca la copia de seguridad correcta y restáurala.</string>
     <string name="qbtc_intro_generate_title">Genera tu par de claves cuánticas</string>
     <string name="qbtc_intro_generate_desc">Vultisig ejecuta una ceremonia MPC local entre los dispositivos de tu bóveda para producir un nuevo par de claves.</string>
     <string name="qbtc_intro_link_title">Vincúlalo a tu bóveda existente</string>
@@ -1863,6 +1879,7 @@
     <string name="verify_verb_merging">Estás fusionando</string>
     <string name="verify_verb_unmerging">Estás separando</string>
     <string name="verify_verb_bridging">Estás transfiriendo entre cadenas</string>
+    <string name="verify_verb_voting">Estás votando</string>
     <string name="scope_your_whole_stake">todo tu stake</string>
     <string name="scope_rewards_accrued_so_far">recompensas acumuladas hasta ahora</string>
     <string name="scope_delegated_amount_after_rent">el importe delegado después de la reserva de alquiler</string>

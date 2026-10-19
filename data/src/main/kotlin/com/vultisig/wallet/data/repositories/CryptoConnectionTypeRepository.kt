@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,8 +10,6 @@ interface CryptoConnectionTypeRepository {
     val activeCryptoConnectionFlow: StateFlow<CryptoConnectionType>
 
     fun setActiveCryptoConnection(cryptoConnectionType: CryptoConnectionType)
-
-    fun hasDeFiPositionsScreen(chain: Chain): Boolean
 }
 
 internal class CryptoConnectionTypeRepositoryImpl @Inject constructor() :
@@ -25,21 +22,4 @@ internal class CryptoConnectionTypeRepositoryImpl @Inject constructor() :
     override fun setActiveCryptoConnection(cryptoConnectionType: CryptoConnectionType) {
         connection.value = cryptoConnectionType
     }
-
-    override fun hasDeFiPositionsScreen(chain: Chain) =
-        when (chain) {
-            Chain.ThorChain,
-            Chain.MayaChain,
-            Chain.Tron,
-            // TON surfaces a nominator-pool staking positions screen (stake / unstake).
-            Chain.Ton,
-            // Terra / TerraClassic / QBTC surface a staking positions screen (delegate / undelegate
-            // / redelegate / claim). Without these branches they're selectable in the "Select DeFi
-            // chains" sheet (isDeFiSupported) but get filtered out of the DeFi portfolio list, so
-            // the user never reaches the staking view.
-            Chain.Terra,
-            Chain.TerraClassic,
-            Chain.Qbtc -> true
-            else -> false
-        }
 }

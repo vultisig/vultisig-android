@@ -299,6 +299,9 @@
     <string name="deposit_form_operator_fee_title">Naknade operatora (Bazni bodovi)</string>
     <string name="deposit_message_deposit_title">%s depozit poruke</string>
     <string name="deposit_form_custom_memo_title">Prilagođeni dopis</string>
+    <string name="deposit_form_proposal_id_title">ID prijedloga</string>
+    <string name="deposit_form_proposal_id_error">Unesite važeći ID prijedloga</string>
+    <string name="deposit_form_vote_option_error">Odaberite opciju glasanja</string>
     <string name="swap_screen_same_asset_error_message">Izvorna i odredišna imovina ne mogu biti ista.</string>
     <string name="address_book_toolbar_title">Adresar</string>
     <string name="address_book_settings_title">Adresar</string>
@@ -761,6 +764,7 @@
     <string name="swapkit_error_decoding">Nije moguće parsirati SwapKit odgovor</string>
     <string name="swapkit_error_server">Pogreška SwapKit poslužitelja (HTTP %1$d)</string>
     <string name="sign_message_continue">Nastavi</string>
+    <string name="sign_message_unsupported_evm_format">Nepodržani format poruke. Mogu se potpisati samo personal_sign s valjanim EIP-191 omotom i eth_signTypedData_v4.</string>
     <string name="hint_signing_method">Metoda potpisivanja</string>
     <string name="verify_sign_message_signing_method" >Metoda potpisivanja</string>
     <string name="signing_error_transaction_timeout">Vrijeme transakcije je isteklo zbog sporog potpisivanja. Pokušajte ponovno.</string>
@@ -860,6 +864,8 @@
     <string name="governance_voting_closed">Glasanje za ovaj prijedlog je završeno</string>
     <string name="hide_balance">Sakrij stanje</string>
     <string name="show_balance">Prikaži stanje</string>
+    <string name="hide_total_balance">Sakrij ukupno stanje</string>
+    <string name="show_total_balance">Prikaži ukupno stanje</string>
     <string name="no_chains_found">Nisu pronađeni lanci</string>
     <string name="no_chain_make_sure_that">Provjerite je li lanac koji tražite omogućen.</string>
     <string name="no_chain_customize_chains">Prilagodi lance</string>
@@ -1146,7 +1152,16 @@
     <string name="keygen_benefit_3_emphasized">Međulančano poslovanje,</string>
     <string name="upgrade_banner_title">Nadogradite svoj trezor sada</string>
     <string name="deposit_form_custom_memo_optional_title">Prilagođeni memorandum (nije obavezno)</string>
-    <string name="home_defi_portfolio">DeFi portfelj</string>
+    <string name="home_display">Prikaz početnog zaslona</string>
+    <string name="home_display_separate_title">Novčanik i DeFi odvojeno</string>
+    <string name="home_display_separate_description">Kartica Novčanik prikazuje samo stanje novčanika, a kartica DeFi vaše DeFi stanje.</string>
+    <string name="home_display_combined_title">Novčanik + DeFi</string>
+    <string name="home_display_combined_description">Obje kartice prikazuju vaše ukupno stanje novčanika i DeFi-ja.</string>
+    <string name="home_balance_display">Prikaz stanja</string>
+    <string name="home_swipe_hint_title">Povucite za promjenu</string>
+    <string name="home_swipe_hint_description">Povucite lijevo ili desno za prelazak između kartica novčanika i DeFi-ja.</string>
+    <string name="home_positions">Pozicije</string>
+    <string name="home_swipe_hint_got_it">Razumijem</string>
     <string name="backup_password_request_with_password_action">Koristite lozinku</string>
     <string name="backup_password_topbar_title">Lozinka</string>
     <string name="function_transfer_ibc_dst_address_input_title">Odredišna adresa</string>
@@ -1766,6 +1781,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Nova kvantna sigurnost</string>
     <string name="qbtc_intro_subtitle">Klasične ključeve mogu razbiti kvantna računala. Omogućavanje QBTC-a zahtijeva generiranje novog para ključeva.</string>
+    <string name="qbtc_intro_key_warning">Omogućavanje QBTC-a stvara novi kvantni ključ i novu QBTC adresu. Ako je ovaj trezor prethodno imao kvantni ključ, pronađite ispravnu sigurnosnu kopiju i vratite je.</string>
     <string name="qbtc_intro_generate_title">Generirajte svoj kvantni par ključeva</string>
     <string name="qbtc_intro_generate_desc">Vultisig pokreće lokalnu MPC ceremoniju na uređajima vašeg trezora kako bi proizveo novi par ključeva.</string>
     <string name="qbtc_intro_link_title">Povežite ga sa svojim postojećim trezorom</string>
@@ -1874,6 +1890,7 @@
     <string name="verify_verb_merging">Spajate</string>
     <string name="verify_verb_unmerging">Razdvajate</string>
     <string name="verify_verb_bridging">Premošćujete</string>
+    <string name="verify_verb_voting">Glasate</string>
     <string name="scope_your_whole_stake">cijeli vaš ulog</string>
     <string name="scope_rewards_accrued_so_far">do sada stečene nagrade</string>
     <string name="scope_delegated_amount_after_rent">delegirani iznos nakon rezerve za najam</string>

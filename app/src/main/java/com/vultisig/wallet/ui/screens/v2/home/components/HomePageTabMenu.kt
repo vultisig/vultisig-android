@@ -36,6 +36,7 @@ internal fun HomePageTabMenu(
     onEditClick: () -> Unit = {},
     isEditVisible: Boolean = true,
     onSearchClick: () -> Unit = {},
+    title: String = stringResource(R.string.search_bar_portfolio),
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -47,7 +48,7 @@ internal fun HomePageTabMenu(
         VsTabGroup(index = state) {
             tab {
                 VsTab(
-                    label = stringResource(R.string.search_bar_portfolio),
+                    label = title,
                     onClick = {
                         onPortfolioClick()
                         state = 0

@@ -4,6 +4,8 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositMemo
@@ -16,6 +18,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.first
@@ -26,6 +29,8 @@ internal class AddCacaoPoolStrategy(
     private val chainProvider: () -> Chain?,
     private val tokenAmountFieldState: TextFieldState,
     private val accountsRepository: AccountsRepository,
+    private val addressProvider: () -> Address?,
+    private val requireTokenAmount: (Coin, Account, Address, TokenValue) -> BigInteger,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val calculateGasFee: suspend (Chain, Coin, String) -> TokenValue,
     private val getFeesFiatValue:
@@ -68,6 +73,8 @@ internal class AddCacaoPoolStrategy(
         val srcAddress = selectedToken.address
 
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
+        requireCoveredByFormBalance(addressProvider(), selectedToken, gasFee, requireTokenAmount)
+
         val memo = DepositMemo.DepositPool
 
         val specific =

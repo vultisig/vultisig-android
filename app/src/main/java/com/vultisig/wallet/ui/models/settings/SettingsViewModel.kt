@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.models.settings.SettingsItem.Discord
 import com.vultisig.wallet.ui.models.settings.SettingsItem.DiscountTiers
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Faq
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Github
+import com.vultisig.wallet.ui.models.settings.SettingsItem.HomeDisplay
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Language
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Notifications
 import com.vultisig.wallet.ui.models.settings.SettingsItem.PasscodeEncryption
@@ -96,6 +97,15 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 title = UiText.StringResource(R.string.settings_screen_currency),
                 value = curr,
                 leadingIcon = R.drawable.currency,
+                trailingIcon = R.drawable.ic_small_caret_right,
+            )
+        )
+
+    data object HomeDisplay :
+        SettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.home_display),
+                leadingIcon = R.drawable.wallet,
                 trailingIcon = R.drawable.ic_small_caret_right,
             )
         )
@@ -251,6 +261,8 @@ internal data class SettingsItemUiModel(
     val trailingIcon: Int? = null,
     val leadingIconTint: Color? = null,
     val trailingSwitch: Boolean? = null,
+    // False hides the trailing icon but keeps its room, so a selection never reflows the row.
+    val isTrailingIconVisible: Boolean = true,
     val value: String? = null,
     val backgroundColor: Color? = null,
 )
@@ -294,6 +306,7 @@ constructor(
                                 ReferralCode,
                                 Language("English"),
                                 Currency("USD"),
+                                HomeDisplay,
                                 AddressBook,
                             ),
                     ),
@@ -355,6 +368,10 @@ constructor(
             Github -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.GITHUB))
             is Language -> {
                 viewModelScope.launch { navigator.route(Route.LanguageSetting) }
+            }
+
+            HomeDisplay -> {
+                viewModelScope.launch { navigator.route(Route.HomeDisplaySetting) }
             }
 
             PrivacyPolicy -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.PRIVACY))

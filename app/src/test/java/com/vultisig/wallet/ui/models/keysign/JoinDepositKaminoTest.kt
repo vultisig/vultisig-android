@@ -78,6 +78,7 @@ internal class JoinDepositKaminoTest {
             feeResolver = feeResolver,
             rentReserve = rentReserve,
             mapTokenValueToDecimalUiString = TokenValueToDecimalUiStringMapperImpl(),
+            parseCosmosMessage = mockk(relaxed = true),
         )
 
     private suspend fun build(intent: KaminoRelayedIntent, toAddress: String): DepositTransaction {

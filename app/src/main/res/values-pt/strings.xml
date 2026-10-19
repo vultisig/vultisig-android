@@ -301,6 +301,9 @@
     <string name="deposit_form_operator_fee_title">Taxas do operador (Pontos base)</string>
     <string name="deposit_message_deposit_title">%s depósito de mensagens</string>
     <string name="deposit_form_custom_memo_title">Memorando personalizado</string>
+    <string name="deposit_form_proposal_id_title">ID da proposta</string>
+    <string name="deposit_form_proposal_id_error">Insira um ID de proposta válido</string>
+    <string name="deposit_form_vote_option_error">Selecione uma opção de voto</string>
     <string name="swap_screen_same_asset_error_message">Os ativos de origem e de destino não podem ser iguais.</string>
     <string name="address_book_toolbar_title">Catálogo de endereços</string>
     <string name="address_book_settings_title">Catálogo de endereços</string>
@@ -758,6 +761,7 @@
     <string name="swapkit_error_decoding">Não foi possível processar a resposta do SwapKit</string>
     <string name="swapkit_error_server">Erro de servidor do SwapKit (HTTP %1$d)</string>
     <string name="sign_message_continue">Continuar</string>
+    <string name="sign_message_unsupported_evm_format">Formato de mensagem não suportado. Só é possível assinar personal_sign com um envelope EIP-191 válido e eth_signTypedData_v4.</string>
     <string name="hint_signing_method">Método de assinatura</string>
     <string name="verify_sign_message_signing_method">Método de assinatura</string>
     <string name="signing_error_transaction_timeout">Tempo limite da transação excedido devido à lentidão na assinatura. Por favor, tente novamente.</string>
@@ -856,6 +860,8 @@
     <string name="governance_voting_closed">A votação desta proposta terminou</string>
     <string name="hide_balance">Ocultar saldo</string>
     <string name="show_balance">Mostrar saldo</string>
+    <string name="hide_total_balance">Ocultar saldo total</string>
+    <string name="show_total_balance">Mostrar saldo total</string>
     <string name="no_chains_found">Nenhuma cadeia encontrada</string>
     <string name="no_chain_make_sure_that">Certifique-se de que a corrente que procura está ativada.</string>
     <string name="no_chain_customize_chains">Personalizar correntes</string>
@@ -1140,7 +1146,16 @@
     <string name="keygen_benefit_3_emphasized">Cross-chain</string>
     <string name="upgrade_banner_title">Atualize o seu cofre agora</string>
     <string name="deposit_form_custom_memo_optional_title">Nota personalizada (opcional)</string>
-    <string name="home_defi_portfolio">Portfólio DeFi</string>
+    <string name="home_display">Tela inicial</string>
+    <string name="home_display_separate_title">Carteira e DeFi separados</string>
+    <string name="home_display_separate_description">A aba Carteira mostra apenas o saldo da carteira e a aba DeFi mostra o saldo DeFi.</string>
+    <string name="home_display_combined_title">Carteira + DeFi</string>
+    <string name="home_display_combined_description">As duas abas mostram o saldo combinado da carteira e do DeFi.</string>
+    <string name="home_balance_display">Exibição do saldo</string>
+    <string name="home_swipe_hint_title">Deslize para alternar</string>
+    <string name="home_swipe_hint_description">Deslize para a esquerda ou para a direita para alternar entre as abas da carteira e DeFi.</string>
+    <string name="home_positions">Posições</string>
+    <string name="home_swipe_hint_got_it">Entendi</string>
     <string name="backup_password_request_with_password_action">Usar palavra-passe</string>
     <string name="backup_password_topbar_title">Palavra-passe</string>
     <string name="function_transfer_ibc_dst_address_input_title">Endereço de destino</string>
@@ -1753,6 +1768,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Nova segurança quântica</string>
     <string name="qbtc_intro_subtitle">As chaves clássicas podem ser quebradas por computadores quânticos. Ativar o QBTC requer gerar um novo par de chaves.</string>
+    <string name="qbtc_intro_key_warning">Ativar o QBTC cria uma nova chave quântica e um novo endereço QBTC. Se este cofre tinha anteriormente uma chave quântica, encontre a cópia de segurança correta e restaure-a.</string>
     <string name="qbtc_intro_generate_title">Gere o seu par de chaves quântico</string>
     <string name="qbtc_intro_generate_desc">A Vultisig executa uma cerimónia MPC local nos dispositivos do seu cofre para produzir um novo par de chaves.</string>
     <string name="qbtc_intro_link_title">Vincule-o ao seu cofre existente</string>
@@ -1861,6 +1877,7 @@
     <string name="verify_verb_merging">Você está mesclando</string>
     <string name="verify_verb_unmerging">Você está separando</string>
     <string name="verify_verb_bridging">Você está transferindo entre cadeias</string>
+    <string name="verify_verb_voting">Você está votando</string>
     <string name="scope_your_whole_stake">todo o seu stake</string>
     <string name="scope_rewards_accrued_so_far">recompensas acumuladas até agora</string>
     <string name="scope_delegated_amount_after_rent">o valor delegado após a reserva de aluguel</string>

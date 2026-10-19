@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
+import com.vultisig.wallet.data.common.hexToByteArrayOrNull
 import com.vultisig.wallet.data.common.isHexPrefixed
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
@@ -41,6 +42,49 @@ object SigningHelper {
     private fun SwapPayload.isPlainMemoSend(chain: Chain): Boolean =
         this is SwapPayload.MayaChain || (this is SwapPayload.ThorChain && chain == Chain.Zcash)
     private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
+    private const val PERSONAL_SIGN = "personal_sign"
+    private const val EIP191_PREFIX = "\u0019Ethereum Signed Message:\n"
+
+    /**
+     * EVM custom messages are signed as keccak256 of the raw bytes, which only has a
+     * message-signing domain for an EIP-191 envelope or EIP-712 typed data; anything else is
+     * refused. A missing or unknown chain falls through to the keccak256 branch, so it is treated
+     * as Ethereum (mirrors iOS validateEVMSignable). Non-EVM chains are always signable here.
+     */
+    fun isEvmSignable(messagePayload: CustomMessagePayload): Boolean {
+        val chain =
+            messagePayload.chain?.let { raw -> runCatching { Chain.fromRaw(raw) }.getOrNull() }
+                ?: Chain.Ethereum
+        if (chain.standard != TokenStandard.EVM) return true
+        val method = messagePayload.method
+        if (method.equals(ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) return true
+        return method.equals(PERSONAL_SIGN, ignoreCase = true) &&
+            hasEip191Envelope(messagePayload.message)
+    }
+
+    /** `\x19Ethereum Signed Message:\n`, a decimal length, then exactly that many bytes. */
+    private fun hasEip191Envelope(message: String): Boolean {
+        val bytes =
+            if (message.isHexPrefixed()) {
+                val hex = message.removePrefix("0x")
+                // toInt(16) alone accepts a sign, which toHexBytes would decode differently.
+                if (!hex.all { it.digitToIntOrNull(16) != null }) return false
+                hex.hexToByteArrayOrNull() ?: return false
+            } else {
+                message.toByteArray()
+            }
+        val prefix = EIP191_PREFIX.toByteArray()
+        if (bytes.size <= prefix.size || !bytes.take(prefix.size).toByteArray().contentEquals(prefix)) {
+            return false
+        }
+        val rest = bytes.drop(prefix.size)
+        val digits = rest.takeWhile { it in '0'.code.toByte()..'9'.code.toByte() }
+        // The length's digits are followed by message bytes that may themselves be digits, so
+        // accept any split whose declared length matches the bytes after it.
+        return (1..digits.size).any { count ->
+            String(digits.take(count).toByteArray()) == (rest.size - count).toString()
+        }
+    }
 
     fun getKeysignMessages(messagePayload: CustomMessagePayload): List<String> =
         getKeysignMessages(messagePayload, typedDataHasher = EthereumAbi::encodeTyped)

@@ -22,9 +22,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +61,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.HomeBalanceDisplay
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.logo
@@ -66,6 +69,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.passcode.AutoLockTimeout
+import com.vultisig.wallet.data.repositories.HomeDisplayRepository
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
@@ -210,6 +214,7 @@ import com.vultisig.wallet.ui.screens.send.SendFormScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendSheet
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
+import com.vultisig.wallet.ui.screens.settings.HomeDisplaySettingScreen
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
@@ -274,6 +279,12 @@ import kotlin.math.sin
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface HomeDisplayPreviewEntryPoint {
+    fun homeDisplayRepository(): HomeDisplayRepository
+}
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -653,6 +664,19 @@ class PreviewActivity : ComponentActivity() {
                     "sui_token_selection_before" -> SuiTokenSelectionPreview(discovered = false)
                     "sui_token_selection_after" -> SuiTokenSelectionPreview(discovered = true)
                     "home_topbar" -> HomeTopBarPreview()
+                    "home_swipe" ->
+                        HomeSwipePreview(
+                            displayOverride =
+                                when (intent.getStringExtra("display")) {
+                                    "combined" -> HomeBalanceDisplay.Combined
+                                    "separate" -> HomeBalanceDisplay.Separate
+                                    else -> null
+                                },
+                            hintOverride =
+                                if (intent.hasExtra("hint")) intent.getBooleanExtra("hint", true)
+                                else null,
+                        )
+                    "home_display_setting" -> HomeDisplaySettingPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -3768,7 +3792,7 @@ private fun QbtcClaimDonePreview() {
                 txHash = "774365959AC251DA340851945A053D508A5F2F6CE98861556F83783C72E9CAFC",
                 totalSats = 5607L,
                 explorerUrl =
-                    "https://explorer.qbtc.network/tx/774365959AC251DA340851945A053D508A5F2F6CE98861556F83783C72E9CAFC",
+                    "https://explorer.qbtc.net/qbtc/tx/774365959AC251DA340851945A053D508A5F2F6CE98861556F83783C72E9CAFC",
             ),
         isFastVault = true,
         onBackClick = {},
@@ -4549,6 +4573,138 @@ private fun HomeTopBarPreview() {
                     ),
             )
     )
+}
+
+/** `--es display combined|separate` and `--ez hint true|false` override the persisted values. */
+@Composable
+private fun HomeSwipePreview(displayOverride: HomeBalanceDisplay?, hintOverride: Boolean?) {
+    val repository = rememberHomeDisplayRepository()
+    val scope = rememberCoroutineScope()
+    val persistedDisplay by repository.balanceDisplay.collectAsState(initial = null)
+    var state by remember {
+        mutableStateOf(
+            VaultAccountsUiModel(
+                vaultName = "Main Vault",
+                totalFiatValue = "$10,344.67",
+                totalDeFiValue = "$2,481.20",
+                combinedFiatValue = "$12,825.87",
+                hasLoadedAccounts = true,
+                hasLoadedDeFiAccounts = true,
+                banners = listOf(HomeBannerType.BuyVult, HomeBannerType.FollowX),
+                accounts =
+                    listOf(
+                        homeAccount(
+                            Chain.Ethereum,
+                            "Ethereum",
+                            R.drawable.ethereum,
+                            "0xAbCd1234",
+                            "0.5 ETH",
+                            "$1,234.56",
+                            "ETH",
+                            3,
+                        ),
+                        homeAccount(
+                            Chain.Bitcoin,
+                            "Bitcoin",
+                            R.drawable.bitcoin,
+                            "bc1qxyz",
+                            "0.1 BTC",
+                            "$6,500.00",
+                            "BTC",
+                            1,
+                        ),
+                        homeAccount(
+                            Chain.ThorChain,
+                            "THORChain",
+                            R.drawable.rune,
+                            "thor1abc",
+                            "100 RUNE",
+                            "$400.00",
+                            "RUNE",
+                            1,
+                        ),
+                        homeAccount(
+                            Chain.Solana,
+                            "Solana",
+                            R.drawable.solana,
+                            "So1anaAddr",
+                            "12 SOL",
+                            "$2,210.11",
+                            "SOL",
+                            2,
+                        ),
+                    ),
+                defiAccounts =
+                    listOf(
+                        homeAccount(
+                            Chain.ThorChain,
+                            "THORChain",
+                            R.drawable.rune,
+                            "thor1abc",
+                            "300 RUNE",
+                            "$1,200.00",
+                            "RUNE",
+                            2,
+                        ),
+                        homeAccount(
+                            Chain.Solana,
+                            "Solana",
+                            R.drawable.solana,
+                            "So1anaAddr",
+                            "7 SOL",
+                            "$1,281.20",
+                            "SOL",
+                            1,
+                        ),
+                    ),
+            )
+        )
+    }
+    LaunchedEffect(Unit) {
+        state = state.copy(showSwipeHint = hintOverride ?: !repository.hasSeenSwipeHint())
+    }
+    val dismissHint = {
+        if (state.showSwipeHint && hintOverride == null) {
+            scope.launch { repository.markSwipeHintSeen() }
+        }
+        state = state.copy(showSwipeHint = false)
+    }
+    VaultAccountsScreen(
+        state =
+            state.copy(
+                balanceDisplay = displayOverride ?: persistedDisplay ?: HomeBalanceDisplay.Separate
+            ),
+        onCryptoConnectionTypeSettle = { type ->
+            state = state.copy(cryptoConnectionType = type)
+            dismissHint()
+        },
+        onDismissSwipeHint = dismissHint,
+    )
+}
+
+/** Settings → Home display against the real, persisted `HomeDisplayRepository`. */
+@Composable
+private fun HomeDisplaySettingPreview() {
+    val repository = rememberHomeDisplayRepository()
+    val scope = rememberCoroutineScope()
+    val selected by repository.balanceDisplay.collectAsState(initial = null)
+    HomeDisplaySettingScreen(
+        selected = selected,
+        onBackClick = {},
+        onSelect = { scope.launch { repository.setBalanceDisplay(it) } },
+    )
+}
+
+@Composable
+private fun rememberHomeDisplayRepository(): HomeDisplayRepository {
+    val context = LocalContext.current
+    return remember(context) {
+        EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                HomeDisplayPreviewEntryPoint::class.java,
+            )
+            .homeDisplayRepository()
+    }
 }
 
 private fun homeAccount(

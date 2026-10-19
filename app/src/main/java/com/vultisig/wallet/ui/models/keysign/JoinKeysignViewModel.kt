@@ -142,6 +142,10 @@ sealed class JoinKeysignError(val message: UiText) {
      */
     data object Timeout : JoinKeysignError(R.string.join_keysign_start_timeout.asUiText())
 
+    /** An EVM custom message that isn't a recognised signing format; never signed. */
+    data object UnsupportedCustomMessage :
+        JoinKeysignError(R.string.sign_message_unsupported_evm_format.asUiText())
+
     /**
      * This vault is missing the Bitcoin or QBTC account the claim hash is derived from, so it
      * cannot co-sign the QBTC claim.
@@ -580,6 +584,11 @@ constructor(
             ) {
                 return false
             }
+        }
+
+        if (!SigningHelper.isEvmSignable(customMessage)) {
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.UnsupportedCustomMessage)
+            return false
         }
 
         customMessagePayload = customMessage

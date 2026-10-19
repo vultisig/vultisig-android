@@ -298,6 +298,9 @@
     <string name="deposit_form_operator_fee_title">Комиссии оператора (Базисные пункты)</string>
     <string name="deposit_message_deposit_title">%s сообщение депозит</string>
     <string name="deposit_form_custom_memo_title">Пользовательская записка</string>
+    <string name="deposit_form_proposal_id_title">ID предложения</string>
+    <string name="deposit_form_proposal_id_error">Введите действительный ID предложения</string>
+    <string name="deposit_form_vote_option_error">Выберите вариант голосования</string>
     <string name="swap_screen_same_asset_error_message">Исходные и целевые активы не могут быть одинаковыми.</string>
     <string name="address_book_toolbar_title">Адресная книга</string>
     <string name="address_book_settings_title">Адресная книга</string>
@@ -761,6 +764,7 @@
     <string name="swapkit_error_decoding">Не удалось разобрать ответ SwapKit</string>
     <string name="swapkit_error_server">Ошибка сервера SwapKit (HTTP %1$d)</string>
     <string name="sign_message_continue">Продолжить</string>
+    <string name="sign_message_unsupported_evm_format">Неподдерживаемый формат сообщения. Можно подписывать только personal_sign с корректной оболочкой EIP-191 и eth_signTypedData_v4.</string>
     <string name="hint_signing_method">Метод подписания</string>
     <string name="verify_sign_message_signing_method" >Метод подписания</string>
     <string name="signing_error_transaction_timeout">Время транзакции истекло из-за медленного подписания. Попробуйте ещё раз.</string>
@@ -860,6 +864,8 @@
     <string name="governance_voting_closed">Голосование по этому предложению завершено</string>
     <string name="hide_balance">Скрыть баланс</string>
     <string name="show_balance">Показать баланс</string>
+    <string name="hide_total_balance">Скрыть общий баланс</string>
+    <string name="show_total_balance">Показать общий баланс</string>
     <string name="no_chains_found">Сети не найдены.</string>
     <string name="no_chain_make_sure_that">Убедитесь, что искомая сеть включена.</string>
     <string name="no_chain_customize_chains">Настроить сети</string>
@@ -1146,7 +1152,16 @@
     <string name="keygen_benefit_3_emphasized">Кроссчейн</string>
     <string name="upgrade_banner_title">Обновите хранилище прямо сейчас</string>
     <string name="deposit_form_custom_memo_optional_title">Пользовательское примечание (необязательно)</string>
-    <string name="home_defi_portfolio">Портфель DeFi</string>
+    <string name="home_display">Главный экран</string>
+    <string name="home_display_separate_title">Кошелек и DeFi отдельно</string>
+    <string name="home_display_separate_description">Вкладка «Кошелек» показывает только баланс кошелька, а вкладка DeFi — ваш баланс DeFi.</string>
+    <string name="home_display_combined_title">Кошелек + DeFi</string>
+    <string name="home_display_combined_description">Обе вкладки показывают общий баланс кошелька и DeFi.</string>
+    <string name="home_balance_display">Отображение баланса</string>
+    <string name="home_swipe_hint_title">Проведите для переключения</string>
+    <string name="home_swipe_hint_description">Проведите влево или вправо, чтобы переключаться между вкладками кошелька и DeFi.</string>
+    <string name="home_positions">Позиции</string>
+    <string name="home_swipe_hint_got_it">Понятно</string>
     <string name="backup_password_request_with_password_action">Использовать пароль</string>
     <string name="backup_password_topbar_title">Пароль</string>
     <string name="function_transfer_ibc_dst_address_input_title">Адрес назначения</string>
@@ -1769,6 +1784,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Новая квантовая безопасность</string>
     <string name="qbtc_intro_subtitle">Классические ключи могут быть взломаны квантовыми компьютерами. Для включения QBTC необходимо сгенерировать новую пару ключей.</string>
+    <string name="qbtc_intro_key_warning">Включение QBTC создаёт новый квантовый ключ и новый адрес QBTC. Если у этого хранилища ранее был квантовый ключ, найдите нужную резервную копию и восстановите её.</string>
     <string name="qbtc_intro_generate_title">Сгенерируйте свою квантовую пару ключей</string>
     <string name="qbtc_intro_generate_desc">Vultisig проводит локальную MPC-церемонию на устройствах вашего хранилища, чтобы создать новую пару ключей.</string>
     <string name="qbtc_intro_link_title">Свяжите её с вашим существующим хранилищем</string>
@@ -1877,6 +1893,7 @@
     <string name="verify_verb_merging">Вы объединяете</string>
     <string name="verify_verb_unmerging">Вы отменяете объединение</string>
     <string name="verify_verb_bridging">Вы переводите между сетями</string>
+    <string name="verify_verb_voting">Вы голосуете</string>
     <string name="scope_your_whole_stake">весь ваш стейк</string>
     <string name="scope_rewards_accrued_so_far">накопленные на данный момент награды</string>
     <string name="scope_delegated_amount_after_rent">делегированная сумма за вычетом резерва за аренду</string>
