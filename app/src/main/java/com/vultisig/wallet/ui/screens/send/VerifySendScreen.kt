@@ -311,8 +311,9 @@ private fun VerifySendConsents(
 ) {
     Column(modifier = modifier) {
         if (state.transaction.requiresDappConsent) {
-            // A dApp XRPL tx, or a Substrate dApp call that is not a transfer, has
-            // no native recipient/amount to attest to, so show a single "reviewed
+            // A dApp XRPL tx, a Substrate dApp call that is not a transfer, or a
+            // signDirect body with no readable transfer has no native recipient/amount
+            // to attest to, so show a single "reviewed
             // the details" consent instead of the address/amount pair, which would
             // ask the co-signer to confirm values that aren't what's being signed.
             // Checked before isRippleTrustSet: a dApp TrustSet still carries
@@ -492,6 +493,33 @@ private fun VerifySendDetails(
                         textAlign = TextAlign.Center,
                     )
                 }
+            } else if (tx.isUnverifiedSignDirect) {
+                // A signDirect body that is not a plain bank send (contract call, vote,
+                // multi-message) has no amount read out of the signed bytes, so name it
+                // instead of showing "0 ATOM"; the Direct Sign card below carries the body.
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(R.string.amino_direct),
+                        style = Theme.brockmann.supplementary.captionSmall,
+                        color = Theme.v2.colors.text.tertiary,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                    )
+                    UiSpacer(12.dp)
+                    Text(
+                        text =
+                            stringResource(
+                                R.string.cosmos_sign_direct_transaction,
+                                tx.token.token.chain.displayName,
+                            ),
+                        style = Theme.brockmann.headings.title2,
+                        color = Theme.v2.colors.text.primary,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             } else if (tx.isRippleTrustSet) {
 
                 Text(
@@ -530,7 +558,11 @@ private fun VerifySendDetails(
         // decoded payload keeps the row form, where the extra terms have somewhere to go.
         val toDstLabel =
             tx.dstVaultName ?: tx.dstAddressBookTitle ?: tx.dstContractLabel ?: tx.dstLabel
-        val isPlainSend = tx.signRipple == null && tx.signSubstrate == null && !tx.isRippleTrustSet
+        val isPlainSend =
+            tx.signRipple == null &&
+                tx.signSubstrate == null &&
+                !tx.isRippleTrustSet &&
+                !tx.isUnverifiedSignDirect
         if (inSheet && isPlainSend) {
             VerifyAccountCards(
                 fromName = tx.srcVaultName,

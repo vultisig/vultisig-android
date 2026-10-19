@@ -1440,6 +1440,7 @@
     <string name="ripple_partial_payment_warning">Partial payment: the amount shown is a maximum, not a guarantee. Less may be delivered.</string>
     <string name="substrate_dapp_transaction">%1$s Transaction</string>
     <string name="substrate_call_index">Call %1$s</string>
+    <string name="cosmos_sign_direct_transaction">%1$s Transaction</string>
     <string name="substrate_signer_payload">Signer payload</string>
     <string name="substrate_field_call_data">Call data</string>
     <string name="substrate_field_nonce">Nonce</string>

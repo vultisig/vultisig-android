@@ -1379,6 +1379,7 @@
     <string name="ripple_partial_payment_warning">Teilzahlung: Der angezeigte Betrag ist ein Maximum, keine Garantie. Es kann weniger geliefert werden.</string>
     <string name="substrate_dapp_transaction">%1$s-Transaktion</string>
     <string name="substrate_call_index">Aufruf %1$s</string>
+    <string name="cosmos_sign_direct_transaction">%1$s-Transaktion</string>
     <string name="substrate_signer_payload">Signer-Payload</string>
     <string name="substrate_field_call_data">Aufrufdaten</string>
     <string name="substrate_field_nonce">Nonce</string>

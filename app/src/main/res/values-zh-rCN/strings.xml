@@ -1709,6 +1709,7 @@
     <string name="ripple_partial_payment_warning">部分支付：显示的金额为上限，并非保证值。实际交付可能更少。</string>
     <string name="substrate_dapp_transaction">%1$s 交易</string>
     <string name="substrate_call_index">调用 %1$s</string>
+    <string name="cosmos_sign_direct_transaction">%1$s 交易</string>
     <string name="substrate_signer_payload">签名者负载</string>
     <string name="substrate_field_call_data">调用数据</string>
     <string name="substrate_field_nonce">Nonce</string>

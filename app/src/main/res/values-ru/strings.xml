@@ -1384,6 +1384,7 @@
     <string name="ripple_partial_payment_warning">Частичный платёж: показанное количество — это максимум, а не гарантия. Может быть доставлено меньше.</string>
     <string name="substrate_dapp_transaction">Транзакция %1$s</string>
     <string name="substrate_call_index">Вызов %1$s</string>
+    <string name="cosmos_sign_direct_transaction">Транзакция %1$s</string>
     <string name="substrate_signer_payload">Payload подписанта</string>
     <string name="substrate_field_call_data">Данные вызова</string>
     <string name="substrate_field_nonce">Nonce</string>

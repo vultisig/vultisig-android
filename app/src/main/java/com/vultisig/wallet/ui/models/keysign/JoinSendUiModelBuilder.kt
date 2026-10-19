@@ -138,8 +138,19 @@ constructor(
                 else -> payload.toAmount
             }
 
+        val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+        // The payload coin's ticker/decimals are the initiator's claim too. When the signed coin is
+        // the chain's native denom, label it from the locally known native token so a doctored
+        // `decimal` can't rescale the signed integer.
+        val displayToken =
+            if (signDirectTransfer != null && expectedSignDirectDenom == chain.cosmosNativeDenom) {
+                nativeCoin.copy(address = address)
+            } else {
+                payloadToken
+            }
+
         val tokenValue =
-            TokenValue(value = amount, unit = payloadToken.ticker, decimals = payloadToken.decimal)
+            TokenValue(value = amount, unit = displayToken.ticker, decimals = displayToken.decimal)
 
         val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return null
 
@@ -157,7 +168,6 @@ constructor(
                 isMax = false,
             )
 
-        val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
         // A dApp XRPL tx is signed verbatim, so the fee that is actually paid is the `Fee` baked
         // into its raw JSON — not a live re-estimate. Surface that exact value so an inflated Fee
         // is
@@ -247,11 +257,11 @@ constructor(
                 id = Uuid.random().toString(),
                 vaultId = payload.vaultPublicKeyECDSA,
                 chainId = chain.id,
-                token = payloadToken,
+                token = displayToken,
                 srcAddress = address,
                 dstAddress = dstAddress,
                 tokenValue = tokenValue,
-                fiatValue = convertTokenValueToFiat(payloadToken, tokenValue, currency),
+                fiatValue = convertTokenValueToFiat(displayToken, tokenValue, currency),
                 gasFee = gasFee,
                 // A Substrate signer payload is the signed content, rendered by its own card, not
                 // a memo.
@@ -341,6 +351,7 @@ constructor(
                 decodedFunctionParams = decodedExtras.decodedFunctionParams,
                 isUniversalRouterSwap = decodedExtras.isUniversalRouterSwap,
                 tonMessages = tonMessages,
+                isUnverifiedSignDirect = payload.signDirect != null && signDirectTransfer == null,
             )
         return JoinSendUiModelResult(
             result =
@@ -373,32 +384,30 @@ constructor(
             Timber.w(e, "Failed to resolve native token for %s", chainId)
             null
         }
-
-    /**
-     * Pulls the recipient and amount out of a decoded `signDirect` SignDoc, but only when the body
-     * is exactly one bank `MsgSend` carrying a single coin whose denom is [expectedDenom]. That is
-     * the one case where a simple "To / amount" row can faithfully stand in for the signed bytes.
-     * Anything else — staking, governance, multi-message or dApp bodies, or a coin in a denom that
-     * doesn't match what the row would be labelled with — returns null so the verify screen shows
-     * no spoofable To/amount and relies on the full Direct Sign card instead. The recipient and
-     * amount are taken verbatim from the signed bytes, so what the co-signer sees is what it signs.
-     */
-    private fun CosmosMessage.singleMsgSendTransfer(expectedDenom: String?): SignDirectTransfer? {
-        if (expectedDenom.isNullOrEmpty()) return null
-        val message = messages.singleOrNull() ?: return null
-        if (message.typeUrl != MSG_SEND_TYPE_URL) return null
-        val body = message.value as? JsonObject ?: return null
-        val recipient = (body["toAddress"] as? JsonPrimitive)?.content ?: return null
-        val coin = (body["amount"] as? JsonArray)?.singleOrNull() as? JsonObject ?: return null
-        val denom = (coin["denom"] as? JsonPrimitive)?.content ?: return null
-        if (!denom.equals(expectedDenom, ignoreCase = true)) return null
-        val amount = (coin["amount"] as? JsonPrimitive)?.content?.toBigIntegerOrNull() ?: return null
-        return SignDirectTransfer(recipient = recipient, amount = amount)
-    }
-
-    private data class SignDirectTransfer(val recipient: String, val amount: BigInteger)
-
-    private companion object {
-        const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
-    }
 }
+
+/**
+ * Pulls the recipient and amount out of a decoded `signDirect` SignDoc, but only when the body
+ * is exactly one bank `MsgSend` carrying a single coin whose denom is [expectedDenom]. That is
+ * the one case where a simple "To / amount" row can faithfully stand in for the signed bytes.
+ * Anything else — staking, governance, multi-message or dApp bodies, or a coin in a denom that
+ * doesn't match what the row would be labelled with — returns null so the verify screen shows
+ * no spoofable To/amount and relies on the full Direct Sign card instead. The recipient and
+ * amount are taken verbatim from the signed bytes, so what the co-signer sees is what it signs.
+ */
+internal fun CosmosMessage.singleMsgSendTransfer(expectedDenom: String?): SignDirectTransfer? {
+    if (expectedDenom.isNullOrEmpty()) return null
+    val message = messages.singleOrNull() ?: return null
+    if (message.typeUrl != MSG_SEND_TYPE_URL) return null
+    val body = message.value as? JsonObject ?: return null
+    val recipient = (body["toAddress"] as? JsonPrimitive)?.content ?: return null
+    val coin = (body["amount"] as? JsonArray)?.singleOrNull() as? JsonObject ?: return null
+    val denom = (coin["denom"] as? JsonPrimitive)?.content ?: return null
+    if (denom != expectedDenom) return null
+    val amount = (coin["amount"] as? JsonPrimitive)?.content?.toBigIntegerOrNull() ?: return null
+    return SignDirectTransfer(recipient = recipient, amount = amount)
+}
+
+internal data class SignDirectTransfer(val recipient: String, val amount: BigInteger)
+
+private const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
