@@ -1018,7 +1018,7 @@
 
     <!-- Sign Message -->
     <string name="sign_message_continue">继续</string>
-    <string name="sign_message_unsupported_evm_format">不支持的消息格式。只能签署带有有效 EIP-191 封装的 personal_sign 和 eth_signTypedData_v4。</string>
+    <string name="sign_message_unsupported_evm_format">不支持的消息格式。仅支持带有有效 EIP-191 封装的 personal_sign，以及 eth_signTypedData_v4。</string>
 
     <!-- Address Book -->
     <string name="address_book_empty_description">将所有重要地址整理在一个地方。</string>

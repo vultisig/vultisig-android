@@ -58,4 +58,10 @@ class EvmCustomMessageSignableTest {
     fun `non-EVM chains are untouched`() {
         signable("anything", "hello", chain = "Bitcoin") shouldBe true
     }
+
+    @Test
+    fun `refuses malformed hex and non-canonical length`() {
+        signable("personal_sign", "0x" + "\u0019Ethereum Signed Message:\n1".toByteArray().joinToString("") { "%02x".format(it) } + "gg") shouldBe false
+        signable("personal_sign", envelope("hello").replace("\n5", "\n05")) shouldBe false
+    }
 }

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
+import com.vultisig.wallet.data.common.hexToByteArrayOrNull
 import com.vultisig.wallet.data.common.isHexPrefixed
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
@@ -63,7 +64,15 @@ object SigningHelper {
 
     /** `\x19Ethereum Signed Message:\n`, a decimal length, then exactly that many bytes. */
     private fun hasEip191Envelope(message: String): Boolean {
-        val bytes = if (message.isHexPrefixed()) message.toHexBytes() else message.toByteArray()
+        val bytes =
+            if (message.isHexPrefixed()) {
+                val hex = message.removePrefix("0x")
+                // toInt(16) alone accepts a sign, which toHexBytes would decode differently.
+                if (!hex.all { it.digitToIntOrNull(16) != null }) return false
+                hex.hexToByteArrayOrNull() ?: return false
+            } else {
+                message.toByteArray()
+            }
         val prefix = EIP191_PREFIX.toByteArray()
         if (bytes.size <= prefix.size || !bytes.take(prefix.size).toByteArray().contentEquals(prefix)) {
             return false
@@ -73,7 +82,7 @@ object SigningHelper {
         // The length's digits are followed by message bytes that may themselves be digits, so
         // accept any split whose declared length matches the bytes after it.
         return (1..digits.size).any { count ->
-            String(digits.take(count).toByteArray()).toIntOrNull() == rest.size - count
+            String(digits.take(count).toByteArray()) == (rest.size - count).toString()
         }
     }
 
