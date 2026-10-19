@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.deposit.submit
 
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Account
@@ -14,6 +13,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
+import com.vultisig.wallet.ui.models.deposit.DepositFieldStates
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
@@ -30,7 +30,8 @@ import org.junit.jupiter.api.Test
 
 internal class AddLiquidityStrategyTest {
 
-    private val tokenAmount = TextFieldState()
+    private val fields = DepositFieldStates()
+    private val tokenAmount = fields.tokenAmountFieldState
     private val accountsRepository: AccountsRepository = mockk()
     private val preflight: ThorChainLpPreflightUseCase = mockk()
     private val specificRepo: BlockChainSpecificRepository = mockk()
@@ -86,6 +87,46 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
+    fun `RUNE-side add that leaves no room for the fee is refused`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+
+        val error =
+            assertFailsWith<InvalidTransactionDataException> {
+                build(Chain.ThorChain, pairedAddress = ETH_ADDRESS, formBalance = ONE_COIN).build()
+            }
+
+        assertInsufficientBalance(error)
+    }
+
+    @Test
+    fun `asset-side add that leaves no room for the fee is refused`() = runTest {
+        givenNativeAccount(Chain.Ethereum, ETH_ADDRESS)
+
+        val error =
+            assertFailsWith<InvalidTransactionDataException> {
+                build(Chain.Ethereum, pairedAddress = RUNE_ADDRESS, formBalance = ONE_COIN).build()
+            }
+
+        assertInsufficientBalance(error)
+    }
+
+    @Test
+    fun `add the balance covers with the fee keeps the amount and empty destination`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+
+        val tx =
+            build(
+                    Chain.ThorChain,
+                    pairedAddress = ETH_ADDRESS,
+                    formBalance = ONE_COIN + BigInteger.ONE,
+                )
+                .build()
+
+        assertEquals(ONE_COIN, tx.srcTokenValue.value)
+        assertEquals("", tx.dstAddress)
+    }
+
+    @Test
     fun `Maya add never consults the THORChain preflight`() = runTest {
         givenNativeAccount(Chain.MayaChain, "maya1self")
 
@@ -94,7 +135,12 @@ internal class AddLiquidityStrategyTest {
         coVerify(exactly = 0) { preflight(any(), any()) }
     }
 
-    private fun build(chain: Chain, pairedAddress: String?, pool: String = STAGED_POOL) =
+    private fun build(
+        chain: Chain,
+        pairedAddress: String?,
+        pool: String = STAGED_POOL,
+        formBalance: BigInteger = ONE_COIN * BigInteger.TEN,
+    ) =
         AddLiquidityStrategy(
             vaultIdProvider = { VAULT_ID },
             chainProvider = { chain },
@@ -103,6 +149,10 @@ internal class AddLiquidityStrategyTest {
             accountsRepository = accountsRepository,
             thorChainLpPreflight = preflight,
             resolvePairedAddress = { _, _, _ -> pairedAddress },
+            addressProvider = {
+                gateAddress(gateAccount(nativeCoin(chain, addressOf(chain)), formBalance))
+            },
+            requireTokenAmount = amountGate(chain, fields)::requireTokenAmount,
             blockChainSpecificRepository = specificRepo,
             calculateGasFee = { _, coin, _ -> TokenValue(BigInteger.ONE, coin) },
             getFeesFiatValue = { _, gasFee, _ -> estimatedFee(gasFee) },
@@ -122,6 +172,13 @@ internal class AddLiquidityStrategyTest {
                 )
             )
     }
+
+    private fun addressOf(chain: Chain): String =
+        when (chain) {
+            Chain.ThorChain -> RUNE_ADDRESS
+            Chain.Ethereum -> ETH_ADDRESS
+            else -> "maya1self"
+        }
 
     private fun nativeCoin(chain: Chain, address: String): Coin =
         Coin(
@@ -149,5 +206,6 @@ internal class AddLiquidityStrategyTest {
         const val STAGED_POOL = "ETH.LINK-0X514910771AF9CA656AF840DFF83E8264ECF986CA"
         const val RUNE_ADDRESS = "thor1self"
         const val ETH_ADDRESS = "0xself"
+        val ONE_COIN: BigInteger = BigInteger.TEN.pow(8)
     }
 }

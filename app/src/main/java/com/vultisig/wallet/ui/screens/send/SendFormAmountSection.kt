@@ -44,6 +44,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSections
+import com.vultisig.wallet.ui.models.send.exceedsStakeBalance
 import com.vultisig.wallet.ui.models.send.isContinueDisabled
 import com.vultisig.wallet.ui.models.send.isDstAddressBlocking
 import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
@@ -183,7 +184,9 @@ internal fun FoldableAmountWidget(
                         // Gate the soft-keyboard send with the same condition as the Continue
                         // button so it can't submit a stale gas fee while a fresh one is still
                         // computing.
-                        val isContinueDisabled = state.isContinueDisabled()
+                        val isContinueDisabled =
+                            state.isContinueDisabled() ||
+                                state.exceedsStakeBalance(tokenAmountFieldState.text.toString())
                         if (!isContinueDisabled) {
                             focusManager.clearFocus()
                             onSend()
@@ -255,6 +258,16 @@ internal fun FoldableAmountWidget(
                     color = Theme.v2.colors.text.secondary,
                     textAlign = TextAlign.End,
                     modifier = Modifier.weight(1f),
+                )
+            }
+
+            if (state.exceedsStakeBalance(tokenAmountFieldState.text.toString())) {
+                UiSpacer(8.dp)
+                Text(
+                    text = stringResource(R.string.send_error_insufficient_balance),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.alerts.error,
+                    modifier = Modifier.padding(horizontal = 4.dp),
                 )
             }
 

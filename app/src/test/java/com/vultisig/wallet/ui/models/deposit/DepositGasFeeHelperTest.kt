@@ -117,7 +117,7 @@ internal class DepositGasFeeHelperTest {
                             )
                         ),
                 ),
-        ) { totalGas, _ ->
+        ) { totalGas, _, _ ->
             shown.complete(totalGas)
         }
 

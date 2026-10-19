@@ -4,6 +4,8 @@ package com.vultisig.wallet.ui.models.deposit.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositMemo
@@ -15,6 +17,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -23,8 +26,11 @@ internal class CustomStrategy(
     private val vaultIdProvider: () -> String?,
     private val chainProvider: () -> Chain?,
     private val selectedTokenProvider: () -> Coin?,
+    private val selectedAccountProvider: () -> Account?,
+    private val addressProvider: () -> Address?,
     private val customMemoFieldState: TextFieldState,
     private val tokenAmountFieldState: TextFieldState,
+    private val requireTokenAmount: (Coin, Account, Address, TokenValue) -> BigInteger,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val calculateGasFee: suspend (Chain, Coin, String) -> TokenValue,
     private val getFeesFiatValue:
@@ -63,6 +69,21 @@ internal class CustomStrategy(
         }
 
         val tokenAmountInt = tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
+
+        // A zero amount is a memo-only deposit and moves nothing but the fee.
+        if (tokenAmountInt > BigInteger.ZERO) {
+            val selectedAccount =
+                selectedAccountProvider()
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+            val address =
+                addressProvider()
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+        }
 
         val specific =
             blockChainSpecificRepository.getSpecific(

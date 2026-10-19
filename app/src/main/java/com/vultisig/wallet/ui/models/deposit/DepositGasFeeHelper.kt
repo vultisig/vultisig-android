@@ -61,7 +61,7 @@ constructor(
         vaultId: String,
         chain: Chain,
         address: Address,
-        onResult: (totalGas: UiText, estimatedFee: UiText) -> Unit,
+        onResult: (totalGas: UiText, estimatedFee: UiText, gasFee: BigDecimal) -> Unit,
     ) {
         scope.safeLaunch {
             val token = address.accounts.find { it.token.isNativeToken }?.token ?: return@safeLaunch
@@ -81,6 +81,7 @@ constructor(
             onResult(
                 UiText.DynamicString(estimatedGasFee.formattedTokenValue),
                 UiText.DynamicString(estimatedGasFee.formattedFiatValue),
+                gasFee.decimal,
             )
         }
     }

@@ -185,6 +185,7 @@ internal data class DepositFormUiModel(
     val removeLpTokenSymbol: String = "CACAO",
     val totalGas: UiText = UiText.Empty,
     val estimatedFee: UiText = UiText.Empty,
+    val gasFeeDecimal: BigDecimal? = null,
     val removeLpPercent: Float = 0f,
     // Slider-derived withdrawal fraction in basis points (0..10000). Stored so the submit path can
     // reuse the exact value used to compute the displayed redeem amount, keeping the shown amount
@@ -494,8 +495,14 @@ constructor(
                     vaultId = vaultId,
                     chain = chain,
                     address = address,
-                    onResult = { totalGas, estimatedFee ->
-                        state.update { it.copy(totalGas = totalGas, estimatedFee = estimatedFee) }
+                    onResult = { totalGas, estimatedFee, gasFee ->
+                        state.update {
+                            it.copy(
+                                totalGas = totalGas,
+                                estimatedFee = estimatedFee,
+                                gasFeeDecimal = gasFee,
+                            )
+                        }
                     },
                 )
             },
