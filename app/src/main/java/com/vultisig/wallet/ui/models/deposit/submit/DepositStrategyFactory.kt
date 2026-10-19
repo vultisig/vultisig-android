@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.deposit.submit
 
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -37,6 +38,7 @@ constructor(
     private val mayaChainLpPreflight: MayaChainLpPreflightUseCase,
     private val checkMayaLpPairing: CheckMayaLpPairingUseCase,
     private val mayaChainApi: MayaChainApi,
+    private val thorChainApi: ThorChainApi,
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
     private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
     private val fieldValidator: DepositFieldValidator,
@@ -201,6 +203,12 @@ constructor(
                         blockChainSpecificRepository = context.blockChainSpecificRepository,
                         calculateGasFee = context.calculateGasFee,
                         getFeesFiatValue = context.getFeesFiatValue,
+                        thorChainApi = thorChainApi,
+                        vaultRepository = vaultRepository,
+                        feeServiceComposite = feeServiceComposite,
+                        tokenRepository = tokenRepository,
+                        gasFeeToEstimate = gasFeeToEstimate,
+                        getBitcoinTransactionPlan = context.getBitcoinTransactionPlan,
                     ),
                 DepositOption.AddMayaLiquidity to
                     AddMayaLiquidityStrategy(

@@ -230,94 +230,6 @@ internal class DefaultSendStrategyTest {
         }
 
     /**
-     * Production regression for #4152: when the user reaches the Send form via the THORChain LP
-     * "Add LP → ETH.<token>" navigation, the resulting non-native EVM Send must pass
-     * `isThorchainRouterDeposit = true` so the helper bumps the gas limit past the bare-transfer
-     * 150k ceiling. Without this, `depositWithExpiry` reverts on non-standard ERC-20s like USDT.
-     */
-    @Test
-    fun `ADD_LP defi non-native EVM Send flags getSpecific as thorchain router deposit`() =
-        runTest {
-            mockkStatic(Dispatchers::class)
-            every { Dispatchers.IO } returns mainDispatcher
-            try {
-                val usdtCoin = usdtCoin()
-                val account =
-                    Account(
-                        token = usdtCoin,
-                        tokenValue = TokenValue(BigInteger("1000000000"), usdtCoin),
-                        fiatValue = null,
-                        price = null,
-                    )
-                vaultId = "vault-1"
-                selectedAccount = account
-                defiType = DeFiNavActions.ADD_LP
-                addressFieldState.setTextAndPlaceCursorAtEnd("0xrouter")
-                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.30")
-                memoFieldState.setTextAndPlaceCursorAtEnd("+:ETH.USDT-0xdac17:thor1abc")
-                coEvery { accountValidator.validate() } returns
-                    ValidatedAccount(
-                        vaultId = "vault-1",
-                        selectedAccount = account,
-                        chain = Chain.Ethereum,
-                        gasFee = TokenValue(BigInteger.valueOf(21_000), usdtCoin),
-                        dstAddress = "0xrouter",
-                    )
-                coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
-                accounts.value =
-                    listOf(
-                        Account(
-                            token = ethCoin(),
-                            tokenValue = TokenValue(BigInteger("1000000000000000000"), ethCoin()),
-                            fiatValue = null,
-                            price = null,
-                        )
-                    )
-
-                val flagSlot = slot<Boolean>()
-                coEvery {
-                    blockChainSpecificRepository.getSpecific(
-                        chain = any(),
-                        address = any(),
-                        token = any(),
-                        gasFee = any(),
-                        isSwap = any(),
-                        isMaxAmountEnabled = any(),
-                        isDeposit = any(),
-                        dstAddress = any(),
-                        tokenAmountValue = any(),
-                        memo = any(),
-                        isThorchainRouterDeposit = capture(flagSlot),
-                    )
-                } returns
-                    BlockChainSpecificAndUtxo(
-                        BlockChainSpecific.Ethereum(
-                            maxFeePerGasWei = BigInteger.ONE,
-                            priorityFeeWei = BigInteger.ONE,
-                            nonce = BigInteger.ZERO,
-                            gasLimit = BigInteger.valueOf(200_000),
-                        )
-                    )
-                every { amountManager.currentMaxAmount } returns BigDecimal.ONE
-                coEvery { gasFeeToEstimatedFee(any()) } returns
-                    EstimatedGasFee(
-                        formattedFiatValue = "$0.10",
-                        formattedTokenValue = "0.0001 ETH",
-                        tokenValue = TokenValue(BigInteger.ONE, ethCoin()),
-                        fiatValue = mockk(relaxed = true),
-                    )
-                coEvery { transactionRepository.addTransaction(any()) } returns Unit
-
-                build(this).submit()
-                advanceUntilIdle()
-
-                assertEquals(true, flagSlot.captured)
-            } finally {
-                unmockkStatic(Dispatchers::class)
-            }
-        }
-
-    /**
      * Regression for #5504: submit reused `planBtc.value` via an elvis short-circuit whenever it
      * was already non-null, so a background-collected plan computed against a stale specific (a
      * wrong sendMaxAmount, or a since-changed amount) never got re-planned at submit time — even
@@ -1226,7 +1138,7 @@ internal class DefaultSendStrategyTest {
                 )
             vaultId = "vault-1"
             selectedAccount = account
-            defiType = DeFiNavActions.ADD_LP
+            defiType = DeFiNavActions.FREEZE_TRX
             addressFieldState.setTextAndPlaceCursorAtEnd("0xdest")
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
             coEvery { accountValidator.validate() } returns

@@ -76,8 +76,9 @@ internal data class SendStrategies(
 
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withdrawUsdcCircle.submit()
 
-            // Bond/Unbond/Stake-Cacao/Unstake-Cacao/Remove-LP/Add-Maya-LP only submit through the
-            // Deposit flow now — fail closed rather than falling back to a plain send.
+            // Bond/Unbond/Stake-Cacao/Unstake-Cacao/Add-LP/Remove-LP/Add-Maya-LP only submit
+            // through the Deposit flow now — fail closed rather than falling back to a plain send.
+            DeFiNavActions.ADD_LP,
             DeFiNavActions.ADD_MAYA_LP,
             DeFiNavActions.BOND,
             DeFiNavActions.UNBOND,
@@ -86,9 +87,6 @@ internal data class SendStrategies(
             DeFiNavActions.REMOVE_LP -> onUnsupportedDefiType(defiType)
 
             null,
-            // ADD_LP still submits through the Send flow for the EVM asset side of a pool add,
-            // which the Deposit flow's AddLiquidityStrategy doesn't cover (RUNE/CACAO side only).
-            DeFiNavActions.ADD_LP,
             DeFiNavActions.FREEZE_TRX,
             DeFiNavActions.UNFREEZE_TRX,
             // TON staking submits through the Deposit flow, not the Send flow.

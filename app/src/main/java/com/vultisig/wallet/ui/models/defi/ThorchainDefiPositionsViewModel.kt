@@ -765,8 +765,10 @@ constructor(
                     lpPendingTimeLeftUiText(it * THORCHAIN_BLOCK_SECONDS)
                 },
             // Completing means sending the missing side, which needs an account on its chain. When
-            // RUNE is the missing half the vault always has one.
-            canComplete = !isRunePending || assetAddress != null,
+            // RUNE is the missing half the vault always has one. A token pool's asset half goes
+            // through the router after an approval, which the Deposit flow cannot build.
+            canComplete =
+                !isRunePending || (assetAddress != null && parsed.contractAddress.isEmpty()),
         )
     }
 
