@@ -1759,6 +1759,7 @@
     <!-- New quantum security intro screen -->
     <string name="qbtc_intro_title">Neue Quantensicherheit</string>
     <string name="qbtc_intro_subtitle">Klassische Schlüssel können von Quantencomputern gebrochen werden. Zum Aktivieren von QBTC muss ein neues Schlüsselpaar generiert werden.</string>
+    <string name="qbtc_intro_key_warning">Durch das Aktivieren von QBTC werden ein neuer Quantenschlüssel und eine neue QBTC-Adresse erstellt. Falls dieser Tresor zuvor einen Quantenschlüssel hatte, suchen Sie bitte das richtige Backup und stellen Sie es wieder her.</string>
     <string name="qbtc_intro_generate_title">Generieren Sie Ihr Quanten-Schlüsselpaar</string>
     <string name="qbtc_intro_generate_desc">Vultisig führt eine lokale MPC-Zeremonie über Ihre Tresor-Geräte aus, um ein neues Schlüsselpaar zu erzeugen.</string>
     <string name="qbtc_intro_link_title">Verknüpfen Sie es mit Ihrem vorhandenen Tresor</string>

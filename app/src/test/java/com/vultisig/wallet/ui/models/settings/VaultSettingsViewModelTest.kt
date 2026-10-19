@@ -351,6 +351,36 @@ internal class VaultSettingsViewModelTest {
             dilithium.enabled.shouldBeFalse()
         }
 
+    /** The row opens the quantum intro, whose warning precedes keygen, instead of keygen itself. */
+    @Test
+    fun `dilithium keygen row opens the quantum security intro`() =
+        runTest(testDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(id = VAULT_ID, name = "Test", libType = SigningLibType.DKLS)
+            val vm = createViewModel()
+
+            vm.onSettingsItemClick(VaultSettingsItem.DilithiumKeygen(isEnabled = true))
+
+            coVerify(exactly = 1) {
+                navigator.route(Route.QuantumSecurityIntro(vaultId = VAULT_ID))
+            }
+            coVerify(exactly = 0) { navigator.route(ofType<Route.Keygen.PeerDiscovery>()) }
+            coVerify(exactly = 0) { navigator.route(ofType<Route.VerifyExistingVault>()) }
+        }
+
+    /** A KeyImport vault gets its quantum key at import, so the row navigates nowhere. */
+    @Test
+    fun `dilithium keygen row does nothing for a KeyImport vault`() =
+        runTest(testDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(id = VAULT_ID, name = "Test", libType = SigningLibType.KeyImport)
+            val vm = createViewModel()
+
+            vm.onSettingsItemClick(VaultSettingsItem.DilithiumKeygen(isEnabled = true))
+
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
     private companion object {
         const val VAULT_ID = "vault-1"
     }
