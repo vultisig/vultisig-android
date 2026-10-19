@@ -864,6 +864,8 @@
     <string name="governance_voting_closed">Голосование по этому предложению завершено</string>
     <string name="hide_balance">Скрыть баланс</string>
     <string name="show_balance">Показать баланс</string>
+    <string name="hide_total_balance">Скрыть общий баланс</string>
+    <string name="show_total_balance">Показать общий баланс</string>
     <string name="no_chains_found">Сети не найдены.</string>
     <string name="no_chain_make_sure_that">Убедитесь, что искомая сеть включена.</string>
     <string name="no_chain_customize_chains">Настроить сети</string>
@@ -1150,7 +1152,16 @@
     <string name="keygen_benefit_3_emphasized">Кроссчейн</string>
     <string name="upgrade_banner_title">Обновите хранилище прямо сейчас</string>
     <string name="deposit_form_custom_memo_optional_title">Пользовательское примечание (необязательно)</string>
-    <string name="home_defi_portfolio">Портфель DeFi</string>
+    <string name="home_display">Главный экран</string>
+    <string name="home_display_separate_title">Кошелек и DeFi отдельно</string>
+    <string name="home_display_separate_description">Вкладка «Кошелек» показывает только баланс кошелька, а вкладка DeFi — ваш баланс DeFi.</string>
+    <string name="home_display_combined_title">Кошелек + DeFi</string>
+    <string name="home_display_combined_description">Обе вкладки показывают общий баланс кошелька и DeFi.</string>
+    <string name="home_balance_display">Отображение баланса</string>
+    <string name="home_swipe_hint_title">Проведите для переключения</string>
+    <string name="home_swipe_hint_description">Проведите влево или вправо, чтобы переключаться между вкладками кошелька и DeFi.</string>
+    <string name="home_positions">Позиции</string>
+    <string name="home_swipe_hint_got_it">Понятно</string>
     <string name="backup_password_request_with_password_action">Использовать пароль</string>
     <string name="backup_password_topbar_title">Пароль</string>
     <string name="function_transfer_ibc_dst_address_input_title">Адрес назначения</string>

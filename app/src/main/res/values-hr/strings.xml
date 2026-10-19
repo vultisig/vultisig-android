@@ -864,6 +864,8 @@
     <string name="governance_voting_closed">Glasanje za ovaj prijedlog je završeno</string>
     <string name="hide_balance">Sakrij stanje</string>
     <string name="show_balance">Prikaži stanje</string>
+    <string name="hide_total_balance">Sakrij ukupno stanje</string>
+    <string name="show_total_balance">Prikaži ukupno stanje</string>
     <string name="no_chains_found">Nisu pronađeni lanci</string>
     <string name="no_chain_make_sure_that">Provjerite je li lanac koji tražite omogućen.</string>
     <string name="no_chain_customize_chains">Prilagodi lance</string>
@@ -1150,7 +1152,16 @@
     <string name="keygen_benefit_3_emphasized">Međulančano poslovanje,</string>
     <string name="upgrade_banner_title">Nadogradite svoj trezor sada</string>
     <string name="deposit_form_custom_memo_optional_title">Prilagođeni memorandum (nije obavezno)</string>
-    <string name="home_defi_portfolio">DeFi portfelj</string>
+    <string name="home_display">Prikaz početnog zaslona</string>
+    <string name="home_display_separate_title">Novčanik i DeFi odvojeno</string>
+    <string name="home_display_separate_description">Kartica Novčanik prikazuje samo stanje novčanika, a kartica DeFi vaše DeFi stanje.</string>
+    <string name="home_display_combined_title">Novčanik + DeFi</string>
+    <string name="home_display_combined_description">Obje kartice prikazuju vaše ukupno stanje novčanika i DeFi-ja.</string>
+    <string name="home_balance_display">Prikaz stanja</string>
+    <string name="home_swipe_hint_title">Povucite za promjenu</string>
+    <string name="home_swipe_hint_description">Povucite lijevo ili desno za prelazak između kartica novčanika i DeFi-ja.</string>
+    <string name="home_positions">Pozicije</string>
+    <string name="home_swipe_hint_got_it">Razumijem</string>
     <string name="backup_password_request_with_password_action">Koristite lozinku</string>
     <string name="backup_password_topbar_title">Lozinka</string>
     <string name="function_transfer_ibc_dst_address_input_title">Odredišna adresa</string>

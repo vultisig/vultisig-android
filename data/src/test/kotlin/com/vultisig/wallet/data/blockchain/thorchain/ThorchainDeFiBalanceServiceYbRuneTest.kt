@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.thorchain
 
+import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
@@ -77,6 +78,16 @@ internal class ThorchainDeFiBalanceServiceYbRuneTest {
         assertEquals(BigInteger("42000000000"), balances.amountFor(Coins.ThorChain.sTCY.id))
     }
 
+    @Test
+    fun `fetched bonded nodes reach the DeFi balances`() = runTest {
+        coEvery { bondUseCase.getActiveNodes(vaultId = VAULT_ID, address = ADDRESS) } returns
+            flowOf(listOf(bondedNode(BigInteger("300000000000"))))
+
+        val balances = service.getRemoteDeFiBalance(ADDRESS, VAULT_ID)
+
+        assertEquals(BigInteger("300000000000"), balances.amountFor(Coins.ThorChain.RUNE.id))
+    }
+
     private fun List<com.vultisig.wallet.data.blockchain.model.DeFiBalance>.amountFor(
         coinId: String
     ): BigInteger =
@@ -92,6 +103,17 @@ internal class ThorchainDeFiBalanceServiceYbRuneTest {
             nextPayoutDate = null,
             rewards = null,
             rewardsCoin = null,
+        )
+
+    private fun bondedNode(amount: BigInteger) =
+        BondedNodePosition(
+            id = "rune-node",
+            node = BondedNodePosition.BondedNode(address = "thor1node", state = "Active"),
+            amount = amount,
+            coin = Coins.ThorChain.RUNE,
+            apy = 0.0,
+            nextReward = 0.0,
+            nextChurn = null,
         )
 
     private companion object {

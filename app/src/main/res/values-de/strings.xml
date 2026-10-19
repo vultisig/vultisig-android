@@ -863,6 +863,8 @@
     <string name="governance_voting_closed">Die Abstimmung für diesen Vorschlag ist beendet</string>
     <string name="hide_balance">Guthaben verbergen</string>
     <string name="show_balance">Guthaben anzeigen</string>
+    <string name="hide_total_balance">Gesamtguthaben verbergen</string>
+    <string name="show_total_balance">Gesamtguthaben anzeigen</string>
     <string name="no_chains_found">Keine Blockchains gefunden</string>
     <string name="no_chain_make_sure_that">Stellen Sie sicher, dass die gesuchte Blockchain aktiviert ist.</string>
     <string name="no_chain_customize_chains">Blockchains anpassen</string>
@@ -1147,7 +1149,16 @@
     <string name="keygen_benefit_3_emphasized">Chainübergreifend</string>
     <string name="upgrade_banner_title">Jetzt Ihren Tresor upgraden</string>
     <string name="deposit_form_custom_memo_optional_title">Benutzerdefiniertes Memo (optional)</string>
-    <string name="home_defi_portfolio">DeFi-Portfolio</string>
+    <string name="home_display">Startbildschirm</string>
+    <string name="home_display_separate_title">Wallet &amp; DeFi getrennt</string>
+    <string name="home_display_separate_description">Der Wallet-Tab zeigt nur dein Wallet-Guthaben, der DeFi-Tab dein DeFi-Guthaben.</string>
+    <string name="home_display_combined_title">Wallet + DeFi</string>
+    <string name="home_display_combined_description">Beide Tabs zeigen dein kombiniertes Wallet- und DeFi-Guthaben.</string>
+    <string name="home_balance_display">Saldoanzeige</string>
+    <string name="home_swipe_hint_title">Wischen zum Wechseln</string>
+    <string name="home_swipe_hint_description">Wische nach links oder rechts, um zwischen Wallet- und DeFi-Tab zu wechseln.</string>
+    <string name="home_positions">Positionen</string>
+    <string name="home_swipe_hint_got_it">Verstanden</string>
     <string name="backup_password_request_with_password_action">Passwort verwenden</string>
     <string name="backup_password_topbar_title">Passwort</string>
     <string name="function_transfer_ibc_dst_address_input_title">Zieladresse</string>

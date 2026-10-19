@@ -861,6 +861,8 @@
     <string name="governance_voting_closed">La votazione per questa proposta è terminata</string>
     <string name="hide_balance">Nascondi saldo</string>
     <string name="show_balance">Mostra saldo</string>
+    <string name="hide_total_balance">Nascondi saldo totale</string>
+    <string name="show_total_balance">Mostra saldo totale</string>
     <string name="no_chains_found">Nessuna catena trovata</string>
     <string name="no_chain_make_sure_that">Assicurati che la catena che stai cercando sia abilitata.</string>
     <string name="no_chain_customize_chains">Personalizza catene</string>
@@ -1145,7 +1147,16 @@
     <string name="keygen_benefit_3_emphasized">Cross-chain,</string>
     <string name="upgrade_banner_title">Aggiorna il tuo vault ora</string>
     <string name="deposit_form_custom_memo_optional_title">Memo personalizzato (facoltativo)</string>
-    <string name="home_defi_portfolio">Portafoglio DeFi</string>
+    <string name="home_display">Schermata principale</string>
+    <string name="home_display_separate_title">Portafoglio e DeFi separati</string>
+    <string name="home_display_separate_description">La scheda Portafoglio mostra solo il saldo del portafoglio e la scheda DeFi il saldo DeFi.</string>
+    <string name="home_display_combined_title">Portafoglio + DeFi</string>
+    <string name="home_display_combined_description">Entrambe le schede mostrano il saldo combinato di portafoglio e DeFi.</string>
+    <string name="home_balance_display">Visualizzazione del saldo</string>
+    <string name="home_swipe_hint_title">Scorri per cambiare</string>
+    <string name="home_swipe_hint_description">Scorri a sinistra o a destra per passare tra le schede portafoglio e DeFi.</string>
+    <string name="home_positions">Posizioni</string>
+    <string name="home_swipe_hint_got_it">Capito</string>
     <string name="backup_password_request_with_password_action">Usa password</string>
     <string name="backup_password_topbar_title">Password</string>
     <string name="function_transfer_ibc_dst_address_input_title">Indirizzo di destinazione</string>

@@ -275,7 +275,7 @@ class ThorchainDeFiBalanceService(
         vaultId: String,
     ): DeFiBalance {
         val bondedNodes =
-            runCatching { bondUseCase.getActiveNodes(address, vaultId).last() }
+            runCatching { bondUseCase.getActiveNodes(vaultId = vaultId, address = address).last() }
                 .getOrElse { exception ->
                     Timber.e(exception, "ThorchainDeFiBalanceService: Failed to fetch bonded nodes")
                     throw exception
