@@ -760,6 +760,7 @@
     <string name="swapkit_error_decoding">Kon SwapKit-respons niet verwerken</string>
     <string name="swapkit_error_server">SwapKit-serverfout (HTTP %1$d)</string>
     <string name="sign_message_continue">Doorgaan</string>
+    <string name="sign_message_unsupported_evm_format">Niet-ondersteund berichtformaat. Alleen personal_sign met een geldige EIP-191-envelop en eth_signTypedData_v4 kunnen worden ondertekend.</string>
     <string name="hint_signing_method">Ondertekeningsmethode</string>
     <string name="verify_sign_message_signing_method" >Ondertekeningsmethode</string>
     <string name="signing_error_transaction_timeout">Transactie is verlopen vanwege trage ondertekening. Probeer het opnieuw.</string>

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,6 +25,8 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.models.sign.SignMessageFormViewModel
+import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun SignMessageFormScreen(
@@ -41,6 +44,7 @@ internal fun SignMessageFormScreen(
     SignMessageFormScreen(
         methodFieldState = model.methodFieldState,
         messageFieldState = model.messageFieldState,
+        error = state.error?.asString(),
         state =
             if (state.isLoading || !isFormValid) VsButtonState.Disabled else VsButtonState.Enabled,
         onSign = {
@@ -55,6 +59,7 @@ private fun SignMessageFormScreen(
     methodFieldState: TextFieldState,
     messageFieldState: TextFieldState,
     state: VsButtonState,
+    error: String? = null,
     onSign: () -> Unit = {},
 ) {
     Scaffold(
@@ -83,6 +88,11 @@ private fun SignMessageFormScreen(
                 keyboardType = KeyboardType.Text,
                 autoCorrectEnabled = false,
             )
+
+            if (error != null) {
+                UiSpacer(14.dp)
+                Text(text = error, style = Theme.brockmann.body.s.medium, color = Theme.v2.colors.alerts.error)
+            }
         }
     }
 }

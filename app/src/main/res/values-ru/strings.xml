@@ -764,6 +764,7 @@
     <string name="swapkit_error_decoding">Не удалось разобрать ответ SwapKit</string>
     <string name="swapkit_error_server">Ошибка сервера SwapKit (HTTP %1$d)</string>
     <string name="sign_message_continue">Продолжить</string>
+    <string name="sign_message_unsupported_evm_format">Неподдерживаемый формат сообщения. Можно подписывать только personal_sign с корректной оболочкой EIP-191 и eth_signTypedData_v4.</string>
     <string name="hint_signing_method">Метод подписания</string>
     <string name="verify_sign_message_signing_method" >Метод подписания</string>
     <string name="signing_error_transaction_timeout">Время транзакции истекло из-за медленного подписания. Попробуйте ещё раз.</string>

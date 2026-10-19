@@ -1114,6 +1114,7 @@
     <string name="swapkit_error_decoding">Could not parse SwapKit response</string>
     <string name="swapkit_error_server">SwapKit server error (HTTP %1$d)</string>
     <string name="sign_message_continue">Continue</string>
+    <string name="sign_message_unsupported_evm_format">Unsupported message format. Only personal_sign with a valid EIP-191 envelope and eth_signTypedData_v4 can be signed.</string>
     <string name="address_book_empty_description">Keep all your important addresses organized in one place.</string>
     <string name="address_book_empty_title">Your Address Book is empty</string>
     <string name="check_updates_settings_title">Check for Updates</string>

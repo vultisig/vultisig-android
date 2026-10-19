@@ -763,6 +763,7 @@
     <string name="swapkit_error_decoding">Impossibile elaborare la risposta di SwapKit</string>
     <string name="swapkit_error_server">Errore del server SwapKit (HTTP %1$d)</string>
     <string name="sign_message_continue">Continua</string>
+    <string name="sign_message_unsupported_evm_format">Formato del messaggio non supportato. È possibile firmare solo personal_sign con un involucro EIP-191 valido e eth_signTypedData_v4.</string>
     <string name="hint_signing_method">Metodo di firma</string>
     <string name="verify_sign_message_signing_method" >Metodo di firma</string>
     <string name="signing_error_transaction_timeout">Timeout della transazione dovuto alla firma lenta. Riprova.</string>

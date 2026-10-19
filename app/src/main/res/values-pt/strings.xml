@@ -761,6 +761,7 @@
     <string name="swapkit_error_decoding">Não foi possível processar a resposta do SwapKit</string>
     <string name="swapkit_error_server">Erro de servidor do SwapKit (HTTP %1$d)</string>
     <string name="sign_message_continue">Continuar</string>
+    <string name="sign_message_unsupported_evm_format">Formato de mensagem não suportado. Só é possível assinar personal_sign com um envelope EIP-191 válido e eth_signTypedData_v4.</string>
     <string name="hint_signing_method">Método de assinatura</string>
     <string name="verify_sign_message_signing_method">Método de assinatura</string>
     <string name="signing_error_transaction_timeout">Tempo limite da transação excedido devido à lentidão na assinatura. Por favor, tente novamente.</string>
