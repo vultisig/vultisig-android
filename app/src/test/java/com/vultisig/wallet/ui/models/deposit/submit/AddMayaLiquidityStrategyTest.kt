@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.deposit.submit
 
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MayaChainApi
@@ -23,6 +22,7 @@ import com.vultisig.wallet.data.usecases.CheckMayaLpPairingUseCase
 import com.vultisig.wallet.data.usecases.MayaChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.MayaChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.MayaLpPairing
+import com.vultisig.wallet.ui.models.deposit.DepositFieldStates
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
@@ -41,7 +41,9 @@ import wallet.core.jni.proto.Common.SigningError
 
 internal class AddMayaLiquidityStrategyTest {
 
-    private val tokenAmount = TextFieldState()
+    private val fields = DepositFieldStates()
+    private val tokenAmount = fields.tokenAmountFieldState
+    private var formCoin: Coin? = null
     private val accountsRepository: AccountsRepository = mockk()
     private val vaultRepository: VaultRepository = mockk()
     private val mayaChainApi: MayaChainApi = mockk()
@@ -207,8 +209,7 @@ internal class AddMayaLiquidityStrategyTest {
     @Test
     fun `a preflight block stops the build before the inbound is fetched`() = runTest {
         givenNativeAccount(Chain.Bitcoin, decimals = 8, address = BTC_ADDRESS)
-        coEvery { preflight("BTC.BTC", true) } returns
-            MayaChainLpPreflightBlock.LpPaused("BTC.BTC")
+        coEvery { preflight("BTC.BTC", true) } returns MayaChainLpPreflightBlock.LpPaused("BTC.BTC")
 
         assertFormattedError(R.string.deposit_error_maya_lp_paused_pool) {
             build(Chain.Bitcoin).build()
@@ -217,17 +218,16 @@ internal class AddMayaLiquidityStrategyTest {
     }
 
     @Test
-    fun `an asset deposit into a live CACAO-only position is refused before signing`() =
-        runTest {
-            givenNativeAccount(Chain.Zcash, decimals = 8, address = ZEC_ADDRESS)
-            coEvery { checkPairing("ZEC.ZEC", CACAO_ADDRESS, ZEC_ADDRESS) } returns
-                MayaLpPairing.SingleSidedPosition
+    fun `an asset deposit into a live CACAO-only position is refused before signing`() = runTest {
+        givenNativeAccount(Chain.Zcash, decimals = 8, address = ZEC_ADDRESS)
+        coEvery { checkPairing("ZEC.ZEC", CACAO_ADDRESS, ZEC_ADDRESS) } returns
+            MayaLpPairing.SingleSidedPosition
 
-            assertFormattedError(R.string.deposit_error_maya_lp_single_sided_position) {
-                build(Chain.Zcash).build()
-            }
-            coVerify(exactly = 0) { mayaChainApi.getInboundAddresses() }
+        assertFormattedError(R.string.deposit_error_maya_lp_single_sided_position) {
+            build(Chain.Zcash).build()
         }
+        coVerify(exactly = 0) { mayaChainApi.getInboundAddresses() }
+    }
 
     @Test
     fun `an asset deposit into a record paired elsewhere is refused`() = runTest {
@@ -292,6 +292,36 @@ internal class AddMayaLiquidityStrategyTest {
     }
 
     @Test
+    fun `an EVM deposit that leaves no room for the fee is refused`() = runTest {
+        givenNativeAccount(Chain.Ethereum, decimals = 18, address = ETH_ADDRESS)
+
+        val error =
+            assertFailsWith<InvalidTransactionDataException> {
+                build(Chain.Ethereum, formBalance = ONE_HUNDREDTH_ETH).build()
+            }
+
+        assertInsufficientBalance(error)
+    }
+
+    @Test
+    fun `an EVM deposit the balance covers with the fee is built`() = runTest {
+        givenNativeAccount(Chain.Ethereum, decimals = 18, address = ETH_ADDRESS)
+
+        val tx = build(Chain.Ethereum, formBalance = ONE_HUNDREDTH_ETH + BigInteger.TEN).build()
+
+        assertEquals(ONE_HUNDREDTH_ETH, tx.srcTokenValue.value)
+    }
+
+    @Test
+    fun `a UTXO deposit leaves the balance check to the planner`() = runTest {
+        givenNativeAccount(Chain.Bitcoin, decimals = 8, address = BTC_ADDRESS)
+
+        val tx = build(Chain.Bitcoin, formBalance = BigInteger.ZERO).build()
+
+        assertEquals(BTC_INBOUND, tx.dstAddress)
+    }
+
+    @Test
     fun `a chain the planner does not cover keeps the fee service's figure`() = runTest {
         givenNativeAccount(Chain.Ethereum, decimals = 18, address = ETH_ADDRESS)
 
@@ -300,11 +330,13 @@ internal class AddMayaLiquidityStrategyTest {
         assertEquals(BigInteger.TEN, tx.estimatedFees.value)
     }
 
-    private fun build(chain: Chain, planFee: Long = 0L) =
+    private fun build(chain: Chain, planFee: Long = 0L, formBalance: BigInteger = ONE_ETH) =
         AddMayaLiquidityStrategy(
             vaultIdProvider = { VAULT_ID },
             chainProvider = { chain },
             tokenAmountFieldState = tokenAmount,
+            addressProvider = { formCoin?.let { gateAddress(gateAccount(it, formBalance)) } },
+            requireTokenAmount = amountGate(chain, fields)::requireTokenAmount,
             accountsRepository = accountsRepository,
             vaultRepository = vaultRepository,
             mayaChainApi = mayaChainApi,
@@ -338,6 +370,7 @@ internal class AddMayaLiquidityStrategyTest {
 
     private fun givenNativeAccount(chain: Chain, decimals: Int, address: String) {
         val coin = nativeCoin(chain, decimals, address)
+        formCoin = coin
         coEvery { accountsRepository.loadAddress(VAULT_ID, chain) } returns
             flowOf(
                 Address(
@@ -399,5 +432,7 @@ internal class AddMayaLiquidityStrategyTest {
         const val ETH_INBOUND = "0xinbound"
         const val ARB_INBOUND = "0xarbinbound"
         const val ZEC_INBOUND = "t1inbound"
+        val ONE_ETH: BigInteger = BigInteger.TEN.pow(18)
+        val ONE_HUNDREDTH_ETH: BigInteger = BigInteger.TEN.pow(16)
     }
 }

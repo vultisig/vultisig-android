@@ -207,6 +207,8 @@ constructor(
                         vaultIdProvider = context.vaultId,
                         chainProvider = context.chain,
                         tokenAmountFieldState = fields.tokenAmountFieldState,
+                        addressProvider = context.address,
+                        requireTokenAmount = context.requireTokenAmount,
                         accountsRepository = accountsRepository,
                         vaultRepository = vaultRepository,
                         mayaChainApi = mayaChainApi,

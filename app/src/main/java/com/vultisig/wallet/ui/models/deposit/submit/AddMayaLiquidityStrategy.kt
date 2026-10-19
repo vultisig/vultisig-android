@@ -7,7 +7,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -48,6 +51,8 @@ internal class AddMayaLiquidityStrategy(
     private val vaultIdProvider: () -> String?,
     private val chainProvider: () -> Chain?,
     private val tokenAmountFieldState: TextFieldState,
+    private val addressProvider: () -> Address?,
+    private val requireTokenAmount: (Coin, Account, Address, TokenValue) -> BigInteger,
     private val accountsRepository: AccountsRepository,
     private val vaultRepository: VaultRepository,
     private val mayaChainApi: MayaChainApi,
@@ -129,6 +134,16 @@ internal class AddMayaLiquidityStrategy(
                 gasFeeToEstimate = gasFeeToEstimate,
                 getBitcoinTransactionPlan = getBitcoinTransactionPlan,
             )
+
+        // A UTXO plan already refuses an amount its inputs cannot cover, with its own error.
+        if (!chain.isPlannedUtxoChain) {
+            requireCoveredByFormBalance(
+                addressProvider(),
+                token,
+                transfer.gasFee,
+                requireTokenAmount,
+            )
+        }
 
         return DepositTransaction(
             id = Uuid.random().toString(),
