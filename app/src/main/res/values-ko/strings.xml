@@ -1102,6 +1102,7 @@
     <string name="swapkit_error_decoding">SwapKit 응답을 파싱할 수 없습니다</string>
     <string name="swapkit_error_server">SwapKit 서버 오류 (HTTP %1$d)</string>
     <string name="sign_message_continue">계속</string>
+    <string name="sign_message_unsupported_evm_format">지원되지 않는 메시지 형식입니다. 유효한 EIP-191 봉투의 personal_sign과 eth_signTypedData_v4만 서명할 수 있습니다.</string>
     <string name="address_book_empty_description">모든 중요한 주소를 한곳에서 관리하세요.</string>
     <string name="address_book_empty_title">주소록이 비어 있습니다</string>
     <string name="check_updates_settings_title">업데이트 확인</string>
