@@ -30,7 +30,10 @@ private val NearRefusal.stringRes: Int
             NearRefusal.MEMO,
             NearRefusal.CONTRACT_PAYLOAD,
             NearRefusal.CUSTOM_SIGN_PAYLOAD,
-            NearRefusal.SWAP_PAYLOAD -> R.string.send_error_near_unsupported_payload
+            NearRefusal.SWAPKIT_DEPOSIT_ONLY,
+            NearRefusal.SWAPKIT_NOT_NATIVE_NEAR,
+            NearRefusal.SWAPKIT_DEPOSIT_PREBUILT,
+            NearRefusal.SWAPKIT_DEPOSIT_MEMO -> R.string.send_error_near_unsupported_payload
             NearRefusal.INVALID_AMOUNT,
             NearRefusal.MISSING_CHAIN_SPECIFIC,
             NearRefusal.INVALID_GAS_FEE,
@@ -42,5 +45,8 @@ private val NearRefusal.stringRes: Int
             NearRefusal.SENDER_NOT_IMPLICIT,
             NearRefusal.SENDER_KEY_MISMATCH,
             NearRefusal.SIGNATURE_VERIFICATION_FAILED,
-            NearRefusal.MALFORMED_SIGNED_TRANSACTION -> R.string.send_error_near_safety_check
+            NearRefusal.MALFORMED_SIGNED_TRANSACTION,
+            NearRefusal.SWAPKIT_DEPOSIT_NOT_IMPLICIT,
+            NearRefusal.SWAPKIT_DEPOSIT_RECEIVER_MISMATCH,
+            NearRefusal.SWAPKIT_DEPOSIT_AMOUNT_MISMATCH -> R.string.send_error_near_safety_check
         }

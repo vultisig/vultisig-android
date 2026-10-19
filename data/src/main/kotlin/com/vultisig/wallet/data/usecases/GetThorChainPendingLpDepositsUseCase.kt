@@ -35,8 +35,13 @@ interface GetThorChainPendingLpDepositsUseCase {
      * hold *anyone's* pending liquidity. Only those pools are then checked against the user's
      * address, so the usual cost is one request rather than one per pool.
      *
+     * The scan is all-or-nothing: a failed pool scan or a failed read on any candidate pool throws,
+     * because a partial list cannot be told apart from "that pool is no longer pending". A pool
+     * with no record for the user (404) is skipped. Only the refund countdown is best-effort.
+     *
      * @param runeAddress the user's RUNE address — one side of every symmetric add, and the side
      *   thornode keys the record by.
+     * @throws NetworkException when the pool scan or any candidate pool's LP read fails.
      */
     suspend operator fun invoke(runeAddress: String): List<ThorChainPendingLpDeposit>
 }
@@ -46,16 +51,7 @@ internal class GetThorChainPendingLpDepositsUseCaseImpl
 constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepositsUseCase {
 
     override suspend fun invoke(runeAddress: String): List<ThorChainPendingLpDeposit> {
-        val candidates =
-            try {
-                thorChainApi.getPools().filter { it.holdsPendingLiquidity() }
-            } catch (e: IOException) {
-                Timber.w(e, "Failed to scan pools for pending liquidity")
-                return emptyList()
-            } catch (e: NetworkException) {
-                Timber.w(e, "Failed to scan pools for pending liquidity")
-                return emptyList()
-            }
+        val candidates = thorChainApi.getPools().filter { it.holdsPendingLiquidity() }
         if (candidates.isEmpty()) return emptyList()
 
         val found = coroutineScope {
@@ -79,15 +75,7 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
      * add always does — so an asset-address lookup can only ever return what this one already did.
      */
     private suspend fun fetchPending(pool: String, runeAddress: String): PendingFetch? =
-        try {
-            thorChainApi.getLiquidityProvider(pool, runeAddress)?.toPendingFetch(pool)
-        } catch (e: IOException) {
-            Timber.w(e, "Failed to read pending liquidity for pool %s", pool)
-            null
-        } catch (e: NetworkException) {
-            Timber.w(e, "Failed to read pending liquidity for pool %s", pool)
-            null
-        }
+        thorChainApi.getLiquidityProvider(pool, runeAddress)?.toPendingFetch(pool)
 
     /**
      * Resolves how long each half-deposit has before it is refunded. A failed read leaves the

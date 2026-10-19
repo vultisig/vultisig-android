@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.models.send.AmountFraction.F75
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import java.math.BigDecimal
 import java.math.BigInteger
 
 @Immutable
@@ -71,6 +72,8 @@ internal data class SendFormUiModel(
     val tokenAmountError: UiText? = null,
     val memoError: UiText? = null,
     val reapingError: UiText? = null,
+    // A percentage/MAX tap came out as zero because the network fee is larger than the balance.
+    val feeShortfallError: UiText? = null,
     val hasMemo: Boolean = false,
     // XRP: show a dedicated destination-tag field instead of the free-text memo field.
     val isDestinationTag: Boolean = false,
@@ -207,3 +210,27 @@ internal sealed class GasSettings {
 }
 
 internal data class InvalidTransactionDataException(val text: UiText) : Exception()
+
+private val stakeDefiTypes =
+    setOf(
+        DeFiNavActions.STAKE_RUJI,
+        DeFiNavActions.STAKE_SRUJI,
+        DeFiNavActions.STAKE_TCY,
+        DeFiNavActions.STAKE_STCY,
+        DeFiNavActions.STAKE_YBRUNE,
+    )
+
+/**
+ * Whether [amount] is more than the selected coin's balance (or the balance is empty) in a stake
+ * flow; the form shows an inline error and disables Continue instead of clamping what the user can
+ * type.
+ */
+internal fun SendFormUiModel.exceedsStakeBalance(amount: String): Boolean {
+    if (defiType !in stakeDefiTypes) return false
+    // The raw value: `balance` is locale-formatted for display ("1,234.5", "2.5M").
+    val balance = selectedCoin?.model?.account?.tokenValue?.decimal ?: return false
+    // Nothing to stake: Max on an empty balance fills 0, which must not enable Continue.
+    if (balance.signum() <= 0) return true
+    val entered = amount.toBigDecimalOrNull() ?: return false
+    return entered > balance
+}

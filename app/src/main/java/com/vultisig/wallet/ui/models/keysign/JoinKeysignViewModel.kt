@@ -32,6 +32,7 @@ import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.transaction_decoding.asSignedTransactionContent
@@ -67,6 +68,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import com.vultisig.wallet.ui.utils.nearErrorTextOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
@@ -139,6 +141,10 @@ sealed class JoinKeysignError(val message: UiText) {
      * keysign (closed the app or lost connectivity). Retryable.
      */
     data object Timeout : JoinKeysignError(R.string.join_keysign_start_timeout.asUiText())
+
+    /** An EVM custom message that isn't a recognised signing format; never signed. */
+    data object UnsupportedCustomMessage :
+        JoinKeysignError(R.string.sign_message_unsupported_evm_format.asUiText())
 
     /**
      * This vault is missing the Bitcoin or QBTC account the claim hash is derived from, so it
@@ -580,6 +586,11 @@ constructor(
             }
         }
 
+        if (!SigningHelper.isEvmSignable(customMessage)) {
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.UnsupportedCustomMessage)
+            return false
+        }
+
         customMessagePayload = customMessage
         // A message request carries no KeysignPayload, so the payload setter above never runs for
         // it; the dApp rides on the custom message itself and is mirrored from here instead.
@@ -704,7 +715,7 @@ constructor(
         // has any use for.
         val kamino = if (swapPayload == null) resolveKaminoIntent(payload) else null
         when {
-            swapPayload != null ->
+            swapPayload != null -> {
                 applyVerifyResult(
                     joinSwapUiModelBuilder.build(
                         payload = payload,
@@ -713,6 +724,10 @@ constructor(
                         currency = currency,
                     )
                 )
+                if (payload.coin.chain == Chain.Solana && swapPayload is SwapPayload.EVM) {
+                    scanSolanaSwap(payload)
+                }
+            }
 
             // A Kamino payload states none of what it is in a field — no memo, no deposit flag —
             // so it reaches the deposit screen on the strength of its own bytes or not at all.
@@ -1065,6 +1080,103 @@ constructor(
                             )
                     )
                 }
+            }
+        }
+    }
+
+    /**
+     * Scans a Solana aggregator swap (Jupiter, LI.FI, SwapKit) through Blockaid using the exact
+     * transaction it signs — the swap quote's `tx.data` — and publishes the verdict on the swap
+     * verify screen, so the co-signer gets an independent read on the bytes rather than relying on
+     * the initiator's swap summary. One simulate call returns both simulation and validation.
+     */
+    private fun scanSolanaSwap(payload: KeysignPayload) {
+        blockaidSimulationJob?.cancel()
+        blockaidSimulationJob =
+            viewModelScope.safeLaunch(
+                onError = {
+                    Timber.w(it, "Solana swap scan failed")
+                    updateSwapUiModel { model ->
+                        model.copy(
+                            txScanStatus =
+                                TransactionScanStatus.Error(
+                                    "Security Scanner Failed",
+                                    BLOCKAID_PROVIDER,
+                                )
+                        )
+                    }
+                }
+            ) {
+                val chain = payload.coin.chain
+                val isChainSupported =
+                    securityScannerService.getSupportedChainsByFeature().isChainSupported(chain) &&
+                        securityScannerService.isSecurityServiceEnabled()
+                if (!isChainSupported) return@safeLaunch
+
+                updateSwapUiModel { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
+
+                val result =
+                    try {
+                        withContext(Dispatchers.IO) { blockaidSimulationService.scan(payload) }
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        Timber.w(e, "Blockaid scan failed for Solana swap")
+                        null
+                    }
+                val scannerResult = result?.scannerResult
+                val hero =
+                    result?.let {
+                        buildHeroContent(
+                            simulation = it.simulation,
+                            decodedFunctionName = null,
+                            didLoadSimulation = it.didLoadSimulation,
+                        )
+                    }
+                    // A cross-chain swap only has its outflow on Solana, so the simulation reads as
+                    // a Send; showing that would replace the quoted legs and hide the destination.
+                    ?.takeIf { it is HeroContent.Swap }
+                // No verdict (network failure, undecodable tx, unparsable validation) surfaces as a
+                // scan error, never as a clean result.
+                val scanStatus =
+                    if (scannerResult != null) {
+                        TransactionScanStatus.Scanned(scannerResult)
+                    } else {
+                        TransactionScanStatus.Error("Security Scanner Failed", BLOCKAID_PROVIDER)
+                    }
+                updateSwapUiModel { it.copy(txScanStatus = scanStatus, heroContent = hero) }
+            }
+    }
+
+    /**
+     * Joins the swap keysign unless the scan flagged the swap, in which case its warning is shown
+     * first, mirroring the initiator's gate.
+     */
+    fun joinSwapKeysign() {
+        val model = (verifyUiModel.value as? VerifyUiModel.Swap)?.model ?: return joinKeysign()
+        handleSigningFlowCommon(
+            txScanStatus = model.txScanStatus,
+            showWarning = { updateSwapUiModel { it.copy(showScanningWarning = true) } },
+            onSign = { joinKeysign() },
+        )
+    }
+
+    /** Joins the swap keysign after the user chose "Continue anyway" on the scan warning. */
+    fun joinSwapKeysignSkippingWarning() {
+        dismissSwapScanWarning()
+        joinKeysign()
+    }
+
+    /** Hides the swap scan warning without signing. */
+    fun dismissSwapScanWarning() {
+        updateSwapUiModel { it.copy(showScanningWarning = false) }
+    }
+
+    private fun updateSwapUiModel(updateBlock: (VerifySwapUiModel) -> VerifySwapUiModel) {
+        verifyUiModel.update { current ->
+            if (current is VerifyUiModel.Swap) {
+                VerifyUiModel.Swap(updateBlock(current.model))
+            } else {
+                current
             }
         }
     }

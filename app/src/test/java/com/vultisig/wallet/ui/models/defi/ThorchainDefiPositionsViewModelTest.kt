@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.ThorChainLpPosition
+import com.vultisig.wallet.data.models.ThorChainPendingLpDeposit
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -28,6 +29,7 @@ import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainPendingLpDepositsUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPositions
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.decimals
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.navigation.Destination
@@ -1690,6 +1692,47 @@ internal class ThorchainDefiPositionsViewModelTest {
         assertNull(vm.state.value.rewardHistory)
     }
 
+    @Test
+    fun `a failed rescan keeps the earlier pending cards with completion withdrawn`() = runTest {
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
+            listOf(pendingDeposit(BTC_POOL), pendingDeposit(ETH_POOL))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.state.value.lp.pendingDeposits.map { it.canComplete } shouldBe listOf(true, true)
+
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } throws
+            NetworkException(503, "thornode down")
+        vm.onScreenResumed()
+
+        val lp = vm.state.value.lp
+        lp.pendingDeposits.map { it.poolId } shouldBe listOf(BTC_POOL, ETH_POOL)
+        lp.pendingDeposits.map { it.canComplete } shouldBe listOf(false, false)
+        lp.pendingDepositsLoaded shouldBe true
+    }
+
+    @Test
+    fun `a successful empty rescan clears the pending cards`() = runTest {
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
+            listOf(pendingDeposit(BTC_POOL))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns emptyList()
+        vm.onScreenResumed()
+
+        vm.state.value.lp.pendingDeposits.isEmpty() shouldBe true
+        vm.state.value.lp.pendingDepositsLoaded shouldBe true
+    }
+
+    @Test
+    fun `a failed first scan with nothing on screen still settles the tab`() = runTest {
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } throws
+            NetworkException(503, "thornode down")
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.state.value.lp.pendingDeposits.isEmpty() shouldBe true
+        vm.state.value.lp.pendingDepositsLoaded shouldBe true
+    }
+
     private fun churnReward(amount: BigInteger, date: Date = Date(0)) =
         BondChurnReward(churnHeight = 1L, date = date, amount = amount)
 
@@ -1734,6 +1777,17 @@ internal class ThorchainDefiPositionsViewModelTest {
             stakedAmountDisplay = "1 ${coin.ticker}",
             apy = null,
             canWithdraw = canWithdraw,
+        )
+
+    /** An asset-first half-deposit: RUNE is the awaited side, which this vault can always send. */
+    private fun pendingDeposit(pool: String) =
+        ThorChainPendingLpDeposit(
+            pool = pool,
+            pendingRune = BigInteger.ZERO,
+            pendingAsset = BigInteger("100000000"),
+            pendingTxId = null,
+            pairedAddress = RUNE_ADDRESS,
+            blocksUntilRefund = null,
         )
 
     private fun poolStats(asset: String) =

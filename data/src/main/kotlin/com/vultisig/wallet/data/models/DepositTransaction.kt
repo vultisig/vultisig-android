@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosGovVote
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
@@ -88,6 +89,12 @@ data class DepositTransaction(
      * deposit, which carries a text comment instead.
      */
     val signTon: SignTon? = null,
+    /**
+     * The governance vote [signDirect] carries, kept so the Verify screen can show the proposal and
+     * ballot. Display-only: the SignDoc bytes are the signing contract. Null for every other
+     * deposit.
+     */
+    val governanceVote: CosmosGovVote? = null,
 )
 
 const val OPERATION_MINT = "Mint"

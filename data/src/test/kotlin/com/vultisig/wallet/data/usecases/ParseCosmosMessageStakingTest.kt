@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosVoteOption
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingHelper
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import java.util.Base64
@@ -93,6 +94,27 @@ class ParseCosmosMessageStakingTest {
         // Must be structured JSON, not the base64 fallback (which would be a bare string
         // primitive).
         assertTrue(msg.value is kotlinx.serialization.json.JsonObject)
+    }
+
+    @Test
+    fun `decodes MsgVote to proposal id, voter and ballot`() {
+        val message =
+            parse(
+                signDirectFor(
+                    CosmosStakingHelper.encodeVote(
+                        proposalId = 312L,
+                        voter = delegator,
+                        option = CosmosVoteOption.NO_WITH_VETO.protoValue,
+                    )
+                )
+            )
+
+        val msg = message.messages.single()
+        assertEquals(CosmosStakingHelper.MSG_VOTE_TYPE_URL, msg.typeUrl)
+        val obj = msg.value.jsonObject
+        assertEquals("312", obj["proposalId"]?.jsonPrimitive?.content)
+        assertEquals(delegator, obj["voter"]?.jsonPrimitive?.content)
+        assertEquals("NO_WITH_VETO", obj["option"]?.jsonPrimitive?.content)
     }
 
     /** Wrap one Any-encoded staking message in a SignDoc the parser accepts. */

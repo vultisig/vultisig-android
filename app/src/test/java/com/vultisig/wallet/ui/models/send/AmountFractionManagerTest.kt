@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.TronAccountJson
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
@@ -25,6 +26,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.confirmVerified
@@ -34,6 +36,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +44,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -70,6 +74,7 @@ internal class AmountFractionManagerTest {
     private var defiType: DeFiNavActions? = null
     private var vault: Vault? = vault()
     private var account: Account? = null
+    private val selectedAccount = MutableStateFlow<Account?>(null)
     private var tronFrozen: BigDecimal? = null
 
     private val tronApi: TronApi =
@@ -470,6 +475,146 @@ internal class AmountFractionManagerTest {
             assertEquals(AmountFraction.F50, uiState.value.selectedAmountFraction)
         }
 
+    // ──────── fee shortfall ────────
+
+    @Test
+    fun `chooseMaxTokenAmount fee larger than balance - shows the insufficient-gas error`() =
+        runTest(mainDispatcher) {
+            val manager =
+                feeShortfallManager(balance = BigInteger("7257"), fee = BigInteger("7500"))
+
+            manager.chooseMaxTokenAmount()
+            advanceUntilIdle()
+
+            assertEquals("0", tokenAmountFieldState.text.toString())
+            assertEquals(
+                UiText.FormattedText(R.string.insufficient_native_token, listOf("ETH")),
+                uiState.value.feeShortfallError,
+            )
+        }
+
+    @Test
+    fun `choosePercentageAmount fee larger than balance - shows the insufficient-gas error`() =
+        runTest(mainDispatcher) {
+            val manager =
+                feeShortfallManager(balance = BigInteger("7257"), fee = BigInteger("7500"))
+
+            manager.choosePercentageAmount(AmountFraction.F25)
+            advanceUntilIdle()
+
+            assertEquals("0", tokenAmountFieldState.text.toString())
+            assertNotNull(uiState.value.feeShortfallError)
+        }
+
+    @Test
+    fun `fee shortfall error clears once the fee drops below the balance`() =
+        runTest(mainDispatcher) {
+            val manager =
+                feeShortfallManager(balance = BigInteger("7257"), fee = BigInteger("7500"))
+            manager.chooseMaxTokenAmount()
+            advanceUntilIdle()
+            assertNotNull(uiState.value.feeShortfallError)
+
+            gasFee.value = TokenValue(BigInteger("7000"), ethAccount().token)
+            advanceUntilIdle()
+
+            assertNull(uiState.value.feeShortfallError)
+        }
+
+    @Test
+    fun `fee shortfall error clears once the balance grows past the fee`() =
+        runTest(mainDispatcher) {
+            val manager =
+                feeShortfallManager(balance = BigInteger("7257"), fee = BigInteger("7500"))
+            manager.chooseMaxTokenAmount()
+            advanceUntilIdle()
+            assertNotNull(uiState.value.feeShortfallError)
+
+            selectedAccount.value = nativeEth(BigInteger("10000"))
+            advanceUntilIdle()
+
+            assertNull(uiState.value.feeShortfallError)
+        }
+
+    @Test
+    fun `fee shortfall error does not come back after it cleared`() =
+        runTest(mainDispatcher) {
+            val manager =
+                feeShortfallManager(balance = BigInteger("7257"), fee = BigInteger("7500"))
+            manager.chooseMaxTokenAmount()
+            advanceUntilIdle()
+            gasFee.value = TokenValue(BigInteger("7000"), ethAccount().token)
+            advanceUntilIdle()
+
+            // The verdict belonged to the tap; a later fee swing alone must not repaint it.
+            gasFee.value = TokenValue(BigInteger("8000"), ethAccount().token)
+            advanceUntilIdle()
+
+            assertNull(uiState.value.feeShortfallError)
+        }
+
+    @Test
+    fun `fee shortfall error clears when the asset changes`() =
+        runTest(mainDispatcher) {
+            val manager =
+                feeShortfallManager(balance = BigInteger("7257"), fee = BigInteger("7500"))
+            manager.chooseMaxTokenAmount()
+            advanceUntilIdle()
+            assertNotNull(uiState.value.feeShortfallError)
+
+            // TokenNetworkSelectionDelegate cancels the fraction manager on every asset switch.
+            manager.cancel()
+            advanceUntilIdle()
+
+            assertNull(uiState.value.feeShortfallError)
+        }
+
+    @Test
+    fun `zero balance - no fee shortfall error`() =
+        runTest(mainDispatcher) {
+            val manager = feeShortfallManager(balance = BigInteger.ZERO, fee = BigInteger("7500"))
+
+            manager.chooseMaxTokenAmount()
+            advanceUntilIdle()
+
+            assertNull(uiState.value.feeShortfallError)
+        }
+
+    @Test
+    fun `positive amount - no fee shortfall error`() =
+        runTest(mainDispatcher) {
+            val manager =
+                feeShortfallManager(balance = BigInteger("9000"), fee = BigInteger("7500"))
+
+            manager.chooseMaxTokenAmount()
+            advanceUntilIdle()
+
+            assertNull(uiState.value.feeShortfallError)
+        }
+
+    /**
+     * Native ETH with a known fee: EVM reuses the cached fee, so the tap reads the balance through
+     * [getAvailableTokenBalance] alone, stubbed here the way the real use case nets a native fee.
+     */
+    private fun TestScope.feeShortfallManager(
+        balance: BigInteger,
+        fee: BigInteger,
+    ): AmountFractionManager {
+        val eth = nativeEth(balance)
+        account = eth
+        selectedAccount.value = eth
+        gasFee.value = TokenValue(fee, eth.token)
+        coEvery { getAvailableTokenBalance(any(), any()) } answers
+            {
+                val held = firstArg<Account>().tokenValue ?: return@answers null
+                held.copy(value = (held.value - secondArg<BigInteger>()).max(BigInteger.ZERO))
+            }
+        return build(backgroundScope).also { it.start() }
+    }
+
+    private fun nativeEth(balance: BigInteger): Account =
+        ethAccount().let { it.copy(tokenValue = TokenValue(balance, it.token)) }
+
     // ──────── helpers ────────
 
     private fun build(scope: CoroutineScope) =
@@ -485,6 +630,7 @@ internal class AmountFractionManagerTest {
             defiTypeProvider = { defiType },
             vaultProvider = { vault },
             accountProvider = { account },
+            selectedAccount = selectedAccount,
             currentTronFrozenBalanceProvider = { tronFrozen },
             getAvailableTokenBalance = getAvailableTokenBalance,
             feeServiceComposite = feeServiceComposite,

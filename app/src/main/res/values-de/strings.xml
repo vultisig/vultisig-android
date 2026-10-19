@@ -299,6 +299,9 @@
     <string name="deposit_form_operator_fee_title">Betreiber-Gebühren (Basispunkte)</string>
     <string name="deposit_message_deposit_title">%s Nachricht Einzahlung</string>
     <string name="deposit_form_custom_memo_title">Benutzerdefiniertes Memo</string>
+    <string name="deposit_form_proposal_id_title">Vorschlags-ID</string>
+    <string name="deposit_form_proposal_id_error">Geben Sie eine gültige Vorschlags-ID ein</string>
+    <string name="deposit_form_vote_option_error">Wählen Sie eine Abstimmungsoption</string>
     <string name="swap_screen_same_asset_error_message">Quell- und Ziel-Assets können nicht identisch sein.</string>
     <string name="address_book_toolbar_title">Adressbuch</string>
     <string name="address_book_settings_title">Adressbuch</string>
@@ -760,6 +763,7 @@
     <string name="swapkit_error_decoding">SwapKit-Antwort konnte nicht verarbeitet werden</string>
     <string name="swapkit_error_server">SwapKit-Serverfehler (HTTP %1$d)</string>
     <string name="sign_message_continue">Weiter</string>
+    <string name="sign_message_unsupported_evm_format">Nicht unterstütztes Nachrichtenformat. Nur personal_sign mit gültigem EIP-191-Umschlag und eth_signTypedData_v4 können signiert werden.</string>
     <string name="hint_signing_method">Signaturmethode</string>
     <string name="verify_sign_message_signing_method" >Signaturmethode</string>
     <string name="signing_error_transaction_timeout">Die Transaktion ist aufgrund langsamer Signierung fehlgeschlagen. Bitte versuchen Sie es erneut.</string>
@@ -1056,7 +1060,7 @@
     <string name="send_error_xrp_destination_not_activated">Der Mindestbetrag zur Aktivierung dieser Adresse beträgt %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Der Mindestbetrag zur Aktivierung dieser Adresse beträgt %1$s %2$s (Existential Deposit).</string>
     <string name="send_error_near_destination_not_found">Dieses NEAR-Konto existiert nicht. Prüfen Sie den Empfänger: Eine Überweisung dorthin würde nur Gas verbrauchen.</string>
-    <string name="send_error_near_unsupported_payload">Diese NEAR-Transaktion wird nicht unterstützt. Nur native NEAR-Überweisungen können signiert werden.</string>
+    <string name="send_error_near_unsupported_payload">Diese NEAR-Transaktion wird nicht unterstützt. Nur native NEAR-Überweisungen und SwapKit-Einzahlungen können signiert werden.</string>
     <string name="send_error_near_invalid_recipient">Dies ist kein gültiges NEAR-Konto. Prüfen Sie den Empfänger.</string>
     <string name="send_error_near_key_not_full_access">Der Schlüssel dieses Tresors hat keinen vollen Zugriff auf dieses NEAR-Konto und kann daher nicht davon senden.</string>
     <string name="send_error_near_network">Das NEAR-Netzwerk hat einen Fehler oder eine unlesbare Antwort zurückgegeben. Bitte versuchen Sie es erneut.</string>
@@ -1874,6 +1878,7 @@
     <string name="verify_verb_merging">Du führst zusammen</string>
     <string name="verify_verb_unmerging">Du trennst</string>
     <string name="verify_verb_bridging">Du überträgst kettenübergreifend</string>
+    <string name="verify_verb_voting">Du stimmst ab</string>
     <string name="scope_your_whole_stake">dein gesamter Stake</string>
     <string name="scope_rewards_accrued_so_far">bisher angefallene Belohnungen</string>
     <string name="scope_delegated_amount_after_rent">der delegierte Betrag nach Abzug der Mietreserve</string>

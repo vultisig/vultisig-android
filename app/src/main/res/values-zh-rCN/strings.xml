@@ -520,6 +520,9 @@
     <!-- Deposit -->
     <string name="deposit_message_deposit_title">%s 存款消息</string>
     <string name="deposit_form_custom_memo_title">自定义备注</string>
+    <string name="deposit_form_proposal_id_title">提案 ID</string>
+    <string name="deposit_form_proposal_id_error">请输入有效的提案 ID</string>
+    <string name="deposit_form_vote_option_error">请选择投票选项</string>
     <string name="deposit_form_unstake_percentage_hint">输入要取消质押的百分比</string>
 
     <!-- Swap Screen -->
@@ -1015,6 +1018,7 @@
 
     <!-- Sign Message -->
     <string name="sign_message_continue">继续</string>
+    <string name="sign_message_unsupported_evm_format">不支持的消息格式。仅支持带有有效 EIP-191 封装的 personal_sign，以及 eth_signTypedData_v4。</string>
 
     <!-- Address Book -->
     <string name="address_book_empty_description">将所有重要地址整理在一个地方。</string>
@@ -1385,7 +1389,7 @@
     <string name="send_error_xrp_destination_not_activated">激活此地址所需的最低金额为 %1$s %2$s。</string>
     <string name="send_error_tao_destination_below_existential_deposit">激活此地址所需的最低金额为 %1$s %2$s（存在性存款）。</string>
     <string name="send_error_near_destination_not_found">此 NEAR 账户不存在。请检查收款方：向其转账只会消耗 Gas。</string>
-    <string name="send_error_near_unsupported_payload">不支持此 NEAR 交易。只能签署原生 NEAR 转账。</string>
+    <string name="send_error_near_unsupported_payload">不支持此 NEAR 交易。只能签署原生 NEAR 转账和 SwapKit 充值。</string>
     <string name="send_error_near_invalid_recipient">这不是有效的 NEAR 账户。请检查收款方。</string>
     <string name="send_error_near_key_not_full_access">此保险库的密钥对该 NEAR 账户没有完全访问权限，因此无法从该账户发送。</string>
     <string name="send_error_near_network">NEAR 网络返回了错误或无法读取的响应。请重试。</string>
@@ -2195,6 +2199,7 @@
     <string name="verify_verb_merging">您正在合并</string>
     <string name="verify_verb_unmerging">您正在取消合并</string>
     <string name="verify_verb_bridging">您正在跨链转账</string>
+    <string name="verify_verb_voting">您正在投票</string>
     <string name="scope_your_whole_stake">您的全部质押</string>
     <string name="scope_rewards_accrued_so_far">至今累积的奖励</string>
     <string name="scope_delegated_amount_after_rent">扣除租金储备后的委托金额</string>

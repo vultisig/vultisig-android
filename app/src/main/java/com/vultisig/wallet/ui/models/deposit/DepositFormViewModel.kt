@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosVoteOption
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -77,6 +78,7 @@ internal enum class DepositOption {
     WithdrawSecuredAsset,
     AddLiquidity,
     RemoveLiquidity,
+    Vote,
 }
 
 /**
@@ -183,6 +185,7 @@ internal data class DepositFormUiModel(
     val removeLpTokenSymbol: String = "CACAO",
     val totalGas: UiText = UiText.Empty,
     val estimatedFee: UiText = UiText.Empty,
+    val gasFeeDecimal: BigDecimal? = null,
     val removeLpPercent: Float = 0f,
     // Slider-derived withdrawal fraction in basis points (0..10000). Stored so the submit path can
     // reuse the exact value used to compute the displayed redeem amount, keeping the shown amount
@@ -197,6 +200,11 @@ internal data class DepositFormUiModel(
     // The user's full asset-side redeem value (base units), scaled by the slider the same way
     // removeLpPoolDepth is for the RUNE side.
     val removeLpAssetRedeemBase: BigInteger = BigInteger.ZERO,
+    // Governance vote ballot. Null until the user picks one: nothing is preselected, so a vote can
+    // never be cast by default.
+    val selectedVoteOption: CosmosVoteOption? = null,
+    val voteOptionError: UiText? = null,
+    val proposalIdError: UiText? = null,
 )
 
 /**
@@ -326,6 +334,9 @@ constructor(
 
     val slippageFieldState
         get() = fields.slippageFieldState
+
+    val proposalIdFieldState
+        get() = fields.proposalIdFieldState
 
     val state: StateFlow<DepositFormUiModel>
         field = MutableStateFlow(DepositFormUiModel())
@@ -484,8 +495,14 @@ constructor(
                     vaultId = vaultId,
                     chain = chain,
                     address = address,
-                    onResult = { totalGas, estimatedFee ->
-                        state.update { it.copy(totalGas = totalGas, estimatedFee = estimatedFee) }
+                    onResult = { totalGas, estimatedFee, gasFee ->
+                        state.update {
+                            it.copy(
+                                totalGas = totalGas,
+                                estimatedFee = estimatedFee,
+                                gasFeeDecimal = gasFee,
+                            )
+                        }
                     },
                 )
             },
@@ -565,6 +582,13 @@ constructor(
      * [DepositFieldInputCoordinator.selectDstChain].
      */
     fun selectDstChain(chain: Chain) = fieldInputCoordinator.selectDstChain(chain)
+
+    fun selectVoteOption(option: CosmosVoteOption) {
+        state.update { it.copy(selectedVoteOption = option, voteOptionError = null) }
+    }
+
+    /** Validates the proposal-id field; see [DepositFieldInputCoordinator.validateProposalId]. */
+    fun validateProposalId() = fieldInputCoordinator.validateProposalId()
 
     fun selectMergeToken(mergeInfo: TokenMergeInfo) {
         state.update { it.copy(selectedCoin = mergeInfo) }
@@ -667,6 +691,13 @@ constructor(
                 ) {
                     fieldInputCoordinator.validateProvider()
                     if (state.value.providerError != null) return@launch
+                }
+
+                if (depositOption == DepositOption.Vote) {
+                    fieldInputCoordinator.validateVoteOption()
+                    fieldInputCoordinator.validateProposalId()
+                    if (state.value.voteOptionError != null || state.value.proposalIdError != null)
+                        return@launch
                 }
 
                 isLoading = true

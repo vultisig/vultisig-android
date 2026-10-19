@@ -20,6 +20,7 @@ import io.ktor.serialization.kotlinx.json.json
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import kotlinx.serialization.json.Json
+import okhttp3.Dispatcher
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -49,6 +50,11 @@ internal interface NetworkModule {
                         writeTimeout(15, TimeUnit.SECONDS)
 
                         retryOnConnectionFailure(true)
+
+                        // Most chains share one proxy host; OkHttp's default allows 5 at a time.
+                        dispatcher(
+                            Dispatcher().apply { maxRequestsPerHost = MAX_REQUESTS_PER_HOST }
+                        )
                     }
                 }
             }
@@ -79,5 +85,6 @@ internal interface NetworkModule {
             }
 
         private const val PROOF_SERVICE_TIMEOUT_SECONDS = 300L
+        private const val MAX_REQUESTS_PER_HOST = 16
     }
 }

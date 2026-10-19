@@ -299,6 +299,9 @@
     <string name="deposit_form_operator_fee_title">Naknade operatora (Bazni bodovi)</string>
     <string name="deposit_message_deposit_title">%s depozit poruke</string>
     <string name="deposit_form_custom_memo_title">Prilagođeni dopis</string>
+    <string name="deposit_form_proposal_id_title">ID prijedloga</string>
+    <string name="deposit_form_proposal_id_error">Unesite važeći ID prijedloga</string>
+    <string name="deposit_form_vote_option_error">Odaberite opciju glasanja</string>
     <string name="swap_screen_same_asset_error_message">Izvorna i odredišna imovina ne mogu biti ista.</string>
     <string name="address_book_toolbar_title">Adresar</string>
     <string name="address_book_settings_title">Adresar</string>
@@ -761,6 +764,7 @@
     <string name="swapkit_error_decoding">Nije moguće parsirati SwapKit odgovor</string>
     <string name="swapkit_error_server">Pogreška SwapKit poslužitelja (HTTP %1$d)</string>
     <string name="sign_message_continue">Nastavi</string>
+    <string name="sign_message_unsupported_evm_format">Nepodržani format poruke. Mogu se potpisati samo personal_sign s valjanim EIP-191 omotom i eth_signTypedData_v4.</string>
     <string name="hint_signing_method">Metoda potpisivanja</string>
     <string name="verify_sign_message_signing_method" >Metoda potpisivanja</string>
     <string name="signing_error_transaction_timeout">Vrijeme transakcije je isteklo zbog sporog potpisivanja. Pokušajte ponovno.</string>
@@ -1059,7 +1063,7 @@
     <string name="send_error_xrp_destination_not_activated">Minimalni iznos za aktivaciju ove adrese je %1$s %2$s.</string>
     <string name="send_error_tao_destination_below_existential_deposit">Minimalni iznos za aktivaciju ove adrese je %1$s %2$s (egzistencijalni depozit).</string>
     <string name="send_error_near_destination_not_found">Ovaj NEAR račun ne postoji. Provjerite primatelja: prijenos na njega samo bi potrošio gas.</string>
-    <string name="send_error_near_unsupported_payload">Ova NEAR transakcija nije podržana. Mogu se potpisati samo izvorni NEAR prijenosi.</string>
+    <string name="send_error_near_unsupported_payload">Ova NEAR transakcija nije podržana. Mogu se potpisati samo izvorni NEAR prijenosi i SwapKit uplate.</string>
     <string name="send_error_near_invalid_recipient">Ovo nije valjani NEAR račun. Provjerite primatelja.</string>
     <string name="send_error_near_key_not_full_access">Ključ ovog trezora nema puni pristup ovom NEAR računu, pa s njega ne može slati.</string>
     <string name="send_error_near_network">NEAR mreža vratila je pogrešku ili nečitljiv odgovor. Pokušajte ponovno.</string>
@@ -1884,6 +1888,7 @@
     <string name="verify_verb_merging">Spajate</string>
     <string name="verify_verb_unmerging">Razdvajate</string>
     <string name="verify_verb_bridging">Premošćujete</string>
+    <string name="verify_verb_voting">Glasate</string>
     <string name="scope_your_whole_stake">cijeli vaš ulog</string>
     <string name="scope_rewards_accrued_so_far">do sada stečene nagrade</string>
     <string name="scope_delegated_amount_after_rent">delegirani iznos nakon rezerve za najam</string>

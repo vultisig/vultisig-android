@@ -15,6 +15,18 @@ import com.vultisig.wallet.data.models.isOpStackL2
  * signer bonds `maxOf(routeGas, limit)`, and the L1 data fee op-geth bills on top is an oracle
  * estimate the co-signer never sees. That figure is an estimate, not a bound, so it keeps the plain
  * label too.
+ *
+ * NEAR shows its upfront gas reservation, the most the transfer can burn (the unused part is
+ * refunded), so it is labelled as a maximum, as iOS `SwapCryptoLogic.feeLabelKeys` and the
+ * extension's `getSwapNetworkFeeLabelKey` label it.
  */
 internal val Chain.hasSwapNetworkFeeCeiling: Boolean
-    get() = standard == TokenStandard.EVM && !isOpStackL2
+    get() = (standard == TokenStandard.EVM && !isOpStackL2) || this == Chain.Near
+
+/**
+ * Whether SwapKit's wire inbound fee for a deposit out of this chain is that deposit's own network
+ * cost (a UTXO or Cardano miner fee, NEAR's upfront gas). The Network Fee row already shows it, so
+ * the Swap Fee row is hidden rather than counting it twice, as iOS `SwapCryptoLogic.fee` does.
+ */
+internal val Chain.swapKitInboundFeeIsNetworkFee: Boolean
+    get() = standard == TokenStandard.UTXO || this == Chain.Near

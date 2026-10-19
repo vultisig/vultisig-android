@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosGovVote
+import com.vultisig.wallet.data.blockchain.cosmos.gov.CosmosVoteOption
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -13,6 +15,8 @@ import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import io.kotest.matchers.shouldBe
 import java.math.BigInteger
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
 import vultisig.keysign.v1.TransactionType
 
@@ -77,6 +81,68 @@ internal class IsCosmosStakingDepositTest {
 
         payload.isCosmosStakingDeposit(parse) shouldBe false
     }
+
+    @Test
+    fun `vote message is a deposit and yields its proposal and ballot`() {
+        val payload = cosmosPayload(signDirect = signDirect())
+        val parse = parseReturningVote(proposalId = "312", option = "NO_WITH_VETO")
+
+        payload.isCosmosStakingDeposit(parse) shouldBe true
+        payload.cosmosGovVote(parse) shouldBe
+            CosmosGovVote(proposalId = 312uL, option = CosmosVoteOption.NO_WITH_VETO)
+    }
+
+    @Test
+    fun `a vote with a sibling message is not a deposit`() {
+        val payload = cosmosPayload(signDirect = signDirect())
+
+        payload.isCosmosStakingDeposit(
+            parseReturning(
+                CosmosStakingHelper.MSG_VOTE_TYPE_URL,
+                "/cosmos.bank.v1beta1.MsgSend",
+            )
+        ) shouldBe false
+        payload.isCosmosStakingDeposit(
+            parseReturning(
+                CosmosStakingHelper.MSG_VOTE_TYPE_URL,
+                CosmosStakingHelper.MSG_DELEGATE_TYPE_URL,
+            )
+        ) shouldBe false
+    }
+
+    @Test
+    fun `an unreadable vote or a non-vote body yields no governance vote`() {
+        val payload = cosmosPayload(signDirect = signDirect())
+
+        payload.cosmosGovVote(parseReturningVote(proposalId = "0", option = "YES")) shouldBe null
+        payload.cosmosGovVote(parseReturningVote(proposalId = "1", option = "4")) shouldBe null
+        payload.cosmosGovVote(parseReturning(CosmosStakingHelper.MSG_VOTE_TYPE_URL)) shouldBe null
+        payload.cosmosGovVote(parseReturning(CosmosStakingHelper.MSG_DELEGATE_TYPE_URL)) shouldBe
+            null
+    }
+
+    private fun parseReturningVote(proposalId: String, option: String) =
+        ParseCosmosMessageUseCase {
+            CosmosMessage(
+                chainId = "dydx-mainnet-1",
+                accountNumber = "1",
+                sequence = "0",
+                memo = "",
+                messages =
+                    listOf(
+                        Message(
+                            typeUrl = CosmosStakingHelper.MSG_VOTE_TYPE_URL,
+                            value =
+                                buildJsonObject {
+                                    put("proposalId", proposalId)
+                                    put("voter", "dydx1voter")
+                                    put("option", option)
+                                },
+                        )
+                    ),
+                authInfoFee = Fee(amount = emptyList()),
+            )
+        }
 
     private fun parseReturning(vararg typeUrls: String) = ParseCosmosMessageUseCase {
         CosmosMessage(
