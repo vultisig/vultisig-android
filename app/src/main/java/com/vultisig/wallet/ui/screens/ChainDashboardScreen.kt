@@ -101,6 +101,9 @@ private fun ChainDashboardScreen(
             onSettle = onTypeSettle,
             // The navigator hides while the token search is open; the search keeps its tab.
             userScrollEnabled = uiModel.isBottomBarVisible,
+            // Re-composing the Wallet page on swipe back re-runs its expandable top bar's
+            // measuring pass and leaves a gap above it; keeping it composed avoids that.
+            keepsOtherPageComposed = true,
             modifier = Modifier.fillMaxSize(),
         ) { type ->
             val route = uiModel.routes.getValue(type)
