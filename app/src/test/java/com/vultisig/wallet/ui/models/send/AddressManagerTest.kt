@@ -549,6 +549,26 @@ internal class AddressManagerTest {
         }
 
     @Test
+    fun `retyping an edited pasted NEAR named account stays on the Address step`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Near, any()) } returns true
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = token(Chain.Near, "NEAR")
+            manager.setOutputAddress("alice.near")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            val emissions = collectValidations(manager)
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("alice.nea")
+            Snapshot.sendApplyNotifications()
+            typeAddress("alice.near")
+
+            emissions.shouldBeEmpty()
+        }
+
+    @Test
     fun `a typed EVM address still moves on to Amount as soon as it is valid`() =
         runTest(mainDispatcher) {
             every { chainAccountAddressRepository.isValid(Chain.Ethereum, "0xabc") } returns true

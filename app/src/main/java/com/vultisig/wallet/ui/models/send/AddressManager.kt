@@ -107,7 +107,10 @@ internal class AddressManager(
 
     private suspend fun collectIsComplete() {
         addressFieldState.textAsFlow().collect { text ->
-            isDstAddressComplete.value = text.toString().isNotBlank()
+            val address = text.toString()
+            // Any edit away from the picked recipient makes it typed, so retyping it isn't picked.
+            if (address != pickedAddress) pickedAddress = null
+            isDstAddressComplete.value = address.isNotBlank()
         }
     }
 
