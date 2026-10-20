@@ -77,6 +77,7 @@ internal class TokenNetworkSelectionDelegate(
     private val isSwitchingAccounts: MutableStateFlow<Boolean>,
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val expandSection: (SendSections) -> Unit,
+    private val onRecipientPicked: (String) -> Unit,
 ) {
 
     private val selectedTokenValue: Coin?
@@ -287,6 +288,7 @@ internal class TokenNetworkSelectionDelegate(
         if (qrCode.isNullOrBlank()) return
         Timber.d("setAddressFromQrCode(address = $qrCode)")
 
+        if (fieldState === addressFieldState) onRecipientPicked(qrCode)
         fieldState.setTextAndPlaceCursorAtEnd(qrCode)
 
         val vaultId = vaultIdProvider()

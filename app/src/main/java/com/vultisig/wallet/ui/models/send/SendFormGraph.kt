@@ -317,6 +317,7 @@ internal class SendFormGraph(
             isSwitchingAccounts = isSwitchingAccounts,
             defiTypeProvider = defiTypeProvider,
             expandSection = expandSection,
+            onRecipientPicked = { addressManager.markPicked(it) },
         )
     }
 

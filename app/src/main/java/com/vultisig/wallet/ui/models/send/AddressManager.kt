@@ -58,6 +58,10 @@ internal class AddressManager(
     // that normalized value, and to release it once the user replaces the address.
     private var lockedClassicAddress: String? = null
 
+    // A recipient from the paste button, a QR scan or the address book. It arrives whole, so a
+    // valid one moves on to Amount even when a longer address could still extend it.
+    private var pickedAddress: String? = null
+
     val isDstAddressComplete: StateFlow<Boolean>
         field = MutableStateFlow(false)
 
@@ -77,7 +81,13 @@ internal class AddressManager(
     }
 
     fun setOutputAddress(address: String) {
+        markPicked(address)
         addressFieldState.setTextAndPlaceCursorAtEnd(address)
+    }
+
+    /** Records [address] as picked rather than typed; call it before writing the field. */
+    fun markPicked(address: String) {
+        pickedAddress = address
     }
 
     /** Opens the address book and applies the chosen entry to the output address field. */
@@ -110,7 +120,12 @@ internal class AddressManager(
             .mapLatest { (address, token) ->
                 val tokenTransfer = address.asEip681TokenTransfer()
                 if (tokenTransfer != null) applyTokenTransferLink(tokenTransfer, token)
-                else handleAddressInput(address.asAddressInput(), token)
+                else
+                    handleAddressInput(
+                        addressStr = address.asAddressInput(),
+                        token = token,
+                        isPicked = address.toString() == pickedAddress,
+                    )
             }
             .collect()
     }
@@ -138,7 +153,7 @@ internal class AddressManager(
         addressError.value = RecipientValidity.InvalidForChain
     }
 
-    private suspend fun handleAddressInput(addressStr: String, token: Coin) {
+    private suspend fun handleAddressInput(addressStr: String, token: Coin, isPicked: Boolean) {
         val chain = token.chain
 
         if (chain == Chain.Ripple) {
@@ -173,7 +188,12 @@ internal class AddressManager(
                 }
                 resolvedDstAddress.value = addressStr
                 addressError.value = null
-                onAddressValidated.tryEmit(Unit)
+                // A typed address that a longer one could still extend stays on the Address step,
+                // so a pause mid-word can't commit the prefix; Continue moves on from there.
+                val completeLength = chain.typedAddressCompleteLength
+                if (isPicked || completeLength == null || addressStr.length >= completeLength) {
+                    onAddressValidated.tryEmit(Unit)
+                }
             }
             // A token account, program address or burn address is a well-formed address, so
             // there is no name for the resolver to find — reject it here instead of sending it
@@ -256,3 +276,16 @@ internal class AddressManager(
         }
     }
 }
+
+/**
+ * Length at which a typed recipient can no longer be extended into another valid address, or null
+ * when no valid address is a prefix of another. NEAR accepts any account id of 2+ characters; a
+ * 43-character Solana prefix can decode to 32 bytes.
+ */
+private val Chain.typedAddressCompleteLength: Int?
+    get() =
+        when (this) {
+            Chain.Near -> 64
+            Chain.Solana -> 44
+            else -> null
+        }

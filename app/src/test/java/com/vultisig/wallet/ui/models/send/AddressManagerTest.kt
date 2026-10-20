@@ -451,6 +451,124 @@ internal class AddressManagerTest {
             manager.addressError.value shouldBe RecipientValidity.InvalidForChain
         }
 
+    @Test
+    fun `a typed NEAR named account is accepted without moving on to Amount`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Near, any()) } returns true
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = token(Chain.Near, "NEAR")
+            val emissions = collectValidations(manager)
+
+            typeAddress("al")
+
+            manager.resolvedDstAddress.value shouldBe "al"
+            manager.addressError.value.shouldBeNull()
+            emissions.shouldBeEmpty()
+        }
+
+    @Test
+    fun `a typed full-length NEAR implicit account moves on to Amount`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Near, any()) } returns true
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = token(Chain.Near, "NEAR")
+            val emissions = collectValidations(manager)
+
+            typeAddress("a".repeat(64))
+
+            emissions shouldHaveSize 1
+        }
+
+    @Test
+    fun `a typed Solana address short of the maximum length stays on the Address step`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Solana, any()) } returns true
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = token(Chain.Solana, "SOL")
+            val emissions = collectValidations(manager)
+
+            typeAddress("1".repeat(43))
+            emissions.shouldBeEmpty()
+
+            typeAddress("1".repeat(44))
+            emissions shouldHaveSize 1
+        }
+
+    @Test
+    fun `a pasted NEAR named account moves on to Amount`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Near, any()) } returns true
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = token(Chain.Near, "NEAR")
+            val emissions = collectValidations(manager)
+
+            manager.setOutputAddress("alice.near")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            emissions shouldHaveSize 1
+        }
+
+    @Test
+    fun `a scanned NEAR named account marked as picked moves on to Amount`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Near, any()) } returns true
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = token(Chain.Near, "NEAR")
+            val emissions = collectValidations(manager)
+
+            manager.markPicked("alice.near")
+            typeAddress("alice.near")
+
+            emissions shouldHaveSize 1
+        }
+
+    @Test
+    fun `editing a pasted NEAR named account is treated as typing`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Near, any()) } returns true
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = token(Chain.Near, "NEAR")
+            manager.setOutputAddress("alice.near")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            val emissions = collectValidations(manager)
+
+            typeAddress("alice.nea")
+
+            manager.resolvedDstAddress.value shouldBe "alice.nea"
+            emissions.shouldBeEmpty()
+        }
+
+    @Test
+    fun `a typed EVM address still moves on to Amount as soon as it is valid`() =
+        runTest(mainDispatcher) {
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "0xabc") } returns true
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+            val emissions = collectValidations(manager)
+
+            typeAddress("0xabc")
+
+            emissions shouldHaveSize 1
+        }
+
+    private fun TestScope.typeAddress(text: String) {
+        addressFieldState.setTextAndPlaceCursorAtEnd(text)
+        Snapshot.sendApplyNotifications()
+        advanceTimeBy(400)
+        advanceUntilIdle()
+    }
+
     private fun TestScope.collectValidations(manager: AddressManager): MutableList<Unit> {
         val emissions = mutableListOf<Unit>()
         backgroundScope.launch { manager.onAddressValidated.collect { emissions += Unit } }
