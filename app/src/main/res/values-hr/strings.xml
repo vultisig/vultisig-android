@@ -1398,6 +1398,7 @@
     <string name="ripple_partial_payment_warning">Djelomično plaćanje: prikazani iznos je maksimum, a ne jamstvo. Može biti isporučeno manje.</string>
     <string name="substrate_dapp_transaction">%1$s transakcija</string>
     <string name="substrate_call_index">Poziv %1$s</string>
+    <string name="cosmos_sign_direct_transaction">%1$s transakcija</string>
     <string name="substrate_signer_payload">Payload potpisnika</string>
     <string name="substrate_field_call_data">Podaci poziva</string>
     <string name="substrate_field_nonce">Nonce</string>
