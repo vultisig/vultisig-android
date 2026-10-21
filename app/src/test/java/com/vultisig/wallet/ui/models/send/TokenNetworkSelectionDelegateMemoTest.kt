@@ -18,6 +18,7 @@ internal class TokenNetworkSelectionDelegateMemoTest {
 
     private val selectedToken = MutableStateFlow<Coin?>(Coins.Ethereum.ETH)
     private val memoFieldState = TextFieldState()
+    private val addressFieldState = TextFieldState()
 
     @Test
     fun `selecting a token whose signer drops memos clears the memo`() = runTest {
@@ -37,7 +38,23 @@ internal class TokenNetworkSelectionDelegateMemoTest {
         assertEquals("exchange memo", memoFieldState.text.toString())
     }
 
-    private fun delegate(): TokenNetworkSelectionDelegate =
+    @Test
+    fun `a scanned recipient is reported as picked`() = runTest {
+        val picked = mutableListOf<String>()
+
+        delegate(onRecipientPicked = { picked += it })
+            .setAddressFromQrCode(
+                qrCode = "alice.near",
+                preSelectedChainId = null,
+                preSelectedTokenId = null,
+                fieldState = addressFieldState,
+            )
+
+        assertEquals(listOf("alice.near"), picked)
+        assertEquals("alice.near", addressFieldState.text.toString())
+    }
+
+    private fun delegate(onRecipientPicked: (String) -> Unit = {}): TokenNetworkSelectionDelegate =
         TokenNetworkSelectionDelegate(
             scope = mockk(relaxed = true),
             navigator = mockk(relaxed = true),
@@ -52,11 +69,12 @@ internal class TokenNetworkSelectionDelegateMemoTest {
             vaultIdProvider = { null },
             accounts = MutableStateFlow(emptyList<Account>()),
             selectedToken = selectedToken,
-            addressFieldState = TextFieldState(),
+            addressFieldState = addressFieldState,
             memoFieldState = memoFieldState,
             uiState = MutableStateFlow(SendFormUiModel()),
             isSwitchingAccounts = MutableStateFlow(false),
             defiTypeProvider = { null },
             expandSection = {},
+            onRecipientPicked = onRecipientPicked,
         )
 }
