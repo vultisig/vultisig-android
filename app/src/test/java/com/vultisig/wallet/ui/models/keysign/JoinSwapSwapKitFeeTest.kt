@@ -237,6 +237,30 @@ internal class JoinSwapSwapKitFeeTest {
         coVerify(exactly = 0) { swapQuoteRepository.getSwapKitInboundFee(any()) }
     }
 
+    @Test
+    fun `shows the deposit account the keysign payload's transfer is signed to`() = runTest {
+        stub()
+
+        // The fee stubs are Tron's; only the txType routes the row to the signed toAddress.
+        val tx =
+            join(
+                statedFeePayload()
+                    .copy(txType = SwapKitSwapPayloadJson.TX_TYPE_TON, targetAddress = "quoted")
+            )
+
+        tx.depositAddress shouldBe "Tdeposit"
+    }
+
+    @Test
+    fun `shows no deposit account for TRON, whose bytes pin none`() = runTest {
+        stub()
+
+        join(statedFeePayload()).depositAddress shouldBe null
+    }
+
+    private fun statedFeePayload() =
+        payload(swapFee = "13000000", swapFeeChain = "Tron", swapFeeDecimals = 6)
+
     private suspend fun join(swapKit: SwapKitSwapPayloadJson): SwapTransactionUiModel {
         val result =
             builder().build(keysignPayload(), SwapPayload.SwapKit(swapKit), vault, AppCurrency.USD)

@@ -380,111 +380,13 @@ internal class SwapKitZcashSigner(
         val outputs: List<SaplingOutput>,
     )
 
-    /**
-     * Parse the Sapling-v4 unsigned-tx body. Rejects NU5 (v5) outright — a different sighash
-     * construction (ZIP-244) — and any tx with shielded value flowing (we can't sign shielded
-     * bundles with MPC).
-     */
-    private fun parseSaplingUnsignedTx(data: ByteArray): ParsedSaplingTx {
-        val cursor = PsbtCursor(data)
-        val version = cursor.readUInt32LE()
-        val versionGroupID = cursor.readUInt32LE()
-        if (version != SAPLING_TX_VERSION || versionGroupID != SAPLING_VERSION_GROUP_ID) {
-            throw SwapKitZcashSignerException(
-                "SwapKit ZEC unsupported Zcash version 0x${version.toString(16)} / group " +
-                    "0x${versionGroupID.toString(16)} (only Sapling-v4 transparent is supported)"
-            )
-        }
-        val inCount = cursor.readCompactSize()
-        val inputs =
-            (0L until inCount).map {
-                val prevBytes = cursor.readBytes(32)
-                val prevIndex = cursor.readUInt32LE()
-                // Unsigned-tx inputs must carry empty scriptSigs; reject a non-empty one rather
-                // than
-                // silently skip it (the frozen plan rebuilds the tx from these fields, so dropped
-                // bytes would change the broadcast tx_id the route is tracked by).
-                val sigLen = cursor.readCompactSize()
-                if (sigLen != 0L) {
-                    throw SwapKitZcashSignerException(
-                        "SwapKit ZEC unsigned-tx input #$it scriptSig must be empty"
-                    )
-                }
-                val sequence = cursor.readUInt32LE()
-                ParsedSaplingTxInput(prevBytes, prevIndex, sequence)
-            }
-        val outCount = cursor.readCompactSize()
-        val outputs =
-            (0L until outCount).map {
-                val amount = cursor.readUInt64LE()
-                val scriptLen = cursor.readCompactSize()
-                SaplingOutput(amount, cursor.readBytes(cursor.asLength(scriptLen)))
-            }
-        val lockTime = cursor.readUInt32LE()
-        val expiryHeight = cursor.readUInt32LE()
-        // WalletCore's `Bitcoin.SigningInput` has no expiryHeight field, so a non-zero expiryHeight
-        // can't be threaded into the rebuilt tx — WalletCore would emit it with expiryHeight 0 and
-        // a
-        // different tx_id than the PSBT the NEAR route is tracked by. Reject it loudly rather than
-        // silently mistrack. (lockTime, by contrast, IS settable — see assembleSigningInput.)
-        if (expiryHeight != 0L) {
-            throw SwapKitZcashSignerException(
-                "SwapKit ZEC PSBT has expiryHeight $expiryHeight; only 0 (no expiry) is supported " +
-                    "because WalletCore can't reproduce a non-zero expiry in the rebuilt tx"
-            )
-        }
-        // Sapling-v4 transparent-only: all shielded fields must be zero.
-        val valueBalance = cursor.readUInt64LE()
-        val nShieldedSpend = cursor.readCompactSize()
-        val nShieldedOutput = cursor.readCompactSize()
-        val nJoinSplit = cursor.readCompactSize()
-        if (
-            valueBalance != 0L || nShieldedSpend != 0L || nShieldedOutput != 0L || nJoinSplit != 0L
-        ) {
-            throw SwapKitZcashSignerException(
-                "SwapKit ZEC PSBT carries a shielded bundle; only transparent-only txs are supported"
-            )
-        }
-        // Transparent-only Sapling v4 ends right after the (all-zero) shielded counts — there is no
-        // joinSplit/binding-sig payload. Trailing bytes would be dropped from the rebuilt tx and
-        // diverge it from the quoted PSBT body, so consume the body exactly.
-        if (!cursor.isAtEnd) {
-            throw SwapKitZcashSignerException("SwapKit ZEC unsigned-tx body has trailing bytes")
-        }
-        return ParsedSaplingTx(lockTime, inputs, outputs)
-    }
-
-    private fun assertP2PKHAndExtractKeyHash(
-        scriptPubKey: ByteArray,
-        index: Int,
-        role: String,
-    ): ByteArray {
-        if (
-            !(scriptPubKey.size == 25 &&
-                scriptPubKey[0] == 0x76.toByte() &&
-                scriptPubKey[1] == 0xa9.toByte() &&
-                scriptPubKey[2] == 0x14.toByte() &&
-                scriptPubKey[23] == 0x88.toByte() &&
-                scriptPubKey[24] == 0xac.toByte())
-        ) {
-            throw SwapKitZcashSignerException(
-                "SwapKit ZEC PSBT $role #$index scriptPubKey is not P2PKH: " +
-                    Numeric.toHexStringNoPrefix(scriptPubKey)
-            )
-        }
-        return scriptPubKey.copyOfRange(3, 23)
-    }
-
     /** ZEC transparent `t1…` address from a 20-byte hash160 (two-byte prefix `0x1C 0xB8`). */
-    private fun zcashAddress(hash: ByteArray): String? =
-        Base58.encode(byteArrayOf(0x1C, 0xB8.toByte()) + hash)
-
     private fun sha256d(data: ByteArray): ByteArray {
         val digest = MessageDigest.getInstance("SHA-256")
         return digest.digest(digest.digest(data))
     }
 
-    private companion object {
+    internal companion object {
         private const val KEY_NON_WITNESS_UTXO = "00"
         private const val KEY_WITNESS_UTXO = "01"
 
@@ -492,5 +394,122 @@ internal class SwapKitZcashSigner(
         private const val SAPLING_TX_VERSION = 0x80000004L
         /** Sapling consensus group id. */
         private const val SAPLING_VERSION_GROUP_ID = 0x892F2085L
+
+        /**
+         * The transparent address the PSBT's deposit output pays: the `toAddress`
+         * [buildSigningInputData] hands WalletCore, decoded from [psbtBytes] alone so a review can
+         * show it without the vault or the branch id.
+         *
+         * @throws SwapKitPsbtException or [SwapKitZcashSignerException] when the PSBT doesn't
+         *   parse, as signing it would.
+         */
+        fun depositAddress(psbtBytes: ByteArray, targetAddressHint: String): String {
+            val header = SwapKitPsbtParser.parseFramingHeader(psbtBytes)
+            val deposit =
+                parseSaplingUnsignedTx(header.unsignedTxBytes).outputs.firstOrNull()
+                    ?: throw SwapKitZcashSignerException("SwapKit ZEC PSBT has no outputs")
+            val keyHash = assertP2PKHAndExtractKeyHash(deposit.scriptPubKey, 0, "output")
+            return zcashAddress(keyHash) ?: targetAddressHint
+        }
+
+        /**
+         * Parse the Sapling-v4 unsigned-tx body. Rejects NU5 (v5) outright — a different sighash
+         * construction (ZIP-244) — and any tx with shielded value flowing (we can't sign shielded
+         * bundles with MPC).
+         */
+        private fun parseSaplingUnsignedTx(data: ByteArray): ParsedSaplingTx {
+            val cursor = PsbtCursor(data)
+            val version = cursor.readUInt32LE()
+            val versionGroupID = cursor.readUInt32LE()
+            if (version != SAPLING_TX_VERSION || versionGroupID != SAPLING_VERSION_GROUP_ID) {
+                throw SwapKitZcashSignerException(
+                    "SwapKit ZEC unsupported Zcash version 0x${version.toString(16)} / group " +
+                        "0x${versionGroupID.toString(16)} (only Sapling-v4 transparent is supported)"
+                )
+            }
+            val inCount = cursor.readCompactSize()
+            val inputs =
+                (0L until inCount).map {
+                    val prevBytes = cursor.readBytes(32)
+                    val prevIndex = cursor.readUInt32LE()
+                    // Unsigned-tx inputs must carry empty scriptSigs; reject a non-empty one rather
+                    // than silently skip it (the frozen plan rebuilds the tx from these fields, so
+                    // dropped bytes would change the broadcast tx_id the route is tracked by).
+                    val sigLen = cursor.readCompactSize()
+                    if (sigLen != 0L) {
+                        throw SwapKitZcashSignerException(
+                            "SwapKit ZEC unsigned-tx input #$it scriptSig must be empty"
+                        )
+                    }
+                    val sequence = cursor.readUInt32LE()
+                    ParsedSaplingTxInput(prevBytes, prevIndex, sequence)
+                }
+            val outCount = cursor.readCompactSize()
+            val outputs =
+                (0L until outCount).map {
+                    val amount = cursor.readUInt64LE()
+                    val scriptLen = cursor.readCompactSize()
+                    SaplingOutput(amount, cursor.readBytes(cursor.asLength(scriptLen)))
+                }
+            val lockTime = cursor.readUInt32LE()
+            val expiryHeight = cursor.readUInt32LE()
+            // WalletCore's `Bitcoin.SigningInput` has no expiryHeight field, so a non-zero
+            // expiryHeight can't be threaded into the rebuilt tx — WalletCore would emit it with
+            // expiryHeight 0 and a different tx_id than the PSBT the NEAR route is tracked by.
+            // Reject it loudly rather than silently mistrack. (lockTime, by contrast, IS settable —
+            // see assembleSigningInput.)
+            if (expiryHeight != 0L) {
+                throw SwapKitZcashSignerException(
+                    "SwapKit ZEC PSBT has expiryHeight $expiryHeight; only 0 (no expiry) is supported " +
+                        "because WalletCore can't reproduce a non-zero expiry in the rebuilt tx"
+                )
+            }
+            // Sapling-v4 transparent-only: all shielded fields must be zero.
+            val valueBalance = cursor.readUInt64LE()
+            val nShieldedSpend = cursor.readCompactSize()
+            val nShieldedOutput = cursor.readCompactSize()
+            val nJoinSplit = cursor.readCompactSize()
+            if (
+                valueBalance != 0L ||
+                    nShieldedSpend != 0L ||
+                    nShieldedOutput != 0L ||
+                    nJoinSplit != 0L
+            ) {
+                throw SwapKitZcashSignerException(
+                    "SwapKit ZEC PSBT carries a shielded bundle; only transparent-only txs are supported"
+                )
+            }
+            // Transparent-only Sapling v4 ends right after the (all-zero) shielded counts — there
+            // is no joinSplit/binding-sig payload. Trailing bytes would be dropped from the rebuilt
+            // tx and diverge it from the quoted PSBT body, so consume the body exactly.
+            if (!cursor.isAtEnd) {
+                throw SwapKitZcashSignerException("SwapKit ZEC unsigned-tx body has trailing bytes")
+            }
+            return ParsedSaplingTx(lockTime, inputs, outputs)
+        }
+
+        private fun assertP2PKHAndExtractKeyHash(
+            scriptPubKey: ByteArray,
+            index: Int,
+            role: String,
+        ): ByteArray {
+            if (
+                !(scriptPubKey.size == 25 &&
+                    scriptPubKey[0] == 0x76.toByte() &&
+                    scriptPubKey[1] == 0xa9.toByte() &&
+                    scriptPubKey[2] == 0x14.toByte() &&
+                    scriptPubKey[23] == 0x88.toByte() &&
+                    scriptPubKey[24] == 0xac.toByte())
+            ) {
+                throw SwapKitZcashSignerException(
+                    "SwapKit ZEC PSBT $role #$index scriptPubKey is not P2PKH: " +
+                        Numeric.toHexStringNoPrefix(scriptPubKey)
+                )
+            }
+            return scriptPubKey.copyOfRange(3, 23)
+        }
+
+        private fun zcashAddress(hash: ByteArray): String? =
+            Base58.encode(byteArrayOf(0x1C, 0xB8.toByte()) + hash)
     }
 }

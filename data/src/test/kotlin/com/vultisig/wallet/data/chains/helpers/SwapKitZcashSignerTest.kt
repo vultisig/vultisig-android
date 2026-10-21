@@ -88,6 +88,20 @@ class SwapKitZcashSignerTest {
     }
 
     @Test
+    fun `depositAddress refuses a non-P2PKH deposit output`() {
+        val psbt =
+            encodeSaplingPsbt(
+                inputs = listOf(saplingIn(amount = 100_000)),
+                outputs = listOf(SaplingOut(99_000, "0014" + "22".repeat(20))),
+            )
+        val e =
+            assertThrows(SwapKitZcashSignerException::class.java) {
+                SwapKitZcashSigner.depositAddress(psbt, "")
+            }
+        assertTrue(e.message!!.contains("output #0"))
+    }
+
+    @Test
     fun `rejects a non-P2PKH input scriptPubKey`() {
         val psbt =
             encodeSaplingPsbt(
@@ -262,6 +276,8 @@ class SwapKitZcashSignerTest {
             // Derived from the PSBT output hash160s as transparent `t1…` addresses.
             assertTrue(input.toAddress.startsWith("t1"), "deposit ${input.toAddress}")
             assertTrue(input.changeAddress.startsWith("t1"), "change ${input.changeAddress}")
+            // The review's vault-free decode names the same deposit the signer pays.
+            assertEquals(input.toAddress, SwapKitZcashSigner.depositAddress(psbt, ""))
         } catch (e: Throwable) {
             skipIfJniUnavailable(e)
         }

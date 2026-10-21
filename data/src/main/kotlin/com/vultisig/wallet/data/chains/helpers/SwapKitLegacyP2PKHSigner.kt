@@ -196,16 +196,16 @@ internal class SwapKitLegacyP2PKHSigner(
         // SwapKit `targetAddress` hint is used only if hash160 → address derivation fails
         // (shouldn't
         // happen for DOGE/BCH/DASH — all decode via single-byte base58check).
-        val depositAddress = legacyAddress(outputKeyHashes[0]) ?: targetAddressHint
+        val depositAddress = legacyAddress(outputKeyHashes[0], coinType) ?: targetAddressHint
         val changeAddress =
             if (outputs.size >= 2) {
-                legacyAddress(outputKeyHashes[1]) ?: targetAddressHint
+                legacyAddress(outputKeyHashes[1], coinType) ?: targetAddressHint
             } else {
                 // No change output — point `changeAddress` at the source pubkey hash so
                 // WalletCore's
                 // validator accepts the input. The plan's `change = 0` means no change output is
                 // actually emitted, so the address is a structural placeholder.
-                legacyAddress(inputs[0].keyHash) ?: targetAddressHint
+                legacyAddress(inputs[0].keyHash, coinType) ?: targetAddressHint
             }
 
         val utxos =
@@ -430,107 +430,129 @@ internal class SwapKitLegacyP2PKHSigner(
         val outputs: List<LegacyP2PKHOutput>,
     )
 
-    /**
-     * Parse the legacy (non-witness) unsigned-tx body BIP-174 stores under global key 0x00. DOGE /
-     * BCH / DASH have no segwit, so the body never carries a marker+flag.
-     */
-    private fun parseLegacyUnsignedTx(data: ByteArray): ParsedLegacyTx {
-        val cursor = PsbtCursor(data)
-        val version = cursor.readUInt32LE()
-        val inCount = cursor.readCompactSize()
-        val inputs =
-            (0L until inCount).map {
-                val prevBytes = cursor.readBytes(32) // internal little-endian wire order
-                val prevIndex = cursor.readUInt32LE()
-                // A PSBT's unsigned tx must carry empty scriptSigs. Reject a non-empty one rather
-                // than silently skip it — the frozen plan rebuilds the tx from these parsed fields,
-                // so dropped bytes would diverge the signed tx from the PSBT body.
-                val scriptSigLen = cursor.readCompactSize()
-                if (scriptSigLen != 0L) {
-                    throw SwapKitLegacyP2PKHSignerException(
-                        "SwapKit PSBT unsigned-tx input #$it scriptSig must be empty"
-                    )
-                }
-                val sequence = cursor.readUInt32LE()
-                ParsedLegacyTxInput(prevBytes, prevIndex, sequence)
-            }
-        SwapKitLegacyPsbtVersion.requireSignableAsV1(version, inputs.map { it.sequence })
-        val outCount = cursor.readCompactSize()
-        val outputs =
-            (0L until outCount).map {
-                val amount = cursor.readUInt64LE()
-                val scriptLen = cursor.readCompactSize()
-                LegacyP2PKHOutput(amount, cursor.readBytes(cursor.asLength(scriptLen)))
-            }
-        val lockTime = cursor.readUInt32LE()
-        // The unsigned-tx body must consume exactly; trailing bytes (e.g. a stray BIP-144 witness
-        // flag) would be silently dropped from the rebuilt tx, diverging it from the PSBT body.
-        if (!cursor.isAtEnd) {
-            throw SwapKitLegacyP2PKHSignerException(
-                "SwapKit PSBT unsigned-tx body has trailing bytes"
-            )
-        }
-        return ParsedLegacyTx(lockTime, inputs, outputs)
-    }
-
-    /**
-     * P2PKH scriptPubKey: 25 bytes — `OP_DUP OP_HASH160 PUSH20 <20-byte hash> OP_EQUALVERIFY
-     * OP_CHECKSIG` = `76 a9 14 <20> 88 ac`. Returns the 20-byte hash160. [role] tags the error
-     * (`input`/`output`) so non-P2PKH rejections read distinctly in logs.
-     */
-    private fun assertP2PKHAndExtractKeyHash(
-        scriptPubKey: ByteArray,
-        index: Int,
-        role: String,
-    ): ByteArray {
-        if (
-            !(scriptPubKey.size == 25 &&
-                scriptPubKey[0] == 0x76.toByte() &&
-                scriptPubKey[1] == 0xa9.toByte() &&
-                scriptPubKey[2] == 0x14.toByte() &&
-                scriptPubKey[23] == 0x88.toByte() &&
-                scriptPubKey[24] == 0xac.toByte())
-        ) {
-            throw SwapKitLegacyP2PKHSignerException(
-                "SwapKit PSBT $role #$index scriptPubKey is not P2PKH: " +
-                    Numeric.toHexStringNoPrefix(scriptPubKey)
-            )
-        }
-        return scriptPubKey.copyOfRange(3, 23)
-    }
-
-    /**
-     * Build a legacy base58-check P2PKH address for [coinType] from a 20-byte hash160. Used to
-     * derive the deposit + change addresses WalletCore re-emits as output scripts. Returns null if
-     * no version prefix is defined for the coin (caller falls back to the SwapKit `targetAddress`
-     * hint).
-     */
-    private fun legacyAddress(hash: ByteArray): String? {
-        val prefix = versionPrefix(coinType) ?: return null
-        return Base58.encode(prefix + hash)
-    }
-
-    /**
-     * Mainnet P2PKH version prefix per chain. Listed inline because [CoinType] doesn't surface the
-     * prefix bytes. DOGE `0x1E` (`D…`), BCH `0x00` legacy `1…` (CashAddr derives the same hash),
-     * DASH `0x4C` (`X…`).
-     */
-    private fun versionPrefix(coin: CoinType): ByteArray? =
-        when (coin) {
-            CoinType.DOGECOIN -> byteArrayOf(0x1E)
-            CoinType.BITCOINCASH -> byteArrayOf(0x00)
-            CoinType.DASH -> byteArrayOf(0x4C)
-            else -> null
-        }
-
     private fun sha256d(data: ByteArray): ByteArray {
         val digest = MessageDigest.getInstance("SHA-256")
         return digest.digest(digest.digest(data))
     }
 
-    private companion object {
+    internal companion object {
         private const val KEY_NON_WITNESS_UTXO = "00"
         private const val KEY_WITNESS_UTXO = "01"
+
+        /**
+         * The address the PSBT's deposit output pays: the `toAddress` [buildSigningInputData] hands
+         * WalletCore, decoded from [psbtBytes] alone so a review can show it without the vault.
+         *
+         * @throws SwapKitPsbtException or [SwapKitLegacyP2PKHSignerException] when the PSBT doesn't
+         *   parse, as signing it would.
+         */
+        fun depositAddress(
+            psbtBytes: ByteArray,
+            coinType: CoinType,
+            targetAddressHint: String,
+        ): String {
+            val header = SwapKitPsbtParser.parseFramingHeader(psbtBytes)
+            val deposit =
+                parseLegacyUnsignedTx(header.unsignedTxBytes).outputs.firstOrNull()
+                    ?: throw SwapKitLegacyP2PKHSignerException("SwapKit PSBT has no outputs")
+            val keyHash = assertP2PKHAndExtractKeyHash(deposit.scriptPubKey, 0, "output")
+            return legacyAddress(keyHash, coinType) ?: targetAddressHint
+        }
+
+        /**
+         * Parse the legacy (non-witness) unsigned-tx body BIP-174 stores under global key 0x00.
+         * DOGE / BCH / DASH have no segwit, so the body never carries a marker+flag.
+         */
+        private fun parseLegacyUnsignedTx(data: ByteArray): ParsedLegacyTx {
+            val cursor = PsbtCursor(data)
+            val version = cursor.readUInt32LE()
+            val inCount = cursor.readCompactSize()
+            val inputs =
+                (0L until inCount).map {
+                    val prevBytes = cursor.readBytes(32) // internal little-endian wire order
+                    val prevIndex = cursor.readUInt32LE()
+                    // A PSBT's unsigned tx must carry empty scriptSigs. Reject a non-empty one
+                    // rather than silently skip it — the frozen plan rebuilds the tx from these
+                    // parsed fields, so dropped bytes would diverge the signed tx from the PSBT
+                    // body.
+                    val scriptSigLen = cursor.readCompactSize()
+                    if (scriptSigLen != 0L) {
+                        throw SwapKitLegacyP2PKHSignerException(
+                            "SwapKit PSBT unsigned-tx input #$it scriptSig must be empty"
+                        )
+                    }
+                    val sequence = cursor.readUInt32LE()
+                    ParsedLegacyTxInput(prevBytes, prevIndex, sequence)
+                }
+            SwapKitLegacyPsbtVersion.requireSignableAsV1(version, inputs.map { it.sequence })
+            val outCount = cursor.readCompactSize()
+            val outputs =
+                (0L until outCount).map {
+                    val amount = cursor.readUInt64LE()
+                    val scriptLen = cursor.readCompactSize()
+                    LegacyP2PKHOutput(amount, cursor.readBytes(cursor.asLength(scriptLen)))
+                }
+            val lockTime = cursor.readUInt32LE()
+            // The unsigned-tx body must consume exactly; trailing bytes (e.g. a stray BIP-144
+            // witness flag) would be silently dropped from the rebuilt tx, diverging it from the
+            // PSBT body.
+            if (!cursor.isAtEnd) {
+                throw SwapKitLegacyP2PKHSignerException(
+                    "SwapKit PSBT unsigned-tx body has trailing bytes"
+                )
+            }
+            return ParsedLegacyTx(lockTime, inputs, outputs)
+        }
+
+        /**
+         * P2PKH scriptPubKey: 25 bytes — `OP_DUP OP_HASH160 PUSH20 <20-byte hash> OP_EQUALVERIFY
+         * OP_CHECKSIG` = `76 a9 14 <20> 88 ac`. Returns the 20-byte hash160. [role] tags the error
+         * (`input`/`output`) so non-P2PKH rejections read distinctly in logs.
+         */
+        private fun assertP2PKHAndExtractKeyHash(
+            scriptPubKey: ByteArray,
+            index: Int,
+            role: String,
+        ): ByteArray {
+            if (
+                !(scriptPubKey.size == 25 &&
+                    scriptPubKey[0] == 0x76.toByte() &&
+                    scriptPubKey[1] == 0xa9.toByte() &&
+                    scriptPubKey[2] == 0x14.toByte() &&
+                    scriptPubKey[23] == 0x88.toByte() &&
+                    scriptPubKey[24] == 0xac.toByte())
+            ) {
+                throw SwapKitLegacyP2PKHSignerException(
+                    "SwapKit PSBT $role #$index scriptPubKey is not P2PKH: " +
+                        Numeric.toHexStringNoPrefix(scriptPubKey)
+                )
+            }
+            return scriptPubKey.copyOfRange(3, 23)
+        }
+
+        /**
+         * Build a legacy base58-check P2PKH address for [coinType] from a 20-byte hash160. Used to
+         * derive the deposit + change addresses WalletCore re-emits as output scripts. Returns null
+         * if no version prefix is defined for the coin (caller falls back to the SwapKit
+         * `targetAddress` hint).
+         */
+        private fun legacyAddress(hash: ByteArray, coinType: CoinType): String? {
+            val prefix = versionPrefix(coinType) ?: return null
+            return Base58.encode(prefix + hash)
+        }
+
+        /**
+         * Mainnet P2PKH version prefix per chain. Listed inline because [CoinType] doesn't surface
+         * the prefix bytes. DOGE `0x1E` (`D…`), BCH `0x00` legacy `1…` (CashAddr derives the same
+         * hash), DASH `0x4C` (`X…`).
+         */
+        private fun versionPrefix(coin: CoinType): ByteArray? =
+            when (coin) {
+                CoinType.DOGECOIN -> byteArrayOf(0x1E)
+                CoinType.BITCOINCASH -> byteArrayOf(0x00)
+                CoinType.DASH -> byteArrayOf(0x4C)
+                else -> null
+            }
     }
 }
 

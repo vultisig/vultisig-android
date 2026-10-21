@@ -98,6 +98,29 @@ class SwapKitLegacyP2PKHSignerTest {
     }
 
     @Test
+    fun `depositAddress refuses a non-P2PKH deposit output`() {
+        val psbt =
+            encodeLegacyPsbt(
+                inputs =
+                    listOf(
+                        LegacyIn(
+                            prevTxIdDisplay = TXID_ONE,
+                            vout = 0,
+                            sequence = 0xFFFFFFFFL,
+                            amount = 100_000,
+                            prevScriptHex = p2pkh("11".repeat(20)),
+                        )
+                    ),
+                outputs = listOf(LegacyOut(amount = 99_000, scriptHex = "0014" + "33".repeat(20))),
+            )
+        val e =
+            assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+                SwapKitLegacyP2PKHSigner.depositAddress(psbt, CoinType.DOGECOIN, "")
+            }
+        assertTrue(e.message!!.contains("output #0"))
+    }
+
+    @Test
     fun `rejects more than two outputs`() {
         val psbt =
             encodeLegacyPsbt(
@@ -449,6 +472,11 @@ class SwapKitLegacyP2PKHSignerTest {
             // so WalletCore re-emits the exact output scripts the PSBT shipped.
             assertTrue(input.toAddress.startsWith("D"), "deposit ${input.toAddress}")
             assertTrue(input.changeAddress.startsWith("D"), "change ${input.changeAddress}")
+            // The review's vault-free decode names the same deposit the signer pays.
+            assertEquals(
+                input.toAddress,
+                SwapKitLegacyP2PKHSigner.depositAddress(psbt, CoinType.DOGECOIN, ""),
+            )
         } catch (e: Throwable) {
             skipIfJniUnavailable(e)
         }
