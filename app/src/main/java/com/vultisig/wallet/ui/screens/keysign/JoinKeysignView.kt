@@ -239,7 +239,6 @@ internal fun JoinKeysignView() {
                 val errorState: ErrorState
                 val buttonText: String
                 var rawError: String? = null
-                var retryable = true
                 when (error.errorType) {
                     is JoinKeysignError.WrongVaultShare -> {
                         title = stringResource(R.string.error_same_vault_share_title)
@@ -268,10 +267,8 @@ internal fun JoinKeysignView() {
                         title = signingError.title
                         description = signingError.description
                         errorState = signingError.errorState
-                        rawError =
-                            rawMessage.ifBlank { null }?.takeIf { signingError.showsRawError }
+                        rawError = rawMessage.ifBlank { null }
                         buttonText = stringResource(R.string.try_again)
-                        retryable = signingError.retryable
                     }
                 }
                 ErrorView(
@@ -280,8 +277,7 @@ internal fun JoinKeysignView() {
                     errorState = errorState,
                     rawError = rawError,
                     buttonUiModel =
-                        ErrorViewButtonUiModel(text = buttonText, onClick = viewModel::tryAgain)
-                            .takeIf { retryable },
+                        ErrorViewButtonUiModel(text = buttonText, onClick = viewModel::tryAgain),
                 )
             }
         }

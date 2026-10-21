@@ -12,8 +12,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
-import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkCheck
-import com.vultisig.wallet.data.blockchain.cosmos.qbtc.isQbtcNetworkBound
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
@@ -109,7 +107,6 @@ constructor(
     private val buildKeysignMessage: BuildKeysignMessageUseCase,
     private val updateSolanaKeysignPayload: UpdateSolanaKeysignPayloadUseCase,
     private val buildKeysignTransactionUiModel: BuildKeysignTransactionUiModelUseCase,
-    private val qbtcNetworkCheck: QbtcNetworkCheck,
 ) : ViewModel() {
     private val _sessionID: String = Uuid.random().toString()
     private val _serviceName: String = generateServiceName()
@@ -232,13 +229,6 @@ constructor(
             val keysignPayload = shareViewModel.keysignPayload
             val modifiedKeysignPayload = updateSolanaKeysignPayload(keysignPayload)
             _keysignPayload = modifiedKeysignPayload
-            if (
-                modifiedKeysignPayload?.isQbtcNetworkBound == true &&
-                    qbtcNetworkCheck.isAppOutdated()
-            ) {
-                moveToState(Error(R.string.qbtc_update_required_detail.asUiText()))
-                return
-            }
             val customMessagePayload = shareViewModel.customMessagePayload
             this.customMessagePayload = customMessagePayload
             messagesToSign =

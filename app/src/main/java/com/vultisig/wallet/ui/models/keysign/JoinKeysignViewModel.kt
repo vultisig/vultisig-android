@@ -14,8 +14,6 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.utils.HttpException
-import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkCheck
-import com.vultisig.wallet.data.blockchain.cosmos.qbtc.isQbtcNetworkBound
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRelayedIntent
 import com.vultisig.wallet.data.blockchain.solana.kamino.ResolveKaminoRelayedIntentUseCase
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
@@ -150,10 +148,6 @@ sealed class JoinKeysignError(val message: UiText) {
      */
     data object MissingQbtcClaimAccount :
         JoinKeysignError(R.string.join_keysign_qbtc_claim_missing_account.asUiText())
-
-    /** The QBTC node runs another network than this build signs for, so the app needs updating. */
-    data object QbtcUpdateRequired :
-        JoinKeysignError(R.string.qbtc_update_required_detail.asUiText())
 
     /** A TON jetton transfer that doesn't move what it shows, or that couldn't be checked. */
     data class TonJettonTransferRefused(@StringRes val reason: Int) :
@@ -325,7 +319,6 @@ constructor(
     private val verifyTonJettonTransfer: VerifyTonJettonTransferUseCase,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveKaminoRelayedIntent: ResolveKaminoRelayedIntentUseCase,
-    private val qbtcNetworkCheck: QbtcNetworkCheck,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -692,11 +685,6 @@ constructor(
                 JoinKeysignState.Error(
                     JoinKeysignError.FailedToPrepare(UiText.DynamicString(e.message.orEmpty()))
                 )
-            return false
-        }
-
-        if (ksPayload.isQbtcNetworkBound && qbtcNetworkCheck.isAppOutdated()) {
-            currentState.value = JoinKeysignState.Error(JoinKeysignError.QbtcUpdateRequired)
             return false
         }
 

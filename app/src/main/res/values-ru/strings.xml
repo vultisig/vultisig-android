@@ -1754,8 +1754,6 @@
     <string name="qbtc_claim_failed_to_load_title">Не удалось загрузить UTXO для получения</string>
     <string name="qbtc_claim_no_utxos_title">Нечего получать</string>
     <string name="qbtc_claim_no_utxos_detail">У вас нет Bitcoin UTXO, подходящих для получения в виде QBTC.</string>
-    <string name="qbtc_update_required_title">Требуется обновление</string>
-    <string name="qbtc_update_required_detail">Сеть QBTC обновлена. Обновите Vultisig, чтобы подписывать транзакции и получение QBTC.</string>
     <string name="qbtc_claim_error_invalid_btc_key">Недействительный публичный ключ Bitcoin.</string>
     <string name="qbtc_claim_error_proof_mismatch">Сервис доказательств вернул несовпадающие данные. Запрос на получение не был отправлен.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">Не удалось отправить запрос на получение. Пожалуйста, попробуйте позже.</string>

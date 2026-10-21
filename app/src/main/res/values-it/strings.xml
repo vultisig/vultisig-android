@@ -1744,8 +1744,6 @@
     <string name="qbtc_claim_failed_to_load_title">Impossibile caricare gli UTXO prelevabili</string>
     <string name="qbtc_claim_no_utxos_title">Niente da prelevare</string>
     <string name="qbtc_claim_no_utxos_detail">Non hai UTXO Bitcoin idonei per essere prelevati come QBTC.</string>
-    <string name="qbtc_update_required_title">Aggiornamento necessario</string>
-    <string name="qbtc_update_required_detail">La rete QBTC è stata aggiornata. Aggiorna Vultisig per firmare transazioni e prelievi QBTC.</string>
     <string name="qbtc_claim_error_invalid_btc_key">Chiave pubblica Bitcoin non valida.</string>
     <string name="qbtc_claim_error_proof_mismatch">Il servizio di prova ha restituito dati non corrispondenti. Il prelievo non è stato inviato.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">Impossibile trasmettere il prelievo. Riprova più tardi.</string>

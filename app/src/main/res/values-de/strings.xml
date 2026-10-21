@@ -1741,8 +1741,6 @@
     <string name="qbtc_claim_failed_to_load_title">Abrufbare UTXOs konnten nicht geladen werden</string>
     <string name="qbtc_claim_no_utxos_title">Nichts zum Abrufen</string>
     <string name="qbtc_claim_no_utxos_detail">Sie haben keine Bitcoin-UTXOs, die als QBTC abgerufen werden können.</string>
-    <string name="qbtc_update_required_title">Update erforderlich</string>
-    <string name="qbtc_update_required_detail">Das QBTC-Netzwerk wurde aktualisiert. Aktualisieren Sie Vultisig, um QBTC-Transaktionen und -Abrufe zu signieren.</string>
     <string name="qbtc_claim_error_invalid_btc_key">Ungültiger öffentlicher Bitcoin-Schlüssel.</string>
     <string name="qbtc_claim_error_proof_mismatch">Der Nachweisdienst hat nicht übereinstimmende Daten zurückgegeben. Der Abruf wurde nicht übermittelt.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">Der Abruf konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.</string>

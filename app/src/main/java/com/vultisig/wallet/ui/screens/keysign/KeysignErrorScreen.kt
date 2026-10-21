@@ -17,10 +17,6 @@ internal data class SigningError(
     val title: String,
     val description: String?,
     val errorState: ErrorState,
-    /** False when [description] already is the whole message, so the raw text adds nothing. */
-    val showsRawError: Boolean = true,
-    /** False when signing again cannot succeed, so the screen offers no Try again button. */
-    val retryable: Boolean = true,
 )
 
 /**
@@ -35,16 +31,7 @@ internal fun resolveSigningError(rawMessage: String): SigningError {
     // ("Blockhash not found", "insufficient lamports") and Solana's camelCase enum forms
     // ("BlockhashNotFound", "BlockHeightExceeded") that error.data.err carries.
     val normalized = rawMessage.lowercase().replace(" ", "").replace("_", "")
-    val qbtcUpdateRequired = stringResource(R.string.qbtc_update_required_detail)
     return when {
-        rawMessage == qbtcUpdateRequired ->
-            SigningError(
-                title = stringResource(R.string.qbtc_update_required_title),
-                description = qbtcUpdateRequired,
-                errorState = ErrorState.WARNING,
-                showsRawError = false,
-                retryable = false,
-            )
         // Blockhash expiry — both RPC wordings map to the same "sign again" copy.
         normalized.contains("blockhashnotfound") || normalized.contains("blockheightexceeded") ->
             SigningError(
@@ -182,10 +169,9 @@ internal fun KeysignErrorScreen(
         title = signingError.title,
         description = signingError.description,
         errorState = signingError.errorState,
-        rawError = rawMessage.ifBlank { null }?.takeIf { signingError.showsRawError },
+        rawError = rawMessage.ifBlank { null },
         buttonUiModel =
-            ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = tryAgain)
-                .takeIf { signingError.retryable },
+            ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = tryAgain),
         onBack = onBack,
     )
 }

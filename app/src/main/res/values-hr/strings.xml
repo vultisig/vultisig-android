@@ -1751,8 +1751,6 @@
     <string name="qbtc_claim_failed_to_load_title">Nije moguće učitati UTXO-ove za preuzimanje</string>
     <string name="qbtc_claim_no_utxos_title">Ništa za preuzimanje</string>
     <string name="qbtc_claim_no_utxos_detail">Nemate Bitcoin UTXO-ove prihvatljive za preuzimanje kao QBTC.</string>
-    <string name="qbtc_update_required_title">Potrebno ažuriranje</string>
-    <string name="qbtc_update_required_detail">Mreža QBTC je nadograđena. Ažurirajte Vultisig kako biste potpisivali QBTC transakcije i preuzimanja.</string>
     <string name="qbtc_claim_error_invalid_btc_key">Nevažeći javni Bitcoin ključ.</string>
     <string name="qbtc_claim_error_proof_mismatch">Servis za dokaze vratio je nepodudarne podatke. Preuzimanje nije poslano.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">Preuzimanje nije moglo biti emitirano. Molimo pokušajte ponovno kasnije.</string>

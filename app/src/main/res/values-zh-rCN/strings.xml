@@ -2062,8 +2062,6 @@
     <string name="qbtc_claim_failed_to_load_title">无法加载可提取的 UTXO</string>
     <string name="qbtc_claim_no_utxos_title">无可提取项</string>
     <string name="qbtc_claim_no_utxos_detail">您没有符合条件可提取为 QBTC 的 Bitcoin UTXO。</string>
-    <string name="qbtc_update_required_title">需要更新</string>
-    <string name="qbtc_update_required_detail">QBTC 网络已升级。请更新 Vultisig 以签署 QBTC 交易和提取。</string>
     <string name="qbtc_claim_error_invalid_btc_key">无效的 Bitcoin 公钥。</string>
     <string name="qbtc_claim_error_proof_mismatch">证明服务返回了不匹配的数据。提取未提交。</string>
     <string name="qbtc_claim_error_broadcast_unavailable">无法广播提取。请稍后重试。</string>
