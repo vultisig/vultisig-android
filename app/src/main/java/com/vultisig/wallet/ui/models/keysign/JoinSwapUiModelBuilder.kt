@@ -627,6 +627,8 @@ constructor(
                         providerFeeToken = swapKitProviderFeeToken,
                         currency = currency,
                         providerLabel = providerLabel,
+                        depositAddress =
+                            swapPayload.data.swapKitDepositRecipient(payload.toAddress),
                         swapFeeHidden = swapFeeHidden,
                         feeProvider = SwapProvider.SWAPKIT,
                         vultBps = swapKitVultBps,
@@ -655,6 +657,7 @@ constructor(
         currency: AppCurrency,
         providerLabel: String = provider,
         externalRecipient: String? = null,
+        depositAddress: String? = null,
         swapFee: TokenValue? = null,
         outboundFee: TokenValue? = null,
         // Hides the Swap Fee row and drops it from the total for a SwapKit UTXO deposit whose cost
@@ -761,6 +764,7 @@ constructor(
             provider = provider,
             providerLabel = providerLabel,
             externalRecipient = externalRecipient,
+            depositAddress = depositAddress,
             swapFeeHidden = swapFeeHidden,
             swapFeePercent = feeRow.percent,
             // Shown exactly when [swapFeeRow] priced a row, so the co-signer itemizes the same

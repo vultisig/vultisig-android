@@ -26,6 +26,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 /**
@@ -74,7 +75,43 @@ internal class SwapTransactionToUiModelMapperSwapKitProviderTest {
             assertEquals("SwapKit (NEAR)", uiModel.providerLabel)
         }
 
-    private fun swapKitTransaction(subProvider: String): RegularSwapTransaction {
+    @Test
+    fun `shows the deposit account a native transfer is signed to`() = runTest {
+        stubMapper()
+
+        val uiModel =
+            mapper()
+                .invoke(
+                    swapKitTransaction(
+                        subProvider = "NEAR",
+                        txType = SwapKitSwapPayloadJson.TX_TYPE_XRP,
+                    )
+                )
+
+        assertEquals("rDest", uiModel.depositAddress)
+    }
+
+    @Test
+    fun `shows no deposit account for TRON, whose bytes pin none`() = runTest {
+        stubMapper()
+
+        val uiModel = mapper().invoke(swapKitTransaction(subProvider = "NEAR"))
+
+        assertNull(uiModel.depositAddress)
+    }
+
+    private fun stubMapper() {
+        every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { tokenRepository.getNativeToken(any()) } returns trx
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+    }
+
+    private fun swapKitTransaction(
+        subProvider: String,
+        txType: String = SwapKitSwapPayloadJson.TX_TYPE_TRON,
+    ): RegularSwapTransaction {
         val srcValue = TokenValue(value = BigInteger.TEN, token = trx)
         return RegularSwapTransaction(
             id = "tx-1",
@@ -95,7 +132,7 @@ internal class SwapTransactionToUiModelMapperSwapKitProviderTest {
                         toCoin = xrp,
                         fromAmount = BigInteger.TEN,
                         toAmountDecimal = BigDecimal.ONE,
-                        txType = SwapKitSwapPayloadJson.TX_TYPE_TRON,
+                        txType = txType,
                         txPayload = ByteArray(0),
                         targetAddress = "rDest",
                         subProvider = subProvider,

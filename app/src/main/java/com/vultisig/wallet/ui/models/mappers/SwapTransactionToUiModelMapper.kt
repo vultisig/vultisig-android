@@ -240,9 +240,12 @@ constructor(
             externalRecipient =
                 (from as? SwapTransaction.RegularSwapTransaction)?.externalRecipient,
             depositAddress =
-                (from.payload as? SwapPayload.EVM)
-                    ?.data
-                    ?.swapKitDepositRecipient(from.srcToken.chain),
+                when (val payload = from.payload) {
+                    is SwapPayload.EVM -> payload.data.swapKitDepositRecipient(from.srcToken.chain)
+                    is SwapPayload.SwapKit -> payload.data.swapKitDepositRecipient(from.dstAddress)
+                    is SwapPayload.ThorChain,
+                    is SwapPayload.MayaChain -> null
+                },
             // Resolved here rather than read off the transaction: the fee above is re-valued at
             // the current price, and a source that has lost its price since Continue can no longer
             // be grossed up — so the rate the form recorded would then sit over a discounted
