@@ -9,6 +9,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SendDeeplinkData
+import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
@@ -59,6 +60,7 @@ constructor(
     private val navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
+    private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val appUpdateManager: AppUpdateManager,
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
@@ -196,7 +198,17 @@ constructor(
             viewModelScope.safeLaunch {
                 _navigationReady.await()
                 val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
-                val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
+                // Prefer the vault named in the payload, but fall back to the last opened vault
+                // when the push carries no (or an unresolvable) `vault` param. The in-app QR
+                // scanner joins against the active vault (ScanQrViewModel), so without this
+                // fallback a tapped push silently dead-ends on a blank screen while scanning the
+                // same link works. The Keysign.Join flow still validates the committee, so a
+                // vault that cannot participate fails there rather than joining blindly.
+                val vault =
+                    pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
+                        ?: lastOpenedVaultRepository.lastOpenedVaultId.first()?.let {
+                            vaultRepository.get(it)
+                        }
                 if (vault == null) {
                     snackbarFlow.showMessage(
                         UiText.StringResource(R.string.push_notification_vault_not_found),
