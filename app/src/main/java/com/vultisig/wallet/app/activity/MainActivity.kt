@@ -96,9 +96,8 @@ class MainActivity : AppCompatActivity() {
         // Handle notification tap when app was killed — ViewModel awaits navigation readiness.
         // Track whether this cold start was launched by a keysign notification, so we can skip
         // the branded LaunchSplash and make the cold path match the warm onNewIntent path.
-        // The payload comes from PendingPushPayload, never from this exported activity's extras.
         val launchedFromKeysignNotification =
-            PendingPushPayload.take()?.let {
+            takePushPayload(intent, fromExtras = savedInstanceState == null)?.let {
                 mainViewModel.onPushNotificationReceived(it)
                 true
             } ?: false
@@ -182,8 +181,24 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val qrCodeData = PendingPushPayload.take() ?: return
+        val qrCodeData = takePushPayload(intent, fromExtras = true) ?: return
         mainViewModel.onPushNotificationReceived(qrCodeData)
+    }
+
+    /**
+     * A tap on our own notification hands the payload over via [PendingPushPayload]. A backgrounded
+     * FCM message with a notification block is drawn by the FCM SDK instead, and its tap launches
+     * this activity with the payload as an extra, so that is read too. The extra can come from any
+     * app because this activity is exported; the handler follows nothing but keysign requests, so a
+     * keygen payload injected this way is still ignored.
+     */
+    private fun takePushPayload(intent: Intent?, fromExtras: Boolean): String? {
+        PendingPushPayload.take()?.let {
+            return it
+        }
+        if (!fromExtras) return null
+        val key = VultisigFirebaseMessagingService.QR_CODE_DATA
+        return intent?.getStringExtra(key)?.also { intent.removeExtra(key) }
     }
 
     override fun onStart() {
