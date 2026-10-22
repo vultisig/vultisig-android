@@ -408,6 +408,7 @@
     <string name="deposit_error_thorchain_chain_halted">Einzahlungen auf %1$s sind derzeit auf THORChain ausgesetzt. Bitte später erneut versuchen.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">THORChain konnte nicht erreicht werden, um den eingehenden Vault zu verifizieren. Bitte erneut versuchen.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s ist derzeit nicht für Einzahlungen verfügbar.</string>
+    <string name="deposit_error_lp_token_pool_asset_side">Das Abschließen einer Einzahlung in %1$s wird noch nicht unterstützt: Die Token-Seite eines Pools kann von hier nicht gesendet werden.</string>
     <string name="deposit_error_pool_staged_unpaired">Pool %1$s ist im Status „Staged“ und akzeptiert nur gepaarte Einzahlungen beider Seiten. THORChain würde diese Transaktion erstatten.</string>
     <string name="deposit_error_maya_lp_paused_pool">Liquidität hinzufügen ist für %1$s pausiert. MayaChain würde diese Transaktion erstatten.</string>
     <string name="deposit_error_maya_lp_halted_chain">Liquiditätsaktionen auf %1$s sind derzeit angehalten. MayaChain würde diese Transaktion erstatten.</string>

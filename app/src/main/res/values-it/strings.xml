@@ -408,6 +408,7 @@
     <string name="deposit_error_thorchain_chain_halted">I depositi su %1$s sono attualmente sospesi su THORChain. Riprova più tardi.</string>
     <string name="deposit_error_thorchain_inbound_unavailable">Impossibile contattare THORChain per verificare il vault in entrata. Riprova.</string>
     <string name="deposit_error_pool_not_available">Il pool %1$s non è attualmente disponibile per i depositi.</string>
+    <string name="deposit_error_lp_token_pool_asset_side">Il completamento di un deposito in %1$s non è ancora supportato: il lato token di un pool non può essere inviato da qui.</string>
     <string name="deposit_error_pool_staged_unpaired">Il pool %1$s è in stato «staged» e accetta solo depositi abbinati all\'altro lato. THORChain rimborserebbe questa transazione.</string>
     <string name="deposit_error_maya_lp_paused_pool">Aggiungere liquidità è in pausa per %1$s. MayaChain rimborserebbe questa transazione.</string>
     <string name="deposit_error_maya_lp_halted_chain">Le azioni di liquidità su %1$s sono attualmente sospese. MayaChain rimborserebbe questa transazione.</string>
