@@ -7,6 +7,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.DeepLinkHelper
+import com.vultisig.wallet.data.common.JOIN_KEYSIGN_FLOW
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -195,41 +196,50 @@ constructor(
         navigationJob =
             viewModelScope.safeLaunch {
                 _navigationReady.await()
-                val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
-                val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
-                if (vault == null) {
-                    snackbarFlow.showMessage(
-                        UiText.StringResource(R.string.push_notification_vault_not_found),
-                        SnackbarType.Error,
-                    )
-                    // No navigation happens on this branch, so the route-change observer will
-                    // never clear the banner — clear it here so it doesn't linger forever.
+                // No navigation happens when the request isn't followed, so the route-change
+                // observer will never clear the banner — clear it here so it doesn't linger.
+                if (!joinKeysign(qrCodeData)) {
                     foregroundNotification.value = null
-                    return@safeLaunch
                 }
-                val direction = getDirectionByQrCodeUseCase(qrCodeData, vault.id)
-                // Devices only ever push keysign requests. The push backend relays any payload it
-                // is handed, so a keygen / reshare (or any other) payload arriving this way is
-                // never followed: joining one would run a ceremony the user never started.
-                if (direction !is Route.Keysign.Join) {
-                    Timber.w("Ignoring a push notification that isn't a keysign request")
-                    foregroundNotification.value = null
-                    return@safeLaunch
-                }
-                // A join must always land on a FRESH Keysign.Join entry.
-                // NavController.buildOptions sets launchSingleTop = true on every navigation, so
-                // without popUpTo the navigator reuses an existing join entry and its Hilt-scoped
-                // ViewModel — whose QR was read once at init via the route args. If the joiner is
-                // already sitting on a finished/polling Keysign.Join entry, the second request
-                // would silently reuse that dead ViewModel and never start the new join (#4623).
-                // Popping the prior join entry inclusive forces a new entry (and tears down the
-                // old polling ViewModel). The route-change observer in MainActivityContent clears
-                // the banner once the destination is reached.
-                navigator.route(
-                    direction,
-                    NavigationOptions(popUpToRoute = Route.Keysign.Join::class, inclusive = true),
-                )
             }
+    }
+
+    /**
+     * Opens join-keysign for [qrCodeData] if it targets a vault on this device. Returns false when
+     * nothing was navigated to.
+     */
+    private suspend fun joinKeysign(qrCodeData: String): Boolean {
+        val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
+        val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
+        if (vault == null) {
+            snackbarFlow.showMessage(
+                UiText.StringResource(R.string.push_notification_vault_not_found),
+                SnackbarType.Error,
+            )
+            return false
+        }
+        val direction = getDirectionByQrCodeUseCase(qrCodeData, vault.id)
+        // Only keysign requests are followed. The push backend relays any payload it is handed,
+        // and a link can carry any payload too, so a keygen / reshare (or any other) payload is
+        // never joined: that would run a ceremony the user never started.
+        if (direction !is Route.Keysign.Join) {
+            Timber.w("Ignoring a request that isn't a keysign request")
+            return false
+        }
+        // A join must always land on a FRESH Keysign.Join entry.
+        // NavController.buildOptions sets launchSingleTop = true on every navigation, so
+        // without popUpTo the navigator reuses an existing join entry and its Hilt-scoped
+        // ViewModel — whose QR was read once at init via the route args. If the joiner is
+        // already sitting on a finished/polling Keysign.Join entry, the second request
+        // would silently reuse that dead ViewModel and never start the new join (#4623).
+        // Popping the prior join entry inclusive forces a new entry (and tears down the
+        // old polling ViewModel). The route-change observer in MainActivityContent clears
+        // the banner once the destination is reached.
+        navigator.route(
+            direction,
+            NavigationOptions(popUpToRoute = Route.Keysign.Join::class, inclusive = true),
+        )
+        return true
     }
 
     fun openUri(uri: Uri) {
@@ -256,6 +266,8 @@ constructor(
                 } else {
                     navigator.route(Route.ImportVault())
                 }
+            } else if (deepLinkHelper.getFlowType() == JOIN_KEYSIGN_FLOW) {
+                joinKeysign(uri.toString())
             } else {
                 navigator.route(Route.ImportVault(uri = uri.toString()))
             }
