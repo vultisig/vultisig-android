@@ -37,6 +37,9 @@ import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.editableText
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -179,6 +182,11 @@ internal fun VsTextInputField(
                                 .onFocusChanged {
                                     focused = it.isFocused
                                     onFocusChanged?.invoke(it.isFocused)
+                                }
+                                // BasicSecureTextField hands the raw value to accessibility;
+                                // the outermost semantics wins, so this masks it there.
+                                .semantics {
+                                    editableText = maskedPasswordText(textFieldState.text.length)
                                 }
                                 .testTag(TEXT_INPUT_FIELD_TAG),
                         decorator = { textField ->
@@ -424,3 +432,8 @@ private fun VsTextInputPreviewMaker(
 }
 
 internal const val TEXT_INPUT_FIELD_TAG = "textInputField"
+
+private const val PASSWORD_MASK_CHAR = '\u2022'
+
+internal fun maskedPasswordText(length: Int): AnnotatedString =
+    AnnotatedString(PASSWORD_MASK_CHAR.toString().repeat(length))
