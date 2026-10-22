@@ -5,6 +5,8 @@ import com.vultisig.wallet.data.blockchain.ton.TonNominatorPool
 import com.vultisig.wallet.data.common.toHexByteArray
 import com.vultisig.wallet.data.crypto.ton.TonAddressFlags
 import com.vultisig.wallet.data.crypto.ton.TonBounceability
+import com.vultisig.wallet.data.crypto.ton.TonWalletVersion
+import com.vultisig.wallet.data.crypto.ton.tonStateInitAddress
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -23,6 +25,7 @@ import wallet.core.jni.PrivateKey
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TONAddressConverter
+import wallet.core.jni.TONWallet
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.TheOpenNetwork
 
@@ -36,54 +39,84 @@ object TonHelper {
                 ?: throw RuntimeException("Failed to get TON chain specific data")
 
         val publicKey = PublicKey(payload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.ED25519)
+        val walletVersion = resolveWalletVersion(payload.coin.address, publicKey)
 
         val builder =
             TheOpenNetwork.SigningInput.newBuilder()
                 .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
                 .setExpireAt(tonSpecific.expireAt.toInt())
-                .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
+                .setWalletVersion(walletVersion.toProto())
                 .setPublicKey(ByteString.copyFrom(publicKey.data()))
 
-        addTransfersTo(builder, payload, tonSpecific)
+        addTransfersTo(builder, payload, tonSpecific, walletVersion)
 
         return builder.build().toByteArray()
     }
+
+    /**
+     * The wallet contract that owns [senderAddress] under [publicKey]: V4R2 is WalletCore's own TON
+     * derivation, W5 the hash of the StateInit WalletCore deploys it from.
+     */
+    private fun resolveWalletVersion(senderAddress: String, publicKey: PublicKey) =
+        TonWalletVersion.resolve(senderAddress) { version ->
+            when (version) {
+                TonWalletVersion.V4R2 -> CoinType.TON.deriveAddressFromPublicKey(publicKey)
+                TonWalletVersion.V5R1 ->
+                    tonStateInitAddress(
+                        TONWallet.buildV5R1StateInit(
+                            publicKey,
+                            BASE_WORKCHAIN,
+                            TonWalletVersion.V5R1_WALLET_ID,
+                        )
+                    )
+            }
+        }
+
+    private fun TonWalletVersion.toProto() =
+        when (this) {
+            TonWalletVersion.V4R2 -> TheOpenNetwork.WalletVersion.WALLET_V4_R2
+            TonWalletVersion.V5R1 -> TheOpenNetwork.WalletVersion.WALLET_V5_R1
+        }
 
     private fun addTransfersTo(
         builder: TheOpenNetwork.SigningInput.Builder,
         payload: KeysignPayload,
         tonSpecific: BlockChainSpecific.Ton,
+        walletVersion: TonWalletVersion,
     ) {
+        val mode = sendModeOf(walletVersion)
         payload.signTon?.let { signTon ->
             val messages = signTon.tonMessages.filterNotNull()
             require(messages.isNotEmpty()) { "SignTon must have at least one message" }
-            require(messages.size <= MAX_TON_MESSAGES) {
-                "SignTon supports at most $MAX_TON_MESSAGES messages, got ${messages.size}"
+            val maxMessages = walletVersion.maxMessagesPerRequest
+            require(messages.size <= maxMessages) {
+                "A $walletVersion TON wallet can send at most $maxMessages messages per request, " +
+                    "got ${messages.size}"
             }
             messages.forEach { msg ->
                 val amount = msg.amount.toLongOrNull() ?: 0L
                 require(amount > 0) { "TonMessage amount must be positive, got ${msg.amount}" }
-                builder.addMessages(buildTonConnectTransfer(msg))
+                builder.addMessages(buildTonConnectTransfer(msg, mode))
             }
         }
             ?: run {
                 val transfer =
                     if (payload.coin.isNativeToken) {
-                        buildNativeTransfer(payload, tonSpecific)
+                        buildNativeTransfer(payload, tonSpecific, mode)
                     } else {
-                        buildJettonTransfer(payload, tonSpecific)
+                        buildJettonTransfer(payload, tonSpecific, mode)
                     }
                 builder.addMessages(transfer)
             }
     }
 
-    private fun buildTonConnectTransfer(msg: TonMessage): TheOpenNetwork.Transfer {
+    private fun buildTonConnectTransfer(msg: TonMessage, mode: Int): TheOpenNetwork.Transfer {
         val toAddress = AnyAddress(msg.to, CoinType.TON)
         val amount = msg.amount.toLongOrNull() ?: 0L
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
             .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
-            .setMode(SEND_MODE)
+            .setMode(mode)
             .setBounceable(msg.isBounceable())
             .apply {
                 msg.payload?.takeIf { it.isNotEmpty() }?.let { setCustomPayload(it) }
@@ -109,6 +142,7 @@ object TonHelper {
     private fun buildNativeTransfer(
         payload: KeysignPayload,
         tonSpecific: BlockChainSpecific.Ton,
+        mode: Int,
     ): TheOpenNetwork.Transfer {
         val toAddress = AnyAddress(payload.toAddress, CoinType.TON)
         // Sign the explicit amount even for MAX, never an ATTACH_ALL_CONTRACT_BALANCE sweep: the
@@ -126,7 +160,7 @@ object TonHelper {
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
             .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
-            .setMode(SEND_MODE)
+            .setMode(mode)
             .setBounceable(bounceable)
             .apply { payload.memo?.let { setComment(it) } }
             .build()
@@ -135,6 +169,7 @@ object TonHelper {
     private fun buildJettonTransfer(
         payload: KeysignPayload,
         tonSpecific: BlockChainSpecific.Ton,
+        mode: Int,
     ): TheOpenNetwork.Transfer {
         // Convert destination to bounceable, as jettons addresses are always EQ
         val destinationAddress = TONAddressConverter.toUserFriendly(payload.toAddress, true, false)
@@ -161,7 +196,7 @@ object TonHelper {
             )
             .setComment(payload.memo.orEmpty())
             .setBounceable(true) // Jettons always bounceable
-            .setMode(SEND_MODE)
+            .setMode(mode)
             .setDest(tonSpecific.jettonAddress) // Will be set to origin Jetton address
             .setJettonTransfer(jettonTransfer)
             .build()
@@ -187,15 +222,21 @@ object TonHelper {
             payload.blockChainSpecific as? BlockChainSpecific.Ton
                 ?: throw RuntimeException("Failed to get TON chain specific data")
 
+        val walletVersion =
+            resolveWalletVersion(
+                payload.coin.address,
+                PublicKey(payload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.ED25519),
+            )
+
         val builder =
             TheOpenNetwork.SigningInput.newBuilder()
                 .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
                 .setExpireAt(tonSpecific.expireAt.toInt())
-                .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
+                .setWalletVersion(walletVersion.toProto())
                 .setPublicKey(ByteString.copyFrom(dummyPublicKey.data()))
                 .setPrivateKey(ByteString.copyFrom(dummyPrivateKey.data()))
 
-        addTransfersTo(builder, payload, tonSpecific)
+        addTransfersTo(builder, payload, tonSpecific, walletVersion)
 
         val output =
             AnySigner.sign(builder.build(), CoinType.TON, TheOpenNetwork.SigningOutput.parser())
@@ -252,13 +293,25 @@ object TonHelper {
     val RECOMMENDED_JETTONS_AMOUNT = CoinType.TON.toUnit("0.08".toBigDecimal()).toLong()
 
     /**
-     * Every app-built transfer - native, jetton and TonConnect alike - pays fees separately and
-     * nothing more. `IGNORE_ACTION_PHASE_ERRORS` is deliberately absent: with it set, a transfer
-     * the wallet contract cannot pay for is skipped while the transaction still lands un-aborted,
-     * so the seqno is consumed and no funds move. The mode is part of the signed message body, so
-     * every co-signer must derive the same one.
+     * Every app-built transfer from a V4R2 wallet - native, jetton and TonConnect alike - pays fees
+     * separately and nothing more. `IGNORE_ACTION_PHASE_ERRORS` is deliberately absent: with it
+     * set, a transfer the wallet contract cannot pay for is skipped while the transaction still
+     * lands un-aborted, so the seqno is consumed and no funds move.
+     *
+     * W5 is the exception: its code refuses an external request unless every action carries
+     * `IGNORE_ACTION_PHASE_ERRORS`, and WalletCore enforces the same check. A skipped W5 transfer
+     * still reports as failed, because the status check reads the action phase.
+     *
+     * The mode is part of the signed message body, so every co-signer must derive the same one.
+     * Mirrors SDK `getTonSendMode`.
      */
-    private const val SEND_MODE = TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
+    private fun sendModeOf(walletVersion: TonWalletVersion): Int =
+        when (walletVersion) {
+            TonWalletVersion.V4R2 -> TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
+            TonWalletVersion.V5R1 ->
+                TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE or
+                    TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
+        }
 
-    private const val MAX_TON_MESSAGES = 4
+    private const val BASE_WORKCHAIN = 0
 }

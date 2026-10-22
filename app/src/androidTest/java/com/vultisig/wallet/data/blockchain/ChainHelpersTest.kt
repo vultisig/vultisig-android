@@ -164,12 +164,11 @@ class ChainHelpersTest {
             (loadTransactionData(EVM_CHAIN_MATRIX_JSON_FILE) + loadTransactionData(EVM_JSON_FILE))
                 .filter { it.keysignPayload.coin.isNativeToken }
 
-        val hashesByCase =
-            nativeSends.associate { transaction ->
-                val payload = transaction.keysignPayload.toInternalKeySignPayload()
-                val helper = EvmHelper(payload.coin.chain.coinType, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
-                transaction.name to helper.getPreSignedImageHash(payload)
-            }
+        val hashesByCase = nativeSends.associate { transaction ->
+            val payload = transaction.keysignPayload.toInternalKeySignPayload()
+            val helper = EvmHelper(payload.coin.chain.coinType, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
+            transaction.name to helper.getPreSignedImageHash(payload)
+        }
 
         val allHashes = hashesByCase.values.flatten()
         assertEquals(
@@ -212,16 +211,19 @@ class ChainHelpersTest {
     }
 
     /**
-     * Every app-built TON transfer carries mode PAY_FEES_SEPARATELY and nothing else - in
-     * particular not IGNORE_ACTION_PHASE_ERRORS, which lets a transfer the wallet contract cannot
-     * pay for be skipped while the transaction still lands un-aborted (seqno consumed, no funds
-     * moved). The mode is part of the signed body, so a co-signer that derives a different one
-     * computes a different pre-image hash and never finishes keysign. Mirrors iOS
+     * Every app-built TON transfer from a V4R2 wallet carries mode PAY_FEES_SEPARATELY and nothing
+     * else - in particular not IGNORE_ACTION_PHASE_ERRORS, which lets a transfer the wallet
+     * contract cannot pay for be skipped while the transaction still lands un-aborted (seqno
+     * consumed, no funds moved). A W5 wallet refuses any action without IGNORE_ACTION_PHASE_ERRORS,
+     * so its transfers carry both. The mode is part of the signed body, so a co-signer that derives
+     * a different one computes a different pre-image hash and never finishes keysign. Mirrors iOS
      * `TonSendTransactionTests.testNativeSingleTransferUsesPayFeesSeparately`.
      */
     @Test
-    fun tonSendModeIsPayFeesSeparatelyOnEveryBuilder() {
+    fun tonSendModeFollowsTheSenderWalletVersion() {
         val payFeesSeparately = TheOpenNetwork.SendMode.PAY_FEES_SEPARATELY_VALUE
+        val w5Mode = payFeesSeparately or TheOpenNetwork.SendMode.IGNORE_ACTION_PHASE_ERRORS_VALUE
+        val versions = mutableSetOf<TheOpenNetwork.WalletVersion>()
 
         loadTransactionData(TON_JSON_FILE).forEach { transaction ->
             val inputData =
@@ -229,10 +231,44 @@ class ChainHelpersTest {
                     transaction.keysignPayload.toInternalKeySignPayload()
                 )
             val signingInput = TheOpenNetwork.SigningInput.parseFrom(inputData)
+            versions += signingInput.walletVersion
+            val expectedMode =
+                when (signingInput.walletVersion) {
+                    TheOpenNetwork.WalletVersion.WALLET_V5_R1 -> w5Mode
+                    else -> payFeesSeparately
+                }
 
             signingInput.messagesList.forEach { message ->
-                assertEquals(transaction.name, payFeesSeparately, message.mode)
+                assertEquals(transaction.name, expectedMode, message.mode)
             }
+        }
+
+        assertEquals(
+            setOf(
+                TheOpenNetwork.WalletVersion.WALLET_V4_R2,
+                TheOpenNetwork.WalletVersion.WALLET_V5_R1,
+            ),
+            versions,
+        )
+    }
+
+    /**
+     * The payload carries no wallet-version field, so a sender address that is neither of the key's
+     * V4R2 and W5 wallets must be refused - a pre-image for a guessed contract can never match the
+     * initiator's.
+     */
+    @Test
+    fun tonRefusesASenderThatIsNeitherOfTheKeysWallets() {
+        val payload =
+            loadTransactionData(TON_JSON_FILE).first().keysignPayload.toInternalKeySignPayload()
+        val foreign =
+            payload.copy(
+                coin =
+                    payload.coin.copy(address = "UQDmLe6ticcY_uLZsfurdYONshNuCn8IS81KcJ8p6M6ISMcB")
+            )
+
+        assertThrows(IllegalStateException::class.java) {
+            TonHelper.getPreSignedImageHash(foreign)
         }
     }
 
@@ -249,7 +285,7 @@ class ChainHelpersTest {
             Coin(
                 chain = "Ton",
                 ticker = "TON",
-                address = "UQCc9iCgP_b5RMJcFE5XD8zStfjtNHLhDWfUqC5m1SjSer95",
+                address = HEX_PUBLIC_KEY_EDDSA_TON_ADDRESS,
                 decimals = 9,
                 priceProviderId = "the-open-network",
                 isNativeToken = true,
@@ -301,7 +337,7 @@ class ChainHelpersTest {
             Coin(
                 chain = "Ton",
                 ticker = "TON",
-                address = "UQCc9iCgP_b5RMJcFE5XD8zStfjtNHLhDWfUqC5m1SjSer95",
+                address = HEX_PUBLIC_KEY_EDDSA_TON_ADDRESS,
                 decimals = 9,
                 priceProviderId = "the-open-network",
                 isNativeToken = true,
@@ -376,7 +412,7 @@ class ChainHelpersTest {
             Coin(
                 chain = "Ton",
                 ticker = "TON",
-                address = "UQCmBAnvlatV6yLWm391BEFTWP7jZX5mUFJ4Dc5TJAnvVgYi",
+                address = HEX_PUBLIC_KEY_EDDSA_TON_ADDRESS,
                 decimals = 9,
                 priceProviderId = "the-open-network",
                 isNativeToken = true,
@@ -1244,6 +1280,10 @@ class ChainHelpersTest {
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"
         private const val HEX_PUBLIC_KEY_EDDSA =
             "75be85178816db3bc71a4f3e64e5c89866d8b7daae827ba9cf4ecd1ed9e645d5"
+
+        /** WalletCore's V4R2 TON address for [HEX_PUBLIC_KEY_EDDSA]. */
+        private const val HEX_PUBLIC_KEY_EDDSA_TON_ADDRESS =
+            "UQDmLe6ticcY_uLZsfurdYONshNuCn8IS81KcJ8p6M6ISMcB"
         private const val HEX_CHAIN_CODE =
             "c9b189a8232b872b8d9ccd867d0db316dd10f56e729c310fe072adf5fd204ae7"
 
@@ -1263,11 +1303,10 @@ class ChainHelpersTest {
         @JvmStatic
         @AfterClass
         fun verifyFixtureBindingsWereActuallyLoaded() {
-            val unproven =
-                FIXTURE_TESTS.filter { (file, test) ->
-                    val filesLoadedByTest = loadedFilesByTestMethod[test]
-                    filesLoadedByTest != null && file !in filesLoadedByTest
-                }
+            val unproven = FIXTURE_TESTS.filter { (file, test) ->
+                val filesLoadedByTest = loadedFilesByTestMethod[test]
+                filesLoadedByTest != null && file !in filesLoadedByTest
+            }
             assertEquals(
                 "FIXTURE_TESTS binds a file to a test whose body never loaded it — the binding " +
                     "has drifted from what the test actually signs",
