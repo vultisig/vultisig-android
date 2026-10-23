@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.crypto.ton
 
 import java.math.BigInteger
+import java.security.MessageDigest
 
 /**
  * Parse failure raised by the minimal TON BOC reader. Thrown at decoder boundaries and caught
@@ -15,6 +16,35 @@ internal class TonCellException(message: String) : Exception(message)
  */
 internal class TonCell(val bits: TonBitString, val refs: List<TonCell>) {
     fun beginParse(): TonSlice = TonSlice(bits, refs)
+
+    /** Max distance to a leaf: 0 for a cell without refs. */
+    val depth: Int by lazy { refs.maxOfOrNull { it.depth + 1 } ?: 0 }
+
+    /**
+     * The level-0 representation hash of this ordinary cell: `sha256(d1 ‖ d2 ‖ padded data ‖ ref
+     * depths ‖ ref hashes)`. The hash of a StateInit cell is the account id of the contract it
+     * deploys.
+     */
+    val hash: ByteArray by lazy {
+        val byteCount = (bits.length + 7) / 8
+        val data = bits.bytes.copyOf(byteCount)
+        val tailBits = bits.length % 8
+        if (tailBits != 0) {
+            val kept = data[byteCount - 1].toInt() and (0xFF shl (8 - tailBits))
+            data[byteCount - 1] = (kept or (1 shl (7 - tailBits))).toByte()
+        }
+
+        val digest = MessageDigest.getInstance("SHA-256")
+        digest.update(refs.size.toByte())
+        digest.update((bits.length / 8 + byteCount).toByte())
+        digest.update(data)
+        refs.forEach { ref ->
+            digest.update((ref.depth shr 8).toByte())
+            digest.update(ref.depth.toByte())
+        }
+        refs.forEach { ref -> digest.update(ref.hash) }
+        digest.digest()
+    }
 }
 
 /**
