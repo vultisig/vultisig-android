@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
@@ -32,7 +33,7 @@ class QbtcClaimOrchestratorTest {
             btcAddress = btcAddress,
             compressedPubkey = testPubkeyHex.hexToByteArray(),
             qbtcAddress = qbtcAddress,
-            chainId = QbtcClaimConfig.CHAIN_ID,
+            chainId = QbtcNetworkConfig.CHAIN_ID,
         )
 
     private fun matchingProofResponse(txHash: String? = "ab".repeat(32)) =

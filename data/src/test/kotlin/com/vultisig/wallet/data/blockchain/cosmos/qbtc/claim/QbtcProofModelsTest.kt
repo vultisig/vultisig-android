@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -41,7 +42,7 @@ class QbtcProofModelsTest {
                     "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
                 utxos = listOf(ClaimableUtxo(txid = "aa".repeat(32), vout = 0, amount = 60_000)),
                 claimerAddress = "qbtc1abc",
-                chainId = QbtcClaimConfig.CHAIN_ID,
+                chainId = QbtcNetworkConfig.CHAIN_ID,
             )
         val encoded = json.encodeToString(ClaimProofRequest.serializer(), request)
         val decoded = json.parseToJsonElement(encoded).jsonObject

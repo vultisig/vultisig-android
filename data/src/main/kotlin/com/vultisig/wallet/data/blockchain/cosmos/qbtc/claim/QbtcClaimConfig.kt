@@ -6,9 +6,6 @@ package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
  * service.
  */
 object QbtcClaimConfig {
-    /** Cosmos chain id, also hashed into the claim message hash. */
-    const val CHAIN_ID = "qbtc"
-
     const val MAX_CLAIM_UTXOS = 50
 
     /**

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import javax.inject.Inject
 
 /**
@@ -31,7 +32,7 @@ internal class ComputeQbtcClaimMessageHashUseCaseImpl @Inject constructor() :
                 btcAddress = btcAddress,
                 compressedPubkey = compressedPubkeyHex.hexToByteArray(),
                 qbtcAddress = qbtcAddress,
-                chainId = QbtcClaimConfig.CHAIN_ID,
+                chainId = QbtcNetworkConfig.CHAIN_ID,
             )
             .messageHash
             .toHexString()

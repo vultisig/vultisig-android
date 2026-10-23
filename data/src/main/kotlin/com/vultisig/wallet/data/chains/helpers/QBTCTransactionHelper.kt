@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -13,8 +14,6 @@ import vultisig.keysign.v1.TransactionType
 class QBTCTransactionHelper {
 
     companion object {
-        // This is the actual on-chain ID; the network launched with this name
-        private const val CHAIN_ID = "qbtc"
         private const val DENOM = "qbtc"
         // Higher than typical Cosmos chains — ML-DSA-44 signatures are ~2.4 KB
         internal const val GAS_LIMIT = 300_000L
@@ -94,7 +93,7 @@ class QBTCTransactionHelper {
             val cosmosSpecific =
                 keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
                     ?: error("Invalid blockChainSpecific for QBTC")
-            chainId = CHAIN_ID
+            chainId = QbtcNetworkConfig.CHAIN_ID
             accountNumber = cosmosSpecific.accountNumber.toLong()
         }
 
