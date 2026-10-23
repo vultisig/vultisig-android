@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
@@ -73,6 +75,7 @@ internal fun MayachainDefiPositionsScreen(
     }
 
     LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.onScreenResumed() }
 
     when (val s = uiState) {
         is MayachainDefiUiState.Loading -> Unit
@@ -111,6 +114,7 @@ internal fun MayachainDefiPositionsScreen(
                 onClickUnstake = { model.onNavigateToStake(it) },
                 onClickAddLp = { model.onNavigateToLp(it, ADD_LP) },
                 onClickRemoveLp = { model.onNavigateToLp(it, REMOVE_LP) },
+                onClickCompletePendingLp = model::onClickCompletePendingLp,
             )
     }
 }
@@ -138,6 +142,7 @@ internal fun MayachainDefiPositionsScreenContent(
     onClickUnstake: (DeFiNavActions) -> Unit = {},
     onClickAddLp: (String) -> Unit = {},
     onClickRemoveLp: (String) -> Unit = {},
+    onClickCompletePendingLp: (String) -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
     val tabs = MAYA_DEFI_TABS
@@ -243,15 +248,23 @@ internal fun MayachainDefiPositionsScreenContent(
                             isBalanceVisible = state.isBalanceVisible,
                         )
 
+                    // A pending half-deposit is on a refund timer and belongs to no selected pool,
+                    // so it must survive the empty-selection branch — otherwise the one user who
+                    // has to act sees "no positions".
                     DeFiTab.LP.displayNameRes if
-                        !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) ->
+                        !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) &&
+                            state.lp.pendingDeposits.isEmpty() ->
                         NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
 
                     DeFiTab.LP.displayNameRes ->
                         LpTabContent(
-                            state = state.lp,
+                            // Cards a rescan has not yet confirmed stay hidden until it lands.
+                            state =
+                                if (state.lp.pendingDepositsLoaded) state.lp
+                                else state.lp.copy(pendingDeposits = emptyList()),
                             onClickAdd = onClickAddLp,
                             onClickRemove = onClickRemoveLp,
+                            onClickCompletePending = onClickCompletePendingLp,
                         )
                 }
 

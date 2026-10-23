@@ -76,8 +76,9 @@ internal data class SendStrategies(
 
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withdrawUsdcCircle.submit()
 
-            // Bond/Unbond/Stake-Cacao/Unstake-Cacao/Remove-LP only submit through the Deposit
-            // flow now — fail closed rather than falling back to a plain send.
+            // Bond/Unbond/Stake-Cacao/Unstake-Cacao/Remove-LP/Add-Maya-LP only submit through the
+            // Deposit flow now — fail closed rather than falling back to a plain send.
+            DeFiNavActions.ADD_MAYA_LP,
             DeFiNavActions.BOND,
             DeFiNavActions.UNBOND,
             DeFiNavActions.STAKE_CACAO,

@@ -417,7 +417,8 @@ class PreviewActivity : ComponentActivity() {
                                                         awaitedTicker = "VVV",
                                                         depositedAmount = "2 RUNE",
                                                         pairedAddress = "0x14F6…89B6",
-                                                        refundsIn = UiText.DynamicString("21h 14m"),
+                                                        addedAloneIn =
+                                                            UiText.DynamicString("21h 14m"),
                                                     )
                                                 )
                                         ),
