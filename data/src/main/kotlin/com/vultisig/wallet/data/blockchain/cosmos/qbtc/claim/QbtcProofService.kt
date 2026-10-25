@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
-import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -31,7 +31,7 @@ constructor(@QbtcProofHttpClient private val httpClient: HttpClient) : QbtcProof
     override suspend fun isHealthy(): Boolean =
         try {
             httpClient
-                .get("${Endpoints.QBTC_PROOF_SERVICE_URL}/health")
+                .get("${QbtcNetworkConfig.PROOF_SERVICE_URL}/health")
                 .bodyOrThrow<ProofServiceHealth>()
                 .isHealthy
         } catch (e: CancellationException) {
@@ -45,7 +45,7 @@ constructor(@QbtcProofHttpClient private val httpClient: HttpClient) : QbtcProof
 
     override suspend fun generateProof(request: ClaimProofRequest): ClaimProofResponse =
         httpClient
-            .post("${Endpoints.QBTC_PROOF_SERVICE_URL}/prove") {
+            .post("${QbtcNetworkConfig.PROOF_SERVICE_URL}/prove") {
                 // This dedicated client has no DefaultRequest plugin, so set the JSON content
                 // type explicitly — otherwise the request body isn't serialized as JSON.
                 contentType(ContentType.Application.Json)

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.QbtcNetworkConfig
 import com.vultisig.wallet.data.models.Chain
 
 /**
@@ -51,7 +52,7 @@ object CustomRpcDefaultEndpoint {
             Chain.TerraClassic to "https://terra-classic-lcd.publicnode.com",
             Chain.Noble to "https://noble-api.polkachu.com",
             Chain.Akash to "https://akash-rest.publicnode.com",
-            Chain.Qbtc to "https://api.vultisig.com/qbtc-rpc",
+            Chain.Qbtc to QbtcNetworkConfig.REST_URL,
         )
 
     /** Default EVM RPC URL for [chain]. Throws for a chain [EvmApiFactory] does not support. */
