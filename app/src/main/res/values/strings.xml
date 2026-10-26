@@ -550,6 +550,8 @@
     <string name="deposit_error_maya_lp_single_sided_position">You already have a CACAO-only position in %1$s. MayaChain only accepts CACAO into it, so this deposit would be refunded.</string>
     <string name="deposit_error_maya_lp_address_mismatch">Your %1$s position is paired with a different address. MayaChain would refund this deposit.</string>
     <string name="deposit_error_maya_lp_unverified">Could not reach MayaChain to check your position. Please try again.</string>
+    <string name="deposit_error_thorchain_lp_address_mismatch">Your %1$s position is paired with a different address. THORChain would refund this deposit.</string>
+    <string name="deposit_error_thorchain_lp_unverified">Could not reach THORChain to check your position. Please try again.</string>
     <string name="deposit_form_screen_assets">Asset</string>
     <string name="deposit_form_screen_asset_selection">Asset selection</string>
     <string name="deposit_form_screen_lpunits">LP Units</string>

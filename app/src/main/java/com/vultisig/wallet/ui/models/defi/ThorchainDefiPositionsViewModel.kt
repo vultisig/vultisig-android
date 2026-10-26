@@ -728,7 +728,7 @@ constructor(
     }
 
     private fun ThorChainPendingLpDeposit.toUiModel(
-        assetAddress: String?
+        vaultAssetAddress: String?
     ): PendingLpDepositUiModel {
         val parsed = parseThorChainPool(pool)
         val assetTicker = parsed.ticker
@@ -764,11 +764,15 @@ constructor(
                 blocksUntilAddedAlone?.let {
                     lpPendingTimeLeftUiText(it * THORCHAIN_BLOCK_SECONDS)
                 },
-            // Completing means sending the missing side, which needs an account on its chain. When
-            // RUNE is the missing half the vault always has one. A token pool's asset half goes
-            // through the router after an approval, which the Deposit flow cannot build.
+            // Completing means sending the missing side, and either half pairs only from the
+            // asset address the record holds: thornode refunds a RUNE add naming another one, and
+            // an asset add from another one is a separate deposit. An empty recorded address never
+            // matches a named one. A token pool's asset half goes through the router after an
+            // approval, which the Deposit flow cannot build.
             canComplete =
-                !isRunePending || (assetAddress != null && parsed.contractAddress.isEmpty()),
+                vaultAssetAddress != null &&
+                    vaultAssetAddress.equals(assetAddress, ignoreCase = true) &&
+                    (!isRunePending || parsed.contractAddress.isEmpty()),
         )
     }
 

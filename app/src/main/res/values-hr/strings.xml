@@ -419,6 +419,8 @@
     <string name="deposit_error_maya_lp_single_sided_position">Već imate poziciju samo u CACAO-u u %1$s. MayaChain u nju prihvaća samo CACAO, pa bi ovaj polog bio vraćen.</string>
     <string name="deposit_error_maya_lp_address_mismatch">Vaša pozicija u %1$s uparena je s drugom adresom. MayaChain bi vratio ovaj polog.</string>
     <string name="deposit_error_maya_lp_unverified">Nije moguće dohvatiti MayaChain radi provjere vaše pozicije. Pokušajte ponovno.</string>
+    <string name="deposit_error_thorchain_lp_address_mismatch">Vaša pozicija u %1$s uparena je s drugom adresom. THORChain bi vratio ovaj polog.</string>
+    <string name="deposit_error_thorchain_lp_unverified">Nije moguće dohvatiti THORChain radi provjere vaše pozicije. Pokušajte ponovno.</string>
     <string name="deposit_form_screen_assets">Imovina</string>
     <string name="deposit_form_screen_asset_selection">Odabir imovine</string>
     <string name="deposit_form_screen_lpunits">LP jedinice</string>

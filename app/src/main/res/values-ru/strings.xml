@@ -418,6 +418,8 @@
     <string name="deposit_error_maya_lp_single_sided_position">У вас уже есть позиция только в CACAO в %1$s. MayaChain принимает в неё только CACAO, поэтому этот депозит будет возвращён.</string>
     <string name="deposit_error_maya_lp_address_mismatch">Ваша позиция в %1$s связана с другим адресом. MayaChain вернёт этот депозит.</string>
     <string name="deposit_error_maya_lp_unverified">Не удалось связаться с MayaChain для проверки вашей позиции. Повторите попытку.</string>
+    <string name="deposit_error_thorchain_lp_address_mismatch">Ваша позиция в %1$s связана с другим адресом. THORChain вернёт этот депозит.</string>
+    <string name="deposit_error_thorchain_lp_unverified">Не удалось связаться с THORChain для проверки вашей позиции. Повторите попытку.</string>
     <string name="deposit_form_screen_assets">Актив</string>
     <string name="deposit_form_screen_asset_selection">Выбор актива</string>
     <string name="deposit_form_screen_lpunits">Единицы LP</string>

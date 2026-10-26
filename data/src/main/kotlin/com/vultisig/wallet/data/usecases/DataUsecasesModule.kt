@@ -330,6 +330,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindCheckThorChainLpPairingUseCase(
+        impl: CheckThorChainLpPairingUseCaseImpl
+    ): CheckThorChainLpPairingUseCase
+
+    @Binds
+    @Singleton
     fun bindThorchainMemoParser(impl: ThorchainMemoParserImpl): ThorchainMemoParser
 
     @Binds
