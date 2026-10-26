@@ -147,6 +147,7 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
                     pairedAddress =
                         if (runePending.signum() > 0) assetAddress?.takeIf { it.isNotBlank() }
                         else runeAddress?.takeIf { it.isNotBlank() },
+                    assetAddress = assetAddress?.takeIf { it.isNotBlank() },
                     blocksUntilAddedAlone = null,
                 ),
             lastAddHeight = lastAddHeight?.takeIf { it > 0 },

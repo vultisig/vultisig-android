@@ -539,6 +539,8 @@
     <string name="deposit_error_maya_lp_single_sided_position">%1$s에 이미 CACAO 단독 포지션이 있습니다. MayaChain은 여기에 CACAO만 받으므로 이 입금은 환불됩니다.</string>
     <string name="deposit_error_maya_lp_address_mismatch">%1$s 포지션이 다른 주소와 연결되어 있습니다. MayaChain이 이 입금을 환불합니다.</string>
     <string name="deposit_error_maya_lp_unverified">포지션을 확인하기 위해 MayaChain에 연결할 수 없습니다. 다시 시도해 주세요.</string>
+    <string name="deposit_error_thorchain_lp_address_mismatch">%1$s 포지션이 다른 주소와 연결되어 있습니다. THORChain이 이 입금을 환불합니다.</string>
+    <string name="deposit_error_thorchain_lp_unverified">포지션을 확인하기 위해 THORChain에 연결할 수 없습니다. 다시 시도해 주세요.</string>
     <string name="deposit_form_screen_assets">자산</string>
     <string name="deposit_form_screen_asset_selection">자산 선택</string>
     <string name="deposit_form_screen_lpunits">LP 유닛</string>

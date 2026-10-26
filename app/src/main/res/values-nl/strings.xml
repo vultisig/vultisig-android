@@ -418,6 +418,8 @@
     <string name="deposit_error_maya_lp_single_sided_position">Je hebt al een positie met alleen CACAO in %1$s. MayaChain accepteert daarin alleen CACAO, dus deze storting zou worden terugbetaald.</string>
     <string name="deposit_error_maya_lp_address_mismatch">Je positie in %1$s is gekoppeld aan een ander adres. MayaChain zou deze storting terugbetalen.</string>
     <string name="deposit_error_maya_lp_unverified">Kon MayaChain niet bereiken om je positie te controleren. Probeer het opnieuw.</string>
+    <string name="deposit_error_thorchain_lp_address_mismatch">Je positie in %1$s is gekoppeld aan een ander adres. THORChain zou deze storting terugbetalen.</string>
+    <string name="deposit_error_thorchain_lp_unverified">Kon THORChain niet bereiken om je positie te controleren. Probeer het opnieuw.</string>
     <string name="deposit_form_screen_assets">Activa</string>
     <string name="deposit_form_screen_asset_selection">Activaselectie</string>
     <string name="deposit_form_screen_lpunits">LP-eenheden</string>

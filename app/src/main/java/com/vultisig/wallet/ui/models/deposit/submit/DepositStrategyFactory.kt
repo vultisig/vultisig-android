@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CheckMayaLpPairingUseCase
+import com.vultisig.wallet.data.usecases.CheckThorChainLpPairingUseCase
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.MayaChainLpPreflightUseCase
@@ -37,6 +38,7 @@ constructor(
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase,
     private val mayaChainLpPreflight: MayaChainLpPreflightUseCase,
     private val checkMayaLpPairing: CheckMayaLpPairingUseCase,
+    private val checkThorChainLpPairing: CheckThorChainLpPairingUseCase,
     private val mayaChainApi: MayaChainApi,
     private val thorChainApi: ThorChainApi,
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
@@ -197,6 +199,7 @@ constructor(
                         thorChainLpPreflight = thorChainLpPreflight,
                         mayaChainLpPreflight = mayaChainLpPreflight,
                         checkMayaLpPairing = checkMayaLpPairing,
+                        checkThorChainLpPairing = checkThorChainLpPairing,
                         resolvePairedAddress = context.resolvePairedAddress,
                         addressProvider = context.address,
                         requireTokenAmount = context.requireTokenAmount,

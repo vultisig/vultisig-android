@@ -419,6 +419,8 @@
     <string name="deposit_error_maya_lp_single_sided_position">Sie haben bereits eine reine CACAO-Position in %1$s. MayaChain nimmt dort nur CACAO an, daher würde diese Einzahlung erstattet.</string>
     <string name="deposit_error_maya_lp_address_mismatch">Ihre Position in %1$s ist mit einer anderen Adresse gekoppelt. MayaChain würde diese Einzahlung erstatten.</string>
     <string name="deposit_error_maya_lp_unverified">MayaChain konnte nicht erreicht werden, um Ihre Position zu prüfen. Bitte erneut versuchen.</string>
+    <string name="deposit_error_thorchain_lp_address_mismatch">Ihre Position in %1$s ist mit einer anderen Adresse gekoppelt. THORChain würde diese Einzahlung erstatten.</string>
+    <string name="deposit_error_thorchain_lp_unverified">THORChain konnte nicht erreicht werden, um Ihre Position zu prüfen. Bitte erneut versuchen.</string>
     <string name="deposit_form_screen_assets">Vermögenswert</string>
     <string name="deposit_form_screen_asset_selection">Anlagenauswahl</string>
     <string name="deposit_form_screen_lpunits">LP-Einheiten</string>
