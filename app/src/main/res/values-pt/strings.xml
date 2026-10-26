@@ -419,6 +419,8 @@
     <string name="deposit_error_maya_lp_single_sided_position">Você já tem uma posição só de CACAO em %1$s. MayaChain só aceita CACAO nela, então este depósito seria reembolsado.</string>
     <string name="deposit_error_maya_lp_address_mismatch">Sua posição em %1$s está pareada com outro endereço. MayaChain reembolsaria este depósito.</string>
     <string name="deposit_error_maya_lp_unverified">Não foi possível conectar ao MayaChain para verificar sua posição. Tente novamente.</string>
+    <string name="deposit_error_thorchain_lp_address_mismatch">Sua posição em %1$s está pareada com outro endereço. THORChain reembolsaria este depósito.</string>
+    <string name="deposit_error_thorchain_lp_unverified">Não foi possível conectar ao THORChain para verificar sua posição. Tente novamente.</string>
     <string name="deposit_form_screen_assets">Ativo</string>
     <string name="deposit_form_screen_asset_selection">Seleção de ativos</string>
     <string name="deposit_form_screen_lpunits">Unidades LP</string>

@@ -1694,8 +1694,10 @@ internal class ThorchainDefiPositionsViewModelTest {
 
     @Test
     fun `a failed rescan keeps the earlier pending cards with completion withdrawn`() = runTest {
+        coEvery { vaultRepository.get(VAULT_ID) } returns
+            VAULT.copy(coins = VAULT.coins + BTC_COIN + ETH_COIN)
         coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
-            listOf(pendingDeposit(BTC_POOL), pendingDeposit(ETH_POOL))
+            listOf(pendingDeposit(BTC_POOL, BTC_ADDRESS), pendingDeposit(ETH_POOL))
         val vm = createViewModel().also { it.setData(VAULT_ID) }
         vm.state.value.lp.pendingDeposits.map { it.canComplete } shouldBe listOf(true, true)
 
@@ -1746,6 +1748,50 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `an asset-first pending card completes only from the recorded asset address`() = runTest {
+        coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = VAULT.coins + ETH_COIN)
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
+            listOf(
+                pendingDeposit(ETH_POOL, assetAddress = "0xexternalwallet"),
+                pendingDeposit(USDC_POOL, assetAddress = ETH_ADDRESS.uppercase()),
+            )
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.state.value.lp.pendingDeposits.map { it.poolId to it.canComplete } shouldBe
+            listOf(ETH_POOL to false, USDC_POOL to true)
+
+        vm.onClickCompletePendingLp(ETH_POOL)
+
+        coVerify(exactly = 0) { navigator.route(any()) }
+    }
+
+    @Test
+    fun `a pending card cannot be completed without the record's asset address`() = runTest {
+        coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = VAULT.coins + ETH_COIN)
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
+            listOf(pendingDeposit(BTC_POOL, BTC_ADDRESS), pendingDeposit(ETH_POOL, null))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.state.value.lp.pendingDeposits.map { it.poolId to it.canComplete } shouldBe
+            listOf(BTC_POOL to false, ETH_POOL to false)
+    }
+
+    @Test
+    fun `a RUNE-first pending card paired with another asset address cannot be completed`() =
+        runTest {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                VAULT.copy(coins = VAULT.coins + ETH_COIN)
+            coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
+                listOf(runeFirstPendingDeposit(ETH_POOL).copy(assetAddress = "0xexternalwallet"))
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            vm.state.value.lp.pendingDeposits.single().canComplete shouldBe false
+        }
+
+    @Test
     fun `completing a RUNE-first native pool opens the deposit on the asset chain`() = runTest {
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = VAULT.coins + ETH_COIN)
         coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
@@ -1774,6 +1820,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             pendingAsset = BigInteger.ZERO,
             pendingTxId = null,
             pairedAddress = ETH_ADDRESS,
+            assetAddress = ETH_ADDRESS,
             blocksUntilAddedAlone = null,
         )
 
@@ -1823,14 +1870,15 @@ internal class ThorchainDefiPositionsViewModelTest {
             canWithdraw = canWithdraw,
         )
 
-    /** An asset-first half-deposit: RUNE is the awaited side, which this vault can always send. */
-    private fun pendingDeposit(pool: String) =
+    /** An asset-first half-deposit sent from [assetAddress]: RUNE is the awaited side. */
+    private fun pendingDeposit(pool: String, assetAddress: String? = ETH_ADDRESS) =
         ThorChainPendingLpDeposit(
             pool = pool,
             pendingRune = BigInteger.ZERO,
             pendingAsset = BigInteger("100000000"),
             pendingTxId = null,
             pairedAddress = RUNE_ADDRESS,
+            assetAddress = assetAddress,
             blocksUntilAddedAlone = null,
         )
 
@@ -1891,6 +1939,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         const val ETH_POOL = "ETH.ETH"
         const val USDC_POOL = "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"
         const val ETH_ADDRESS = "0xethaddress"
+        const val BTC_ADDRESS = "bc1qbtcaddress"
 
         val AppCurrencyUsd = com.vultisig.wallet.data.models.settings.AppCurrency.USD
 
@@ -1902,6 +1951,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         val RUNE_COIN = Coins.ThorChain.RUNE.copy(address = RUNE_ADDRESS)
         val RUJI_COIN = Coins.ThorChain.RUJI.copy(address = RUJI_ADDRESS)
         val ETH_COIN = Coins.Ethereum.ETH.copy(address = ETH_ADDRESS)
+        val BTC_COIN = Coins.Bitcoin.BTC.copy(address = BTC_ADDRESS)
 
         val VAULT =
             Vault(
