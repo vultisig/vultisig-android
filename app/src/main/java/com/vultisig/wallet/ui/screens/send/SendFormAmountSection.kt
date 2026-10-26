@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -54,6 +55,7 @@ import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlinx.coroutines.flow.first
 
 @Immutable
 internal data class AmountInputs(
@@ -281,6 +283,12 @@ internal fun FoldableAmountWidget(
                 // the only visible reason Continue is disabled.
                 LaunchedEffect(state.memoError) {
                     if (state.memoError != null) isMemoExpanded = true
+                }
+
+                // A memo the form opened with (a deeplink's) is shown, never left collapsed.
+                LaunchedEffect(Unit) {
+                    snapshotFlow { memoFieldState.text.isNotEmpty() }.first { it }
+                    isMemoExpanded = true
                 }
 
                 val rotationAngle by
