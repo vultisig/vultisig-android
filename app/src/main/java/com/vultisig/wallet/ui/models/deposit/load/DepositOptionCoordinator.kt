@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.models.deposit.BondedRuneCeiling
 import com.vultisig.wallet.ui.models.deposit.DepositFieldStates
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
+import com.vultisig.wallet.ui.models.deposit.DepositPrefill
 import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
 import com.vultisig.wallet.ui.models.deposit.bondedRuneAmountForNode
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -74,6 +75,7 @@ constructor(
     @Assisted private val chainProvider: () -> Chain?,
     @Assisted("vaultId") private val vaultId: () -> String?,
     @Assisted("bondAddress") private val bondAddress: () -> String?,
+    @Assisted private val prefill: () -> DepositPrefill?,
 ) {
 
     /** @see DepositOptionCoordinator */
@@ -94,6 +96,7 @@ constructor(
             chainProvider: () -> Chain?,
             @Assisted("vaultId") vaultId: () -> String?,
             @Assisted("bondAddress") bondAddress: () -> String?,
+            prefill: () -> DepositPrefill?,
         ): DepositOptionCoordinator
     }
 
@@ -187,6 +190,12 @@ constructor(
             val bondAddress = bondAddress()
             if (!bondAddress.isNullOrEmpty()) {
                 fields.nodeAddressFieldState.setTextAndPlaceCursorAtEnd(bondAddress)
+            }
+
+            val prefill = prefill()
+            if (option == DepositOption.Custom && prefill != null) {
+                prefill.amount?.let(fields.tokenAmountFieldState::setTextAndPlaceCursorAtEnd)
+                prefill.memo?.let(fields.customMemoFieldState::setTextAndPlaceCursorAtEnd)
             }
 
             when {

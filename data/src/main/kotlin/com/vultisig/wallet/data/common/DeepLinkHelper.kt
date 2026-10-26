@@ -63,6 +63,10 @@ class DeepLinkHelper(input: String) {
         return scheme.equals("vultisig://send", ignoreCase = true)
     }
 
+    fun isDepositDeeplink(): Boolean {
+        return scheme.equals("vultisig://deposit", ignoreCase = true)
+    }
+
     fun hasResharePrefix(): Boolean {
         return parameters.containsKey("resharePrefix")
     }

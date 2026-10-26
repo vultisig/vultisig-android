@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.JOIN_KEYSIGN_FLOW
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SendDeeplinkData
+import com.vultisig.wallet.data.models.toDepositDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
@@ -266,11 +267,31 @@ constructor(
                 } else {
                     navigator.route(Route.ImportVault())
                 }
+            } else if (deepLinkHelper.isDepositDeeplink()) {
+                openDepositDeeplink(deepLinkHelper)
             } else if (deepLinkHelper.getFlowType() == JOIN_KEYSIGN_FLOW) {
                 joinKeysign(uri.toString())
             } else {
                 navigator.route(Route.ImportVault(uri = uri.toString()))
             }
+        }
+    }
+
+    private suspend fun openDepositDeeplink(deepLinkHelper: DeepLinkHelper) {
+        val depositDeepLinkData = deepLinkHelper.toDepositDeeplinkData()
+        when {
+            depositDeepLinkData == null ->
+                snackbarFlow.showMessage(
+                    UiText.StringResource(R.string.deeplink_not_supported),
+                    SnackbarType.Error,
+                )
+            hasAnyVault() ->
+                navigator.route(
+                    Route.VaultList(
+                        openType = Route.VaultList.OpenType.DepositDeepLink(depositDeepLinkData)
+                    )
+                )
+            else -> navigator.route(Route.ImportVault())
         }
     }
 

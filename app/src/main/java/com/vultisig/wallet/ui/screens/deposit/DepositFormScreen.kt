@@ -44,6 +44,7 @@ import com.vultisig.wallet.ui.models.deposit.BondAssetsState
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
+import com.vultisig.wallet.ui.models.deposit.DepositPrefill
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.models.deposit.TokenWithdrawSecureAsset
 import com.vultisig.wallet.ui.models.deposit.bondedUnitsCeiling
@@ -60,10 +61,13 @@ internal fun DepositFormScreen(
     depositType: String? = null,
     bondAddress: String? = null,
     poolId: String? = null,
+    prefill: DepositPrefill? = null,
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) { model.loadData(vaultId, chainId, depositType, bondAddress, poolId) }
+    LaunchedEffect(Unit) {
+        model.loadData(vaultId, chainId, depositType, bondAddress, poolId, prefill)
+    }
 
     DepositFormScreen(
         state = state,

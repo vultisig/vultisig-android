@@ -103,6 +103,7 @@ internal class DepositOptionCoordinatorUnbondTest {
             chainProvider = { Chain.ThorChain },
             vaultId = { VAULT_ID },
             bondAddress = { bondAddress },
+            prefill = { null },
         )
 
     private fun bondedNode(address: String, amount: BigInteger) =

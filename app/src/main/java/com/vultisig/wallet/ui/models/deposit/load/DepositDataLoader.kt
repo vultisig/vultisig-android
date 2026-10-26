@@ -48,9 +48,10 @@ constructor(
     private val accountsRepository: AccountsRepository,
     @Assisted private val scope: CoroutineScope,
     @Assisted private val address: MutableStateFlow<Address?>,
-    @Assisted private val depositTypeActionProvider: () -> String?,
+    @Assisted("depositTypeAction") private val depositTypeActionProvider: () -> String?,
     @Assisted private val clearDepositTypeAction: () -> Unit,
     @Assisted private val selectDepositOption: (DepositOption) -> Unit,
+    @Assisted("preferredTicker") private val preferredTicker: () -> String?,
 ) {
 
     /** @see DepositDataLoader */
@@ -63,9 +64,10 @@ constructor(
         fun create(
             scope: CoroutineScope,
             address: MutableStateFlow<Address?>,
-            depositTypeActionProvider: () -> String?,
+            @Assisted("depositTypeAction") depositTypeActionProvider: () -> String?,
             clearDepositTypeAction: () -> Unit,
             selectDepositOption: (DepositOption) -> Unit,
+            @Assisted("preferredTicker") preferredTicker: () -> String?,
         ): DepositDataLoader
     }
 
@@ -113,7 +115,9 @@ constructor(
      * entered from the DeFi tab, not picked here.
      */
     private fun depositOptionFor(action: String): DepositOption =
-        when (parseDepositType(action)) {
+        if (action == DepositOption.Custom.name) DepositOption.Custom
+        else
+            when (parseDepositType(action)) {
             DeFiNavActions.BOND -> DepositOption.Bond
             DeFiNavActions.UNBOND -> DepositOption.Unbond
             DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
@@ -220,7 +224,10 @@ constructor(
         address
             .filterNotNull()
             .onEach { address ->
-                val selectedToken = address.accounts.find { it.token.isNativeToken }?.token
+                val selectedToken =
+                    preferredTicker()?.let { ticker ->
+                        address.accounts.find { it.token.ticker.equals(ticker, ignoreCase = true) }
+                    }?.token ?: address.accounts.find { it.token.isNativeToken }?.token
                 selectedToken?.let { state.update { it.copy(selectedToken = selectedToken) } }
                 if (depositTypeActionProvider() == DeFiNavActions.ADD_LP.type) {
                     loadGasFeeForDisplay(vaultId, chain, address)

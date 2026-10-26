@@ -20,6 +20,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.deposit.DepositPrefill
 import com.vultisig.wallet.ui.models.deposit.DepositViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -43,6 +44,7 @@ internal fun DepositScreen(
     depositType: String? = null,
     bondAddress: String? = null,
     poolId: String? = null,
+    prefill: DepositPrefill? = null,
 ) {
     val depositNavHostController = rememberNavController()
     val context = LocalContext.current
@@ -85,6 +87,7 @@ internal fun DepositScreen(
         depositType = depositType,
         bondAddress = bondAddress,
         poolId = poolId,
+        prefill = prefill,
     )
 
     if (showShareSheet) {
@@ -108,6 +111,7 @@ private fun DepositScreen(
     depositType: String? = null,
     bondAddress: String? = null,
     poolId: String? = null,
+    prefill: DepositPrefill? = null,
 ) {
 
     V2Scaffold(
@@ -151,6 +155,7 @@ private fun DepositScreen(
                             depositType = depositType,
                             bondAddress = bondAddress,
                             poolId = poolId,
+                            prefill = prefill,
                         )
                     }
                 }

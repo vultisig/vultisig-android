@@ -349,6 +349,7 @@ constructor(
     private val address = MutableStateFlow<Address?>(null)
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
+    private var prefill: DepositPrefill? = null
     private var lpPoolId: String? = null
 
     private val liquidityDataLoader: LiquidityDataLoader =
@@ -393,6 +394,7 @@ constructor(
             chainProvider = { chain },
             vaultId = { vaultId },
             bondAddress = { bondAddress },
+            prefill = { prefill },
         )
 
     private val nodeWhitelistChecker: NodeWhitelistChecker =
@@ -421,6 +423,7 @@ constructor(
             depositTypeActionProvider = { depositTypeAction },
             clearDepositTypeAction = { depositTypeAction = null },
             selectDepositOption = ::selectDepositOption,
+            preferredTicker = { prefill?.ticker },
         )
 
     private val depositAmountHelper: DepositAmountHelper =
@@ -464,6 +467,7 @@ constructor(
      * @param depositType optional deep-link deposit action (e.g. ADD_LP) consumed during wiring.
      * @param bondAddress optional pre-filled bond address.
      * @param poolId optional liquidity pool id.
+     * @param prefill optional Custom-deposit values from a `vultisig://deposit` link.
      */
     fun loadData(
         vaultId: String,
@@ -471,6 +475,7 @@ constructor(
         depositType: String?,
         bondAddress: String?,
         poolId: String? = null,
+        prefill: DepositPrefill? = null,
     ) {
         this.vaultId = vaultId
         val chain = chainId.let(Chain::fromRaw)
@@ -478,6 +483,7 @@ constructor(
         this.depositTypeAction = depositType
         this.bondAddress = bondAddress
         this.lpPoolId = poolId
+        this.prefill = prefill
 
         depositAmountHelper.collectAmountChanges()
 

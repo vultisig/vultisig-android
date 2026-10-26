@@ -198,6 +198,7 @@ internal class DepositFormViewModelTest {
                 depositTypeActionProvider: () -> String?,
                 clearDepositTypeAction: () -> Unit,
                 selectDepositOption: (DepositOption) -> Unit,
+                preferredTicker: () -> String?,
             ): DepositDataLoader =
                 DepositDataLoader(
                     accountsRepository = accountsRepository,
@@ -206,6 +207,7 @@ internal class DepositFormViewModelTest {
                     depositTypeActionProvider = depositTypeActionProvider,
                     clearDepositTypeAction = clearDepositTypeAction,
                     selectDepositOption = selectDepositOption,
+                    preferredTicker = preferredTicker,
                 )
         }
     private val depositOptionCoordinatorFactory: DepositOptionCoordinator.Factory =
@@ -221,6 +223,7 @@ internal class DepositFormViewModelTest {
                 chainProvider: () -> Chain?,
                 vaultId: () -> String?,
                 bondAddress: () -> String?,
+                prefill: () -> DepositPrefill?,
             ): DepositOptionCoordinator =
                 DepositOptionCoordinator(
                     mayaChainApi = mayaChainApi,
@@ -237,6 +240,7 @@ internal class DepositFormViewModelTest {
                     chainProvider = chainProvider,
                     vaultId = vaultId,
                     bondAddress = bondAddress,
+                    prefill = prefill,
                 )
         }
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
