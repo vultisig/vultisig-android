@@ -118,14 +118,14 @@ constructor(
         if (action == DepositOption.Custom.name) DepositOption.Custom
         else
             when (parseDepositType(action)) {
-            DeFiNavActions.BOND -> DepositOption.Bond
-            DeFiNavActions.UNBOND -> DepositOption.Unbond
-            DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
-            DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
-            DeFiNavActions.ADD_LP -> DepositOption.AddLiquidity
-            DeFiNavActions.REMOVE_LP -> DepositOption.RemoveLiquidity
-            else -> DepositOption.Bond
-        }
+                DeFiNavActions.BOND -> DepositOption.Bond
+                DeFiNavActions.UNBOND -> DepositOption.Unbond
+                DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
+                DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
+                DeFiNavActions.ADD_LP -> DepositOption.AddLiquidity
+                DeFiNavActions.REMOVE_LP -> DepositOption.RemoveLiquidity
+                else -> DepositOption.Bond
+            }
 
     /**
      * Wires the init-time deposit flow at screen entry: builds the per-[chain] option list and
@@ -225,9 +225,13 @@ constructor(
             .filterNotNull()
             .onEach { address ->
                 val selectedToken =
-                    preferredTicker()?.let { ticker ->
-                        address.accounts.find { it.token.ticker.equals(ticker, ignoreCase = true) }
-                    }?.token ?: address.accounts.find { it.token.isNativeToken }?.token
+                    preferredTicker()
+                        ?.let { ticker ->
+                            address.accounts.find {
+                                it.token.ticker.equals(ticker, ignoreCase = true)
+                            }
+                        }
+                        ?.token ?: address.accounts.find { it.token.isNativeToken }?.token
                 selectedToken?.let { state.update { it.copy(selectedToken = selectedToken) } }
                 if (depositTypeActionProvider() == DeFiNavActions.ADD_LP.type) {
                     loadGasFeeForDisplay(vaultId, chain, address)

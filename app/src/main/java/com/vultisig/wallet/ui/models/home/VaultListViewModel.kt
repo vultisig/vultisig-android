@@ -180,20 +180,25 @@ constructor(
 
     private suspend fun openDepositDeepLink(vaultId: String, data: DepositDeeplinkData) {
         val ticker = data.assetTicker
-        val hasCoin =
-            vaultRepository.get(vaultId)?.coins.orEmpty().any { coin ->
+        val matches =
+            vaultRepository.get(vaultId)?.coins.orEmpty().count { coin ->
                 coin.chain.raw == data.chainId &&
                     if (ticker == null) coin.isNativeToken
                     else coin.ticker.equals(ticker, ignoreCase = true)
             }
-        if (!hasCoin) {
-            snackbarFlow.showMessage(
-                UiText.FormattedText(
-                    R.string.must_be_enabled_before_proceeding,
-                    listOf(ticker ?: data.chainId),
-                ),
-                SnackbarType.Error,
-            )
+        // A ticker two of the vault's coins share cannot say which one the link means.
+        val error =
+            when {
+                matches == 0 ->
+                    UiText.FormattedText(
+                        R.string.must_be_enabled_before_proceeding,
+                        listOf(ticker ?: data.chainId),
+                    )
+                matches > 1 -> UiText.StringResource(R.string.deeplink_not_supported)
+                else -> null
+            }
+        if (error != null) {
+            snackbarFlow.showMessage(error, SnackbarType.Error)
             return
         }
         navigator.route(
