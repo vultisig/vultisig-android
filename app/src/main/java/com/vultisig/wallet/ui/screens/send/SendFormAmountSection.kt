@@ -275,7 +275,11 @@ internal fun FoldableAmountWidget(
 
             // memo
             if (state.hasMemo && state.defiType == null) {
-                var isMemoExpanded by remember { mutableStateOf(false) }
+                // Open when the form starts with a memo (e.g. prefilled by a send deeplink), so the
+                // user sees what will be signed.
+                var isMemoExpanded by remember {
+                    mutableStateOf(memoFieldState.text.isNotEmpty())
+                }
 
                 // Reveal the field while the memo is over the chain's limit: the inline error is
                 // the only visible reason Continue is disabled.
