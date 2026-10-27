@@ -466,6 +466,8 @@
     <string name="push_notifications">Push obavijesti</string>
     <string name="push_notifications_failed">Slanje push obavijesti nije uspjelo</string>
     <string name="push_notification_vault_not_found">Trezor nije pronađen</string>
+    <string name="deposit_deeplink_unsupported">Ova poveznica za polog nije podržana</string>
+    <string name="deposit_deeplink_coin_not_in_vault">%1$s nije u ovom trezoru</string>
     <string name="push_notification_error_vault_not_supported">Trezor ne podržava obavijesti</string>
     <string name="push_notification_error_token_not_available">Nije moguće dohvatiti token obavijesti</string>
     <string name="push_notification_error_api_failure">Nije moguće ažurirati registraciju obavijesti</string>

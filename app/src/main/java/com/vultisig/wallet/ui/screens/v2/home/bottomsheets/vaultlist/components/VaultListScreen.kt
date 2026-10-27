@@ -60,7 +60,8 @@ internal fun VaultListScreen(
     LaunchedEffect(openType) { viewModel.init(openType) }
 
     when (openType) {
-        is Route.VaultList.OpenType.DeepLink ->
+        is Route.VaultList.OpenType.DeepLink,
+        is Route.VaultList.OpenType.DepositDeepLink ->
             VaultListScreen(state = state, onSelectVault = viewModel::selectVault)
 
         is Route.VaultList.OpenType.Home -> {

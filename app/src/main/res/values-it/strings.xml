@@ -466,6 +466,8 @@
     <string name="push_notifications">Notifiche push</string>
     <string name="push_notifications_failed">Invio notifica push non riuscito</string>
     <string name="push_notification_vault_not_found">Cassaforte non trovata</string>
+    <string name="deposit_deeplink_unsupported">Questo link di deposito non è supportato</string>
+    <string name="deposit_deeplink_coin_not_in_vault">%1$s non è in questa cassaforte</string>
     <string name="push_notification_error_vault_not_supported">La cassaforte non supporta le notifiche</string>
     <string name="push_notification_error_token_not_available">Impossibile ottenere il token di notifica</string>
     <string name="push_notification_error_api_failure">Impossibile aggiornare la registrazione delle notifiche</string>

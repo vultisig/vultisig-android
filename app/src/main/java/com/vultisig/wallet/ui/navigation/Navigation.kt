@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.annotation.Keep
 import androidx.navigation.NavType
 import com.vultisig.wallet.data.models.ChainId
+import com.vultisig.wallet.data.models.DepositDeeplinkData
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TokenId
@@ -407,6 +408,9 @@ internal sealed class Route {
         sealed interface OpenType {
             @Serializable data class DeepLink(val sendDeepLinkData: SendDeeplinkData) : OpenType
 
+            @Serializable
+            data class DepositDeepLink(val depositDeepLinkData: DepositDeeplinkData) : OpenType
+
             @Serializable data class Home(val vaultId: VaultId) : OpenType
         }
     }
@@ -458,6 +462,10 @@ internal sealed class Route {
         val depositType: String? = null,
         val bondAddress: String? = null,
         val poolId: String? = null,
+        /** Custom-form prefill from a `type=Deposit` link: the coin's ticker, amount and memo. */
+        val customTicker: String? = null,
+        val customAmount: String? = null,
+        val customMemo: String? = null,
     )
 
     /**

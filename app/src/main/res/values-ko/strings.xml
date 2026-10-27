@@ -5,6 +5,8 @@
     <string name="push_notifications">푸시 알림</string>
     <string name="push_notifications_failed">푸시 알림 실패</string>
     <string name="push_notification_vault_not_found">볼트를 찾을 수 없음</string>
+    <string name="deposit_deeplink_unsupported">지원되지 않는 예치 링크입니다</string>
+    <string name="deposit_deeplink_coin_not_in_vault">이 볼트에 %1$s이(가) 없습니다</string>
     <string name="push_notification_error_vault_not_supported">볼트가 알림을 지원하지 않습니다</string>
     <string name="push_notification_error_token_not_available">알림 토큰을 가져오지 못했습니다</string>
     <string name="push_notification_error_api_failure">알림 등록 업데이트에 실패했습니다</string>

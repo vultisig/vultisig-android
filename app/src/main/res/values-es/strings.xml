@@ -466,6 +466,8 @@
     <string name="push_notifications">Notificaciones push</string>
     <string name="push_notifications_failed">Error al enviar la notificación push</string>
     <string name="push_notification_vault_not_found">Bóveda no encontrada</string>
+    <string name="deposit_deeplink_unsupported">Este enlace de depósito no es compatible</string>
+    <string name="deposit_deeplink_coin_not_in_vault">%1$s no está en esta bóveda</string>
     <string name="push_notification_error_vault_not_supported">La bóveda no admite notificaciones</string>
     <string name="push_notification_error_token_not_available">No se pudo obtener el token de notificación</string>
     <string name="push_notification_error_api_failure">No se pudo actualizar el registro de notificaciones</string>

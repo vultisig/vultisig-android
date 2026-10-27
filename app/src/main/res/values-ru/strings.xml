@@ -465,6 +465,8 @@
     <string name="push_notifications">Push-уведомления</string>
     <string name="push_notifications_failed">Ошибка отправки push-уведомления</string>
     <string name="push_notification_vault_not_found">Хранилище не найдено</string>
+    <string name="deposit_deeplink_unsupported">Эта ссылка на депозит не поддерживается</string>
+    <string name="deposit_deeplink_coin_not_in_vault">%1$s нет в этом хранилище</string>
     <string name="push_notification_error_vault_not_supported">Хранилище не поддерживает уведомления</string>
     <string name="push_notification_error_token_not_available">Не удалось получить токен уведомления</string>
     <string name="push_notification_error_api_failure">Не удалось обновить регистрацию уведомлений</string>

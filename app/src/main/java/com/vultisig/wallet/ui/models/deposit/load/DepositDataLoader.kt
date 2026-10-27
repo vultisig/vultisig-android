@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.deposit.CustomDepositPrefill
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
@@ -147,6 +148,7 @@ constructor(
      *   on the SecuredAsset form.
      * @param loadGasFeeForDisplay callback that loads and displays gas fees for the ADD_LP
      *   deep-link.
+     * @param customPrefill deep-link prefill: opens the form on Custom with its coin selected.
      */
     fun wireInitialState(
         vaultId: String,
@@ -157,6 +159,7 @@ constructor(
         selectDstChain: (Chain) -> Unit,
         collectSecuredAssetAddresses: () -> Unit,
         loadGasFeeForDisplay: (String, Chain, Address) -> Unit,
+        customPrefill: CustomDepositPrefill? = null,
     ) {
         val depositOptions =
             when (chain) {
@@ -191,7 +194,10 @@ constructor(
         // the pool's own asset chain — so seed from the pending action first and never assume the
         // list has a head.
         val depositOption =
-            depositTypeActionProvider()?.takeIf { it.isNotEmpty() }?.let { depositOptionFor(it) }
+            customPrefill?.let { DepositOption.Custom }
+                ?: depositTypeActionProvider()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { depositOptionFor(it) }
                 ?: depositOptions.firstOrNull()
                 ?: DepositOption.Custom
         val defaultToken =
@@ -220,7 +226,14 @@ constructor(
         address
             .filterNotNull()
             .onEach { address ->
-                val selectedToken = address.accounts.find { it.token.isNativeToken }?.token
+                val prefilledToken =
+                    customPrefill?.let { prefill ->
+                        address.accounts
+                            .find { it.token.ticker.equals(prefill.ticker, ignoreCase = true) }
+                            ?.token
+                    }
+                val selectedToken =
+                    prefilledToken ?: address.accounts.find { it.token.isNativeToken }?.token
                 selectedToken?.let { state.update { it.copy(selectedToken = selectedToken) } }
                 if (depositTypeActionProvider() == DeFiNavActions.ADD_LP.type) {
                     loadGasFeeForDisplay(vaultId, chain, address)

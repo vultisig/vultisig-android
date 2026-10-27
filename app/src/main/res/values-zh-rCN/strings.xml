@@ -5,6 +5,8 @@
     <string name="push_notifications">推送通知</string>
     <string name="push_notifications_failed">推送通知失败</string>
     <string name="push_notification_vault_not_found">未找到保险库</string>
+    <string name="deposit_deeplink_unsupported">不支持此存款链接</string>
+    <string name="deposit_deeplink_coin_not_in_vault">此保险库中没有 %1$s</string>
     <string name="push_notification_error_vault_not_supported">保险库不支持通知</string>
     <string name="push_notification_error_token_not_available">无法获取通知令牌</string>
     <string name="push_notification_error_api_failure">无法更新通知注册</string>
