@@ -179,11 +179,20 @@ constructor(
 
     private suspend fun openDepositForm(vaultId: String, data: DepositDeeplinkData) {
         val chain = data.chain ?: return
-        val coin = data.findCoin(vaultRepository.get(vaultId)?.coins.orEmpty())
+        val vaultCoins = vaultRepository.get(vaultId)?.coins.orEmpty()
+        val coin = data.findCoin(vaultCoins)
         if (coin == null) {
             val missing = data.assetTicker?.takeIf { it.isNotBlank() } ?: chain.displayName
             snackbarFlow.showMessage(
                 UiText.FormattedText(R.string.deposit_deeplink_coin_not_in_vault, listOf(missing)),
+                SnackbarType.Error,
+            )
+            return
+        }
+        // Without the chain's native coin the form never loads an address, so it would stay blocked.
+        if (vaultCoins.none { it.chain == chain && it.isNativeToken }) {
+            snackbarFlow.showMessage(
+                UiText.StringResource(R.string.deposit_deeplink_unsupported),
                 SnackbarType.Error,
             )
             return

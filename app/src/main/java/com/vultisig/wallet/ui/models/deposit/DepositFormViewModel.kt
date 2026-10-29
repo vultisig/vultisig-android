@@ -354,6 +354,8 @@ constructor(
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
     private var isCustomPrefillApplied = false
+    private var customPrefill: CustomDepositPrefill? = null
+    private var isCustomPrefillTokenApplied = false
 
     private val liquidityDataLoader: LiquidityDataLoader =
         liquidityDataLoaderFactory.create(
@@ -484,6 +486,7 @@ constructor(
         this.depositTypeAction = depositType
         this.bondAddress = bondAddress
         this.lpPoolId = poolId
+        this.customPrefill = customPrefill
 
         depositAmountHelper.collectAmountChanges()
 
@@ -496,6 +499,8 @@ constructor(
             selectDstChain = ::selectDstChain,
             collectSecuredAssetAddresses = securedAssetLoader::collectSecuredAssetAddresses,
             customPrefill = customPrefill,
+            isPrefillTokenApplied = { isCustomPrefillTokenApplied },
+            onPrefillTokenApplied = { isCustomPrefillTokenApplied = true },
             loadGasFeeForDisplay = { vaultId, chain, address ->
                 gasFeeHelper.loadGasFeeForDisplay(
                     scope = viewModelScope,
@@ -690,6 +695,16 @@ constructor(
                 val vaultId = vaultId ?: return@launch
 
                 val depositOption = state.value.depositOption
+
+                // The link's coin is applied once the address loads; until then the form still holds
+                // the native default and must not sign against it.
+                if (
+                    depositOption == DepositOption.Custom &&
+                        customPrefill != null &&
+                        !isCustomPrefillTokenApplied
+                ) {
+                    return@launch
+                }
 
                 if (
                     depositOption == DepositOption.Bond && operatorFeeFieldState.text.isNotEmpty()

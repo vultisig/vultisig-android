@@ -149,6 +149,9 @@ constructor(
      * @param loadGasFeeForDisplay callback that loads and displays gas fees for the ADD_LP
      *   deep-link.
      * @param customPrefill deep-link prefill: opens the form on Custom with its coin selected.
+     * @param isPrefillTokenApplied whether the link's coin was already selected, kept by the caller
+     *   so a re-entered screen neither re-applies it nor resets the user's later pick.
+     * @param onPrefillTokenApplied called once the link's coin is selected.
      */
     fun wireInitialState(
         vaultId: String,
@@ -160,6 +163,8 @@ constructor(
         collectSecuredAssetAddresses: () -> Unit,
         loadGasFeeForDisplay: (String, Chain, Address) -> Unit,
         customPrefill: CustomDepositPrefill? = null,
+        isPrefillTokenApplied: () -> Boolean = { false },
+        onPrefillTokenApplied: () -> Unit = {},
     ) {
         val depositOptions =
             when (chain) {
@@ -209,9 +214,13 @@ constructor(
             it.copy(
                 depositMessage = R.string.deposit_message_deposit_title.asUiText(chain.displayName),
                 depositOptions = depositOptions,
-                depositOption = depositOption,
+                depositOption =
+                    if (customPrefill != null && isPrefillTokenApplied()) it.depositOption
+                    else depositOption,
                 depositChain = chain,
-                selectedToken = defaultToken,
+                selectedToken =
+                    if (customPrefill != null && isPrefillTokenApplied()) it.selectedToken
+                    else defaultToken,
             )
         }
 
@@ -224,13 +233,12 @@ constructor(
         loadAddress(vaultId, chain)
 
         // The link's coin is applied once, so later address refreshes keep the user's choice.
-        var isPrefillApplied = false
         address
             .filterNotNull()
             .onEach { address ->
                 val prefilledToken =
                     customPrefill
-                        ?.takeIf { !isPrefillApplied }
+                        ?.takeIf { !isPrefillTokenApplied() }
                         ?.let { prefill ->
                             address.accounts
                                 .singleOrNull {
@@ -238,7 +246,7 @@ constructor(
                                 }
                                 ?.token
                         }
-                        ?.also { isPrefillApplied = true }
+                        ?.also { onPrefillTokenApplied() }
                 val selectedToken =
                     prefilledToken
                         ?: address.accounts
