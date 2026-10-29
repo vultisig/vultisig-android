@@ -81,6 +81,9 @@ internal enum class DepositOption {
     Vote,
 }
 
+/** What a `type=Deposit` link prefills on the Custom form; the user still reviews and signs. */
+internal data class CustomDepositPrefill(val ticker: String, val amount: String?, val memo: String)
+
 /**
  * The LP-unit ceiling an Unbond may spend, carrying the position it was measured for.
  *
@@ -350,6 +353,9 @@ constructor(
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
+    private var isCustomPrefillApplied = false
+    private var customPrefill: CustomDepositPrefill? = null
+    private var isCustomPrefillTokenApplied = false
 
     private val liquidityDataLoader: LiquidityDataLoader =
         liquidityDataLoaderFactory.create(
@@ -464,6 +470,7 @@ constructor(
      * @param depositType optional deep-link deposit action (e.g. ADD_LP) consumed during wiring.
      * @param bondAddress optional pre-filled bond address.
      * @param poolId optional liquidity pool id.
+     * @param customPrefill optional deep-link prefill that opens the form on Custom.
      */
     fun loadData(
         vaultId: String,
@@ -471,6 +478,7 @@ constructor(
         depositType: String?,
         bondAddress: String?,
         poolId: String? = null,
+        customPrefill: CustomDepositPrefill? = null,
     ) {
         this.vaultId = vaultId
         val chain = chainId.let(Chain::fromRaw)
@@ -478,6 +486,7 @@ constructor(
         this.depositTypeAction = depositType
         this.bondAddress = bondAddress
         this.lpPoolId = poolId
+        this.customPrefill = customPrefill
 
         depositAmountHelper.collectAmountChanges()
 
@@ -489,6 +498,9 @@ constructor(
             updateTokenAmount = depositAmountHelper::updateTokenAmount,
             selectDstChain = ::selectDstChain,
             collectSecuredAssetAddresses = securedAssetLoader::collectSecuredAssetAddresses,
+            customPrefill = customPrefill,
+            isPrefillTokenApplied = { isCustomPrefillTokenApplied },
+            onPrefillTokenApplied = { isCustomPrefillTokenApplied = true },
             loadGasFeeForDisplay = { vaultId, chain, address ->
                 gasFeeHelper.loadGasFeeForDisplay(
                     scope = viewModelScope,
@@ -507,6 +519,13 @@ constructor(
                 )
             },
         )
+
+        // Filled once, so a re-entered screen never undoes what the user has since edited.
+        if (customPrefill != null && !isCustomPrefillApplied) {
+            isCustomPrefillApplied = true
+            customPrefill.amount?.let { tokenAmountFieldState.setTextAndPlaceCursorAtEnd(it) }
+            customMemoFieldState.setTextAndPlaceCursorAtEnd(customPrefill.memo)
+        }
     }
 
     fun selectBondAsset(asset: String) {
@@ -676,6 +695,16 @@ constructor(
                 val vaultId = vaultId ?: return@launch
 
                 val depositOption = state.value.depositOption
+
+                // The link's coin is applied once the address loads; until then the form still holds
+                // the native default and must not sign against it.
+                if (
+                    depositOption == DepositOption.Custom &&
+                        customPrefill != null &&
+                        !isCustomPrefillTokenApplied
+                ) {
+                    return@launch
+                }
 
                 if (
                     depositOption == DepositOption.Bond && operatorFeeFieldState.text.isNotEmpty()

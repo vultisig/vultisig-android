@@ -4,6 +4,8 @@
     <string name="push_notifications">Push notifications</string>
     <string name="push_notifications_failed">Push notification failed</string>
     <string name="push_notification_vault_not_found">Vault not found</string>
+    <string name="deposit_deeplink_unsupported">This deposit link isn\'t supported</string>
+    <string name="deposit_deeplink_coin_not_in_vault">%1$s isn\'t in this vault</string>
     <string name="push_notification_error_vault_not_supported">Vault does not support notifications</string>
     <string name="push_notification_error_token_not_available">Failed to get notification token</string>
     <string name="push_notification_error_api_failure">Failed to update notification registration</string>

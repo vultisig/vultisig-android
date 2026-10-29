@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.navigation
 
 import android.net.Uri
 import android.os.Bundle
+import com.vultisig.wallet.data.models.DepositDeeplinkData
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -77,6 +78,21 @@ internal class RouteNavTypeTest {
         val restored = roundTrip(openType)
 
         (restored as Route.VaultList.OpenType.DeepLink).sendDeepLinkData.memo shouldBe "0%2F1%2F0"
+    }
+
+    @Test
+    fun `a deposit memo round trips verbatim, literal percent sequences included`() {
+        val openType =
+            Route.VaultList.OpenType.DepositDeepLink(
+                DepositDeeplinkData(
+                    assetChain = "THORChain",
+                    assetTicker = null,
+                    amount = "0.01",
+                    memo = "TCY+:thor1x/0 100%2F",
+                )
+            )
+
+        roundTrip(openType) shouldBe openType
     }
 
     @Test

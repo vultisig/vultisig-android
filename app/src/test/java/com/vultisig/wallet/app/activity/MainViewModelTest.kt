@@ -4,6 +4,7 @@ package com.vultisig.wallet.app.activity
 
 import android.net.Uri
 import com.google.android.play.core.appupdate.AppUpdateManager
+import com.vultisig.wallet.data.models.DepositDeeplinkData
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
@@ -367,6 +368,71 @@ internal class MainViewModelTest {
             coVerify(exactly = 0) { getDirectionByQrCodeUseCase(any(), any()) }
             coVerify(exactly = 0) { navigator.route(ofType(Route.Keygen.Join::class), any()) }
             coVerify { navigator.route(Route.ImportVault(uri = link)) }
+        }
+
+    @Test
+    fun `openUri with a Deposit link opens the vault picker with the link's values`() =
+        runTest(dispatcher) {
+            val link =
+                "https://vultisig.com?type=Deposit&assetChain=THORChain&amount=0.01&memo=TCY+"
+            coEvery { vaultRepository.hasVaults() } returns true
+
+            val vm = createViewModel()
+            vm.onNavigationReady()
+            advanceUntilIdle()
+
+            vm.openUri(uriOf(link))
+            advanceUntilIdle()
+
+            coVerify {
+                navigator.route(
+                    Route.VaultList(
+                        openType =
+                            Route.VaultList.OpenType.DepositDeepLink(
+                                DepositDeeplinkData(
+                                    assetChain = "THORChain",
+                                    assetTicker = null,
+                                    amount = "0.01",
+                                    memo = "TCY+",
+                                )
+                            )
+                    )
+                )
+            }
+            coVerify(exactly = 0) { getDirectionByQrCodeUseCase(any(), any()) }
+        }
+
+    @Test
+    fun `openUri with a Deposit link for another chain shows an error and stays put`() =
+        runTest(dispatcher) {
+            coEvery { vaultRepository.hasVaults() } returns true
+
+            val vm = createViewModel()
+            vm.onNavigationReady()
+            advanceUntilIdle()
+
+            vm.openUri(uriOf("https://vultisig.com?type=Deposit&assetChain=Ethereum&memo=x"))
+            advanceUntilIdle()
+
+            coVerify { snackbarFlow.showMessage(any<UiText>(), SnackbarType.Error) }
+            coVerify(exactly = 0) { navigator.route(any()) }
+            coVerify(exactly = 0) { navigator.route(any(), any()) }
+        }
+
+    @Test
+    fun `openUri with a Deposit link without a memo shows an error and stays put`() =
+        runTest(dispatcher) {
+            coEvery { vaultRepository.hasVaults() } returns true
+
+            val vm = createViewModel()
+            vm.onNavigationReady()
+            advanceUntilIdle()
+
+            vm.openUri(uriOf("https://vultisig.com?type=Deposit&assetChain=THORChain&memo="))
+            advanceUntilIdle()
+
+            coVerify { snackbarFlow.showMessage(any<UiText>(), SnackbarType.Error) }
+            coVerify(exactly = 0) { navigator.route(any()) }
         }
 
     @Test

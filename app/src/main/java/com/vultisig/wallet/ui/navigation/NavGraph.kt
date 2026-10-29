@@ -17,6 +17,7 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
+import com.vultisig.wallet.ui.models.deposit.CustomDepositPrefill
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REFERRAL_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Route.AddChainAccount
@@ -214,6 +215,14 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
                 depositType = args.depositType,
                 bondAddress = args.bondAddress,
                 poolId = args.poolId,
+                customPrefill =
+                    args.customTicker?.let { ticker ->
+                        CustomDepositPrefill(
+                            ticker = ticker,
+                            amount = args.customAmount,
+                            memo = args.customMemo.orEmpty(),
+                        )
+                    },
             )
         }
 

@@ -2,6 +2,8 @@ package com.vultisig.wallet.ui.models.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.DepositDeeplinkData
 import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.FolderRepository
@@ -12,11 +14,14 @@ import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.usecases.GetOrderedVaults
 import com.vultisig.wallet.data.usecases.VaultAndBalance
 import com.vultisig.wallet.data.usecases.VaultAndBalanceUseCase
+import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -52,6 +57,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val vaultAndBalanceUseCase: VaultAndBalanceUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
+    private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VaultListUiModel())
@@ -161,12 +167,54 @@ constructor(
                         )
                     )
                 }
+                is Route.VaultList.OpenType.DepositDeepLink ->
+                    openDepositForm(vaultId, openType.depositDeepLinkData)
                 is Route.VaultList.OpenType.Home -> {
                     lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
                     navigator.back()
                 }
             }
         }
+    }
+
+    private suspend fun openDepositForm(vaultId: String, data: DepositDeeplinkData) {
+        val chain = data.chain ?: return
+        val vaultCoins = vaultRepository.get(vaultId)?.coins.orEmpty()
+        val coin = data.findCoin(vaultCoins)
+        if (coin == null) {
+            val missing = data.assetTicker?.takeIf { it.isNotBlank() } ?: chain.displayName
+            snackbarFlow.showMessage(
+                UiText.FormattedText(R.string.deposit_deeplink_coin_not_in_vault, listOf(missing)),
+                SnackbarType.Error,
+            )
+            return
+        }
+        // Without the chain's native coin the form never loads an address, so it would stay blocked.
+        if (vaultCoins.none { it.chain == chain && it.isNativeToken }) {
+            snackbarFlow.showMessage(
+                UiText.StringResource(R.string.deposit_deeplink_unsupported),
+                SnackbarType.Error,
+            )
+            return
+        }
+        // More decimals than the coin has would be silently truncated when the amount is signed.
+        val amount = data.prefillAmount
+        if (amount != null && amount.toBigDecimal().stripTrailingZeros().scale() > coin.decimal) {
+            snackbarFlow.showMessage(
+                UiText.StringResource(R.string.deposit_deeplink_unsupported),
+                SnackbarType.Error,
+            )
+            return
+        }
+        navigator.route(
+            Route.Deposit(
+                vaultId = vaultId,
+                chainId = chain.raw,
+                customTicker = coin.ticker,
+                customAmount = amount,
+                customMemo = data.memo,
+            )
+        )
     }
 
     fun addVault() {

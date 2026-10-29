@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.components.library.form.SelectionCard
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.models.deposit.BondAssetsState
+import com.vultisig.wallet.ui.models.deposit.CustomDepositPrefill
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
@@ -60,10 +61,13 @@ internal fun DepositFormScreen(
     depositType: String? = null,
     bondAddress: String? = null,
     poolId: String? = null,
+    customPrefill: CustomDepositPrefill? = null,
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) { model.loadData(vaultId, chainId, depositType, bondAddress, poolId) }
+    LaunchedEffect(Unit) {
+        model.loadData(vaultId, chainId, depositType, bondAddress, poolId, customPrefill)
+    }
 
     DepositFormScreen(
         state = state,

@@ -9,6 +9,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.JOIN_KEYSIGN_FLOW
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.DepositDeeplinkData
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
@@ -266,11 +267,39 @@ constructor(
                 } else {
                     navigator.route(Route.ImportVault())
                 }
+            } else if (deepLinkHelper.isDepositDeeplink()) {
+                openDepositDeeplink(deepLinkHelper)
             } else if (deepLinkHelper.getFlowType() == JOIN_KEYSIGN_FLOW) {
                 joinKeysign(uri.toString())
             } else {
                 navigator.route(Route.ImportVault(uri = uri.toString()))
             }
+        }
+    }
+
+    /**
+     * A deposit link never joins a ceremony: it only opens the Custom deposit form, prefilled, for
+     * the vault the user picks. A link that can never succeed is rejected before the picker.
+     */
+    private suspend fun openDepositDeeplink(deepLinkHelper: DeepLinkHelper) {
+        val data =
+            DepositDeeplinkData(
+                assetChain = deepLinkHelper.getAssetChain(),
+                assetTicker = deepLinkHelper.getAssetTicker(),
+                amount = deepLinkHelper.getAmount(),
+                memo = deepLinkHelper.getMemo(),
+            )
+        when {
+            !data.isValid ->
+                snackbarFlow.showMessage(
+                    UiText.StringResource(R.string.deposit_deeplink_unsupported),
+                    SnackbarType.Error,
+                )
+            hasAnyVault() ->
+                navigator.route(
+                    Route.VaultList(openType = Route.VaultList.OpenType.DepositDeepLink(data))
+                )
+            else -> navigator.route(Route.ImportVault())
         }
     }
 

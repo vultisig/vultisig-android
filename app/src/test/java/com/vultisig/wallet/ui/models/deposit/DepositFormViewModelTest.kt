@@ -413,6 +413,69 @@ internal class DepositFormViewModelTest {
     }
 
     @Test
+    fun `loadData with a custom prefill opens Custom with amount and memo filled`() = runTest {
+        val vm = buildViewModel()
+
+        vm.loadData(
+            "vault1",
+            Chain.ThorChain.raw,
+            null,
+            null,
+            customPrefill = CustomDepositPrefill(ticker = "RUNE", amount = "0.01", memo = "TCY+"),
+        )
+        advanceUntilIdle()
+
+        vm.state.value.depositOption shouldBe DepositOption.Custom
+        vm.tokenAmountFieldState.text.toString() shouldBe "0.01"
+        vm.customMemoFieldState.text.toString() shouldBe "TCY+"
+    }
+
+    @Test
+    fun `custom prefill selects the coin the link names once the address loads`() = runTest {
+        val vm = buildViewModel()
+        givenThorVaultAddress(Coins.ThorChain.RUNE, Coins.ThorChain.TCY)
+
+        vm.loadData(
+            "vault1",
+            Chain.ThorChain.raw,
+            null,
+            null,
+            customPrefill = CustomDepositPrefill(ticker = "tcy", amount = null, memo = "TCY-"),
+        )
+        advanceUntilIdle()
+
+        vm.state.value.selectedToken shouldBe Coins.ThorChain.TCY
+    }
+
+    @Test
+    fun `custom prefill does not overwrite the user's edits when loadData runs again`() = runTest {
+        val vm = buildViewModel()
+        val prefill = CustomDepositPrefill(ticker = "RUNE", amount = "0.01", memo = "TCY+")
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null, customPrefill = prefill)
+        advanceUntilIdle()
+        vm.customMemoFieldState.setTextAndPlaceCursorAtEnd("edited")
+
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null, customPrefill = prefill)
+        advanceUntilIdle()
+
+        vm.customMemoFieldState.text.toString() shouldBe "edited"
+    }
+
+    private fun givenThorVaultAddress(vararg coins: Coin) {
+        coEvery { accountsRepository.loadAddress("vault1", Chain.ThorChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.ThorChain,
+                    address = "thor1somevalidaddress",
+                    accounts =
+                        coins.map {
+                            Account(token = it, tokenValue = null, fiatValue = null, price = null)
+                        },
+                )
+            )
+    }
+
+    @Test
     fun `selectDepositOption Bond on ThorChain sets RUNE as selected token`() = runTest {
         val vm = buildViewModel()
         vm.loadData("vault1", Chain.ThorChain.raw, null, null)

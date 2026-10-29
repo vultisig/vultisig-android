@@ -466,6 +466,8 @@
     <string name="push_notifications">Push-Benachrichtigungen</string>
     <string name="push_notifications_failed">Push-Benachrichtigung fehlgeschlagen</string>
     <string name="push_notification_vault_not_found">Tresor nicht gefunden</string>
+    <string name="deposit_deeplink_unsupported">Dieser Einzahlungslink wird nicht unterstützt</string>
+    <string name="deposit_deeplink_coin_not_in_vault">%1$s ist nicht in diesem Tresor</string>
     <string name="push_notification_error_vault_not_supported">Tresor unterstützt keine Benachrichtigungen</string>
     <string name="push_notification_error_token_not_available">Benachrichtigungstoken konnte nicht abgerufen werden</string>
     <string name="push_notification_error_api_failure">Benachrichtigungsregistrierung konnte nicht aktualisiert werden</string>

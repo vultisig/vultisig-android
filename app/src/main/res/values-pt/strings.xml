@@ -466,6 +466,8 @@
     <string name="push_notifications">Notificações push</string>
     <string name="push_notifications_failed">Falha ao enviar notificação push</string>
     <string name="push_notification_vault_not_found">Cofre não encontrado</string>
+    <string name="deposit_deeplink_unsupported">Este link de depósito não é suportado</string>
+    <string name="deposit_deeplink_coin_not_in_vault">%1$s não está neste cofre</string>
     <string name="push_notification_error_vault_not_supported">O cofre não suporta notificações</string>
     <string name="push_notification_error_token_not_available">Falha ao obter token de notificação</string>
     <string name="push_notification_error_api_failure">Falha ao atualizar registo de notificações</string>

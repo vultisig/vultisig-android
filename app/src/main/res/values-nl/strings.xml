@@ -465,6 +465,8 @@
     <string name="push_notifications">Pushmeldingen</string>
     <string name="push_notifications_failed">Pushmelding mislukt</string>
     <string name="push_notification_vault_not_found">Kluis niet gevonden</string>
+    <string name="deposit_deeplink_unsupported">Deze stortingslink wordt niet ondersteund</string>
+    <string name="deposit_deeplink_coin_not_in_vault">%1$s staat niet in deze kluis</string>
     <string name="push_notification_error_vault_not_supported">Kluis ondersteunt geen meldingen</string>
     <string name="push_notification_error_token_not_available">Kan meldingentoken niet ophalen</string>
     <string name="push_notification_error_api_failure">Kan meldingenregistratie niet bijwerken</string>
