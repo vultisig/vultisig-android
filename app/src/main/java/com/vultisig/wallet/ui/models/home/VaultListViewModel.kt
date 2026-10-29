@@ -188,12 +188,21 @@ constructor(
             )
             return
         }
+        // More decimals than the coin has would be silently truncated when the amount is signed.
+        val amount = data.prefillAmount
+        if (amount != null && amount.toBigDecimal().stripTrailingZeros().scale() > coin.decimal) {
+            snackbarFlow.showMessage(
+                UiText.StringResource(R.string.deposit_deeplink_unsupported),
+                SnackbarType.Error,
+            )
+            return
+        }
         navigator.route(
             Route.Deposit(
                 vaultId = vaultId,
                 chainId = chain.raw,
                 customTicker = coin.ticker,
-                customAmount = data.prefillAmount,
+                customAmount = amount,
                 customMemo = data.memo,
             )
         )

@@ -20,17 +20,23 @@ data class DepositDeeplinkData(
 
     /** Whether the link itself can ever succeed, checked before a vault is picked. */
     val isValid: Boolean
-        get() = chain != null && !memo.isNullOrBlank()
+        get() =
+            chain != null &&
+                !memo.isNullOrBlank() &&
+                assetTicker?.trim().orEmpty().let { it.isEmpty() || TICKER.matches(it) }
 
     /** The amount when it is a plain dot-decimal; anything else is dropped, not guessed at. */
     val prefillAmount: String?
         get() = amount?.trim()?.takeIf { DECIMAL_AMOUNT.matches(it) }
 
-    /** The vault coin the deposit rides on: the named ticker, or the chain's native coin. */
+    /**
+     * The vault coin the deposit rides on: the named ticker, or the chain's native coin. A ticker
+     * shared by several coins is ambiguous, so it matches none.
+     */
     fun findCoin(coins: List<Coin>): Coin? {
         val chain = chain ?: return null
         val ticker = assetTicker?.trim().orEmpty()
-        return coins.firstOrNull { coin ->
+        return coins.singleOrNull { coin ->
             coin.chain == chain &&
                 if (ticker.isEmpty()) coin.isNativeToken
                 else coin.ticker.equals(ticker, ignoreCase = true)
@@ -41,3 +47,5 @@ data class DepositDeeplinkData(
 private val DEPOSIT_CHAINS = listOf(Chain.ThorChain, Chain.MayaChain)
 
 private val DECIMAL_AMOUNT = Regex("""\d+(\.\d+)?""")
+
+private val TICKER = Regex("""[A-Za-z0-9.-]{1,15}""")

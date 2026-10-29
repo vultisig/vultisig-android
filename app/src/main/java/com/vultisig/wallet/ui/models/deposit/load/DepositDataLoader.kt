@@ -223,17 +223,28 @@ constructor(
 
         loadAddress(vaultId, chain)
 
+        // The link's coin is applied once, so later address refreshes keep the user's choice.
+        var isPrefillApplied = false
         address
             .filterNotNull()
             .onEach { address ->
                 val prefilledToken =
-                    customPrefill?.let { prefill ->
-                        address.accounts
-                            .find { it.token.ticker.equals(prefill.ticker, ignoreCase = true) }
-                            ?.token
-                    }
+                    customPrefill
+                        ?.takeIf { !isPrefillApplied }
+                        ?.let { prefill ->
+                            address.accounts
+                                .singleOrNull {
+                                    it.token.ticker.equals(prefill.ticker, ignoreCase = true)
+                                }
+                                ?.token
+                        }
+                        ?.also { isPrefillApplied = true }
                 val selectedToken =
-                    prefilledToken ?: address.accounts.find { it.token.isNativeToken }?.token
+                    prefilledToken
+                        ?: address.accounts
+                            .takeIf { customPrefill == null }
+                            ?.find { it.token.isNativeToken }
+                            ?.token
                 selectedToken?.let { state.update { it.copy(selectedToken = selectedToken) } }
                 if (depositTypeActionProvider() == DeFiNavActions.ADD_LP.type) {
                     loadGasFeeForDisplay(vaultId, chain, address)

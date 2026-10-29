@@ -59,6 +59,19 @@ internal class DepositDeeplinkDataTest {
         link(assetTicker = "TCY").findCoin(listOf(Coins.ThorChain.RUNE)).shouldBeNull()
     }
 
+    @Test
+    fun `a malformed ticker makes the link invalid`() {
+        link(assetTicker = "TCY").isValid.shouldBeTrue()
+        link(assetTicker = "<b>hi</b> send funds now").isValid.shouldBeFalse()
+    }
+
+    @Test
+    fun `a ticker shared by several coins matches none`() {
+        val coins = listOf(Coins.ThorChain.TCY, Coins.ThorChain.TCY.copy(contractAddress = "x"))
+
+        link(assetTicker = "TCY").findCoin(coins).shouldBeNull()
+    }
+
     private fun link(
         assetChain: String? = "THORChain",
         assetTicker: String? = null,
