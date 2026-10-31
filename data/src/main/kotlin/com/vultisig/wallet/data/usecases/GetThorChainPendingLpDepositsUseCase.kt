@@ -51,8 +51,21 @@ internal class GetThorChainPendingLpDepositsUseCaseImpl
 constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepositsUseCase {
 
     override suspend fun invoke(runeAddress: String): List<ThorChainPendingLpDeposit> {
-        val candidates = thorChainApi.getPools().filter { it.holdsPendingLiquidity() }
+        val pools = thorChainApi.getPools()
+        val candidates = pools.filter { it.holdsPendingLiquidity() }
         if (candidates.isEmpty()) return emptyList()
+        val cleanedPools =
+            pools
+                .filter {
+                    isCleanedPendingLiquidityPool(
+                        asset = it.asset,
+                        status = it.status,
+                        pendingInboundNative = it.pendingInboundRune,
+                        pendingInboundAsset = it.pendingInboundAsset,
+                        derivedChainPrefix = "THOR",
+                    )
+                }
+                .map { it.asset }
 
         val found = coroutineScope {
             candidates
@@ -62,7 +75,7 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
         }
         if (found.isEmpty()) return emptyList()
 
-        return withAgeLimitCountdown(found)
+        return withAgeLimitCountdown(found, cleanedPools)
     }
 
     private fun ThorChainPoolJson.holdsPendingLiquidity(): Boolean =
@@ -82,7 +95,8 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
      * the countdown null rather than inventing a deadline the user might plan around.
      */
     private suspend fun withAgeLimitCountdown(
-        pending: List<PendingFetch>
+        pending: List<PendingFetch>,
+        cleanedPools: List<String>,
     ): List<ThorChainPendingLpDeposit> {
         val (ageLimit, currentHeight) =
             coroutineScope {
@@ -96,7 +110,14 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
             else
                 deposit.copy(
                     blocksUntilAddedAlone =
-                        (lastAddHeight + ageLimit - currentHeight).coerceAtLeast(0L)
+                        blocksUntilPendingLiquidityCommit(
+                            schedule = PendingLiquidityCleanupSchedule.THORChain,
+                            pool = deposit.pool,
+                            cleanedPools = cleanedPools,
+                            lastAddHeight = lastAddHeight,
+                            ageLimit = ageLimit,
+                            currentHeight = currentHeight,
+                        )
                 )
         }
     }

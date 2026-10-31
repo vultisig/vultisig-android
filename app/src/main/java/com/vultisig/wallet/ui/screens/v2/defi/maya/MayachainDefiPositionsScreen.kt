@@ -248,9 +248,22 @@ internal fun MayachainDefiPositionsScreenContent(
                             isBalanceVisible = state.isBalanceVisible,
                         )
 
-                    // A pending half-deposit is on a refund timer and belongs to no selected pool,
-                    // so it must survive the empty-selection branch — otherwise the one user who
-                    // has to act sees "no positions".
+                    // "No match" and "nothing pending" mean nothing until both feeds settle, so a
+                    // cold open waits on its spinner instead of flashing the no-positions container
+                    // over a half-deposit the scan has yet to report.
+                    DeFiTab.LP.displayNameRes if
+                        !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) &&
+                            (!state.lpDialogLoaded || !state.lp.pendingDepositsLoaded) ->
+                        LpTabContent(
+                            state = state.lp.copy(isLoading = true, pendingDeposits = emptyList()),
+                            onClickAdd = onClickAddLp,
+                            onClickRemove = onClickRemoveLp,
+                            onClickCompletePending = onClickCompletePendingLp,
+                        )
+
+                    // A pending half-deposit is committed alone once it ages out and belongs to no
+                    // selected pool, so it must survive the empty-selection branch — otherwise the
+                    // one user who has to act sees "no positions".
                     DeFiTab.LP.displayNameRes if
                         !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) &&
                             state.lp.pendingDeposits.isEmpty() ->

@@ -558,6 +558,9 @@ constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load Maya LP positions for dialog")
+                // Settled, not succeeded: left false, the LP tab would wait on its spinner for a
+                // dataset that is never coming, while a pending card can still stand on its own.
+                updateModel { it.copy(lpDialogLoaded = true) }
                 // The tab keeps its own loading state; the header total is a separate concern.
                 // reloadLpTab parks the LP leg unreported while it waits for this dataset, so
                 // report it as zero here or the total would never see all three legs.

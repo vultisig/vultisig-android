@@ -30,7 +30,7 @@ internal class GetThorChainPendingLpDepositsUseCaseTest {
     }
 
     @Test
-    fun `returns pending deposits with a refund countdown`() = runTest {
+    fun `returns pending deposits with a cleanup-slot countdown`() = runTest {
         coEvery { api.getPools() } returns
             listOf(pool("BTC.BTC", pendingRune = "100"), pool("ETH.ETH"))
         coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } returns
@@ -42,7 +42,8 @@ internal class GetThorChainPendingLpDepositsUseCaseTest {
         assertEquals("BTC.BTC", btc.pool)
         assertEquals(BigInteger("100"), btc.pendingRune)
         assertEquals(BTC_ADDR, btc.pairedAddress)
-        assertEquals(LAST_ADD_HEIGHT + AGE_LIMIT - CURRENT_HEIGHT, btc.blocksUntilAddedAlone)
+        // Aged out at 20,090,801, past slot 0 of that cycle, so the next one: 20,160,000.
+        assertEquals(160_000L, btc.blocksUntilAddedAlone)
         coVerify(exactly = 0) { api.getLiquidityProvider("ETH.ETH", any()) }
     }
 

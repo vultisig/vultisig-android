@@ -44,8 +44,21 @@ internal class GetMayaChainPendingLpDepositsUseCaseImpl
 constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepositsUseCase {
 
     override suspend fun invoke(cacaoAddress: String): List<MayaChainPendingLpDeposit> {
-        val candidates = mayaChainApi.getMayaNodePools().filter { it.holdsPendingLiquidity() }
+        val pools = mayaChainApi.getMayaNodePools()
+        val candidates = pools.filter { it.holdsPendingLiquidity() }
         if (candidates.isEmpty()) return emptyList()
+        val cleanedPools =
+            pools
+                .filter {
+                    isCleanedPendingLiquidityPool(
+                        asset = it.asset,
+                        status = it.status,
+                        pendingInboundNative = it.pendingInboundCacao,
+                        pendingInboundAsset = it.pendingInboundAsset,
+                        derivedChainPrefix = null,
+                    )
+                }
+                .map { it.asset }
 
         val found = coroutineScope {
             candidates
@@ -61,7 +74,7 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
         }
         if (found.isEmpty()) return emptyList()
 
-        return withAgeLimitCountdown(found)
+        return withAgeLimitCountdown(found, cleanedPools)
     }
 
     private fun MayaNodePool.holdsPendingLiquidity(): Boolean =
@@ -69,7 +82,8 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
             (pendingInboundAsset.toBigIntegerOrNull()?.signum() ?: 0) > 0
 
     private suspend fun withAgeLimitCountdown(
-        pending: List<PendingFetch>
+        pending: List<PendingFetch>,
+        cleanedPools: List<String>,
     ): List<MayaChainPendingLpDeposit> {
         val (ageLimit, currentHeight) =
             coroutineScope {
@@ -94,7 +108,14 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
             else
                 deposit.copy(
                     blocksUntilAddedAlone =
-                        (lastAddHeight + ageLimit - currentHeight).coerceAtLeast(0L)
+                        blocksUntilPendingLiquidityCommit(
+                            schedule = PendingLiquidityCleanupSchedule.MayaChain,
+                            pool = deposit.pool,
+                            cleanedPools = cleanedPools,
+                            lastAddHeight = lastAddHeight,
+                            ageLimit = ageLimit,
+                            currentHeight = currentHeight,
+                        )
                 )
         }
     }

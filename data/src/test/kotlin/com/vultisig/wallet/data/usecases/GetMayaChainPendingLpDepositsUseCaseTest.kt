@@ -79,17 +79,48 @@ internal class GetMayaChainPendingLpDepositsUseCaseTest {
     }
 
     @Test
-    fun `the refund countdown uses the default age limit without a mimir override`() = runTest {
+    fun `the countdown runs to the pool's cleanup slot after the default age limit`() = runTest {
+        // Aged out at 18,100,001; the only cleaned pool is slot 0, so the next multiple of
+        // 100,800 — 18,144,000 — is when mayanode commits it.
         val deposit = useCase(CACAO_ADDRESS).single()
 
-        assertEquals(100_800L - 800L, deposit.blocksUntilAddedAlone)
+        assertEquals(144_000L, deposit.blocksUntilAddedAlone)
     }
 
     @Test
     fun `a mimir override replaces the default age limit`() = runTest {
         coEvery { api.getMayaConstants() } returns mapOf("PENDINGLIQUIDITYAGELIMIT" to 1_000L)
 
-        assertEquals(200L, useCase(CACAO_ADDRESS).single().blocksUntilAddedAlone)
+        assertEquals(1_000L, useCase(CACAO_ADDRESS).single().blocksUntilAddedAlone)
+    }
+
+    @Test
+    fun `the cleanup slot follows the pool's place among pools holding pending liquidity`() =
+        runTest {
+            coEvery { api.getMayaConstants() } returns mapOf("PENDINGLIQUIDITYAGELIMIT" to 1_000L)
+            coEvery { api.getMayaNodePools() } returns
+                listOf(
+                    pool("BTC.BTC", pendingCacao = "3000000000"),
+                    pool("ARB.ETH", pendingAsset = "1"),
+                )
+            coEvery { api.getLiquidityProvider("ARB.ETH", CACAO_ADDRESS) } returns null
+
+            // BTC.BTC sorts second of two: slot every 500 blocks, so 18,000,500.
+            assertEquals(500L, useCase(CACAO_ADDRESS).single().blocksUntilAddedAlone)
+        }
+
+    @Test
+    fun `a pool the cleanup pass skips leaves the countdown unknown`() = runTest {
+        coEvery { api.getMayaNodePools() } returns
+            listOf(
+                MayaNodePool(
+                    asset = "BTC.BTC",
+                    status = "Suspended",
+                    pendingInboundCacao = "3000000000",
+                )
+            )
+
+        assertNull(useCase(CACAO_ADDRESS).single().blocksUntilAddedAlone)
     }
 
     @Test
