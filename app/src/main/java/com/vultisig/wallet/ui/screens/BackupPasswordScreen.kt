@@ -127,6 +127,8 @@ internal fun BackupPasswordScreen(
                                 drawableResId = R.drawable.ic_info,
                                 size = 16.dp,
                                 tint = Theme.v2.colors.alerts.warning,
+                                contentDescription =
+                                    stringResource(R.string.fast_vault_password_screen_hint_title),
                                 onClick = onShowMoreInfo,
                             )
                         },
@@ -179,7 +181,7 @@ internal fun BackupPasswordScreen(
                             footNote = (state.passwordErrorMessage ?: UiText.Empty).asString(),
                             imeAction =
                                 if (state.isNextButtonEnabled) ImeAction.Go else ImeAction.None,
-                            onKeyboardAction = { onBackupClick() },
+                            onKeyboardAction = { if (state.isNextButtonEnabled) onBackupClick() },
                             modifier =
                                 Modifier.testTag("BackupPasswordScreen.confirmPasswordField"),
                         )

@@ -301,8 +301,8 @@ interface ShareQrPreviewEntryPoint {
 class PreviewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         val screen = intent.getStringExtra("screen") ?: "swap_confirm"
+        if (screen == "backup_password") enableEdgeToEdge()
         // `adb shell am start -n com.vultisig.wallet/.debug.PreviewActivity --es pin_widget
         // ticker|top`
         // asks the launcher to place a market widget, for checking real home-screen rendering.
