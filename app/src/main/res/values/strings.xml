@@ -457,16 +457,16 @@
     <string name="reshare_start_join_subtitle">You received a reshare request from another device.</string>
     <string name="before_reshare_title">Before you reshare</string>
     <string name="before_reshare_subtitle">Resharing regenerates your vault shares. There are a few things to know first.</string>
-    <string name="before_reshare_backups_title">Old backups will stop working</string>
-    <string name="before_reshare_backups_body">Any existing .vult files become invalid. You\'ll need to create fresh backups after resharing.</string>
+    <string name="before_reshare_backups_title">Make fresh backups</string>
+    <string name="before_reshare_backups_body">Backups from before this reshare can\'t be combined with the new ones. Old backups still work together, so keep them safe or delete them. If a device was lost or compromised, move your funds to a new vault.</string>
     <string name="before_reshare_cosigners_title">All co-signers must be online</string>
     <string name="before_reshare_cosigners_body">Every current device in your vault needs to participate in the reshare session.</string>
     <string name="reshare_success_title">Vault reshared</string>
     <string name="reshare_success_title_highlight">successfully</string>
     <string name="reshare_backup_each_device_body">This is only 1 backup of your vault, repeat this process for the other devices.</string>
     <string name="reshare_backup_store_separately_body">Keep each backup in a different place. If one is compromised, your funds stay safe.</string>
-    <string name="reshare_backup_old_wont_work_title">Old backups won\'t work</string>
-    <string name="reshare_backup_old_wont_work_body">Backups from previous vault setups can\'t be used. Only backups created during this setup are valid.</string>
+    <string name="reshare_backup_old_wont_work_title">Make fresh backups</string>
+    <string name="reshare_backup_old_wont_work_body">Backups from before this reshare can\'t be combined with the new ones. Old backups still work together, so keep them safe or delete them. If a device was lost or compromised, move your funds to a new vault.</string>
     <string name="threshold_error">Threshold not reached\nMissing enough initial devices</string>
     <string name="add_folder_folder_name_title">Folder Name</string>
 
@@ -784,7 +784,7 @@
     <string name="fast_vault_name_screen_desc">You can always rename your vault later in the settings</string>
     <string name="enter_email_screen_title">Enter your email</string>
     <string name="enter_email_screen_hint">Email</string>
-    <string name="enter_email_screen_desc">This email is used for cloud backup and shared with no third party</string>
+    <string name="enter_email_screen_desc">Used once to send your vault backup. We don\'t store it.</string>
     <string name="fast_vault_password_screen_title">Choose a password</string>
     <string name="fast_vault_password_screen_hint">This occurs because the password is used to locally encrypt the backup file, similar to how a hard drive is encrypted. In the following step, you have the option to add a hint.</string>
     <string name="fast_vault_password_screen_hint_title">More Info</string>
@@ -1676,7 +1676,7 @@
     <string name="vault_setup_no_inspiration">No inspiration? You can always change the name later in your settings.</string>
     <string name="naming_saving_vault">Saving vault</string>
     <string name="email_enter_your_email">Enter your email</string>
-    <string name="email_only_used_once">This email is used for cloud backup and shared with no third party</string>
+    <string name="email_only_used_once">Used once to send your vault backup. We don\'t store it.</string>
     <string name="password_choose_a_password">Choose a password</string>
     <string name="password_extra_layer">If you want an extra layer of security, choose a password. Password cannot be recovered.</string>
     <string name="password_extra_layer_highlight">Password cannot be recovered.</string>
@@ -1730,7 +1730,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Server Backup</string>
     <string name="server_backup_email_label">Email</string>
-    <string name="server_backup_email_description">This email is used for cloud backup and shared with no third party</string>
+    <string name="server_backup_email_description">Used once to send your vault backup. We don\'t store it.</string>
     <string name="server_backup_email_error">Incorrect email, please check</string>
     <string name="server_backup_password_label">Password</string>
     <string name="server_backup_password_description">Enter the password you set when creating this Vault.</string>
