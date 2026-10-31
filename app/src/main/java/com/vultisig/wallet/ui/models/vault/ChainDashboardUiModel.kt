@@ -106,21 +106,23 @@ constructor(
         }
     }
 
+    // Ethereum's DeFi page is Circle, which is only reachable from the DeFi home Circle row;
+    // the Ethereum token list never pages into it.
     private fun initAvailableCryptoTypes() {
         val availableCryptoTypes =
             if (
-                chainId in
-                    listOf(
-                        Chain.ThorChain.id,
-                        Chain.Ethereum.id,
-                        Chain.MayaChain.id,
-                        Chain.Tron.id,
-                        Chain.Ton.id,
-                        Chain.Solana.id,
-                        Chain.Terra.id,
-                        Chain.TerraClassic.id,
-                        Chain.Qbtc.id,
-                    )
+                args.route is ChainDashboardRoute.PositionCircle ||
+                    chainId in
+                        listOf(
+                            Chain.ThorChain.id,
+                            Chain.MayaChain.id,
+                            Chain.Tron.id,
+                            Chain.Ton.id,
+                            Chain.Solana.id,
+                            Chain.Terra.id,
+                            Chain.TerraClassic.id,
+                            Chain.Qbtc.id,
+                        )
             )
                 BOTH_CRYPTO_CONNECTION_TYPES
             else ONLY_WALLET
@@ -162,7 +164,8 @@ constructor(
                             vaultId = vaultId,
                             chainId = requireNotNull(chainId),
                         )
-                    else -> ChainDashboardRoute.PositionCircle(vaultId = vaultId)
+                    Chain.Ethereum.id -> ChainDashboardRoute.PositionCircle(vaultId = vaultId)
+                    else -> error("No DeFi page for chain $chainId")
                 }
             }
         }

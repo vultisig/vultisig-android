@@ -66,6 +66,7 @@ internal fun Banner(
     /** Optional heading above [text], for banners that need a subject line of their own. */
     title: String? = null,
     variant: BannerVariant = BannerVariant.Info,
+    showLeadingIcon: Boolean = true,
     @SuppressLint("ComposableLambdaParameterNaming") actions: (@Composable () -> Unit)? = null,
 ) {
     val shape = Theme.v2.radius.xl
@@ -108,7 +109,9 @@ internal fun Banner(
                 BannerVariant.Success -> Theme.v2.colors.alerts.success
             }
 
-        UiIcon(drawableResId = R.drawable.ic_info, size = 16.dp, tint = contentColor)
+        if (showLeadingIcon) {
+            UiIcon(drawableResId = R.drawable.ic_info, size = 16.dp, tint = contentColor)
+        }
 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
             title?.let {
