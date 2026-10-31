@@ -1162,7 +1162,8 @@
     <string name="home_positions">Positionen</string>
     <string name="home_swipe_hint_got_it">Verstanden</string>
     <string name="backup_password_request_with_password_action">Passwort verwenden</string>
-    <string name="backup_password_topbar_title">Passwort</string>
+    <string name="backup_password_device_title">Passwort für Gerätesicherung</string>
+    <string name="backup_password_screen_back_up_now">Dieses Gerät jetzt sichern</string>
     <string name="function_transfer_ibc_dst_address_input_title">Zieladresse</string>
     <string name="select_vault_type_secure_desc_3">Sichern Sie beliebige Vermögenswerte.</string>
     <string name="select_vault_type_fast_desc_3">Vultiserver signiert sofort</string>
