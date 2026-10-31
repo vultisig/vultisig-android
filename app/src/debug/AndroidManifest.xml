@@ -4,7 +4,6 @@
         <activity
             android:name="com.vultisig.wallet.debug.PreviewActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:windowSoftInputMode="adjustResize" />
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
     </application>
 </manifest>
