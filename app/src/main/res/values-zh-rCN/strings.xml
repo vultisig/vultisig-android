@@ -20,7 +20,7 @@
     <string name="keysign_notification_title">签署交易</string>
     <string name="keysign_notification_body">有一个新的签名请求等待您处理</string>
     <string name="foreground_notification_banner_title">加入交易</string>
-    <string name="notification_banner_swap_summary">交换 %1$s → %2$s</string>
+    <string name="notification_banner_swap_summary">兑换 %1$s → %2$s</string>
     <string name="notification_banner_send_summary">发送 %1$s</string>
     <string name="notifications_intro_enable">启用</string>
     <string name="notifications_are_here">通知已到来</string>
@@ -107,7 +107,7 @@
     <string name="tron_defi_claim_button">提取 %1$s</string>
     <string name="tron_defi_countdown_days">%1$d天 %2$d小时</string>
     <string name="tron_defi_countdown_hours">%1$d小时 %2$d分钟</string>
-    <string name="tron_defi_error_trx_not_in_vault">在金库中未找到TRX代币</string>
+    <string name="tron_defi_error_trx_not_in_vault">在保险库中未找到 TRX 代币</string>
     <string name="tron_freeze_screen_title">冻结 TRON</string>
     <string name="tron_unfreeze_screen_title">解冻 TRON</string>
     <string name="tron_claim_screen_title">提取 TRON</string>
@@ -133,7 +133,7 @@
     <string name="vault_settings_rename_title">重命名</string>
     <string name="vault_settings_rename_subtitle">编辑您的保险库名称</string>
     <string name="vault_settings_reshare_title">重新分享</string>
-    <string name="vault_settings_reshare_subtitle">与新委员会重新分享保险库</string>
+    <string name="vault_settings_reshare_subtitle">使用新的设备组重新共享保险库</string>
     <string name="vault_settings_dilithium_keygen_title">启用 QBTC</string>
     <string name="vault_settings_dilithium_keygen_subtitle">生成密钥以启用 QBTC 链</string>
     <string name="vault_settings_delete_title">删除</string>
@@ -155,7 +155,7 @@
     <string name="vault_tier_unlock_ultimate_part2">终极</string>
     <string name="vault_tier_unlock_ultimate_part3">等级</string>
     <string name="vault_tier_ultimate">终极</string>
-    <string name="vault_tier_swap_discount">交换折扣：%1$d基点</string>
+    <string name="vault_tier_swap_discount">兑换折扣：%1$d基点</string>
     <string name="vault_tier_more_coming_soon">更多即将推出</string>
     <string name="vault_tier_unlock">解锁等级</string>
     <string name="vault_tier_active">已激活</string>
@@ -176,22 +176,22 @@
     <string name="vault_tier_description">持有 $VULT 以解锁更低的交易费用。</string>
     <string name="vault_tier_bronze_description_part1">持有 1,500 $VULT，您将解锁青铜等级并获得</string>
     <string name="vault_tier_bronze_description_part2">5 基点交易费折扣</string>
-    <string name="vault_tier_bronze_description_part3">在所有交换中。</string>
+    <string name="vault_tier_bronze_description_part3">，适用于所有兑换。</string>
     <string name="vault_tier_silver_description_part1">持有 3,000 $VULT，您将解锁白银等级并获得</string>
     <string name="vault_tier_silver_description_part2">10 基点交易费折扣</string>
-    <string name="vault_tier_silver_description_part3">在所有交换中。</string>
+    <string name="vault_tier_silver_description_part3">，适用于所有兑换。</string>
     <string name="vault_tier_gold_description_part1">持有 7,500 $VULT，您将解锁黄金等级并获得</string>
     <string name="vault_tier_gold_description_part2">20 基点交易费折扣</string>
-    <string name="vault_tier_gold_description_part3">在所有交换中。</string>
+    <string name="vault_tier_gold_description_part3">，适用于所有兑换。</string>
     <string name="vault_tier_platinum_description_part1">持有 15,000 $VULT，您将解锁铂金等级并获得</string>
     <string name="vault_tier_platinum_description_part2">25 基点交易费折扣</string>
-    <string name="vault_tier_platinum_description_part3">在所有交换中。</string>
+    <string name="vault_tier_platinum_description_part3">，适用于所有兑换。</string>
     <string name="vault_tier_diamond_description_part1">持有 100,000 $VULT，您将解锁钻石等级并获得</string>
     <string name="vault_tier_diamond_description_part2">35 基点交易费折扣</string>
-    <string name="vault_tier_diamond_description_part3">在所有交换中。</string>
+    <string name="vault_tier_diamond_description_part3">，适用于所有兑换。</string>
     <string name="vault_tier_ultimate_description_part1">持有 1,000,000 $VULT，您将解锁终极等级并获得</string>
     <string name="vault_tier_ultimate_description_part2">完全免除 Vultisig 费用</string>
-    <string name="vault_tier_ultimate_description_part3">在所有交换中。</string>
+    <string name="vault_tier_ultimate_description_part3">，适用于所有兑换。</string>
     <!-- Keysign & Join -->
     <string name="join_keysign_missing_required_vault">您没有密钥签名所需的保险库</string>
 
@@ -210,10 +210,10 @@
     <string name="send_continue_button">继续</string>
 
     <!-- Chain Account -->
-    <string name="chain_account_view_swap">交换</string>
+    <string name="chain_account_view_swap">兑换</string>
 
     <string name="circle_defi_description">将您的 USDC 存入 Circle 账户并赚取收益。安全地存储在您的 Vultisig 保险库中。</string>
-    <string name="circle_defi_control_info">资金完全由您的保险库控制。Circle 账户是自托管的，收益通过安全的链下国库产生。</string>
+    <string name="circle_defi_control_info">资金完全由您的保险库控制。Circle 账户为自托管账户，收益来自安全的链下国债。</string>
     <string name="open_account_button">开设账户</string>
 
     <!-- Vault Settings Errors -->
@@ -267,7 +267,7 @@
     <string name="verify_transaction_consent_address">我正在发送到正确的地址</string>
     <string name="verify_transaction_consent_amount">金额正确</string>
     <string name="verify_transaction_consent_dapp_transaction">我已核对交易详情</string>
-    <string name="verify_transaction_error_not_enough_consent">请检查所有同意项</string>
+    <string name="verify_transaction_error_not_enough_consent">请勾选所有确认项</string>
 
     <!-- Camera & QR -->
     <string name="camera_permission_open_settings">打开设置</string>
@@ -308,7 +308,7 @@
 
     <!-- Keysign Screen -->
     <string name="keysign_screen_preparing_vault">准备保险库…</string>
-    <string name="keysign_malicious_party_detected">检测到此 keysign 会话中的设备“%1$s”存在恶意行为。请勿再使用它进行签名。</string>
+    <string name="keysign_malicious_party_detected">检测到此签名会话中的设备“%1$s”存在恶意行为。请勿再使用该设备进行签名。</string>
 
     <!-- Camera Bind Error -->
 
@@ -341,10 +341,10 @@
     <string name="faq_settings_q5">费用和成本是多少？</string>
     <string name="faq_settings_q6">Vultisig 支持哪些加密货币？</string>
     <string name="faq_settings_a1">它是一个基于 MPC 技术的安全、多重认证钱包，用于管理数字资产。交易需要多个设备的批准。</string>
-    <string name="faq_settings_a2">Vultisig 通过多设备认证提供增强的安全性，支持许多区块链，易于恢复选项，无需助记词或用户跟踪。</string>
+    <string name="faq_settings_a2">Vultisig 通过多设备认证提供更强的安全性，支持众多区块链，恢复简便，且无需助记词，也不追踪用户。</string>
     <string name="faq_settings_a3">是的，只要您在创建保险库时保存并可以访问您的备份。您可以在新设备上导入这些备份以重新获得对资产的访问权限。</string>
-    <string name="faq_settings_a4">Vultisig 安全地存储和管理数字资产。所有操作，如发送或交换，都需要设备阈值来签署交易。</string>
-    <string name="faq_settings_a5">Vultisig 免费使用。只有标准网络费用适用于发送。对于交换和桥接，有 0.5%（50 基点）的费用。</string>
+    <string name="faq_settings_a4">Vultisig 安全地存储和管理数字资产。所有操作（如发送或兑换）都需要达到阈值数量的设备共同签署交易。</string>
+    <string name="faq_settings_a5">Vultisig 可免费使用。发送时仅收取标准网络费。兑换和跨链桥收取 0.5%（50 基点）的费用。</string>
     <string name="faq_settings_a6">Vultisig 支持主要的加密货币和代币，目前有超过 30 个链及其代币可用。</string>
 
     <!-- Biometry Auth -->
@@ -401,8 +401,8 @@
 
     <!-- Swap Form -->
     <string name="swap_form_from_title">从</string>
-    <string name="swap_form_estimated_fees_title">交换费用</string>
-    <string name="swap_form_estimated_fees_with_percent_title">交换费用 (%1$s)</string>
+    <string name="swap_form_estimated_fees_title">兑换手续费</string>
+    <string name="swap_form_estimated_fees_with_percent_title">兑换手续费（%1$s）</string>
     <string name="swap_form_estimated_fees_included_in_rate">已包含在报价汇率中</string>
     <string name="swap_form_outbound_fee_title">出金手续费</string>
     <string name="swap_form_price_impact_title">价格影响</string>
@@ -410,7 +410,7 @@
     <string name="swap_price_impact_average">中等</string>
     <string name="swap_price_impact_high">较高</string>
     <string name="swap_form_dst_token_title">至</string>
-    <string name="transaction_type_button_swap">交换</string>
+    <string name="transaction_type_button_swap">兑换</string>
     <string name="swap_form_gas_title">网络费用</string>
     <string name="swap_max_network_fee">最大网络费用</string>
     <string name="swap_form_total_fees_title">总费用</string>
@@ -425,7 +425,7 @@
 
     <!-- Verify Swap -->
     <string name="verify_swap_agree_receive_amount">我同意将收到的最低金额</string>
-    <string name="verify_swap_consent_amount">交换金额正确</string>
+    <string name="verify_swap_consent_amount">兑换金额正确</string>
 
     <!-- Chain Token Screen -->
     <string name="chain_token_screen_address_copied">%1$s 已复制到剪贴板</string>
@@ -453,7 +453,7 @@
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_memo_title">备注</string>
-    <string name="verify_transaction_allow_death_warning">此转账可能会清空发送方账户。如果剩余余额低于存在性存款，账户将被停用（收割），任何剩余的 %1$s 将丢失。</string>
+    <string name="verify_transaction_allow_death_warning">此转账可能会清空发送方账户。如果剩余余额低于最低存续余额（Existential Deposit），账户将被注销（reaped），剩余的 %1$s 将全部丢失。</string>
 
     <!-- Circular Progress Indicator -->
 
@@ -466,7 +466,7 @@
 
     <!-- Swap Screen -->
     <string name="swap_screen_provider_title">提供商</string>
-    <string name="swap_form_minimum_amount">交换金额太小。建议金额 %1$s %2$s</string>
+    <string name="swap_form_minimum_amount">兑换金额太小。建议金额 %1$s %2$s</string>
 
     <!-- Backup Password Screen -->
     <string name="backup_password_screen_title">备份</string>
@@ -474,7 +474,7 @@
     <string name="add_vault_save">保存</string>
     <string name="backup_password_screen_enter_password">输入密码</string>
     <string name="backup_password_screen_error_too_short">密码至少需要 %1$d 个字符</string>
-    <string name="import_file_screen_enter_password_sub">此密码是在导出共享保险库时设置的。</string>
+    <string name="import_file_screen_enter_password_sub">此密码是在导出保险库份额时设置的。</string>
     <string name="import_file_screen_hint_password">密码</string>
     <string name="backup_password_screen_permission_required">备份操作需要文件权限。</string>
 
@@ -539,7 +539,7 @@
     <string name="add_address_title">添加地址</string>
 
     <!-- Swap -->
-    <string name="swap_route_not_available">交换路线不可用</string>
+    <string name="swap_route_not_available">兑换路径不可用</string>
 
     <!-- Add Address -->
     <string name="add_address_address_title">地址</string>
@@ -557,7 +557,7 @@
 
     <!-- Import File -->
     <string name="import_file_not_supported">不支持的文件类型，请重试</string>
-    <string name="import_file_zip_incomplete">无法读取此文件中的部分保险库分片</string>
+    <string name="import_file_zip_incomplete">无法读取此文件中的部分保险库份额</string>
 
     <!-- Failed to Resolve Address -->
     <string name="failed_to_resolve_address">解析地址失败</string>
@@ -573,16 +573,16 @@
     <string name="reshare_start_join_subtitle">您收到了来自其他设备的重新分享请求。</string>
     <string name="before_reshare_title">重新分享之前</string>
     <string name="before_reshare_subtitle">重新分享会重新生成您的保险库份额。请先了解以下几点。</string>
-    <string name="before_reshare_backups_title">旧备份将停止工作</string>
-    <string name="before_reshare_backups_body">所有现有的 .vult 文件将失效。重新分享后，您需要创建新的备份。</string>
+    <string name="before_reshare_backups_title">创建新的备份</string>
+    <string name="before_reshare_backups_body">此次重新共享之前的备份无法与新备份组合使用。旧备份之间仍可配合使用，请妥善保管或将其删除。如果有设备丢失或遭到入侵，请将您的资金转移到新的保险库。</string>
     <string name="before_reshare_cosigners_title">所有共同签名者必须在线</string>
     <string name="before_reshare_cosigners_body">您保险库中当前的每台设备都需要参与重新分享会话。</string>
     <string name="reshare_success_title">保险库已重新分享</string>
     <string name="reshare_success_title_highlight">成功</string>
     <string name="reshare_backup_each_device_body">这只是您保险库的 1 个备份，请在其他设备上重复此过程。</string>
     <string name="reshare_backup_store_separately_body">将每个备份保存在不同的地方。如果其中一个被泄露，您的资金仍然安全。</string>
-    <string name="reshare_backup_old_wont_work_title">旧备份将无法使用</string>
-    <string name="reshare_backup_old_wont_work_body">无法使用先前保险库设置中的备份。只有在本次设置期间创建的备份才有效。</string>
+    <string name="reshare_backup_old_wont_work_title">创建新的备份</string>
+    <string name="reshare_backup_old_wont_work_body">此次重新共享之前的备份无法与新备份组合使用。旧备份之间仍可配合使用，请妥善保管或将其删除。如果有设备丢失或遭到入侵，请将您的资金转移到新的保险库。</string>
     <string name="reshare_start_screen_start_reshare">开始重新分享</string>
 
     <!-- Threshold Error -->
@@ -622,7 +622,7 @@
     <!-- Signing Errors -->
     <string name="signing_error_insufficient_funds">没有足够的燃料来支付交易费用。\n请为钱包充值。</string>
     <string name="signing_error_token_account_not_found_s">无法加载您的 %s 代币账户。请重试。</string>
-    <string name="signing_error_mixed_reshare">混合重新分享签名。\n请使用相同重新分享周期的保险库份额。</string>
+    <string name="signing_error_mixed_reshare">签名使用了不同重新共享周期的份额。\n请使用同一重新共享周期的保险库份额。</string>
     <string name="signing_error_sequence_mismatch">账户序列号已更改 — 请重试。</string>
     <string name="signing_error_account_not_funded">此账户尚未在链上存在。\n请先为钱包充值。</string>
     <string name="signing_error_broadcast_rejected">交易被网络拒绝。</string>
@@ -658,7 +658,7 @@
     <!-- QR Titles -->
     <string name="qr_title_join_keygen">加入密钥生成</string>
     <string name="qr_title_join_keysign">加入密钥签名</string>
-    <string name="qr_title_join_swap_keysign">加入交换</string>
+    <string name="qr_title_join_swap_keysign">加入兑换</string>
     <string name="qr_share_label_vault">保险库</string>
     <string name="qr_share_label_amount">金额</string>
     <string name="qr_share_label_to">至</string>
@@ -668,8 +668,8 @@
     <string name="keysign_share_qr_copy_link">复制链接</string>
     <string name="keysign_share_qr_share_image">分享二维码图片</string>
     <string name="keysign_share_qr_link_copied">链接已复制</string>
-    <string name="qr_share_type_fast_vault">快速保险库</string>
-    <string name="qr_share_type_secure_vault">安全保险库</string>
+    <string name="qr_share_type_fast_vault">Fast Vault</string>
+    <string name="qr_share_type_secure_vault">Secure Vault</string>
 
     <!-- Error Folder -->
     <string name="error_folder_must_have_at_least_one_vault">文件夹需要至少一个选定的保险库</string>
@@ -710,7 +710,7 @@
     <string name="deposit_form_no_bonded_assets_on_node">在此节点上未找到已绑定资产</string>
     <string name="deposit_form_bonded_assets_load_failed">无法加载此节点的已绑定资产</string>
     <string name="deposit_form_bonded_assets_loading">正在加载已绑定资产…</string>
-    <string name="deposit_form_estimated_bond_value">预计质押价值</string>
+    <string name="deposit_form_estimated_bond_value">预计绑定价值</string>
 
     <!-- Join Keysign Error -->
     <string name="join_keysign_error_wrong_vault_share">相同的保险库份额。请更改份额以签名</string>
@@ -759,10 +759,10 @@
     <!-- Swap Errors -->
     <string name="swap_error_amount_too_low">金额太低，不足以支付手续费。请增加金额。</string>
     <string name="swap_error_amount_below_dust_threshold">金额低于粉尘阈值。请增加金额后重试。</string>
-    <string name="swap_error_insufficient_balance_and_fees">%1$s 余额不足以支付交换和 Gas 费用。请充值 %1$s 或减少交换金额</string>
-    <string name="swap_error_insufficient_source_token">%1$s 余额不足以进行交换</string>
+    <string name="swap_error_insufficient_balance_and_fees">%1$s 余额不足以支付兑换金额和 Gas 费。请充值 %1$s 或减少兑换金额</string>
+    <string name="swap_error_insufficient_source_token">%1$s 余额不足，无法兑换</string>
     <string name="swap_error_insufficient_gas_fees">没有足够的 %1$s 来支付 Gas 费用。请为钱包充值。</string>
-    <string name="swap_error_time_out">交换请求超时。请重试</string>
+    <string name="swap_error_time_out">兑换请求超时。请重试</string>
     <string name="swap_error_high_price_impact">价格影响过高。请尝试较小的金额或不同的代币对。</string>
     <string name="swap_error_slippage_tolerance_too_low">此兑换的滑点容差过低。请调高或使用自动。</string>
     <string name="swap_error_quote_failed">兑换报价失败。请重试或调整金额。</string>
@@ -791,8 +791,8 @@
     <string name="network_connection_lost">网络连接丢失。请检查您的互联网连接</string>
 
     <!-- Send Form Polka -->
-    <string name="send_form_polka_reaping_warning">确保留下足够的资金来支付费用。如果账户余额低于 0.01 DOT（存在性存款），账户将被停用（收割），任何剩余资金将丢失。您可以随时用大于存在性存款的新存款重新激活地址。但是，这不会恢复丢失的资金。</string>
-    <string name="send_form_bittensor_reaping_warning">确保留下足够的资金来支付费用。如果账户余额低于 0.0000005 TAO（存在性存款），账户将被停用（收割），任何剩余资金将丢失，因此会拒绝会使余额低于该金额的转账。</string>
+    <string name="send_form_polka_reaping_warning">请确保预留足够的资金支付手续费。如果账户余额低于 0.01 DOT（最低存续余额，Existential Deposit），账户将被注销（reaped），剩余资金将全部丢失。您可以随时存入高于最低存续余额的金额来重新激活该地址，但丢失的资金无法找回。</string>
+    <string name="send_form_bittensor_reaping_warning">请确保预留足够的资金支付手续费。如果账户余额低于 0.0000005 TAO（最低存续余额，Existential Deposit），账户将被注销（reaped），剩余资金将全部丢失，因此会导致余额低于该金额的转账将被拒绝。</string>
 
     <!-- Sign Message -->
     <string name="hint_signing_method">签名方法</string>
@@ -836,9 +836,9 @@
     <!-- Verify Transaction -->
     <string name="verify_transaction_function_signature_title">函数签名</string>
     <string name="verify_transaction_function_inputs_title">函数参数</string>
-    <string name="dapp_hero_unverified_function_title">未验证的功能</string>
+    <string name="dapp_hero_unverified_function_title">未验证的合约函数</string>
     <string name="dapp_hero_unverified_function_subtitle">请在签名前查看下方详情</string>
-    <string name="dapp_unverified_function_done_caution">未验证的功能。请查看交易详情。</string>
+    <string name="dapp_unverified_function_done_caution">未验证的合约函数。请核对交易详情。</string>
     <string name="request_from">请求来自</string>
 
     <!-- Fast Vault Password Reminder -->
@@ -883,8 +883,8 @@
     <string name="referral_screen_code_hint">输入最多 4 个字符</string>
     <string name="referral_create_referral">创建推荐</string>
     <string name="referral_invite_onboarding_3">节省费用。</string>
-    <string name="referral_create_code_and_earn">创建您自己的代码并赚取</string>
-    <string name="referral_on_referred_swaps">在推荐交换上</string>
+    <string name="referral_create_code_and_earn">创建您自己的推荐码，从推荐用户的兑换中赚取\u0020</string>
+    <string name="referral_on_referred_swaps">\u0020收益</string>
     <string name="referral_main_my_referral_title">我的推荐</string>
     <string name="referral_main_my_referral_body">管理您的推荐代码并领取奖励。</string>
     <string name="referral_view_friend_active">已激活</string>
@@ -913,7 +913,7 @@
     <string name="unstake_cacao_unlocks_in_hours_format">%1$d小时%2$d分钟后解锁</string>
     <string name="unstake_cacao_maturity_check_failed">无法验证仓位。请重试。</string>
     <string name="cacaopool_only_cacao_supported">池操作仅支持 CACAO 代币</string>
-    <string name="referral_create_info_content">推荐计划适用于 THORChain 交换，并尽力而为。您需要注册 THORName 才能使用 Vultisig 推荐。注册费为 10 RUNE，每年 1 RUNE，支付给 THORChain 网络。</string>
+    <string name="referral_create_info_content">推荐计划适用于 THORChain 兑换，按尽力而为原则提供。您需要注册 THORName 才能使用 Vultisig 推荐。注册费为 10 RUNE，另加每年 1 RUNE，均支付给 THORChain 网络。</string>
     <string name="referral_create_info_title">推荐计划</string>
     <string name="referral_create_not_enough_balance">余额不足</string>
     <string name="referral_create_unknown_error">未知错误</string>
@@ -938,11 +938,11 @@
     <string name="referral_create_code_title">创建您的推荐代码</string>
     <string name="referral_create_code_description">选择一个简短的代码并设置您的奖励支付。</string>
     <string name="referral_share_title">与朋友分享</string>
-    <string name="referral_share_description">邀请朋友在交换时使用您的代码。</string>
-    <string name="referral_earn_title">自动赚取交换的 10 基点</string>
+    <string name="referral_share_description">邀请好友在兑换时使用您的推荐码。</string>
+    <string name="referral_earn_title">自动赚取兑换金额的 10 基点</string>
     <string name="referral_earn_description">每次他们交易时，以您喜欢的资产获得报酬。</string>
     <string name="referral_use_code_title">使用推荐代码 - 节省 5 基点</string>
-    <string name="referral_use_code_description">使用朋友的代码并节省交换费用。</string>
+    <string name="referral_use_code_description">使用好友的推荐码，节省兑换手续费。</string>
     <string name="referral_not_found">还没有推荐</string>
     <string name="referral_cta">将您的保险库变成奖励机器。立即创建您的推荐并开始赚钱</string>
     <string name="referral_view_title">您的推荐</string>
@@ -952,7 +952,7 @@
     <string name="referral_view_collected_rewards">收集的奖励</string>
     <string name="referral_view_add_friend">添加朋友的推荐</string>
     <string name="referral_view_save">保存</string>
-    <string name="referral_view_on_swaps">现在在交换上</string>
+    <string name="referral_view_on_swaps">（适用于兑换）</string>
 
     <!-- TCY Auto Compound -->
     <string name="referral_top_bar_list_vaults">保险库</string>
@@ -995,7 +995,7 @@
     <!-- Feature gate (tier-locked feature popup) -->
     <string name="feature_gate_requires">需要</string>
     <string name="feature_gate_tier_requirement">$VULT %1$s 等级或以上</string>
-    <string name="feature_gate_hold_threshold">在您的金库中持有至少 %1$s</string>
+    <string name="feature_gate_hold_threshold">在您的保险库中持有至少 %1$s</string>
     <string name="feature_gate_your_balance">您的余额</string>
     <string name="feature_gate_get_vult">获取 $VULT</string>
     <string name="swapkit_error_api_key_missing">SwapKit API 密钥未配置</string>
@@ -1091,8 +1091,8 @@
 
     <!-- Vault Names -->
     <string name="name_vault_vault_with_this_name_already_exists">已存在此名称的保险库</string>
-    <string name="name_vault_server_exists_warning_title">快速保险库已存在</string>
-    <string name="name_vault_server_exists_warning_message">此助记词的快速保险库已存在于服务器上。请返回并恢复现有保险库，或选择安全保险库进行新的 MPC 设置。</string>
+    <string name="name_vault_server_exists_warning_title">Fast Vault 已存在</string>
+    <string name="name_vault_server_exists_warning_message">服务器上已存在此助记词对应的 Fast Vault。请返回并恢复现有保险库，或选择 Secure Vault 进行新的 MPC 设置。</string>
     <string name="name_vault_server_exists_warning_back">返回</string>
 
     <!-- Errors -->
@@ -1125,7 +1125,7 @@
 
     <!-- Verify -->
     <string name="verify_send_send_overview">发送概览</string>
-    <string name="verify_swap_swap_overview">交换概览</string>
+    <string name="verify_swap_swap_overview">兑换概览</string>
 
     <!-- Settings -->
     <string name="check_updates_settings_title">检查更新</string>
@@ -1164,7 +1164,7 @@
     <string name="backup_password_request_caution_cannot_reset_desc">记住：如果您忘记保险库密码，它无法重置或恢复。</string>
     <string name="backup_password_request_highlight_cannot">无法</string>
     <string name="backup_password_request_caution_secure_without_desc">默认情况下，您的备份无需额外密码即可安全，因为您将保险库份额存储在不同位置。</string>
-    <string name="backup_password_request_highlight_secure_without">无需即可安全</string>
+    <string name="backup_password_request_highlight_secure_without">无需额外密码即可安全</string>
 
     <!-- Backup Select Vaults -->
     <string name="backup_select_vaults_title">选择要备份的保险库</string>
@@ -1309,7 +1309,7 @@
     <string name="send_tx_overview_add_to_address_book">添加到地址簿</string>
     <string name="invite_to_x_banner_title">Vultisig 正在与您一起构建。</string>
     <string name="invite_to_x_banner_desc">在 X 上关注我们</string>
-    <string name="buy_vult_banner_desc">并节省交换费用</string>
+    <string name="buy_vult_banner_desc">并节省兑换手续费</string>
     <string name="rujira_banner_caption">质押并赚取收益</string>
     <string name="rujira_banner_title">Rujira 质押现已上线</string>
     <string name="backup_banner_caption">备份您的保险库</string>
@@ -1342,7 +1342,7 @@
     <string name="fast_vault_password_hint_screen_title">添加可选提示</string>
     <string name="migration_onboarding_step_2_text_start">您将创建新的保险库份额备份，</string>
     <string name="migration_onboarding_step_2_text_end">像以前一样存放</string>
-    <string name="migration_onboarding_step_3_text_start">确保</string>
+    <string name="migration_onboarding_step_3_text_start">升级时，请确保</string>
     <string name="migration_onboarding_step_3_text_emphasize">所有初始设备均已到位</string>
     <string name="select_vault_type_secure_title">终极安全保障</string>
     <string name="select_vault_type_secure_desc_1">多设备安全防护</string>
@@ -1441,7 +1441,7 @@
     <string name="ton_liquid_unstake_notice">将附加 %1$s %2$s 用于处理提取，未使用的部分将退还。质押池有流动性时立即支付，否则在当前验证轮次结束时支付。</string>
     <string name="ton_liquid_unstake_notice_round_end">将附加 %1$s %2$s 用于处理提取，未使用的部分将退还。将在当前验证轮次结束时支付。</string>
     <string name="ton_liquid_deposits_closed">Tonstakers 目前不接受存入</string>
-    <string name="ton_liquid_no_position">此金库没有 tsTON</string>
+    <string name="ton_liquid_no_position">此保险库没有 tsTON</string>
     <!-- Solana native staking (DeFi tab) -->
     <string name="solana_staking_error_sol_not_in_vault">此保险库中没有 SOL</string>
     <string name="solana_staking_total_staked_sol">质押 SOL 总额</string>
@@ -1472,7 +1472,7 @@
     <string name="solana_unstake_notice">停用后会开始冷却期——您的质押将被锁定约2天，之后您才能提取。</string>
     <string name="vault_backup_verifying_pin">正在验证代码，请稍候</string>
     <string name="select_vault_type_next">下一步</string>
-    <string name="select_vault_type_choose_setup">选择“设置”</string>
+    <string name="select_vault_type_choose_setup">选择设置方式</string>
     <string name="home_screen_scan_qr_code">扫描二维码</string>
     <string name="onboarding_desc_page_6_part_2">解锁您的保险库</string>
     <string name="onboarding_summary_button">创建您的保险库</string>
@@ -1527,7 +1527,7 @@
     <string name="vault_backup_try_again">重试</string>
     <string name="tx_overview_screen_tx_hash">交易哈希</string>
     <string name="tx_overview_screen_tx_from">从</string>
-    <string name="swap_swap_button">交换</string>
+    <string name="swap_swap_button">兑换</string>
     <string name="swap_swap_button_fill_in_amount">填写金额</string>
     <string name="swap_mode_market">市价</string>
     <string name="swap_mode_limit">限价</string>
@@ -1585,7 +1585,7 @@
     <string name="keygen_benefit_2_template">完全掌控您的资产</string>
     <string name="onboarding_summary_check">我已阅读并理解该如何操作。</string>
     <string name="send_error_invalid_plan_fee">无效计划费用</string>
-    <string name="onboarding_desc_page_3_part_2">存放在您的保险库中</string>
+    <string name="onboarding_desc_page_3_part_2">在您的保险库中均持有</string>
     <string name="transfer_ibc_function_memo_title">备注</string>
     <string name="tx_overview_screen_tx_to">至</string>
     <string name="tx_overview_screen_tx_memo">备注</string>
@@ -1607,7 +1607,7 @@
     <string name="scan_qr_code_modal_next">开始扫描</string>
     <string name="peer_discovery_action_next_title">下一步</string>
     <string name="home_page_no_chains_enabled">未启用任何链</string>
-    <string name="onboarding_desc_page_3_part_3">共享一个保险库</string>
+    <string name="onboarding_desc_page_3_part_3">一个保险库份额</string>
     <string name="select_vault_type_fast_title">快速单设备设置</string>
     <string name="select_vault_type_fast_desc_1">仅需一台设备</string>
     <string name="scan_qr_code_modal_scan_the">在其他设备上扫描二维码</string>
@@ -1635,16 +1635,16 @@
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">想创建私密保险库？</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">切换至本地模式</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">切换回网络模式</string>
-    <string name="onboarding_desc_page_6_part_1">这些共享文件协同工作</string>
-    <string name="enter_email_screen_desc">此电子邮件仅用于发送服务器备份</string>
+    <string name="onboarding_desc_page_6_part_1">这些份额协同工作，以</string>
+    <string name="enter_email_screen_desc">仅用于一次性发送您的保险库备份，我们不会保存。</string>
     <string name="keygen_connecting_with_server_take_a_second">这只需几秒钟。</string>
     <string name="tx_transaction_successful_screen_title">交易成功</string>
-    <string name="migration_onboarding_step_3_text_end">升级时</string>
+    <string name="migration_onboarding_step_3_text_end">，以便顺利完成升级</string>
     <string name="migration_onboarding_upgrade_your_vault">升级您的保险库</string>
     <string name="migration_onboarding_upgrade_now">立即升级</string>
     <string name="migration_onboarding_step_1_text_start">将此保险库升级至</string>
-    <string name="onboarding_desc_page_1_part_2">保险库共享</string>
-    <string name="verify_swap_youre_swapping_title">您正在交换</string>
+    <string name="onboarding_desc_page_1_part_2">保险库份额，</string>
+    <string name="verify_swap_youre_swapping_title">您正在兑换</string>
     <string name="keysign_app_version_text">版本 %1$s (%2$s)</string>
     <string name="lp_pending_title">等待配对的 %1$s 存入</string>
     <string name="lp_pending_subtitle">THORChain 会保留此笔存入，直到配对的另一侧到达；否则将予以退款。</string>
@@ -1667,7 +1667,7 @@
     <string name="bandwidth">带宽</string>
     <string name="energy">能量</string>
     <string name="bandwidth_desc">在 TRON 上进行所有交易都需要带宽点数 (Bandwidth Points)，包括标准代币发送和智能合约交互。每位 TRON 用户每天可获得 600 个免费带宽点数，大约可以完成两次基本发送。此外，您可以通过质押 TRX 来赚取额外的带宽点数，增加您的每日余额，从而支持更多交易。如果您拥有足够的带宽点数，则可以发送代币、质押 TRX 或与智能合约交互，而无需支付 TRX 作为 Gas 费用。</string>
-    <string name="energy_desc">更复杂的操作（例如与智能合约交互，如代币互换或 dApp 交易）则需要能量 (Energy)。与带宽不同，能量并非免费提供——您需要质押 TRX 才能获得能量。（更高级的用户还可以通过 JustLend 或 Tronify 的能量租赁市场等租赁机制来获取能量）。然而，拥有能量可以显著降低甚至消除智能合约交互的 Gas 费用，因此对于经常使用 TRON dApp 的用户来说，能量非常宝贵。</string>
+    <string name="energy_desc">更复杂的操作（例如与智能合约交互，如代币兑换或 dApp 交易）则需要能量（Energy）。与带宽不同，能量并非免费提供——您需要质押 TRX 才能获得能量。（更高级的用户还可以通过 JustLend 或 Tronify 的能量租赁市场等租赁机制来获取能量。）然而，拥有能量可以显著降低甚至消除智能合约交互的 Gas 费用，因此对于经常使用 TRON dApp 的用户来说，能量非常宝贵。</string>
 
     <string name="deposit_option_withdraw_secured">提取担保资产</string>
     <string name="deposit_option_secured_assets">担保资产</string>
@@ -1774,7 +1774,7 @@
     <string name="transaction_history_title_chain">%1$s 历史记录</string>
     <string name="transaction_history_tab_overview">概览</string>
     <string name="transaction_history_tab_send">发送</string>
-    <string name="transaction_history_tab_swap">交换</string>
+    <string name="transaction_history_tab_swap">兑换</string>
     <string name="transaction_history_tab_limit">限价单</string>
     <!-- Limit Orders (THORChain limit swaps) -->
     <string name="limit_order_card_title">限价单</string>
@@ -1823,7 +1823,7 @@
     <string name="transaction_status_failed_label">错误</string>
     <string name="transaction_status_refunded_label">已退款</string>
     <string name="transaction_status_failed_slippage_label">价格超出滑点容差</string>
-    <string name="transaction_status_failed_slippage_description">此次交换执行前价格发生变动，支付金额将低于您的滑点容差允许的范围，网络已撤销该交易。请提高滑点容差或重试。</string>
+    <string name="transaction_status_failed_slippage_description">此次兑换执行前价格发生变动，到账金额将低于您的滑点容差所允许的范围，因此网络已撤销该交易。请提高滑点容差或重试。</string>
     <string name="transaction_status_failed_expired_label">在被打包前已过期</string>
     <string name="transaction_status_failed_expired_description">网络在打包此交易前已将其丢弃，因此没有发送任何资产，也未收取网络费用。您可以重试。</string>
     <string name="transaction_status_in_progress_label">进行中…</string>
@@ -1890,7 +1890,7 @@
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">消息</string>
     <string name="sign_ton_state_init">State Init</string>
-    <string name="ton_op_swap">交换</string>
+    <string name="ton_op_swap">兑换</string>
     <string name="ton_op_jetton_transfer">Jetton 转账</string>
     <string name="ton_op_nft_transfer">NFT 转账</string>
     <string name="ton_op_excess_gas_refund">超额燃料退款</string>
@@ -1902,8 +1902,8 @@
 
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>
     <string name="vault_setup_your_vault_setup">您的保险库设置</string>
-    <string name="vault_setup_fast_vault">快速保险库</string>
-    <string name="vault_setup_secure_vault">安全保险库</string>
+    <string name="vault_setup_fast_vault">Fast Vault</string>
+    <string name="vault_setup_secure_vault">Secure Vault</string>
     <string name="vault_setup_2_device_setup">2设备设置</string>
     <string name="vault_setup_3_device_setup">3设备设置</string>
     <string name="vault_setup_4plus_device_vault">4+设备保险库</string>
@@ -1916,7 +1916,7 @@
     <string name="vault_setup_no_inspiration">没有灵感？您随时可以在设置中更改名称。</string>
     <string name="naming_saving_vault">正在保存保险库</string>
     <string name="email_enter_your_email">输入您的电子邮件</string>
-    <string name="email_only_used_once">此邮件仅用于发送您的备份文件，Vultisig不存储任何数据。</string>
+    <string name="email_only_used_once">仅用于一次性发送您的保险库备份，我们不会保存。</string>
     <string name="password_choose_a_password">选择密码</string>
     <string name="password_extra_layer">如果您想要额外的安全层，请选择密码。密码无法恢复。</string>
     <string name="password_extra_layer_highlight">密码无法恢复。</string>
@@ -1969,7 +1969,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">服务器备份</string>
     <string name="server_backup_email_label">邮箱</string>
-    <string name="server_backup_email_description">输入接收保险库份额的电子邮件地址。</string>
+    <string name="server_backup_email_description">仅用于一次性发送您的保险库备份，我们不会保存。</string>
     <string name="server_backup_email_error">电子邮件不正确，请检查</string>
     <string name="server_backup_password_label">密码</string>
     <string name="server_backup_password_description">输入您创建此保险库时设置的密码。</string>
@@ -2015,17 +2015,17 @@
     <string name="defi_header_staked">质押 %1$s</string>
 
     <string name="name_vault_import">导入保险库</string>
-    <string name="name_vault_fast">快速保险库</string>
-    <string name="name_vault_secure">安全保险库</string>
+    <string name="name_vault_fast">Fast Vault</string>
+    <string name="name_vault_secure">Secure Vault</string>
     <string name="unknown_error">未知错误</string>
     <string name="key_import_error_title">密钥导入失败</string>
-    <string name="key_import_error_description">无法从助记词导入钱包。请检查您的助记词并重试。</string>
+    <string name="key_import_error_description">无法从助记词导入保险库。请检查您的助记词并重试。</string>
     <string name="key_import_error_no_mnemonic_description">未找到助记词。请重新输入您的助记词并重试。</string>
     <string name="swap_error_approval_timeout">代币批准耗时比预期更长。请先在浏览器中查看后再重试</string>
     <string name="swap_error_approval_failed">代币批准交易失败。请重试</string>
     <string name="erc20_approval_title">批准</string>
     <string name="erc20_approval_unlimited_amount">无限制 %1$s 授权</string>
-    <string name="erc20_approval_spender">接收方</string>
+    <string name="erc20_approval_spender">被授权方</string>
     <string name="decoded_function_owner">所有者</string>
     <string name="decoded_function_operator">操作员</string>
     <string name="decoded_function_status">状态</string>
@@ -2037,11 +2037,11 @@
     <string name="decoded_function_unlimited_amount">无限制 %1$s</string>
     <string name="decoded_function_from_token">源代币</string>
     <string name="decoded_function_to_token">目标代币</string>
-    <string name="decoded_function_amount_in">转入金额</string>
-    <string name="decoded_function_max_amount_in">最大转入金额</string>
-    <string name="decoded_function_min_amount_out">最小转出金额</string>
-    <string name="decoded_function_amount_out">转出金额</string>
-    <string name="decoded_function_swap_title">交换</string>
+    <string name="decoded_function_amount_in">输入金额</string>
+    <string name="decoded_function_max_amount_in">最大输入金额</string>
+    <string name="decoded_function_min_amount_out">最小输出金额</string>
+    <string name="decoded_function_amount_out">输出金额</string>
+    <string name="decoded_function_swap_title">兑换</string>
     <string name="decoded_function_truncated">更多参数未显示</string>
     <string name="typed_data_action">操作</string>
     <string name="typed_data_token_approval">代币授权</string>
