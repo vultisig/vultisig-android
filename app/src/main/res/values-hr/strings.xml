@@ -1174,8 +1174,8 @@
     <string name="peer_discovery_expand_qr">Povećaj QR kod</string>
     <string name="vault_backup_screen_email_sent_to">Poslano na %s.</string>
     <string name="vault_backup_screen_donot_receive_email">Niste primili e-poštu?</string>
-    <string name="onboarding_desc_page_5_part_2">odvojeno u</string>
-    <string name="onboarding_desc_page_5_part_3">na drugom mjestu</string>
+    <string name="onboarding_desc_page_5_part_2">odvojeno na</string>
+    <string name="onboarding_desc_page_5_part_3">drugom mjestu</string>
     <string name="scan_qr_code_modal_annotation">Na drugom uređaju otvorite aplikaciju i dodirnite \'Skeniraj QR kod\' za povezivanje.</string>
     <string name="onboarding_desc_page_2_part_3">radi povećanja sigurnosti i</string>
     <string name="onboarding_desc_page_2_part_4">uklanjanja jedinstvene točke kvara</string>
