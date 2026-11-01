@@ -1310,7 +1310,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Переключитесь в локальный режим</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Переключитесь обратно в интернет-режим</string>
     <string name="onboarding_desc_page_6_part_1">Вместе эти доли</string>
-    <string name="enter_email_screen_desc">Ваш email используется только один раз для отправки резервной копии хранилища. Мы его не храним.</string>
+    <string name="enter_email_screen_desc">Ваш email используется только один раз для отправки резервной копии хранилища. Vultisig его не хранит.</string>
     <string name="keygen_connecting_with_server_take_a_second">Это займёт всего секунду.</string>
     <string name="tx_transaction_successful_screen_title">Транзакция выполнена успешно</string>
     <string name="migration_onboarding_step_3_text_end">при обновлении</string>
@@ -1606,7 +1606,7 @@
     <string name="vault_setup_no_inspiration">Нет идей для названия? Вы всегда можете изменить имя позже в настройках.</string>
     <string name="naming_saving_vault">Сохранение хранилища</string>
     <string name="email_enter_your_email">Введите ваш email</string>
-    <string name="email_only_used_once">Ваш email используется только один раз для отправки резервной копии хранилища. Мы его не храним.</string>
+    <string name="email_only_used_once">Ваш email используется только один раз для отправки резервной копии хранилища. Vultisig его не хранит.</string>
     <string name="password_choose_a_password">Выберите пароль</string>
     <string name="password_extra_layer">Если вы хотите дополнительный уровень безопасности, выберите пароль. Пароль невозможно восстановить.</string>
     <string name="password_extra_layer_highlight">Пароль невозможно восстановить.</string>
@@ -1662,7 +1662,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Резервная копия на сервере</string>
     <string name="server_backup_email_label">Электронная почта</string>
-    <string name="server_backup_email_description">Ваш email используется только один раз для отправки резервной копии хранилища. Мы его не храним.</string>
+    <string name="server_backup_email_description">Ваш email используется только один раз для отправки резервной копии хранилища. Vultisig его не хранит.</string>
     <string name="server_backup_email_error">Неверный адрес электронной почты, пожалуйста, проверьте</string>
     <string name="server_backup_password_label">Пароль</string>
     <string name="server_backup_password_description">Введите пароль, который вы установили при создании этого хранилища.</string>

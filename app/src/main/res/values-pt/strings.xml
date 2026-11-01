@@ -1303,7 +1303,7 @@
     <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Quer criar o cofre de forma privada?</string>
     <string name="peer_discovery_switch_network_mode_switch_to_local">Mude para o modo local</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Volte ao modo internet</string>
-    <string name="enter_email_screen_desc">Seu e-mail é usado só uma vez para enviar o backup do seu cofre. Não o armazenamos.</string>
+    <string name="enter_email_screen_desc">Seu e-mail é usado só uma vez para enviar o backup do seu cofre. O Vultisig não o armazena.</string>
     <string name="onboarding_desc_page_6_part_1">Essas partes trabalham juntas para</string>
     <string name="keygen_connecting_with_server_take_a_second">Isso deve levar só um segundo</string>
     <string name="tx_transaction_successful_screen_title">Transação concluída com sucesso</string>
@@ -1591,7 +1591,7 @@
     <string name="vault_setup_no_inspiration">Sem inspiração? Você pode mudar o nome depois nas configurações.</string>
     <string name="naming_saving_vault">Salvando cofre</string>
     <string name="email_enter_your_email">Digite seu e-mail</string>
-    <string name="email_only_used_once">Seu e-mail é usado só uma vez para enviar o backup do seu cofre. Não o armazenamos.</string>
+    <string name="email_only_used_once">Seu e-mail é usado só uma vez para enviar o backup do seu cofre. O Vultisig não o armazena.</string>
     <string name="password_choose_a_password">Escolha uma senha</string>
     <string name="password_extra_layer">Se quiser uma camada extra de segurança, escolha uma senha. A senha não pode ser recuperada.</string>
     <string name="password_extra_layer_highlight">A senha não pode ser recuperada.</string>
@@ -1645,7 +1645,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Backup do servidor</string>
     <string name="server_backup_email_label">E-mail</string>
-    <string name="server_backup_email_description">Seu e-mail é usado só uma vez para enviar o backup do seu cofre. Não o armazenamos.</string>
+    <string name="server_backup_email_description">Seu e-mail é usado só uma vez para enviar o backup do seu cofre. O Vultisig não o armazena.</string>
     <string name="server_backup_email_error">E-mail incorreto, por favor verifique</string>
     <string name="server_backup_password_label">Senha</string>
     <string name="server_backup_password_description">Digite a senha que você definiu ao criar este cofre.</string>

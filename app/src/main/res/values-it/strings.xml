@@ -1305,7 +1305,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Passa alla modalità locale</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Passa alla modalità Internet</string>
     <string name="onboarding_desc_page_6_part_1">Queste quote collaborano per</string>
-    <string name="enter_email_screen_desc">La tua email viene usata una sola volta per inviare il backup del vault. Non la conserviamo.</string>
+    <string name="enter_email_screen_desc">La tua email viene usata una sola volta per inviare il backup del vault. Vultisig non la conserva.</string>
     <string name="keygen_connecting_with_server_take_a_second">L\'operazione dovrebbe richiedere solo un secondo</string>
     <string name="tx_transaction_successful_screen_title">Transazione riuscita</string>
     <string name="migration_onboarding_step_3_text_end">durante l\'aggiornamento</string>
@@ -1594,7 +1594,7 @@
     <string name="vault_setup_no_inspiration">Nessuna ispirazione? Puoi sempre cambiare il nome in seguito nelle impostazioni.</string>
     <string name="naming_saving_vault">Salvataggio vault in corso</string>
     <string name="email_enter_your_email">Inserisci la tua email</string>
-    <string name="email_only_used_once">La tua email viene usata una sola volta per inviare il backup del vault. Non la conserviamo.</string>
+    <string name="email_only_used_once">La tua email viene usata una sola volta per inviare il backup del vault. Vultisig non la conserva.</string>
     <string name="password_choose_a_password">Scegli una password</string>
     <string name="password_extra_layer">Se vuoi un ulteriore livello di sicurezza, scegli una password. La password non può essere recuperata.</string>
     <string name="password_extra_layer_highlight">La password non può essere recuperata.</string>
@@ -1648,7 +1648,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Backup del server</string>
     <string name="server_backup_email_label">Email</string>
-    <string name="server_backup_email_description">La tua email viene usata una sola volta per inviare il backup del vault. Non la conserviamo.</string>
+    <string name="server_backup_email_description">La tua email viene usata una sola volta per inviare il backup del vault. Vultisig non la conserva.</string>
     <string name="server_backup_email_error">E-mail errata, controllala</string>
     <string name="server_backup_password_label">Password</string>
     <string name="server_backup_password_description">Inserisci la password impostata durante la creazione di questo vault.</string>

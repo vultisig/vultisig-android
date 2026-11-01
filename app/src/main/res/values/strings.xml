@@ -784,7 +784,7 @@
     <string name="fast_vault_name_screen_desc">You can always rename your vault later in the settings</string>
     <string name="enter_email_screen_title">Enter your email</string>
     <string name="enter_email_screen_hint">Email</string>
-    <string name="enter_email_screen_desc">Used once to send your vault backup. We don\'t store it.</string>
+    <string name="enter_email_screen_desc">Used once to send your vault backup. Vultisig doesn\'t store it.</string>
     <string name="fast_vault_password_screen_title">Choose a password</string>
     <string name="fast_vault_password_screen_hint">This occurs because the password is used to locally encrypt the backup file, similar to how a hard drive is encrypted. In the following step, you have the option to add a hint.</string>
     <string name="fast_vault_password_screen_hint_title">More Info</string>
@@ -1677,7 +1677,7 @@
     <string name="vault_setup_no_inspiration">No inspiration? You can always change the name later in your settings.</string>
     <string name="naming_saving_vault">Saving vault</string>
     <string name="email_enter_your_email">Enter your email</string>
-    <string name="email_only_used_once">Used once to send your vault backup. We don\'t store it.</string>
+    <string name="email_only_used_once">Used once to send your vault backup. Vultisig doesn\'t store it.</string>
     <string name="password_choose_a_password">Choose a password</string>
     <string name="password_extra_layer">If you want an extra layer of security, choose a password. Password cannot be recovered.</string>
     <string name="password_extra_layer_highlight">Password cannot be recovered.</string>
@@ -1731,7 +1731,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Server Backup</string>
     <string name="server_backup_email_label">Email</string>
-    <string name="server_backup_email_description">Used once to send your vault backup. We don\'t store it.</string>
+    <string name="server_backup_email_description">Used once to send your vault backup. Vultisig doesn\'t store it.</string>
     <string name="server_backup_email_error">Incorrect email, please check</string>
     <string name="server_backup_password_label">Password</string>
     <string name="server_backup_password_description">Enter the password you set when creating this Vault.</string>

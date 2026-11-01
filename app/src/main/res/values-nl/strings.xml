@@ -1302,7 +1302,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Schakel over naar de lokale modus</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Schakel terug naar de internetmodus</string>
     <string name="onboarding_desc_page_6_part_1">Deze kluisdelen werken samen om</string>
-    <string name="enter_email_screen_desc">Je e-mailadres wordt eenmalig gebruikt om je kluisback-up te verzenden. We slaan het niet op.</string>
+    <string name="enter_email_screen_desc">Je e-mailadres wordt eenmalig gebruikt om je kluisback-up te verzenden. Vultisig slaat het niet op.</string>
     <string name="keygen_connecting_with_server_take_a_second">Dit zou slechts een seconde moeten duren</string>
     <string name="tx_transaction_successful_screen_title">Transactie succesvol</string>
     <string name="migration_onboarding_step_3_text_end">bij het upgraden</string>
@@ -1586,7 +1586,7 @@
     <string name="vault_setup_no_inspiration">Geen inspiratie? Je kunt de naam later altijd wijzigen in de instellingen.</string>
     <string name="naming_saving_vault">Kluis opslaan</string>
     <string name="email_enter_your_email">Voer je e-mailadres in</string>
-    <string name="email_only_used_once">Je e-mailadres wordt eenmalig gebruikt om je kluisback-up te verzenden. We slaan het niet op.</string>
+    <string name="email_only_used_once">Je e-mailadres wordt eenmalig gebruikt om je kluisback-up te verzenden. Vultisig slaat het niet op.</string>
     <string name="password_choose_a_password">Kies een wachtwoord</string>
     <string name="password_extra_layer">Wil je een extra beveiligingslaag, kies dan een wachtwoord. Het wachtwoord kan niet worden hersteld.</string>
     <string name="password_extra_layer_highlight">Het wachtwoord kan niet worden hersteld.</string>
@@ -1640,7 +1640,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Serverback-up</string>
     <string name="server_backup_email_label">E-mail</string>
-    <string name="server_backup_email_description">Je e-mailadres wordt eenmalig gebruikt om je kluisback-up te verzenden. We slaan het niet op.</string>
+    <string name="server_backup_email_description">Je e-mailadres wordt eenmalig gebruikt om je kluisback-up te verzenden. Vultisig slaat het niet op.</string>
     <string name="server_backup_email_error">Onjuist emailadres, controleer dit</string>
     <string name="server_backup_password_label">Wachtwoord</string>
     <string name="server_backup_password_description">Voer het wachtwoord in dat je hebt ingesteld bij het aanmaken van deze kluis.</string>

@@ -1636,7 +1636,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">切换至本地模式</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">切换回网络模式</string>
     <string name="onboarding_desc_page_6_part_1">这些份额协同工作，以</string>
-    <string name="enter_email_screen_desc">仅用于一次性发送您的保险库备份，我们不会保存。</string>
+    <string name="enter_email_screen_desc">仅用于一次性发送您的保险库备份，Vultisig 不会保存。</string>
     <string name="keygen_connecting_with_server_take_a_second">这只需几秒钟。</string>
     <string name="tx_transaction_successful_screen_title">交易成功</string>
     <string name="migration_onboarding_step_3_text_end">，以便顺利完成升级</string>
@@ -1916,7 +1916,7 @@
     <string name="vault_setup_no_inspiration">没有灵感？您随时可以在设置中更改名称。</string>
     <string name="naming_saving_vault">正在保存保险库</string>
     <string name="email_enter_your_email">输入您的电子邮件</string>
-    <string name="email_only_used_once">仅用于一次性发送您的保险库备份，我们不会保存。</string>
+    <string name="email_only_used_once">仅用于一次性发送您的保险库备份，Vultisig 不会保存。</string>
     <string name="password_choose_a_password">选择密码</string>
     <string name="password_extra_layer">如果您想要额外的安全层，请选择密码。密码无法恢复。</string>
     <string name="password_extra_layer_highlight">密码无法恢复。</string>
@@ -1969,7 +1969,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">服务器备份</string>
     <string name="server_backup_email_label">邮箱</string>
-    <string name="server_backup_email_description">仅用于一次性发送您的保险库备份，我们不会保存。</string>
+    <string name="server_backup_email_description">仅用于一次性发送您的保险库备份，Vultisig 不会保存。</string>
     <string name="server_backup_email_error">电子邮件不正确，请检查</string>
     <string name="server_backup_password_label">密码</string>
     <string name="server_backup_password_description">输入您创建此保险库时设置的密码。</string>

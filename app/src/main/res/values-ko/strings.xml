@@ -774,7 +774,7 @@
     <string name="fast_vault_name_screen_desc">볼트 이름은 나중에 설정에서 변경할 수 있습니다</string>
     <string name="enter_email_screen_title">이메일 입력</string>
     <string name="enter_email_screen_hint">이메일</string>
-    <string name="enter_email_screen_desc">볼트 백업을 보낼 때 한 번만 사용되며, 저장하지 않습니다.</string>
+    <string name="enter_email_screen_desc">볼트 백업을 보낼 때 한 번만 사용되며, Vultisig는 저장하지 않습니다.</string>
     <string name="fast_vault_password_screen_title">비밀번호 선택</string>
     <string name="fast_vault_password_screen_hint">비밀번호는 하드 드라이브 암호화와 유사하게 백업 파일을 로컬로 암호화하는 데 사용됩니다. 다음 단계에서 힌트를 추가할 수 있습니다.</string>
     <string name="fast_vault_password_screen_hint_title">추가 정보</string>
@@ -1618,7 +1618,7 @@
     <string name="vault_setup_no_inspiration">이름이 떠오르지 않나요? 나중에 설정에서 언제든 변경할 수 있습니다.</string>
     <string name="naming_saving_vault">볼트 저장 중</string>
     <string name="email_enter_your_email">이메일을 입력하세요</string>
-    <string name="email_only_used_once">볼트 백업을 보낼 때 한 번만 사용되며, 저장하지 않습니다.</string>
+    <string name="email_only_used_once">볼트 백업을 보낼 때 한 번만 사용되며, Vultisig는 저장하지 않습니다.</string>
     <string name="password_choose_a_password">비밀번호를 선택하세요</string>
     <string name="password_extra_layer">추가 보안 레이어를 원하시면 비밀번호를 선택하세요. 비밀번호는 복구할 수 없습니다.</string>
     <string name="password_extra_layer_highlight">비밀번호는 복구할 수 없습니다.</string>
@@ -1671,7 +1671,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">서버 백업</string>
     <string name="server_backup_email_label">이메일</string>
-    <string name="server_backup_email_description">볼트 백업을 보낼 때 한 번만 사용되며, 저장하지 않습니다.</string>
+    <string name="server_backup_email_description">볼트 백업을 보낼 때 한 번만 사용되며, Vultisig는 저장하지 않습니다.</string>
     <string name="server_backup_email_error">이메일이 올바르지 않습니다. 확인해 주세요</string>
     <string name="server_backup_password_label">비밀번호</string>
     <string name="server_backup_password_description">이 볼트를 생성할 때 설정한 비밀번호를 입력하세요.</string>

@@ -1310,7 +1310,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Prebacite se na lokalni način rada</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Vratite se na internetski način rada</string>
     <string name="onboarding_desc_page_6_part_1">Ti udjeli zajedno</string>
-    <string name="enter_email_screen_desc">Vaša e-adresa koristi se samo jednom za slanje sigurnosne kopije trezora. Ne pohranjujemo je.</string>
+    <string name="enter_email_screen_desc">Vaša e-adresa koristi se samo jednom za slanje sigurnosne kopije trezora. Vultisig je ne pohranjuje.</string>
     <string name="keygen_connecting_with_server_take_a_second">Ovo bi trebalo trajati samo sekundu</string>
     <string name="tx_transaction_successful_screen_title">Transakcija uspješna</string>
     <string name="migration_onboarding_step_3_text_end">prilikom nadogradnje</string>
@@ -1600,7 +1600,7 @@
     <string name="vault_setup_no_inspiration">Nema inspiracije? Uvijek možete promijeniti naziv kasnije u postavkama.</string>
     <string name="naming_saving_vault">Sprema se trezor</string>
     <string name="email_enter_your_email">Unesite svoju e-poštu</string>
-    <string name="email_only_used_once">Vaša e-adresa koristi se samo jednom za slanje sigurnosne kopije trezora. Ne pohranjujemo je.</string>
+    <string name="email_only_used_once">Vaša e-adresa koristi se samo jednom za slanje sigurnosne kopije trezora. Vultisig je ne pohranjuje.</string>
     <string name="password_choose_a_password">Odaberite lozinku</string>
     <string name="password_extra_layer">Ako želite dodatni sloj sigurnosti, odaberite lozinku. Lozinka se ne može oporaviti.</string>
     <string name="password_extra_layer_highlight">Lozinka se ne može oporaviti.</string>
@@ -1655,7 +1655,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Sigurnosna kopija poslužitelja</string>
     <string name="server_backup_email_label">E-pošta</string>
-    <string name="server_backup_email_description">Vaša e-adresa koristi se samo jednom za slanje sigurnosne kopije trezora. Ne pohranjujemo je.</string>
+    <string name="server_backup_email_description">Vaša e-adresa koristi se samo jednom za slanje sigurnosne kopije trezora. Vultisig je ne pohranjuje.</string>
     <string name="server_backup_email_error">Netočna e-pošta, molimo provjerite</string>
     <string name="server_backup_password_label">Lozinka</string>
     <string name="server_backup_password_description">Unesite lozinku koju ste postavili prilikom stvaranja ovog trezora.</string>

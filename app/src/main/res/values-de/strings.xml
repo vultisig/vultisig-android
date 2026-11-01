@@ -1307,7 +1307,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">In den lokalen Modus wechseln</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Zurück in den Internetmodus wechseln</string>
     <string name="onboarding_desc_page_6_part_1">Diese Tresoranteile arbeiten zusammen, um</string>
-    <string name="enter_email_screen_desc">Ihre E-Mail-Adresse wird nur einmal verwendet, um Ihr Tresor-Backup zu senden. Wir speichern sie nicht.</string>
+    <string name="enter_email_screen_desc">Ihre E-Mail-Adresse wird nur einmal verwendet, um Ihr Tresor-Backup zu senden. Vultisig speichert sie nicht.</string>
     <string name="keygen_connecting_with_server_take_a_second">Dies dauert nur einen Augenblick.</string>
     <string name="tx_transaction_successful_screen_title">Transaktion erfolgreich</string>
     <string name="migration_onboarding_step_3_text_end">beim Upgrade dabei sind</string>
@@ -1591,7 +1591,7 @@
     <string name="vault_setup_no_inspiration">Keine Inspiration? Sie können den Namen später jederzeit in den Einstellungen ändern.</string>
     <string name="naming_saving_vault">Tresor wird gespeichert</string>
     <string name="email_enter_your_email">Geben Sie Ihre E-Mail ein</string>
-    <string name="email_only_used_once">Ihre E-Mail-Adresse wird nur einmal verwendet, um Ihr Tresor-Backup zu senden. Wir speichern sie nicht.</string>
+    <string name="email_only_used_once">Ihre E-Mail-Adresse wird nur einmal verwendet, um Ihr Tresor-Backup zu senden. Vultisig speichert sie nicht.</string>
     <string name="password_choose_a_password">Wählen Sie ein Passwort</string>
     <string name="password_extra_layer">Wenn Sie eine zusätzliche Sicherheitsebene möchten, wählen Sie ein Passwort. Das Passwort kann nicht wiederhergestellt werden.</string>
     <string name="password_extra_layer_highlight">Das Passwort kann nicht wiederhergestellt werden.</string>
@@ -1645,7 +1645,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Serversicherung</string>
     <string name="server_backup_email_label">E-Mail</string>
-    <string name="server_backup_email_description">Ihre E-Mail-Adresse wird nur einmal verwendet, um Ihr Tresor-Backup zu senden. Wir speichern sie nicht.</string>
+    <string name="server_backup_email_description">Ihre E-Mail-Adresse wird nur einmal verwendet, um Ihr Tresor-Backup zu senden. Vultisig speichert sie nicht.</string>
     <string name="server_backup_email_error">Falsche E-Mail, bitte überprüfen</string>
     <string name="server_backup_password_label">Passwort</string>
     <string name="server_backup_password_description">Geben Sie das Passwort ein, das Sie beim Erstellen dieses Tresors festgelegt haben.</string>

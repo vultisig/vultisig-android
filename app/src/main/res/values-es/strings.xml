@@ -1305,7 +1305,7 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Cambia al modo local.</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Cambia al modo de internet.</string>
     <string name="onboarding_desc_page_6_part_1">Estos fragmentos colaboran para</string>
-    <string name="enter_email_screen_desc">Tu correo se usa una sola vez para enviar la copia de seguridad de tu bóveda. No lo guardamos.</string>
+    <string name="enter_email_screen_desc">Tu correo se usa una sola vez para enviar la copia de seguridad de tu bóveda. Vultisig no lo guarda.</string>
     <string name="keygen_connecting_with_server_take_a_second">Esto solo debería tardar un segundo.</string>
     <string name="tx_transaction_successful_screen_title">Transacción exitosa</string>
     <string name="migration_onboarding_step_3_text_end">Al actualizar</string>
@@ -1590,7 +1590,7 @@
     <string name="vault_setup_no_inspiration">¿Sin inspiración? Siempre puedes cambiar el nombre más tarde en tus ajustes.</string>
     <string name="naming_saving_vault">Guardando bóveda</string>
     <string name="email_enter_your_email">Introduce tu correo electrónico</string>
-    <string name="email_only_used_once">Tu correo se usa una sola vez para enviar la copia de seguridad de tu bóveda. No lo guardamos.</string>
+    <string name="email_only_used_once">Tu correo se usa una sola vez para enviar la copia de seguridad de tu bóveda. Vultisig no lo guarda.</string>
     <string name="password_choose_a_password">Elige una contraseña</string>
     <string name="password_extra_layer">Si quieres una capa adicional de seguridad, elige una contraseña. La contraseña no se puede recuperar.</string>
     <string name="password_extra_layer_highlight">La contraseña no se puede recuperar.</string>
@@ -1644,7 +1644,7 @@
     <!-- Server Backup Screen -->
     <string name="server_backup_title">Copia de seguridad del servidor</string>
     <string name="server_backup_email_label">Correo electrónico</string>
-    <string name="server_backup_email_description">Tu correo se usa una sola vez para enviar la copia de seguridad de tu bóveda. No lo guardamos.</string>
+    <string name="server_backup_email_description">Tu correo se usa una sola vez para enviar la copia de seguridad de tu bóveda. Vultisig no lo guarda.</string>
     <string name="server_backup_email_error">Correo electrónico incorrecto. Revísalo.</string>
     <string name="server_backup_password_label">Contraseña</string>
     <string name="server_backup_password_description">Introduce la contraseña que estableciste al crear esta bóveda.</string>
