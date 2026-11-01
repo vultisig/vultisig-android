@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -95,6 +97,7 @@ import com.vultisig.wallet.ui.components.v2.fastselection.SelectPopupUiModel
 import com.vultisig.wallet.ui.components.v2.fastselection.components.ChainSelectorPickerItem
 import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectPopup
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
+import com.vultisig.wallet.ui.models.auth.BackupPasswordState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
@@ -180,6 +183,7 @@ import com.vultisig.wallet.ui.models.vault.DeviceMeta
 import com.vultisig.wallet.ui.models.vault.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.vault.VaultDetailUiModel
 import com.vultisig.wallet.ui.models.vault.toNetworkUiModel
+import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
@@ -298,6 +302,7 @@ class PreviewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val screen = intent.getStringExtra("screen") ?: "swap_confirm"
+        if (screen == "backup_password") enableEdgeToEdge()
         // `adb shell am start -n com.vultisig.wallet/.debug.PreviewActivity --es pin_widget
         // ticker|top`
         // asks the launcher to place a market widget, for checking real home-screen rendering.
@@ -338,6 +343,7 @@ class PreviewActivity : ComponentActivity() {
             OnBoardingComposeTheme {
                 when (screen) {
                     "market_widgets" -> MarketWidgetsPreview()
+                    "backup_password" -> BackupPasswordPreview()
                     "auto_lock_setting" ->
                         AutoLockSettingScreen(
                             state = AutoLockSettingUiModel(selected = AutoLockTimeout.FiveMinutes),
@@ -5251,4 +5257,32 @@ private fun KaminoAmountPreview(isWithdraw: Boolean) {
         onPercentage = {},
         onSubmit = {},
     )
+}
+
+@Composable
+private fun BackupPasswordPreview() {
+    val password = rememberTextFieldState()
+    val confirmPassword = rememberTextFieldState()
+    var state by remember { mutableStateOf(BackupPasswordState()) }
+    val passwordsMatch =
+        password.text.isNotEmpty() && password.text.toString() == confirmPassword.text.toString()
+
+    // Mirrors MainActivityContent, which pads every screen for the system bars and the IME.
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).safeDrawingPadding()) {
+        BackupPasswordScreen(
+            state = state.copy(isNextButtonEnabled = passwordsMatch),
+            passwordTextFieldState = password,
+            confirmPasswordTextFieldState = confirmPassword,
+            onBackClick = {},
+            onBackupClick = {},
+            onShowMoreInfo = { state = state.copy(isMoreInfoVisible = true) },
+            onHideMoreInfo = { state = state.copy(isMoreInfoVisible = false) },
+            onTogglePasswordVisibilityClick = {
+                state = state.copy(isPasswordVisible = !state.isPasswordVisible)
+            },
+            onToggleConfirmPasswordVisibilityClick = {
+                state = state.copy(isConfirmPasswordVisible = !state.isConfirmPasswordVisible)
+            },
+        )
+    }
 }

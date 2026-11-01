@@ -890,7 +890,8 @@
     <string name="keysign_app_version_text">버전 %1$s (%2$s)</string>
     <string name="backup_password_request_no_password_action">비밀번호 없이 백업</string>
     <string name="backup_password_request_with_password_action">비밀번호 사용</string>
-    <string name="backup_password_topbar_title">비밀번호</string>
+    <string name="backup_password_device_title">기기 백업 비밀번호</string>
+    <string name="backup_password_screen_back_up_now">지금 이 기기 백업하기</string>
     <string name="function_transfer_ibc_dst_address_input_title">수신 주소</string>
     <string name="migration_onboarding_step_1_text_start">이 볼트를</string>
     <string name="migration_onboarding_step_1_text_emphasized">세계에서 가장 빠른 MPC 프로토콜</string>

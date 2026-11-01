@@ -900,7 +900,8 @@
     <string name="keysign_app_version_text">Version %1$s (%2$s)</string>
     <string name="backup_password_request_no_password_action">Backup without password</string>
     <string name="backup_password_request_with_password_action">Use password</string>
-    <string name="backup_password_topbar_title">Password</string>
+    <string name="backup_password_device_title">Device Backup Password</string>
+    <string name="backup_password_screen_back_up_now">Back up this device now</string>
     <string name="function_transfer_ibc_dst_address_input_title">Destination Address</string>
     <string name="migration_onboarding_step_1_text_start">Upgrade this vault to the</string>
     <string name="migration_onboarding_step_1_text_emphasized">world’s fastest MPC protocol</string>

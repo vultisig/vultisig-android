@@ -1491,7 +1491,8 @@
     <string name="home_positions">仓位</string>
     <string name="home_swipe_hint_got_it">知道了</string>
     <string name="backup_password_request_with_password_action">使用密码</string>
-    <string name="backup_password_topbar_title">密码</string>
+    <string name="backup_password_device_title">设备备份密码</string>
+    <string name="backup_password_screen_back_up_now">立即备份此设备</string>
     <string name="function_transfer_ibc_dst_address_input_title">目标地址</string>
     <string name="vault_backup_screen_email_sent_to">已发送至 %s。</string>
     <string name="vault_backup_screen_donot_receive_email">未收到邮件？</string>

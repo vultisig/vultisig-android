@@ -10,7 +10,6 @@ import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.string.shouldContain
 import java.math.BigDecimal
 import java.math.BigInteger
 import org.junit.jupiter.api.Test
@@ -18,7 +17,7 @@ import org.junit.jupiter.api.Test
 /**
  * A SwapKit EVM route approves a token-transfer proxy (`allowanceTarget`) rather than the swap's
  * `to`. The keysign proto doesn't carry that field (vultisig/commondata#116), so a co-signer sees
- * it as null and must fail closed instead of signing an approve to an unverified spender.
+ * it as null and can only check the token and amount, as iOS does.
  */
 class SigningHelperApproveBoundToSwapTest {
 
@@ -40,19 +39,24 @@ class SigningHelperApproveBoundToSwapTest {
         }
     }
 
-    // What a co-signer reconstructs from the proto today: the proxy is dropped, so it can't be
-    // told apart from any other address.
+    // What a co-signer reconstructs from the proto today: the proxy is dropped, so the spender
+    // can't be bound and only the token and amount are checked.
     @Test
-    fun `SwapKit approve to a proxy is rejected when the payload carries no allowanceTarget`() {
-        val error =
-            shouldThrow<IllegalArgumentException> {
-                SigningHelper.requireApproveBoundToSwap(
-                    approve(spender = ATTACKER),
-                    payload(provider = "swapkit", allowanceTarget = null),
-                )
-            }
+    fun `SwapKit approve to a proxy is signed when the payload carries no allowanceTarget`() {
+        SigningHelper.requireApproveBoundToSwap(
+            approve(spender = PROXY),
+            payload(provider = "swapkit", allowanceTarget = null),
+        )
+    }
 
-        error.message shouldContain "allowanceTarget"
+    @Test
+    fun `SwapKit approve above the swap amount is rejected when the payload carries no allowanceTarget`() {
+        shouldThrow<IllegalArgumentException> {
+            SigningHelper.requireApproveBoundToSwap(
+                approve(spender = PROXY, amount = AMOUNT + BigInteger.ONE),
+                payload(provider = "swapkit", allowanceTarget = null),
+            )
+        }
     }
 
     @Test
