@@ -330,7 +330,7 @@
     <string name="before_reshare_title">Antes de recompartir</string>
     <string name="before_reshare_subtitle">Recompartir regenera los fragmentos de tu bóveda. Hay algunas cosas que debes saber primero.</string>
     <string name="before_reshare_backups_title">Crea nuevas copias de seguridad</string>
-    <string name="before_reshare_backups_body">Las copias de seguridad anteriores a esta recompartición no se pueden combinar con las nuevas. Las antiguas siguen funcionando entre sí, así que guárdalas en un lugar seguro o elimínalas. Si perdiste un dispositivo o se vio comprometido, transfiere tus fondos a una bóveda nueva.</string>
+    <string name="before_reshare_backups_body">Las copias de seguridad anteriores a esta recompartición no se pueden combinar con las nuevas. Primero guarda una copia de seguridad nueva de cada dispositivo. Después, las copias antiguas siguen funcionando entre sí, así que guárdalas en un lugar seguro o elimínalas. Si perdiste un dispositivo o se vio comprometido, transfiere tus fondos a una bóveda nueva.</string>
     <string name="before_reshare_cosigners_title">Todos los cofirmantes deben estar en línea</string>
     <string name="before_reshare_cosigners_body">Cada dispositivo actual de tu bóveda debe participar en la sesión de recompartir.</string>
     <string name="reshare_success_title">Bóveda recompartida</string>
@@ -338,7 +338,7 @@
     <string name="reshare_backup_each_device_body">Esta es solo 1 copia de seguridad de tu bóveda, repite este proceso para los demás dispositivos.</string>
     <string name="reshare_backup_store_separately_body">Guarda cada copia de seguridad en un lugar diferente. Si una se ve comprometida, tus fondos permanecen seguros.</string>
     <string name="reshare_backup_old_wont_work_title">Crea nuevas copias de seguridad</string>
-    <string name="reshare_backup_old_wont_work_body">Las copias de seguridad anteriores a esta recompartición no se pueden combinar con las nuevas. Las antiguas siguen funcionando entre sí, así que guárdalas en un lugar seguro o elimínalas. Si perdiste un dispositivo o se vio comprometido, transfiere tus fondos a una bóveda nueva.</string>
+    <string name="reshare_backup_old_wont_work_body">Las copias de seguridad anteriores a esta recompartición no se pueden combinar con las nuevas. Primero guarda una copia de seguridad nueva de cada dispositivo. Después, las copias antiguas siguen funcionando entre sí, así que guárdalas en un lugar seguro o elimínalas. Si perdiste un dispositivo o se vio comprometido, transfiere tus fondos a una bóveda nueva.</string>
     <string name="reshare_start_screen_start_reshare">Empezar a recompartir</string>
     <string name="threshold_error">Umbral no alcanzado\nNo hay suficientes dispositivos iniciales</string>
     <string name="add_folder_folder_name_title">Nombre de la carpeta</string>

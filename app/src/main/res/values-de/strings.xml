@@ -330,7 +330,7 @@
     <string name="before_reshare_title">Vor dem Reshare</string>
     <string name="before_reshare_subtitle">Beim Reshare werden Ihre Tresoranteile neu erzeugt. Vorab einige wichtige Hinweise.</string>
     <string name="before_reshare_backups_title">Neue Backups erstellen</string>
-    <string name="before_reshare_backups_body">Backups aus der Zeit vor diesem Reshare lassen sich nicht mit den neuen kombinieren. Alte Backups funktionieren untereinander weiterhin. Bewahren Sie sie daher sicher auf oder löschen Sie sie. Wenn ein Gerät verloren ging oder kompromittiert wurde, übertragen Sie Ihr Guthaben in einen neuen Tresor.</string>
+    <string name="before_reshare_backups_body">Backups aus der Zeit vor diesem Reshare lassen sich nicht mit den neuen kombinieren. Speichern Sie zuerst von jedem Gerät ein neues Backup. Danach funktionieren alte Backups untereinander weiterhin. Bewahren Sie sie daher sicher auf oder löschen Sie sie. Wenn ein Gerät verloren ging oder kompromittiert wurde, übertragen Sie Ihr Guthaben in einen neuen Tresor.</string>
     <string name="before_reshare_cosigners_title">Alle Mitsignierenden müssen online sein</string>
     <string name="before_reshare_cosigners_body">Jedes aktuelle Gerät in Ihrem Tresor muss an der Reshare-Sitzung teilnehmen.</string>
     <string name="reshare_success_title">Reshare des Tresors</string>
@@ -338,7 +338,7 @@
     <string name="reshare_backup_each_device_body">Dies ist nur 1 Backup Ihres Tresors. Wiederholen Sie diesen Vorgang für die anderen Geräte.</string>
     <string name="reshare_backup_store_separately_body">Bewahren Sie jedes Backup an einem anderen Ort auf. Wenn eines kompromittiert wird, bleiben Ihre Gelder sicher.</string>
     <string name="reshare_backup_old_wont_work_title">Neue Backups erstellen</string>
-    <string name="reshare_backup_old_wont_work_body">Backups aus der Zeit vor diesem Reshare lassen sich nicht mit den neuen kombinieren. Alte Backups funktionieren untereinander weiterhin. Bewahren Sie sie daher sicher auf oder löschen Sie sie. Wenn ein Gerät verloren ging oder kompromittiert wurde, übertragen Sie Ihr Guthaben in einen neuen Tresor.</string>
+    <string name="reshare_backup_old_wont_work_body">Backups aus der Zeit vor diesem Reshare lassen sich nicht mit den neuen kombinieren. Speichern Sie zuerst von jedem Gerät ein neues Backup. Danach funktionieren alte Backups untereinander weiterhin. Bewahren Sie sie daher sicher auf oder löschen Sie sie. Wenn ein Gerät verloren ging oder kompromittiert wurde, übertragen Sie Ihr Guthaben in einen neuen Tresor.</string>
     <string name="reshare_start_screen_start_reshare">Reshare starten</string>
     <string name="threshold_error">Schwellenwert nicht erreicht\nNicht genügend Ausgangsgeräte</string>
     <string name="add_folder_folder_name_title">Ordnername</string>

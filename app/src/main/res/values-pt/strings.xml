@@ -330,7 +330,7 @@
     <string name="before_reshare_title">Antes de recompartilhar</string>
     <string name="before_reshare_subtitle">Recompartilhar regenera as partes do seu cofre. Há algumas coisas que você precisa saber antes.</string>
     <string name="before_reshare_backups_title">Faça novos backups</string>
-    <string name="before_reshare_backups_body">Os backups anteriores a este recompartilhamento não podem ser combinados com os novos. Os backups antigos continuam funcionando entre si, então guarde-os em segurança ou exclua-os. Se um dispositivo foi perdido ou comprometido, transfira seus fundos para um novo cofre.</string>
+    <string name="before_reshare_backups_body">Os backups anteriores a este recompartilhamento não podem ser combinados com os novos. Primeiro, salve um novo backup de cada dispositivo. Depois disso, os backups antigos continuam funcionando entre si, então guarde-os em segurança ou exclua-os. Se um dispositivo foi perdido ou comprometido, transfira seus fundos para um novo cofre.</string>
     <string name="before_reshare_cosigners_title">Todos os cossignatários devem estar online</string>
     <string name="before_reshare_cosigners_body">Todos os dispositivos atuais do cofre precisam participar da sessão de recompartilhamento.</string>
     <string name="reshare_success_title">Cofre recompartilhado</string>
@@ -338,7 +338,7 @@
     <string name="reshare_backup_each_device_body">Este é apenas 1 backup do seu cofre, repita este processo para os outros dispositivos.</string>
     <string name="reshare_backup_store_separately_body">Guarde cada backup em um local diferente. Se um for comprometido, seus fundos continuam seguros.</string>
     <string name="reshare_backup_old_wont_work_title">Faça novos backups</string>
-    <string name="reshare_backup_old_wont_work_body">Os backups anteriores a este recompartilhamento não podem ser combinados com os novos. Os backups antigos continuam funcionando entre si, então guarde-os em segurança ou exclua-os. Se um dispositivo foi perdido ou comprometido, transfira seus fundos para um novo cofre.</string>
+    <string name="reshare_backup_old_wont_work_body">Os backups anteriores a este recompartilhamento não podem ser combinados com os novos. Primeiro, salve um novo backup de cada dispositivo. Depois disso, os backups antigos continuam funcionando entre si, então guarde-os em segurança ou exclua-os. Se um dispositivo foi perdido ou comprometido, transfira seus fundos para um novo cofre.</string>
     <string name="reshare_start_screen_start_reshare">Iniciar recompartilhamento</string>
     <string name="threshold_error">Limite não atingido\n Faltam dispositivos iniciais suficientes</string>
     <string name="add_folder_folder_name_title">Nome da pasta</string>

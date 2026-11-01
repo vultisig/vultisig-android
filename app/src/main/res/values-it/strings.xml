@@ -330,7 +330,7 @@
     <string name="before_reshare_title">Prima del reshare</string>
     <string name="before_reshare_subtitle">Il reshare rigenera le quote del vault. Prima, alcune cose da sapere.</string>
     <string name="before_reshare_backups_title">Crea nuovi backup</string>
-    <string name="before_reshare_backups_body">I backup precedenti a questo reshare non si possono combinare con quelli nuovi. I vecchi backup continuano a funzionare tra loro, quindi conservali al sicuro o eliminali. Se un dispositivo è stato perso o compromesso, sposta i tuoi fondi in un nuovo vault.</string>
+    <string name="before_reshare_backups_body">I backup precedenti a questo reshare non si possono combinare con quelli nuovi. Prima salva un nuovo backup da ogni dispositivo. Dopodiché, i vecchi backup continuano a funzionare tra loro, quindi conservali al sicuro o eliminali. Se un dispositivo è stato perso o compromesso, sposta i tuoi fondi in un nuovo vault.</string>
     <string name="before_reshare_cosigners_title">Tutti i co-firmatari devono essere online</string>
     <string name="before_reshare_cosigners_body">Ogni dispositivo attuale del vault deve partecipare alla sessione di reshare.</string>
     <string name="reshare_success_title">Vault ricondiviso</string>
@@ -338,7 +338,7 @@
     <string name="reshare_backup_each_device_body">Questo è solo 1 backup del tuo vault, ripeti questo processo per gli altri dispositivi.</string>
     <string name="reshare_backup_store_separately_body">Conserva ogni backup in un luogo diverso. Se uno viene compromesso, i tuoi fondi restano al sicuro.</string>
     <string name="reshare_backup_old_wont_work_title">Crea nuovi backup</string>
-    <string name="reshare_backup_old_wont_work_body">I backup precedenti a questo reshare non si possono combinare con quelli nuovi. I vecchi backup continuano a funzionare tra loro, quindi conservali al sicuro o eliminali. Se un dispositivo è stato perso o compromesso, sposta i tuoi fondi in un nuovo vault.</string>
+    <string name="reshare_backup_old_wont_work_body">I backup precedenti a questo reshare non si possono combinare con quelli nuovi. Prima salva un nuovo backup da ogni dispositivo. Dopodiché, i vecchi backup continuano a funzionare tra loro, quindi conservali al sicuro o eliminali. Se un dispositivo è stato perso o compromesso, sposta i tuoi fondi in un nuovo vault.</string>
     <string name="reshare_start_screen_start_reshare">Avvia il reshare</string>
     <string name="threshold_error">Soglia non raggiunta\nDispositivi iniziali insufficienti</string>
     <string name="add_folder_folder_name_title">Nome cartella</string>

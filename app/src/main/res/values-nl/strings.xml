@@ -329,7 +329,7 @@
     <string name="before_reshare_title">Voor je een Reshare start</string>
     <string name="before_reshare_subtitle">Een Reshare genereert je kluisdelen opnieuw. Er zijn eerst een paar dingen die je moet weten.</string>
     <string name="before_reshare_backups_title">Maak nieuwe back-ups</string>
-    <string name="before_reshare_backups_body">Back-ups van vóór deze Reshare kun je niet combineren met de nieuwe. Oude back-ups werken onderling nog wel, dus bewaar ze veilig of verwijder ze. Is een apparaat kwijtgeraakt of gecompromitteerd? Zet je tegoed dan over naar een nieuwe kluis.</string>
+    <string name="before_reshare_backups_body">Back-ups van vóór deze Reshare kun je niet combineren met de nieuwe. Sla eerst vanaf elk apparaat een nieuwe back-up op. Daarna werken oude back-ups onderling nog wel, dus bewaar ze veilig of verwijder ze. Is een apparaat kwijtgeraakt of gecompromitteerd? Zet je tegoed dan over naar een nieuwe kluis.</string>
     <string name="before_reshare_cosigners_title">Alle medeondertekenaars moeten online zijn</string>
     <string name="before_reshare_cosigners_body">Elk huidig apparaat in je kluis moet deelnemen aan de Reshare-sessie.</string>
     <string name="reshare_success_title">Kluis gereshared</string>
@@ -337,7 +337,7 @@
     <string name="reshare_backup_each_device_body">Dit is maar 1 back-up van je kluis. Herhaal dit voor de andere apparaten.</string>
     <string name="reshare_backup_store_separately_body">Bewaar elke back-up op een andere plek. Als er één wordt gecompromitteerd, blijft je tegoed veilig.</string>
     <string name="reshare_backup_old_wont_work_title">Maak nieuwe back-ups</string>
-    <string name="reshare_backup_old_wont_work_body">Back-ups van vóór deze Reshare kun je niet combineren met de nieuwe. Oude back-ups werken onderling nog wel, dus bewaar ze veilig of verwijder ze. Is een apparaat kwijtgeraakt of gecompromitteerd? Zet je tegoed dan over naar een nieuwe kluis.</string>
+    <string name="reshare_backup_old_wont_work_body">Back-ups van vóór deze Reshare kun je niet combineren met de nieuwe. Sla eerst vanaf elk apparaat een nieuwe back-up op. Daarna werken oude back-ups onderling nog wel, dus bewaar ze veilig of verwijder ze. Is een apparaat kwijtgeraakt of gecompromitteerd? Zet je tegoed dan over naar een nieuwe kluis.</string>
     <string name="reshare_start_screen_start_reshare">Reshare starten</string>
     <string name="threshold_error">Drempelwaarde niet bereikt\nTe weinig oorspronkelijke apparaten aanwezig</string>
     <string name="add_folder_folder_name_title">Mapnaam</string>
