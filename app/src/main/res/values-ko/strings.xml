@@ -495,7 +495,7 @@
     <string name="start_screen_recover_or_convert">볼트를 복구하거나 시드 구문을 볼트로 변환하세요</string>
     <string name="keysign_password_incorrect_password">비밀번호가 올바르지 않습니다</string>
     <string name="vault_list_part_n_of_t">파트 %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">공유 %1$d-of-%2$d</string>
+    <string name="vault_part_n_of_t">%2$d개 중 %1$d번째 셰어</string>
     <string name="qr_title_join_keygen">키 생성 참여</string>
     <string name="qr_title_join_keysign">서명 참여</string>
     <string name="qr_title_join_swap_keysign">스왑 참여</string>

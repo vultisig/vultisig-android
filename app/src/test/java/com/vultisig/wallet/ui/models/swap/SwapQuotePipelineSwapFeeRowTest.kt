@@ -52,7 +52,7 @@ internal class SwapQuotePipelineSwapFeeRowTest {
             fiatValueToString =
                 FiatValueToStringMapperImpl(
                     mockk<AppCurrencyRepository>().also {
-                        coEvery { it.getCurrencyFormat() } returns
+                        coEvery { it.getCurrencyFormat(any()) } returns
                             NumberFormat.getCurrencyInstance(Locale.US)
                     }
                 ),

@@ -373,7 +373,7 @@
     <string name="start_screen_recover_or_convert">Recupera tu bóveda o convierte tu frase semilla en una bóveda</string>
     <string name="keysign_password_incorrect_password">La contraseña es incorrecta</string>
     <string name="vault_list_part_n_of_t">Compartir %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">Compartir %1$d-de-%2$d</string>
+    <string name="vault_part_n_of_t">Fragmento %1$d de %2$d</string>
     <string name="qr_title_join_keygen">Únase a Keygen</string>
     <string name="qr_title_join_keysign">Únase a Keysign</string>
     <string name="qr_title_join_swap_keysign">Únete a Swap</string>

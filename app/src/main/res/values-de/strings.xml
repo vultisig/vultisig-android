@@ -373,7 +373,7 @@
     <string name="start_screen_recover_or_convert">Stellen Sie Ihren Tresor wieder her oder konvertieren Sie Ihre Seed-Phrase in einen Tresor</string>
     <string name="keysign_password_incorrect_password">Das Passwort ist falsch</string>
     <string name="vault_list_part_n_of_t">Teilen %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">Teilen %1$d-von-%2$d</string>
+    <string name="vault_part_n_of_t">Anteil %1$d von %2$d</string>
     <string name="qr_title_join_keygen">Keygen beitreten</string>
     <string name="qr_title_join_keysign">Keysign beitreten</string>
     <string name="qr_title_join_swap_keysign">Treten Sie Swap bei</string>

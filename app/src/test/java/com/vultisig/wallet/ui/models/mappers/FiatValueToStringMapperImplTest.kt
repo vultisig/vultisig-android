@@ -3,15 +3,18 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Locale
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -19,7 +22,8 @@ internal class FiatValueToStringMapperImplTest {
 
     private val appCurrencyRepository =
         mockk<AppCurrencyRepository>().also {
-            coEvery { it.getCurrencyFormat() } answers
+            every { it.currency } returns flowOf(AppCurrency.USD)
+            coEvery { it.getCurrencyFormat(any()) } answers
                 {
                     NumberFormat.getCurrencyInstance(Locale.US)
                 }

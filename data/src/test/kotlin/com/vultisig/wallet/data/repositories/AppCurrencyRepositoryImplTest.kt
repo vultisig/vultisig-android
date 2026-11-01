@@ -52,23 +52,23 @@ class AppCurrencyRepositoryImplTest {
     }
 
     @Test
-    fun `format keeps the device locale conventions for other english locales`() = runTest {
+    fun `format uses the currency's own conventions for AUD`() = runTest {
         Locale.setDefault(Locale.forLanguageTag("en-AU"))
         val repository = AppCurrencyRepositoryImpl(FakeCurrencyDataStore(AppCurrency.AUD.ticker))
 
         val formatted = repository.getCurrencyFormat().format(1000)
 
-        assertEquals("$1,000.00", formatted)
+        assertEquals("A$1,000.00", formatted)
     }
 
     @Test
-    fun `format renders the selected non-USD currency`() = runTest {
+    fun `format renders euros with German conventions whatever the app language`() = runTest {
         Locale.setDefault(Locale.US)
         val repository = AppCurrencyRepositoryImpl(FakeCurrencyDataStore(AppCurrency.EUR.ticker))
 
         val formatted = repository.getCurrencyFormat().format(1000)
 
-        assertEquals("€1,000.00", formatted)
+        assertEquals("1.000,00\u00A0€", formatted)
     }
 
     @Test
@@ -110,7 +110,7 @@ class AppCurrencyRepositoryImplTest {
 
         val formatted = repository.getCurrencyFormat(AppCurrency.EUR).format(1000)
 
-        assertEquals("€1,000.00", formatted)
+        assertEquals("1.000,00\u00A0€", formatted)
     }
 
     private class FakeCurrencyDataStore(var ticker: String) : AppDataStore {

@@ -373,7 +373,7 @@
     <string name="start_screen_recover_or_convert">Oporavi svoj trezor ili pretvori svoju seed-frazu u trezor</string>
     <string name="keysign_password_incorrect_password">Lozinka je netočna</string>
     <string name="vault_list_part_n_of_t">Podijeli %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">Podijeli %1$d-od-%2$d</string>
+    <string name="vault_part_n_of_t">Udio %1$d od %2$d</string>
     <string name="qr_title_join_keygen">Pridružite se Keygenu</string>
     <string name="qr_title_join_keysign">Pridružite se Keysignu</string>
     <string name="qr_title_join_swap_keysign">Pridružite se Swapu</string>

@@ -526,10 +526,11 @@ constructor(
         tokenTicker: String,
     ): MarketStatsUiModel =
         MarketStatsUiModel(
-            marketCap = marketCap?.toStatFiatString(currencyTicker),
+            marketCap = marketCap?.toFiatString(currencyTicker, compact = true),
             marketCapRank = marketCapRank?.let { "#$it" },
-            volume24h = volume24h?.toStatFiatString(currencyTicker),
-            fullyDilutedValuation = fullyDilutedValuation?.toStatFiatString(currencyTicker),
+            volume24h = volume24h?.toFiatString(currencyTicker, compact = true),
+            fullyDilutedValuation =
+                fullyDilutedValuation?.toFiatString(currencyTicker, compact = true),
             circulatingSupply = circulatingSupply?.let { formatSupply(it, tokenTicker) },
             maxSupply = maxSupply?.let { formatSupply(it, tokenTicker) },
         )
@@ -552,20 +553,13 @@ constructor(
     private suspend fun BigDecimal.toFiatString(
         currencyTicker: String,
         asPrice: Boolean = false,
-    ): String = fiatValueToStringMapper(FiatValue(this, currencyTicker), asPrice = asPrice)
-
-    /**
-     * A market-stats fiat figure. Caps, valuations and volumes run to twelve digits, which no
-     * reader compares across a two-column row, so anything from a million up is abbreviated with
-     * the currency's own symbol; smaller figures keep the currency's standard formatting.
-     */
-    private suspend fun BigDecimal.toStatFiatString(currencyTicker: String): String =
-        if (MarketStatFormatter.isAbbreviated(this)) {
-            MarketStatFormatter.currencySymbol(currencyTicker) +
-                MarketStatFormatter.abbreviate(this)
-        } else {
-            toFiatString(currencyTicker)
-        }
+        compact: Boolean = false,
+    ): String =
+        fiatValueToStringMapper(
+            FiatValue(this, currencyTicker),
+            asPrice = asPrice,
+            compact = compact,
+        )
 
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }

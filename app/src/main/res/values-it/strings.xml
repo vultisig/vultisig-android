@@ -373,7 +373,7 @@
     <string name="start_screen_recover_or_convert">Recupera il tuo vault o converti la tua seedphrase in un vault</string>
     <string name="keysign_password_incorrect_password">La password è errata</string>
     <string name="vault_list_part_n_of_t">Condividi %1$d-of-%2$d</string>
-    <string name="vault_part_n_of_t">Condividi %1$d-di-%2$d</string>
+    <string name="vault_part_n_of_t">Quota %1$d di %2$d</string>
     <string name="qr_title_join_keygen">Unisciti a Keygen</string>
     <string name="qr_title_join_keysign">Unisciti a Keysign</string>
     <string name="qr_title_join_swap_keysign">Unisciti allo scambio</string>

@@ -1,12 +1,18 @@
 package com.vultisig.wallet.ui.models.mappers
 
+import android.icu.number.Notation
+import android.icu.number.NumberFormatter
+import android.icu.number.Precision
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.ui.models.token.MarketStatFormatter
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.NumberFormat
 import java.util.Currency
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
 
 internal interface FiatValueToStringMapper {
     /**
@@ -21,13 +27,19 @@ internal interface FiatValueToStringMapper {
      * fraction digits to reveal its first significant figures, so a tiny per-token price like
      * LUNC's `$0.00006` displays as `$0.00006` instead of collapsing to `$0.00`.
      *
-     * All other values fall through to the currency's standard formatting. [asFee] takes precedence
-     * over [asPrice] when both are set.
+     * When [compact] is true and the value is a million or more, it is rendered in the currency's
+     * compact notation (`$280.78B`, `280,78 Mrd. €`), truncated so it never reads larger than the
+     * value it stands for.
+     *
+     * All other values fall through to the currency's standard formatting. Every format uses the
+     * currency's [AppCurrency.formatLocale], never the app language. [asFee] takes precedence over
+     * [asPrice] when both are set.
      */
     suspend operator fun invoke(
         value: FiatValue,
         asFee: Boolean = false,
         asPrice: Boolean = false,
+        compact: Boolean = false,
     ): String
 }
 
@@ -35,11 +47,22 @@ internal class FiatValueToStringMapperImpl
 @Inject
 constructor(private val appCurrencyRepository: AppCurrencyRepository) : FiatValueToStringMapper {
 
-    override suspend fun invoke(value: FiatValue, asFee: Boolean, asPrice: Boolean): String {
+    override suspend fun invoke(
+        value: FiatValue,
+        asFee: Boolean,
+        asPrice: Boolean,
+        compact: Boolean,
+    ): String {
+        val appCurrency =
+            AppCurrency.fromTicker(value.currency) ?: appCurrencyRepository.currency.first()
+        if (compact && MarketStatFormatter.isAbbreviated(value.value)) {
+            return formatCompact(value, appCurrency)
+        }
         val currency = Currency.getInstance(value.currency)
         val format =
-            (appCurrencyRepository.getCurrencyFormat().clone() as NumberFormat).apply {
-                this.currency = currency
+            (appCurrencyRepository.getCurrencyFormat(appCurrency).clone() as NumberFormat).apply {
+                // Re-setting the same currency would reset an overridden symbol such as "CA$".
+                if (this.currency != currency) this.currency = currency
             }
         if (!asFee && !asPrice) {
             return format.format(value.value)
@@ -64,9 +87,26 @@ constructor(private val appCurrencyRepository: AppCurrencyRepository) : FiatValu
         return format.format(value.value)
     }
 
+    private fun formatCompact(value: FiatValue, appCurrency: AppCurrency): String {
+        val currency = android.icu.util.Currency.getInstance(value.currency)
+        val formatted =
+            NumberFormatter.withLocale(appCurrency.formatLocale)
+                .notation(Notation.compactShort())
+                .unit(currency)
+                .precision(Precision.maxFraction(COMPACT_FRACTION_DIGITS))
+                .roundingMode(RoundingMode.DOWN)
+                .format(value.value)
+                .toString()
+        val symbol =
+            appCurrency.symbol?.takeIf { appCurrency.ticker == value.currency } ?: return formatted
+        // ICU's number formatter ignores DecimalFormatSymbols' currency symbol, so swap it in.
+        return formatted.replaceFirst(currency.getSymbol(appCurrency.formatLocale), symbol)
+    }
+
     private companion object {
         private const val EXTRA_FEE_PRECISION_DIGITS = 3
         private const val PRICE_SIGNIFICANT_DIGITS = 2
         private const val MAX_PRICE_FRACTION_DIGITS = 8
+        private const val COMPACT_FRACTION_DIGITS = 2
     }
 }

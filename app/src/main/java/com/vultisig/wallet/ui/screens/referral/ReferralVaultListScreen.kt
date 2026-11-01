@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.screens.referral
 
+import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.asUiText
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -158,7 +160,7 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
             UiSpacer(6.dp)
 
             Text(
-                text = vault.signingInfo,
+                text = vault.signingInfo.asString(),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.tertiary,
             )
@@ -195,25 +197,25 @@ private fun ReferralVaultListScreenPreview() {
                         id = "1",
                         name = "My Main Vault",
                         isSelected = true,
-                        signingInfo = "Part 1 of 3",
+                        signingInfo = R.string.vault_part_n_of_t.asUiText(1, 3),
                     ),
                     VaultItem(
                         id = "2",
                         name = "Trading Vault",
                         isSelected = false,
-                        signingInfo = "Part 2 of 3",
+                        signingInfo = R.string.vault_part_n_of_t.asUiText(2, 3),
                     ),
                     VaultItem(
                         id = "3",
                         name = "Savings Vault",
                         isSelected = false,
-                        signingInfo = "Part 1 of 2",
+                        signingInfo = R.string.vault_part_n_of_t.asUiText(1, 2),
                     ),
                     VaultItem(
                         id = "4",
                         name = "DeFi Vault",
                         isSelected = false,
-                        signingInfo = "Part 3 of 5",
+                        signingInfo = R.string.vault_part_n_of_t.asUiText(3, 5),
                     ),
                 ),
             error = null,

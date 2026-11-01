@@ -2,16 +2,15 @@ package com.vultisig.wallet.ui.models.token
 
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 import java.util.Locale
 
 /**
- * Abbreviated number formatting for the token detail sheet's market sections.
+ * Abbreviated number formatting for the token detail sheet's token figures (supply, percentages).
  *
- * A market cap written out in full is a fourteen-digit number nobody reads across a two-column row;
- * `$2.23T` is the figure people actually compare. Below a million the abbreviation would lose more
- * than it saves, so those values are left to the caller's normal currency/number formatting.
+ * A supply written out in full is a nine-digit number nobody reads across a two-column row;
+ * `120.68M ETH` is the figure people actually compare. Below a million the abbreviation would lose
+ * more than it saves. Fiat figures are compacted by `FiatValueToStringMapper` instead.
  */
 internal object MarketStatFormatter {
 
@@ -68,11 +67,6 @@ internal object MarketStatFormatter {
             minimumFractionDigits = 0
             roundingMode = RoundingMode.DOWN
         }
-
-    /** The currency's display symbol, prefixed to an abbreviated amount the way iOS does. */
-    fun currencySymbol(currencyTicker: String, locale: Locale = Locale.getDefault()): String =
-        runCatching { java.util.Currency.getInstance(currencyTicker).getSymbol(locale) }
-            .getOrElse { DecimalFormatSymbols.getInstance(locale).currencySymbol }
 
     private const val MAX_FRACTION_DIGITS = 2
 }
