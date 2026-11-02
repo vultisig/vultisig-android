@@ -65,14 +65,14 @@ constructor(private val thorChainApi: ThorChainApi, private val timeSource: Time
 
     /**
      * Converts a secured-asset denom (`BTC-BTC`, `ETH-USDC-0XA0B8…`) into its [Coin] (`btc-btc`,
-     * `eth-usdc-0xa0b8…`), or null when malformed or THOR/MAYA-native (e.g. `THOR-TCY`, which uses
+     * `eth-usdc-0xa0b8…`), or null when malformed or THOR-native (e.g. `THOR-TCY`, which uses
      * the `x/`-prefixed LP/staking convention, not the secured-asset one).
      */
     private fun toSecuredAssetCoin(denom: String): Coin? {
         val dash = denom.indexOf('-')
         if (dash <= 0 || dash >= denom.length - 1) return null
         val chainCode = denom.substring(0, dash)
-        if (NATIVE_CHAIN_CODES.any { it.equals(chainCode, ignoreCase = true) }) return null
+        if (chainCode.equals(THOR_CHAIN_CODE, ignoreCase = true)) return null
         val denomTail = denom.substring(dash + 1)
         val ticker = denomTail.substringBefore('-').uppercase()
         if (ticker.isBlank()) return null
@@ -82,7 +82,7 @@ constructor(private val thorChainApi: ThorChainApi, private val timeSource: Time
     private companion object {
         const val SECURED_ASSET_DECIMALS = 8
         val CACHE_TTL = 5.minutes
-        val NATIVE_CHAIN_CODES = listOf("THOR", "MAYA")
+        const val THOR_CHAIN_CODE = "THOR"
 
         /**
          * Offline fallback for the SECURE_ASSETS_TICKERS chains: used only until a live fetch first
