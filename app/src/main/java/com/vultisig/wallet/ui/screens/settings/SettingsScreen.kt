@@ -23,8 +23,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -174,6 +178,14 @@ internal fun SettingItem(
                         if (isSelected != null) Modifier.semantics { selected = isSelected }
                         else Modifier
                     )
+                    .then(
+                        item.trailingSwitch?.let { isChecked ->
+                            Modifier.semantics {
+                                role = Role.Switch
+                                toggleableState = ToggleableState(isChecked)
+                            }
+                        } ?: Modifier
+                    )
                     .clickOnce(onClick = onClick)
                     .padding(horizontal = 12.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -222,17 +234,7 @@ internal fun SettingItem(
             UiSpacer(size = 12.dp)
 
             item.trailingSwitch?.let { isChecked ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    VsSwitch(checked = isChecked, onCheckedChange = null)
-                    Text(
-                        text = if (isChecked) "ON" else "OFF",
-                        style = Theme.brockmann.headings.subtitle,
-                        color = tint ?: Theme.v2.colors.text.primary,
-                    )
-                }
+                VsSwitch(checked = isChecked, onCheckedChange = null)
 
                 UiSpacer(size = 8.dp)
             }
@@ -251,7 +253,7 @@ internal fun SettingItem(
                     imageVector = ImageVector.vectorResource(trailingIcon),
                     modifier =
                         Modifier.size(16.dp).alpha(if (item.isTrailingIconVisible) 1f else 0f),
-                    contentDescription = if (isSelected != null) null else "trailing icon",
+                    contentDescription = null,
                 )
             }
         }

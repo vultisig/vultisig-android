@@ -38,7 +38,7 @@ fun V3Icon(@DrawableRes logo: Int) {
     ) {
         Image(
             painter = painterResource(logo),
-            contentDescription = "icon",
+            contentDescription = null,
             modifier = Modifier.size(size = 18.dp),
         )
     }

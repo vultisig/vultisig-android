@@ -96,25 +96,32 @@ internal class SwapFiatAmountInput(
             }
             .flatMapLatest { (token, currency) ->
                 if (token == null) {
-                    flowOf(FiatAvailability(isAvailable = false, symbol = ""))
+                    flowOf(FiatAvailability(isAvailable = false, symbol = "", isSymbolAtEnd = false))
                 } else {
-                    val symbol = currencySymbol(currency)
+                    val (symbol, isSymbolAtEnd) = currencySymbol(currency)
                     tokenPriceRepository
                         .getPrice(token, currency)
-                        .map { price -> FiatAvailability(price.signum() > 0, symbol) }
+                        .map { price -> FiatAvailability(price.signum() > 0, symbol, isSymbolAtEnd) }
                         .catch { e ->
                             Timber.w(e, "Failed to observe %s price for fiat input", token.ticker)
-                            emit(FiatAvailability(isAvailable = false, symbol = symbol))
+                            emit(
+                                FiatAvailability(
+                                    isAvailable = false,
+                                    symbol = symbol,
+                                    isSymbolAtEnd = isSymbolAtEnd,
+                                )
+                            )
                         }
                 }
             }
             .distinctUntilChanged()
-            .collect { (isAvailable, symbol) ->
+            .collect { (isAvailable, symbol, isSymbolAtEnd) ->
                 uiState.update {
                     it.copy(
                         isSrcFiatInputAvailable = isAvailable,
                         isSrcFiatInput = it.isSrcFiatInput && isAvailable,
                         fiatSymbol = symbol,
+                        isFiatSymbolAtEnd = isSymbolAtEnd,
                     )
                 }
             }
@@ -211,17 +218,23 @@ internal class SwapFiatAmountInput(
             null
         }
 
-    private suspend fun currencySymbol(currency: AppCurrency): String =
-        (appCurrencyRepository.getCurrencyFormat(currency) as? DecimalFormat)
-            ?.decimalFormatSymbols
-            ?.currencySymbol ?: currency.ticker
+    /** The currency's symbol and whether its format writes it after the number (`2,52 €`). */
+    private suspend fun currencySymbol(currency: AppCurrency): Pair<String, Boolean> {
+        val format = appCurrencyRepository.getCurrencyFormat(currency) as? DecimalFormat
+        val symbol = format?.decimalFormatSymbols?.currencySymbol ?: currency.ticker
+        return symbol to (format != null && format.positivePrefix.isEmpty())
+    }
 
     private fun fractionDigits(currency: AppCurrency): Int =
         runCatching { Currency.getInstance(currency.ticker).defaultFractionDigits }
             .getOrDefault(DEFAULT_FRACTION_DIGITS)
             .coerceAtLeast(0)
 
-    private data class FiatAvailability(val isAvailable: Boolean, val symbol: String)
+    private data class FiatAvailability(
+        val isAvailable: Boolean,
+        val symbol: String,
+        val isSymbolAtEnd: Boolean,
+    )
 
     private companion object {
         private const val DEFAULT_FRACTION_DIGITS = 2

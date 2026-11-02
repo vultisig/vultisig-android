@@ -94,6 +94,8 @@ internal data class SwapFormUiModel(
     val isSrcFiatInputAvailable: Boolean = false,
     // Symbol shown ahead of the fiat amount in fiat input, e.g. "$".
     val fiatSymbol: String = "",
+    // Whether the currency's format writes the symbol after the amount (`2,52 €`).
+    val isFiatSymbolAtEnd: Boolean = false,
     val quoteDisplay: QuoteDisplay = QuoteDisplay(),
     val feeBreakdown: FeeBreakdown = FeeBreakdown(),
     val discountInfo: DiscountInfo = DiscountInfo(),

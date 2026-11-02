@@ -354,10 +354,15 @@ internal fun SwapScreen(
                                                 // rather than typed, so it leads the digits as one
                                                 // right-aligned run and can't be deleted.
                                                 val fiatSymbol = state.fiatSymbol
+                                                val isSymbolAtEnd = state.isFiatSymbolAtEnd
                                                 val symbolPrefix =
-                                                    remember(fiatSymbol) {
+                                                    remember(fiatSymbol, isSymbolAtEnd) {
                                                         OutputTransformation {
-                                                            insert(0, fiatSymbol)
+                                                            if (isSymbolAtEnd) {
+                                                                append("\u00A0$fiatSymbol")
+                                                            } else {
+                                                                insert(0, fiatSymbol)
+                                                            }
                                                         }
                                                     }
                                                 VsBasicTextField(
