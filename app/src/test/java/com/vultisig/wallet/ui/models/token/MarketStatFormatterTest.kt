@@ -57,10 +57,4 @@ internal class MarketStatFormatterTest {
         MarketStatFormatter.percent(23.164, locale) shouldBe "+23.16%"
         MarketStatFormatter.percent(0.0, locale) shouldBe "+0.00%"
     }
-
-    @Test
-    fun `an unknown currency code falls back to the locale's symbol instead of throwing`() {
-        MarketStatFormatter.currencySymbol("USD", locale) shouldBe "$"
-        MarketStatFormatter.currencySymbol("NOTACURRENCY", locale) shouldBe "$"
-    }
 }

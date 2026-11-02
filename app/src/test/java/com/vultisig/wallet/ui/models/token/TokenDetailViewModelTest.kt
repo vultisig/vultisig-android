@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChartRange
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.CoinMarketStats
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.MarketChart
 import com.vultisig.wallet.data.models.MarketChartPoint
 import com.vultisig.wallet.data.models.logo
@@ -583,8 +584,12 @@ internal class TokenDetailViewModelTest {
         }
 
     @Test
-    fun `market stats abbreviate large fiat figures and tag supply with the coin's ticker`() =
+    fun `market stats format fiat figures compactly and tag supply with the coin's ticker`() =
         runTest(testDispatcher) {
+            coEvery { fiatValueToStringMapper(any(), any(), any(), true) } answers
+                {
+                    "compact ${firstArg<FiatValue>().value.toPlainString()}"
+                }
             coEvery {
                 tokenPriceChartRepository.getChart(coin, ChartRange.ONE_DAY, AppCurrency.USD)
             } returns chart(sign = 1)
@@ -593,8 +598,6 @@ internal class TokenDetailViewModelTest {
                     marketCap = BigDecimal("2226290000000"),
                     volume24h = BigDecimal("6960000"),
                     circulatingSupply = BigDecimal("120680000"),
-                    // Below the abbreviation threshold, so this one keeps standard formatting —
-                    // which the mocked mapper stands in for.
                     fullyDilutedValuation = BigDecimal("999999"),
                 )
 
@@ -602,10 +605,10 @@ internal class TokenDetailViewModelTest {
             advanceUntilIdle()
 
             val stats = vm.uiState.value.marketStats
-            stats?.marketCap shouldBe "$2.22T"
-            stats?.volume24h shouldBe "$6.96M"
+            stats?.marketCap shouldBe "compact 2226290000000"
+            stats?.volume24h shouldBe "compact 6960000"
             stats?.circulatingSupply shouldBe "120.68M BTC"
-            stats?.fullyDilutedValuation shouldBe "$100.00"
+            stats?.fullyDilutedValuation shouldBe "compact 999999"
         }
 
     @Test

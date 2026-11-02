@@ -1,20 +1,14 @@
 package com.vultisig.wallet.ui.screens.vault_settings.components.security
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.securityscanner.SettingsSecurityScannerBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
@@ -60,20 +54,7 @@ private fun SecurityScannerEnableScreen(
                 color = Theme.v2.colors.text.secondary,
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                VsSwitch(checked = uiModel.isSwitchEnabled, onCheckedChange = onCheckChange)
-
-                UiSpacer(12.dp)
-
-                Text(
-                    text = if (uiModel.isSwitchEnabled) "ON" else "OFF",
-                    style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.primary,
-                )
-            }
+            VsSwitch(checked = uiModel.isSwitchEnabled, onCheckedChange = onCheckChange)
 
             if (uiModel.showWarningDialog) {
                 SettingsSecurityScannerBottomSheet(

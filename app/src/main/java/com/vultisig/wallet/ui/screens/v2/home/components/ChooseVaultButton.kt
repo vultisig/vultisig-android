@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType.Bordered
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType.SECONDARY
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -36,19 +37,7 @@ internal fun ChooseVaultButton(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            UiIcon(
-                drawableResId =
-                    if (isFastVault) {
-                        R.drawable.thunder
-                    } else {
-                        R.drawable.ic_shield
-                    },
-                contentDescription = "vault type logo",
-                size = 16.dp,
-                tint =
-                    if (isFastVault) Theme.v2.colors.alerts.warning
-                    else Theme.v2.colors.alerts.success,
-            )
+            VaultIcon(isFastVault = isFastVault)
             UiSpacer(size = 6.dp)
             Text(
                 text = vaultName,
