@@ -87,11 +87,13 @@ internal class PendingLiquidityCommitSlotTest {
     fun `cleaned pools are the live non-synthetic ones holding pending liquidity`() {
         fun cleaned(asset: String, status: String? = "Available", pending: String = "1") =
             isCleanedPendingLiquidityPool(
+                schedule = THORChain,
                 asset = asset,
                 status = status,
                 pendingInboundNative = pending,
                 pendingInboundAsset = "0",
-                derivedChainPrefix = "THOR",
+                mimir = emptyMap(),
+                height = 100,
             )
 
         assertTrue(cleaned("BTC.BTC"))
@@ -100,6 +102,51 @@ internal class PendingLiquidityCommitSlotTest {
         assertFalse(cleaned("BTC.BTC", status = "Suspended"))
         assertFalse(cleaned("BTC.BTC", pending = "0"))
         assertFalse(cleaned("BTC/BTC"))
-        assertFalse(cleaned("THOR.BTC"))
+        assertTrue(cleaned("THOR.TCY"))
+        assertTrue(cleaned("THOR.RUJI"))
+    }
+
+    @Test
+    fun `a halted or LP-paused chain drops its pools from the cleanup pass`() {
+        fun cleaned(mimir: Map<String, Long>, asset: String = "BTC.BTC") =
+            isCleanedPendingLiquidityPool(
+                schedule = THORChain,
+                asset = asset,
+                status = "Available",
+                pendingInboundNative = "1",
+                pendingInboundAsset = "0",
+                mimir = mimir,
+                height = 100,
+            )
+
+        assertFalse(cleaned(mapOf("HALTBTCCHAIN" to 50)))
+        assertFalse(cleaned(mapOf("SOLVENCYHALTBTCCHAIN" to 50)))
+        assertFalse(cleaned(mapOf("HALTCHAINGLOBAL" to 50)))
+        assertFalse(cleaned(mapOf("NODEPAUSECHAINGLOBAL" to 150)))
+        assertFalse(cleaned(mapOf("PAUSELP" to 50)))
+        assertFalse(cleaned(mapOf("PAUSELPBTC" to 50)))
+        assertTrue(cleaned(mapOf("PAUSELPBTC" to 50), asset = "ETH.ETH"))
+        assertTrue(cleaned(mapOf("HALTBTCCHAIN" to 150)))
+        assertTrue(cleaned(mapOf("HALTBTCCHAIN" to 0)))
+        assertTrue(cleaned(mapOf("NODEPAUSECHAINGLOBAL" to 99)))
+    }
+
+    @Test
+    fun `thornode halts from the activation height, mayanode only after it`() {
+        fun cleaned(schedule: PendingLiquidityCleanupSchedule, mimir: Map<String, Long>) =
+            isCleanedPendingLiquidityPool(
+                schedule = schedule,
+                asset = "BTC.BTC",
+                status = "Available",
+                pendingInboundNative = "1",
+                pendingInboundAsset = "0",
+                mimir = mimir,
+                height = 100,
+            )
+
+        assertFalse(cleaned(THORChain, mapOf("HALTBTCCHAIN" to 100)))
+        assertTrue(cleaned(MayaChain, mapOf("HALTBTCCHAIN" to 100)))
+        assertFalse(cleaned(THORChain, mapOf("NODEPAUSECHAINGLOBAL" to 100)))
+        assertTrue(cleaned(MayaChain, mapOf("NODEPAUSECHAINGLOBAL" to 100)))
     }
 }

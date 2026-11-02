@@ -44,6 +44,7 @@ internal class AddLiquidityStrategy(
     private val mayaChainLpPreflight: MayaChainLpPreflightUseCase,
     private val checkMayaLpPairing: CheckMayaLpPairingUseCase,
     private val resolvePairedAddress: suspend (Chain, String, String) -> String?,
+    private val canHoldChain: suspend (vaultId: String, chain: Chain) -> Boolean,
     private val addressProvider: () -> Address?,
     private val requireTokenAmount: (Coin, Account, Address, TokenValue) -> BigInteger,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
@@ -149,7 +150,9 @@ internal class AddLiquidityStrategy(
         // add pairs exactly where mayaLpPairedChain says the app can deposit the asset half; an
         // unresolved address there must not quietly turn a fresh add single-sided — a live position
         // already is one. The address comes from a coin the vault holds, so a missing one means
-        // that chain is not enabled.
+        // that chain is not enabled — unless the vault can never enable it (a KeyImport vault
+        // without that chain's key), where the CACAO add stays the single-sided `+:POOL` it was
+        // before pairing existed rather than a dead end.
         val pairedChain =
             when {
                 isMayaChainLpAdd -> mayaLpPairedChain(chain, poolId)
@@ -157,7 +160,12 @@ internal class AddLiquidityStrategy(
                     if (chain == Chain.ThorChain) assetChain else Chain.ThorChain
                 else -> null
             }
-        if (pairedChain != null && pairedAddress == null && !acceptsSingleSided) {
+        if (
+            pairedChain != null &&
+                pairedAddress == null &&
+                !acceptsSingleSided &&
+                !(isMayaChainLpAdd && !canHoldChain(vaultId, pairedChain))
+        ) {
             throw InvalidTransactionDataException(
                 UiText.FormattedText(
                     R.string.deposit_error_lp_paired_chain_not_enabled,

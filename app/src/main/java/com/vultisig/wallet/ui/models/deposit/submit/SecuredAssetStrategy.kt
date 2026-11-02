@@ -7,7 +7,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -52,7 +51,6 @@ internal typealias BitcoinTransactionPlanBuilder =
 /** Builds a Secured-Asset [DepositTransaction] minting a secured asset on THORChain. */
 internal class SecuredAssetStrategy(
     private val vaultIdProvider: () -> String?,
-    private val chainProvider: () -> Chain?,
     private val thorAddressFieldState: TextFieldState,
     private val tokenAmountFieldState: TextFieldState,
     private val selectedAccountProvider: () -> Account?,
@@ -72,11 +70,6 @@ internal class SecuredAssetStrategy(
             requireNotNull(vaultIdProvider()) {
                 "vaultId must be initialized before creating transaction"
             }
-        chainProvider()
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-
         val thorAddress = thorAddressFieldState.text.toString()
         if (thorAddress.isBlank()) {
             throw InvalidTransactionDataException(

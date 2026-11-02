@@ -29,8 +29,8 @@ internal enum class PendingLiquidityCleanupSchedule {
  *
  * [cleanedPools] are the pools the node would clean, as `/pools` reports them now; their sort order
  * is the node's store order (`pool/<ASSET>`, uppercased). The set moves as other pools gain or lose
- * pending liquidity, and halted chains or a TVL cap skip a slot, so this is an estimate that a
- * re-scan refreshes — never a promise.
+ * pending liquidity, and a TVL cap can skip a slot, so this is an estimate that a re-scan refreshes
+ * — never a promise.
  */
 internal fun blocksUntilPendingLiquidityCommit(
     schedule: PendingLiquidityCleanupSchedule,
@@ -70,27 +70,62 @@ internal fun blocksUntilPendingLiquidityCommit(
 }
 
 /**
- * Whether a node's cleanup pass would visit [asset]'s pool, judged from `/pools` alone.
+ * Whether a node's cleanup pass would visit [asset]'s pool, judged from `/pools` and [mimir].
  *
- * Synthetic pools are always skipped; [derivedChainPrefix] names the chain whose non-native pools
- * are skipped too (thornode's derived `THOR.*` assets), `null` when the node skips none. A missing
- * [status] counts as live: the pool still holds pending liquidity, so it was live when it took it.
+ * Synthetic pools are always skipped. `/pools` already leaves out thornode's derived assets, so
+ * every other live pool counts — including `THOR.TCY` and whitelisted `THOR.*` pools, which
+ * thornode still cleans. A missing [status] counts as live: the pool still holds pending liquidity,
+ * so it was live when it took it.
+ *
+ * Both nodes also skip a pool whose chain is halted or has LP paused *before* they count the pools,
+ * so such a pool must drop out here too or every later pool's slot index shifts.
  */
 internal fun isCleanedPendingLiquidityPool(
+    schedule: PendingLiquidityCleanupSchedule,
     asset: String,
     status: String?,
     pendingInboundNative: String,
     pendingInboundAsset: String,
-    derivedChainPrefix: String?,
+    mimir: Map<String, Long>,
+    height: Long,
 ): Boolean {
     if ('/' in asset) return false
-    if (derivedChainPrefix != null && asset.startsWith("$derivedChainPrefix.", ignoreCase = true))
-        return false
     val live =
         status == null ||
             status.equals("Available", ignoreCase = true) ||
             status.equals("Staged", ignoreCase = true)
     if (!live) return false
-    return (pendingInboundNative.toBigIntegerOrNull()?.signum() ?: 0) > 0 ||
-        (pendingInboundAsset.toBigIntegerOrNull()?.signum() ?: 0) > 0
+    val holdsPending =
+        (pendingInboundNative.toBigIntegerOrNull()?.signum() ?: 0) > 0 ||
+            (pendingInboundAsset.toBigIntegerOrNull()?.signum() ?: 0) > 0
+    if (!holdsPending) return false
+    return !isChainLpCleanupHalted(schedule, asset.substringBefore('.'), mimir, height)
+}
+
+/**
+ * The node's `IsChainHalted(chain) || IsLPPaused(chain)` from a `/mimir` snapshot. Every key is an
+ * activation height: thornode treats it as active from that block on, mayanode only after it.
+ * `NodePauseChainGlobal` is the reverse — a pause *until* that height.
+ */
+private fun isChainLpCleanupHalted(
+    schedule: PendingLiquidityCleanupSchedule,
+    chain: String,
+    mimir: Map<String, Long>,
+    height: Long,
+): Boolean {
+    val inclusive = schedule == PendingLiquidityCleanupSchedule.THORChain
+    fun active(key: String): Boolean {
+        val value = mimir[key] ?: return false
+        return value > 0 && (if (inclusive) value <= height else value < height)
+    }
+    val upper = chain.uppercase()
+    val nodePause = mimir["NODEPAUSECHAINGLOBAL"]
+    val nodePaused =
+        nodePause != null && (if (inclusive) nodePause >= height else nodePause > height)
+    return nodePaused ||
+        active("HALTCHAINGLOBAL") ||
+        active("HALT${upper}CHAIN") ||
+        active("SOLVENCYHALT${upper}CHAIN") ||
+        active("PAUSELP") ||
+        active("PAUSELP$upper")
 }

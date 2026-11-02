@@ -101,6 +101,29 @@ internal class GetThorChainPendingLpDepositsUseCaseTest {
         assertNull(btc.blocksUntilAddedAlone)
     }
 
+    @Test
+    fun `a pending half on THOR_TCY gets a countdown`() = runTest {
+        coEvery { api.getPools() } returns listOf(pool("THOR.TCY", pendingRune = "100"))
+        coEvery { api.getLiquidityProvider("THOR.TCY", RUNE_ADDR) } returns
+            lp("THOR.TCY", pendingRune = "100", lastAddHeight = LAST_ADD_HEIGHT)
+
+        assertEquals(160_000L, useCase(RUNE_ADDR).single().blocksUntilAddedAlone)
+    }
+
+    @Test
+    fun `a pool on a halted chain does not take a cleanup slot`() = runTest {
+        coEvery { api.getMimir() } returns
+            mapOf("PENDINGLIQUIDITYAGELIMIT" to AGE_LIMIT, "HALTAVAXCHAIN" to 1L)
+        coEvery { api.getPools() } returns
+            listOf(pool("AVAX.AVAX", pendingAsset = "1"), pool("BTC.BTC", pendingRune = "100"))
+        coEvery { api.getLiquidityProvider("AVAX.AVAX", RUNE_ADDR) } returns null
+        coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } returns
+            lp("BTC.BTC", pendingRune = "100", lastAddHeight = LAST_ADD_HEIGHT)
+
+        // Counting AVAX.AVAX would put BTC.BTC on the second slot, 109,600 blocks out.
+        assertEquals(160_000L, useCase(RUNE_ADDR).single().blocksUntilAddedAlone)
+    }
+
     private fun pool(asset: String, pendingRune: String = "0", pendingAsset: String = "0") =
         ThorChainPoolJson(
             asset = asset,

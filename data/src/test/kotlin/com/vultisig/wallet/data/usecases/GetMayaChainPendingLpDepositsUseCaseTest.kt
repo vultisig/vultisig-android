@@ -110,6 +110,21 @@ internal class GetMayaChainPendingLpDepositsUseCaseTest {
         }
 
     @Test
+    fun `a pool whose chain has LP paused does not take a cleanup slot`() = runTest {
+        coEvery { api.getMayaConstants() } returns
+            mapOf("PENDINGLIQUIDITYAGELIMIT" to 1_000L, "PAUSELPARB" to HEIGHT - 1)
+        coEvery { api.getMayaNodePools() } returns
+            listOf(
+                pool("BTC.BTC", pendingCacao = "3000000000"),
+                pool("ARB.ETH", pendingAsset = "1"),
+            )
+        coEvery { api.getLiquidityProvider("ARB.ETH", CACAO_ADDRESS) } returns null
+
+        // With ARB.ETH skipped BTC.BTC is the only pool, cleaned at the next cycle start.
+        assertEquals(1_000L, useCase(CACAO_ADDRESS).single().blocksUntilAddedAlone)
+    }
+
+    @Test
     fun `a pool the cleanup pass skips leaves the countdown unknown`() = runTest {
         coEvery { api.getMayaNodePools() } returns
             listOf(

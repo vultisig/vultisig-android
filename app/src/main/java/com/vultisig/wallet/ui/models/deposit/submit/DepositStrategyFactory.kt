@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.deposit.submit
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.models.hasPreGeneratedKey
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -196,6 +197,9 @@ constructor(
                         mayaChainLpPreflight = mayaChainLpPreflight,
                         checkMayaLpPairing = checkMayaLpPairing,
                         resolvePairedAddress = context.resolvePairedAddress,
+                        canHoldChain = { vaultId, chain ->
+                            vaultRepository.get(vaultId)?.hasPreGeneratedKey(chain) ?: true
+                        },
                         addressProvider = context.address,
                         requireTokenAmount = context.requireTokenAmount,
                         blockChainSpecificRepository = context.blockChainSpecificRepository,
@@ -234,7 +238,6 @@ constructor(
                 DepositOption.SecuredAsset to
                     SecuredAssetStrategy(
                         vaultIdProvider = context.vaultId,
-                        chainProvider = context.chain,
                         thorAddressFieldState = fields.thorAddressFieldState,
                         tokenAmountFieldState = fields.tokenAmountFieldState,
                         selectedAccountProvider = context.selectedAccount,

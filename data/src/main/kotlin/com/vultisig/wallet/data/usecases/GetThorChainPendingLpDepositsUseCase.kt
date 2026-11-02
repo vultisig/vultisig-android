@@ -54,18 +54,6 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
         val pools = thorChainApi.getPools()
         val candidates = pools.filter { it.holdsPendingLiquidity() }
         if (candidates.isEmpty()) return emptyList()
-        val cleanedPools =
-            pools
-                .filter {
-                    isCleanedPendingLiquidityPool(
-                        asset = it.asset,
-                        status = it.status,
-                        pendingInboundNative = it.pendingInboundRune,
-                        pendingInboundAsset = it.pendingInboundAsset,
-                        derivedChainPrefix = "THOR",
-                    )
-                }
-                .map { it.asset }
 
         val found = coroutineScope {
             candidates
@@ -75,7 +63,7 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
         }
         if (found.isEmpty()) return emptyList()
 
-        return withAgeLimitCountdown(found, cleanedPools)
+        return withAgeLimitCountdown(found, pools)
     }
 
     private fun ThorChainPoolJson.holdsPendingLiquidity(): Boolean =
@@ -96,17 +84,36 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
      */
     private suspend fun withAgeLimitCountdown(
         pending: List<PendingFetch>,
-        cleanedPools: List<String>,
+        pools: List<ThorChainPoolJson>,
     ): List<ThorChainPendingLpDeposit> {
-        val (ageLimit, currentHeight) =
+        val (mimir, currentHeight) =
             coroutineScope {
-                val ageLimitTask = async { fetchPendingLiquidityAgeLimit() }
+                val mimirTask = async { fetchMimirOrNull() }
                 val heightTask = async { fetchLastBlockOrNull() }
-                ageLimitTask.await() to heightTask.await()
+                mimirTask.await() to heightTask.await()
             }
+        if (mimir == null || currentHeight == null) return pending.map { it.deposit }
+
+        val ageLimit =
+            mimir[PENDING_LIQUIDITY_AGE_LIMIT_MIMIR]?.takeIf { it > 0 }
+                ?: DEFAULT_PENDING_LIQUIDITY_AGE_LIMIT
+        val cleanedPools =
+            pools
+                .filter {
+                    isCleanedPendingLiquidityPool(
+                        schedule = PendingLiquidityCleanupSchedule.THORChain,
+                        asset = it.asset,
+                        status = it.status,
+                        pendingInboundNative = it.pendingInboundRune,
+                        pendingInboundAsset = it.pendingInboundAsset,
+                        mimir = mimir,
+                        height = currentHeight,
+                    )
+                }
+                .map { it.asset }
 
         return pending.map { (deposit, lastAddHeight) ->
-            if (ageLimit == null || currentHeight == null || lastAddHeight == null) deposit
+            if (lastAddHeight == null) deposit
             else
                 deposit.copy(
                     blocksUntilAddedAlone =
@@ -122,15 +129,14 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
         }
     }
 
-    private suspend fun fetchPendingLiquidityAgeLimit(): Long? =
+    private suspend fun fetchMimirOrNull(): Map<String, Long>? =
         try {
-            thorChainApi.getMimir()[PENDING_LIQUIDITY_AGE_LIMIT_MIMIR]?.takeIf { it > 0 }
-                ?: DEFAULT_PENDING_LIQUIDITY_AGE_LIMIT
+            thorChainApi.getMimir()
         } catch (e: IOException) {
-            Timber.w(e, "Failed to read PendingLiquidityAgeLimit")
+            Timber.w(e, "Failed to read THORChain mimir")
             null
         } catch (e: NetworkException) {
-            Timber.w(e, "Failed to read PendingLiquidityAgeLimit")
+            Timber.w(e, "Failed to read THORChain mimir")
             null
         }
 

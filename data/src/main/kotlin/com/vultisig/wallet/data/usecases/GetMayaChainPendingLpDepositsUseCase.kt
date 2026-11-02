@@ -47,18 +47,6 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
         val pools = mayaChainApi.getMayaNodePools()
         val candidates = pools.filter { it.holdsPendingLiquidity() }
         if (candidates.isEmpty()) return emptyList()
-        val cleanedPools =
-            pools
-                .filter {
-                    isCleanedPendingLiquidityPool(
-                        asset = it.asset,
-                        status = it.status,
-                        pendingInboundNative = it.pendingInboundCacao,
-                        pendingInboundAsset = it.pendingInboundAsset,
-                        derivedChainPrefix = null,
-                    )
-                }
-                .map { it.asset }
 
         val found = coroutineScope {
             candidates
@@ -74,7 +62,7 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
         }
         if (found.isEmpty()) return emptyList()
 
-        return withAgeLimitCountdown(found, cleanedPools)
+        return withAgeLimitCountdown(found, pools)
     }
 
     private fun MayaNodePool.holdsPendingLiquidity(): Boolean =
@@ -83,15 +71,12 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
 
     private suspend fun withAgeLimitCountdown(
         pending: List<PendingFetch>,
-        cleanedPools: List<String>,
+        pools: List<MayaNodePool>,
     ): List<MayaChainPendingLpDeposit> {
-        val (ageLimit, currentHeight) =
+        val (mimir, currentHeight) =
             coroutineScope {
-                val ageLimitTask = async {
-                    probe("read PendingLiquidityAgeLimit") {
-                        mayaChainApi.getMayaConstants()[PENDING_LIQUIDITY_AGE_LIMIT_MIMIR]
-                            ?.takeIf { it > 0 } ?: DEFAULT_PENDING_LIQUIDITY_AGE_LIMIT
-                    }
+                val mimirTask = async {
+                    probe("read MayaChain mimir") { mayaChainApi.getMayaConstants() }
                 }
                 val heightTask = async {
                     probe("read MayaChain height") {
@@ -100,11 +85,30 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
                         }
                     }
                 }
-                ageLimitTask.await() to heightTask.await()
+                mimirTask.await() to heightTask.await()
             }
+        if (mimir == null || currentHeight == null) return pending.map { it.deposit }
+
+        val ageLimit =
+            mimir[PENDING_LIQUIDITY_AGE_LIMIT_MIMIR]?.takeIf { it > 0 }
+                ?: DEFAULT_PENDING_LIQUIDITY_AGE_LIMIT
+        val cleanedPools =
+            pools
+                .filter {
+                    isCleanedPendingLiquidityPool(
+                        schedule = PendingLiquidityCleanupSchedule.MayaChain,
+                        asset = it.asset,
+                        status = it.status,
+                        pendingInboundNative = it.pendingInboundCacao,
+                        pendingInboundAsset = it.pendingInboundAsset,
+                        mimir = mimir,
+                        height = currentHeight,
+                    )
+                }
+                .map { it.asset }
 
         return pending.map { (deposit, lastAddHeight) ->
-            if (ageLimit == null || currentHeight == null || lastAddHeight == null) deposit
+            if (lastAddHeight == null) deposit
             else
                 deposit.copy(
                     blocksUntilAddedAlone =

@@ -333,7 +333,6 @@ internal class DepositFormViewModelTest {
             appCurrencyRepository = appCurrencyRepository,
             mapTokenValueToStringWithUnit = mapTokenValueToStringWithUnit,
             requestResultRepository = requestResultRepository,
-            chainAccountAddressRepository = chainAccountAddressRepository,
             transactionRepository = transactionRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
             balanceRepository = balanceRepository,

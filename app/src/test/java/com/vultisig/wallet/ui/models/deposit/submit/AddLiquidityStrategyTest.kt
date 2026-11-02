@@ -171,6 +171,39 @@ internal class AddLiquidityStrategyTest {
         }
 
     @Test
+    fun `CACAO add from a vault that cannot hold the asset chain stays single-sided`() = runTest {
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+
+        val tx =
+            build(
+                    Chain.MayaChain,
+                    pairedAddress = null,
+                    pool = MAYA_BTC_POOL,
+                    canHoldChain = false,
+                )
+                .build()
+
+        assertEquals("+:$MAYA_BTC_POOL", tx.memo)
+        assertEquals("", tx.pairedAddress)
+        coVerify(exactly = 1) { mayaPreflight(MAYA_BTC_POOL, false) }
+    }
+
+    @Test
+    fun `THORChain add from a vault that cannot hold the asset chain is still refused`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+        coEvery { preflight(STAGED_POOL, false) } returns null
+
+        val error =
+            assertFailsWith<InvalidTransactionDataException> {
+                build(Chain.ThorChain, pairedAddress = null, canHoldChain = false).build()
+            }
+
+        val text = error.text
+        assertTrue(text is UiText.FormattedText)
+        assertEquals(R.string.deposit_error_lp_paired_chain_not_enabled, text.resId)
+    }
+
+    @Test
     fun `CACAO add to a Maya pool the app cannot pair stays single-sided`() = runTest {
         givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
 
@@ -279,6 +312,7 @@ internal class AddLiquidityStrategyTest {
         pairedAddress: String?,
         pool: String = STAGED_POOL,
         formBalance: BigInteger = ONE_COIN * BigInteger.TEN,
+        canHoldChain: Boolean = true,
     ) =
         AddLiquidityStrategy(
             vaultIdProvider = { VAULT_ID },
@@ -290,6 +324,7 @@ internal class AddLiquidityStrategyTest {
             mayaChainLpPreflight = mayaPreflight,
             checkMayaLpPairing = checkPairing,
             resolvePairedAddress = { _, _, _ -> pairedAddress },
+            canHoldChain = { _, _ -> canHoldChain },
             addressProvider = {
                 gateAddress(gateAccount(nativeCoin(chain, addressOf(chain)), formBalance))
             },

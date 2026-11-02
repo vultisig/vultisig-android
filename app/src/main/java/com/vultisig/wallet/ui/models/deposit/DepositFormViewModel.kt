@@ -21,7 +21,6 @@ import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -272,7 +271,6 @@ constructor(
     appCurrencyRepository: AppCurrencyRepository,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val requestResultRepository: RequestResultRepository,
-    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val transactionRepository: DepositTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val balanceRepository: BalanceRepository,
