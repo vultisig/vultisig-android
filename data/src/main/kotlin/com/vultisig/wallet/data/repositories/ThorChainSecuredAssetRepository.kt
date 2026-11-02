@@ -83,8 +83,8 @@ constructor(private val thorChainApi: ThorChainApi, private val timeSource: Time
 
     /**
      * Converts a secured-asset denom (`BTC-BTC`, `ETH-USDC-0XA0B8…`) into its [Coin] (`btc-btc`,
-     * `eth-usdc-0xa0b8…`), or null when malformed or THOR-native (e.g. `THOR-TCY`, which uses
-     * the `x/`-prefixed LP/staking convention, not the secured-asset one).
+     * `eth-usdc-0xa0b8…`), or null when malformed or THOR-native (e.g. `THOR-TCY`, which uses the
+     * `x/`-prefixed LP/staking convention, not the secured-asset one).
      */
     private fun toSecuredAssetCoin(denom: String): Coin? {
         val dash = denom.indexOf('-')
