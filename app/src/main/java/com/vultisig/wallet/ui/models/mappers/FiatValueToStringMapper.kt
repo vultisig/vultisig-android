@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.ui.models.token.MarketStatFormatter
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Currency
 import javax.inject.Inject
@@ -55,15 +56,15 @@ constructor(private val appCurrencyRepository: AppCurrencyRepository) : FiatValu
     ): String {
         val appCurrency =
             AppCurrency.fromTicker(value.currency) ?: appCurrencyRepository.currency.first()
-        if (compact && MarketStatFormatter.isAbbreviated(value.value)) {
-            return formatCompact(value, appCurrency)
-        }
         val currency = Currency.getInstance(value.currency)
         val format =
             (appCurrencyRepository.getCurrencyFormat(appCurrency).clone() as NumberFormat).apply {
                 // Re-setting the same currency would reset an overridden symbol such as "CA$".
                 if (this.currency != currency) this.currency = currency
             }
+        if (compact && MarketStatFormatter.isAbbreviated(value.value)) {
+            return formatCompact(value, appCurrency, format)
+        }
         if (!asFee && !asPrice) {
             return format.format(value.value)
         }
@@ -87,21 +88,22 @@ constructor(private val appCurrencyRepository: AppCurrencyRepository) : FiatValu
         return format.format(value.value)
     }
 
-    private fun formatCompact(value: FiatValue, appCurrency: AppCurrency): String {
-        val currency = android.icu.util.Currency.getInstance(value.currency)
-        val formatted =
-            NumberFormatter.withLocale(appCurrency.formatLocale)
-                .notation(Notation.compactShort())
-                .unit(currency)
-                .precision(Precision.maxFraction(COMPACT_FRACTION_DIGITS))
-                .roundingMode(RoundingMode.DOWN)
-                .format(value.value)
-                .toString()
-        val symbol =
-            appCurrency.symbol?.takeIf { appCurrency.ticker == value.currency } ?: return formatted
-        // ICU's number formatter ignores DecimalFormatSymbols' currency symbol, so swap it in.
-        return formatted.replaceFirst(currency.getSymbol(appCurrency.formatLocale), symbol)
-    }
+    /**
+     * Compact digits from ICU, wrapped in the standard [format]'s own prefix and suffix so the
+     * symbol sits, and reads, exactly as in the currency's regular amounts (`CHF 2.22 Bio.` beside
+     * `CHF 1’234.50`, `CA$280.78B`) instead of following ICU's separate compact pattern.
+     */
+    private fun formatCompact(value: FiatValue, appCurrency: AppCurrency, format: NumberFormat) =
+        (format as? DecimalFormat)?.let { decimal ->
+            val digits =
+                NumberFormatter.withLocale(appCurrency.formatLocale)
+                    .notation(Notation.compactShort())
+                    .precision(Precision.maxFraction(COMPACT_FRACTION_DIGITS))
+                    .roundingMode(RoundingMode.DOWN)
+                    .format(value.value)
+                    .toString()
+            decimal.positivePrefix + digits + decimal.positiveSuffix
+        } ?: format.format(value.value)
 
     private companion object {
         private const val EXTRA_FEE_PRECISION_DIGITS = 3

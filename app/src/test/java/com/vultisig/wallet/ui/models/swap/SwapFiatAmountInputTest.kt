@@ -55,7 +55,7 @@ internal class SwapFiatAmountInputTest {
             every { currency } returns this@SwapFiatAmountInputTest.currency
             coEvery { getCurrencyFormat(any()) } answers
                 {
-                    NumberFormat.getCurrencyInstance(Locale.US).apply {
+                    NumberFormat.getCurrencyInstance(firstArg<AppCurrency>().formatLocale).apply {
                         this.currency = Currency.getInstance(firstArg<AppCurrency>().ticker)
                     }
                 }
@@ -195,6 +195,8 @@ internal class SwapFiatAmountInputTest {
 
             fiatAmountState.text.toString() shouldBe "1800"
             uiState.value.fiatSymbol shouldBe "€"
+            // de-DE writes `1.800,00 €`, so the field must close with the symbol too.
+            uiState.value.isFiatSymbolAtEnd shouldBe true
         }
 
     @Test
@@ -238,6 +240,7 @@ internal class SwapFiatAmountInputTest {
         runTest(mainDispatcher) {
             start(backgroundScope, eth, price = "2000")
             uiState.value.fiatSymbol shouldBe "$"
+            uiState.value.isFiatSymbolAtEnd shouldBe false
 
             currency.value = AppCurrency.EUR
             advanceUntilIdle()
