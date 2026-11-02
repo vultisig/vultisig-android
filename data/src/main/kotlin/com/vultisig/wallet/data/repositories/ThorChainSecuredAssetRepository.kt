@@ -64,12 +64,12 @@ constructor(private val thorChainApi: ThorChainApi, private val timeSource: Time
 
     private suspend fun fetch(): List<Coin> = coroutineScope {
         val securedAssets = async { thorChainApi.getSecuredAssets() }
-        val availablePoolDenoms = async { fetchAvailablePoolDenoms() }
-        val available = availablePoolDenoms.await()
+        val availableDenoms = async { fetchAvailablePoolDenoms() }
+        val available = availableDenoms.await()
         securedAssets
             .await()
+            .filter { it.asset.lowercase() in available }
             .mapNotNull { toSecuredAssetCoin(it.asset) }
-            .filter { it.contractAddress in available }
     }
 
     /** Lowercase secured-asset denoms (`eth-usdc-0xa0b8…`) of every `Available` pool. */
@@ -90,7 +90,7 @@ constructor(private val thorChainApi: ThorChainApi, private val timeSource: Time
         val dash = denom.indexOf('-')
         if (dash <= 0 || dash >= denom.length - 1) return null
         val chainCode = denom.substring(0, dash)
-        if (chainCode.equals(THOR_CHAIN_CODE, ignoreCase = true)) return null
+        if (chainCode.equals(Chain.ThorChain.swapAssetName(), ignoreCase = true)) return null
         val denomTail = denom.substring(dash + 1)
         val ticker = denomTail.substringBefore('-').uppercase()
         if (ticker.isBlank()) return null
@@ -101,7 +101,6 @@ constructor(private val thorChainApi: ThorChainApi, private val timeSource: Time
         const val STATUS_AVAILABLE = "available"
         const val SECURED_ASSET_DECIMALS = 8
         val CACHE_TTL = 5.minutes
-        const val THOR_CHAIN_CODE = "THOR"
 
         /**
          * Offline fallback for the SECURE_ASSETS_TICKERS chains: used only until a live fetch first

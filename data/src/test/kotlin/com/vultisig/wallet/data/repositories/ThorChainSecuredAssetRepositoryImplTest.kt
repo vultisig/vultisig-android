@@ -103,6 +103,7 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
         repeat(5) { repo.getSecuredAssetCoins() }
 
         coVerify(exactly = 1) { thorChainApi.getSecuredAssets() }
+        coVerify(exactly = 1) { thorChainApi.getPools() }
     }
 
     @Test
