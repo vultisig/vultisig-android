@@ -21,7 +21,11 @@ sealed class ThorChainLpPreflightBlock {
      */
     data class LpPaused(val pool: String) : ThorChainLpPreflightBlock()
 
-    /** LP activity on the asset's chain is halted via `HALT<CHAIN>LP`/`HALT<CHAIN>CHAIN`. */
+    /**
+     * The pool asset's chain refuses the add: mimir `HALT<CHAIN>LP`/`HALT<CHAIN>CHAIN`, or — for a
+     * RUNE-side add — its `/thorchain/inbound_addresses` entry reporting a chain halt, a trading
+     * halt, or paused LP actions.
+     */
     data class ChainLpHalted(val chainPrefix: String) : ThorChainLpPreflightBlock()
 
     /** Pool exists but its `status` takes no adds at all (typically `Suspended`). */
@@ -36,15 +40,16 @@ sealed class ThorChainLpPreflightBlock {
 }
 
 /**
- * Validates THORChain network state before a RUNE-side add-liquidity inbound is signed and
- * broadcast. By reading mimir and the pool's `status`, we refuse to build the keysign payload when
- * the network would refund it.
+ * Validates THORChain network state before an add-liquidity inbound is signed and broadcast. By
+ * reading mimir, the pool's `status` and, for a RUNE-side add, the pool asset chain's inbound
+ * flags, we refuse to build the keysign payload when the network would refuse it.
  *
- * Scope is intentionally limited to the RUNE side: a RUNE deposit never traverses the asset-chain
- * inbound, so asset-chain inbound flags are not inspected. The asset chain is identified by the
- * pool prefix (e.g. `ETH` from `ETH.USDT-0xdac…`) and is only used for the mimir
- * `HALT<CHAIN>LP`/`HALT<CHAIN>CHAIN` checks, which capture LP-specific halts independently of
- * inbound trading state.
+ * The asset chain is identified by the pool prefix (e.g. `ETH` from `ETH.USDT-0xdac…`). thornode
+ * judges a RUNE-side `MsgDeposit` add by that chain's trading and LP halts, not by THORChain's: it
+ * fails the add in the block after the ante handler has already taken the native fee. The
+ * `/thorchain/inbound_addresses` entry for the chain carries exactly those halts, evaluated at the
+ * current height by the same keeper functions the handlers call, so it is read instead of more raw
+ * mimir keys whose activation heights a plain `> 0` read would get wrong.
  */
 interface ThorChainLpPreflightUseCase {
     /**
@@ -57,8 +62,14 @@ interface ThorChainLpPreflightUseCase {
      *   `ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7`.
      * @param isPairedAdd whether the memo names the other side's address, making this one leg of a
      *   dual-sided add — the only kind a `Staged` pool accepts.
+     * @param checkAssetChainInbound whether to also block on the pool asset chain's inbound halt
+     *   flags. True for a RUNE-side add; the asset-side add has its own inbound gate.
      */
-    suspend operator fun invoke(pool: String, isPairedAdd: Boolean): ThorChainLpPreflightBlock?
+    suspend operator fun invoke(
+        pool: String,
+        isPairedAdd: Boolean,
+        checkAssetChainInbound: Boolean,
+    ): ThorChainLpPreflightBlock?
 }
 
 internal class ThorChainLpPreflightUseCaseImpl
@@ -68,22 +79,29 @@ constructor(
     private val mimirRepository: ThorMimirRepository,
 ) : ThorChainLpPreflightUseCase {
 
-    override suspend fun invoke(pool: String, isPairedAdd: Boolean): ThorChainLpPreflightBlock? =
-        coroutineScope {
+    override suspend fun invoke(
+        pool: String,
+        isPairedAdd: Boolean,
+        checkAssetChainInbound: Boolean,
+    ): ThorChainLpPreflightBlock? = coroutineScope {
         val chainPrefix = pool.substringBefore('.', missingDelimiterValue = "").uppercase()
 
         val lpPausedDeferred = async { probe { mimirRepository.isLpPaused(pool) } }
         val chainHaltedDeferred = async {
             if (chainPrefix.isEmpty()) null else probe { mimirRepository.isLpHalted(chainPrefix) }
         }
+        val inboundHaltedDeferred = async {
+            if (!checkAssetChainInbound || chainPrefix.isEmpty() || chainPrefix == THOR_PREFIX) null
+            else probe { isInboundHalted(chainPrefix) }
+        }
         val poolDeferred = async { probe { thorChainApi.getPool(pool) } }
 
         if (lpPausedDeferred.await() == true) {
-            cancelAll(chainHaltedDeferred, poolDeferred)
+            cancelAll(chainHaltedDeferred, inboundHaltedDeferred, poolDeferred)
             return@coroutineScope ThorChainLpPreflightBlock.LpPaused(pool)
         }
-        if (chainHaltedDeferred.await() == true) {
-            cancelAll(poolDeferred)
+        if (chainHaltedDeferred.await() == true || inboundHaltedDeferred.await() == true) {
+            cancelAll(inboundHaltedDeferred, poolDeferred)
             return@coroutineScope ThorChainLpPreflightBlock.ChainLpHalted(chainPrefix)
         }
 
@@ -96,6 +114,17 @@ constructor(
             else -> ThorChainLpPreflightBlock.PoolNotAvailable(pool, status)
         }
     }
+
+    private suspend fun isInboundHalted(chainPrefix: String): Boolean? =
+        thorChainApi
+            .getTHORChainInboundAddresses()
+            .firstOrNull { it.chain.equals(chainPrefix, ignoreCase = true) }
+            ?.let {
+                it.halted ||
+                    it.globalTradingPaused ||
+                    it.chainTradingPaused ||
+                    it.chainLPActionsPaused
+            }
 
     private fun cancelAll(vararg deferreds: Deferred<*>) {
         deferreds.forEach { it.cancel() }
@@ -113,5 +142,6 @@ constructor(
     private companion object {
         const val POOL_STATUS_AVAILABLE = "Available"
         const val POOL_STATUS_STAGED = "Staged"
+        const val THOR_PREFIX = "THOR"
     }
 }
