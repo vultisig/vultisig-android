@@ -1,13 +1,12 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainSecuredAssetJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.isSecuredAsset
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import java.math.BigInteger
 import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -20,12 +19,11 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
 
     private fun repo() = ThorChainSecuredAssetRepositoryImpl(thorChainApi, TestTimeSource())
 
-    private fun pool(asset: String, status: String = "Available") =
-        ThorChainPoolJson(asset = asset, assetTorPrice = BigInteger.ONE, status = status)
+    private fun securedAsset(asset: String) = ThorChainSecuredAssetJson(asset = asset)
 
     @Test
-    fun `derives the secured-asset denom and ticker from a native L1 pool`() = runTest {
-        coEvery { thorChainApi.getPools() } returns listOf(pool("BTC.BTC"))
+    fun `derives the secured-asset denom and ticker from a native L1 secured asset`() = runTest {
+        coEvery { thorChainApi.getSecuredAssets() } returns listOf(securedAsset("BTC-BTC"))
 
         val coins = repo().getSecuredAssetCoins()
 
@@ -38,9 +36,9 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
     }
 
     @Test
-    fun `preserves the contract tail for an ERC20-style pool asset`() = runTest {
-        coEvery { thorChainApi.getPools() } returns
-            listOf(pool("ETH.USDC-0xA0b86991c6218b36c1d19d4a2e9eb0Ce3606eB48"))
+    fun `preserves the contract tail for an ERC20-style secured asset`() = runTest {
+        coEvery { thorChainApi.getSecuredAssets() } returns
+            listOf(securedAsset("ETH-USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"))
 
         val coin = repo().getSecuredAssetCoins().single()
 
@@ -49,8 +47,9 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
     }
 
     @Test
-    fun `excludes THOR-native pools such as TCY`() = runTest {
-        coEvery { thorChainApi.getPools() } returns listOf(pool("THOR.TCY"), pool("BTC.BTC"))
+    fun `excludes THOR-native assets such as TCY`() = runTest {
+        coEvery { thorChainApi.getSecuredAssets() } returns
+            listOf(securedAsset("THOR-TCY"), securedAsset("BTC-BTC"))
 
         val coins = repo().getSecuredAssetCoins()
 
@@ -59,19 +58,14 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
     }
 
     @Test
-    fun `excludes pools that are not Available`() = runTest {
-        coEvery { thorChainApi.getPools() } returns
-            listOf(pool("ETH.ETH", status = "Staged"), pool("BTC.BTC", status = "available"))
-
-        val coins = repo().getSecuredAssetCoins()
-
-        assertEquals(listOf("BTC"), coins.map { it.ticker })
-    }
-
-    @Test
-    fun `drops malformed pool asset ids`() = runTest {
-        coEvery { thorChainApi.getPools() } returns
-            listOf(pool(".USDT"), pool("ETH."), pool("NODOT"), pool("BTC.BTC"))
+    fun `drops malformed secured-asset denoms`() = runTest {
+        coEvery { thorChainApi.getSecuredAssets() } returns
+            listOf(
+                securedAsset("-USDT"),
+                securedAsset("ETH-"),
+                securedAsset("NODASH"),
+                securedAsset("BTC-BTC"),
+            )
 
         val coins = repo().getSecuredAssetCoins()
 
@@ -80,17 +74,17 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
 
     @Test
     fun `a fresh successful snapshot is not re-fetched within the TTL window`() = runTest {
-        coEvery { thorChainApi.getPools() } returns listOf(pool("BTC.BTC"))
+        coEvery { thorChainApi.getSecuredAssets() } returns listOf(securedAsset("BTC-BTC"))
         val repo = repo()
 
         repeat(5) { repo.getSecuredAssetCoins() }
 
-        coVerify(exactly = 1) { thorChainApi.getPools() }
+        coVerify(exactly = 1) { thorChainApi.getSecuredAssets() }
     }
 
     @Test
     fun `falls back to the static catalog when the very first fetch fails`() = runTest {
-        coEvery { thorChainApi.getPools() } throws RuntimeException("boom")
+        coEvery { thorChainApi.getSecuredAssets() } throws RuntimeException("boom")
 
         val coins = repo().getSecuredAssetCoins()
 
@@ -103,7 +97,7 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
 
     @Test
     fun `the static fallback uses THORChain's BSC chain code for BNB, not the ticker`() = runTest {
-        coEvery { thorChainApi.getPools() } throws RuntimeException("boom")
+        coEvery { thorChainApi.getSecuredAssets() } throws RuntimeException("boom")
 
         val coins = repo().getSecuredAssetCoins()
 
@@ -113,14 +107,14 @@ internal class ThorChainSecuredAssetRepositoryImplTest {
     @Test
     fun `a later failure keeps the live snapshot instead of reverting to the static fallback`() =
         runTest {
-            coEvery { thorChainApi.getPools() } returns listOf(pool("ETH.ETH"))
+            coEvery { thorChainApi.getSecuredAssets() } returns listOf(securedAsset("ETH-ETH"))
             val repo = repo()
             repo.refresh()
             val liveSnapshot = repo.getSecuredAssetCoins()
             assertEquals(listOf("ETH"), liveSnapshot.map { it.ticker })
 
             // refresh() bypasses the TTL, forcing a real re-fetch attempt that then fails.
-            coEvery { thorChainApi.getPools() } throws RuntimeException("boom")
+            coEvery { thorChainApi.getSecuredAssets() } throws RuntimeException("boom")
             repo.refresh()
 
             assertEquals(liveSnapshot, repo.getSecuredAssetCoins())

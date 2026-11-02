@@ -17,12 +17,13 @@ import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 /**
- * The catalog of THORChain secured assets, derived live from THORChain's `Available` pools so every
- * poolable L1 asset (BTC, ETH, ETH-USDC, GAIA.ATOM, …) is discoverable, not just the ones already
- * held. Falls back to a small static list of well-known secured assets offline.
+ * The catalog of THORChain secured assets, read live from THORNode's secured-asset list so every
+ * secured L1 asset (BTC, ETH, ETH-USDC, GAIA-ATOM, …) is discoverable, not just the ones already
+ * held, whatever the status of its pool. Falls back to a small static list of well-known secured
+ * assets offline.
  */
 internal interface ThorChainSecuredAssetRepository {
-    /** The current secured-asset catalog, refreshing from THORChain pools when stale. */
+    /** The current secured-asset catalog, refreshing from THORNode when stale. */
     suspend fun getSecuredAssetCoins(): List<Coin>
 }
 
@@ -54,45 +55,38 @@ constructor(private val thorChainApi: ThorChainApi, private val timeSource: Time
                 cache = it
                 lastRefresh = timeSource.markNow()
             }
-            .onFailure {
-                Timber.w(it, "THORChain secured-asset pools refresh failed; keeping last-good")
-            }
+            .onFailure { Timber.w(it, "THORChain secured-asset refresh failed; keeping last-good") }
     }
 
     private fun isStale(): Boolean = lastRefresh?.let { it.elapsedNow() < CACHE_TTL } != true
 
     private suspend fun fetch(): List<Coin> =
-        thorChainApi
-            .getPools()
-            .asSequence()
-            .filter { it.status.equals(STATUS_AVAILABLE, ignoreCase = true) }
-            .mapNotNull { toSecuredAssetCoin(it.asset) }
-            .toList()
+        thorChainApi.getSecuredAssets().mapNotNull { toSecuredAssetCoin(it.asset) }
 
     /**
-     * Converts a pool asset id (`BTC.BTC`, `ETH.USDC-0xA0b8…`) into its secured-asset [Coin]
-     * (`btc-btc`, `eth-usdc-0xa0b8…`), or null when malformed or THOR-native (e.g. `THOR.TCY`,
-     * which uses the `x/`-prefixed LP/staking convention, not the secured-asset one).
+     * Converts a secured-asset denom (`BTC-BTC`, `ETH-USDC-0XA0B8…`) into its [Coin] (`btc-btc`,
+     * `eth-usdc-0xa0b8…`), or null when malformed or THOR/MAYA-native (e.g. `THOR-TCY`, which uses
+     * the `x/`-prefixed LP/staking convention, not the secured-asset one).
      */
-    private fun toSecuredAssetCoin(poolAsset: String): Coin? {
-        val dot = poolAsset.indexOf('.')
-        if (dot <= 0 || dot >= poolAsset.length - 1) return null
-        val chainPart = poolAsset.substring(0, dot)
-        if (chainPart.equals("THOR", ignoreCase = true)) return null
-        val rest = poolAsset.substring(dot + 1)
-        val ticker = rest.substringBefore('-').uppercase()
+    private fun toSecuredAssetCoin(denom: String): Coin? {
+        val dash = denom.indexOf('-')
+        if (dash <= 0 || dash >= denom.length - 1) return null
+        val chainCode = denom.substring(0, dash)
+        if (NATIVE_CHAIN_CODES.any { it.equals(chainCode, ignoreCase = true) }) return null
+        val denomTail = denom.substring(dash + 1)
+        val ticker = denomTail.substringBefore('-').uppercase()
         if (ticker.isBlank()) return null
-        return securedAssetCoin(chainCode = chainPart, ticker = ticker, denomTail = rest)
+        return securedAssetCoin(chainCode = chainCode, ticker = ticker, denomTail = denomTail)
     }
 
     private companion object {
-        const val STATUS_AVAILABLE = "available"
         const val SECURED_ASSET_DECIMALS = 8
         val CACHE_TTL = 5.minutes
+        val NATIVE_CHAIN_CODES = listOf("THOR", "MAYA")
 
         /**
-         * Offline fallback for the SECURE_ASSETS_TICKERS chains: used only until a live pool fetch
-         * first succeeds. THORChain's chain code for BSC is `BSC`, not the `BNB` ticker.
+         * Offline fallback for the SECURE_ASSETS_TICKERS chains: used only until a live fetch first
+         * succeeds. THORChain's chain code for BSC is `BSC`, not the `BNB` ticker.
          */
         val STATIC_FALLBACK: List<Coin> =
             SECURE_ASSETS_TICKERS.map { ticker ->
@@ -104,8 +98,8 @@ constructor(private val thorChainApi: ThorChainApi, private val timeSource: Time
          * Builds a secured-asset [Coin] with denom `<chainCode>-<denomTail>`, both lowercased.
          *
          * The name is the underlying L1 asset's, taken from the catalogue so a search for "bitcoin"
-         * on THORChain lands on `BTC.BTC` the way it lands on BTC itself; a pool for a token the
-         * catalogue does not carry stays nameless rather than guessing one.
+         * on THORChain lands on `BTC-BTC` the way it lands on BTC itself; a secured asset for a
+         * token the catalogue does not carry stays nameless rather than guessing one.
          */
         fun securedAssetCoin(chainCode: String, ticker: String, denomTail: String): Coin =
             Coin(
