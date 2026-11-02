@@ -12,15 +12,17 @@ import javax.inject.Singleton
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 /**
- * The catalog of THORChain secured assets, read live from THORNode's secured-asset list so every
- * secured L1 asset (BTC, ETH, ETH-USDC, GAIA-ATOM, …) is discoverable, not just the ones already
- * held, whatever the status of its pool. Falls back to a small static list of well-known secured
- * assets offline.
+ * The catalog of THORChain secured assets: THORNode's secured-asset list, kept only where the
+ * asset's pool is `Available`, so every such secured L1 asset (BTC, ETH, ETH-USDC, GAIA-ATOM, …) is
+ * discoverable, not just the ones already held. Falls back to a small static list of well-known
+ * secured assets offline or when either source fails.
  */
 internal interface ThorChainSecuredAssetRepository {
     /** The current secured-asset catalog, refreshing from THORNode when stale. */
@@ -60,8 +62,24 @@ constructor(private val thorChainApi: ThorChainApi, private val timeSource: Time
 
     private fun isStale(): Boolean = lastRefresh?.let { it.elapsedNow() < CACHE_TTL } != true
 
-    private suspend fun fetch(): List<Coin> =
-        thorChainApi.getSecuredAssets().mapNotNull { toSecuredAssetCoin(it.asset) }
+    private suspend fun fetch(): List<Coin> = coroutineScope {
+        val securedAssets = async { thorChainApi.getSecuredAssets() }
+        val availablePoolDenoms = async { fetchAvailablePoolDenoms() }
+        val available = availablePoolDenoms.await()
+        securedAssets
+            .await()
+            .mapNotNull { toSecuredAssetCoin(it.asset) }
+            .filter { it.contractAddress in available }
+    }
+
+    /** Lowercase secured-asset denoms (`eth-usdc-0xa0b8…`) of every `Available` pool. */
+    private suspend fun fetchAvailablePoolDenoms(): Set<String> =
+        thorChainApi
+            .getPools()
+            .asSequence()
+            .filter { it.status.equals(STATUS_AVAILABLE, ignoreCase = true) }
+            .map { it.asset.replaceFirst('.', '-').lowercase() }
+            .toSet()
 
     /**
      * Converts a secured-asset denom (`BTC-BTC`, `ETH-USDC-0XA0B8…`) into its [Coin] (`btc-btc`,
@@ -80,6 +98,7 @@ constructor(private val thorChainApi: ThorChainApi, private val timeSource: Time
     }
 
     private companion object {
+        const val STATUS_AVAILABLE = "available"
         const val SECURED_ASSET_DECIMALS = 8
         val CACHE_TTL = 5.minutes
         const val THOR_CHAIN_CODE = "THOR"
