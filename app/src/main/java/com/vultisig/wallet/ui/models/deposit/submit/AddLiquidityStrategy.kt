@@ -141,7 +141,10 @@ internal class AddLiquidityStrategy(
             }
         // thornode refunds a RUNE add naming an asset address other than the one a live or
         // pending record holds, and an empty recorded address never matches a named one. It
-        // compares only when the add names one, so a live position takes `+:POOL` as it is. See
+        // compares only when the add names one, so a live RUNE-only position takes `+:POOL` as it
+        // is. A live position paired with another asset address is refused outright: anyone can
+        // fix that address with an asset add naming the vault's RUNE address, and a `+:POOL` into
+        // it would pay half its value out to that address on withdrawal. See
         // [CheckThorChainLpPairingUseCase].
         val thorPairing =
             if (chain == Chain.ThorChain && isSymmetricPool) {
@@ -152,8 +155,7 @@ internal class AddLiquidityStrategy(
         val acceptsSingleSided =
             mayaPairing == MayaLpPairing.SingleSidedPosition ||
                 mayaPairing == MayaLpPairing.PairedWithOtherAddress ||
-                thorPairing == ThorChainLpPairing.SingleSidedPosition ||
-                thorPairing == ThorChainLpPairing.PairedWithOtherAddress
+                thorPairing == ThorChainLpPairing.SingleSidedPosition
         if (mayaPairing == MayaLpPairing.AddressMismatch && pairedAddress != null) {
             throw InvalidTransactionDataException(
                 UiText.FormattedText(
@@ -162,7 +164,10 @@ internal class AddLiquidityStrategy(
                 )
             )
         }
-        if (thorPairing == ThorChainLpPairing.AddressMismatch) {
+        if (
+            thorPairing == ThorChainLpPairing.AddressMismatch ||
+                thorPairing == ThorChainLpPairing.PairedWithOtherAddress
+        ) {
             throw InvalidTransactionDataException(
                 UiText.FormattedText(
                     R.string.deposit_error_thorchain_lp_address_mismatch,

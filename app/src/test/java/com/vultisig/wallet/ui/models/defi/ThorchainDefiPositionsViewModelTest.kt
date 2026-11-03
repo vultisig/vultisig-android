@@ -1779,6 +1779,17 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `an asset-first card on a pool whose chain the app cannot hold still completes`() =
+        runTest {
+            coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
+                listOf(pendingDeposit(ZEC_POOL, assetAddress = "t1zcashaddress"))
+
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            vm.state.value.lp.pendingDeposits.single().canComplete shouldBe true
+        }
+
+    @Test
     fun `a RUNE-first pending card paired with another asset address cannot be completed`() =
         runTest {
             coEvery { vaultRepository.get(VAULT_ID) } returns
@@ -1937,6 +1948,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         val SEP_17_NOON_UTC = Date(1_789_646_400_000L)
         const val BTC_POOL = "BTC.BTC"
         const val ETH_POOL = "ETH.ETH"
+        const val ZEC_POOL = "ZEC.ZEC"
         const val USDC_POOL = "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"
         const val ETH_ADDRESS = "0xethaddress"
         const val BTC_ADDRESS = "bc1qbtcaddress"

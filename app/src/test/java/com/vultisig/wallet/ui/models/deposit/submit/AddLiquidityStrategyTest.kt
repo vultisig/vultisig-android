@@ -571,16 +571,36 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
-    fun `RUNE add into a live position paired elsewhere falls back to single-sided`() = runTest {
+    fun `RUNE add into a live position paired elsewhere is refused`() = runTest {
         givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
         coEvery { checkThorPairing(ETH_POOL, RUNE_ADDRESS, ETH_ADDRESS) } returns
             ThorChainLpPairing.PairedWithOtherAddress
 
-        val tx = build(Chain.ThorChain, pairedAddress = ETH_ADDRESS, pool = ETH_POOL).build()
-
-        assertEquals("+:$ETH_POOL", tx.memo)
-        coVerify(exactly = 1) { preflight(ETH_POOL, false) }
+        val text =
+            assertFailsWith<InvalidTransactionDataException> {
+                    build(Chain.ThorChain, pairedAddress = ETH_ADDRESS, pool = ETH_POOL).build()
+                }
+                .text
+        assertTrue(text is UiText.FormattedText)
+        assertEquals(R.string.deposit_error_thorchain_lp_address_mismatch, text.resId)
+        coVerify(exactly = 0) { preflight(any(), any()) }
     }
+
+    @Test
+    fun `RUNE top-up of a live position paired elsewhere is refused without an asset chain`() =
+        runTest {
+            givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+            coEvery { checkThorPairing(ETH_POOL, RUNE_ADDRESS, null) } returns
+                ThorChainLpPairing.PairedWithOtherAddress
+
+            val text =
+                assertFailsWith<InvalidTransactionDataException> {
+                        build(Chain.ThorChain, pairedAddress = null, pool = ETH_POOL).build()
+                    }
+                    .text
+            assertTrue(text is UiText.FormattedText)
+            assertEquals(R.string.deposit_error_thorchain_lp_address_mismatch, text.resId)
+        }
 
     @Test
     fun `RUNE top-up of a live position needs no asset chain enabled`() = runTest {

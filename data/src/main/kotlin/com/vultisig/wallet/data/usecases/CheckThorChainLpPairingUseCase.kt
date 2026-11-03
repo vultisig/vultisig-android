@@ -21,9 +21,11 @@ sealed interface ThorChainLpPairing {
     data object SingleSidedPosition : ThorChainLpPairing
 
     /**
-     * The vault holds a live position paired with another asset address. thornode compares the
-     * asset address only when an add names one, so a single-sided RUNE add (`+:POOL`) is still
-     * credited; an add naming this asset address is refunded.
+     * The vault holds a live position paired with another asset address. thornode refunds an add
+     * naming this asset address, and although it credits a single-sided RUNE add (`+:POOL`), a
+     * symmetric withdrawal then pays half of that RUNE's value to the recorded address — which
+     * anyone can set by naming the vault's RUNE address on an asset add that later commits alone.
+     * Neither add is safe to send.
      */
     data object PairedWithOtherAddress : ThorChainLpPairing
 
@@ -43,8 +45,8 @@ sealed interface ThorChainLpPairing {
 interface CheckThorChainLpPairingUseCase {
     /**
      * @param assetAddress the asset address the add would name, or `null` when the vault has none.
-     *   A live record then reads as [ThorChainLpPairing.SingleSidedPosition] or
-     *   [ThorChainLpPairing.PairedWithOtherAddress], both of which take a `+:POOL` add.
+     *   A live record then reads as [ThorChainLpPairing.SingleSidedPosition], which takes a
+     *   `+:POOL` add, or [ThorChainLpPairing.PairedWithOtherAddress].
      * @throws Exception when the record cannot be read; a caller about to move funds must not
      *   guess.
      */

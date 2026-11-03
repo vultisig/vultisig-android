@@ -767,12 +767,15 @@ constructor(
             // Completing means sending the missing side, and either half pairs only from the
             // asset address the record holds: thornode refunds a RUNE add naming another one, and
             // an asset add from another one is a separate deposit. An empty recorded address never
-            // matches a named one. A token pool's asset half goes through the router after an
+            // matches a named one. A pool whose chain the app cannot hold (ZEC.ZEC) is the
+            // exception on the RUNE side: that add names no asset address, and thornode commits it
+            // with the pending asset. A token pool's asset half goes through the router after an
             // approval, which the Deposit flow cannot build.
             canComplete =
-                vaultAssetAddress != null &&
-                    vaultAssetAddress.equals(assetAddress, ignoreCase = true) &&
-                    (!isRunePending || parsed.contractAddress.isEmpty()),
+                (!isRunePending && parsed.chain == null) ||
+                    (vaultAssetAddress != null &&
+                        vaultAssetAddress.equals(assetAddress, ignoreCase = true) &&
+                        (!isRunePending || parsed.contractAddress.isEmpty())),
         )
     }
 
