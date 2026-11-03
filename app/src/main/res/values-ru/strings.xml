@@ -26,10 +26,10 @@
     <string name="vault_settings_security_screen_title_switch">Управление безопасностью в сети</string>
     <string name="vault_settings_security_screen_title_content">Вы можете отключить защиту в режиме реального времени, предоставляемую Blockaid.</string>
     <string name="vault_settings_reshare_subtitle">Перераспределить доли хранилища с новым комитетом</string>
-    <string name="vault_settings_dilithium_keygen_title">Включить QBTC</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Сгенерировать ключ для включения сети QBTC</string>
+    <string name="vault_settings_dilithium_keygen_title">Постквантовый ключ</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Создайте ключ MLDSA-44 для квантовой устойчивости</string>
     <string name="vault_settings_delete_title">Удалить</string>
-    <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда.</string>
+    <string name="vault_settings_delete_subtitle">Безвозвратно удалите долю хранилища</string>
     <string name="vault_settings_security_title">Безопасность в сети</string>
     <string name="vault_settings_security_subtitle">Управляйте своей безопасностью в сети</string>
     <string name="vault_settings_discounts">Уровни скидок $VULT</string>
@@ -307,7 +307,6 @@
     <string name="add_address_address_title">Адрес</string>
     <string name="add_address_type_hint">Введите здесь</string>
     <string name="join_keysign_invalid_qr">Недействительное содержимое QR-кода</string>
-    <string name="settings_screen_privacy">Конфиденциальность</string>
     <string name="settings_screen_prevent_screenshots">Запретить снимки экрана</string>
     <string name="settings_screen_legal">Правовая информация</string>
     <string name="settings_screen_privacy_policy">политика конфиденциальности</string>
@@ -774,7 +773,6 @@
     <string name="address_book_empty_description">Храните все важные адреса в одном месте.</string>
     <string name="address_book_empty_title">Ваша адресная книга пуста.</string>
     <string name="check_updates_settings_title">Проверить обновления</string>
-    <string name="vult_website_settings_title">Сайт Vultisig</string>
     <string name="vault">Хранилище</string>
     <string name="general">Общие</string>
     <string name="support">Поддержка</string>
@@ -821,9 +819,16 @@
     <string name="vault_settings_view_vault">Просмотр имени, части и типа хранилища</string>
     <string name="vault_settings_biometric_fast">Биометрическая подпись</string>
     <string name="vault_settings_backup_vault">Резервная копия доли хранилища</string>
-    <string name="vault_settings_back_up_your">Сохраните резервную копию доли хранилища на устройстве или сервере.</string>
+    <string name="vault_settings_back_up_your">Создайте резервную копию доли хранилища в удобном месте</string>
     <string name="vault_settings_migrate_gg20">Перевод хранилища GG20 на DKLS</string>
     <string name="vault_settings_reshare_change">Перераспределение, безопасность и подпись сообщений.</string>
+    <string name="settings_screen_vultisig_education">Обучение Vultisig</string>
+    <string name="settings_community_website">Сайт</string>
+    <string name="vault_settings_home_display_subtitle">Изменить отображение баланса кошелька</string>
+    <string name="vault_settings_security_row_subtitle">Управление биометрией для быстрой подписи</string>
+    <string name="vault_settings_lock_time_title">Время блокировки</string>
+    <string name="vault_settings_lock_time_subtitle">Установите время до автоматической блокировки приложения</string>
+    <string name="vault_settings_sign_title">Подписать</string>
     <string name="vault_backup_summary_choose_chains">Выберите сети</string>
     <string name="transaction_done_form_approve">Одобрить</string>
     <string name="vault_settings_migration_title">Мигрировать</string>

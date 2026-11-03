@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,6 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -31,6 +36,11 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.border
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
@@ -40,14 +50,13 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.referral.ReferralCodeBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.settings.SettingsGroupUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsItem
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsUiEvent
 import com.vultisig.wallet.ui.models.settings.SettingsUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
+import com.vultisig.wallet.ui.models.settings.defaultSettingsMenu
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareLinkBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -72,8 +81,6 @@ fun SettingsScreen() {
         state = state,
         onSettingsItemClick = viewModel::onSettingsItemClick,
         onBackClick = viewModel::back,
-        onContinueReferral = viewModel::onContinueReferralBottomSheet,
-        onDismissReferral = viewModel::onDismissReferralBottomSheet,
         onDismissShareLink = viewModel::onDismissShareLinkBottomSheet,
         onVersionClick = viewModel::onVersionClick,
     )
@@ -84,8 +91,6 @@ private fun SettingsScreen(
     state: SettingsUiModel,
     onSettingsItemClick: (SettingsItem) -> Unit,
     onBackClick: () -> Unit,
-    onContinueReferral: () -> Unit,
-    onDismissReferral: () -> Unit,
     onDismissShareLink: () -> Unit,
     onVersionClick: () -> Unit,
 ) {
@@ -94,30 +99,36 @@ private fun SettingsScreen(
             modifier = Modifier.verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                state.items.forEach { groupItem ->
-                    SettingsBox(title = groupItem.title.asString()) {
-                        val enabledSettings = groupItem.items.filter(SettingsItem::enabled)
+            Column(verticalArrangement = Arrangement.spacedBy(SECTION_GAP)) {
+                state.items.forEach { group ->
+                    SettingsBox(
+                        title = group.title.asString(),
+                        layout = SettingItemLayout.List,
+                        aboveCard =
+                            if (group.tiles.isEmpty()) null
+                            else {
+                                { SettingsTiles(tiles = group.tiles, onClick = onSettingsItemClick) }
+                            },
+                    ) {
+                        val enabledSettings = group.items.filter(SettingsItem::enabled)
                         enabledSettings.forEachIndexed { index, settingItem ->
                             SettingItem(
                                 item = settingItem.value,
                                 isLastItem = index == enabledSettings.lastIndex,
                                 onClick = { onSettingsItemClick(settingItem) },
+                                titleStyle = Theme.brockmann.body.s.medium,
+                                layout = SettingItemLayout.List,
                             )
                         }
                     }
                 }
             }
 
-            UiSpacer(size = 15.dp)
+            UiSpacer(size = VERSION_FOOTER_TOP_GAP)
 
-            AppVersionText(modifier = Modifier.clickable(onClick = onVersionClick))
-        }
-
-        if (state.hasToShowReferralCodeSheet) {
-            ReferralCodeBottomSheet(
-                onContinue = onContinueReferral,
-                onDismissRequest = onDismissReferral,
+            AppVersionText(
+                modifier = Modifier.clickable(onClick = onVersionClick),
+                style = Theme.brockmann.supplementary.caption,
             )
         }
 
@@ -127,12 +138,69 @@ private fun SettingsScreen(
     }
 }
 
+/** Equal-width link tiles (icon over a short label) shown above a section's card. */
+@Composable
+private fun SettingsTiles(tiles: List<SettingsItem>, onClick: (SettingsItem) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(TILE_GAP),
+    ) {
+        tiles.forEach { tile ->
+            Column(
+                modifier =
+                    Modifier.weight(1f)
+                        .height(TILE_HEIGHT)
+                        .clip(Theme.v2.radius.lg)
+                        .background(Theme.v2.colors.backgrounds.surface1)
+                        .clickOnce(onClick = { onClick(tile) })
+                        .padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TILE_GAP, Alignment.CenterVertically),
+            ) {
+                tile.value.leadingIcon?.let { icon ->
+                    UiIcon(
+                        drawableResId = icon,
+                        size = 20.dp,
+                        tint = Theme.v2.colors.text.secondary,
+                    )
+                }
+                Text(
+                    text = tile.value.title.asString(),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.primary,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Spacing of a [SettingItem] and its [SettingsBox]. [List] is the settings-list row of the 2026
+ * settings design (main settings, Vault Settings, Advanced); [Legacy] is the row the remaining
+ * settings sub-screens keep until they move to that design.
+ */
+internal enum class SettingItemLayout(
+    val iconGap: Dp,
+    val subtitleGap: Dp,
+    val switchEndGap: Dp,
+    val cardTopPadding: Dp,
+) {
+    Legacy(iconGap = 16.dp, subtitleGap = 0.dp, switchEndGap = 8.dp, cardTopPadding = 0.dp),
+    List(iconGap = 12.dp, subtitleGap = 4.dp, switchEndGap = 0.dp, cardTopPadding = 1.dp),
+}
+
 @Composable
 internal fun SettingsBox(
     modifier: Modifier = Modifier,
     title: String? = null,
+    layout: SettingItemLayout = SettingItemLayout.Legacy,
+    /** Shown between the title and the card, e.g. a row of link tiles. */
+    aboveCard: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
+    val shape = if (layout == SettingItemLayout.List) Theme.v2.radius.xl else Theme.v2.radius.md
     Column(modifier.fillMaxWidth()) {
         title?.let {
             Text(
@@ -143,14 +211,18 @@ internal fun SettingsBox(
             UiSpacer(size = 12.dp)
         }
 
+        aboveCard?.let {
+            it()
+            UiSpacer(size = ABOVE_CARD_GAP)
+        }
+
         Column(
             modifier =
+                // Clipped before the top padding so that strip stays the screen colour, as drawn.
                 Modifier.fillMaxWidth()
-                    .background(
-                        color = Theme.v2.colors.backgrounds.secondary,
-                        shape = Theme.v2.radius.md,
-                    )
-                    .clip(Theme.v2.radius.md)
+                    .clip(shape)
+                    .padding(top = layout.cardTopPadding)
+                    .background(color = Theme.v2.colors.backgrounds.secondary)
         ) {
             content()
         }
@@ -165,12 +237,29 @@ internal fun SettingItem(
     tint: Color? = null,
     /** Set on single-choice rows, whose checkmark then only mirrors this state. */
     isSelected: Boolean? = null,
+    titleStyle: TextStyle = Theme.brockmann.headings.subtitle,
+    layout: SettingItemLayout = SettingItemLayout.Legacy,
 ) {
+    val isList = layout == SettingItemLayout.List
+    val dividerColor = Theme.v2.colors.border.light
     Column {
         Row(
             modifier =
                 Modifier.then(
                         if (item.backgroundColor != null) Modifier.background(item.backgroundColor)
+                        else Modifier
+                    )
+                    .then(
+                        // Drawn inside the bottom edge so a divider doesn't add to the row's height.
+                        if (isList && !isLastItem)
+                            Modifier.drawBehind {
+                                val thickness = DividerDefaults.Thickness.toPx()
+                                drawRect(
+                                    color = dividerColor,
+                                    topLeft = Offset(0f, size.height - thickness),
+                                    size = Size(size.width, thickness),
+                                )
+                            }
                         else Modifier
                     )
                     .fillMaxWidth()
@@ -194,38 +283,40 @@ internal fun SettingItem(
                 UiIcon(
                     drawableResId = icon,
                     size = 20.dp,
-                    tint = tint ?: item.leadingIconTint ?: Theme.v2.colors.primary.accent4,
+                    tint =
+                        tint
+                            ?: item.leadingIconTint
+                            ?: if (isList) Theme.v2.colors.text.secondary
+                            else Theme.v2.colors.primary.accent4,
                 )
-                UiSpacer(size = 16.dp)
+                UiSpacer(size = layout.iconGap)
             }
 
             // Weighted so the text takes what is left after the trailing switch or value, and wraps
             // inside it. Without this the column claims its full intrinsic width and pushes the
             // trailing content off the right edge — invisible until a row carries a long subtitle.
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(layout.subtitleGap),
+            ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
                         text = item.title.asString(),
-                        style = Theme.brockmann.headings.subtitle,
+                        style = titleStyle,
                         color = tint ?: Theme.v2.colors.text.primary,
                     )
 
-                    item.titleBadge?.let { badge ->
-                        Text(
-                            text = badge.asString(),
-                            style = Theme.brockmann.supplementary.caption,
-                            color = Theme.v2.colors.primary.accent4,
-                        )
-                    }
+                    item.titleBadge?.let { badge -> SettingItemBadge(text = badge.asString()) }
                 }
 
                 item.subTitle?.let {
                     Text(
                         text = it.asString(),
-                        color = tint ?: Theme.v2.colors.text.secondary,
+                        color = tint?.copy(alpha = TINTED_SUBTITLE_ALPHA)
+                                ?: Theme.v2.colors.text.secondary,
                         style = Theme.brockmann.supplementary.caption,
                     )
                 }
@@ -234,15 +325,26 @@ internal fun SettingItem(
             UiSpacer(size = 12.dp)
 
             item.trailingSwitch?.let { isChecked ->
-                VsSwitch(checked = isChecked, onCheckedChange = null)
+                VsSwitch(
+                    checked = isChecked,
+                    onCheckedChange = null,
+                    // Keeps a toggle row as tall as a plain one; the switch overhangs the padding.
+                    modifier =
+                        if (isList)
+                            Modifier.height(SWITCH_LINE_HEIGHT)
+                                .wrapContentHeight(unbounded = true)
+                        else Modifier,
+                )
 
-                UiSpacer(size = 8.dp)
+                UiSpacer(size = layout.switchEndGap)
             }
 
             item.value?.let { value ->
                 Text(
                     text = value,
-                    style = Theme.brockmann.headings.subtitle,
+                    style =
+                        if (isList) Theme.brockmann.button.medium.medium
+                        else Theme.brockmann.headings.subtitle,
                     color = tint ?: Theme.v2.colors.text.primary,
                 )
                 UiSpacer(size = 12.dp)
@@ -258,59 +360,44 @@ internal fun SettingItem(
             }
         }
 
-        if (isLastItem.not()) {
+        if (!isList && !isLastItem) {
             UiHorizontalDivider()
         }
     }
 }
 
+/** Pill next to a row title, e.g. the tier a feature needs. */
+@Composable
+private fun SettingItemBadge(text: String) {
+    Text(
+        text = text,
+        style = Theme.brockmann.supplementary.caption,
+        color = Theme.v2.colors.primary.accent4,
+        modifier =
+            Modifier.background(
+                    color = Theme.v2.colors.variables.backgroundsSurface12,
+                    shape = Theme.v2.radius.pill,
+                )
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = Theme.v2.radius.pill)
+                .padding(horizontal = 8.dp, vertical = 3.dp),
+    )
+}
+
+private val SECTION_GAP = 14.dp
+private val ABOVE_CARD_GAP = 8.dp
+private val TILE_GAP = 6.dp
+private val TILE_HEIGHT = 70.dp
+private val VERSION_FOOTER_TOP_GAP = 79.dp
+private val SWITCH_LINE_HEIGHT = 20.dp
+private const val TINTED_SUBTITLE_ALPHA = 0.8f
+
 @Preview
 @Composable
 internal fun SettingsScreenPreview() {
     SettingsScreen(
-        state =
-            SettingsUiModel(
-                items =
-                    listOf(
-                        SettingsGroupUiModel(
-                            title = "General".asUiText(),
-                            items =
-                                listOf(
-                                    SettingsItem.VaultSetting,
-                                    SettingsItem.Language("English"),
-                                    SettingsItem.Currency("USD"),
-                                    SettingsItem.AddressBook,
-                                ),
-                        ),
-                        SettingsGroupUiModel(
-                            title = "Support".asUiText(),
-                            items =
-                                listOf(
-                                    SettingsItem.Faq,
-                                    SettingsItem.CheckForUpdates,
-                                    SettingsItem.RateTheApp,
-                                    SettingsItem.ShareTheApp,
-                                ),
-                        ),
-                        SettingsGroupUiModel(
-                            title = "Community".asUiText(),
-                            items =
-                                listOf(
-                                    SettingsItem.ReferralCode,
-                                    SettingsItem.Twitter,
-                                    SettingsItem.Discord,
-                                ),
-                        ),
-                        SettingsGroupUiModel(
-                            title = "About".asUiText(),
-                            items = listOf(SettingsItem.TermsOfService, SettingsItem.PrivacyPolicy),
-                        ),
-                    )
-            ),
+        state = defaultSettingsMenu,
         onSettingsItemClick = {},
         onBackClick = {},
-        onContinueReferral = {},
-        onDismissReferral = {},
         onDismissShareLink = {},
         onVersionClick = {},
     )

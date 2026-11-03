@@ -7,8 +7,8 @@
     <string name="vault_settings_rename_subtitle">Uredite naziv svojeg trezora</string>
     <string name="vault_settings_reshare_title">Ponovno podijeli</string>
     <string name="vault_settings_reshare_subtitle">Ponovno podijelite trezor s novom skupinom uređaja</string>
-    <string name="vault_settings_dilithium_keygen_title">Omogući QBTC</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Generirajte ključ za omogućavanje QBTC lanca</string>
+    <string name="vault_settings_dilithium_keygen_title">Postkvantni ključ</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generiraj MLDSA-44 ključ za otpornost na kvantna računala</string>
     <string name="vault_settings_delete_title">Izbriši</string>
     <string name="vault_settings_security_title">On-chain sigurnost</string>
     <string name="vault_settings_security_subtitle">Upravljajte svojom on-chain sigurnošću</string>
@@ -238,7 +238,7 @@
     <string name="swap_price_impact_good">Dobro</string>
     <string name="swap_price_impact_average">Srednje</string>
     <string name="swap_price_impact_high">Visoko</string>
-    <string name="vault_settings_delete_subtitle">Trajno izbrišite svoj trezor.</string>
+    <string name="vault_settings_delete_subtitle">Trajno izbrišite svoj udio trezora</string>
     <string name="currency_unit_setting_screen_title">Valuta</string>
     <string name="share_qr_utils_choose_an_app">Odaberite aplikaciju</string>
     <string name="vault_accounts_account_assets">%1$s sredstva</string>
@@ -308,7 +308,6 @@
     <string name="add_address_address_title">Adresa</string>
     <string name="add_address_type_hint">Upišite ovdje</string>
     <string name="join_keysign_invalid_qr">Nevažeći sadržaj QR koda</string>
-    <string name="settings_screen_privacy">Privatnost</string>
     <string name="settings_screen_prevent_screenshots">Spriječi snimke zaslona</string>
     <string name="settings_screen_legal">Pravno</string>
     <string name="settings_screen_privacy_policy">Politika privatnosti</string>
@@ -774,7 +773,6 @@
     <string name="address_book_empty_description">Držite sve važne adrese organizirane na jednom mjestu.</string>
     <string name="address_book_empty_title">Vaš adresar je prazan</string>
     <string name="check_updates_settings_title">Provjerite Ažuriranja</string>
-    <string name="vult_website_settings_title">Vultisig web stranica</string>
     <string name="vault">Trezor</string>
     <string name="general">Općenito</string>
     <string name="support">Podrška</string>
@@ -819,11 +817,18 @@
     <string name="transaction_type_button_buy">Kupi</string>
     <string name="transaction_type_button_receive">Primi</string>
     <string name="vault_settings_view_vault">Prikaz naziva, udjela i vrste trezora</string>
-    <string name="vault_settings_biometric_fast">Biometrijski brzi potpis</string>
+    <string name="vault_settings_biometric_fast">Brzo potpisivanje biometrijom</string>
     <string name="vault_settings_backup_vault">Sigurnosna kopija udjela trezora</string>
-    <string name="vault_settings_back_up_your">Napravite sigurnosnu kopiju udjela trezora na uređaju ili poslužitelju.</string>
+    <string name="vault_settings_back_up_your">Napravite sigurnosnu kopiju svog udjela trezora na željenoj lokaciji</string>
     <string name="vault_settings_migrate_gg20">Migriraj GG20 trezor na DKLS</string>
     <string name="vault_settings_reshare_change">Ponovno dijeljenje, upravljanje sigurnošću ili potpisivanje poruka.</string>
+    <string name="settings_screen_vultisig_education">Edukacija Vultisig</string>
+    <string name="settings_community_website">Web-stranica</string>
+    <string name="vault_settings_home_display_subtitle">Uredite prikaz stanja novčanika</string>
+    <string name="vault_settings_security_row_subtitle">Upravljajte biometrijom za brzo potpisivanje</string>
+    <string name="vault_settings_lock_time_title">Vrijeme zaključavanja</string>
+    <string name="vault_settings_lock_time_subtitle">Postavite vrijeme do automatskog zaključavanja aplikacije</string>
+    <string name="vault_settings_sign_title">Potpiši</string>
     <string name="vault_backup_summary_choose_chains">Odaberite lance</string>
     <string name="transaction_done_form_approve">Odobri</string>
     <string name="vault_settings_migration_title">Migrirati</string>

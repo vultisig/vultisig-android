@@ -134,10 +134,10 @@
     <string name="vault_settings_rename_subtitle">编辑您的保险库名称</string>
     <string name="vault_settings_reshare_title">重新分享</string>
     <string name="vault_settings_reshare_subtitle">使用新的设备组重新共享保险库</string>
-    <string name="vault_settings_dilithium_keygen_title">启用 QBTC</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">生成密钥以启用 QBTC 链</string>
+    <string name="vault_settings_dilithium_keygen_title">后量子密钥</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">生成 MLDSA-44 密钥以实现抗量子能力</string>
     <string name="vault_settings_delete_title">删除</string>
-    <string name="vault_settings_delete_subtitle">永久删除您的保险库。</string>
+    <string name="vault_settings_delete_subtitle">永久删除您的保险库份额</string>
     <string name="vault_settings_security_title">链上安全</string>
     <string name="vault_settings_security_subtitle">管理您的链上安全</string>
     <string name="vault_settings_discounts">$VULT 折扣等级</string>
@@ -545,7 +545,6 @@
     <string name="join_keysign_invalid_qr">无效的二维码内容</string>
 
     <!-- Settings Screen -->
-    <string name="settings_screen_privacy">隐私</string>
     <string name="settings_screen_prevent_screenshots">防止截图</string>
     <string name="settings_screen_legal">法律</string>
     <string name="settings_screen_privacy_policy">隐私政策</string>
@@ -1125,7 +1124,6 @@
 
     <!-- Settings -->
     <string name="check_updates_settings_title">检查更新</string>
-    <string name="vult_website_settings_title">Vultisig 网站</string>
     <string name="vault">保险库</string>
     <string name="general">通用</string>
     <string name="support">支持</string>
@@ -1193,9 +1191,16 @@
     <string name="vault_settings_view_vault">查看保险库名称、部分和类型</string>
     <string name="vault_settings_biometric_fast">生物识别快速签名</string>
     <string name="vault_settings_backup_vault">备份保险库份额</string>
-    <string name="vault_settings_back_up_your">将您的保险库份额备份到设备或服务器。</string>
+    <string name="vault_settings_back_up_your">将您的保险库份额备份到首选位置</string>
     <string name="vault_settings_migrate_gg20">将 GG20 保险库迁移到 DKLS</string>
     <string name="vault_settings_reshare_change">重新分享、管理安全性或签署消息。</string>
+    <string name="settings_screen_vultisig_education">Vultisig 教育</string>
+    <string name="settings_community_website">网站</string>
+    <string name="vault_settings_home_display_subtitle">编辑钱包余额显示</string>
+    <string name="vault_settings_security_row_subtitle">管理快速签名的生物识别</string>
+    <string name="vault_settings_lock_time_title">锁定时间</string>
+    <string name="vault_settings_lock_time_subtitle">设置应用自动锁定前的时间</string>
+    <string name="vault_settings_sign_title">签名</string>
 
     <!-- Transaction -->
     <string name="transaction_buy">购买</string>

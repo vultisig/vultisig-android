@@ -7,8 +7,8 @@
     <string name="vault_settings_rename_subtitle">Modifica il nome del vault</string>
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Esegui il reshare del vault con un nuovo comitato</string>
-    <string name="vault_settings_dilithium_keygen_title">Abilita QBTC</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Genera chiave per abilitare la catena QBTC</string>
+    <string name="vault_settings_dilithium_keygen_title">Chiave post-quantistica</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Genera la chiave MLDSA-44 per la resistenza ai computer quantistici</string>
     <string name="vault_settings_delete_title">Elimina</string>
     <string name="vault_settings_security_title">Sicurezza On-chain</string>
     <string name="vault_settings_security_subtitle">Gestisci la tua sicurezza on-chain</string>
@@ -238,7 +238,7 @@
     <string name="swap_price_impact_good">Buono</string>
     <string name="swap_price_impact_average">Medio</string>
     <string name="swap_price_impact_high">Alto</string>
-    <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>
+    <string name="vault_settings_delete_subtitle">Elimina definitivamente la quota del vault</string>
     <string name="currency_unit_setting_screen_title">Valuta</string>
     <string name="share_qr_utils_choose_an_app">Scegli un\'app</string>
     <string name="vault_accounts_account_assets">%1$s asset</string>
@@ -308,7 +308,6 @@
     <string name="add_address_address_title">Indirizzo</string>
     <string name="add_address_type_hint">Scrivi qui</string>
     <string name="join_keysign_invalid_qr">Contenuto del codice QR non valido</string>
-    <string name="settings_screen_privacy">Privacy</string>
     <string name="settings_screen_prevent_screenshots">Impedisci screenshot</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Informativa sulla privacy</string>
@@ -773,7 +772,6 @@
     <string name="address_book_empty_description">Tieni tutti i tuoi indirizzi importanti organizzati in un unico posto.</string>
     <string name="address_book_empty_title">La tua rubrica è vuota</string>
     <string name="check_updates_settings_title">Controlla gli Aggiornamenti</string>
-    <string name="vult_website_settings_title">Sito web Vultisig</string>
     <string name="vault">Vault</string>
     <string name="general">Generale</string>
     <string name="support">Supporto</string>
@@ -816,11 +814,18 @@
     <string name="transaction_type_button_buy">Acquista</string>
     <string name="transaction_type_button_receive">Ricevi</string>
     <string name="vault_settings_view_vault">Visualizza nome, parte e tipo del vault</string>
-    <string name="vault_settings_biometric_fast">Firma rapida biometrica</string>
+    <string name="vault_settings_biometric_fast">Firma rapida con biometria</string>
     <string name="vault_settings_backup_vault">Backup della quota del vault</string>
-    <string name="vault_settings_back_up_your">Esegui il backup della quota del vault su dispositivo o server.</string>
+    <string name="vault_settings_back_up_your">Esegui il backup della quota del vault in un luogo a tua scelta</string>
     <string name="vault_settings_migrate_gg20">Migra il vault da GG20 a DKLS</string>
     <string name="vault_settings_reshare_change">Reshare, gestisci la sicurezza o firma messaggi.</string>
+    <string name="settings_screen_vultisig_education">Vultisig Education</string>
+    <string name="settings_community_website">Sito web</string>
+    <string name="vault_settings_home_display_subtitle">Modifica la visualizzazione del saldo del wallet</string>
+    <string name="vault_settings_security_row_subtitle">Gestisci la biometria per la firma rapida</string>
+    <string name="vault_settings_lock_time_title">Tempo di blocco</string>
+    <string name="vault_settings_lock_time_subtitle">Imposta il tempo prima del blocco automatico dell\'app</string>
+    <string name="vault_settings_sign_title">Firma</string>
     <string name="vault_backup_summary_choose_chains">Scegli le chain</string>
     <string name="transaction_done_form_approve">Approva</string>
     <string name="vault_settings_migration_title">Migrare</string>

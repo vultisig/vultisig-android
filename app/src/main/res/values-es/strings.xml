@@ -9,8 +9,8 @@
     <string name="vault_settings_rename_subtitle">Editar el nombre de tu bóveda</string>
     <string name="vault_settings_reshare_title">Recompartir</string>
     <string name="vault_settings_reshare_subtitle">Recompartir bóveda con un nuevo comité</string>
-    <string name="vault_settings_dilithium_keygen_title">Habilitar QBTC</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Generar clave para habilitar la cadena QBTC</string>
+    <string name="vault_settings_dilithium_keygen_title">Clave post-cuántica</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Genera una clave MLDSA-44 para resistencia cuántica</string>
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="swap_form_on_chain">en</string>
     <string name="select_asset_title">Seleccionar activo</string>
@@ -20,7 +20,7 @@
     <string name="select_asset_secured_badge">Asegurado</string>
     <string name="select_chain_chain_title">Cadena</string>
     <string name="select_chain_balance_title">Saldo</string>
-    <string name="vault_settings_delete_subtitle">Eliminar tu bóveda de forma permanente.</string>
+    <string name="vault_settings_delete_subtitle">Elimina tu fragmento de la bóveda de forma permanente</string>
     <string name="vault_settings_security_screen_title_bottomsheet">Seguridad en cadena desactivada</string>
     <string name="vault_settings_security_screen_content_bottomsheet">Desactivar la seguridad en cadena significa que Blockaid no puede verificar las transacciones. Estarás menos protegido.</string>
     <string name="vault_settings_security_title">Seguridad en cadena</string>
@@ -309,7 +309,6 @@
     <string name="add_address_address_title">Dirección</string>
     <string name="add_address_type_hint">Escribe aquí</string>
     <string name="join_keysign_invalid_qr">Contenido de código QR no válido</string>
-    <string name="settings_screen_privacy">Privacidad</string>
     <string name="settings_screen_prevent_screenshots">Evitar capturas de pantalla</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Política de privacidad</string>
@@ -775,7 +774,6 @@
     <string name="address_book_empty_description">Mantén todas tus direcciones importantes organizadas en un solo lugar.</string>
     <string name="address_book_empty_title">Tu libreta de direcciones está vacía</string>
     <string name="check_updates_settings_title">Consultar actualizaciones</string>
-    <string name="vult_website_settings_title">Sitio web de Vultisig</string>
     <string name="vault">Bóveda</string>
     <string name="general">General</string>
     <string name="support">Soporte</string>
@@ -818,11 +816,18 @@
     <string name="transaction_type_button_buy">Comprar</string>
     <string name="transaction_type_button_receive">Recibir</string>
     <string name="vault_settings_view_vault">Ver el nombre, la parte y el tipo de tu bóveda</string>
-    <string name="vault_settings_biometric_fast">Biometría para la firma rápida</string>
+    <string name="vault_settings_biometric_fast">Firma rápida con biometría</string>
     <string name="vault_settings_backup_vault">Respaldar fragmento de bóveda</string>
-    <string name="vault_settings_back_up_your">Haz una copia de seguridad del fragmento de bóveda en el dispositivo o el servidor.</string>
+    <string name="vault_settings_back_up_your">Haz una copia de seguridad de tu fragmento de la bóveda en la ubicación que prefieras</string>
     <string name="vault_settings_migrate_gg20">Migrar bóveda GG20 a DKLS</string>
     <string name="vault_settings_reshare_change">Recompartir, gestionar seguridad o firmar mensajes.</string>
+    <string name="settings_screen_vultisig_education">Educación Vultisig</string>
+    <string name="settings_community_website">Sitio web</string>
+    <string name="vault_settings_home_display_subtitle">Edita cómo se muestra el saldo de la billetera</string>
+    <string name="vault_settings_security_row_subtitle">Gestiona la biometría para la firma rápida</string>
+    <string name="vault_settings_lock_time_title">Tiempo de bloqueo</string>
+    <string name="vault_settings_lock_time_subtitle">Establece el tiempo hasta que la app se bloquee automáticamente</string>
+    <string name="vault_settings_sign_title">Firmar</string>
     <string name="vault_backup_summary_choose_chains">Elegir cadenas</string>
     <string name="transaction_done_form_approve">Aprobar</string>
     <string name="vault_settings_migration_title">Migrar</string>

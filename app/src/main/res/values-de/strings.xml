@@ -8,8 +8,8 @@
     <string name="vault_settings_rename_subtitle">Den Namen Ihres Tresors bearbeiten</string>
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Tresor-Reshare mit neuer Gerätegruppe durchführen</string>
-    <string name="vault_settings_dilithium_keygen_title">QBTC aktivieren</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Schlüssel generieren, um die QBTC-Blockchain zu aktivieren</string>
+    <string name="vault_settings_dilithium_keygen_title">Post-Quantum-Schlüssel</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">MLDSA-44-Schlüssel für Quantenresistenz generieren</string>
     <string name="vault_settings_delete_title">Löschen</string>
     <string name="select_asset_title">Asset auswählen</string>
     <string name="select_asset_no_result">Kein Ergebnis gefunden.</string>
@@ -238,7 +238,7 @@
     <string name="swap_price_impact_good">Gut</string>
     <string name="swap_price_impact_average">Mittel</string>
     <string name="swap_price_impact_high">Hoch</string>
-    <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>
+    <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresoranteil dauerhaft</string>
     <string name="currency_unit_setting_screen_title">Währung</string>
     <string name="share_qr_utils_choose_an_app">Wählen Sie eine App</string>
     <string name="vault_accounts_account_assets">%1$s Vermögenswerte</string>
@@ -308,7 +308,6 @@
     <string name="add_address_address_title">Adresse</string>
     <string name="add_address_type_hint">Geben Sie hier ein</string>
     <string name="join_keysign_invalid_qr">Ungültiger QR-Code-Inhalt</string>
-    <string name="settings_screen_privacy">Datenschutz</string>
     <string name="settings_screen_prevent_screenshots">Screenshots verhindern</string>
     <string name="settings_screen_legal">Rechtliches</string>
     <string name="settings_screen_privacy_policy">Datenschutzrichtlinie</string>
@@ -773,7 +772,6 @@
     <string name="address_book_empty_description">Bewahren Sie alle wichtigen Adressen an einem Ort auf.</string>
     <string name="address_book_empty_title">Ihr Adressbuch ist leer</string>
     <string name="check_updates_settings_title">Aktualisierungen prüfen</string>
-    <string name="vult_website_settings_title">Vultisig-Website</string>
     <string name="vault">Tresor</string>
     <string name="general">Allgemein</string>
     <string name="support">Support</string>
@@ -818,11 +816,18 @@
     <string name="transaction_type_button_buy">Kaufen</string>
     <string name="transaction_type_button_receive">Empfangen</string>
     <string name="vault_settings_view_vault">Tresorname, -anteil und -typ anzeigen</string>
-    <string name="vault_settings_biometric_fast">Fast Sign mit Biometrie</string>
+    <string name="vault_settings_biometric_fast">Biometrische Schnellsignatur</string>
     <string name="vault_settings_backup_vault">Tresoranteil sichern</string>
-    <string name="vault_settings_back_up_your">Sichern Sie Ihren Tresoranteil auf einem Gerät oder auf dem Server.</string>
+    <string name="vault_settings_back_up_your">Sichern Sie Ihren Tresoranteil an einem Ort Ihrer Wahl</string>
     <string name="vault_settings_migrate_gg20">GG20‑Vault auf DKLS migrieren</string>
     <string name="vault_settings_reshare_change">Reshare, Sicherheit verwalten oder Nachrichten signieren.</string>
+    <string name="settings_screen_vultisig_education">Vultisig-Wissen</string>
+    <string name="settings_community_website">Website</string>
+    <string name="vault_settings_home_display_subtitle">Anzeige des Wallet-Guthabens bearbeiten</string>
+    <string name="vault_settings_security_row_subtitle">Biometrie für Fast Sign verwalten</string>
+    <string name="vault_settings_lock_time_title">Sperrzeit</string>
+    <string name="vault_settings_lock_time_subtitle">Legen Sie fest, wann sich die App automatisch sperrt</string>
+    <string name="vault_settings_sign_title">Signieren</string>
     <string name="vault_backup_summary_choose_chains">Chains auswählen</string>
     <string name="transaction_done_form_approve">Genehmigen</string>
     <string name="vault_settings_migration_title">Migrieren</string>

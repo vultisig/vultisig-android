@@ -29,9 +29,11 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
+import com.vultisig.wallet.ui.components.referral.ReferralCodeBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.screens.settings.SettingItem
+import com.vultisig.wallet.ui.screens.settings.SettingItemLayout
 import com.vultisig.wallet.ui.screens.settings.SettingsBox
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
@@ -58,6 +60,8 @@ internal fun VaultSettingsScreen() {
         onToggleVisibilityClick = viewModel::togglePasswordVisibility,
         onDismissCustomRpcUpsell = viewModel::onDismissCustomRpcUpsell,
         onUnlockCustomRpcTier = viewModel::onUnlockCustomRpcTier,
+        onContinueReferral = viewModel::onContinueReferralBottomSheet,
+        onDismissReferral = viewModel::onDismissReferralBottomSheet,
     )
 }
 
@@ -75,6 +79,8 @@ private fun VaultSettingsScreen(
     onToggleVisibilityClick: () -> Unit = {},
     onDismissCustomRpcUpsell: () -> Unit = {},
     onUnlockCustomRpcTier: () -> Unit = {},
+    onContinueReferral: () -> Unit = {},
+    onDismissReferral: () -> Unit = {},
 ) {
 
     val settingGroups = uiModel.settingGroups
@@ -86,8 +92,11 @@ private fun VaultSettingsScreen(
         onBackClick = onBackClick,
     ) {
         Column(Modifier.verticalScroll(rememberScrollState())) {
+            val titleStyle =
+                if (uiModel.isAdvanceSetting) Theme.brockmann.headings.subtitle
+                else Theme.brockmann.supplementary.footnote
             settingGroups.filter(VaultSettingsGroupUiModel::isVisible).forEach { group ->
-                SettingsBox(title = group.title?.asString()) {
+                SettingsBox(title = group.title?.asString(), layout = SettingItemLayout.List) {
                     val enabledSettings = group.items.filter(VaultSettingsItem::enabled)
                     enabledSettings.forEachIndexed { index, item ->
                         SettingItem(
@@ -97,10 +106,19 @@ private fun VaultSettingsScreen(
                             tint =
                                 if (item is VaultSettingsItem.Delete) Theme.v2.colors.alerts.error
                                 else null,
+                            titleStyle = titleStyle,
+                            layout = SettingItemLayout.List,
                         )
                     }
                 }
                 UiSpacer(14.dp)
+            }
+
+            if (uiModel.hasToShowReferralCodeSheet) {
+                ReferralCodeBottomSheet(
+                    onContinue = onContinueReferral,
+                    onDismissRequest = onDismissReferral,
+                )
             }
 
             if (uiModel.isBackupVaultBottomSheetVisible) {
@@ -227,3 +245,49 @@ private fun BiometricFastSignBottomSheetContentPreview() {
         onSaveClick = {},
     )
 }
+
+@Preview
+@Composable
+internal fun VaultSettingsScreenPreview() {
+    VaultSettingsScreen(
+        uiModel = VaultSettingsState(settingGroups = previewVaultSettingGroups(isAdvanced = false)),
+        biometricTextFieldState = rememberTextFieldState(),
+        onSettingsClick = {},
+    )
+}
+
+@Preview
+@Composable
+internal fun VaultAdvancedSettingsScreenPreview() {
+    VaultSettingsScreen(
+        uiModel =
+            VaultSettingsState(
+                settingGroups = previewVaultSettingGroups(isAdvanced = true),
+                isAdvanceSetting = true,
+            ),
+        biometricTextFieldState = rememberTextFieldState(),
+        onSettingsClick = {},
+    )
+}
+
+/** Every row the design shows, with each row's visibility rule switched on. */
+private fun previewVaultSettingGroups(isAdvanced: Boolean) =
+    defaultVaultSettingGroups.map { group ->
+        group.copy(
+            isVisible = (group.id == "ADVANCED") == isAdvanced,
+            items =
+                group.items.map { item ->
+                    when (item) {
+                        is VaultSettingsItem.BiometricFastSign ->
+                            item.copy(isEnabled = true, isBiometricEnabled = true)
+                        is VaultSettingsItem.Security -> item.copy(isEnabled = true)
+                        is VaultSettingsItem.LockTime -> item.copy(isEnabled = true)
+                        is VaultSettingsItem.Migrate -> item.copy(isEnabled = true)
+                        is VaultSettingsItem.Reshare -> item.copy(isEnabled = true)
+                        is VaultSettingsItem.DilithiumKeygen -> item.copy(isEnabled = true)
+                        is VaultSettingsItem.CustomRpc -> item.copy(isEnabled = true)
+                        else -> item
+                    }
+                },
+        )
+    }

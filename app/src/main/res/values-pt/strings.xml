@@ -12,8 +12,8 @@
     <string name="vault_settings_rename_subtitle">Editar o nome do seu cofre</string>
     <string name="vault_settings_reshare_title">Recompartilhar</string>
     <string name="vault_settings_reshare_subtitle">Recompartilhar cofre com um novo comitê</string>
-    <string name="vault_settings_dilithium_keygen_title">Ativar QBTC</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Gerar chave para ativar a blockchain QBTC</string>
+    <string name="vault_settings_dilithium_keygen_title">Chave Pós-Quântica</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Gere a chave MLDSA-44 para resistência quântica</string>
     <string name="vault_settings_delete_title">Excluir</string>
     <string name="vault_settings_security_title">Segurança On-chain</string>
     <string name="vault_settings_security_subtitle">Gerencie sua segurança on-chain</string>
@@ -238,7 +238,7 @@
     <string name="swap_price_impact_good">Bom</string>
     <string name="swap_price_impact_average">Médio</string>
     <string name="swap_price_impact_high">Alto</string>
-    <string name="vault_settings_delete_subtitle">Exclua seu cofre permanentemente.</string>
+    <string name="vault_settings_delete_subtitle">Exclua a parte do cofre permanentemente</string>
     <string name="currency_unit_setting_screen_title">Moeda</string>
     <string name="share_qr_utils_choose_an_app">Escolha um aplicativo</string>
     <string name="vault_accounts_account_assets">%1$s ativos</string>
@@ -310,7 +310,6 @@
     <string name="add_address_address_title">Endereço</string>
     <string name="add_address_type_hint">Digite aqui</string>
     <string name="join_keysign_invalid_qr">Conteúdo de código QR inválido</string>
-    <string name="settings_screen_privacy">Privacidade</string>
     <string name="settings_screen_prevent_screenshots">Impedir capturas de tela</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Política de privacidade</string>
@@ -771,7 +770,6 @@
     <string name="address_book_empty_description">Mantenha todos os seus endereços importantes organizados em um só lugar.</string>
     <string name="address_book_empty_title">Sua agenda de endereços está vazia</string>
     <string name="check_updates_settings_title">Verificar Atualizações</string>
-    <string name="vult_website_settings_title">Site Vultisig</string>
     <string name="vault">Cofre</string>
     <string name="general">Geral</string>
     <string name="support">Suporte</string>
@@ -815,11 +813,18 @@
     <string name="transaction_type_button_buy">Comprar</string>
     <string name="transaction_type_button_receive">Receber</string>
     <string name="vault_settings_view_vault">Visualizar nome, parte e tipo do cofre</string>
-    <string name="vault_settings_biometric_fast">Assinatura biométrica rápida</string>
+    <string name="vault_settings_biometric_fast">Assinatura rápida por biometria</string>
     <string name="vault_settings_backup_vault">Fazer backup da parte do cofre</string>
-    <string name="vault_settings_back_up_your">Faça backup da parte do cofre em um dispositivo ou servidor.</string>
+    <string name="vault_settings_back_up_your">Faça backup da parte do cofre em um local de sua preferência</string>
     <string name="vault_settings_migrate_gg20">Migrar cofre GG20 para DKLS</string>
     <string name="vault_settings_reshare_change">Recompartilhar, gerenciar a segurança ou assinar mensagens.</string>
+    <string name="settings_screen_vultisig_education">Educação Vultisig</string>
+    <string name="settings_community_website">Site</string>
+    <string name="vault_settings_home_display_subtitle">Edite a exibição do saldo da carteira</string>
+    <string name="vault_settings_security_row_subtitle">Gerencie a biometria para assinatura rápida</string>
+    <string name="vault_settings_lock_time_title">Tempo de bloqueio</string>
+    <string name="vault_settings_lock_time_subtitle">Defina o tempo até o app bloquear automaticamente</string>
+    <string name="vault_settings_sign_title">Assinar</string>
     <string name="vault_backup_summary_choose_chains">Escolha as chains</string>
     <string name="transaction_done_form_approve">Aprovar</string>
     <string name="vault_settings_migration_title">Migrar</string>

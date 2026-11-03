@@ -11,7 +11,12 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.hasValidMldsaKey
+import com.vultisig.wallet.data.passcode.PasscodeConfig
+import com.vultisig.wallet.data.passcode.PasscodeRepository
+import com.vultisig.wallet.data.passcode.isConfigured
 import com.vultisig.wallet.data.repositories.CustomRpcConfig
+import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -68,6 +73,7 @@ internal data class VaultSettingsState(
     val customRpcVultBalance: String = "",
     val customRpcVultThreshold: String = "",
     val customRpcIsBelowThreshold: Boolean = false,
+    val hasToShowReferralCodeSheet: Boolean = false,
 )
 
 internal sealed class VaultSettingsItem(
@@ -79,8 +85,8 @@ internal sealed class VaultSettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.vault_settings_details_title),
                 subTitle = UiText.StringResource(R.string.vault_settings_view_vault),
-                trailingIcon = R.drawable.ic_small_caret_right,
-                leadingIcon = R.drawable.details,
+                trailingIcon = R.drawable.icon_chevron_right_small,
+                leadingIcon = R.drawable.circle_info,
             )
         )
 
@@ -89,8 +95,27 @@ internal sealed class VaultSettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.vault_settings_rename_title),
                 subTitle = UiText.StringResource(R.string.vault_settings_rename_subtitle),
-                trailingIcon = R.drawable.ic_small_caret_right,
-                leadingIcon = R.drawable.reame,
+                trailingIcon = R.drawable.icon_chevron_right_small,
+                leadingIcon = R.drawable.pen_writing,
+            )
+        )
+
+    data object HomeDisplay :
+        VaultSettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.home_display),
+                subTitle = UiText.StringResource(R.string.vault_settings_home_display_subtitle),
+                trailingIcon = R.drawable.icon_chevron_right_small,
+                leadingIcon = R.drawable.grid_layout_7,
+            )
+        )
+
+    data object ReferralCode :
+        VaultSettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.referral_code_settings_title),
+                trailingIcon = R.drawable.icon_chevron_right_small,
+                leadingIcon = R.drawable.megaphone,
             )
         )
 
@@ -99,7 +124,7 @@ internal sealed class VaultSettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.vault_settings_biometric_fast),
                 trailingSwitch = isBiometricEnabled,
-                leadingIcon = R.drawable.biomatrics_fast,
+                leadingIcon = R.drawable.bolt_filled,
             ),
             enabled = isEnabled,
         )
@@ -110,9 +135,44 @@ internal sealed class VaultSettingsItem(
                 SettingsItemUiModel(
                     title = UiText.StringResource(R.string.vault_settings_backup_vault),
                     subTitle = UiText.StringResource(R.string.vault_settings_back_up_your),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.backup_vault,
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.cloud_download,
                 )
+        )
+
+    /** Opens the app-lock passcode settings; [isEnabled] follows the passcode entry rule. */
+    data class Security(val isEnabled: Boolean) :
+        VaultSettingsItem(
+            value =
+                SettingsItemUiModel(
+                    title = UiText.StringResource(R.string.vault_settings_security_screen_title),
+                    subTitle = UiText.StringResource(R.string.vault_settings_security_row_subtitle),
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.shield_filled,
+                ),
+            enabled = isEnabled,
+        )
+
+    /** Opens the auto-lock picker, which only applies once a passcode is configured. */
+    data class LockTime(val isEnabled: Boolean) :
+        VaultSettingsItem(
+            value =
+                SettingsItemUiModel(
+                    title = UiText.StringResource(R.string.vault_settings_lock_time_title),
+                    subTitle = UiText.StringResource(R.string.vault_settings_lock_time_subtitle),
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.lock_filled,
+                ),
+            enabled = isEnabled,
+        )
+
+    data class PreventScreenshots(val isEnabled: Boolean = false) :
+        VaultSettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.settings_screen_prevent_screenshots),
+                leadingIcon = R.drawable.eye_closed,
+                trailingSwitch = isEnabled,
+            )
         )
 
     data class Migrate(val isEnabled: Boolean) :
@@ -121,8 +181,8 @@ internal sealed class VaultSettingsItem(
                 SettingsItemUiModel(
                     title = UiText.StringResource(R.string.vault_settings_migration_title),
                     subTitle = UiText.StringResource(R.string.vault_settings_migrate_gg20),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.pass_hint,
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.cloud_upload,
                 ),
             enabled = isEnabled,
         )
@@ -133,8 +193,8 @@ internal sealed class VaultSettingsItem(
                 SettingsItemUiModel(
                     title = UiText.StringResource(R.string.vault_settings_advanced_title),
                     subTitle = UiText.StringResource(R.string.vault_settings_reshare_change),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.advanced,
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.file_search,
                 )
         )
 
@@ -144,8 +204,8 @@ internal sealed class VaultSettingsItem(
                 SettingsItemUiModel(
                     title = UiText.StringResource(R.string.vault_settings_reshare_title),
                     subTitle = UiText.StringResource(R.string.vault_settings_reshare_subtitle),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.reshare,
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.share_up_right_2,
                 ),
             enabled = isEnabled,
         )
@@ -154,11 +214,11 @@ internal sealed class VaultSettingsItem(
         VaultSettingsItem(
             value =
                 SettingsItemUiModel(
-                    title = UiText.StringResource(R.string.verify_swap_sign_button),
+                    title = UiText.StringResource(R.string.vault_settings_sign_title),
                     subTitle =
                         UiText.StringResource(R.string.vault_settings_sign_message_description),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.sign,
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.pen_writing,
                 )
         )
 
@@ -168,8 +228,8 @@ internal sealed class VaultSettingsItem(
                 SettingsItemUiModel(
                     title = UiText.StringResource(R.string.vault_settings_security_title),
                     subTitle = UiText.StringResource(R.string.vault_settings_security_subtitle),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.onchain_security,
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.file_lock,
                 )
         )
 
@@ -180,8 +240,8 @@ internal sealed class VaultSettingsItem(
                     title = UiText.StringResource(R.string.vault_settings_dilithium_keygen_title),
                     subTitle =
                         UiText.StringResource(R.string.vault_settings_dilithium_keygen_subtitle),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.advanced,
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.file_pen,
                 ),
             enabled = isEnabled,
         )
@@ -192,8 +252,8 @@ internal sealed class VaultSettingsItem(
                 SettingsItemUiModel(
                     title = UiText.StringResource(R.string.vault_settings_delete_title),
                     subTitle = UiText.StringResource(R.string.vault_settings_delete_subtitle),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.delete,
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.trash_filled,
                 )
         )
 
@@ -204,12 +264,62 @@ internal sealed class VaultSettingsItem(
                     title = UiText.StringResource(R.string.custom_rpc_title),
                     titleBadge = UiText.StringResource(R.string.custom_rpc_tier_badge),
                     subTitle = UiText.StringResource(R.string.custom_rpc_advanced_subtitle),
-                    trailingIcon = R.drawable.ic_small_caret_right,
-                    leadingIcon = R.drawable.broadcast,
+                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    leadingIcon = R.drawable.signature,
                 ),
             enabled = isEnabled,
         )
 }
+
+/**
+ * Vault Settings rows before the vault and flags load; rows whose visibility depends on them start
+ * disabled. The group with id `ADVANCED` is the Advanced sub-list.
+ */
+internal val defaultVaultSettingGroups =
+    listOf(
+        VaultSettingsGroupUiModel(
+            title = UiText.StringResource(R.string.vault_management),
+            items =
+                listOf(
+                    VaultSettingsItem.Details,
+                    VaultSettingsItem.Rename,
+                    VaultSettingsItem.HomeDisplay,
+                    VaultSettingsItem.ReferralCode,
+                    VaultSettingsItem.BiometricFastSign(
+                        isEnabled = false,
+                        isBiometricEnabled = false,
+                    ),
+                ),
+        ),
+        VaultSettingsGroupUiModel(
+            title = UiText.StringResource(R.string.vault_settings_security_screen_title),
+            items =
+                listOf(
+                    VaultSettingsItem.Security(isEnabled = false),
+                    VaultSettingsItem.LockTime(isEnabled = false),
+                    VaultSettingsItem.BackupVaultShare,
+                    VaultSettingsItem.PreventScreenshots(),
+                ),
+        ),
+        VaultSettingsGroupUiModel(
+            title = UiText.StringResource(R.string.other),
+            items = listOf(VaultSettingsItem.Migrate(false), VaultSettingsItem.Advanced),
+        ),
+        VaultSettingsGroupUiModel(title = null, items = listOf(VaultSettingsItem.Delete)),
+        VaultSettingsGroupUiModel(
+            id = "ADVANCED",
+            title = null,
+            items =
+                listOf(
+                    VaultSettingsItem.Reshare(false),
+                    VaultSettingsItem.DilithiumKeygen(false),
+                    VaultSettingsItem.Sign,
+                    VaultSettingsItem.OnChainSecurity,
+                    VaultSettingsItem.CustomRpc(false),
+                ),
+            isVisible = false,
+        ),
+    )
 
 @HiltViewModel
 internal open class VaultSettingsViewModel
@@ -226,47 +336,13 @@ constructor(
     private val snackbarFlow: SnackbarFlow,
     private val customRpcConfig: CustomRpcConfig,
     private val getDiscountBps: GetDiscountBpsUseCase,
+    private val referralRepository: ReferralCodeSettingsRepositoryContract,
+    private val preventScreenshotsRepository: PreventScreenshotsRepository,
+    private val passcodeRepository: PasscodeRepository,
+    private val passcodeConfig: PasscodeConfig,
 ) : ViewModel() {
 
-    val settingGroups =
-        listOf(
-            VaultSettingsGroupUiModel(
-                title = UiText.StringResource(R.string.vault_management),
-                items =
-                    listOf(
-                        VaultSettingsItem.Details,
-                        VaultSettingsItem.Rename,
-                        VaultSettingsItem.BiometricFastSign(
-                            isEnabled = false,
-                            isBiometricEnabled = false,
-                        ),
-                    ),
-            ),
-            VaultSettingsGroupUiModel(
-                title = UiText.StringResource(R.string.vault_settings_security_screen_title),
-                items = listOf(VaultSettingsItem.BackupVaultShare),
-            ),
-            VaultSettingsGroupUiModel(
-                title = UiText.StringResource(R.string.other),
-                items = listOf(VaultSettingsItem.Migrate(false), VaultSettingsItem.Advanced),
-            ),
-            VaultSettingsGroupUiModel(title = null, items = listOf(VaultSettingsItem.Delete)),
-            VaultSettingsGroupUiModel(
-                id = "ADVANCED",
-                title = null,
-                items =
-                    listOf(
-                        VaultSettingsItem.Reshare(false),
-                        VaultSettingsItem.DilithiumKeygen(false),
-                        VaultSettingsItem.Sign,
-                        VaultSettingsItem.OnChainSecurity,
-                        VaultSettingsItem.CustomRpc(false),
-                    ),
-                isVisible = false,
-            ),
-        )
-
-    val uiModel = MutableStateFlow(VaultSettingsState(settingGroups = settingGroups))
+    val uiModel = MutableStateFlow(VaultSettingsState(settingGroups = defaultVaultSettingGroups))
 
     var isBiometricFastSignEnabled: Boolean
         get() {
@@ -288,6 +364,8 @@ constructor(
     private val vaultId: String = savedStateHandle.toRoute<Route.VaultSettings>().vaultId
 
     private var hasFastSign: Boolean = false
+
+    private var hasUsedReferral = false
 
     init {
         viewModelScope.launch {
@@ -361,27 +439,74 @@ constructor(
         // flag (#4787 kill-switch). When on, the row appears in this Advanced group, tier-gated.
         viewModelScope.launch {
             customRpcConfig.isFeatureEnabled.collect { enabled ->
-                uiModel.update {
-                    it.copy(
-                        settingGroups =
-                            it.settingGroups.map { group ->
-                                group.copy(
-                                    items =
-                                        group.items.map { item ->
-                                            when (item) {
-                                                is VaultSettingsItem.CustomRpc ->
-                                                    item.copy(isEnabled = enabled)
-                                                else -> item
-                                            }
-                                        }
-                                )
-                            }
-                    )
+                updateItems { item ->
+                    when (item) {
+                        is VaultSettingsItem.CustomRpc -> item.copy(isEnabled = enabled)
+                        else -> item
+                    }
                 }
             }
         }
 
+        loadPasscodeVisibility()
+        loadPreventScreenshots()
+        viewModelScope.launch { hasUsedReferral = referralRepository.hasVisitReferralCode() }
+
         validateEachTextChange()
+    }
+
+    /**
+     * Shows Security only once the passcode feature has been switched on in Advanced Settings, or
+     * whenever a passcode is already configured. The second half matters: turning the flag back off
+     * must not strand a tester with an encrypted vault and no way to reach the off switch. Lock time
+     * shows only while a passcode is configured, as the auto-lock picker does nothing without one.
+     */
+    private fun loadPasscodeVisibility() {
+        // safeLaunch, because initialize() decodes persisted credentials off a keystore that can be
+        // wiped or unavailable. Letting that throw here would take the whole screen's coroutine
+        // down over rows that are merely meant to stay hidden.
+        viewModelScope.safeLaunch {
+            passcodeRepository.initialize()
+            combine(passcodeConfig.isFeatureEnabled, passcodeRepository.state) {
+                    isFeatureEnabled,
+                    passcodeState ->
+                    isFeatureEnabled to passcodeState.isConfigured
+                }
+                .distinctUntilChanged()
+                .collect { (isFeatureEnabled, isConfigured) ->
+                    updateItems { item ->
+                        when (item) {
+                            is VaultSettingsItem.Security ->
+                                item.copy(isEnabled = isFeatureEnabled || isConfigured)
+                            is VaultSettingsItem.LockTime -> item.copy(isEnabled = isConfigured)
+                            else -> item
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun loadPreventScreenshots() {
+        viewModelScope.launch {
+            preventScreenshotsRepository.isEnabled.collect { isEnabled ->
+                updateItems { item ->
+                    when (item) {
+                        is VaultSettingsItem.PreventScreenshots -> item.copy(isEnabled = isEnabled)
+                        else -> item
+                    }
+                }
+            }
+        }
+    }
+
+    /** Maps every row inside [uiModel]'s update, so concurrent collectors don't drop each other. */
+    private fun updateItems(transform: (VaultSettingsItem) -> VaultSettingsItem) {
+        uiModel.update {
+            it.copy(
+                settingGroups =
+                    it.settingGroups.map { group -> group.copy(items = group.items.map(transform)) }
+            )
+        }
     }
 
     fun onBackClick() {
@@ -416,6 +541,19 @@ constructor(
                 }
             }
 
+            VaultSettingsItem.HomeDisplay -> {
+                viewModelScope.launch { navigator.route(Route.HomeDisplaySetting) }
+            }
+            VaultSettingsItem.ReferralCode -> onClickReferralCode()
+            is VaultSettingsItem.Security -> {
+                viewModelScope.launch { navigator.route(Route.PasscodeSettings) }
+            }
+            is VaultSettingsItem.LockTime -> {
+                viewModelScope.launch { navigator.route(Route.AutoLockSetting) }
+            }
+            is VaultSettingsItem.PreventScreenshots -> {
+                viewModelScope.launch { preventScreenshotsRepository.setEnabled(!item.isEnabled) }
+            }
             VaultSettingsItem.Delete -> navigateToConfirmDeleteScreen()
             VaultSettingsItem.Details -> openDetails()
             is VaultSettingsItem.Migrate -> migrate()
@@ -451,6 +589,32 @@ constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun onClickReferralCode() {
+        viewModelScope.launch {
+            if (hasUsedReferral || referralRepository.isShown()) {
+                navigator.navigate(Destination.ReferralCode(vaultId))
+            } else {
+                uiModel.update { it.copy(hasToShowReferralCodeSheet = true) }
+            }
+        }
+    }
+
+    fun onContinueReferralBottomSheet() {
+        viewModelScope.launch {
+            referralRepository.visitReferralCode()
+            referralRepository.setAsShown()
+            uiModel.update { it.copy(hasToShowReferralCodeSheet = false) }
+            navigator.route(Route.ReferralOnboarding(vaultId))
+        }
+    }
+
+    fun onDismissReferralBottomSheet() {
+        viewModelScope.launch {
+            referralRepository.setAsShown()
+            uiModel.update { it.copy(hasToShowReferralCodeSheet = false) }
         }
     }
 

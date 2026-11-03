@@ -7,7 +7,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.passcode.PasscodeConfig
+import com.vultisig.wallet.data.passcode.PasscodeRepository
+import com.vultisig.wallet.data.passcode.PasscodeState
 import com.vultisig.wallet.data.repositories.CustomRpcConfig
+import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -34,8 +39,10 @@ import java.math.BigInteger
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -59,6 +66,10 @@ internal class VaultSettingsViewModelTest {
     private lateinit var snackbarFlow: SnackbarFlow
     private lateinit var customRpcConfig: CustomRpcConfig
     private lateinit var getDiscountBps: GetDiscountBpsUseCase
+    private lateinit var referralRepository: ReferralCodeSettingsRepositoryContract
+    private lateinit var preventScreenshotsRepository: PreventScreenshotsRepository
+    private lateinit var passcodeConfig: PasscodeConfig
+    private lateinit var passcodeRepository: PasscodeRepository
 
     /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
@@ -77,6 +88,13 @@ internal class VaultSettingsViewModelTest {
         snackbarFlow = mockk(relaxed = true)
         customRpcConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
         getDiscountBps = mockk(relaxed = true)
+        referralRepository = mockk(relaxed = true)
+        preventScreenshotsRepository = mockk(relaxed = true)
+        passcodeConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
+        passcodeRepository =
+            mockk(relaxed = true) {
+                every { state } returns MutableStateFlow(PasscodeState.Disabled)
+            }
         // Function-type-interface mocks need an explicit Boolean stub; otherwise relaxed mode
         // returns a generic Object that fails the implicit cast inside the VM.
         coEvery { isVaultHasFastSignById(any()) } returns false
@@ -102,7 +120,14 @@ internal class VaultSettingsViewModelTest {
             snackbarFlow = snackbarFlow,
             customRpcConfig = customRpcConfig,
             getDiscountBps = getDiscountBps,
+            referralRepository = referralRepository,
+            preventScreenshotsRepository = preventScreenshotsRepository,
+            passcodeRepository = passcodeRepository,
+            passcodeConfig = passcodeConfig,
         )
+
+    private fun VaultSettingsViewModel.item(predicate: (VaultSettingsItem) -> Boolean) =
+        uiModel.value.settingGroups.flatMap { it.items }.single(predicate)
 
     /** Verifies clicking Advanced sets isAdvanceSetting to true. */
     @Test
@@ -379,6 +404,71 @@ internal class VaultSettingsViewModelTest {
             vm.onSettingsItemClick(VaultSettingsItem.DilithiumKeygen(isEnabled = true))
 
             coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    /** Verifies onDismissReferralBottomSheet hides referral sheet after it was opened. */
+    @Test
+    fun `onDismissReferralBottomSheet hides referral sheet`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onClickReferralCode()
+            vm.uiModel.value.hasToShowReferralCodeSheet.shouldBeTrue()
+            vm.onDismissReferralBottomSheet()
+            vm.uiModel.value.hasToShowReferralCodeSheet.shouldBeFalse()
+        }
+
+    /** Verifies clicking PreventScreenshots calls setEnabled with toggled value. */
+    @Test
+    fun `clicking PreventScreenshots calls setEnabled with toggled value`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(VaultSettingsItem.PreventScreenshots(isEnabled = false))
+            coVerify { preventScreenshotsRepository.setEnabled(true) }
+        }
+
+    /** Verifies clicking PreventScreenshots when enabled calls setEnabled with false. */
+    @Test
+    fun `clicking PreventScreenshots when enabled calls setEnabled false`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(VaultSettingsItem.PreventScreenshots(isEnabled = true))
+            coVerify { preventScreenshotsRepository.setEnabled(false) }
+        }
+
+    /** Verifies the Security entry stays hidden until the Advanced Settings flag is switched on. */
+    @Test
+    fun `the security entry is hidden while the feature flag is off`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.item { it is VaultSettingsItem.Security }.enabled.shouldBeFalse()
+        }
+
+    /** Verifies switching the Advanced Settings flag on reveals the Security entry. */
+    @Test
+    fun `the security entry appears once the feature flag is on`() =
+        runTest(testDispatcher) {
+            every { passcodeConfig.isFeatureEnabled } returns flowOf(true)
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.item { it is VaultSettingsItem.Security }.enabled.shouldBeTrue()
+        }
+
+    /**
+     * Verifies a configured passcode keeps its Security entry even with the flag off. Otherwise
+     * turning the flag back off would strand a tester with an encrypted vault and no off switch.
+     */
+    @Test
+    fun `the security entry stays visible while a passcode is configured`() =
+        runTest(testDispatcher) {
+            every { passcodeConfig.isFeatureEnabled } returns flowOf(false)
+            every { passcodeRepository.state } returns MutableStateFlow(PasscodeState.Locked)
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.item { it is VaultSettingsItem.Security }.enabled.shouldBeTrue()
         }
 
     private companion object {

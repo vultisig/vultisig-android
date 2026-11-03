@@ -8,29 +8,21 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.settings.AppLanguage
-import com.vultisig.wallet.data.passcode.PasscodeConfig
-import com.vultisig.wallet.data.passcode.PasscodeRepository
-import com.vultisig.wallet.data.passcode.isConfigured
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
-import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
-import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
-import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
 import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Currency
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Discord
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Education
 import com.vultisig.wallet.ui.models.settings.SettingsItem.DiscountTiers
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Faq
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Github
 import com.vultisig.wallet.ui.models.settings.SettingsItem.HomeDisplay
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Language
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Notifications
-import com.vultisig.wallet.ui.models.settings.SettingsItem.PasscodeEncryption
-import com.vultisig.wallet.ui.models.settings.SettingsItem.PreventScreenshots
 import com.vultisig.wallet.ui.models.settings.SettingsItem.PrivacyPolicy
 import com.vultisig.wallet.ui.models.settings.SettingsItem.RateTheApp
-import com.vultisig.wallet.ui.models.settings.SettingsItem.ReferralCode
 import com.vultisig.wallet.ui.models.settings.SettingsItem.ShareTheApp
 import com.vultisig.wallet.ui.models.settings.SettingsItem.TermsOfService
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Twitter
@@ -48,27 +40,29 @@ import javax.inject.Inject
 import kotlin.time.TimeSource
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal data class SettingsUiModel(
     val items: List<SettingsGroupUiModel>,
-    val hasToShowReferralCodeSheet: Boolean = false,
     val showShareBottomSheet: Boolean = false,
 )
 
-internal data class SettingsGroupUiModel(val title: UiText, val items: List<SettingsItem>)
+/** A titled settings section: optional link [tiles] above a card of [items]. */
+internal data class SettingsGroupUiModel(
+    val title: UiText,
+    val items: List<SettingsItem>,
+    val tiles: List<SettingsItem> = emptyList(),
+)
 
 internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: Boolean = true) {
     data object VaultSetting :
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.vault_settings_title),
-                leadingIcon = R.drawable.setting,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.slider,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
@@ -76,8 +70,8 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.vault_settings_discounts),
-                leadingIcon = R.drawable.coins_tier,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.cards_filled,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
@@ -87,7 +81,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 title = UiText.StringResource(R.string.settings_screen_language),
                 value = lang,
                 leadingIcon = R.drawable.language,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
@@ -96,8 +90,8 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.settings_screen_currency),
                 value = curr,
-                leadingIcon = R.drawable.currency,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.circle_dollar,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
@@ -105,8 +99,8 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.home_display),
-                leadingIcon = R.drawable.wallet,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.settings_wallet_filled,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
@@ -114,26 +108,18 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.address_book_settings_title),
-                leadingIcon = R.drawable.address_book,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.book_bookmark_filled,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
-    data object ReferralCode :
-        SettingsItem(
-            SettingsItemUiModel(
-                title = UiText.StringResource(R.string.referral_code_settings_title),
-                leadingIcon = R.drawable.referral_code,
-                trailingIcon = R.drawable.ic_small_caret_right,
-            )
-        )
 
     data object Faq :
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.faq_setting_screen_title),
-                leadingIcon = R.drawable.faq,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.square_question,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
@@ -142,10 +128,19 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             value =
                 SettingsItemUiModel(
                     title = UiText.StringResource(R.string.check_updates_settings_title),
-                    leadingIcon = R.drawable.check_update,
-                    trailingIcon = R.drawable.ic_small_caret_right,
+                    leadingIcon = R.drawable.cloud_upload,
+                    trailingIcon = R.drawable.icon_chevron_right_small,
                 ),
             enabled = true,
+        )
+
+    data object Education :
+        SettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.settings_screen_vultisig_education),
+                leadingIcon = R.drawable.book_bookmark_filled,
+                trailingIcon = R.drawable.icon_chevron_right_small,
+            )
         )
 
     /**
@@ -157,8 +152,10 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.settings_screen_rate_the_app),
-                leadingIcon = R.drawable.rate_the_app,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.sparkle,
+                // The sparkle is two-tone; tinting would flatten it.
+                leadingIconTint = Color.Unspecified,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
@@ -166,17 +163,16 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.settings_screen_share_the_app),
-                leadingIcon = R.drawable.share_app,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.share_up_right_2,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
     data object Twitter :
         SettingsItem(
             SettingsItemUiModel(
-                title = UiText.StringResource(R.string.x_twitter),
-                leadingIcon = R.drawable.x_twitter,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                title = UiText.StringResource(R.string.settings_community_x),
+                leadingIcon = R.drawable.socials_twitter,
             )
         )
 
@@ -184,8 +180,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.discord),
-                leadingIcon = R.drawable.discord,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.socials_discord,
             )
         )
 
@@ -193,17 +188,15 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.github),
-                leadingIcon = R.drawable.githup,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.socials_github,
             )
         )
 
     data object VultisigWebsite :
         SettingsItem(
             SettingsItemUiModel(
-                title = UiText.StringResource(R.string.vult_website_settings_title),
-                leadingIcon = R.drawable.vult_website,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                title = UiText.StringResource(R.string.settings_community_website),
+                leadingIcon = R.drawable.globe_2,
             )
         )
 
@@ -211,8 +204,8 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.settings_screen_tos),
-                leadingIcon = R.drawable.term_service,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.note,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
@@ -220,8 +213,8 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.settings_screen_privacy_policy),
-                leadingIcon = R.drawable.security,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.shield_filled,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
@@ -229,28 +222,12 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
         SettingsItem(
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.notifications),
-                leadingIcon = R.drawable.ic_bell,
-                trailingIcon = R.drawable.ic_small_caret_right,
+                leadingIcon = R.drawable.bell_filled,
+                trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
 
-    data object PasscodeEncryption :
-        SettingsItem(
-            SettingsItemUiModel(
-                title = UiText.StringResource(R.string.passcode_settings_title),
-                leadingIcon = R.drawable.lock,
-                trailingIcon = R.drawable.ic_small_caret_right,
-            )
-        )
 
-    data class PreventScreenshots(val isEnabled: Boolean = false) :
-        SettingsItem(
-            SettingsItemUiModel(
-                title = UiText.StringResource(R.string.settings_screen_prevent_screenshots),
-                leadingIcon = R.drawable.security,
-                trailingSwitch = isEnabled,
-            )
-        )
 }
 
 internal data class SettingsItemUiModel(
@@ -273,6 +250,42 @@ internal sealed interface SettingsUiEvent {
     data class OpenLink(val url: String) : SettingsUiEvent
 }
 
+/** The main settings list before the language and currency values load. */
+internal val defaultSettingsMenu =
+    SettingsUiModel(
+        items =
+            listOf(
+                SettingsGroupUiModel(
+                    title = UiText.StringResource(R.string.vault),
+                    items = listOf(VaultSetting, DiscountTiers),
+                ),
+                SettingsGroupUiModel(
+                    title = UiText.StringResource(R.string.general),
+                    items =
+                        listOf(
+                            Notifications,
+                            Language("English"),
+                            Currency("USD"),
+                            HomeDisplay,
+                            AddressBook,
+                        ),
+                ),
+                SettingsGroupUiModel(
+                    title = UiText.StringResource(R.string.vultisig_community),
+                    tiles = listOf(Twitter, Discord, Github, VultisigWebsite),
+                    items = listOf(RateTheApp, ShareTheApp),
+                ),
+                SettingsGroupUiModel(
+                    title = UiText.StringResource(R.string.support),
+                    items = listOf(Faq, CheckForUpdates, Education),
+                ),
+                SettingsGroupUiModel(
+                    title = UiText.StringResource(R.string.settings_screen_legal),
+                    items = listOf(PrivacyPolicy, TermsOfService),
+                ),
+            )
+    )
+
 @HiltViewModel
 internal class SettingsViewModel
 @Inject
@@ -280,60 +293,14 @@ constructor(
     private val navigator: Navigator<Destination>,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val appLocaleRepository: AppLocaleRepository,
-    private val referralRepository: ReferralCodeSettingsRepositoryContract,
-    private val preventScreenshotsRepository: PreventScreenshotsRepository,
-    private val passcodeRepository: PasscodeRepository,
-    private val passcodeConfig: PasscodeConfig,
     savedStateHandle: SavedStateHandle,
     timeSource: TimeSource,
 ) : ViewModel() {
     private val _uiEvents = Channel<SettingsUiEvent>()
     val uiEvent = _uiEvents.receiveAsFlow()
 
-    val settingsMenu =
-        SettingsUiModel(
-            items =
-                listOf(
-                    SettingsGroupUiModel(
-                        title = UiText.StringResource(R.string.vault),
-                        items = listOf(VaultSetting, DiscountTiers),
-                    ),
-                    SettingsGroupUiModel(
-                        title = UiText.StringResource(R.string.general),
-                        items =
-                            listOf(
-                                Notifications,
-                                ReferralCode,
-                                Language("English"),
-                                Currency("USD"),
-                                HomeDisplay,
-                                AddressBook,
-                            ),
-                    ),
-                    SettingsGroupUiModel(
-                        title = UiText.StringResource(R.string.settings_screen_privacy),
-                        // PasscodeEncryption is inserted by loadPasscodeVisibility when the
-                        // Advanced Settings flag is on, or when a passcode is already configured.
-                        items = listOf(PreventScreenshots()),
-                    ),
-                    SettingsGroupUiModel(
-                        title = UiText.StringResource(R.string.support),
-                        items = listOf(Faq, CheckForUpdates, RateTheApp, ShareTheApp),
-                    ),
-                    SettingsGroupUiModel(
-                        title = UiText.StringResource(R.string.vultisig_community),
-                        items = listOf(Twitter, Discord, Github, VultisigWebsite),
-                    ),
-                    SettingsGroupUiModel(
-                        title = UiText.StringResource(R.string.settings_screen_legal),
-                        items = listOf(PrivacyPolicy, TermsOfService),
-                    ),
-                )
-        )
-
-    val state = MutableStateFlow(settingsMenu)
+    val state = MutableStateFlow(defaultSettingsMenu)
     val vaultId = savedStateHandle.toRoute<Route.Settings>().vaultId
-    private var hasUsedReferral = false
     private val multipleClicksDetector = MultipleClicksDetector(timeSource)
 
     /**
@@ -362,6 +329,7 @@ constructor(
             }
 
             Discord -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.DISCORD))
+            Education -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULTISIG_DOCS))
             Faq -> {
                 viewModelScope.launch { navigator.route(Route.FAQSetting) }
             }
@@ -376,7 +344,6 @@ constructor(
 
             PrivacyPolicy -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.PRIVACY))
             RateTheApp -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.GOOGLE_PLAY))
-            ReferralCode -> onClickReferralCode()
             ShareTheApp -> openShareLinkModalBottomSheet()
             TermsOfService -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TERMS_OF_SERVICE))
             Twitter -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TWITTER))
@@ -392,18 +359,7 @@ constructor(
                 viewModelScope.launch { navigator.route(Route.NotificationSettings) }
             }
 
-            PasscodeEncryption -> {
-                viewModelScope.launch { navigator.route(Route.PasscodeSettings) }
-            }
-
             VultisigWebsite -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_WEBSITE))
-
-            is PreventScreenshots -> {
-                viewModelScope.launch {
-                    val newValue = !item.isEnabled
-                    preventScreenshotsRepository.setEnabled(newValue)
-                }
-            }
         }
     }
 
@@ -415,72 +371,6 @@ constructor(
         viewModelScope.launch {
             loadCurrency()
             loadAppLocale()
-            loadPreventScreenshots()
-            loadPasscodeVisibility()
-            loadWasReferralUsed()
-        }
-    }
-
-    /**
-     * Shows Settings → Passcode only once the feature has been switched on in Advanced Settings, or
-     * whenever a passcode is already configured. The second half matters: turning the flag back off
-     * must not strand a tester with an encrypted vault and no way to reach the off switch.
-     */
-    private fun loadPasscodeVisibility() {
-        // safeLaunch, because initialize() decodes persisted credentials off a keystore that can be
-        // wiped or unavailable. Letting that throw here would take the whole Settings screen's
-        // coroutine down over a row that is merely meant to stay hidden.
-        viewModelScope.safeLaunch {
-            passcodeRepository.initialize()
-            combine(passcodeConfig.isFeatureEnabled, passcodeRepository.state) {
-                    isFeatureEnabled,
-                    passcodeState ->
-                    isFeatureEnabled || passcodeState.isConfigured
-                }
-                .distinctUntilChanged()
-                .collect { isVisible ->
-                    state.update { it.copy(items = updatedPasscodeVisibility(it.items, isVisible)) }
-                }
-        }
-    }
-
-    private fun updatedPasscodeVisibility(
-        groups: List<SettingsGroupUiModel>,
-        isVisible: Boolean,
-    ): List<SettingsGroupUiModel> =
-        groups.map { group ->
-            // The privacy group is the one holding the screenshot switch; it is the only place the
-            // passcode entry belongs.
-            if (group.items.none { it is PreventScreenshots }) return@map group
-            val others = group.items.filterNot { it == PasscodeEncryption }
-            group.copy(items = if (isVisible) listOf(PasscodeEncryption) + others else others)
-        }
-
-    private fun loadWasReferralUsed() {
-        viewModelScope.launch { hasUsedReferral = referralRepository.hasVisitReferralCode() }
-    }
-
-    private fun loadPreventScreenshots() {
-        viewModelScope.launch {
-            preventScreenshotsRepository.isEnabled.collect { isEnabled ->
-                state.update { current ->
-                    current.copy(
-                        items =
-                            current.items.map { group ->
-                                group.copy(
-                                    items =
-                                        group.items.map { item ->
-                                            when (item) {
-                                                is PreventScreenshots ->
-                                                    item.copy(isEnabled = isEnabled)
-                                                else -> item
-                                            }
-                                        }
-                                )
-                            }
-                    )
-                }
-            }
         }
     }
 
@@ -488,7 +378,7 @@ constructor(
         viewModelScope.launch {
             appLocaleRepository.local.collect { locale: AppLanguage ->
                 // Map inside update (not over a state.value snapshot) so a concurrent emission —
-                // e.g. the prevent-screenshots toggle — isn't dropped by this write.
+                // e.g. the currency — isn't dropped by this write.
                 state.update { it.copy(items = updatedLocale(it.items, locale)) }
             }
         }
@@ -511,7 +401,7 @@ constructor(
         viewModelScope.launch {
             appCurrencyRepository.currency.collect { currency: AppCurrency ->
                 // Map inside update (not over a state.value snapshot) so a concurrent emission —
-                // e.g. the prevent-screenshots toggle — isn't dropped by this write.
+                // e.g. the language — isn't dropped by this write.
                 state.update { it.copy(items = updateCurrency(it.items, currency)) }
             }
         }
@@ -530,42 +420,12 @@ constructor(
             )
         }
 
-    private fun navigateTo(destination: Destination) {
-        viewModelScope.launch { navigator.navigate(destination) }
-    }
-
     private fun sendEvent(event: SettingsUiEvent) {
         viewModelScope.launch { _uiEvents.send(event) }
     }
 
     fun back() {
         viewModelScope.launch { navigator.back() }
-    }
-
-    fun onContinueReferralBottomSheet() {
-        viewModelScope.launch {
-            referralRepository.visitReferralCode()
-            referralRepository.setAsShown()
-            state.update { it.copy(hasToShowReferralCodeSheet = false) }
-            viewModelScope.launch { navigator.route(Route.ReferralOnboarding(vaultId)) }
-        }
-    }
-
-    fun onClickReferralCode() {
-        viewModelScope.launch {
-            if (hasUsedReferral || referralRepository.isShown()) {
-                navigateTo(Destination.ReferralCode(vaultId))
-            } else {
-                state.update { it.copy(hasToShowReferralCodeSheet = true) }
-            }
-        }
-    }
-
-    fun onDismissReferralBottomSheet() {
-        viewModelScope.launch {
-            referralRepository.setAsShown()
-            state.update { it.copy(hasToShowReferralCodeSheet = false) }
-        }
     }
 
     fun onDismissShareLinkBottomSheet() {
