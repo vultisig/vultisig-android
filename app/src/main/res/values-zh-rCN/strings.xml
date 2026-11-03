@@ -941,7 +941,7 @@
     <string name="referral_share_description">邀请好友在兑换时使用您的推荐码。</string>
     <string name="referral_earn_title">自动赚取兑换金额的 10 基点</string>
     <string name="referral_earn_description">每次他们交易时，以您喜欢的资产获得报酬。</string>
-    <string name="referral_use_code_title">使用推荐代码 - 节省 5 基点</string>
+    <string name="referral_use_code_title">使用推荐代码 - 节省 10%</string>
     <string name="referral_use_code_description">使用好友的推荐码，节省兑换手续费。</string>
     <string name="referral_not_found">还没有推荐</string>
     <string name="referral_cta">将您的保险库变成奖励机器。立即创建您的推荐并开始赚钱</string>

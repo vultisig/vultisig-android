@@ -697,7 +697,7 @@
     <string name="referral_share_description">Пригласите друзей использовать ваш код при обмене.</string>
     <string name="referral_earn_title">Зарабатывайте автоматически 10 bps на свопах</string>
     <string name="referral_earn_description">Получайте выплаты в предпочитаемом активе каждый раз, когда они торгуют.</string>
-    <string name="referral_use_code_title">Используйте реферальный код - Экономьте 5bps</string>
+    <string name="referral_use_code_title">Используйте реферальный код - Экономьте 10%</string>
     <string name="referral_use_code_description">Используйте код от друга и экономьте на комиссиях за своп.</string>
     <string name="referral_top_bar_list_vaults">Хранилища</string>
     <string name="tcy_auto_compound_enable_title">Включить автокомпаунд</string>

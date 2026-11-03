@@ -1031,7 +1031,7 @@
     <string name="referral_share_description">친구를 초대하여 스왑 시 코드를 사용하도록 하세요.</string>
     <string name="referral_earn_title">스왑의 10 bps를 자동으로 적립</string>
     <string name="referral_earn_description">친구가 거래할 때마다 원하는 자산으로 보상을 받으세요.</string>
-    <string name="referral_use_code_title">추천 코드 사용 - 5bps 절약</string>
+    <string name="referral_use_code_title">추천 코드 사용 - 10% 절약</string>
     <string name="referral_use_code_description">친구의 코드를 사용하여 스왑 수수료를 절약하세요.</string>
     <string name="referral_not_found">아직 추천이 없습니다</string>
     <string name="referral_cta">볼트를 보상 머신으로 바꾸세요. 지금 추천을 생성하고 수익을 시작하세요</string>
