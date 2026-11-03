@@ -205,7 +205,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.settings_screen_tos),
                 leadingIcon = R.drawable.note,
-                trailingIcon = R.drawable.icon_chevron_right_small,
+                trailingIcon = R.drawable.arrows_chevron_right,
             )
         )
 
@@ -214,7 +214,7 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.settings_screen_privacy_policy),
                 leadingIcon = R.drawable.shield_filled,
-                trailingIcon = R.drawable.icon_chevron_right_small,
+                trailingIcon = R.drawable.arrows_chevron_right,
             )
         )
 

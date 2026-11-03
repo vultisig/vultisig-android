@@ -814,7 +814,7 @@
     <string name="vault_settings_biometric_fast">Biometrisch snel tekenen</string>
     <string name="vault_settings_backup_vault">Back-up maken van kluisdeel</string>
     <string name="vault_settings_back_up_your">Maak een back-up van je kluisaandeel op een locatie naar keuze</string>
-    <string name="vault_settings_migrate_gg20">Migreer GG20-kluis DKLS</string>
+    <string name="vault_settings_migrate_gg20">Migreer GG20-kluis naar DKLS</string>
     <string name="vault_settings_reshare_change">Reshare, beheer beveiliging of onderteken berichten.</string>
     <string name="settings_screen_vultisig_education">Vultisig Educatie</string>
     <string name="settings_community_website">Website</string>

@@ -181,7 +181,7 @@ internal sealed class VaultSettingsItem(
                 SettingsItemUiModel(
                     title = UiText.StringResource(R.string.vault_settings_migration_title),
                     subTitle = UiText.StringResource(R.string.vault_settings_migrate_gg20),
-                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    trailingIcon = R.drawable.arrows_chevron_right,
                     leadingIcon = R.drawable.cloud_upload,
                 ),
             enabled = isEnabled,
@@ -193,7 +193,7 @@ internal sealed class VaultSettingsItem(
                 SettingsItemUiModel(
                     title = UiText.StringResource(R.string.vault_settings_advanced_title),
                     subTitle = UiText.StringResource(R.string.vault_settings_reshare_change),
-                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    trailingIcon = R.drawable.arrows_chevron_right,
                     leadingIcon = R.drawable.file_search,
                 )
         )
@@ -252,7 +252,7 @@ internal sealed class VaultSettingsItem(
                 SettingsItemUiModel(
                     title = UiText.StringResource(R.string.vault_settings_delete_title),
                     subTitle = UiText.StringResource(R.string.vault_settings_delete_subtitle),
-                    trailingIcon = R.drawable.icon_chevron_right_small,
+                    trailingIcon = R.drawable.arrows_chevron_right,
                     leadingIcon = R.drawable.trash_filled,
                 )
         )

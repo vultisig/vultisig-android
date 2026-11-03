@@ -2,6 +2,11 @@ package com.vultisig.wallet.ui.screens.settings
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.Box
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -325,17 +330,11 @@ internal fun SettingItem(
             UiSpacer(size = 12.dp)
 
             item.trailingSwitch?.let { isChecked ->
-                VsSwitch(
-                    checked = isChecked,
-                    onCheckedChange = null,
-                    // Keeps a toggle row as tall as a plain one; the switch overhangs the padding.
-                    modifier =
-                        if (isList)
-                            Modifier.height(SWITCH_LINE_HEIGHT)
-                                .wrapContentHeight(unbounded = true)
-                        else Modifier,
-                )
-
+                if (isList) {
+                    SettingsSwitch(checked = isChecked)
+                } else {
+                    VsSwitch(checked = isChecked, onCheckedChange = null)
+                }
                 UiSpacer(size = layout.switchEndGap)
             }
 
@@ -366,6 +365,30 @@ internal fun SettingItem(
     }
 }
 
+/** The list design's compact toggle; the row owns the click and the switch semantics. */
+@Composable
+private fun SettingsSwitch(checked: Boolean) {
+    val colors = Theme.v2.colors
+    val trackColor by
+        animateColorAsState(if (checked) colors.text.secondary else SWITCH_OFF_TRACK)
+    val knobInset by animateDpAsState(if (checked) SWITCH_KNOB_ON_INSET else SWITCH_KNOB_GAP)
+    Box(
+        modifier =
+            // The switch overhangs the 20dp text line so a toggle row is as tall as a plain one.
+            Modifier.height(SWITCH_LINE_HEIGHT)
+                .wrapContentHeight(unbounded = true)
+                .size(width = SWITCH_WIDTH, height = SWITCH_HEIGHT)
+                .background(trackColor, CircleShape)
+    ) {
+        Box(
+            modifier =
+                Modifier.offset(x = knobInset, y = SWITCH_KNOB_GAP)
+                    .size(SWITCH_KNOB_SIZE)
+                    .background(colors.neutrals.n50, CircleShape)
+        )
+    }
+}
+
 /** Pill next to a row title, e.g. the tier a feature needs. */
 @Composable
 private fun SettingItemBadge(text: String) {
@@ -389,6 +412,12 @@ private val TILE_GAP = 6.dp
 private val TILE_HEIGHT = 70.dp
 private val VERSION_FOOTER_TOP_GAP = 79.dp
 private val SWITCH_LINE_HEIGHT = 20.dp
+private val SWITCH_WIDTH = 40.dp
+private val SWITCH_HEIGHT = 24.dp
+private val SWITCH_KNOB_SIZE = 20.dp
+private val SWITCH_KNOB_GAP = 2.dp
+private val SWITCH_KNOB_ON_INSET = SWITCH_WIDTH - SWITCH_KNOB_SIZE - SWITCH_KNOB_GAP
+private val SWITCH_OFF_TRACK = Color(0xFF7D909E)
 private const val TINTED_SUBTITLE_ALPHA = 0.8f
 
 @Preview

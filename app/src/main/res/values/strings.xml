@@ -1117,7 +1117,7 @@
     <string name="address_book_empty_title">Your Address Book is empty</string>
     <string name="check_updates_settings_title">Check for Updates</string>
     <string name="discord" translatable="false">Discord</string>
-    <string name="github" translatable="false">Github</string>
+    <string name="github" translatable="false">GitHub</string>
     <string name="vault">Vault</string>
     <string name="general">General</string>
     <string name="support">Support</string>
@@ -1167,7 +1167,7 @@
     <string name="vault_settings_biometric_fast">Biometrics Fast Signing</string>
     <string name="vault_settings_backup_vault">Backup Vault Share</string>
     <string name="vault_settings_back_up_your">Back up your Vault Share to a preferred location</string>
-    <string name="vault_settings_migrate_gg20">Migrate GG20 vault DKLS</string>
+    <string name="vault_settings_migrate_gg20">Migrate GG20 vault to DKLS</string>
     <string name="vault_settings_reshare_change">Reshare, manage security or sign messages.</string>
     <string name="settings_screen_vultisig_education">Vultisig Education</string>
     <string name="settings_community_website">Website</string>
