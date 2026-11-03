@@ -590,7 +590,7 @@ internal class DepositFormViewModelTest {
                         ),
                 )
             )
-        coEvery { thorChainLpPreflight.invoke(pool, any()) } returns
+        coEvery { thorChainLpPreflight.invoke(pool, any(), true) } returns
             ThorChainLpPreflightBlock.LpPaused(pool)
 
         vm.loadData("vault1", Chain.ThorChain.raw, null, null, pool)
@@ -616,7 +616,7 @@ internal class DepositFormViewModelTest {
             val vm = buildViewModel()
             stubThorChainRuneAccount()
             coEvery { vaultRepository.get("vault1") } returns null
-            coEvery { thorChainLpPreflight.invoke(pool, false) } returns
+            coEvery { thorChainLpPreflight.invoke(pool, false, true) } returns
                 ThorChainLpPreflightBlock.StagedPoolRequiresPairedAdd(pool)
 
             vm.loadData("vault1", Chain.ThorChain.raw, null, null, pool)

@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
+import com.vultisig.wallet.data.db.models.involvesChain
 import com.vultisig.wallet.data.db.models.isInFlight
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SwapProvider
@@ -23,9 +24,10 @@ import timber.log.Timber
 
 interface RefreshPendingTransactionsUseCase {
     /**
-     * Refresh pending transactions for [vaultId]. When [chain] is non-null and non-blank, only
-     * transactions on that chain are polled — this avoids hitting indexers for unrelated chains
-     * when the user is viewing a single-chain history.
+     * Refresh pending transactions for [vaultId]. When [chain] is non-null and non-blank, only the
+     * transactions that chain's history lists are polled — its own, plus swaps paying out on it —
+     * so a single-chain history neither hits indexers for unrelated chains nor leaves a row it
+     * shows unpolled.
      */
     suspend operator fun invoke(vaultId: String, chain: String? = null)
 
@@ -55,7 +57,7 @@ constructor(
         withContext(dispatcher) {
             transactionHistoryRepository
                 .getPendingTransactions(vaultId)
-                .filter { effectiveChain == null || it.chain == effectiveChain }
+                .filter { effectiveChain == null || it.involvesChain(effectiveChain) }
                 .filter { it.shouldPollNow() }
                 .map { tx -> async { refreshTransaction(tx) } }
                 .awaitAll()

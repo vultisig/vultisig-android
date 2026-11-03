@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.models.swap.discountPercentOfListFee
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -71,7 +72,11 @@ internal fun ReferralDiscountRow(
         UiSpacer(size = 4.dp)
 
         Text(
-            text = stringResource(R.string.swap_form_referral_discount_bps, referralBpsDiscount),
+            text =
+                stringResource(
+                    R.string.swap_form_referral_discount_percent,
+                    discountPercentOfListFee(referralBpsDiscount),
+                ),
             color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.supplementary.caption,
         )
@@ -130,9 +135,9 @@ private fun VultDiscountTier(vultBpsDiscount: Int, tierType: TierType?) {
         Text(
             text =
                 stringResource(
-                    R.string.swap_form_vult_discount_bps,
+                    R.string.swap_form_vult_discount_percent,
                     stringResource(title),
-                    vultBpsDiscount,
+                    discountPercentOfListFee(vultBpsDiscount),
                 ),
             color = Theme.v2.colors.text.tertiary,
             style = Theme.brockmann.supplementary.caption,

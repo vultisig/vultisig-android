@@ -30,8 +30,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.BRONZE_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.DIAMOND_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.GOLD_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.PLATINUM_DISCOUNT_BPS
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.SILVER_DISCOUNT_BPS
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.models.swap.discountPercentOfListFee
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.theme.Theme
 import kotlin.math.roundToInt
@@ -213,7 +219,7 @@ private fun getStyleByTier(tier: TierType): BottomSheetTierStyle {
                 titlePart3 = stringResource(R.string.vault_tier_unlock_bronze_part3),
                 tierColor = Color(0xFFDB5727),
                 descriptionPart1 = stringResource(R.string.vault_tier_bronze_description_part1),
-                descriptionPart2 = stringResource(R.string.vault_tier_bronze_description_part2),
+                descriptionPart2 = feeDiscountDescription(BRONZE_DISCOUNT_BPS),
                 descriptionPart3 = stringResource(R.string.vault_tier_bronze_description_part3),
             )
 
@@ -225,7 +231,7 @@ private fun getStyleByTier(tier: TierType): BottomSheetTierStyle {
                 titlePart3 = stringResource(R.string.vault_tier_unlock_silver_part3),
                 tierColor = Color(0xFFC9D6E8),
                 descriptionPart1 = stringResource(R.string.vault_tier_silver_description_part1),
-                descriptionPart2 = stringResource(R.string.vault_tier_silver_description_part2),
+                descriptionPart2 = feeDiscountDescription(SILVER_DISCOUNT_BPS),
                 descriptionPart3 = stringResource(R.string.vault_tier_silver_description_part3),
             )
 
@@ -237,7 +243,7 @@ private fun getStyleByTier(tier: TierType): BottomSheetTierStyle {
                 titlePart3 = stringResource(R.string.vault_tier_unlock_gold_part3),
                 tierColor = Color(0xFFFFC25C),
                 descriptionPart1 = stringResource(R.string.vault_tier_gold_description_part1),
-                descriptionPart2 = stringResource(R.string.vault_tier_gold_description_part2),
+                descriptionPart2 = feeDiscountDescription(GOLD_DISCOUNT_BPS),
                 descriptionPart3 = stringResource(R.string.vault_tier_gold_description_part3),
             )
 
@@ -249,7 +255,7 @@ private fun getStyleByTier(tier: TierType): BottomSheetTierStyle {
                 titlePart3 = stringResource(R.string.vault_tier_unlock_platinum_part3),
                 tierColor = Color(0xFF33E6BF),
                 descriptionPart1 = stringResource(R.string.vault_tier_platinum_description_part1),
-                descriptionPart2 = stringResource(R.string.vault_tier_platinum_description_part2),
+                descriptionPart2 = feeDiscountDescription(PLATINUM_DISCOUNT_BPS),
                 descriptionPart3 = stringResource(R.string.vault_tier_platinum_description_part3),
             )
 
@@ -261,7 +267,7 @@ private fun getStyleByTier(tier: TierType): BottomSheetTierStyle {
                 titlePart3 = stringResource(R.string.vault_tier_unlock_diamond_part3),
                 tierColor = Color(0xFF9747FF),
                 descriptionPart1 = stringResource(R.string.vault_tier_diamond_description_part1),
-                descriptionPart2 = stringResource(R.string.vault_tier_diamond_description_part2),
+                descriptionPart2 = feeDiscountDescription(DIAMOND_DISCOUNT_BPS),
                 descriptionPart3 = stringResource(R.string.vault_tier_diamond_description_part3),
             )
 
@@ -278,6 +284,13 @@ private fun getStyleByTier(tier: TierType): BottomSheetTierStyle {
             )
     }
 }
+
+@Composable
+private fun feeDiscountDescription(discountBps: Int): String =
+    stringResource(
+        R.string.vault_tier_fee_discount_description_part2,
+        discountPercentOfListFee(discountBps),
+    )
 
 internal data class BottomSheetTierStyle(
     val logoTier: Int,

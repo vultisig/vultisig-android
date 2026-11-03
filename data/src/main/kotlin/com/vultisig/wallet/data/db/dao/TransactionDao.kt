@@ -23,14 +23,10 @@ abstract class TransactionHistoryDao {
         """
         SELECT * FROM transaction_history
         WHERE vaultId = :vaultId
-          AND (:chain IS NULL OR chain = :chain)
         ORDER BY timestamp DESC
     """
     )
-    abstract fun observeAllByVault(
-        vaultId: String,
-        chain: String?,
-    ): Flow<List<TransactionHistoryEntity>>
+    abstract fun observeAllByVault(vaultId: String): Flow<List<TransactionHistoryEntity>>
 
     @Query(
         """
@@ -46,22 +42,18 @@ abstract class TransactionHistoryDao {
     ): Flow<List<TransactionHistoryEntity>>
 
     /**
-     * Filters by the source chain only — cross-chain swaps persist the source on the `chain` column
-     * (see `KeysignViewModel` writing `chain = payload.coin.chain.raw`), so a BTC→ETH swap will
-     * surface when [chain] is `"Bitcoin"` but not when it is `"Ethereum"`.
+     * Not scoped by chain: a swap is stored under its source chain, but its destination chain lives
+     * in the JSON payload, so the repository narrows with
+     * [com.vultisig.wallet.data.db.models.involvesChain] instead.
      */
     @Query(
         """
         SELECT * FROM transaction_history
         WHERE vaultId = :vaultId AND type = 'SWAP'
-          AND (:chain IS NULL OR chain = :chain)
         ORDER BY timestamp DESC
     """
     )
-    abstract fun observeSwapByVault(
-        vaultId: String,
-        chain: String?,
-    ): Flow<List<TransactionHistoryEntity>>
+    abstract fun observeSwapByVault(vaultId: String): Flow<List<TransactionHistoryEntity>>
 
     /** NotFound is transient (indexer lag) and must remain pollable. */
     @Query(
