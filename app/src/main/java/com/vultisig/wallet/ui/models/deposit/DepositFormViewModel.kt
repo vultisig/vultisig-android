@@ -38,9 +38,11 @@ import com.vultisig.wallet.ui.models.deposit.load.DepositOptionCoordinator
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.NodeWhitelistChecker
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
+import com.vultisig.wallet.ui.models.deposit.submit.AddLiquidityStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyContext
 import com.vultisig.wallet.ui.models.deposit.submit.DepositStrategyFactory
 import com.vultisig.wallet.ui.models.deposit.submit.DepositSubmitStrategies
+import com.vultisig.wallet.ui.models.deposit.submit.InboundMemoTransfer
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.navigation.Destination
@@ -57,6 +59,7 @@ import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -362,6 +365,7 @@ constructor(
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
+    private var addLpGasFeeJob: Job? = null
     private var isCustomPrefillApplied = false
     private var customPrefill: CustomDepositPrefill? = null
     private var isCustomPrefillTokenApplied = false
@@ -511,23 +515,7 @@ constructor(
             isPrefillTokenApplied = { isCustomPrefillTokenApplied },
             onPrefillTokenApplied = { isCustomPrefillTokenApplied = true },
             loadMayaLpPairing = ::loadMayaLpPairing,
-            loadGasFeeForDisplay = { vaultId, chain, address ->
-                gasFeeHelper.loadGasFeeForDisplay(
-                    scope = viewModelScope,
-                    vaultId = vaultId,
-                    chain = chain,
-                    address = address,
-                    onResult = { totalGas, estimatedFee, gasFee ->
-                        state.update {
-                            it.copy(
-                                totalGas = totalGas,
-                                estimatedFee = estimatedFee,
-                                gasFeeDecimal = gasFee,
-                            )
-                        }
-                    },
-                )
-            },
+            loadGasFeeForDisplay = ::loadAddLpGasFee,
         )
 
         // Filled once, so a re-entered screen never undoes what the user has since edited.
@@ -757,6 +745,58 @@ constructor(
             } finally {
                 isLoading = false
             }
+        }
+    }
+
+    /**
+     * Fills the Add LP form's fee row and the fee its Max and balance check reserve. The asset half
+     * of a THORChain add is priced as the inbound memo transfer it builds; anything else, or an
+     * asset half that cannot be priced yet, as a deposit from the chain's native coin.
+     */
+    private fun loadAddLpGasFee(vaultId: String, chain: Chain, address: Address) {
+        addLpGasFeeJob?.cancel()
+        addLpGasFeeJob =
+            viewModelScope.safeLaunch(onError = { Timber.e(it, "Failed to load Add LP fee") }) {
+                val assetSide = estimateAddLpAssetSideFee(address)
+                if (assetSide != null) {
+                    state.update {
+                        it.copy(
+                            totalGas =
+                                UiText.DynamicString(assetSide.estimatedGasFee.formattedTokenValue),
+                            estimatedFee =
+                                UiText.DynamicString(assetSide.estimatedGasFee.formattedFiatValue),
+                            gasFeeDecimal = assetSide.gasFee.decimal,
+                        )
+                    }
+                    return@safeLaunch
+                }
+                gasFeeHelper.loadGasFeeForDisplay(
+                    scope = this,
+                    vaultId = vaultId,
+                    chain = chain,
+                    address = address,
+                    onResult = { totalGas, estimatedFee, gasFee ->
+                        state.update {
+                            it.copy(
+                                totalGas = totalGas,
+                                estimatedFee = estimatedFee,
+                                gasFeeDecimal = gasFee,
+                            )
+                        }
+                    },
+                )
+            }
+    }
+
+    private suspend fun estimateAddLpAssetSideFee(address: Address): InboundMemoTransfer? {
+        val strategy = depositStrategies[DepositOption.AddLiquidity] as? AddLiquidityStrategy
+        return try {
+            strategy?.estimateAssetSideFee(address)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to price the LP asset half for pool %s", lpPoolId)
+            null
         }
     }
 

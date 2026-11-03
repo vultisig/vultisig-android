@@ -90,6 +90,11 @@ internal class JoinDepositKaminoTest {
         intent: KaminoRelayedIntent?,
         toAddress: String,
     ): JoinKeysignVerifyResult {
+        stubBuild()
+        return builder.build(payload(toAddress), VAULT_ID, intent)
+    }
+
+    private fun stubBuild() {
         val storedVault = mockk<Vault>(relaxed = true)
         coEvery { vaultRepository.get(VAULT_ID) } returns storedVault
         coEvery { vaultRepository.getAll() } returns emptyList()
@@ -104,8 +109,6 @@ internal class JoinDepositKaminoTest {
         coEvery { mapDepositTransactionToUiModel(capture(captured)) } returns
             DepositTransactionUiModel()
         coEvery { mapDepositTransactionHistoryData(any()) } returns mockk(relaxed = true)
-
-        return builder.build(payload(toAddress), VAULT_ID, intent)
     }
 
     @Test
@@ -181,6 +184,21 @@ internal class JoinDepositKaminoTest {
         shouldThrow<IllegalArgumentException> { buildResult(intent = null, toAddress = SIGNER) }
     }
 
+    @Test
+    fun `a plain SOL transfer naming a pool is the asset side of an LP add`() = runTest {
+        coEvery { feeResolver.resolveJoinKeysignNetworkFee(any(), any(), any(), any()) } returns
+            TokenValue(BigInteger.valueOf(5_000), solCoin)
+        val lpAdd =
+            payload(toAddress = INBOUND).copy(signSolana = null, memo = "+:SOL.SOL:thor1self")
+        stubBuild()
+
+        builder.build(lpAdd, VAULT_ID, kamino = null)
+
+        captured.captured.dstAddress shouldBe INBOUND
+        captured.captured.memo shouldBe "+:SOL.SOL:thor1self"
+        captured.captured.estimatedFees.value shouldBe BigInteger.valueOf(5_000)
+    }
+
     private fun intent(action: KaminoAction) =
         KaminoRelayedIntent(
             vault = vault,
@@ -218,6 +236,7 @@ internal class JoinDepositKaminoTest {
         const val VAULT_ID = "vault-id"
         const val SIGNER = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
         const val RAW = "relayed-transaction"
+        const val INBOUND = "8ThorInboundVaultSo1anaAddress111111111111"
 
         val AMOUNT: BigInteger = BigInteger.valueOf(429_219_030)
         val RENT: BigInteger = BigInteger.valueOf(10_377_640)

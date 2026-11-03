@@ -116,7 +116,14 @@ internal class AddMayaLiquidityStrategy(
         requirePairable(pool, cacaoAddress, token.address)
 
         val inbound = requireInbound(pool, chain)
-        requireAboveInboundDust(tokenAmountInt, token.decimal, token.ticker, inbound, chain)
+        requireAboveInboundDust(
+            amount = tokenAmountInt,
+            decimals = token.decimal,
+            ticker = token.ticker,
+            inbound = inbound,
+            chain = chain,
+            isThresholdDropped = true,
+        )
 
         val memo = DepositMemo.AddLiquidity(pool, cacaoAddress).toString()
 
@@ -230,41 +237,5 @@ internal class AddMayaLiquidityStrategy(
             )
         }
         return inbound
-    }
-
-    /**
-     * Bifrost ignores an inbound at or below the chain's `dust_threshold`, published in MayaChain's
-     * 1e8 fixed point whatever the coin's own decimals — such a deposit confirms on the source
-     * chain and is never credited. The minimum shown is therefore one fixed-point unit above it.
-     */
-    private fun requireAboveInboundDust(
-        amount: BigInteger,
-        decimals: Int,
-        ticker: String,
-        inbound: THORChainInboundAddress,
-        chain: Chain,
-    ) {
-        val dust = inbound.dustThreshold?.toBigIntegerOrNull() ?: return
-        if (dust <= BigInteger.ZERO) return
-        val amountFixed8 = BigDecimal(amount).movePointLeft(decimals - MAYA_FIXED_POINT_DECIMALS)
-        if (amountFixed8 <= BigDecimal(dust)) {
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.send_form_minimum_send_amount_is_requires_this,
-                    listOf(
-                        BigDecimal(dust + BigInteger.ONE)
-                            .movePointLeft(MAYA_FIXED_POINT_DECIMALS)
-                            .stripTrailingZeros()
-                            .toPlainString(),
-                        ticker,
-                        chain.raw,
-                    ),
-                )
-            )
-        }
-    }
-
-    private companion object {
-        const val MAYA_FIXED_POINT_DECIMALS = 8
     }
 }

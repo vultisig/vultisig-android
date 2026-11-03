@@ -1733,6 +1733,50 @@ internal class ThorchainDefiPositionsViewModelTest {
         vm.state.value.lp.pendingDepositsLoaded shouldBe true
     }
 
+    @Test
+    fun `a RUNE-first pending card on a token pool cannot be completed`() = runTest {
+        coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = VAULT.coins + ETH_COIN)
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
+            listOf(runeFirstPendingDeposit(USDC_POOL), runeFirstPendingDeposit(ETH_POOL))
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.state.value.lp.pendingDeposits.map { it.poolId to it.canComplete } shouldBe
+            listOf(USDC_POOL to false, ETH_POOL to true)
+    }
+
+    @Test
+    fun `completing a RUNE-first native pool opens the deposit on the asset chain`() = runTest {
+        coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = VAULT.coins + ETH_COIN)
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
+            listOf(runeFirstPendingDeposit(ETH_POOL))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onClickCompletePendingLp(ETH_POOL)
+
+        coVerify(exactly = 1) {
+            navigator.route(
+                Route.Deposit(
+                    vaultId = VAULT_ID,
+                    chainId = Chain.Ethereum.id,
+                    depositType = DeFiNavActions.ADD_LP.type,
+                    poolId = ETH_POOL,
+                )
+            )
+        }
+    }
+
+    /** A RUNE-first half-deposit: the pool's asset is the awaited side. */
+    private fun runeFirstPendingDeposit(pool: String) =
+        ThorChainPendingLpDeposit(
+            pool = pool,
+            pendingRune = BigInteger("100000000"),
+            pendingAsset = BigInteger.ZERO,
+            pendingTxId = null,
+            pairedAddress = ETH_ADDRESS,
+            blocksUntilAddedAlone = null,
+        )
+
     private fun churnReward(amount: BigInteger, date: Date = Date(0)) =
         BondChurnReward(churnHeight = 1L, date = date, amount = amount)
 
@@ -1845,6 +1889,8 @@ internal class ThorchainDefiPositionsViewModelTest {
         val SEP_17_NOON_UTC = Date(1_789_646_400_000L)
         const val BTC_POOL = "BTC.BTC"
         const val ETH_POOL = "ETH.ETH"
+        const val USDC_POOL = "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"
+        const val ETH_ADDRESS = "0xethaddress"
 
         val AppCurrencyUsd = com.vultisig.wallet.data.models.settings.AppCurrency.USD
 
@@ -1855,6 +1901,7 @@ internal class ThorchainDefiPositionsViewModelTest {
 
         val RUNE_COIN = Coins.ThorChain.RUNE.copy(address = RUNE_ADDRESS)
         val RUJI_COIN = Coins.ThorChain.RUJI.copy(address = RUJI_ADDRESS)
+        val ETH_COIN = Coins.Ethereum.ETH.copy(address = ETH_ADDRESS)
 
         val VAULT =
             Vault(
