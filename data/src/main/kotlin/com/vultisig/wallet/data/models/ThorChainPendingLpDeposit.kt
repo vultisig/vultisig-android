@@ -26,6 +26,12 @@ data class ThorChainPendingLpDeposit(
      */
     val pairedAddress: String?,
     /**
+     * The asset-side address the record pairs with, whichever half is pending. Completing either
+     * half needs the vault's asset account to be this one: the asset add is sent from it, and the
+     * RUNE add names it in its memo.
+     */
+    val assetAddress: String?,
+    /**
      * Estimated blocks until the pool's cleanup slot adds the pending side to the pool on its own,
      * or `null` when the age limit, the chain height or the pool's slot could not be worked out.
      */

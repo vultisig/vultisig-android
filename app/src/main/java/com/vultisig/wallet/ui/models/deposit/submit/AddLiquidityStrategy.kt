@@ -23,8 +23,10 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CheckMayaLpPairingUseCase
+import com.vultisig.wallet.data.usecases.CheckThorChainLpPairingUseCase
 import com.vultisig.wallet.data.usecases.MayaChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.MayaLpPairing
+import com.vultisig.wallet.data.usecases.ThorChainLpPairing
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.ui.models.defi.mayaLpPairedChain
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
@@ -55,6 +57,7 @@ internal class AddLiquidityStrategy(
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase,
     private val mayaChainLpPreflight: MayaChainLpPreflightUseCase,
     private val checkMayaLpPairing: CheckMayaLpPairingUseCase,
+    private val checkThorChainLpPairing: CheckThorChainLpPairingUseCase,
     private val resolvePairedAddress: suspend (Chain, String, String) -> String?,
     private val canHoldChain: suspend (vaultId: String, chain: Chain) -> Boolean,
     private val addressProvider: () -> Address?,
@@ -136,13 +139,38 @@ internal class AddLiquidityStrategy(
             } else {
                 null
             }
+        // thornode refunds a RUNE add naming an asset address other than the one a live or
+        // pending record holds, and an empty recorded address never matches a named one. It
+        // compares only when the add names one, so a live RUNE-only position takes `+:POOL` as it
+        // is. A live position paired with another asset address is refused outright: anyone can
+        // fix that address with an asset add naming the vault's RUNE address, and a `+:POOL` into
+        // it would pay half its value out to that address on withdrawal. See
+        // [CheckThorChainLpPairingUseCase].
+        val thorPairing =
+            if (chain == Chain.ThorChain && isSymmetricPool) {
+                checkThorChainPairing(poolId, selectedToken.address, pairedAddress)
+            } else {
+                null
+            }
         val acceptsSingleSided =
             mayaPairing == MayaLpPairing.SingleSidedPosition ||
-                mayaPairing == MayaLpPairing.PairedWithOtherAddress
+                mayaPairing == MayaLpPairing.PairedWithOtherAddress ||
+                thorPairing == ThorChainLpPairing.SingleSidedPosition
         if (mayaPairing == MayaLpPairing.AddressMismatch && pairedAddress != null) {
             throw InvalidTransactionDataException(
                 UiText.FormattedText(
                     R.string.deposit_error_maya_lp_address_mismatch,
+                    listOf(poolId),
+                )
+            )
+        }
+        if (
+            thorPairing == ThorChainLpPairing.AddressMismatch ||
+                thorPairing == ThorChainLpPairing.PairedWithOtherAddress
+        ) {
+            throw InvalidTransactionDataException(
+                UiText.FormattedText(
+                    R.string.deposit_error_thorchain_lp_address_mismatch,
                     listOf(poolId),
                 )
             )
@@ -165,7 +193,7 @@ internal class AddLiquidityStrategy(
         if (isThorChainLpAdd) {
             thorChainLpPreflight(
                     poolId,
-                    isPairedAdd = pairedAddress != null,
+                    isPairedAdd = memoPairedAddress != null,
                     checkAssetChainInbound = chain == Chain.ThorChain,
                 )
                 ?.let { block -> throw block.toError() }
@@ -431,6 +459,23 @@ internal class AddLiquidityStrategy(
             Timber.w(e, "Failed to read the MayaChain LP record for %s", pool)
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.deposit_error_maya_lp_unverified)
+            )
+        }
+
+    /** Reads the vault's record; an unreadable one refuses rather than risk a refunded inbound. */
+    private suspend fun checkThorChainPairing(
+        pool: String,
+        runeAddress: String,
+        assetAddress: String?,
+    ): ThorChainLpPairing =
+        try {
+            checkThorChainLpPairing(pool, runeAddress, assetAddress)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to read the THORChain LP record for %s", pool)
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_thorchain_lp_unverified)
             )
         }
 }

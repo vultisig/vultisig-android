@@ -42,9 +42,22 @@ internal class GetThorChainPendingLpDepositsUseCaseTest {
         assertEquals("BTC.BTC", btc.pool)
         assertEquals(BigInteger("100"), btc.pendingRune)
         assertEquals(BTC_ADDR, btc.pairedAddress)
+        assertEquals(BTC_ADDR, btc.assetAddress)
         // Aged out at 20,090,801, past slot 0 of that cycle, so the next one: 20,160,000.
         assertEquals(160_000L, btc.blocksUntilAddedAlone)
         coVerify(exactly = 0) { api.getLiquidityProvider("ETH.ETH", any()) }
+    }
+
+    @Test
+    fun `an asset-first deposit keeps the asset address it was sent from`() = runTest {
+        coEvery { api.getPools() } returns listOf(pool("BTC.BTC", pendingAsset = "5"))
+        coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } returns
+            lp("BTC.BTC", pendingRune = "0").copy(pendingAsset = "5")
+
+        val btc = useCase(RUNE_ADDR).single()
+
+        assertEquals(RUNE_ADDR, btc.pairedAddress)
+        assertEquals(BTC_ADDR, btc.assetAddress)
     }
 
     @Test
