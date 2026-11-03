@@ -77,6 +77,7 @@ internal class TcyRewardHistoryUseCaseTest {
                 row(amount = "-5", date = "1752718202"),
                 row(amount = "100000", date = "soon"),
                 row(amount = "100000", date = "0"),
+                row(amount = "100000", date = Long.MAX_VALUE.toString()),
             )
 
         useCase(body)(ADDRESS) shouldBe

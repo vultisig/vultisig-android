@@ -954,17 +954,25 @@ constructor(
         state.update { it.copy(rewardHistory = sheet) }
         rewardHistoryJob?.cancel()
         rewardHistoryJob =
-            viewModelScope.launch {
-                val loaded = load(sheet)
-                // A sheet closed, or reopened on another position, while this ran is left alone.
-                state.update {
-                    if (it.rewardHistory?.source == sheet.source) {
-                        it.copy(rewardHistory = loaded)
-                    } else {
-                        it
-                    }
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Failed to load reward history")
+                    showLoadedRewardHistory(sheet.copy(isLoading = false, isError = true))
                 }
+            ) {
+                showLoadedRewardHistory(load(sheet))
             }
+    }
+
+    // A sheet closed, or reopened on another position, while the load ran is left alone.
+    private fun showLoadedRewardHistory(loaded: RewardHistoryUiModel) {
+        state.update {
+            if (it.rewardHistory?.source == loaded.source) {
+                it.copy(rewardHistory = loaded)
+            } else {
+                it
+            }
+        }
     }
 
     private suspend fun loadTcyRewardHistory(

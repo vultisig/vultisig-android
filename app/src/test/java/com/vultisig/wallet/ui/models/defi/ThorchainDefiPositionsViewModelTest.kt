@@ -1780,6 +1780,21 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
+    fun `an Error from the TCY history flags the sheet instead of crashing`() = runTest {
+        selectPositions("TCY")
+        coEvery { tcyStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(tcyStakeWithEstimatedReward())
+        coEvery { tcyRewardHistoryUseCase(any()) } throws StackOverflowError("decoder")
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onClickTcyRewardHistory()
+
+        val sheet = requireNotNull(vm.state.value.rewardHistory)
+        assertTrue(sheet.isError)
+        assertFalse(sheet.isLoading)
+    }
+
+    @Test
     fun `a failed TCY history reading flags the sheet instead of closing it`() = runTest {
         selectPositions("TCY")
         coEvery { tcyStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns

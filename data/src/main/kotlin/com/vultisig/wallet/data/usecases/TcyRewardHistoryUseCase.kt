@@ -35,8 +35,12 @@ constructor(private val thorChainApi: ThorChainApi) : TcyRewardHistoryUseCase {
 // Midgard reports a TCY distribution's date in seconds, unlike a churn's nanoseconds.
 private fun TcyUserDistribution.parse(): TcyRewardPayout? {
     val amount = amount.toBigIntegerOrNull()?.takeIf { it.signum() > 0 } ?: return null
-    val seconds = date.toLongOrNull()?.takeIf { it > 0 } ?: return null
+    val seconds =
+        date.toLongOrNull()?.takeIf { it in 1..MAX_DATE_SECONDS } ?: return null
     return TcyRewardPayout(date = Date(seconds * MILLIS_PER_SECOND), amount = amount)
 }
 
 private const val MILLIS_PER_SECOND = 1_000L
+
+// The largest second count whose millisecond value still fits in a Long.
+private const val MAX_DATE_SECONDS = Long.MAX_VALUE / MILLIS_PER_SECOND
