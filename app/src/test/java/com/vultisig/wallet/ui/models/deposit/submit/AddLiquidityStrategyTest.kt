@@ -36,6 +36,7 @@ import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -57,6 +58,7 @@ internal class AddLiquidityStrategyTest {
     private val vaultRepository: VaultRepository = mockk()
     private val feeServiceComposite: FeeServiceComposite = mockk()
     private val tokenRepository: TokenRepository = mockk()
+    private val plannedAmounts = mutableListOf<BigInteger>()
 
     @BeforeEach
     fun setUp() {
@@ -187,18 +189,107 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
-    fun `asset-side add at the inbound dust threshold is refused`() = runTest {
+    fun `asset-side add of exactly the inbound dust threshold is credited`() = runTest {
         givenNativeAccount(Chain.Bitcoin, BTC_ADDRESS)
         tokenAmount.setTextAndPlaceCursorAtEnd("0.0001")
 
-        val text =
-            assertFailsWith<InvalidTransactionDataException> {
-                    build(Chain.Bitcoin, pairedAddress = RUNE_ADDRESS, pool = BTC_POOL).build()
-                }
-                .text
-        assertTrue(text is UiText.FormattedText)
-        assertEquals(R.string.send_form_minimum_send_amount_is_requires_this, text.resId)
-        assertEquals("0.00010001", text.formatArgs.first())
+        val tx = build(Chain.Bitcoin, pairedAddress = RUNE_ADDRESS, pool = BTC_POOL).build()
+
+        assertEquals(BTC_INBOUND, tx.dstAddress)
+    }
+
+    @Test
+    fun `asset-side add below the inbound dust threshold is refused, naming the threshold`() =
+        runTest {
+            givenNativeAccount(Chain.Bitcoin, BTC_ADDRESS)
+            tokenAmount.setTextAndPlaceCursorAtEnd("0.00009999")
+
+            val text =
+                assertFailsWith<InvalidTransactionDataException> {
+                        build(Chain.Bitcoin, pairedAddress = RUNE_ADDRESS, pool = BTC_POOL).build()
+                    }
+                    .text
+            assertTrue(text is UiText.FormattedText)
+            assertEquals(R.string.send_form_minimum_send_amount_is_requires_this, text.resId)
+            assertEquals("0.0001", text.formatArgs.first())
+        }
+
+    @Test
+    fun `form fee for a UTXO asset half is the planned sweep of the balance to the inbound`() =
+        runTest {
+            val balance = ONE_COIN * BigInteger.TWO
+            givenInboundSpecific(
+                BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = true)
+            )
+
+            val fee =
+                build(Chain.Bitcoin, pairedAddress = RUNE_ADDRESS, pool = BTC_POOL)
+                    .estimateAssetSideFee(formAddress(Chain.Bitcoin, BTC_ADDRESS, balance))
+
+            assertEquals(BigInteger.valueOf(PLAN_FEE), fee?.gasFee?.value)
+            assertEquals(listOf(balance), plannedAmounts)
+            coVerify {
+                specificRepo.getSpecific(
+                    chain = Chain.Bitcoin,
+                    address = BTC_ADDRESS,
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = false,
+                    isMaxAmountEnabled = true,
+                    isDeposit = true,
+                    gasLimit = any(),
+                    dstAddress = BTC_INBOUND,
+                    tokenAmountValue = balance,
+                    memo = "+:$BTC_POOL:$RUNE_ADDRESS",
+                    transactionType = any(),
+                    isThorchainRouterDeposit = false,
+                )
+            }
+        }
+
+    @Test
+    fun `form fee for an account-chain asset half is the inbound memo transfer fee`() = runTest {
+        val fee =
+            build(Chain.Ethereum, pairedAddress = RUNE_ADDRESS, pool = ETH_POOL)
+                .estimateAssetSideFee(formAddress(Chain.Ethereum, ETH_ADDRESS, ONE_COIN))
+
+        assertEquals(BigInteger.TEN, fee?.gasFee?.value)
+        assertTrue(plannedAmounts.isEmpty())
+        coVerify {
+            specificRepo.getSpecific(
+                chain = Chain.Ethereum,
+                address = ETH_ADDRESS,
+                token = any(),
+                gasFee = any(),
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+                gasLimit = any(),
+                dstAddress = ETH_INBOUND,
+                tokenAmountValue = any(),
+                memo = "+:$ETH_POOL:$RUNE_ADDRESS",
+                transactionType = any(),
+                isThorchainRouterDeposit = false,
+            )
+        }
+    }
+
+    @Test
+    fun `form fee is left to the deposit estimate outside a THORChain asset half`() = runTest {
+        val runeSide =
+            build(Chain.ThorChain, pairedAddress = ETH_ADDRESS, pool = ETH_POOL)
+                .estimateAssetSideFee(formAddress(Chain.ThorChain, RUNE_ADDRESS, ONE_COIN))
+        val tokenPool =
+            build(Chain.Ethereum, pairedAddress = RUNE_ADDRESS)
+                .estimateAssetSideFee(formAddress(Chain.Ethereum, ETH_ADDRESS, ONE_COIN))
+        val emptyBalance =
+            build(Chain.Ethereum, pairedAddress = RUNE_ADDRESS, pool = ETH_POOL)
+                .estimateAssetSideFee(formAddress(Chain.Ethereum, ETH_ADDRESS, BigInteger.ZERO))
+
+        assertNull(runeSide)
+        assertNull(tokenPool)
+        assertNull(emptyBalance)
+        coVerify(exactly = 0) { thorChainApi.getTHORChainInboundAddresses() }
     }
 
     @Test
@@ -490,7 +581,8 @@ internal class AddLiquidityStrategyTest {
             feeServiceComposite = feeServiceComposite,
             tokenRepository = tokenRepository,
             gasFeeToEstimate = { params -> estimatedFee(params.gasFee) },
-            getBitcoinTransactionPlan = { _, _, _, _, _, _ ->
+            getBitcoinTransactionPlan = { _, _, _, amount, _, _ ->
+                plannedAmounts += amount
                 Bitcoin.TransactionPlan.newBuilder()
                     .setFee(PLAN_FEE)
                     .setError(SigningError.OK)
@@ -573,6 +665,9 @@ internal class AddLiquidityStrategyTest {
                 )
             )
     }
+
+    private fun formAddress(chain: Chain, address: String, balance: BigInteger): Address =
+        gateAddress(gateAccount(nativeCoin(chain, address), balance))
 
     private fun addressOf(chain: Chain): String =
         when (chain) {

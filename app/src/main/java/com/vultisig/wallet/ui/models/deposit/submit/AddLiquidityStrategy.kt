@@ -251,6 +251,52 @@ internal class AddLiquidityStrategy(
     }
 
     /**
+     * The network fee the Add LP form reserves for the asset half of a symmetric THORChain add,
+     * priced as the inbound memo transfer [build] sends rather than a memoless self-transfer: on a
+     * UTXO chain that fee rate is per vbyte, and on Tron it leaves out the memo fee.
+     *
+     * A UTXO chain is planned as a sweep of the whole balance, so balance minus this fee is an
+     * amount the build can spend, and no smaller amount pays more. Returns null when the form is
+     * not that asset half, or the balance is empty.
+     */
+    suspend fun estimateAssetSideFee(address: Address): InboundMemoTransfer? {
+        val vaultId = vaultIdProvider() ?: return null
+        val chain = chainProvider() ?: return null
+        val poolId = lpPoolIdProvider() ?: return null
+        val pool = parseThorChainPool(poolId)
+        val isThorChainAssetSide =
+            pool.chain != null &&
+                pool.chain != Chain.ThorChain &&
+                pool.chain == chain &&
+                pool.contractAddress.isEmpty()
+        if (!isThorChainAssetSide) return null
+
+        val account = address.accounts.firstOrNull { it.token.isNativeToken } ?: return null
+        val token = account.token
+        val balance = account.tokenValue?.value?.takeIf { it > BigInteger.ZERO } ?: return null
+        val inbound = requireThorChainInbound(poolId, chain)
+        val runeAddress = resolvePairedAddress(chain, vaultId, poolId)
+        val vault =
+            withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: error("Vault not found")
+        val isSweep = chain.isPlannedUtxoChain
+
+        return planInboundMemoTransfer(
+            vaultId = vaultId,
+            vault = vault,
+            token = token,
+            amount = if (isSweep) balance else BigInteger.ZERO,
+            dstAddress = inbound.address,
+            memo = DepositMemo.AddLiquidity(poolId, runeAddress).toString(),
+            feeServiceComposite = feeServiceComposite,
+            tokenRepository = tokenRepository,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            gasFeeToEstimate = gasFeeToEstimate,
+            getBitcoinTransactionPlan = getBitcoinTransactionPlan,
+            isMax = isSweep,
+        )
+    }
+
+    /**
      * The asset half of a symmetric THORChain add: [amount] of the pool's native asset sent to the
      * chain's live inbound vault with `+:POOL:<RUNE address>`, which THORChain matches against the
      * pending RUNE half. Planned like every other inbound memo transfer, so a UTXO chain spends the
@@ -265,7 +311,14 @@ internal class AddLiquidityStrategy(
         runeAddress: String,
     ): DepositTransaction {
         val inbound = requireThorChainInbound(poolId, token.chain)
-        requireAboveInboundDust(amount, token.decimal, token.ticker, inbound, token.chain)
+        requireAboveInboundDust(
+            amount = amount,
+            decimals = token.decimal,
+            ticker = token.ticker,
+            inbound = inbound,
+            chain = token.chain,
+            isThresholdDropped = false,
+        )
 
         val vault =
             withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: error("Vault not found")

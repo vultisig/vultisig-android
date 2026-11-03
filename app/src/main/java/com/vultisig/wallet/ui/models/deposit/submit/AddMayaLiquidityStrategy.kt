@@ -116,7 +116,14 @@ internal class AddMayaLiquidityStrategy(
         requirePairable(pool, cacaoAddress, token.address)
 
         val inbound = requireInbound(pool, chain)
-        requireAboveInboundDust(tokenAmountInt, token.decimal, token.ticker, inbound, chain)
+        requireAboveInboundDust(
+            amount = tokenAmountInt,
+            decimals = token.decimal,
+            ticker = token.ticker,
+            inbound = inbound,
+            chain = chain,
+            isThresholdDropped = true,
+        )
 
         val memo = DepositMemo.AddLiquidity(pool, cacaoAddress).toString()
 

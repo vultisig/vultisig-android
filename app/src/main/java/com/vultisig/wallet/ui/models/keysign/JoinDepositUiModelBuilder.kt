@@ -90,12 +90,20 @@ constructor(
             is BlockChainSpecific.Ton,
             is BlockChainSpecific.UTXO -> Unit
 
-            // Solana arrives here only as a recognised Kamino transaction. A raw Solana payload
-            // nobody could read is still a send, and rendering it as a deposit would put a
+            // The asset half of a THORChain LP add on these chains is a plain memo transfer to the
+            // inbound vault; the memo is what makes it a deposit.
+            is BlockChainSpecific.Tron,
+            is BlockChainSpecific.Ripple ->
+                require(payload.isInboundLpAddMemo()) {
+                    "a ${payload.coin.chain.raw} deposit must be the asset side of an LP add"
+                }
+
+            // Otherwise Solana arrives here only as a recognised Kamino transaction. A raw Solana
+            // payload nobody could read is still a send, and rendering it as a deposit would put a
             // deposit's framing around bytes this device cannot describe.
             is BlockChainSpecific.Solana ->
-                requireNotNull(kamino) {
-                    "a Solana deposit must be a recognised Kamino transaction"
+                require(kamino != null || payload.isInboundLpAddMemo()) {
+                    "a Solana deposit must be a recognised Kamino transaction or an LP add"
                 }
 
             else -> error("BlockChainSpecific ${payload.blockChainSpecific} is not supported")
