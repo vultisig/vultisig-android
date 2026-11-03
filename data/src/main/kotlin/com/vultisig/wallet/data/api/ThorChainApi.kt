@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.api.models.thorchain.TcyUserDistributionsRespons
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainLiquidityProviderJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolStatsJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainSecuredAssetJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainStatusResponse
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainTransactionJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorNameResponseJson
@@ -108,6 +109,9 @@ interface ThorChainApi {
     suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
 
     suspend fun getPools(): List<ThorChainPoolJson>
+
+    /** Every secured asset THORChain currently tracks, whatever the status of its pool. */
+    suspend fun getSecuredAssets(): List<ThorChainSecuredAssetJson>
 
     /**
      * Fetch a single pool's state from thornode. Returns null when the pool does not exist (404).
@@ -422,6 +426,13 @@ constructor(
     override suspend fun getPools(): List<ThorChainPoolJson> =
         httpClient
             .get("$THORNODE_BASE/thorchain/pools") { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow()
+
+    override suspend fun getSecuredAssets(): List<ThorChainSecuredAssetJson> =
+        httpClient
+            .get("$THORNODE_BASE/thorchain/securedassets") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
             .bodyOrThrow()
 
     override suspend fun getPool(asset: String): ThorChainPoolJson? {

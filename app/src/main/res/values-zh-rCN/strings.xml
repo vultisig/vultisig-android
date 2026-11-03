@@ -155,7 +155,7 @@
     <string name="vault_tier_unlock_ultimate_part2">终极</string>
     <string name="vault_tier_unlock_ultimate_part3">等级</string>
     <string name="vault_tier_ultimate">终极</string>
-    <string name="vault_tier_swap_discount">兑换折扣：%1$d基点</string>
+    <string name="vault_tier_swap_discount">兑换折扣：%1$d%%</string>
     <string name="vault_tier_more_coming_soon">更多即将推出</string>
     <string name="vault_tier_unlock">解锁等级</string>
     <string name="vault_tier_active">已激活</string>
@@ -175,19 +175,15 @@
     <string name="vault_tier_banner_subtitle">获得交易折扣</string>
     <string name="vault_tier_description">持有 $VULT 以解锁更低的交易费用。</string>
     <string name="vault_tier_bronze_description_part1">持有 1,500 $VULT，您将解锁青铜等级并获得</string>
-    <string name="vault_tier_bronze_description_part2">5 基点交易费折扣</string>
+    <string name="vault_tier_fee_discount_description_part2">%1$d%%交易费折扣</string>
     <string name="vault_tier_bronze_description_part3">，适用于所有兑换。</string>
     <string name="vault_tier_silver_description_part1">持有 3,000 $VULT，您将解锁白银等级并获得</string>
-    <string name="vault_tier_silver_description_part2">10 基点交易费折扣</string>
     <string name="vault_tier_silver_description_part3">，适用于所有兑换。</string>
     <string name="vault_tier_gold_description_part1">持有 7,500 $VULT，您将解锁黄金等级并获得</string>
-    <string name="vault_tier_gold_description_part2">20 基点交易费折扣</string>
     <string name="vault_tier_gold_description_part3">，适用于所有兑换。</string>
     <string name="vault_tier_platinum_description_part1">持有 15,000 $VULT，您将解锁铂金等级并获得</string>
-    <string name="vault_tier_platinum_description_part2">25 基点交易费折扣</string>
     <string name="vault_tier_platinum_description_part3">，适用于所有兑换。</string>
     <string name="vault_tier_diamond_description_part1">持有 100,000 $VULT，您将解锁钻石等级并获得</string>
-    <string name="vault_tier_diamond_description_part2">35 基点交易费折扣</string>
     <string name="vault_tier_diamond_description_part3">，适用于所有兑换。</string>
     <string name="vault_tier_ultimate_description_part1">持有 1,000,000 $VULT，您将解锁终极等级并获得</string>
     <string name="vault_tier_ultimate_description_part2">完全免除 Vultisig 费用</string>
@@ -953,7 +949,7 @@
     <string name="referral_share_description">邀请好友在兑换时使用您的推荐码。</string>
     <string name="referral_earn_title">自动赚取兑换金额的 10 基点</string>
     <string name="referral_earn_description">每次他们交易时，以您喜欢的资产获得报酬。</string>
-    <string name="referral_use_code_title">使用推荐代码 - 节省 5 基点</string>
+    <string name="referral_use_code_title">使用推荐代码 - 节省 10%</string>
     <string name="referral_use_code_description">使用好友的推荐码，节省兑换手续费。</string>
     <string name="referral_not_found">还没有推荐</string>
     <string name="referral_cta">将您的保险库变成奖励机器。立即创建您的推荐并开始赚钱</string>
@@ -1707,8 +1703,8 @@
     <string name="circle_usdc_account">Circle USDC 账户</string>
     <string name="withdraw">提取</string>
 
-    <string name="swap_form_vult_discount_bps">VULT（%1$s -%2$d bps）</string>
-    <string name="swap_form_referral_discount_bps">推荐人（-%1$d bps）</string>
+    <string name="swap_form_vult_discount_percent">VULT %1$s：%2$d%%</string>
+    <string name="swap_form_referral_discount_percent">推荐人：%1$d%%</string>
     <string name="amino_sign">Amino 签名</string>
     <string name="amino_direct">直接签名</string>
 

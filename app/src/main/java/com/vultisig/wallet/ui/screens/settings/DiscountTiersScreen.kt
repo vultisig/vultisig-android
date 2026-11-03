@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.models.swap.discountPercentOfListFee
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
@@ -236,7 +237,11 @@ private fun ActiveTierCard(style: TierStyle, shape: Shape) {
                         .padding(horizontal = 10.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.vault_tier_swap_discount, style.discountBps),
+                    text =
+                        stringResource(
+                            R.string.vault_tier_swap_discount,
+                            discountPercentOfListFee(style.discountBps),
+                        ),
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.primary,
                 )
