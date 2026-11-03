@@ -49,8 +49,8 @@ internal class AddLiquidityStrategyTest {
             specificRepo.getSpecific(any(), any(), any(), any(), any(), any(), any())
         } returns BlockChainSpecificAndUtxo(mockk(relaxed = true))
         // Mirrors thornode for a Staged pool: only an add naming the other side gets through.
-        coEvery { preflight(STAGED_POOL, true) } returns null
-        coEvery { preflight(STAGED_POOL, false) } returns
+        coEvery { preflight(STAGED_POOL, true, any()) } returns null
+        coEvery { preflight(STAGED_POOL, false, any()) } returns
             ThorChainLpPreflightBlock.StagedPoolRequiresPairedAdd(STAGED_POOL)
         coEvery { mayaPreflight(any(), any()) } returns null
         coEvery { checkPairing(any(), any(), any()) } returns MayaLpPairing.Pairable
@@ -65,7 +65,9 @@ internal class AddLiquidityStrategyTest {
 
             assertEquals("+:$STAGED_POOL:$ETH_ADDRESS", tx.memo)
             assertEquals(ETH_ADDRESS, tx.pairedAddress)
-            coVerify(exactly = 1) { preflight(STAGED_POOL, true) }
+            coVerify(exactly = 1) {
+                preflight(STAGED_POOL, isPairedAdd = true, checkAssetChainInbound = true)
+            }
         }
 
     @Test
@@ -77,7 +79,9 @@ internal class AddLiquidityStrategyTest {
 
             assertEquals("+:$STAGED_POOL:$RUNE_ADDRESS", tx.memo)
             assertEquals(RUNE_ADDRESS, tx.pairedAddress)
-            coVerify(exactly = 1) { preflight(STAGED_POOL, true) }
+            coVerify(exactly = 1) {
+                preflight(STAGED_POOL, isPairedAdd = true, checkAssetChainInbound = false)
+            }
         }
 
     @Test
@@ -135,12 +139,31 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
+    fun `RUNE-side add is refused when the pool asset chain is halted`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+        coEvery { preflight(STAGED_POOL, true, true) } returns
+            ThorChainLpPreflightBlock.ChainLpHalted("ETH")
+
+        val error =
+            assertFailsWith<InvalidTransactionDataException> {
+                build(Chain.ThorChain, pairedAddress = ETH_ADDRESS).build()
+            }
+
+        val text = error.text
+        assertTrue(text is UiText.FormattedText)
+        assertEquals(R.string.deposit_error_lp_halted_chain, text.resId)
+        coVerify(exactly = 0) {
+            specificRepo.getSpecific(any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
     fun `Maya add never consults the THORChain preflight`() = runTest {
         givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
 
         build(Chain.MayaChain, pairedAddress = BTC_ADDRESS, pool = MAYA_BTC_POOL).build()
 
-        coVerify(exactly = 0) { preflight(any(), any()) }
+        coVerify(exactly = 0) { preflight(any(), any(), any()) }
     }
 
     @Test
@@ -191,7 +214,7 @@ internal class AddLiquidityStrategyTest {
     @Test
     fun `THORChain add from a vault that cannot hold the asset chain is still refused`() = runTest {
         givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
-        coEvery { preflight(STAGED_POOL, false) } returns null
+        coEvery { preflight(STAGED_POOL, false, true) } returns null
 
         val error =
             assertFailsWith<InvalidTransactionDataException> {

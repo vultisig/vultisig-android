@@ -30,7 +30,7 @@
     <string name="vault_tier_unlock_ultimate_part2">Definitivo</string>
     <string name="vault_tier_unlock_ultimate_part3"></string>
     <string name="vault_tier_ultimate">Definitivo</string>
-    <string name="vault_tier_swap_discount">Desconto de troca: %1$dbps</string>
+    <string name="vault_tier_swap_discount">Desconto de troca: %1$d%%</string>
     <string name="vault_tier_more_coming_soon">Mais em breve</string>
     <string name="vault_tier_unlock">Desbloquear Nível</string>
     <string name="vault_tier_active">Ativo</string>
@@ -50,19 +50,15 @@
     <string name="vault_tier_banner_subtitle">receba desconto em trading</string>
     <string name="vault_tier_description">Mantenha $VULT para desbloquear taxas de negociação mais baixas.</string>
     <string name="vault_tier_bronze_description_part1">Ao manter 1.500 $VULT, você desbloqueará o Nível Bronze e receberá um </string>
-    <string name="vault_tier_bronze_description_part2">desconto de 5 pontos base nas taxas de negociação</string>
+    <string name="vault_tier_fee_discount_description_part2">desconto de %1$d%% nas taxas de negociação</string>
     <string name="vault_tier_bronze_description_part3"> em todas as trocas.</string>
     <string name="vault_tier_silver_description_part1">Ao manter 3.000 $VULT, você desbloqueará o Nível Prata e receberá um </string>
-    <string name="vault_tier_silver_description_part2">desconto de 10 pontos base nas taxas de negociação</string>
     <string name="vault_tier_silver_description_part3"> em todas as trocas.</string>
     <string name="vault_tier_gold_description_part1">Ao manter 7.500 $VULT, você desbloqueará o Nível Ouro e receberá um </string>
-    <string name="vault_tier_gold_description_part2">desconto de 20 pontos base nas taxas de negociação</string>
     <string name="vault_tier_gold_description_part3"> em todas as trocas.</string>
     <string name="vault_tier_platinum_description_part1">Ao manter 15.000 $VULT, você desbloqueará o Nível Platina e receberá um </string>
-    <string name="vault_tier_platinum_description_part2">desconto de 25 pontos base nas taxas de negociação</string>
     <string name="vault_tier_platinum_description_part3"> em todas as trocas.</string>
     <string name="vault_tier_diamond_description_part1">Ao manter 100.000 $VULT, você desbloqueará o Nível Diamante e receberá um </string>
-    <string name="vault_tier_diamond_description_part2">desconto de 35 pontos base nas taxas de negociação</string>
     <string name="vault_tier_diamond_description_part3"> em todas as trocas.</string>
     <string name="vault_tier_ultimate_description_part1">Ao manter 1.000.000 $VULT, você desbloqueará o Nível Definitivo e receberá </string>
     <string name="vault_tier_ultimate_description_part2">uma isenção completa das taxas Vultisig</string>
@@ -705,7 +701,7 @@
     <string name="referral_share_description">Convide amigos para usar seu código ao fazer swaps.</string>
     <string name="referral_earn_title">Ganhe 10 bps de swaps automaticamente</string>
     <string name="referral_earn_description">Receba pagamentos no seu ativo preferido sempre que eles negociarem.</string>
-    <string name="referral_use_code_title">Use código de indicação - Economize 5bps</string>
+    <string name="referral_use_code_title">Use código de indicação - Economize 10%</string>
     <string name="referral_use_code_description">Use um código do seu amigo e economize nas taxas de swap.</string>
     <string name="referral_top_bar_list_vaults">Cofres</string>
     <string name="tcy_auto_compound_enable_title">Ativar reinvestimento automático</string>
@@ -1375,8 +1371,8 @@
     <string name="circle_msca_account_created_failed">Falha ao criar conta Circle MSCA. Por favor, tente novamente.</string>
     <string name="circle_usdc_account">Conta Circle USDC</string>
     <string name="withdraw">Retirar</string>
-    <string name="swap_form_vult_discount_bps">VULT (%1$s -%2$d bps)</string>
-    <string name="swap_form_referral_discount_bps">Indicação (-%1$d bps)</string>
+    <string name="swap_form_vult_discount_percent">VULT %1$s: %2$d%%</string>
+    <string name="swap_form_referral_discount_percent">Indicação: %1$d%%</string>
     <string name="amino_sign">Assinatura Amino</string>
     <string name="amino_direct">Assinatura Direta</string>
 

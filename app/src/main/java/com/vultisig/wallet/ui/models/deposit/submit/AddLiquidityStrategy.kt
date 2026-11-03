@@ -124,12 +124,17 @@ internal class AddLiquidityStrategy(
         // Staged pool accepts exactly the paired adds and refunds the rest. Maya reuses this
         // strategy with chain == MayaChain and its own pool ids, which thornode knows nothing
         // about: a THORChain-wide PAUSELP, or a same-named THOR pool sitting Staged, would reject a
-        // perfectly valid CACAO add — so a CACAO add asks mayanode instead.
+        // perfectly valid CACAO add — so a CACAO add asks mayanode instead. Only the RUNE side asks
+        // it to read the pool asset chain's inbound halt flags: thornode fails that MsgDeposit in
+        // the block on the asset chain's trading or LP halt, after the native fee is already taken.
         val isThorChainLpAdd = chain == Chain.ThorChain || (isSymmetricPool && chain == assetChain)
         if (isThorChainLpAdd) {
-            thorChainLpPreflight(poolId, isPairedAdd = pairedAddress != null)?.let { block ->
-                throw block.toError()
-            }
+            thorChainLpPreflight(
+                    poolId,
+                    isPairedAdd = pairedAddress != null,
+                    checkAssetChainInbound = chain == Chain.ThorChain,
+                )
+                ?.let { block -> throw block.toError() }
         }
         if (isMayaChainLpAdd) {
             mayaChainLpPreflight(poolId, isPairedAdd = memoPairedAddress != null)?.let { block ->

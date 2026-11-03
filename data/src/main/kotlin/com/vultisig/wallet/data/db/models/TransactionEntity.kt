@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TransactionHistoryData
 
 enum class TransactionType {
@@ -97,3 +98,13 @@ val TransactionStatus.isInFlight: Boolean
             TransactionStatus.FAILED,
             TransactionStatus.REFUNDED -> false
         }
+
+/**
+ * Whether this row belongs in [chain]'s history.
+ *
+ * The `chain` column is the chain the transaction was signed and broadcast on, so a cross-chain
+ * swap is stored once under its source. It also belongs to the chain it pays out on, so a swap
+ * matches its destination too, without a second stored row.
+ */
+fun TransactionHistoryEntity.involvesChain(chain: String): Boolean =
+    this.chain == chain || (payload as? SwapTransactionHistoryData)?.toChain == chain

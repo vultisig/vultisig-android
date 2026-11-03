@@ -109,6 +109,10 @@ internal fun formatAffiliatePercent(): String =
         BASE_AFFILIATE_FEE_BPS.toBigDecimal().divide(BigDecimal(100)),
     )
 
+/** Whole-percent share of the [BASE_AFFILIATE_FEE_BPS] fee a discount removes (5 bps → 10). */
+internal fun discountPercentOfListFee(discountBps: Int): Int =
+    discountBps.coerceIn(0, BASE_AFFILIATE_FEE_BPS) * 100 / BASE_AFFILIATE_FEE_BPS
+
 /**
  * Prices [bps] against the source notional. The only place a discount is valued — every surface
  * takes both the grossed fee and the rows under it from [swapFeeRow], so a row and the fee it was
