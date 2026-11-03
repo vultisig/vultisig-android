@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.db.dao.TransactionHistoryDao
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
+import com.vultisig.wallet.data.db.models.involvesChain
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CommonTransactionHistoryData
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
@@ -15,6 +16,7 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 interface TransactionHistoryRepository {
@@ -135,9 +137,10 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
         // Treat blank as unscoped so a round-tripped "" doesn't silently filter to zero rows.
         val effectiveChain = chain?.takeIf { it.isNotBlank() }
         return when (type) {
-            TransactionHistoryType.OVERVIEW -> dao.observeAllByVault(vaultId, effectiveChain)
+            TransactionHistoryType.OVERVIEW ->
+                dao.observeAllByVault(vaultId).scopedTo(effectiveChain)
             TransactionHistoryType.SEND -> dao.observeSendByVault(vaultId, effectiveChain)
-            TransactionHistoryType.SWAPS -> dao.observeSwapByVault(vaultId, effectiveChain)
+            TransactionHistoryType.SWAPS -> dao.observeSwapByVault(vaultId).scopedTo(effectiveChain)
         }
     }
 
@@ -177,3 +180,9 @@ internal val TransactionHistoryData.fromAddressOrNull: String?
             is SwapTransactionHistoryData -> fromAddress.takeIf { it.isNotEmpty() }
             is UnknownTransactionHistoryData -> null
         }
+
+/** Narrows to the rows that belong in [chain]'s history; null keeps the vault-wide list. */
+private fun Flow<List<TransactionHistoryEntity>>.scopedTo(
+    chain: String?
+): Flow<List<TransactionHistoryEntity>> =
+    if (chain == null) this else map { rows -> rows.filter { it.involvesChain(chain) } }
