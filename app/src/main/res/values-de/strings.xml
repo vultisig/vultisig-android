@@ -696,7 +696,7 @@
     <string name="referral_share_description">Laden Sie Freunde ein, Ihren Code beim Tauschen zu verwenden.</string>
     <string name="referral_earn_title">Verdienen Sie automatisch 10 bps bei Swaps</string>
     <string name="referral_earn_description">Sie erhalten bei jedem ihrer Trades eine Auszahlung im Asset Ihrer Wahl.</string>
-    <string name="referral_use_code_title">Empfehlungscode verwenden - 10 % sparen</string>
+    <string name="referral_use_code_title">Empfehlungscode verwenden - sparen Sie 10 %</string>
     <string name="referral_use_code_description">Verwenden Sie einen Code von Ihrem Freund und sparen Sie bei Swap-Gebühren.</string>
     <string name="referral_top_bar_list_vaults">Tresore</string>
     <string name="tcy_auto_compound_enable_title">Auto-Compounding aktivieren</string>
