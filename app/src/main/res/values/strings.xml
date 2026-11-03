@@ -1043,7 +1043,7 @@
     <string name="referral_share_description">Invite friends to use your code while swapping.</string>
     <string name="referral_earn_title">Earn 10 bps of swaps automatically</string>
     <string name="referral_earn_description">Get paid in your preferred asset every time they trade.</string>
-    <string name="referral_use_code_title">Use Referral code - Save 5bps</string>
+    <string name="referral_use_code_title">Use Referral code - Save 10%</string>
     <string name="referral_use_code_description">Use a code from your friend and save on swap fees.</string>
     <string name="referral_not_found">No referral yet</string>
     <string name="referral_cta">Turn your vault into a rewards machine. Create your referral now and start earning</string>
