@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.border
@@ -158,7 +159,7 @@ private fun SettingsTiles(tiles: List<SettingsItem>, onClick: (SettingsItem) -> 
                         .clip(Theme.v2.radius.lg)
                         .background(Theme.v2.colors.backgrounds.surface1)
                         .clickOnce(onClick = { onClick(tile) })
-                        .padding(12.dp),
+                        .padding(horizontal = 4.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TILE_GAP, Alignment.CenterVertically),
             ) {
@@ -175,6 +176,8 @@ private fun SettingsTiles(tiles: List<SettingsItem>, onClick: (SettingsItem) -> 
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
