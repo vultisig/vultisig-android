@@ -698,7 +698,7 @@
     <string name="referral_share_description">Invita a amigos a usar tu código al intercambiar.</string>
     <string name="referral_earn_title">Gana 10 bps de swaps automáticamente</string>
     <string name="referral_earn_description">Recibe pagos en tu activo preferido cada vez que operen.</string>
-    <string name="referral_use_code_title">Usa código de referido - Ahorra 5bps</string>
+    <string name="referral_use_code_title">Usa código de referido - Ahorra 10%</string>
     <string name="referral_use_code_description">Usa un código de tu amigo y ahorra en comisiones de swap.</string>
     <string name="referral_top_bar_list_vaults">Bóvedas</string>
     <string name="tcy_auto_compound_enable_title">Activar capitalización automática</string>

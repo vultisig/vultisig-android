@@ -693,7 +693,7 @@
     <string name="referral_share_description">Nodig vrienden uit om je code te gebruiken bij het swappen.</string>
     <string name="referral_earn_title">Verdien automatisch 10 bps op swaps</string>
     <string name="referral_earn_description">Ontvang betalingen in je voorkeursasset elke keer als ze handelen.</string>
-    <string name="referral_use_code_title">Gebruik verwijzingscode - Bespaar 5bps</string>
+    <string name="referral_use_code_title">Gebruik verwijzingscode - Bespaar 10%</string>
     <string name="referral_use_code_description">Gebruik een code van je vriend en bespaar op swapkosten.</string>
     <string name="referral_top_bar_list_vaults">Kluizen</string>
     <string name="tcy_auto_compound_enable_title">Automatisch herbeleggen inschakelen</string>
