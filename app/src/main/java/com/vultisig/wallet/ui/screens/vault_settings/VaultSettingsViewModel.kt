@@ -271,10 +271,7 @@ internal sealed class VaultSettingsItem(
         )
 }
 
-/**
- * Vault Settings rows before the vault and flags load; rows whose visibility depends on them start
- * disabled. The group with id `ADVANCED` is the Advanced sub-list.
- */
+/** Rows before the vault and flags load; rows that depend on them start disabled. */
 internal val defaultVaultSettingGroups =
     listOf(
         VaultSettingsGroupUiModel(
@@ -455,16 +452,9 @@ constructor(
         validateEachTextChange()
     }
 
-    /**
-     * Shows Security only once the passcode feature has been switched on in Advanced Settings, or
-     * whenever a passcode is already configured. The second half matters: turning the flag back off
-     * must not strand a tester with an encrypted vault and no way to reach the off switch. Lock time
-     * shows only while a passcode is configured, as the auto-lock picker does nothing without one.
-     */
+    // Security stays reachable once a passcode exists, so turning the flag off cannot strand an encrypted vault.
     private fun loadPasscodeVisibility() {
-        // safeLaunch, because initialize() decodes persisted credentials off a keystore that can be
-        // wiped or unavailable. Letting that throw here would take the whole screen's coroutine
-        // down over rows that are merely meant to stay hidden.
+        // initialize() reads a keystore that can be wiped; a throw must not end this coroutine.
         viewModelScope.safeLaunch {
             passcodeRepository.initialize()
             combine(passcodeConfig.isFeatureEnabled, passcodeRepository.state) {

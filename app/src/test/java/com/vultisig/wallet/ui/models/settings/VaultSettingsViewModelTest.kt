@@ -456,10 +456,7 @@ internal class VaultSettingsViewModelTest {
             vm.item { it is VaultSettingsItem.Security }.enabled.shouldBeTrue()
         }
 
-    /**
-     * Verifies a configured passcode keeps its Security entry even with the flag off. Otherwise
-     * turning the flag back off would strand a tester with an encrypted vault and no off switch.
-     */
+    /** Verifies a configured passcode keeps its Security entry even with the flag off. */
     @Test
     fun `the security entry stays visible while a passcode is configured`() =
         runTest(testDispatcher) {

@@ -184,11 +184,7 @@ private fun SettingsTiles(tiles: List<SettingsItem>, onClick: (SettingsItem) -> 
     }
 }
 
-/**
- * Spacing of a [SettingItem] and its [SettingsBox]. [List] is the settings-list row of the 2026
- * settings design (main settings, Vault Settings, Advanced); [Legacy] is the row the remaining
- * settings sub-screens keep until they move to that design.
- */
+/** Spacing of a [SettingItem]: [List] for the redesigned settings lists, [Legacy] for other screens. */
 internal enum class SettingItemLayout(
     val iconGap: Dp,
     val subtitleGap: Dp,
