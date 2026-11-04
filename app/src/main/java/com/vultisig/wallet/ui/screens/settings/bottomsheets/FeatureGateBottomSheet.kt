@@ -11,9 +11,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,11 +26,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -37,6 +43,22 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.getStyleByTier
 import com.vultisig.wallet.ui.theme.Theme
+
+internal enum class FeatureGateSheetStyle {
+    Default,
+    Settings,
+}
+
+private val SETTINGS_GATE_TOP_PADDING = 23.dp
+private val SETTINGS_GATE_BOTTOM_PADDING = 15.dp
+private val SETTINGS_GATE_TEXT_INSET = 29.dp
+private val SETTINGS_CARD_SHAPE =
+    RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
+private val SETTINGS_BALANCE_SHAPE = RoundedCornerShape(14.dp)
+private val SETTINGS_FOOTER_SHAPE = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+private val SETTINGS_FOOTER_OVERLAP = 22.dp
+private val SETTINGS_FOOTER_VISIBLE_HEIGHT = 52.dp
+private val SETTINGS_NOTE_LINE_HEIGHT = 18.dp
 
 /**
  * Reusable feature-gate popup shown when a user taps a feature locked behind a $VULT tier (Figma
@@ -53,7 +75,10 @@ import com.vultisig.wallet.ui.theme.Theme
  * @param thresholdText the required $VULT holdings, pre-formatted with its unit (e.g. "3,000
  *   VULT").
  * @param isBelowThreshold when true the balance is rendered in the warning accent.
+ * @param style [FeatureGateSheetStyle.Settings] is the settings redesign, where [featureIcon] is a
+ *   finished medallion; every other gate keeps [FeatureGateSheetStyle.Default].
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FeatureGateBottomSheet(
     @DrawableRes featureIcon: Int,
@@ -65,9 +90,14 @@ internal fun FeatureGateBottomSheet(
     isBelowThreshold: Boolean,
     onGetVult: () -> Unit,
     onDismiss: () -> Unit,
+    style: FeatureGateSheetStyle = FeatureGateSheetStyle.Default,
 ) {
     V2BottomSheet(
         onDismissRequest = onDismiss,
+        scrimColor =
+            if (style == FeatureGateSheetStyle.Settings)
+                Theme.v2.colors.neutrals.n900.copy(alpha = 0.5f)
+            else BottomSheetDefaults.ScrimColor,
         leftAction = {
             VsCircleButton(
                 onClick = onDismiss,
@@ -77,6 +107,19 @@ internal fun FeatureGateBottomSheet(
             )
         },
     ) {
+        if (style == FeatureGateSheetStyle.Settings) {
+            SettingsGateContent(
+                featureIcon = featureIcon,
+                featureTitle = featureTitle,
+                featureDescription = featureDescription,
+                requiredTier = requiredTier,
+                balanceText = balanceText,
+                thresholdText = thresholdText,
+                isBelowThreshold = isBelowThreshold,
+                onGetVult = onGetVult,
+            )
+            return@V2BottomSheet
+        }
         Column(
             modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -127,6 +170,179 @@ internal fun FeatureGateBottomSheet(
                 thresholdText = thresholdText,
                 isBelowThreshold = isBelowThreshold,
                 onGetVult = onGetVult,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsGateContent(
+    @DrawableRes featureIcon: Int,
+    featureTitle: String,
+    featureDescription: String,
+    requiredTier: TierType,
+    balanceText: String,
+    thresholdText: String,
+    isBelowThreshold: Boolean,
+    onGetVult: () -> Unit,
+) {
+    val tierStyle = getStyleByTier(requiredTier)
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(top = SETTINGS_GATE_TOP_PADDING, bottom = SETTINGS_GATE_BOTTOM_PADDING),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Image(painter = painterResource(featureIcon), contentDescription = null)
+        UiSpacer(32.dp)
+        Text(
+            text = featureTitle,
+            style = Theme.brockmann.headings.title2,
+            color = Theme.v2.colors.text.primary,
+            textAlign = TextAlign.Center,
+        )
+        UiSpacer(16.dp)
+        Text(
+            text = featureDescription,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.tertiary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = SETTINGS_GATE_TEXT_INSET),
+        )
+        UiSpacer(20.dp)
+        SettingsRequiresCard(
+            tierIcon = tierStyle.icon,
+            tierName = tierStyle.titleText,
+            balanceText = balanceText,
+            thresholdText = thresholdText,
+            isBelowThreshold = isBelowThreshold,
+        )
+        SettingsGetVultFooter(accentColor = tierStyle.accentColor, onClick = onGetVult)
+    }
+}
+
+@Composable
+private fun SettingsRequiresCard(
+    @DrawableRes tierIcon: Int,
+    tierName: String,
+    balanceText: String,
+    thresholdText: String,
+    isBelowThreshold: Boolean,
+) {
+    val noteStyle = Theme.satoshi.price.footnote
+    val noteModifier = Modifier.heightIn(min = SETTINGS_NOTE_LINE_HEIGHT)
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .zIndex(1f)
+                .clip(SETTINGS_CARD_SHAPE)
+                .background(Theme.v2.colors.backgrounds.surface1)
+                .border(1.dp, Theme.v2.colors.border.light, SETTINGS_CARD_SHAPE)
+                .padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.feature_gate_requires),
+            style = noteStyle,
+            color = Theme.v2.colors.text.tertiary,
+            modifier = noteModifier,
+        )
+        Row(
+            modifier = Modifier.padding(bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Image(
+                painter = painterResource(tierIcon),
+                contentDescription = null,
+                modifier = Modifier.size(36.dp),
+            )
+            Column(
+                modifier = Modifier.padding(top = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.feature_gate_tier_requirement, tierName),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.primary,
+                )
+                Text(
+                    text = stringResource(R.string.feature_gate_hold_threshold, thresholdText),
+                    style = noteStyle,
+                    color = Theme.v2.colors.text.tertiary,
+                    modifier = noteModifier,
+                )
+            }
+        }
+        Row(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clip(SETTINGS_BALANCE_SHAPE)
+                    .background(Theme.v2.colors.variables.backgroundsSurface12)
+                    .border(1.dp, Theme.v2.colors.border.light, SETTINGS_BALANCE_SHAPE)
+                    .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            UiIcon(
+                drawableResId = R.drawable.wallet_filled,
+                size = 16.dp,
+                tint = Theme.v2.colors.text.tertiary,
+            )
+            Text(
+                text = stringResource(R.string.feature_gate_your_balance),
+                style = noteStyle,
+                color = Theme.v2.colors.text.tertiary,
+                modifier = noteModifier.weight(1f),
+            )
+            Text(
+                text = balanceText,
+                style = noteStyle,
+                modifier = noteModifier,
+                color =
+                    if (isBelowThreshold) Theme.v2.colors.alerts.warning
+                    else Theme.v2.colors.text.primary,
+            )
+        }
+    }
+}
+
+/** Slides [SETTINGS_FOOTER_OVERLAP] under the card; only the part left showing takes taps. */
+@Composable
+private fun SettingsGetVultFooter(accentColor: Color, onClick: () -> Unit) {
+    val darkEnd = lerp(accentColor, Color.Black, 0.4f)
+    Box(
+        modifier =
+            Modifier.fillMaxWidth()
+                .layout { measurable, constraints ->
+                    val placeable = measurable.measure(constraints)
+                    val overlap = SETTINGS_FOOTER_OVERLAP.roundToPx()
+                    layout(placeable.width, placeable.height - overlap) {
+                        placeable.place(0, -overlap)
+                    }
+                }
+                .height(SETTINGS_FOOTER_VISIBLE_HEIGHT + SETTINGS_FOOTER_OVERLAP)
+                .clip(SETTINGS_FOOTER_SHAPE)
+                .background(
+                    Brush.verticalGradient(
+                        0.23f to darkEnd,
+                        1f to lerp(darkEnd, accentColor, 0.85f),
+                    )
+                ),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Box(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .height(SETTINGS_FOOTER_VISIBLE_HEIGHT)
+                    .clickable(onClick = onClick)
+                    .padding(bottom = 19.dp),
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            Text(
+                text = stringResource(R.string.feature_gate_get_vult),
+                style = Theme.brockmann.button.semibold.medium,
+                color = Theme.v2.colors.text.button.primary,
             )
         }
     }

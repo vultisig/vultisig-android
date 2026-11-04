@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -28,15 +29,17 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldStyle
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.referral.ReferralCodeBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.screens.settings.SettingItem
 import com.vultisig.wallet.ui.screens.settings.SettingItemLayout
 import com.vultisig.wallet.ui.screens.settings.SettingsBox
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateSheetStyle
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareSheetGrabber
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -141,9 +144,10 @@ private fun VaultSettingsScreen(
 
             if (uiModel.showCustomRpcUpsell) {
                 FeatureGateBottomSheet(
-                    featureIcon = R.drawable.broadcast,
                     featureTitle = stringResource(R.string.custom_rpc_title),
                     featureDescription = stringResource(R.string.custom_rpc_gate_description),
+                    featureIcon = R.drawable.ic_custom_rpc_medallion,
+                    style = FeatureGateSheetStyle.Settings,
                     requiredTier = TierType.SILVER,
                     balanceText = uiModel.customRpcVultBalance,
                     thresholdText = uiModel.customRpcVultThreshold,
@@ -164,7 +168,12 @@ private fun BiometricFastSignBottomSheet(
     onSaveBiometricsClick: () -> Unit,
     biometricsEnableUiModel: BiometricsEnableUiModel,
 ) {
-    VsModalBottomSheet(onDismissRequest = onDismissBiometricsBottomSheet) {
+    VsModalBottomSheet(
+        onDismissRequest = onDismissBiometricsBottomSheet,
+        dragHandle = { ShareSheetGrabber(top = 5.dp, bottom = 10.dp) },
+        shape = RoundedCornerShape(topStart = SHEET_CORNER_RADIUS, topEnd = SHEET_CORNER_RADIUS),
+        scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.5f),
+    ) {
         BiometricFastSignBottomSheetContent(
             uiModel = biometricsEnableUiModel,
             passwordTextFieldState = biometricTextFieldState,
@@ -181,17 +190,14 @@ private fun BiometricFastSignBottomSheetContent(
     onToggleVisibilityClick: () -> Unit,
     onSaveClick: () -> Unit,
 ) {
-    Column(
-        Modifier.padding(16.dp).verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
         Text(
-            text = stringResource(R.string.vault_password_biometric_enable_biometrics_fast_signing),
-            style = Theme.brockmann.headings.subtitle,
-            color = Theme.v2.colors.text.primary,
+            text = stringResource(R.string.vault_settings_biometric_fast),
+            style = Theme.brockmann.headings.title2,
+            color = Theme.v2.colors.neutrals.n50,
         )
 
-        FadingHorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
+        UiSpacer(16.dp)
 
         val errorMessage = uiModel.passwordErrorMessage?.asString()
         VsTextInputField(
@@ -203,11 +209,13 @@ private fun BiometricFastSignBottomSheetContent(
                 ),
             hint =
                 uiModel.passwordHint?.asString()
-                    ?: stringResource(R.string.import_file_screen_hint_password),
+                    ?: stringResource(R.string.fast_vault_password_screen_password_hint),
             footNote = errorMessage,
             innerState =
                 if (errorMessage != null) VsTextInputFieldInnerState.Error
                 else VsTextInputFieldInnerState.Default,
+            invisibleIcon = R.drawable.eye_closed,
+            style = VsTextInputFieldStyle.SettingsOutlined,
         )
 
         UiSpacer(14.dp)
@@ -234,6 +242,8 @@ private fun BiometricFastSignBottomSheetContent(
         }
     }
 }
+
+private val SHEET_CORNER_RADIUS = 38.dp
 
 @Preview
 @Composable

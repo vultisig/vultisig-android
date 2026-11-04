@@ -120,6 +120,11 @@
     <string name="vault_detail_screen_ecdsa_key_copied">Chave ECDSA Copiada</string>
     <string name="vault_detail_screen_eddsa_key_copied">Chave EdDSA Copiada</string>
     <string name="vault_detail_screen_mldsa_key">Chave MLDSA</string>
+    <string name="vault_detail_screen_ecdsa_key">Chave ECDSA</string>
+    <string name="vault_detail_screen_eddsa_key">Chave EdDSA</string>
+    <string name="vault_detail_this_device">Este dispositivo</string>
+    <string name="vault_share_position">Parte %1$s-de-%2$s</string>
+    <string name="vault_settings_onchain_security_title">Segurança on-chain</string>
     <string name="vault_detail_screen_mldsa_key_copied">Chave MLDSA Copiada</string>
     <string name="welcome_screen_skip">Pular</string>
     <string name="keysign_screen_preparing_vault">Preparando cofre…</string>
@@ -275,7 +280,6 @@
     <string name="backup_password_screen_enter_password">Digite a senha</string>
     <string name="backup_password_screen_error_too_short">A senha deve ter pelo menos %1$d caracteres</string>
     <string name="import_file_screen_enter_password_sub">Esta senha foi definida quando a parte do cofre foi exportada.</string>
-    <string name="import_file_screen_hint_password">Senha</string>
     <string name="backup_password_screen_permission_required">É necessária permissão de arquivos para fazer backup.</string>
     <string name="token_selection_search_hint">Pesquisa…</string>
     <string name="verify_swap_agree_allowance">Concordo em conceder a permissão (allowance) ERC20</string>
@@ -917,7 +921,6 @@
     <string name="kamino_banner_title">Comece a ganhar com a Kamino</string>
     <string name="vault_detail_vault_info">Informações do Cofre</string>
     <string name="vault_details_keys">Chaves</string>
-    <string name="vault_password_biometric_enable_biometrics_fast_signing">Ativar Assinatura Rápida por Biometria</string>
     <string name="verify_send_send_overview">Resumo do envio</string>
     <string name="verify_swap_swap_overview">Visão geral da troca</string>
     <string name="token_selection_screen_enable_at_least_one">Ative pelo menos um token para ver saldos e gerenciar posições.</string>
