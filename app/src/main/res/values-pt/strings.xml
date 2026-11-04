@@ -123,7 +123,6 @@
     <string name="vault_detail_screen_ecdsa_key">Chave ECDSA</string>
     <string name="vault_detail_screen_eddsa_key">Chave EdDSA</string>
     <string name="vault_detail_this_device">Este dispositivo</string>
-    <string name="vault_share_position">Parte %1$s-de-%2$s</string>
     <string name="vault_settings_onchain_security_title">Segurança on-chain</string>
     <string name="vault_detail_screen_mldsa_key_copied">Chave MLDSA Copiada</string>
     <string name="welcome_screen_skip">Pular</string>

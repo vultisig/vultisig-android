@@ -247,7 +247,6 @@ private fun VaultNotificationToggle(
     }
 }
 
-/** Keeps the old switch's 48dp touch height without adding it to the row's height. */
 private val SECTION_GAP = 14.dp
 private val TEXT_TO_SWITCH_GAP = 4.dp
 private val MASTER_CAPTION_MAX_WIDTH = 233.dp

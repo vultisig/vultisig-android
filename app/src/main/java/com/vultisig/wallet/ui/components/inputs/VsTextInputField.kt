@@ -224,7 +224,7 @@ internal fun VsTextInputField(
                         },
                     )
 
-                    if (textFieldState.text.isNotEmpty() || isOutlinedStyle) {
+                    if (textFieldState.text.isNotEmpty()) {
                         Icon(
                             painter =
                                 painterResource(

@@ -116,7 +116,6 @@
     <string name="vault_detail_screen_ecdsa_key">ECDSA ključ</string>
     <string name="vault_detail_screen_eddsa_key">EdDSA ključ</string>
     <string name="vault_detail_this_device">Ovaj uređaj</string>
-    <string name="vault_share_position">Udio %1$s-od-%2$s</string>
     <string name="vault_settings_onchain_security_title">Sigurnost na lancu</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA ključ kopiran</string>
     <string name="welcome_screen_skip">Preskoči</string>

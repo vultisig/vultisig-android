@@ -258,11 +258,10 @@
     <string name="vault_detail_screen_vault_name">Vault Name</string>
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA Key Copied</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA Key Copied</string>
-    <string name="vault_detail_screen_mldsa_key">MLDSA key</string>
+    <string name="vault_detail_screen_mldsa_key">MLDSA Key</string>
     <string name="vault_detail_screen_ecdsa_key">ECDSA Key</string>
     <string name="vault_detail_screen_eddsa_key">EdDSA Key</string>
     <string name="vault_detail_this_device">This device</string>
-    <string name="vault_share_position">Share %1$s-of-%2$s</string>
     <string name="vault_settings_onchain_security_title">On-chain Security</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA Key Copied</string>
     <string name="welcome_screen_skip">Skip</string>

@@ -89,7 +89,7 @@ internal fun SettingsSecurityScannerBottomSheet(
 
 /** The settings disable warning: names its provider first, then the medallion and the choice. */
 @Composable
-internal fun SettingsSecurityScannerContent(
+private fun SettingsSecurityScannerContent(
     onGoBack: () -> Unit,
     onContinueAnyway: () -> Unit,
     modifier: Modifier = Modifier,

@@ -134,7 +134,7 @@ private fun ConfirmDeleteScreen(
                     key = stringResource(R.string.vault_settings_delete_vault_part),
                     value =
                         stringResource(
-                            id = R.string.vault_share_position,
+                            id = R.string.vault_part_n_of_t,
                             vaultDeleteUiModel.vaultPart.toString(),
                             vaultDeleteUiModel.deviceList.size.toString(),
                         ),

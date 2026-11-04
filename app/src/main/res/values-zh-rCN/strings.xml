@@ -300,7 +300,6 @@
     <string name="vault_detail_screen_ecdsa_key">ECDSA 密钥</string>
     <string name="vault_detail_screen_eddsa_key">EdDSA 密钥</string>
     <string name="vault_detail_this_device">此设备</string>
-    <string name="vault_share_position">份额 %1$s/%2$s</string>
     <string name="vault_settings_onchain_security_title">链上安全</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA 密钥已复制</string>
 
@@ -853,7 +852,7 @@
     <string name="security_scanner_default_description">此交易已被标记为潜在危险。</string>
     <string name="security_scanner_continue_anyway">仍然继续</string>
     <string name="security_scanner_continue_go_back">返回</string>
-    <string name="security_scanner_powered_by">由…提供支持</string>
+    <string name="security_scanner_powered_by">技术支持：</string>
     <string name="security_scanner_transaction_scanned_by">交易已扫描</string>
     <string name="security_scanner_transaction_scanning">扫描中…</string>
     <string name="security_scanner_transaction_not_scanned">交易未扫描</string>

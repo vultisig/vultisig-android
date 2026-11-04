@@ -258,7 +258,6 @@
     <string name="vault_detail_screen_ecdsa_key">ECDSA 키</string>
     <string name="vault_detail_screen_eddsa_key">EdDSA 키</string>
     <string name="vault_detail_this_device">이 기기</string>
-    <string name="vault_share_position">셰어 %1$s/%2$s</string>
     <string name="vault_settings_onchain_security_title">온체인 보안</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA 키 복사됨</string>
     <string name="welcome_screen_skip">건너뛰기</string>

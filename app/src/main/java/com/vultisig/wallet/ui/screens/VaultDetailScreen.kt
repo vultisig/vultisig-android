@@ -111,7 +111,7 @@ internal fun VaultDetailScreen(
                         key = stringResource(R.string.vault_details_screen_vault_part),
                         value =
                             stringResource(
-                                R.string.vault_share_position,
+                                R.string.vault_details_screen_vault_part_desc,
                                 state.vaultPart,
                                 state.vaultSize,
                             ),
