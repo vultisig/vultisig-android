@@ -139,11 +139,11 @@
     <string name="vault_settings_rename_subtitle">Edit your vault name</string>
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
-    <string name="vault_settings_dilithium_keygen_title">Enable QBTC</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Generate key to enable QBTC chain</string>
+    <string name="vault_settings_dilithium_keygen_title">Post-Quantum Key</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generate MLDSA-44 key for quantum resistance</string>
     <string name="vault_settings_delete_title">Delete</string>
-    <string name="vault_settings_delete_subtitle">Delete your vault permanently.</string>
-    <string name="vault_settings_security_title">On-chain Security</string>
+    <string name="vault_settings_delete_subtitle">Delete your vault share permanently</string>
+    <string name="vault_settings_security_title">On-chain security</string>
     <string name="vault_settings_security_subtitle">Manage your on-chain security</string>
     <string name="vault_settings_discounts">$VULT Discount Tiers</string>
     <string name="vault_tier_bronze">Bronze</string>
@@ -435,7 +435,6 @@
     <string name="add_address_address_title">Address</string>
     <string name="add_address_type_hint">Type here</string>
     <string name="join_keysign_invalid_qr">Invalid QR code content</string>
-    <string name="settings_screen_privacy">Privacy</string>
     <string name="settings_screen_prevent_screenshots">Prevent Screenshots</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
@@ -1118,13 +1117,12 @@
     <string name="address_book_empty_title">Your Address Book is empty</string>
     <string name="check_updates_settings_title">Check for Updates</string>
     <string name="discord" translatable="false">Discord</string>
-    <string name="github" translatable="false">Github</string>
-    <string name="vult_website_settings_title">Vultisig Website</string>
+    <string name="github" translatable="false">GitHub</string>
     <string name="vault">Vault</string>
     <string name="general">General</string>
     <string name="support">Support</string>
     <string name="vultisig_community">Vultisig Community</string>
-    <string name="vault_management">Vault</string>
+    <string name="vault_management">Vault Management</string>
     <string name="other">Other</string>
 
     <string name="defi_action_stake" translatable="false">Stake</string>
@@ -1163,15 +1161,21 @@
     <string name="backup_server_title">Server Backup</string>
     <string name="backup_server_desc">Request Server Vault Share again.</string>
     <string name="share_sheet_more">More</string>
-    <string name="x_twitter" translatable="false">X (Twitter)</string>
     <string name="transaction_type_button_buy">Buy</string>
     <string name="transaction_type_button_receive">Receive</string>
     <string name="vault_settings_view_vault">View vault name, part and type</string>
-    <string name="vault_settings_biometric_fast">Biometrics fast sign</string>
+    <string name="vault_settings_biometric_fast">Biometrics Fast Signing</string>
     <string name="vault_settings_backup_vault">Backup Vault Share</string>
-    <string name="vault_settings_back_up_your">Back up your Vault Share to device or server.</string>
-    <string name="vault_settings_migrate_gg20">Migrate GG20 vault DKLS</string>
+    <string name="vault_settings_back_up_your">Back up your Vault Share to a preferred location</string>
+    <string name="vault_settings_migrate_gg20">Migrate GG20 vault to DKLS</string>
     <string name="vault_settings_reshare_change">Reshare, manage security or sign messages.</string>
+    <string name="settings_screen_vultisig_education">Vultisig Education</string>
+    <string name="settings_community_website">Website</string>
+    <string name="vault_settings_security_row_subtitle">Manage your passcode</string>
+    <string name="vault_settings_lock_time_title">Lock time</string>
+    <string name="vault_settings_lock_time_subtitle">Set the time until the app locks automatically</string>
+    <string name="vault_settings_sign_title">Sign</string>
+    <string name="settings_community_x" translatable="false">X</string>
 
     <string name="transaction_buy">Buy</string>
     <string name="search_bar_portfolio">Portfolio</string>
