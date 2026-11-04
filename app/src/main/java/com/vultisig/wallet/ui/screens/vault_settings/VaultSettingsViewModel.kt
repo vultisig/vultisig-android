@@ -100,16 +100,6 @@ internal sealed class VaultSettingsItem(
             )
         )
 
-    data object HomeDisplay :
-        VaultSettingsItem(
-            SettingsItemUiModel(
-                title = UiText.StringResource(R.string.home_display),
-                subTitle = UiText.StringResource(R.string.vault_settings_home_display_subtitle),
-                trailingIcon = R.drawable.icon_chevron_right_small,
-                leadingIcon = R.drawable.grid_layout_7,
-            )
-        )
-
     data object ReferralCode :
         VaultSettingsItem(
             SettingsItemUiModel(
@@ -280,7 +270,6 @@ internal val defaultVaultSettingGroups =
                 listOf(
                     VaultSettingsItem.Details,
                     VaultSettingsItem.Rename,
-                    VaultSettingsItem.HomeDisplay,
                     VaultSettingsItem.ReferralCode,
                     VaultSettingsItem.BiometricFastSign(
                         isEnabled = false,
@@ -531,9 +520,6 @@ constructor(
                 }
             }
 
-            VaultSettingsItem.HomeDisplay -> {
-                viewModelScope.launch { navigator.route(Route.HomeDisplaySetting) }
-            }
             VaultSettingsItem.ReferralCode -> onClickReferralCode()
             is VaultSettingsItem.Security -> {
                 viewModelScope.launch { navigator.route(Route.PasscodeSettings) }
