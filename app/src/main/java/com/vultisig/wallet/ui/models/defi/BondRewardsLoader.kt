@@ -1,11 +1,13 @@
 package com.vultisig.wallet.ui.models.defi
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.usecases.BondRewardHistoryUseCase
 import com.vultisig.wallet.ui.screens.v2.defi.formatBondReward
 import com.vultisig.wallet.ui.screens.v2.defi.formatChurnDate
 import java.math.BigInteger
+import java.util.Date
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
@@ -76,44 +78,53 @@ constructor(private val bondRewardHistoryUseCase: BondRewardHistoryUseCase) {
         }
     }
 
-    /** Fills [sheet] with the node's churn history, or flags it as failed. */
+    /** Fills [sheet] with [nodeAddress]'s churn history, or flags it as failed. */
     suspend fun loadHistory(
         chain: Chain,
-        sheet: BondRewardHistoryUiModel,
+        nodeAddress: String,
+        sheet: RewardHistoryUiModel,
         bondAddress: String,
-    ): BondRewardHistoryUiModel =
+    ): RewardHistoryUiModel =
         try {
             val rewards =
                 bondRewardHistoryUseCase.getRewardHistory(
                     chain = chain,
-                    nodeAddress = sheet.nodeAddress,
+                    nodeAddress = nodeAddress,
                     bondAddress = bondAddress,
                 )
-            val total = rewards.fold(BigInteger.ZERO) { acc, reward -> acc + reward.amount }
-            sheet.copy(
-                isLoading = false,
-                isError = false,
-                totalEarned = total.formatReward(chain),
-                rows =
-                    rewards.map {
-                        BondRewardRowUiModel(
-                            amount = it.amount.formatReward(chain),
-                            date = it.date.formatChurnDate(),
-                        )
-                    },
-            )
+            sheet.withPayouts(rewards.map { it.date to it.amount }, chain.rewardCoin())
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "Failed to load bond reward history for %s", sheet.nodeAddress)
+            Timber.e(e, "Failed to load bond reward history for %s", nodeAddress)
             sheet.copy(isLoading = false, isError = true)
         }
 
-    private fun BigInteger.formatReward(chain: Chain): String {
-        val coin = if (chain == Chain.MayaChain) Coins.MayaChain.CACAO else Coins.ThorChain.RUNE
-        return formatBondReward(decimals = coin.decimal, symbol = coin.ticker)
-    }
+    private fun BigInteger.formatReward(chain: Chain): String = formatPayout(chain.rewardCoin())
+
+    private fun Chain.rewardCoin(): Coin =
+        if (this == Chain.MayaChain) Coins.MayaChain.CACAO else Coins.ThorChain.RUNE
 }
+
+/** This sheet loaded with [payouts] (amounts in [coin]'s base units, newest first), summed. */
+internal fun RewardHistoryUiModel.withPayouts(
+    payouts: List<Pair<Date, BigInteger>>,
+    coin: Coin,
+): RewardHistoryUiModel {
+    val total = payouts.fold(BigInteger.ZERO) { acc, (_, amount) -> acc + amount }
+    return copy(
+        isLoading = false,
+        isError = false,
+        totalEarned = total.formatPayout(coin),
+        rows =
+            payouts.map { (date, amount) ->
+                RewardRowUiModel(amount = amount.formatPayout(coin), date = date.formatChurnDate())
+            },
+    )
+}
+
+private fun BigInteger.formatPayout(coin: Coin): String =
+    formatBondReward(decimals = coin.decimal, symbol = coin.ticker)
 
 /** These nodes with the Last Reward of [nodeAddress] replaced by [reward]. */
 internal fun List<BondedNodeUiModel>.withLastReward(

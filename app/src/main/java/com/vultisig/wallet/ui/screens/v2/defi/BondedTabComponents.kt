@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.v2.defi
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -265,40 +263,24 @@ private fun LastRewardItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier =
-            modifier.clip(Theme.v2.radius.xs).clickable(role = Role.Button, onClick = onClick)
+    ChevronInfoItem(
+        icon = R.drawable.ic_bag_clock,
+        label = stringResource(R.string.last_reward),
+        onClick = onClick,
+        modifier = modifier,
     ) {
-        InfoItem(
-            icon = R.drawable.ic_bag_clock,
-            label = stringResource(R.string.last_reward),
-            value = null,
-        )
-
-        UiSpacer(6.dp)
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (lastReward is LastRewardUiModel.Loading) {
-                UiPlaceholderLoader(modifier = Modifier.size(width = 72.dp, height = 24.dp))
-            } else {
-                Text(
-                    text =
-                        when {
-                            !isBalanceVisible -> HIDE_BALANCE_CHARS
-                            lastReward is LastRewardUiModel.Paid -> lastReward.amount
-                            else -> stringResource(R.string.last_reward_unavailable)
-                        },
-                    style = Theme.brockmann.body.m.medium,
-                    color = Theme.v2.colors.text.secondary,
-                )
-            }
-
-            UiSpacer(4.dp)
-
-            UiIcon(
-                drawableResId = R.drawable.ic_chevron_right_16,
-                size = 16.dp,
-                tint = Theme.v2.colors.text.primary,
+        if (lastReward is LastRewardUiModel.Loading) {
+            UiPlaceholderLoader(modifier = Modifier.size(width = 72.dp, height = 24.dp))
+        } else {
+            Text(
+                text =
+                    when {
+                        !isBalanceVisible -> HIDE_BALANCE_CHARS
+                        lastReward is LastRewardUiModel.Paid -> lastReward.amount
+                        else -> stringResource(R.string.last_reward_unavailable)
+                    },
+                style = Theme.brockmann.body.m.medium,
+                color = Theme.v2.colors.text.secondary,
             )
         }
     }

@@ -37,13 +37,13 @@ import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiUiState
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
-import com.vultisig.wallet.ui.screens.v2.defi.BondRewardHistorySheet
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.LpTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
+import com.vultisig.wallet.ui.screens.v2.defi.RewardHistorySheet
 import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasLpPositions
@@ -199,7 +199,7 @@ internal fun MayachainDefiPositionsScreenContent(
             }
 
             state.rewardHistory?.let { rewardHistory ->
-                BondRewardHistorySheet(
+                RewardHistorySheet(
                     model = rewardHistory,
                     coinIconRes = R.drawable.cacao,
                     isBalanceVisible = state.isBalanceVisible,

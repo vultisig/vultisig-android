@@ -823,7 +823,6 @@
     <string name="vault_settings_reshare_change">Reshare, Sicherheit verwalten oder Nachrichten signieren.</string>
     <string name="settings_screen_vultisig_education">Vultisig-Wissen</string>
     <string name="settings_community_website">Website</string>
-    <string name="vault_settings_home_display_subtitle">Anzeige des Wallet-Guthabens bearbeiten</string>
     <string name="vault_settings_security_row_subtitle">Passcode verwalten</string>
     <string name="vault_settings_lock_time_title">Sperrzeit</string>
     <string name="vault_settings_lock_time_subtitle">Legen Sie fest, wann sich die App automatisch sperrt</string>

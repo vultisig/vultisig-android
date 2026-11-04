@@ -820,7 +820,6 @@
     <string name="vault_settings_reshare_change">Recompartilhar, gerenciar a segurança ou assinar mensagens.</string>
     <string name="settings_screen_vultisig_education">Educação Vultisig</string>
     <string name="settings_community_website">Site</string>
-    <string name="vault_settings_home_display_subtitle">Edite a exibição do saldo da carteira</string>
     <string name="vault_settings_security_row_subtitle">Gerencie seu código de acesso</string>
     <string name="vault_settings_lock_time_title">Tempo de bloqueio</string>
     <string name="vault_settings_lock_time_subtitle">Defina o tempo até o app bloquear automaticamente</string>

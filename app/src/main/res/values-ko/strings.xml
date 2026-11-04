@@ -1152,7 +1152,6 @@
     <string name="vault_settings_reshare_change">재공유, 보안 관리 또는 메시지 서명.</string>
     <string name="settings_screen_vultisig_education">Vultisig 교육</string>
     <string name="settings_community_website">웹사이트</string>
-    <string name="vault_settings_home_display_subtitle">지갑 잔액 표시 편집</string>
     <string name="vault_settings_security_row_subtitle">패스코드 관리</string>
     <string name="vault_settings_lock_time_title">잠금 시간</string>
     <string name="vault_settings_lock_time_subtitle">앱이 자동으로 잠기기까지의 시간 설정</string>

@@ -33,6 +33,7 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainPendingLpDepositsUseCase
+import com.vultisig.wallet.data.usecases.TcyRewardHistoryUseCase
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.toValue
@@ -99,8 +100,8 @@ internal data class ThorchainDefiPositionsUiModel(
     val lp: LpTabUiModel = LpTabUiModel(),
     val isTotalAmountLoading: Boolean = true,
     val isBalanceVisible: Boolean = true,
-    // Total Rewards Earned sheet for one bonded node, open while non-null
-    val rewardHistory: BondRewardHistoryUiModel? = null,
+    // Total Rewards Earned sheet for one bonded node or the TCY stake, open while non-null
+    val rewardHistory: RewardHistoryUiModel? = null,
 
     // position selection dialog
     val showPositionSelectionDialog: Boolean = false,
@@ -145,6 +146,7 @@ constructor(
     private val getThorChainPendingLpDepositsUseCase: GetThorChainPendingLpDepositsUseCase,
     private val snapshotCache: DeFiPositionsSnapshotCache,
     private val bondRewardsLoader: BondRewardsLoader,
+    private val tcyRewardHistoryUseCase: TcyRewardHistoryUseCase,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -191,6 +193,8 @@ constructor(
     // The vault's RUNE address the bonded list was last loaded for; reward readings are this
     // address's share of each node.
     private var bondAddress: String? = null
+    // The vault's RUNE address the staking tab was last loaded for; the TCY stake is held there.
+    private var stakeAddress: String? = null
     private var loadStakingPositionsJob: Job? = null
 
     // A caller-supplied tab is applied once and then forgotten: the screen leaves and re-enters
@@ -919,22 +923,71 @@ constructor(
     fun onClickLastReward(nodeAddress: String) {
         val bondAddress = bondAddress ?: return
         val node = state.value.bonded.nodes.find { it.fullAddress == nodeAddress } ?: return
-        val sheet = BondRewardHistoryUiModel(nodeAddress = nodeAddress, upcoming = node.nextAward)
+        openRewardHistory(
+            RewardHistoryUiModel(
+                source = RewardHistorySource.BondedNode(nodeAddress),
+                upcoming = node.nextAward,
+            )
+        ) { sheet ->
+            bondRewardsLoader.loadHistory(Chain.ThorChain, nodeAddress, sheet, bondAddress)
+        }
+    }
+
+    fun onClickTcyRewardHistory() {
+        val stakeAddress = stakeAddress ?: return
+        val position =
+            state.value.staking.positions.find { it.coin.id == Coins.ThorChain.TCY.id } ?: return
+        openRewardHistory(
+            RewardHistoryUiModel(
+                source = RewardHistorySource.TcyStake,
+                upcoming = position.nextReward,
+            )
+        ) { sheet ->
+            loadTcyRewardHistory(sheet, stakeAddress)
+        }
+    }
+
+    private fun openRewardHistory(
+        sheet: RewardHistoryUiModel,
+        load: suspend (RewardHistoryUiModel) -> RewardHistoryUiModel,
+    ) {
         state.update { it.copy(rewardHistory = sheet) }
         rewardHistoryJob?.cancel()
         rewardHistoryJob =
-            viewModelScope.launch {
-                val loaded = bondRewardsLoader.loadHistory(Chain.ThorChain, sheet, bondAddress)
-                // A sheet closed, or reopened on another node, while this ran is left alone.
-                state.update {
-                    if (it.rewardHistory?.nodeAddress == nodeAddress) {
-                        it.copy(rewardHistory = loaded)
-                    } else {
-                        it
-                    }
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Failed to load reward history")
+                    showLoadedRewardHistory(sheet.copy(isLoading = false, isError = true))
                 }
+            ) {
+                showLoadedRewardHistory(load(sheet))
             }
     }
+
+    // A sheet closed, or reopened on another position, while the load ran is left alone.
+    private fun showLoadedRewardHistory(loaded: RewardHistoryUiModel) {
+        state.update {
+            if (it.rewardHistory?.source == loaded.source) {
+                it.copy(rewardHistory = loaded)
+            } else {
+                it
+            }
+        }
+    }
+
+    private suspend fun loadTcyRewardHistory(
+        sheet: RewardHistoryUiModel,
+        address: String,
+    ): RewardHistoryUiModel =
+        try {
+            val payouts = tcyRewardHistoryUseCase(address)
+            sheet.withPayouts(payouts.map { it.date to it.amount }, Coins.ThorChain.RUNE)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to load TCY reward history")
+            sheet.copy(isLoading = false, isError = true)
+        }
 
     fun onDismissRewardHistory() {
         rewardHistoryJob?.cancel()
@@ -1024,6 +1077,7 @@ constructor(
                     }
 
                     val address = runeCoin.address
+                    stakeAddress = address
                     val coinsToLoad =
                         thorchainSupportStakingDeFi
                             .filter { coin -> selectedPositions.contains(coin.ticker) }
@@ -1177,6 +1231,7 @@ constructor(
                             rewards = null,
                             nextReward = position.estimatedRewards?.toDouble()?.formatToString(),
                             nextPayout = position.nextPayoutDate?.formatDate(),
+                            hasRewardHistory = true,
                         )
 
                     updateExistingPosition(stakePosition)
