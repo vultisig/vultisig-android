@@ -95,18 +95,18 @@ private fun CurrencyUnitSettingScreenPreview() {
             CurrencyUnitSettingUiModel(
                 currencyUnits =
                     listOf(
-                        CurrencyUnit(fullName = "US Dollar (US\$)"),
+                        CurrencyUnit(fullName = "US Dollar (\$)"),
                         CurrencyUnit(fullName = "Australian Dollar (A\$)"),
                         CurrencyUnit(fullName = "Euro (€)"),
                         CurrencyUnit(fullName = "Russian Ruble (₽)"),
                         CurrencyUnit(fullName = "British Pound (£)"),
-                        CurrencyUnit(fullName = "Japanese Yen (JP¥)"),
+                        CurrencyUnit(fullName = "Japanese Yen (￥)"),
                         CurrencyUnit(fullName = "Chinese Yuan (CN¥)"),
                         CurrencyUnit(fullName = "Canadian Dollar (CA\$)"),
-                        CurrencyUnit(fullName = "Singapore Dollar (SGD)"),
-                        CurrencyUnit(fullName = "Swedish Krona (SEK)"),
+                        CurrencyUnit(fullName = "Singapore Dollar (S\$)"),
+                        CurrencyUnit(fullName = "Swedish Krona (kr)"),
                     ),
-                selectedCurrency = CurrencyUnit(fullName = "US Dollar (US\$)"),
+                selectedCurrency = CurrencyUnit(fullName = "US Dollar (\$)"),
             ),
         onCurrencyClick = {},
         onBackClick = {},
