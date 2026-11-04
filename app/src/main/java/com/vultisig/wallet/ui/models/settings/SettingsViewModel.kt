@@ -14,8 +14,8 @@ import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
 import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Currency
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Discord
-import com.vultisig.wallet.ui.models.settings.SettingsItem.Education
 import com.vultisig.wallet.ui.models.settings.SettingsItem.DiscountTiers
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Education
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Faq
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Github
 import com.vultisig.wallet.ui.models.settings.SettingsItem.HomeDisplay
@@ -112,7 +112,6 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
-
 
     data object Faq :
         SettingsItem(
@@ -226,8 +225,6 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 trailingIcon = R.drawable.icon_chevron_right_small,
             )
         )
-
-
 }
 
 internal data class SettingsItemUiModel(
