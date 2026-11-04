@@ -819,7 +819,7 @@
     <string name="settings_screen_vultisig_education">Vultisig Educatie</string>
     <string name="settings_community_website">Website</string>
     <string name="vault_settings_home_display_subtitle">Weergave van het walletsaldo bewerken</string>
-    <string name="vault_settings_security_row_subtitle">Biometrie voor snel tekenen beheren</string>
+    <string name="vault_settings_security_row_subtitle">Beheer je pincode</string>
     <string name="vault_settings_lock_time_title">Vergrendeltijd</string>
     <string name="vault_settings_lock_time_subtitle">Stel de tijd in totdat de app automatisch vergrendelt</string>
     <string name="vault_settings_sign_title">Ondertekenen</string>

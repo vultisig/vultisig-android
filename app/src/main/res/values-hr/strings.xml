@@ -825,7 +825,7 @@
     <string name="settings_screen_vultisig_education">Edukacija Vultisig</string>
     <string name="settings_community_website">Web</string>
     <string name="vault_settings_home_display_subtitle">Uredite prikaz stanja novčanika</string>
-    <string name="vault_settings_security_row_subtitle">Upravljajte biometrijom za brzo potpisivanje</string>
+    <string name="vault_settings_security_row_subtitle">Upravljajte svojim pristupnim kodom</string>
     <string name="vault_settings_lock_time_title">Vrijeme zaključavanja</string>
     <string name="vault_settings_lock_time_subtitle">Postavite vrijeme do automatskog zaključavanja aplikacije</string>
     <string name="vault_settings_sign_title">Potpiši</string>

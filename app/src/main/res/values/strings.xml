@@ -1172,7 +1172,7 @@
     <string name="settings_screen_vultisig_education">Vultisig Education</string>
     <string name="settings_community_website">Website</string>
     <string name="vault_settings_home_display_subtitle">Edit wallet balance display</string>
-    <string name="vault_settings_security_row_subtitle">Manage biometrics for fast sign</string>
+    <string name="vault_settings_security_row_subtitle">Manage your passcode</string>
     <string name="vault_settings_lock_time_title">Lock time</string>
     <string name="vault_settings_lock_time_subtitle">Set the time until the app locks automatically</string>
     <string name="vault_settings_sign_title">Sign</string>

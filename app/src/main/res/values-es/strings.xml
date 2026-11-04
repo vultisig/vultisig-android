@@ -824,7 +824,7 @@
     <string name="settings_screen_vultisig_education">Educación Vultisig</string>
     <string name="settings_community_website">Sitio web</string>
     <string name="vault_settings_home_display_subtitle">Edita cómo se muestra el saldo de la billetera</string>
-    <string name="vault_settings_security_row_subtitle">Gestiona la biometría para la firma rápida</string>
+    <string name="vault_settings_security_row_subtitle">Gestiona tu código de acceso</string>
     <string name="vault_settings_lock_time_title">Tiempo de bloqueo</string>
     <string name="vault_settings_lock_time_subtitle">Establece el tiempo hasta que la app se bloquee automáticamente</string>
     <string name="vault_settings_sign_title">Firmar</string>
