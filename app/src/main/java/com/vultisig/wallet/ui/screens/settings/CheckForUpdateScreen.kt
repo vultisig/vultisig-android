@@ -108,10 +108,21 @@ private fun AppLogoTile() {
         modifier =
             Modifier.size(LOGO_TILE_SIZE)
                 .background(
-                    brush = Brush.verticalGradient(LOGO_TILE_GRADIENT),
+                    brush =
+                        Brush.verticalGradient(
+                            listOf(Theme.v2.colors.primary.accent4, LOGO_TILE_GRADIENT_END)
+                        ),
                     shape = LOGO_TILE_SHAPE,
                 )
-                .innerShadow(LOGO_TILE_SHAPE, LOGO_TILE_HIGHLIGHT),
+                .innerShadow(
+                    LOGO_TILE_SHAPE,
+                    Shadow(
+                        radius = LOGO_TILE_HIGHLIGHT_SIZE,
+                        color = Theme.v2.colors.neutrals.n50,
+                        alpha = LOGO_TILE_HIGHLIGHT_ALPHA,
+                        offset = DpOffset(x = 0.dp, y = LOGO_TILE_HIGHLIGHT_SIZE),
+                    ),
+                ),
         contentAlignment = Alignment.Center,
     ) {
         Image(
@@ -129,14 +140,9 @@ private val VERSION_TO_BUTTON_GAP = 30.dp
 private val BUTTON_HEIGHT = 46.dp
 private val LOGO_TILE_SIZE = 74.5.dp
 private val LOGO_TILE_SHAPE = RoundedCornerShape(23.84.dp)
-private val LOGO_TILE_GRADIENT = listOf(Color(0xFF4879FD), Color(0xFF0D39B1))
-private val LOGO_TILE_HIGHLIGHT =
-    Shadow(
-        radius = 1.49.dp,
-        color = Color.White,
-        alpha = 0.35f,
-        offset = DpOffset(x = 0.dp, y = 1.49.dp),
-    )
+private val LOGO_TILE_GRADIENT_END = Color(0xFF0D39B1)
+private val LOGO_TILE_HIGHLIGHT_SIZE = 1.49.dp
+private const val LOGO_TILE_HIGHLIGHT_ALPHA = 0.35f
 private val LOGO_SIZE = 41.72.dp
 
 internal class CheckForUpdatePreviewParameterProvider :

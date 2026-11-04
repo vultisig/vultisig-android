@@ -50,7 +50,7 @@ internal fun ShareLinkBottomSheet(onDismissRequest: () -> Unit) {
         onDismissRequest = onDismissRequest,
         dragHandle = { ShareSheetGrabber() },
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        scrimColor = Color.Black.copy(alpha = 0.5f),
+        scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.5f),
     ) {
         ShareLinkContent(
             uiModel = uiModel,
@@ -68,7 +68,10 @@ private fun ShareSheetGrabber() {
         modifier =
             Modifier.padding(top = 8.dp, bottom = 13.dp)
                 .size(width = 36.dp, height = 5.dp)
-                .background(color = Color.White.copy(alpha = 0.3f), shape = Theme.v2.radius.pill)
+                .background(
+                    color = Theme.v2.colors.neutrals.n50.copy(alpha = 0.3f),
+                    shape = Theme.v2.radius.pill,
+                )
     )
 }
 
