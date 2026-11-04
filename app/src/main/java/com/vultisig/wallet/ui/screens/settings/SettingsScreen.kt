@@ -10,6 +10,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.border
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -184,15 +186,39 @@ private fun SettingsTiles(tiles: List<SettingsItem>, onClick: (SettingsItem) -> 
     }
 }
 
-/** Spacing of a [SettingItem]: [List] for the redesigned settings lists, [Legacy] for other screens. */
+/** Spacing of a [SettingItem]: [Legacy] outside the redesign, the others inside it. */
 internal enum class SettingItemLayout(
     val iconGap: Dp,
     val subtitleGap: Dp,
     val switchEndGap: Dp,
     val cardTopPadding: Dp,
+    val horizontalPadding: Dp = 12.dp,
+    val verticalPadding: Dp = 16.dp,
+    val minHeight: Dp = Dp.Unspecified,
+    val trailingGap: Dp = 12.dp,
+    val trailingIconSize: Dp = 16.dp,
 ) {
     Legacy(iconGap = 16.dp, subtitleGap = 0.dp, switchEndGap = 8.dp, cardTopPadding = 0.dp),
     List(iconGap = 12.dp, subtitleGap = 4.dp, switchEndGap = 0.dp, cardTopPadding = 1.dp),
+    Choice(
+        iconGap = 12.dp,
+        subtitleGap = 4.dp,
+        switchEndGap = 0.dp,
+        cardTopPadding = 0.dp,
+        horizontalPadding = 20.dp,
+        verticalPadding = 14.dp,
+        minHeight = 65.dp,
+    ),
+    Radio(
+        iconGap = 12.dp,
+        subtitleGap = 4.dp,
+        switchEndGap = 0.dp,
+        cardTopPadding = 0.dp,
+        horizontalPadding = 14.dp,
+        verticalPadding = 14.dp,
+        trailingGap = 14.dp,
+        trailingIconSize = 20.dp,
+    ),
 }
 
 @Composable
@@ -233,6 +259,31 @@ internal fun SettingsBox(
     }
 }
 
+/** The sub-screens' card: a surface with a hairline border. */
+@Composable
+internal fun SettingsBorderedCard(content: @Composable ColumnScope.() -> Unit) {
+    val colors = Theme.v2.colors
+    val shape = Theme.v2.radius.xl
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(shape)
+                .background(colors.backgrounds.surface1)
+                .border(width = 1.dp, color = colors.border.light, shape = shape),
+        content = content,
+    )
+}
+
+/** Drawn inside the bottom edge so a divider doesn't add to the row's height. */
+internal fun Modifier.rowBottomDivider(color: Color): Modifier = drawBehind {
+    val thickness = DividerDefaults.Thickness.toPx()
+    drawRect(
+        color = color,
+        topLeft = Offset(0f, size.height - thickness),
+        size = Size(size.width, thickness),
+    )
+}
+
 @Composable
 internal fun SettingItem(
     item: SettingsItemUiModel,
@@ -244,7 +295,7 @@ internal fun SettingItem(
     titleStyle: TextStyle = Theme.brockmann.headings.subtitle,
     layout: SettingItemLayout = SettingItemLayout.Legacy,
 ) {
-    val isList = layout == SettingItemLayout.List
+    val isList = layout != SettingItemLayout.Legacy
     val dividerColor = Theme.v2.colors.border.light
     Column {
         Row(
@@ -254,19 +305,11 @@ internal fun SettingItem(
                         else Modifier
                     )
                     .then(
-                        // Drawn inside the bottom edge so a divider doesn't add to the row's height.
-                        if (isList && !isLastItem)
-                            Modifier.drawBehind {
-                                val thickness = DividerDefaults.Thickness.toPx()
-                                drawRect(
-                                    color = dividerColor,
-                                    topLeft = Offset(0f, size.height - thickness),
-                                    size = Size(size.width, thickness),
-                                )
-                            }
+                        if (isList && !isLastItem) Modifier.rowBottomDivider(dividerColor)
                         else Modifier
                     )
                     .fillMaxWidth()
+                    .heightIn(min = layout.minHeight)
                     .then(
                         if (isSelected != null) Modifier.semantics { selected = isSelected }
                         else Modifier
@@ -280,7 +323,10 @@ internal fun SettingItem(
                         } ?: Modifier
                     )
                     .clickOnce(onClick = onClick)
-                    .padding(horizontal = 12.dp, vertical = 16.dp),
+                    .padding(
+                        horizontal = layout.horizontalPadding,
+                        vertical = layout.verticalPadding,
+                    ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             item.leadingIcon?.let { icon ->
@@ -326,11 +372,17 @@ internal fun SettingItem(
                 }
             }
 
-            UiSpacer(size = 12.dp)
+            UiSpacer(size = layout.trailingGap)
 
             item.trailingSwitch?.let { isChecked ->
                 if (isList) {
-                    SettingsSwitch(checked = isChecked)
+                    SettingsSwitch(
+                        checked = isChecked,
+                        // Overhangs the 20dp text line so a toggle row is as tall as a plain one.
+                        modifier =
+                            Modifier.height(SWITCH_LINE_HEIGHT)
+                                .wrapContentHeight(unbounded = true),
+                    )
                 } else {
                     VsSwitch(checked = isChecked, onCheckedChange = null)
                 }
@@ -352,7 +404,8 @@ internal fun SettingItem(
                 Image(
                     imageVector = ImageVector.vectorResource(trailingIcon),
                     modifier =
-                        Modifier.size(16.dp).alpha(if (item.isTrailingIconVisible) 1f else 0f),
+                        Modifier.size(layout.trailingIconSize)
+                            .alpha(if (item.isTrailingIconVisible) 1f else 0f),
                     contentDescription = null,
                 )
             }
@@ -364,26 +417,40 @@ internal fun SettingItem(
     }
 }
 
-/** The list design's compact toggle; the row owns the click and the switch semantics. */
+internal enum class SettingsSwitchSize(
+    val width: Dp,
+    val height: Dp,
+    val knobSize: Dp,
+    val knobGap: Dp,
+) {
+    Compact(width = 40.dp, height = 24.dp, knobSize = 20.dp, knobGap = 2.dp),
+    Large(width = 56.dp, height = 30.dp, knobSize = 24.dp, knobGap = 3.dp),
+}
+
+/** The redesign's toggle track and knob; the caller owns the click and the switch semantics. */
 @Composable
-private fun SettingsSwitch(checked: Boolean) {
-    val colors = Theme.v2.colors
-    val trackColor by
-        animateColorAsState(if (checked) colors.text.secondary else SWITCH_OFF_TRACK)
-    val knobInset by animateDpAsState(if (checked) SWITCH_KNOB_ON_INSET else SWITCH_KNOB_GAP)
+internal fun SettingsSwitch(
+    checked: Boolean,
+    modifier: Modifier = Modifier,
+    size: SettingsSwitchSize = SettingsSwitchSize.Compact,
+    onTrackColor: Color = Theme.v2.colors.text.secondary,
+) {
+    val trackColor by animateColorAsState(if (checked) onTrackColor else SWITCH_OFF_TRACK)
+    val knobInset by
+        animateDpAsState(
+            if (checked) size.width - size.knobSize - size.knobGap else size.knobGap
+        )
     Box(
         modifier =
-            // The switch overhangs the 20dp text line so a toggle row is as tall as a plain one.
-            Modifier.height(SWITCH_LINE_HEIGHT)
-                .wrapContentHeight(unbounded = true)
-                .size(width = SWITCH_WIDTH, height = SWITCH_HEIGHT)
+            modifier
+                .size(width = size.width, height = size.height)
                 .background(trackColor, CircleShape)
     ) {
         Box(
             modifier =
-                Modifier.offset(x = knobInset, y = SWITCH_KNOB_GAP)
-                    .size(SWITCH_KNOB_SIZE)
-                    .background(colors.neutrals.n50, CircleShape)
+                Modifier.offset(x = knobInset, y = size.knobGap)
+                    .size(size.knobSize)
+                    .background(Theme.v2.colors.neutrals.n50, CircleShape)
         )
     }
 }
@@ -411,11 +478,6 @@ private val TILE_GAP = 6.dp
 private val TILE_HEIGHT = 70.dp
 private val VERSION_FOOTER_TOP_GAP = 79.dp
 private val SWITCH_LINE_HEIGHT = 20.dp
-private val SWITCH_WIDTH = 40.dp
-private val SWITCH_HEIGHT = 24.dp
-private val SWITCH_KNOB_SIZE = 20.dp
-private val SWITCH_KNOB_GAP = 2.dp
-private val SWITCH_KNOB_ON_INSET = SWITCH_WIDTH - SWITCH_KNOB_SIZE - SWITCH_KNOB_GAP
 private val SWITCH_OFF_TRACK = Color(0xFF7D909E)
 private const val TINTED_SUBTITLE_ALPHA = 0.8f
 
