@@ -776,9 +776,9 @@
     <string name="vault_management">Kluisbeheer</string>
     <string name="other">Overig</string>
     <string name="check_updates_title">Controleer op updates</string>
-    <string name="update_available">Er is een update beschikbaar</string>
-    <string name="app_up_to_date">De app is up-to-date</string>
-    <string name="update">Bijwerken</string>
+    <string name="update_available">Er is een update beschikbaar.</string>
+    <string name="app_up_to_date">De app is up-to-date.</string>
+    <string name="update">App bijwerken</string>
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Adresboek bewerken</string>
     <string name="address_book_delete_entry_title">Adres verwijderen?</string>

@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Push Notifications -->
     <string name="notifications">Notifications</string>
-    <string name="push_notifications">Push notifications</string>
+    <string name="push_notifications">Push Notifications</string>
     <string name="push_notifications_failed">Push notification failed</string>
     <string name="push_notification_vault_not_found">Vault not found</string>
     <string name="deposit_deeplink_unsupported">This deposit link isn\'t supported</string>
@@ -31,7 +31,7 @@
     <string name="choose_vaults_for_notifications">Choose vaults for Notifications</string>
     <string name="notifications_vault_sheet_subtitle">You can manage notifications in system settings.</string>
     <string name="not_now">Not now</string>
-    <string name="vault_notifications">Vault notifications</string>
+    <string name="vault_notifications">Vault Notifications</string>
     <string name="enable_all">Enable all</string>
 
     <string name="deposit_option_bond">Bond</string>
@@ -1131,9 +1131,9 @@
     <string name="defi_action_redeem" translatable="false">Redeem</string>
 
     <string name="check_updates_title">Check Updates</string>
-    <string name="update_available">Update is available</string>
-    <string name="app_up_to_date">Application is up to date</string>
-    <string name="update">Update</string>
+    <string name="update_available">Update is available.</string>
+    <string name="app_up_to_date">Application is up to date.</string>
+    <string name="update">Update App</string>
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Edit Address Book</string>
     <string name="address_book_delete_entry_title">Delete address?</string>

@@ -777,9 +777,9 @@
     <string name="vault_management">Gerenciamento de cofres</string>
     <string name="other">Outros</string>
     <string name="check_updates_title">Verificar atualizações</string>
-    <string name="update_available">Atualização disponível</string>
-    <string name="app_up_to_date">App atualizado</string>
-    <string name="update">Atualizar</string>
+    <string name="update_available">Atualização disponível.</string>
+    <string name="app_up_to_date">App atualizado.</string>
+    <string name="update">Atualizar app</string>
     <string name="add_address_title_label">Rótulo</string>
     <string name="address_book_title_edit">Editar Catálogo de Endereços</string>
     <string name="address_book_delete_entry_title">Excluir endereço?</string>

@@ -780,9 +780,9 @@
     <string name="vault_management">Управление хранилищем</string>
     <string name="other">Другое</string>
     <string name="check_updates_title">Проверить обновления</string>
-    <string name="update_available">Обновление доступно</string>
-    <string name="app_up_to_date">Приложение обновлено</string>
-    <string name="update">Обновить</string>
+    <string name="update_available">Обновление доступно.</string>
+    <string name="app_up_to_date">Приложение обновлено.</string>
+    <string name="update">Обновить приложение</string>
     <string name="add_address_title_label">Метка</string>
     <string name="address_book_title_edit">Редактировать адресную книгу</string>
     <string name="address_book_delete_entry_title">Удалить адрес?</string>

@@ -780,9 +780,9 @@
     <string name="vault_management">Upravljanje trezorom</string>
     <string name="other">Ostalo</string>
     <string name="check_updates_title">Provjeri ažuriranja</string>
-    <string name="update_available">Ažuriranje je dostupno</string>
-    <string name="app_up_to_date">Aplikacija je ažurirana</string>
-    <string name="update">Ažuriraj</string>
+    <string name="update_available">Ažuriranje je dostupno.</string>
+    <string name="app_up_to_date">Aplikacija je ažurirana.</string>
+    <string name="update">Ažuriraj aplikaciju</string>
     <string name="add_address_title_label">Oznaka</string>
     <string name="address_book_title_edit">Uredi adresar</string>
     <string name="address_book_delete_entry_title">Izbrisati adresu?</string>
