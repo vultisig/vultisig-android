@@ -18,6 +18,7 @@ import com.vultisig.wallet.ui.models.settings.CurrencyUnit
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingUiModel
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingViewModel
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asUiText
 
 @Composable
@@ -75,10 +76,14 @@ private fun CurrencyUnitSettingItem(
         item =
             SettingsItemUiModel(
                 title = name.asUiText(),
-                trailingIcon = if (isSelected) R.drawable.check_2 else null,
+                trailingIcon = if (isSelected) R.drawable.loading_bar_checkmark else null,
+                backgroundColor =
+                    if (isSelected) Theme.v2.colors.variables.backgroundsSurface12 else null,
             ),
         onClick = onClick,
         isLastItem = isLastItem,
+        titleStyle = Theme.brockmann.body.s.medium,
+        layout = SettingItemLayout.Choice,
     )
 }
 
