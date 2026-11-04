@@ -36,6 +36,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -211,6 +212,40 @@ fun InfoItem(
                 text = value,
                 style = Theme.brockmann.body.m.medium,
                 color = Theme.v2.colors.text.secondary,
+            )
+        }
+    }
+}
+
+/**
+ * An [InfoItem] whose [value] carries a trailing chevron; the whole cell is a button that opens a
+ * reward history.
+ */
+@Composable
+internal fun ChevronInfoItem(
+    icon: Int,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    value: @Composable () -> Unit,
+) {
+    Column(
+        modifier =
+            modifier.clip(Theme.v2.radius.xs).clickable(role = Role.Button, onClick = onClick)
+    ) {
+        InfoItem(icon = icon, label = label, value = null)
+
+        UiSpacer(6.dp)
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            value()
+
+            UiSpacer(4.dp)
+
+            UiIcon(
+                drawableResId = R.drawable.ic_chevron_right_16,
+                size = 16.dp,
+                tint = Theme.v2.colors.text.primary,
             )
         }
     }
