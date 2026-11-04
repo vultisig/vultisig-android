@@ -68,10 +68,11 @@ internal enum class VsTextInputFieldInnerState {
     Error,
 }
 
-/** [Settings] is the redesigned settings sub-screens' field; every other screen keeps [Default]. */
+/** The Settings styles are the redesign's sub-screen fields; other screens keep [Default]. */
 internal enum class VsTextInputFieldStyle {
     Default,
     Settings,
+    SettingsOutlined,
 }
 
 @Composable
@@ -101,7 +102,8 @@ internal fun VsTextInputField(
     style: VsTextInputFieldStyle = VsTextInputFieldStyle.Default,
 ) {
     var focused by remember { mutableStateOf(false) }
-    val isSettingsStyle = style == VsTextInputFieldStyle.Settings
+    val isSettingsStyle = style != VsTextInputFieldStyle.Default
+    val isOutlinedStyle = style == VsTextInputFieldStyle.SettingsOutlined
     val fieldTextStyle =
         if (isSettingsStyle) Theme.brockmann.body.s.medium else Theme.brockmann.body.m.medium
     val trailingIconTint =
@@ -152,7 +154,8 @@ internal fun VsTextInputField(
                                             Theme.v2.colors.alerts.success
                                         VsTextInputFieldInnerState.Error ->
                                             Theme.v2.colors.alerts.error
-                                        VsTextInputFieldInnerState.Default if focused ->
+                                        VsTextInputFieldInnerState.Default if
+                                            focused || isOutlinedStyle ->
                                             Theme.v2.colors.border.normal
                                         VsTextInputFieldInnerState.Default if isSettingsStyle ->
                                             Theme.v2.colors.variables.bordersExtraLight
@@ -221,7 +224,7 @@ internal fun VsTextInputField(
                         },
                     )
 
-                    if (textFieldState.text.isNotEmpty()) {
+                    if (textFieldState.text.isNotEmpty() || isOutlinedStyle) {
                         Icon(
                             painter =
                                 painterResource(

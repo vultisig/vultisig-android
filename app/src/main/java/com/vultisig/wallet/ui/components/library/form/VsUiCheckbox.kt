@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.library.form
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
@@ -11,12 +12,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun VsUiCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+internal fun VsUiCheckbox(
+    checked: Boolean,
+    @DrawableRes checkIcon: Int = R.drawable.ic_check,
+    checkIconSize: Dp = 16.dp,
+    onCheckedChange: (Boolean) -> Unit,
+) {
     Surface(
         color =
             if (checked) {
@@ -38,8 +45,8 @@ internal fun VsUiCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit) 
     ) {
         if (checked) {
             Icon(
-                modifier = Modifier.size(16.dp),
-                painter = painterResource(id = R.drawable.ic_check),
+                modifier = Modifier.size(checkIconSize),
+                painter = painterResource(id = checkIcon),
                 contentDescription = null,
                 tint = Theme.v2.colors.alerts.success,
             )
