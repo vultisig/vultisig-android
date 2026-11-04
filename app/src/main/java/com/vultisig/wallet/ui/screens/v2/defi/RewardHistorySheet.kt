@@ -33,24 +33,25 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
-import com.vultisig.wallet.ui.models.defi.BondRewardHistoryUiModel
-import com.vultisig.wallet.ui.models.defi.BondRewardRowUiModel
+import com.vultisig.wallet.ui.models.defi.RewardHistorySource
+import com.vultisig.wallet.ui.models.defi.RewardHistoryUiModel
+import com.vultisig.wallet.ui.models.defi.RewardRowUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
- * Total Rewards Earned for one bonded node: the realised churn payouts summed, the share still
- * accruing toward the next churn, then one row per past churn, newest first.
+ * Total Rewards Earned for one bonded node or the TCY stake: the realised payouts summed, the share
+ * still accruing toward the next churn or distribution, then one row per past payout, newest first.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun BondRewardHistorySheet(
-    model: BondRewardHistoryUiModel,
+internal fun RewardHistorySheet(
+    model: RewardHistoryUiModel,
     @DrawableRes coinIconRes: Int,
     isBalanceVisible: Boolean,
     onDismissRequest: () -> Unit,
 ) {
     V2BottomSheet(onDismissRequest = onDismissRequest) {
-        BondRewardHistoryContent(
+        RewardHistoryContent(
             model = model,
             coinIconRes = coinIconRes,
             isBalanceVisible = isBalanceVisible,
@@ -59,8 +60,8 @@ internal fun BondRewardHistorySheet(
 }
 
 @Composable
-private fun BondRewardHistoryContent(
-    model: BondRewardHistoryUiModel,
+private fun RewardHistoryContent(
+    model: RewardHistoryUiModel,
     @DrawableRes coinIconRes: Int,
     isBalanceVisible: Boolean,
 ) {
@@ -105,10 +106,15 @@ private fun BondRewardHistoryContent(
 
                 Text(
                     text =
-                        stringResource(
-                            R.string.reward_history_node,
-                            model.nodeAddress.formatAddress(),
-                        ),
+                        when (val source = model.source) {
+                            is RewardHistorySource.BondedNode ->
+                                stringResource(
+                                    R.string.reward_history_node,
+                                    source.nodeAddress.formatAddress(),
+                                )
+                            RewardHistorySource.TcyStake ->
+                                stringResource(R.string.staked_tcy_header)
+                        },
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.tertiary,
                     textAlign = TextAlign.Center,
@@ -120,13 +126,15 @@ private fun BondRewardHistoryContent(
             UiHorizontalDivider(color = Theme.v2.colors.border.light)
         }
 
-        item {
-            RewardRow(
-                coinIconRes = coinIconRes,
-                amount = "~${amount(model.upcoming)}",
-                badge = stringResource(R.string.reward_history_upcoming),
-                badgeColor = Theme.v2.colors.alerts.warning,
-            )
+        model.upcoming?.let { upcoming ->
+            item {
+                RewardRow(
+                    coinIconRes = coinIconRes,
+                    amount = "~${amount(upcoming)}",
+                    badge = stringResource(R.string.reward_history_upcoming),
+                    badgeColor = Theme.v2.colors.alerts.warning,
+                )
+            }
         }
 
         when {
@@ -215,19 +223,20 @@ private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 
 @Preview
 @Composable
-private fun BondRewardHistoryContentPreview() {
-    BondRewardHistoryContent(
+private fun RewardHistoryContentPreview() {
+    RewardHistoryContent(
         model =
-            BondRewardHistoryUiModel(
-                nodeAddress = "thor10czf2s89h79fsjmqqck85cdqeq536hw5ngz4lt",
+            RewardHistoryUiModel(
+                source =
+                    RewardHistorySource.BondedNode("thor10czf2s89h79fsjmqqck85cdqeq536hw5ngz4lt"),
                 upcoming = "18.2031 RUNE",
                 isLoading = false,
                 totalEarned = "62.0000 RUNE",
                 rows =
                     listOf(
-                        BondRewardRowUiModel(amount = "20.0000 RUNE", date = "Sep 21, 2026"),
-                        BondRewardRowUiModel(amount = "20.0000 RUNE", date = "Sep 14, 2026"),
-                        BondRewardRowUiModel(amount = "22.0000 RUNE", date = "Sep 7, 2026"),
+                        RewardRowUiModel(amount = "20.0000 RUNE", date = "Sep 21, 2026"),
+                        RewardRowUiModel(amount = "20.0000 RUNE", date = "Sep 14, 2026"),
+                        RewardRowUiModel(amount = "22.0000 RUNE", date = "Sep 7, 2026"),
                     ),
             ),
         coinIconRes = R.drawable.rune,

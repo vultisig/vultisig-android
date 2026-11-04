@@ -40,13 +40,13 @@ import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
-import com.vultisig.wallet.ui.screens.v2.defi.BondRewardHistorySheet
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.LpTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
+import com.vultisig.wallet.ui.screens.v2.defi.RewardHistorySheet
 import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasLpPositions
@@ -93,6 +93,7 @@ internal fun ThorchainDefiPositionsScreen(
         onClickBond = { model.onClickBond(it) },
         onClickLastReward = model::onClickLastReward,
         onDismissRewardHistory = model::onDismissRewardHistory,
+        onClickTcyRewardHistory = model::onClickTcyRewardHistory,
         onTabSelected = model::onTabSelected,
         onEditPositionClick = { model.setPositionSelectionDialogVisibility(true) },
         onCancelEditPositionClick = { model.setPositionSelectionDialogVisibility(false) },
@@ -120,6 +121,7 @@ internal fun ThorchainDefiPositionScreenContent(
     onClickBond: (String) -> Unit,
     onClickLastReward: (String) -> Unit = {},
     onDismissRewardHistory: () -> Unit = {},
+    onClickTcyRewardHistory: () -> Unit = {},
     onEditPositionClick: () -> Unit = {},
     onCancelEditPositionClick: () -> Unit = {},
     onDonePositionClick: () -> Unit = {},
@@ -194,7 +196,7 @@ internal fun ThorchainDefiPositionScreenContent(
             }
 
             state.rewardHistory?.let { rewardHistory ->
-                BondRewardHistorySheet(
+                RewardHistorySheet(
                     model = rewardHistory,
                     coinIconRes = R.drawable.rune,
                     isBalanceVisible = state.isBalanceVisible,
@@ -228,6 +230,7 @@ internal fun ThorchainDefiPositionScreenContent(
                             onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) },
                             onClickTransfer = onClickTransfer,
                             isBalanceVisible = state.isBalanceVisible,
+                            onClickRewardHistory = onClickTcyRewardHistory,
                         )
 
                     DeFiTab.LP.displayNameRes -> {
