@@ -28,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -410,9 +409,7 @@ internal fun SettingItem(
             item.trailingIcon?.let { trailingIcon ->
                 Image(
                     imageVector = ImageVector.vectorResource(trailingIcon),
-                    modifier =
-                        Modifier.size(layout.trailingIconSize)
-                            .alpha(if (item.isTrailingIconVisible) 1f else 0f),
+                    modifier = Modifier.size(layout.trailingIconSize),
                     contentDescription = null,
                 )
             }
