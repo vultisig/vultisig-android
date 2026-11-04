@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.screens.transaction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -182,42 +184,46 @@ private fun DeleteAddressDialog(
 
 @Composable
 private fun NoAddressView(onAddAddressClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize()
-            .settingsShade(centerOffsetY = EMPTY_SHADE_CENTER_OFFSET)
-            .padding(start = 48.dp, end = 48.dp, top = 48.dp, bottom = EMPTY_BOTTOM_OFFSET),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = stringResource(R.string.address_book_empty_title),
-            style = Theme.brockmann.button.medium.regular,
-            color = Theme.v2.colors.neutrals.n50,
-            textAlign = TextAlign.Center,
-        )
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val bottomOffset = min(EMPTY_BOTTOM_OFFSET, maxHeight * EMPTY_BOTTOM_MAX_FRACTION)
+        Column(
+            Modifier.fillMaxSize()
+                .settingsShade(centerOffsetY = EMPTY_SHADE_CENTER_OFFSET)
+                .padding(start = 48.dp, end = 48.dp, top = 48.dp, bottom = bottomOffset),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = stringResource(R.string.address_book_empty_title),
+                style = Theme.brockmann.button.medium.regular,
+                color = Theme.v2.colors.neutrals.n50,
+                textAlign = TextAlign.Center,
+            )
 
-        UiSpacer(size = 12.dp)
+            UiSpacer(size = 12.dp)
 
-        Text(
-            text = stringResource(R.string.address_book_empty_description),
-            style = Theme.brockmann.button.medium.medium,
-            color = Theme.v2.colors.text.tertiary,
-            textAlign = TextAlign.Center,
-        )
+            Text(
+                text = stringResource(R.string.address_book_empty_description),
+                style = Theme.brockmann.button.medium.medium,
+                color = Theme.v2.colors.text.tertiary,
+                textAlign = TextAlign.Center,
+            )
 
-        UiSpacer(size = 30.dp)
+            UiSpacer(size = 30.dp)
 
-        VsButton(
-            label = stringResource(R.string.address_book_add_address_button),
-            onClick = onAddAddressClick,
-            size = VsButtonSize.Wide,
-            variant = VsButtonVariant.Primary,
-        )
+            VsButton(
+                label = stringResource(R.string.address_book_add_address_button),
+                onClick = onAddAddressClick,
+                size = VsButtonSize.Wide,
+                variant = VsButtonVariant.Primary,
+            )
+        }
     }
 }
 
 private val HEADER_ICON_SIZE = 24.dp
 private val EMPTY_BOTTOM_OFFSET = 177.dp
+private const val EMPTY_BOTTOM_MAX_FRACTION = 0.25f
 private val EMPTY_SHADE_CENTER_OFFSET = (-44).dp
 private val ROW_HEIGHT = 66.dp
 private val GRIP_TO_ROW_GAP = 5.5.dp
