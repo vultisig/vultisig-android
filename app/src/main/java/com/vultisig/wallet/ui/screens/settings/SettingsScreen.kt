@@ -1,21 +1,23 @@
 package com.vultisig.wallet.ui.screens.settings
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.Box
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.Text
@@ -39,14 +41,12 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.border
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
@@ -113,7 +113,12 @@ private fun SettingsScreen(
                         aboveCard =
                             if (group.tiles.isEmpty()) null
                             else {
-                                { SettingsTiles(tiles = group.tiles, onClick = onSettingsItemClick) }
+                                {
+                                    SettingsTiles(
+                                        tiles = group.tiles,
+                                        onClick = onSettingsItemClick,
+                                    )
+                                }
                             },
                     ) {
                         val enabledSettings = group.items.filter(SettingsItem::enabled)
@@ -184,7 +189,9 @@ private fun SettingsTiles(tiles: List<SettingsItem>, onClick: (SettingsItem) -> 
     }
 }
 
-/** Spacing of a [SettingItem]: [List] for the redesigned settings lists, [Legacy] for other screens. */
+/**
+ * Spacing of a [SettingItem]: [List] for the redesigned settings lists, [Legacy] for other screens.
+ */
 internal enum class SettingItemLayout(
     val iconGap: Dp,
     val subtitleGap: Dp,
@@ -254,7 +261,8 @@ internal fun SettingItem(
                         else Modifier
                     )
                     .then(
-                        // Drawn inside the bottom edge so a divider doesn't add to the row's height.
+                        // Drawn inside the bottom edge so a divider doesn't add to the row's
+                        // height.
                         if (isList && !isLastItem)
                             Modifier.drawBehind {
                                 val thickness = DividerDefaults.Thickness.toPx()
@@ -311,6 +319,7 @@ internal fun SettingItem(
                         text = item.title.asString(),
                         style = titleStyle,
                         color = tint ?: Theme.v2.colors.text.primary,
+                        modifier = Modifier.weight(1f, fill = false),
                     )
 
                     item.titleBadge?.let { badge -> SettingItemBadge(text = badge.asString()) }
@@ -319,7 +328,8 @@ internal fun SettingItem(
                 item.subTitle?.let {
                     Text(
                         text = it.asString(),
-                        color = tint?.copy(alpha = TINTED_SUBTITLE_ALPHA)
+                        color =
+                            tint?.copy(alpha = TINTED_SUBTITLE_ALPHA)
                                 ?: Theme.v2.colors.text.secondary,
                         style = Theme.brockmann.supplementary.caption,
                     )
@@ -368,8 +378,7 @@ internal fun SettingItem(
 @Composable
 private fun SettingsSwitch(checked: Boolean) {
     val colors = Theme.v2.colors
-    val trackColor by
-        animateColorAsState(if (checked) colors.text.secondary else SWITCH_OFF_TRACK)
+    val trackColor by animateColorAsState(if (checked) colors.text.secondary else SWITCH_OFF_TRACK)
     val knobInset by animateDpAsState(if (checked) SWITCH_KNOB_ON_INSET else SWITCH_KNOB_GAP)
     Box(
         modifier =
@@ -400,7 +409,11 @@ private fun SettingItemBadge(text: String) {
                     color = Theme.v2.colors.variables.backgroundsSurface12,
                     shape = Theme.v2.radius.pill,
                 )
-                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = Theme.v2.radius.pill)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = Theme.v2.radius.pill,
+                )
                 .padding(horizontal = 8.dp, vertical = 3.dp),
     )
 }

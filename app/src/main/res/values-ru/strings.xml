@@ -825,7 +825,7 @@
     <string name="settings_screen_vultisig_education">Обучение Vultisig</string>
     <string name="settings_community_website">Сайт</string>
     <string name="vault_settings_home_display_subtitle">Изменить отображение баланса кошелька</string>
-    <string name="vault_settings_security_row_subtitle">Управление биометрией для быстрой подписи</string>
+    <string name="vault_settings_security_row_subtitle">Управление пин-кодом</string>
     <string name="vault_settings_lock_time_title">Время блокировки</string>
     <string name="vault_settings_lock_time_subtitle">Установите время до автоматической блокировки приложения</string>
     <string name="vault_settings_sign_title">Подписать</string>
