@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -134,6 +135,7 @@ fun VsButton(
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
     shape: Shape? = null,
+    labelStyle: TextStyle = Theme.brockmann.button.semibold.medium,
     onClick: () -> Unit,
 ) {
     VsButton(
@@ -171,7 +173,7 @@ fun VsButton(
         if (label != null) {
             AutoSizingText(
                 text = label,
-                style = Theme.brockmann.button.semibold.medium,
+                style = labelStyle,
                 color = contentColor,
             )
         }

@@ -130,6 +130,7 @@ internal fun AddressBookScreen(
             if (state.entries.isNotEmpty()) {
                 VsButton(
                     label = stringResource(R.string.address_book_add_address_button),
+                    labelStyle = Theme.brockmann.button.medium.medium,
                     onClick = onAddAddressClick,
                     modifier =
                         Modifier.fillMaxWidth()

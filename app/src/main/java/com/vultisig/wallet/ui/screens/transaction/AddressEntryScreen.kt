@@ -90,6 +90,7 @@ internal fun AddAddressEntryScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.add_vault_save),
+                labelStyle = Theme.brockmann.button.medium.medium,
                 onClick = onSaveAddressClick,
                 modifier =
                     Modifier.fillMaxWidth()
