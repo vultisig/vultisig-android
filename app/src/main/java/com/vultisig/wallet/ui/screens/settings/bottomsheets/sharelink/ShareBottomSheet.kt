@@ -29,13 +29,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.rememberAsyncImagePainter
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.bottomsheet.SheetGrabber
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
@@ -49,7 +49,7 @@ internal fun ShareLinkBottomSheet(onDismissRequest: () -> Unit) {
 
     VsModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        dragHandle = { ShareSheetGrabber() },
+        dragHandle = { SheetGrabber() },
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.5f),
     ) {
@@ -61,19 +61,6 @@ internal fun ShareLinkBottomSheet(onDismissRequest: () -> Unit) {
             },
         )
     }
-}
-
-@Composable
-internal fun ShareSheetGrabber(top: Dp = 8.dp, bottom: Dp = 13.dp) {
-    Box(
-        modifier =
-            Modifier.padding(top = top, bottom = bottom)
-                .size(width = 36.dp, height = 5.dp)
-                .background(
-                    color = Theme.v2.colors.neutrals.n50.copy(alpha = 0.3f),
-                    shape = Theme.v2.radius.pill,
-                )
-    )
 }
 
 @Composable

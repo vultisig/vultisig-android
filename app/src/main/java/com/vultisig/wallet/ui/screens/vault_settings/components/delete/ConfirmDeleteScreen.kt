@@ -22,12 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -37,6 +36,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.drawSoftGlow
 import com.vultisig.wallet.ui.components.library.form.VsUiCheckbox
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.SettingInfoHorizontalItem
@@ -169,41 +169,47 @@ private fun ConfirmDeleteScreen(
 
             cautions.forEachIndexed { index, resId ->
                 if (index > 0) UiSpacer(size = 2.dp)
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .then(
-                                if (index == 0) Modifier
-                                else Modifier.heightIn(min = CAUTION_ROW_MIN_HEIGHT)
-                            )
-                            .toggleable(
-                                value = checkedCautionIndexes.contains(index),
-                                onValueChange = { checked ->
-                                    onItemCheckChangeClick(index, checked)
-                                },
-                            )
-                            .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    VsUiCheckbox(
-                        checked = checkedCautionIndexes.contains(index),
-                        checkIcon = R.drawable.ic_caution_check,
-                        checkIconSize = 24.dp,
-                    ) { checked ->
-                        onItemCheckChangeClick(index, checked)
-                    }
-
-                    Text(
-                        text = stringResource(resId),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = colors.text.secondary,
-                    )
-                }
+                CautionRow(
+                    text = stringResource(resId),
+                    isChecked = checkedCautionIndexes.contains(index),
+                    hasMinHeight = index > 0,
+                    onCheckedChange = { checked -> onItemCheckChangeClick(index, checked) },
+                )
             }
 
             UiSpacer(size = 8.dp)
         }
+    }
+}
+
+@Composable
+private fun CautionRow(
+    text: String,
+    isChecked: Boolean,
+    hasMinHeight: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .heightIn(min = if (hasMinHeight) CAUTION_ROW_MIN_HEIGHT else Dp.Unspecified)
+                .toggleable(value = isChecked, onValueChange = onCheckedChange)
+                .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        VsUiCheckbox(
+            checked = isChecked,
+            checkIcon = R.drawable.ic_caution_check,
+            checkIconSize = 24.dp,
+            onCheckedChange = onCheckedChange,
+        )
+
+        Text(
+            text = text,
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.secondary,
+        )
     }
 }
 
@@ -279,20 +285,12 @@ private fun DeleteVaultBanner() {
 /** The red wash Figma lays over the screen's content, a blurred ellipse. */
 private fun Modifier.settingsDeleteGlow(): Modifier = drawWithContent {
     drawContent()
-    val glowCenter = Offset(center.x, GLOW_CENTER_Y.toPx())
-    val radius = GLOW_RADIUS.toPx()
-    scale(scaleX = 1f, scaleY = GLOW_HEIGHT_RATIO, pivot = glowCenter) {
-        drawCircle(
-            brush =
-                Brush.radialGradient(
-                    colorStops = GLOW_STOPS,
-                    center = glowCenter,
-                    radius = radius,
-                ),
-            radius = radius,
-            center = glowCenter,
-        )
-    }
+    drawSoftGlow(
+        glowCenter = Offset(center.x, GLOW_CENTER_Y.toPx()),
+        radius = GLOW_RADIUS.toPx(),
+        stops = GLOW_STOPS,
+        scaleY = GLOW_HEIGHT_RATIO,
+    )
 }
 
 @Preview

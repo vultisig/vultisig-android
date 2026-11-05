@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -14,7 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,7 +22,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCircularLoading
 import com.vultisig.wallet.ui.components.backup.BackupMethodBottomSheet
-import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
+import com.vultisig.wallet.ui.components.bottomsheet.SettingsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
@@ -39,7 +37,6 @@ import com.vultisig.wallet.ui.screens.settings.SettingsBox
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateBottomSheet
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.FeatureGateSheetStyle
-import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareSheetGrabber
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -168,12 +165,7 @@ private fun BiometricFastSignBottomSheet(
     onSaveBiometricsClick: () -> Unit,
     biometricsEnableUiModel: BiometricsEnableUiModel,
 ) {
-    VsModalBottomSheet(
-        onDismissRequest = onDismissBiometricsBottomSheet,
-        dragHandle = { ShareSheetGrabber(top = 5.dp, bottom = 10.dp) },
-        shape = RoundedCornerShape(topStart = SHEET_CORNER_RADIUS, topEnd = SHEET_CORNER_RADIUS),
-        scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.5f),
-    ) {
+    SettingsModalBottomSheet(onDismissRequest = onDismissBiometricsBottomSheet) {
         BiometricFastSignBottomSheetContent(
             uiModel = biometricsEnableUiModel,
             passwordTextFieldState = biometricTextFieldState,
@@ -243,7 +235,6 @@ private fun BiometricFastSignBottomSheetContent(
     }
 }
 
-private val SHEET_CORNER_RADIUS = 38.dp
 
 @Preview
 @Composable

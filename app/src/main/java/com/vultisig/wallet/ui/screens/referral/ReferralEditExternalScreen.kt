@@ -15,6 +15,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -70,12 +72,12 @@ private fun ReferralEditExternalScreen(
     onPasteClick: () -> Unit,
 ) {
     V2Scaffold(
-        title = stringResource(R.string.referral_edit_external_title),
+        title = stringResource(R.string.referral_save_referred_code),
         onBackClick = onBackClick,
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.referral_save_referred_code),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                 variant = VsButtonVariant.Primary,
                 state = VsButtonState.Enabled,
                 onClick = onSaveReferral,
@@ -90,10 +92,10 @@ private fun ReferralEditExternalScreen(
                         .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = stringResource(R.string.referral_use_referred_code),
+                    text = saveReferralHeader(),
                     textAlign = TextAlign.Start,
                     color = Theme.v2.colors.text.primary,
-                    style = Theme.brockmann.body.s.medium,
+                    style = Theme.brockmann.headings.subtitle,
                 )
 
                 UiSpacer(8.dp)
@@ -113,6 +115,25 @@ private fun ReferralEditExternalScreen(
         },
     )
 }
+
+@Composable
+private fun saveReferralHeader(): AnnotatedString {
+    val text = stringResource(R.string.referral_save_header, FRIEND_DISCOUNT_LABEL)
+    val start = text.indexOf(FRIEND_DISCOUNT_LABEL)
+    return AnnotatedString(
+        text = text,
+        spanStyles =
+            listOf(
+                AnnotatedString.Range(
+                    SpanStyle(color = Theme.v2.colors.primary.accent4),
+                    start,
+                    start + FRIEND_DISCOUNT_LABEL.length,
+                )
+            ),
+    )
+}
+
+private const val FRIEND_DISCOUNT_LABEL = "10%"
 
 internal const val NEW_EXTERNAL_REFERRAL_CODE = "NEW_EXTERNAL_REFERRAL_CODE"
 

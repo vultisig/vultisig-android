@@ -33,11 +33,11 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
+import com.vultisig.wallet.ui.components.bottomsheet.SheetGrabber
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
-import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareSheetGrabber
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,7 +77,7 @@ internal fun SettingsSecurityScannerBottomSheet(
         containerColor = Theme.v2.colors.backgrounds.background,
         shape = RoundedCornerShape(topStart = 38.dp, topEnd = 38.dp),
         scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.5f),
-        dragHandle = { ShareSheetGrabber(top = 5.dp, bottom = 16.dp) },
+        dragHandle = { SheetGrabber(top = 5.dp, bottom = 16.dp) },
     ) {
         SettingsSecurityScannerContent(
             onGoBack = onDismissRequest,

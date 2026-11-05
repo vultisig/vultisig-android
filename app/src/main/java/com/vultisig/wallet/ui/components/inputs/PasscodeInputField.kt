@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -51,6 +52,12 @@ internal enum class PasscodeInputFieldState {
     Error,
 }
 
+/** [Cells] is the lock screen's look; [Dots] is the settings entry's, a ring per digit. */
+internal enum class PasscodeInputFieldStyle {
+    Cells,
+    Dots,
+}
+
 /**
  * One cell per [PASSCODE_LENGTH] digit.
  *
@@ -65,6 +72,7 @@ internal fun PasscodeInputField(
     enabled: Boolean = true,
     state: PasscodeInputFieldState = PasscodeInputFieldState.Default,
     onKeyboardAction: KeyboardActionHandler? = null,
+    style: PasscodeInputFieldStyle = PasscodeInputFieldStyle.Cells,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -94,58 +102,80 @@ internal fun PasscodeInputField(
         )
 
         val entered = textFieldState.text.length
+        val requestInput = {
+            focusRequester.requestFocus()
+            keyboard?.show()
+            Unit
+        }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier =
-                Modifier.height(PASSCODE_CELL_HEIGHT).clickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() },
-                    enabled = enabled,
-                ) {
-                    focusRequester.requestFocus()
-                    keyboard?.show()
-                },
-        ) {
-            repeat(PASSCODE_LENGTH) { index ->
-                val isActive = enabled && isFocused && index == entered
-                val isFilled = index < entered
+        if (style == PasscodeInputFieldStyle.Dots) {
+            PasscodeDots(
+                filledCount = entered,
+                isError = state == PasscodeInputFieldState.Error,
+                // Keeps the cells' tap target around the shorter row.
+                modifier =
+                    Modifier.height(PASSCODE_DOT_BOX)
+                        .wrapContentHeight(unbounded = true)
+                        .height(PASSCODE_CELL_HEIGHT)
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                            enabled = enabled,
+                            onClick = requestInput,
+                        ),
+            )
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier =
+                    Modifier.height(PASSCODE_CELL_HEIGHT)
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                            enabled = enabled,
+                            onClick = requestInput,
+                        ),
+            ) {
+                repeat(PASSCODE_LENGTH) { index ->
+                    val isActive = enabled && isFocused && index == entered
+                    val isFilled = index < entered
 
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier =
-                        Modifier.size(PASSCODE_CELL_WIDTH, PASSCODE_CELL_HEIGHT)
-                            .background(
-                                color = Theme.v2.colors.backgrounds.surface1,
-                                shape = PasscodeCellShape,
-                            )
-                            .border(
-                                width = 1.dp,
-                                color =
-                                    when {
-                                        state == PasscodeInputFieldState.Error ->
-                                            Theme.v2.colors.alerts.error
-                                        isActive -> Theme.v2.colors.border.light
-                                        else -> PasscodeCellBorder
-                                    },
-                                shape = PasscodeCellShape,
-                            ),
-                ) {
-                    when {
-                        // A drawn dot, not a "•" glyph: font metrics center bullets on cap-height,
-                        // not the cell, so text always sits a hair high.
-                        isFilled ->
-                            Box(
-                                modifier =
-                                    Modifier.size(FILLED_MARK_SIZE)
-                                        .background(Theme.v2.colors.text.primary, CircleShape),
-                            )
-                        isActive ->
-                            Text(
-                                text = CARET_MARK,
-                                color = Theme.v2.colors.primary.accent4,
-                                style = Theme.brockmann.body.m.medium,
-                            )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier =
+                            Modifier.size(PASSCODE_CELL_WIDTH, PASSCODE_CELL_HEIGHT)
+                                .background(
+                                    color = Theme.v2.colors.backgrounds.surface1,
+                                    shape = PasscodeCellShape,
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color =
+                                        when {
+                                            state == PasscodeInputFieldState.Error ->
+                                                Theme.v2.colors.alerts.error
+                                            isActive -> Theme.v2.colors.border.light
+                                            else -> PasscodeCellBorder
+                                        },
+                                    shape = PasscodeCellShape,
+                                ),
+                    ) {
+                        when {
+                            // A drawn dot, not a "•" glyph: font metrics center bullets on
+                            // cap-height, not the cell, so text always sits a hair high.
+                            isFilled ->
+                                Box(
+                                    modifier =
+                                        Modifier.size(FILLED_MARK_SIZE)
+                                            .background(Theme.v2.colors.text.primary, CircleShape),
+                                )
+                            isActive ->
+                                Text(
+                                    text = CARET_MARK,
+                                    color = Theme.v2.colors.primary.accent4,
+                                    style = Theme.brockmann.body.m.medium,
+                                )
+                        }
                     }
                 }
             }
@@ -163,7 +193,36 @@ internal fun PasscodeInputField(
     }
 }
 
+/** A static or live row of [Dots][PasscodeInputFieldStyle.Dots], never showing any digit. */
+@Composable
+internal fun PasscodeDots(filledCount: Int, isError: Boolean, modifier: Modifier = Modifier) {
+    val color = if (isError) Theme.v2.colors.alerts.error else Theme.v2.colors.neutrals.n50
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(PASSCODE_DOT_GAP),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier,
+    ) {
+        repeat(PASSCODE_LENGTH) { index ->
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(PASSCODE_DOT_BOX)) {
+                Box(
+                    modifier =
+                        Modifier.size(PASSCODE_DOT_SIZE)
+                            .then(
+                                if (index < filledCount) Modifier.background(color, CircleShape)
+                                else Modifier
+                            )
+                            .border(PASSCODE_DOT_STROKE, color, CircleShape)
+                )
+            }
+        }
+    }
+}
+
 private val PASSCODE_CELL_HEIGHT = 51.dp
+private val PASSCODE_DOT_BOX = 25.dp
+private val PASSCODE_DOT_SIZE = 15.dp
+private val PASSCODE_DOT_STROKE = 1.5.dp
+private val PASSCODE_DOT_GAP = 10.dp
 private val PASSCODE_CELL_WIDTH = 36.dp
 private val FILLED_MARK_SIZE = 8.dp
 private val PasscodeCellShape = V2.radius.md

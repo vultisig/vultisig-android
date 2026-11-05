@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -68,9 +69,12 @@ import com.vultisig.wallet.ui.models.settings.SettingsViewModel
 import com.vultisig.wallet.ui.models.settings.defaultSettingsMenu
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareLinkBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.asUiText
+
+private val SWITCH_OFF_TRACK = Color(0xFF7D909E)
 
 @Composable
 fun SettingsScreen() {
@@ -203,9 +207,17 @@ internal enum class SettingItemLayout(
     val minHeight: Dp = Dp.Unspecified,
     val trailingGap: Dp = 12.dp,
     val trailingIconSize: Dp = 16.dp,
+    val switchSize: SettingsSwitchSize = SettingsSwitchSize.Compact,
+    val cardShape: Shape = V2.radius.md,
 ) {
     Legacy(iconGap = 16.dp, subtitleGap = 0.dp, switchEndGap = 8.dp, cardTopPadding = 0.dp),
-    List(iconGap = 12.dp, subtitleGap = 4.dp, switchEndGap = 0.dp, cardTopPadding = 1.dp),
+    List(
+        iconGap = 12.dp,
+        subtitleGap = 4.dp,
+        switchEndGap = 0.dp,
+        cardTopPadding = 1.dp,
+        cardShape = V2.radius.xl,
+    ),
     Choice(
         iconGap = 12.dp,
         subtitleGap = 4.dp,
@@ -225,6 +237,22 @@ internal enum class SettingItemLayout(
         trailingGap = 14.dp,
         trailingIconSize = 20.dp,
     ),
+    Security(
+        iconGap = 12.dp,
+        subtitleGap = 4.dp,
+        switchEndGap = 0.dp,
+        cardTopPadding = 1.dp,
+        horizontalPadding = 16.dp,
+        switchSize = SettingsSwitchSize.Large,
+        cardShape = V2.radius.xl,
+    ),
+    Field(
+        iconGap = 12.dp,
+        subtitleGap = 4.dp,
+        switchEndGap = 0.dp,
+        cardTopPadding = 0.dp,
+        horizontalPadding = 16.dp,
+    ),
 }
 
 @Composable
@@ -236,7 +264,6 @@ internal fun SettingsBox(
     aboveCard: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    val shape = if (layout == SettingItemLayout.List) Theme.v2.radius.xl else Theme.v2.radius.md
     Column(modifier.fillMaxWidth()) {
         title?.let {
             Text(
@@ -256,7 +283,7 @@ internal fun SettingsBox(
             modifier =
                 // Clipped before the top padding so that strip stays the screen colour, as drawn.
                 Modifier.fillMaxWidth()
-                    .clip(shape)
+                    .clip(layout.cardShape)
                     .padding(top = layout.cardTopPadding)
                     .background(color = Theme.v2.colors.backgrounds.secondary)
         ) {
@@ -382,39 +409,7 @@ internal fun SettingItem(
 
             UiSpacer(size = layout.trailingGap)
 
-            item.trailingSwitch?.let { isChecked ->
-                if (isList) {
-                    SettingsSwitch(
-                        checked = isChecked,
-                        // Overhangs the 20dp text line so a toggle row is as tall as a plain one.
-                        modifier =
-                            Modifier.height(SWITCH_LINE_HEIGHT)
-                                .wrapContentHeight(unbounded = true),
-                    )
-                } else {
-                    VsSwitch(checked = isChecked, onCheckedChange = null)
-                }
-                UiSpacer(size = layout.switchEndGap)
-            }
-
-            item.value?.let { value ->
-                Text(
-                    text = value,
-                    style =
-                        if (isList) Theme.brockmann.button.medium.medium
-                        else Theme.brockmann.headings.subtitle,
-                    color = tint ?: Theme.v2.colors.text.primary,
-                )
-                UiSpacer(size = 12.dp)
-            }
-
-            item.trailingIcon?.let { trailingIcon ->
-                Image(
-                    imageVector = ImageVector.vectorResource(trailingIcon),
-                    modifier = Modifier.size(layout.trailingIconSize),
-                    contentDescription = null,
-                )
-            }
+            SettingItemTrailing(item = item, layout = layout, tint = tint)
         }
 
         if (!isList && !isLastItem) {
@@ -422,6 +417,68 @@ internal fun SettingItem(
         }
     }
 }
+
+@Composable
+private fun SettingItemTrailing(
+    item: SettingsItemUiModel,
+    layout: SettingItemLayout,
+    tint: Color?,
+) {
+    item.trailingSwitch?.let { isChecked ->
+        if (layout.switchSize == SettingsSwitchSize.Large) {
+            SettingsSwitch(
+                checked = isChecked,
+                size = SettingsSwitchSize.Large,
+                onTrackColor = Theme.v2.colors.primary.accent4,
+            )
+        } else if (layout != SettingItemLayout.Legacy) {
+            SettingsSwitch(
+                checked = isChecked,
+                // Overhangs the 20dp text line so a toggle row is as tall as a plain one.
+                modifier =
+                    Modifier.height(SWITCH_LINE_HEIGHT).wrapContentHeight(unbounded = true),
+            )
+        } else {
+            VsSwitch(checked = isChecked, onCheckedChange = null)
+        }
+        UiSpacer(size = layout.switchEndGap)
+    }
+
+    item.value?.let { value ->
+        Text(text = value, style = layout.valueStyle(), color = tint ?: layout.valueColor())
+        UiSpacer(size = 12.dp)
+    }
+
+    item.trailingIcon?.let { trailingIcon ->
+        Image(
+            imageVector = ImageVector.vectorResource(trailingIcon),
+            modifier = Modifier.size(layout.trailingIconSize),
+            contentDescription = null,
+        )
+    }
+}
+
+@Composable
+private fun SettingItemLayout.valueStyle(): TextStyle =
+    when (this) {
+        SettingItemLayout.Legacy -> Theme.brockmann.headings.subtitle
+        SettingItemLayout.Security -> Theme.brockmann.body.m.regular
+        SettingItemLayout.List,
+        SettingItemLayout.Choice,
+        SettingItemLayout.Radio,
+        SettingItemLayout.Field -> Theme.brockmann.button.medium.medium
+    }
+
+@Composable
+private fun SettingItemLayout.valueColor(): Color =
+    when (this) {
+        SettingItemLayout.Security -> Theme.v2.colors.text.secondary
+        SettingItemLayout.Legacy,
+        SettingItemLayout.List,
+        SettingItemLayout.Choice,
+        SettingItemLayout.Radio,
+        SettingItemLayout.Field -> Theme.v2.colors.text.primary
+    }
 
 internal enum class SettingsSwitchSize(
     val width: Dp,
@@ -519,7 +576,6 @@ private val TILE_GAP = 6.dp
 private val TILE_HEIGHT = 70.dp
 private val VERSION_FOOTER_TOP_GAP = 79.dp
 private val SWITCH_LINE_HEIGHT = 20.dp
-private val SWITCH_OFF_TRACK = Color(0xFF7D909E)
 private const val TINTED_SUBTITLE_ALPHA = 0.8f
 
 @Preview

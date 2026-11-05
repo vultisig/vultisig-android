@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -67,6 +68,8 @@ internal fun Banner(
     title: String? = null,
     variant: BannerVariant = BannerVariant.Info,
     showLeadingIcon: Boolean = true,
+    /** Replaces the variant's own fill, for screens drawn with a fainter one. */
+    fill: Color? = null,
     @SuppressLint("ComposableLambdaParameterNaming") actions: (@Composable () -> Unit)? = null,
 ) {
     val shape = Theme.v2.radius.xl
@@ -78,12 +81,13 @@ internal fun Banner(
             modifier
                 .background(
                     color =
-                        when (variant) {
-                            BannerVariant.Warning -> Theme.v2.colors.backgrounds.alert
-                            BannerVariant.Info -> Theme.v2.colors.backgrounds.secondary
-                            BannerVariant.Error -> Theme.v2.colors.backgrounds.error
-                            BannerVariant.Success -> Theme.v2.colors.backgrounds.success
-                        },
+                        fill
+                            ?: when (variant) {
+                                BannerVariant.Warning -> Theme.v2.colors.backgrounds.alert
+                                BannerVariant.Info -> Theme.v2.colors.backgrounds.secondary
+                                BannerVariant.Error -> Theme.v2.colors.backgrounds.error
+                                BannerVariant.Success -> Theme.v2.colors.backgrounds.success
+                            },
                     shape = shape,
                 )
                 .border(

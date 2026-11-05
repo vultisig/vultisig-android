@@ -39,6 +39,8 @@ import com.vultisig.wallet.ui.models.settings.CheckForUpdateUiModel
 import com.vultisig.wallet.ui.models.settings.CheckForUpdateViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
+private val LOGO_TILE_GRADIENT_END = Color(0xFF0D39B1)
+
 @Composable
 internal fun CheckForUpdateScreen() {
 
@@ -140,7 +142,6 @@ private val VERSION_TO_BUTTON_GAP = 30.dp
 private val BUTTON_HEIGHT = 46.dp
 private val LOGO_TILE_SIZE = 74.5.dp
 private val LOGO_TILE_SHAPE = RoundedCornerShape(23.84.dp)
-private val LOGO_TILE_GRADIENT_END = Color(0xFF0D39B1)
 private val LOGO_TILE_HIGHLIGHT_SIZE = 1.49.dp
 private const val LOGO_TILE_HIGHLIGHT_ALPHA = 0.35f
 private val LOGO_SIZE = 41.72.dp

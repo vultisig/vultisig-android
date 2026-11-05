@@ -109,71 +109,95 @@ internal fun FeatureGateBottomSheet(
             )
         },
     ) {
-        if (style == FeatureGateSheetStyle.Settings) {
-            SettingsGateContent(
-                featureIcon = featureIcon,
-                featureTitle = featureTitle,
-                featureDescription = featureDescription,
-                requiredTier = requiredTier,
-                balanceText = balanceText,
-                thresholdText = thresholdText,
-                isBelowThreshold = isBelowThreshold,
-                onGetVult = onGetVult,
-            )
-            return@V2BottomSheet
-        }
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Box(
-                modifier =
-                    Modifier.size(56.dp)
-                        .clip(CircleShape)
-                        .background(Theme.v2.colors.backgrounds.secondary)
-                        .border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.primary.accent4.copy(alpha = 0.4f),
-                            shape = CircleShape,
-                        ),
-                contentAlignment = Alignment.Center,
-            ) {
-                UiIcon(
-                    drawableResId = featureIcon,
-                    size = 24.dp,
-                    tint = Theme.v2.colors.primary.accent4,
+        when (style) {
+            FeatureGateSheetStyle.Settings ->
+                SettingsGateContent(
+                    featureIcon = featureIcon,
+                    featureTitle = featureTitle,
+                    featureDescription = featureDescription,
+                    requiredTier = requiredTier,
+                    balanceText = balanceText,
+                    thresholdText = thresholdText,
+                    isBelowThreshold = isBelowThreshold,
+                    onGetVult = onGetVult,
                 )
-            }
+            FeatureGateSheetStyle.Default ->
+                DefaultGateContent(
+                    featureIcon = featureIcon,
+                    featureTitle = featureTitle,
+                    featureDescription = featureDescription,
+                    requiredTier = requiredTier,
+                    balanceText = balanceText,
+                    thresholdText = thresholdText,
+                    isBelowThreshold = isBelowThreshold,
+                    onGetVult = onGetVult,
+                )
+        }
+    }
+}
 
-            UiSpacer(24.dp)
-
-            Text(
-                text = featureTitle,
-                style = Theme.brockmann.headings.title2,
-                color = Theme.v2.colors.text.primary,
-                textAlign = TextAlign.Center,
-            )
-
-            UiSpacer(12.dp)
-
-            Text(
-                text = featureDescription,
-                style = Theme.brockmann.body.s.regular,
-                color = Theme.v2.colors.text.tertiary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-
-            UiSpacer(24.dp)
-
-            RequiresCard(
-                requiredTier = requiredTier,
-                balanceText = balanceText,
-                thresholdText = thresholdText,
-                isBelowThreshold = isBelowThreshold,
-                onGetVult = onGetVult,
+@Composable
+private fun DefaultGateContent(
+    @DrawableRes featureIcon: Int,
+    featureTitle: String,
+    featureDescription: String,
+    requiredTier: TierType,
+    balanceText: String,
+    thresholdText: String,
+    isBelowThreshold: Boolean,
+    onGetVult: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier =
+                Modifier.size(56.dp)
+                    .clip(CircleShape)
+                    .background(Theme.v2.colors.backgrounds.secondary)
+                    .border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.primary.accent4.copy(alpha = 0.4f),
+                        shape = CircleShape,
+                    ),
+            contentAlignment = Alignment.Center,
+        ) {
+            UiIcon(
+                drawableResId = featureIcon,
+                size = 24.dp,
+                tint = Theme.v2.colors.primary.accent4,
             )
         }
+
+        UiSpacer(24.dp)
+
+        Text(
+            text = featureTitle,
+            style = Theme.brockmann.headings.title2,
+            color = Theme.v2.colors.text.primary,
+            textAlign = TextAlign.Center,
+        )
+
+        UiSpacer(12.dp)
+
+        Text(
+            text = featureDescription,
+            style = Theme.brockmann.body.s.regular,
+            color = Theme.v2.colors.text.tertiary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+
+        UiSpacer(24.dp)
+
+        RequiresCard(
+            requiredTier = requiredTier,
+            balanceText = balanceText,
+            thresholdText = thresholdText,
+            isBelowThreshold = isBelowThreshold,
+            onGetVult = onGetVult,
+        )
     }
 }
 

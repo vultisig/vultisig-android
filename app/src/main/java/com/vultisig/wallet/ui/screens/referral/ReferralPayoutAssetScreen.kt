@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.screens.referral
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -29,11 +28,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TokenLogo
-import com.vultisig.wallet.ui.components.UiGradientDivider
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCircularLoading
-import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
-import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
+import com.vultisig.wallet.ui.components.bottomsheet.SettingsModalBottomSheet
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.searchbar.SearchBar
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
 import com.vultisig.wallet.ui.models.referral.PayoutAssetUiModel
 import com.vultisig.wallet.ui.models.referral.ReferralPayoutAssetUiState
@@ -44,7 +44,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun ReferralPayoutAssetScreen(model: ReferralPayoutAssetViewModel = hiltViewModel()) {
     val state by model.state.collectAsStateWithLifecycle()
 
-    VsModalBottomSheet(
+    SettingsModalBottomSheet(
         onDismissRequest = model::back,
         content = {
             ReferralPayoutAssetScreen(
@@ -69,13 +69,17 @@ private fun ReferralPayoutAssetScreen(
             Column {
                 Text(
                     text = stringResource(R.string.select_asset_title),
-                    style = Theme.brockmann.body.l.medium,
+                    style = Theme.brockmann.body.m.medium,
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(all = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(all = 10.dp),
                 )
 
-                VsSearchTextField(fieldState = searchFieldState)
+                SearchBar(
+                    state = searchFieldState,
+                    isInitiallyFocused = false,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
             }
         },
         content = {
@@ -97,47 +101,53 @@ private fun ReferralPayoutAssetScreen(
                         NoFoundContent(message = stringResource(R.string.select_asset_no_result))
                     }
                 else ->
-                    LazyColumn(contentPadding = PaddingValues(all = 16.dp)) {
-                        itemsIndexed(assets, key = { _, item -> item.asset }) { index, item ->
-                            val isFirst = index == 0
-                            val isLast = index == assets.size - 1
-                            val rounding = 12.dp
-
-                            PayoutAssetItem(
-                                asset = item,
-                                modifier =
-                                    Modifier.clickable(onClick = { onAssetClick(item) })
-                                        .background(
-                                            color = Theme.v2.colors.backgrounds.secondary,
-                                            shape =
-                                                RoundedCornerShape(
-                                                    topStart = if (isFirst) rounding else 0.dp,
-                                                    topEnd = if (isFirst) rounding else 0.dp,
-                                                    bottomStart = if (isLast) rounding else 0.dp,
-                                                    bottomEnd = if (isLast) rounding else 0.dp,
-                                                ),
-                                        ),
-                            )
-
-                            if (!isLast) {
-                                UiGradientDivider(
-                                    initialColor = Theme.v2.colors.backgrounds.secondary,
-                                    endColor = Theme.v2.colors.backgrounds.secondary,
-                                )
-                            }
-                        }
-                    }
+                    PayoutAssetList(assets = assets, onAssetClick = onAssetClick)
             }
         },
     )
 }
 
 @Composable
+private fun PayoutAssetList(
+    assets: List<PayoutAssetUiModel>,
+    onAssetClick: (PayoutAssetUiModel) -> Unit,
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+    ) {
+        itemsIndexed(assets, key = { _, item -> item.asset }) { index, item ->
+            val isFirst = index == 0
+            val isLast = index == assets.size - 1
+            val rounding = Theme.v2.radius.xl.size
+
+            PayoutAssetItem(
+                asset = item,
+                modifier =
+                    Modifier.clickable(onClick = { onAssetClick(item) })
+                        .background(
+                            color = Theme.v2.colors.backgrounds.secondary,
+                            shape =
+                                RoundedCornerShape(
+                                    topStart = if (isFirst) rounding else 0.dp,
+                                    topEnd = if (isFirst) rounding else 0.dp,
+                                    bottomStart = if (isLast) rounding else 0.dp,
+                                    bottomEnd = if (isLast) rounding else 0.dp,
+                                ),
+                        ),
+            )
+
+            if (!isLast) {
+                UiHorizontalDivider()
+            }
+        }
+    }
+}
+
+@Composable
 private fun PayoutAssetItem(asset: PayoutAssetUiModel, modifier: Modifier = Modifier) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
     ) {
         TokenLogo(
             errorLogoModifier = Modifier.size(32.dp).background(Theme.v2.colors.neutrals.n100),
@@ -146,25 +156,34 @@ private fun PayoutAssetItem(asset: PayoutAssetUiModel, modifier: Modifier = Modi
             modifier = Modifier.size(32.dp),
         )
 
+        UiSpacer(12.dp)
+
         Text(
             text = asset.ticker,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.primary,
-            modifier = Modifier.weight(1f),
         )
+
+        UiSpacer(8.dp)
 
         Text(
             text = asset.chain,
-            style = Theme.brockmann.supplementary.caption,
+            style = Theme.brockmann.supplementary.captionSmall,
             color = Theme.v2.colors.text.secondary,
             modifier =
-                Modifier.border(
+                Modifier.background(
+                        color = Theme.v2.colors.backgrounds.secondary,
+                        shape = Theme.v2.radius.pill,
+                    )
+                    .border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
                         shape = Theme.v2.radius.pill,
                     )
                     .padding(horizontal = 12.dp, vertical = 8.dp),
         )
+
+        UiSpacer(1f)
 
         if (asset.isSelected) {
             Icon(
