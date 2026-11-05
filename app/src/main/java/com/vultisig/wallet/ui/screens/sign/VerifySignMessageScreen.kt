@@ -21,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.SignMessageCard
+import com.vultisig.wallet.ui.components.SignMessageCardStyle
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -32,6 +33,7 @@ import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageViewModel
 import com.vultisig.wallet.ui.screens.send.DecodedFunctionParamRows
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -63,6 +65,7 @@ internal fun VerifySignMessageScreen(viewModel: VerifySignMessageViewModel = hil
         state = state,
         hasToolbar = false,
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        cardStyle = SignMessageCardStyle.Settings,
         onConfirm = viewModel::confirm,
         onBackClick = {},
         onFastSignClick = {
@@ -82,6 +85,7 @@ internal fun VerifySignMessageScreen(
     onConfirm: () -> Unit,
     onBackClick: () -> Unit,
     dappMetadata: DAppMetadata? = null,
+    cardStyle: SignMessageCardStyle = SignMessageCardStyle.Default,
 ) {
     val transactionUiModel = state.model
     VerifySignMessageScreen(
@@ -95,6 +99,7 @@ internal fun VerifySignMessageScreen(
         onConfirm = onConfirm,
         hasToolbar = hasToolbar,
         onBackClick = onBackClick,
+        cardStyle = cardStyle,
     )
 }
 
@@ -110,6 +115,7 @@ private fun VerifySignMessageScreen(
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
     onBackClick: () -> Unit,
+    cardStyle: SignMessageCardStyle = SignMessageCardStyle.Default,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -122,7 +128,17 @@ private fun VerifySignMessageScreen(
             }
         },
         bottomBar = {
-            Column(modifier = Modifier.fillMaxWidth().padding(all = 16.dp)) {
+            Column(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(
+                            start = 16.dp,
+                            top = 16.dp,
+                            end = 16.dp,
+                            bottom =
+                                if (cardStyle == SignMessageCardStyle.Settings) 22.dp else 16.dp,
+                        )
+            ) {
                 if (hasFastSign) {
                     FastSignPairedButtons(
                         onFastSignClick = onFastSignClick,
@@ -133,6 +149,10 @@ private fun VerifySignMessageScreen(
                         label = confirmTitle,
                         onClick = onConfirm,
                         modifier = Modifier.fillMaxWidth(),
+                        labelStyle =
+                            if (cardStyle == SignMessageCardStyle.Settings)
+                                Theme.brockmann.button.medium.medium
+                            else Theme.brockmann.button.semibold.medium,
                     )
                 }
             }
@@ -152,6 +172,7 @@ private fun VerifySignMessageScreen(
             SignMessageCard(
                 title = stringResource(R.string.verify_sign_message_signing_method),
                 value = method,
+                style = cardStyle,
             )
 
             // What the payload turned out to be, when it could be read. Shown above the payload
@@ -162,6 +183,7 @@ private fun VerifySignMessageScreen(
                     SignMessageCard(
                         title = stringResource(R.string.verify_sign_message_decoded_message),
                         value = decoded.value,
+                        style = cardStyle,
                     )
 
                 is DecodedCustomMessage.ContractCall -> {
@@ -169,19 +191,22 @@ private fun VerifySignMessageScreen(
                         title =
                             stringResource(R.string.verify_transaction_function_signature_title),
                         value = decoded.function,
+                        style = cardStyle,
                     )
                     decoded.arguments?.let { arguments ->
                         SignMessageCard(
                             title =
                                 stringResource(R.string.verify_transaction_function_inputs_title),
                             value = arguments,
+                            style = cardStyle,
                         )
                     }
                 }
 
                 is DecodedCustomMessage.TypedData ->
                     SignMessageCard(
-                        title = stringResource(R.string.verify_sign_message_decoded_message)
+                        title = stringResource(R.string.verify_sign_message_decoded_message),
+                        style = cardStyle,
                     ) {
                         DecodedFunctionParamRows(
                             params = decoded.rows,
@@ -204,6 +229,7 @@ private fun VerifySignMessageScreen(
                         }
                     ),
                 value = message,
+                style = cardStyle,
             )
         }
     }

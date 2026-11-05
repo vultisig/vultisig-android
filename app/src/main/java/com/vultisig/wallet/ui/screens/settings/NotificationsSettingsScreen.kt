@@ -11,16 +11,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -205,7 +201,11 @@ private fun MasterNotificationToggle(isChecked: Boolean, onToggle: (Boolean) -> 
             )
         }
         UiSpacer(size = TEXT_TO_SWITCH_GAP)
-        NotificationSwitch(checked = isChecked, onCheckedChange = onToggle)
+        SettingsLargeSwitch(
+            checked = isChecked,
+            label = stringResource(R.string.push_notifications),
+            onCheckedChange = onToggle,
+        )
     }
 }
 
@@ -247,30 +247,10 @@ private fun VaultNotificationToggle(
             modifier = Modifier.weight(1f),
         )
         UiSpacer(size = TEXT_TO_SWITCH_GAP)
-        NotificationSwitch(checked = vault.isEnabled, onCheckedChange = onToggle)
-    }
-}
-
-/** Keeps the old switch's 48dp touch height without adding it to the row's height. */
-@Composable
-private fun NotificationSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    val size = SettingsSwitchSize.Large
-    Box(
-        modifier =
-            Modifier.height(size.height)
-                .wrapContentHeight(unbounded = true)
-                .height(SWITCH_TOUCH_HEIGHT)
-                .toggleable(
-                    value = checked,
-                    role = Role.Switch,
-                    onValueChange = onCheckedChange,
-                ),
-        contentAlignment = Alignment.Center,
-    ) {
-        SettingsSwitch(
-            checked = checked,
-            size = size,
-            onTrackColor = Theme.v2.colors.primary.accent4,
+        SettingsLargeSwitch(
+            checked = vault.isEnabled,
+            label = vault.vaultName,
+            onCheckedChange = onToggle,
         )
     }
 }
@@ -279,7 +259,6 @@ private val SECTION_GAP = 14.dp
 private val TEXT_TO_SWITCH_GAP = 4.dp
 private val MASTER_CAPTION_MAX_WIDTH = 233.dp
 private val VAULT_ROW_VERTICAL_PADDING = 11.dp
-private val SWITCH_TOUCH_HEIGHT = 48.dp
 
 @Preview(showBackground = true)
 @Composable

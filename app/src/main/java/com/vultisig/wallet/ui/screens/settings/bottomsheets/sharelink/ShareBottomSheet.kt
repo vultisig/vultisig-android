@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.rememberAsyncImagePainter
@@ -63,10 +64,10 @@ internal fun ShareLinkBottomSheet(onDismissRequest: () -> Unit) {
 }
 
 @Composable
-private fun ShareSheetGrabber() {
+internal fun ShareSheetGrabber(top: Dp = 8.dp, bottom: Dp = 13.dp) {
     Box(
         modifier =
-            Modifier.padding(top = 8.dp, bottom = 13.dp)
+            Modifier.padding(top = top, bottom = bottom)
                 .size(width = 36.dp, height = 5.dp)
                 .background(
                     color = Theme.v2.colors.neutrals.n50.copy(alpha = 0.3f),

@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.screens.customrpc
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -90,7 +89,7 @@ private fun CustomRpcDetailScreen(
             )
 
             if (state.hasExistingOverride && state.defaultEndpoint != null) {
-                UiSpacer(size = 24.dp)
+                UiSpacer(size = 16.dp)
                 DefaultEndpointCard(endpoint = state.defaultEndpoint)
             }
 
@@ -102,6 +101,7 @@ private fun CustomRpcDetailScreen(
                 state =
                     if (state.canSave && !state.isSaving) VsButtonState.Enabled
                     else VsButtonState.Disabled,
+                labelStyle = Theme.brockmann.button.medium.medium,
                 onClick = onSaveClick,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -112,12 +112,13 @@ private fun CustomRpcDetailScreen(
                     label = stringResource(R.string.custom_rpc_reset_button),
                     variant = VsButtonVariant.Secondary,
                     state = if (state.isSaving) VsButtonState.Disabled else VsButtonState.Enabled,
+                    labelStyle = Theme.brockmann.button.medium.medium,
                     onClick = onResetClick,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
 
-            UiSpacer(size = 16.dp)
+            UiSpacer(size = 10.dp)
         }
     }
 }
@@ -134,13 +135,13 @@ private fun RpcEndpointField(
                 .heightIn(min = 120.dp)
                 .background(
                     color = Theme.v2.colors.backgrounds.surface1,
-                    shape = Theme.v2.radius.md,
+                    shape = Theme.v2.radius.lg,
                 )
                 .border(
                     width = 1.dp,
                     color =
                         if (isError) Theme.v2.colors.alerts.error else Theme.v2.colors.border.light,
-                    shape = Theme.v2.radius.md,
+                    shape = Theme.v2.radius.lg,
                 )
                 .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -157,35 +158,35 @@ private fun RpcEndpointField(
 
 @Composable
 private fun DefaultEndpointCard(endpoint: String) {
-    Column {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.backgrounds.surface1,
+                    shape = Theme.v2.radius.md,
+                )
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
+                    shape = Theme.v2.radius.md,
+                )
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(DEFAULT_ENDPOINT_LABEL_GAP),
+    ) {
         Text(
             text = stringResource(R.string.custom_rpc_default_endpoint_label),
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.tertiary,
         )
-        UiSpacer(size = 8.dp)
-        Box(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .background(
-                        color = Theme.v2.colors.backgrounds.surface1,
-                        shape = Theme.v2.radius.md,
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light,
-                        shape = Theme.v2.radius.md,
-                    )
-                    .padding(16.dp)
-        ) {
-            Text(
-                text = endpoint,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary,
-            )
-        }
+        Text(
+            text = endpoint,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.tertiary,
+        )
     }
 }
+
+private val DEFAULT_ENDPOINT_LABEL_GAP = 19.dp
 
 @Preview
 @Composable

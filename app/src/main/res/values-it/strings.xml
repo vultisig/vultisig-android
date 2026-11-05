@@ -113,6 +113,10 @@
     <string name="vault_detail_screen_ecdsa_key_copied">Chiave ECDSA Copiata</string>
     <string name="vault_detail_screen_eddsa_key_copied">Chiave EdDSA Copiata</string>
     <string name="vault_detail_screen_mldsa_key">Chiave MLDSA</string>
+    <string name="vault_detail_screen_ecdsa_key">Chiave ECDSA</string>
+    <string name="vault_detail_screen_eddsa_key">Chiave EdDSA</string>
+    <string name="vault_detail_this_device">Questo dispositivo</string>
+    <string name="vault_settings_onchain_security_title">Sicurezza on-chain</string>
     <string name="vault_detail_screen_mldsa_key_copied">Chiave MLDSA Copiata</string>
     <string name="welcome_screen_skip">Salta</string>
     <string name="keysign_screen_preparing_vault">Preparazione del vault…</string>
@@ -273,7 +277,6 @@
     <string name="backup_password_screen_enter_password">Inserisci la password</string>
     <string name="backup_password_screen_error_too_short">La password deve contenere almeno %1$d caratteri</string>
     <string name="import_file_screen_enter_password_sub">Questa password è stata impostata al momento dell\'esportazione della quota del vault.</string>
-    <string name="import_file_screen_hint_password">Password</string>
     <string name="backup_password_screen_permission_required">Per le operazioni di backup è richiesta l\'autorizzazione del file.</string>
     <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Accetto di concedere l\'autorizzazione di spesa ERC20</string>
@@ -918,7 +921,6 @@
     <string name="kamino_banner_title">Inizia a guadagnare con Kamino</string>
     <string name="vault_detail_vault_info">Informazioni sul Vault</string>
     <string name="vault_details_keys">Chiavi</string>
-    <string name="vault_password_biometric_enable_biometrics_fast_signing">Abilita Firma Rapida Biometrica</string>
     <string name="verify_send_send_overview">Riepilogo invio</string>
     <string name="verify_swap_swap_overview">Riepilogo swap</string>
     <string name="token_selection_screen_enable_at_least_one">Abilita almeno un token per visualizzare i saldi e gestire le posizioni.</string>

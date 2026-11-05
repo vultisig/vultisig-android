@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
@@ -18,6 +20,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,6 +43,22 @@ import com.vultisig.wallet.ui.screens.SettingInfoHorizontalItem
 import com.vultisig.wallet.ui.screens.itemModifier
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
+
+private val CAUTION_ROW_MIN_HEIGHT = 40.dp
+private val BANNER_TEXT_MAX_WIDTH = 283.dp
+private val GLOW_CENTER_Y = 331.dp
+private val GLOW_RADIUS = 400.dp
+private const val GLOW_HEIGHT_RATIO = 1.15f
+private val GLOW_COLOR = Color(0xFFE9413F)
+private val GLOW_STOPS =
+    arrayOf(
+        0f to GLOW_COLOR.copy(alpha = 0.1f),
+        0.2f to GLOW_COLOR.copy(alpha = 0.086f),
+        0.4f to GLOW_COLOR.copy(alpha = 0.056f),
+        0.6f to GLOW_COLOR.copy(alpha = 0.028f),
+        0.8f to GLOW_COLOR.copy(alpha = 0.01f),
+        1f to Color.Transparent,
+    )
 
 @Composable
 internal fun ConfirmDeleteScreen(navHostController: NavHostController) {
@@ -73,21 +96,32 @@ private fun ConfirmDeleteScreen(
                     else VsButtonState.Enabled,
                 label = stringResource(R.string.confirm_delete_delete_vault),
                 variant = VsButtonVariant.Error,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(start = 16.dp, top = 24.dp, end = 16.dp, bottom = 22.dp),
             )
         },
     ) {
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Column(
+            modifier =
+                Modifier.fillMaxSize()
+                    .settingsDeleteGlow()
+                    .verticalScroll(rememberScrollState())
+        ) {
             DeleteVaultBanner()
             UiSpacer(14.dp)
             SettingInfoHorizontalItem(
                 key = stringResource(R.string.vault_settings_delete_vault_name),
                 value = vaultDeleteUiModel.name,
+                itemShape = Theme.v2.radius.lg,
+                itemVerticalPadding = 20.dp,
             )
             UiSpacer(12.dp)
             SettingInfoHorizontalItem(
                 key = stringResource(R.string.vault_settings_delete_vault_value),
                 value = vaultDeleteUiModel.totalFiatValue,
+                itemShape = Theme.v2.radius.lg,
+                itemVerticalPadding = 20.dp,
             )
             UiSpacer(12.dp)
 
@@ -131,24 +165,32 @@ private fun ConfirmDeleteScreen(
                 )
             }
 
-            UiSpacer(weight = 1f)
-            UiSpacer(size = 16.dp)
+            UiSpacer(size = 22.dp)
 
             cautions.forEachIndexed { index, resId ->
+                if (index > 0) UiSpacer(size = 2.dp)
                 Row(
                     modifier =
                         Modifier.fillMaxWidth()
+                            .then(
+                                if (index == 0) Modifier
+                                else Modifier.heightIn(min = CAUTION_ROW_MIN_HEIGHT)
+                            )
                             .toggleable(
                                 value = checkedCautionIndexes.contains(index),
                                 onValueChange = { checked ->
                                     onItemCheckChangeClick(index, checked)
                                 },
                             )
-                            .padding(8.dp),
+                            .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    VsUiCheckbox(checked = checkedCautionIndexes.contains(index)) { checked ->
+                    VsUiCheckbox(
+                        checked = checkedCautionIndexes.contains(index),
+                        checkIcon = R.drawable.ic_caution_check,
+                        checkIconSize = 24.dp,
+                    ) { checked ->
                         onItemCheckChangeClick(index, checked)
                     }
 
@@ -160,18 +202,21 @@ private fun ConfirmDeleteScreen(
                 }
             }
 
-            UiSpacer(size = 16.dp)
+            UiSpacer(size = 8.dp)
         }
     }
 }
 
 @Composable
 private fun VerticalVaultInfo(modifier: Modifier = Modifier, key: String, value: String) {
-    Column(modifier = modifier.itemModifier(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(
+        modifier = modifier.itemModifier(shape = Theme.v2.radius.lg),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
         Text(
             text = key,
             style = Theme.brockmann.supplementary.footnote,
-            color = colors.text.primary,
+            color = colors.text.secondary,
         )
         Text(
             text = value,
@@ -183,7 +228,10 @@ private fun VerticalVaultInfo(modifier: Modifier = Modifier, key: String, value:
 
 @Composable
 private fun VerticalVaultInfo2(modifier: Modifier = Modifier, key: String, value: String) {
-    Column(modifier = modifier.itemModifier(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(
+        modifier = modifier.itemModifier(shape = Theme.v2.radius.lg),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
         Text(
             text = key,
             style = Theme.brockmann.supplementary.footnote,
@@ -200,9 +248,9 @@ private fun VerticalVaultInfo2(modifier: Modifier = Modifier, key: String, value
 @Composable
 private fun DeleteVaultBanner() {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-        UiSpacer(size = 24.dp)
+        UiSpacer(size = 17.dp)
         UiIcon(
-            drawableResId = R.drawable.ic_warning,
+            drawableResId = R.drawable.ic_triangle_warning_filled,
             contentDescription = "warning",
             size = 24.dp,
             tint = colors.alerts.error,
@@ -223,7 +271,26 @@ private fun DeleteVaultBanner() {
             style = Theme.brockmann.supplementary.footnote,
             color = colors.text.tertiary,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 24.dp),
+            modifier = Modifier.widthIn(max = BANNER_TEXT_MAX_WIDTH),
+        )
+    }
+}
+
+/** The red wash Figma lays over the screen's content, a blurred ellipse. */
+private fun Modifier.settingsDeleteGlow(): Modifier = drawWithContent {
+    drawContent()
+    val glowCenter = Offset(center.x, GLOW_CENTER_Y.toPx())
+    val radius = GLOW_RADIUS.toPx()
+    scale(scaleX = 1f, scaleY = GLOW_HEIGHT_RATIO, pivot = glowCenter) {
+        drawCircle(
+            brush =
+                Brush.radialGradient(
+                    colorStops = GLOW_STOPS,
+                    center = glowCenter,
+                    radius = radius,
+                ),
+            radius = radius,
+            center = glowCenter,
         )
     }
 }

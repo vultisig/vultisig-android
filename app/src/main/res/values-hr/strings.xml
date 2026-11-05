@@ -113,6 +113,10 @@
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA ključ kopiran</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA ključ kopiran</string>
     <string name="vault_detail_screen_mldsa_key">Ključ MLDSA-e</string>
+    <string name="vault_detail_screen_ecdsa_key">ECDSA ključ</string>
+    <string name="vault_detail_screen_eddsa_key">EdDSA ključ</string>
+    <string name="vault_detail_this_device">Ovaj uređaj</string>
+    <string name="vault_settings_onchain_security_title">Sigurnost na lancu</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA ključ kopiran</string>
     <string name="welcome_screen_skip">Preskoči</string>
     <string name="keysign_screen_preparing_vault">Priprema trezora…</string>
@@ -273,7 +277,6 @@
     <string name="backup_password_screen_enter_password">Unesite lozinku</string>
     <string name="backup_password_screen_error_too_short">Lozinka mora imati najmanje %1$d znakova</string>
     <string name="import_file_screen_enter_password_sub">Ova lozinka je postavljena prilikom izvoza udjela trezora.</string>
-    <string name="import_file_screen_hint_password">Lozinka</string>
     <string name="backup_password_screen_permission_required">Za sigurnosne kopije potrebno je dopuštenje datoteke.</string>
     <string name="token_selection_search_hint">Pretraživanje…</string>
     <string name="verify_swap_agree_allowance">Slažem se s davanjem ERC20 odobrenja za potrošnju</string>
@@ -921,7 +924,6 @@
     <string name="kamino_banner_title">Počnite zarađivati uz Kamino</string>
     <string name="vault_detail_vault_info">Informacije o trezoru</string>
     <string name="vault_details_keys">ključevi</string>
-    <string name="vault_password_biometric_enable_biometrics_fast_signing">Omogući brzo biometrijsko potpisivanje</string>
     <string name="verify_send_send_overview">Pregled slanja</string>
     <string name="verify_swap_swap_overview">Pregled zamjene</string>
     <string name="token_selection_screen_enable_at_least_one">Omogućite barem jedan token za pregled stanja i upravljanje pozicijama.</string>

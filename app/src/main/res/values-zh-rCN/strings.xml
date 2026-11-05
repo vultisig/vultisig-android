@@ -297,6 +297,10 @@
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA 密钥已复制</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA 密钥已复制</string>
     <string name="vault_detail_screen_mldsa_key">MLDSA 密钥</string>
+    <string name="vault_detail_screen_ecdsa_key">ECDSA 密钥</string>
+    <string name="vault_detail_screen_eddsa_key">EdDSA 密钥</string>
+    <string name="vault_detail_this_device">此设备</string>
+    <string name="vault_settings_onchain_security_title">链上安全</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA 密钥已复制</string>
 
     <!-- Welcome Screen -->
@@ -471,7 +475,6 @@
     <string name="backup_password_screen_enter_password">输入密码</string>
     <string name="backup_password_screen_error_too_short">密码至少需要 %1$d 个字符</string>
     <string name="import_file_screen_enter_password_sub">此密码是在导出保险库份额时设置的。</string>
-    <string name="import_file_screen_hint_password">密码</string>
     <string name="backup_password_screen_permission_required">备份操作需要文件权限。</string>
 
     <!-- Token Selection -->
@@ -588,7 +591,7 @@
 
     <!-- Vault Settings Security -->
     <string name="vault_settings_security_screen_title_bottomsheet">链上安全已禁用</string>
-    <string name="vault_settings_security_screen_content_bottomsheet">禁用链上安全意味着 Blockaid 无法验证交易。您将受到较少的保护</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">禁用链上安全意味着 Blockaid 无法验证交易。您将受到较少的保护。</string>
     <string name="vault_settings_security_screen_title_switch">管理您的链上安全</string>
     <string name="vault_settings_security_screen_title_content">您可以禁用由 Blockaid 提供的实时链上安全。</string>
     <string name="vault_settings_security_screen_title">安全</string>
@@ -849,7 +852,7 @@
     <string name="security_scanner_default_description">此交易已被标记为潜在危险。</string>
     <string name="security_scanner_continue_anyway">仍然继续</string>
     <string name="security_scanner_continue_go_back">返回</string>
-    <string name="security_scanner_powered_by">由…提供支持</string>
+    <string name="security_scanner_powered_by">技术支持：</string>
     <string name="security_scanner_transaction_scanned_by">交易已扫描</string>
     <string name="security_scanner_transaction_scanning">扫描中…</string>
     <string name="security_scanner_transaction_not_scanned">交易未扫描</string>
@@ -1116,7 +1119,6 @@
     <!-- Vault Details -->
     <string name="vault_detail_vault_info">保险库信息</string>
     <string name="vault_details_keys">密钥</string>
-    <string name="vault_password_biometric_enable_biometrics_fast_signing">启用生物识别快速签名</string>
 
     <!-- Verify -->
     <string name="verify_send_send_overview">发送概览</string>

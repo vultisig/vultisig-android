@@ -146,6 +146,10 @@
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA-sleutel gekopieerd</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA-sleutel gekopieerd</string>
     <string name="vault_detail_screen_mldsa_key">MLDSA-sleutel</string>
+    <string name="vault_detail_screen_ecdsa_key">ECDSA-sleutel</string>
+    <string name="vault_detail_screen_eddsa_key">EdDSA-sleutel</string>
+    <string name="vault_detail_this_device">Dit apparaat</string>
+    <string name="vault_settings_onchain_security_title">On-chain beveiliging</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA-sleutel gekopieerd</string>
     <string name="welcome_screen_skip">Overslaan</string>
     <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
@@ -272,7 +276,6 @@
     <string name="backup_password_screen_enter_password">Voer wachtwoord in</string>
     <string name="backup_password_screen_error_too_short">Het wachtwoord moet minstens %1$d tekens bevatten</string>
     <string name="import_file_screen_enter_password_sub">Dit wachtwoord is ingesteld toen het kluisdeel werd geëxporteerd.</string>
-    <string name="import_file_screen_hint_password">Wachtwoord</string>
     <string name="backup_password_screen_permission_required">Voor back-upbewerkingen zijn bestandsrechten vereist.</string>
     <string name="token_selection_search_hint">Zoeken…</string>
     <string name="verify_swap_agree_allowance">Ik ga akkoord met het verlenen van een ERC20-allowance</string>
@@ -915,7 +918,6 @@
     <string name="kamino_banner_title">Begin met verdienen via Kamino</string>
     <string name="vault_detail_vault_info">Kluisinfo</string>
     <string name="vault_details_keys">Sleutels</string>
-    <string name="vault_password_biometric_enable_biometrics_fast_signing">Snelle ondertekening met biometrie inschakelen</string>
     <string name="verify_send_send_overview">Overzicht verzenden</string>
     <string name="verify_swap_swap_overview">Swapoverzicht</string>
     <string name="token_selection_screen_enable_at_least_one">Schakel minimaal één token in om saldo\'s te bekijken en posities te beheren.</string>

@@ -146,6 +146,10 @@
     <string name="vault_detail_screen_ecdsa_key_copied">Ключ ECDSA скопирован</string>
     <string name="vault_detail_screen_eddsa_key_copied">Ключ EdDSA скопирован</string>
     <string name="vault_detail_screen_mldsa_key">Ключ MLDSA</string>
+    <string name="vault_detail_screen_ecdsa_key">Ключ ECDSA</string>
+    <string name="vault_detail_screen_eddsa_key">Ключ EdDSA</string>
+    <string name="vault_detail_this_device">Это устройство</string>
+    <string name="vault_settings_onchain_security_title">Безопасность в сети</string>
     <string name="vault_detail_screen_mldsa_key_copied">Ключ MLDSA скопирован</string>
     <string name="welcome_screen_skip">Пропустить</string>
     <string name="keysign_screen_preparing_vault">Подготовка хранилища…</string>
@@ -274,7 +278,6 @@
     <string name="backup_password_screen_enter_password">Введите пароль</string>
     <string name="backup_password_screen_error_too_short">Пароль должен содержать не менее %1$d символов</string>
     <string name="import_file_screen_enter_password_sub">Этот пароль был задан при экспорте доли хранилища.</string>
-    <string name="import_file_screen_hint_password">Пароль</string>
     <string name="backup_password_screen_permission_required">Для операций резервного копирования требуется разрешение на доступ к файлу.</string>
     <string name="token_selection_search_hint">Поиск…</string>
     <string name="verify_swap_agree_allowance">Я разрешаю расходование токена ERC20 (allowance)</string>
@@ -919,7 +922,6 @@
     <string name="kamino_banner_title">Начните зарабатывать с Kamino</string>
     <string name="vault_detail_vault_info">Информация о хранилище</string>
     <string name="vault_details_keys">Ключи</string>
-    <string name="vault_password_biometric_enable_biometrics_fast_signing">Включить быструю биометрическую подпись</string>
     <string name="verify_send_send_overview">Обзор отправки</string>
     <string name="verify_swap_swap_overview">Обзор обмена</string>
     <string name="token_selection_screen_enable_at_least_one">Включите хотя бы один токен для просмотра балансов и управления позициями.</string>

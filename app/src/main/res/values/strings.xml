@@ -258,7 +258,11 @@
     <string name="vault_detail_screen_vault_name">Vault Name</string>
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA Key Copied</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA Key Copied</string>
-    <string name="vault_detail_screen_mldsa_key">MLDSA key</string>
+    <string name="vault_detail_screen_mldsa_key">MLDSA Key</string>
+    <string name="vault_detail_screen_ecdsa_key">ECDSA Key</string>
+    <string name="vault_detail_screen_eddsa_key">EdDSA Key</string>
+    <string name="vault_detail_this_device">This device</string>
+    <string name="vault_settings_onchain_security_title">On-chain Security</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA Key Copied</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
@@ -393,7 +397,6 @@
     <string name="backup_password_screen_enter_password">Enter Password</string>
     <string name="backup_password_screen_error_too_short">Password must be at least %1$d characters</string>
     <string name="import_file_screen_enter_password_sub">This password was set when the vault share was exported.</string>
-    <string name="import_file_screen_hint_password">Password</string>
     <string name="backup_password_screen_permission_required">File permission is required for backup operations.</string>
     <string name="token_selection_search_hint">Search…</string>
     <string name="verify_swap_agree_allowance">I agree with providing ERC20 allowance</string>
@@ -466,7 +469,7 @@
     <string name="add_folder_folder_name_title">Folder Name</string>
 
     <string name="vault_settings_security_screen_title_bottomsheet">On-chain security disabled</string>
-    <string name="vault_settings_security_screen_content_bottomsheet">Disabling on-chain security means Blockaid can\'t verify transactions. You\'ll be less protected</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Disabling on-chain security means Blockaid can\'t verify transactions. You\'ll be less protected.</string>
     <string name="vault_settings_security_screen_title_switch">Manage your on-chain security</string>
     <string name="vault_settings_security_screen_title_content">You can disable your realtime on-chain security provided by Blockaid.</string>
     <string name="vault_settings_security_screen_title">Security</string>
@@ -600,7 +603,7 @@
     <!-- Sign-message Verify: what the signed payload turned out to be -->
     <string name="verify_sign_message_decoded_message">Decoded message</string>
     <string name="verify_sign_message_message_hash">Message hash</string>
-    <string name="sign_message_sign_screen_title">Sign message</string>
+    <string name="sign_message_sign_screen_title">Sign Message</string>
     <string name="vault_settings_sign_message_description">Sign custom message</string>
     <string name="swap_screen_invalid_specific_and_utxo">Specific calculation failed</string>
     <string name="verify_sign_message_message_field_signature">Signature</string>
@@ -1355,7 +1358,6 @@
     <string name="vault_confirmation_vault_upgraded">"Vault upgraded"</string>
     <string name="vault_detail_vault_info">Vault Info</string>
     <string name="vault_details_keys">Keys</string>
-    <string name="vault_password_biometric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>
     <string name="verify_send_send_overview">Send overview</string>
     <string name="verify_swap_swap_overview">Swap overview</string>
     <string name="rename_vault_screen_rename_vault">Rename Vault</string>

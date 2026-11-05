@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DividerDefaults
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -458,6 +460,37 @@ internal fun SettingsSwitch(
         )
     }
 }
+
+/** The large redesign switch with its own tap target, 48 tall around the drawn track. */
+@Composable
+internal fun SettingsLargeSwitch(
+    checked: Boolean,
+    label: String,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    val size = SettingsSwitchSize.Large
+    Box(
+        modifier =
+            Modifier.height(size.height)
+                .wrapContentHeight(unbounded = true)
+                .height(SWITCH_TOUCH_HEIGHT)
+                .semantics { contentDescription = label }
+                .toggleable(
+                    value = checked,
+                    role = Role.Switch,
+                    onValueChange = onCheckedChange,
+                ),
+        contentAlignment = Alignment.Center,
+    ) {
+        SettingsSwitch(
+            checked = checked,
+            size = size,
+            onTrackColor = Theme.v2.colors.primary.accent4,
+        )
+    }
+}
+
+private val SWITCH_TOUCH_HEIGHT = 48.dp
 
 /** Pill next to a row title, e.g. the tier a feature needs. */
 @Composable

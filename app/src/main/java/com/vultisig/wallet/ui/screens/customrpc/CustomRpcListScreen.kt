@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -83,6 +84,7 @@ private fun CustomRpcListScreen(
                     columns = GridCells.Fixed(4),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(horizontal = GRID_SIDE_INSET),
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     items(state.chains, key = { it.chainId }) { chain ->
@@ -158,6 +160,8 @@ private fun CustomRpcChainTile(chain: CustomRpcChainUiModel, onClick: () -> Unit
         )
     }
 }
+
+private val GRID_SIDE_INSET = 8.5.dp
 
 @Preview
 @Composable
