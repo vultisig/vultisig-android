@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRelayedIntent
 import com.vultisig.wallet.data.blockchain.solana.kamino.ResolveKaminoRelayedIntentUseCase
+import com.vultisig.wallet.data.chains.helpers.BitcoinSignedMessage
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -145,6 +146,10 @@ sealed class JoinKeysignError(val message: UiText) {
     /** An EVM custom message that isn't a recognised signing format; never signed. */
     data object UnsupportedCustomMessage :
         JoinKeysignError(R.string.sign_message_unsupported_evm_format.asUiText())
+
+    /** A Bitcoin custom message that isn't exactly one BIP-137 envelope; never signed. */
+    data object UnsupportedBitcoinMessage :
+        JoinKeysignError(R.string.sign_message_unsupported_bitcoin_format.asUiText())
 
     /**
      * This vault is missing the Bitcoin or QBTC account the claim hash is derived from, so it
@@ -584,6 +589,14 @@ constructor(
             ) {
                 return false
             }
+        }
+
+        if (
+            BitcoinSignedMessage.isBitcoinMessage(customMessage) &&
+                !BitcoinSignedMessage.isWellFormed(customMessage.message)
+        ) {
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.UnsupportedBitcoinMessage)
+            return false
         }
 
         if (!SigningHelper.isEvmSignable(customMessage)) {

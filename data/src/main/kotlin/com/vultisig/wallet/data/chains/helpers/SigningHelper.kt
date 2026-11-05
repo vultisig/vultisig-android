@@ -93,6 +93,15 @@ object SigningHelper {
         messagePayload: CustomMessagePayload,
         typedDataHasher: (String) -> ByteArray?,
     ): List<String> {
+        // Ahead of the method checks, so a misrouted method can't send a Bitcoin payload down the
+        // typed-data or keccak256 paths.
+        if (BitcoinSignedMessage.isBitcoinMessage(messagePayload)) {
+            val digest =
+                BitcoinSignedMessage.digest(messagePayload.message)
+                    ?: error("Refusing to sign a Bitcoin message without a BIP-137 envelope")
+            return listOf(digest)
+        }
+
         if (messagePayload.method.equals(ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) {
             return getKeysignMessagesForTypedData(messagePayload.message, typedDataHasher)
         }
