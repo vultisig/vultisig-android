@@ -317,7 +317,7 @@ private fun SettingsGetVultFooter(accentColor: Color, onClick: () -> Unit) {
                 .layout { measurable, constraints ->
                     val placeable = measurable.measure(constraints)
                     val overlap = SETTINGS_FOOTER_OVERLAP.roundToPx()
-                    layout(placeable.width, placeable.height - overlap) {
+                    layout(placeable.width, (placeable.height - overlap).coerceAtLeast(0)) {
                         placeable.place(0, -overlap)
                     }
                 }

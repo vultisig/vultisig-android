@@ -61,7 +61,11 @@ private fun SecurityScannerEnableScreen(
                 color = Theme.v2.colors.text.secondary,
             )
 
-            SettingsLargeSwitch(checked = uiModel.isSwitchEnabled, onCheckedChange = onCheckChange)
+            SettingsLargeSwitch(
+                checked = uiModel.isSwitchEnabled,
+                label = stringResource(id = R.string.vault_settings_security_screen_title_switch),
+                onCheckedChange = onCheckChange,
+            )
 
             if (uiModel.showWarningDialog) {
                 SettingsSecurityScannerBottomSheet(

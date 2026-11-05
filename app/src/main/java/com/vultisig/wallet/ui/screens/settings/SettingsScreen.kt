@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -462,13 +463,18 @@ internal fun SettingsSwitch(
 
 /** The large redesign switch with its own tap target, 48 tall around the drawn track. */
 @Composable
-internal fun SettingsLargeSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+internal fun SettingsLargeSwitch(
+    checked: Boolean,
+    label: String,
+    onCheckedChange: (Boolean) -> Unit,
+) {
     val size = SettingsSwitchSize.Large
     Box(
         modifier =
             Modifier.height(size.height)
                 .wrapContentHeight(unbounded = true)
                 .height(SWITCH_TOUCH_HEIGHT)
+                .semantics { contentDescription = label }
                 .toggleable(
                     value = checked,
                     role = Role.Switch,

@@ -201,7 +201,11 @@ private fun MasterNotificationToggle(isChecked: Boolean, onToggle: (Boolean) -> 
             )
         }
         UiSpacer(size = TEXT_TO_SWITCH_GAP)
-        SettingsLargeSwitch(checked = isChecked, onCheckedChange = onToggle)
+        SettingsLargeSwitch(
+            checked = isChecked,
+            label = stringResource(R.string.push_notifications),
+            onCheckedChange = onToggle,
+        )
     }
 }
 
@@ -243,7 +247,11 @@ private fun VaultNotificationToggle(
             modifier = Modifier.weight(1f),
         )
         UiSpacer(size = TEXT_TO_SWITCH_GAP)
-        SettingsLargeSwitch(checked = vault.isEnabled, onCheckedChange = onToggle)
+        SettingsLargeSwitch(
+            checked = vault.isEnabled,
+            label = vault.vaultName,
+            onCheckedChange = onToggle,
+        )
     }
 }
 
