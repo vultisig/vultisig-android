@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -190,6 +192,7 @@ private fun SettingsGateContent(
     Column(
         modifier =
             Modifier.fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(top = SETTINGS_GATE_TOP_PADDING, bottom = SETTINGS_GATE_BOTTOM_PADDING),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -317,7 +320,7 @@ private fun SettingsGetVultFooter(accentColor: Color, onClick: () -> Unit) {
                 .layout { measurable, constraints ->
                     val placeable = measurable.measure(constraints)
                     val overlap = SETTINGS_FOOTER_OVERLAP.roundToPx()
-                    layout(placeable.width, (placeable.height - overlap).coerceAtLeast(0)) {
+                    layout(placeable.width, placeable.height - overlap) {
                         placeable.place(0, -overlap)
                     }
                 }
