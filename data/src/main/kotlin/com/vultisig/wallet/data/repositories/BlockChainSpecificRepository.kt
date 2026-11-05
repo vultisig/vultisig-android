@@ -361,7 +361,7 @@ constructor(
                         BlockChainSpecific.UTXO(
                             byteFee = gasFee.value,
                             sendMaxAmount = isMaxAmountEnabled,
-                            // Resolve the live ZIP-243 branch id for ZEC at build time so it
+                            // Resolve the live consensus branch id for ZEC at build time so it
                             // travels with the payload to the signing helpers; null (constant
                             // fallback) for the other UTXO chains and when the RPC is down.
                             zcashBranchId =
