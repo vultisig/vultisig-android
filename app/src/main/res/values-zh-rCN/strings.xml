@@ -1135,9 +1135,9 @@
 
     <!-- Check Updates -->
     <string name="check_updates_title">检查更新</string>
-    <string name="update_available">有可用更新</string>
-    <string name="app_up_to_date">应用程序是最新的</string>
-    <string name="update">更新</string>
+    <string name="update_available">有可用更新。</string>
+    <string name="app_up_to_date">应用程序是最新的。</string>
+    <string name="update">更新应用</string>
 
     <!-- Share Vault QR -->
 

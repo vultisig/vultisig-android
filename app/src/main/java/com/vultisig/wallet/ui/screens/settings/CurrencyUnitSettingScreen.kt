@@ -18,6 +18,7 @@ import com.vultisig.wallet.ui.models.settings.CurrencyUnit
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingUiModel
 import com.vultisig.wallet.ui.models.settings.CurrencyUnitSettingViewModel
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asUiText
 
 @Composable
@@ -75,10 +76,14 @@ private fun CurrencyUnitSettingItem(
         item =
             SettingsItemUiModel(
                 title = name.asUiText(),
-                trailingIcon = if (isSelected) R.drawable.check_2 else null,
+                trailingIcon = if (isSelected) R.drawable.loading_bar_checkmark else null,
+                backgroundColor =
+                    if (isSelected) Theme.v2.colors.variables.backgroundsSurface12 else null,
             ),
         onClick = onClick,
         isLastItem = isLastItem,
+        titleStyle = Theme.brockmann.body.s.medium,
+        layout = SettingItemLayout.Choice,
     )
 }
 
@@ -90,18 +95,18 @@ private fun CurrencyUnitSettingScreenPreview() {
             CurrencyUnitSettingUiModel(
                 currencyUnits =
                     listOf(
-                        CurrencyUnit(fullName = "US Dollar (US\$)"),
+                        CurrencyUnit(fullName = "US Dollar (\$)"),
                         CurrencyUnit(fullName = "Australian Dollar (A\$)"),
                         CurrencyUnit(fullName = "Euro (€)"),
                         CurrencyUnit(fullName = "Russian Ruble (₽)"),
                         CurrencyUnit(fullName = "British Pound (£)"),
-                        CurrencyUnit(fullName = "Japanese Yen (JP¥)"),
+                        CurrencyUnit(fullName = "Japanese Yen (￥)"),
                         CurrencyUnit(fullName = "Chinese Yuan (CN¥)"),
                         CurrencyUnit(fullName = "Canadian Dollar (CA\$)"),
-                        CurrencyUnit(fullName = "Singapore Dollar (SGD)"),
-                        CurrencyUnit(fullName = "Swedish Krona (SEK)"),
+                        CurrencyUnit(fullName = "Singapore Dollar (S\$)"),
+                        CurrencyUnit(fullName = "Swedish Krona (kr)"),
                     ),
-                selectedCurrency = CurrencyUnit(fullName = "US Dollar (US\$)"),
+                selectedCurrency = CurrencyUnit(fullName = "US Dollar (\$)"),
             ),
         onCurrencyClick = {},
         onBackClick = {},

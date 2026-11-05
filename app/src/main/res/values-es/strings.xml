@@ -781,9 +781,9 @@
     <string name="vault_management">Gestión de bóvedas</string>
     <string name="other">Otros</string>
     <string name="check_updates_title">Consultar actualizaciones</string>
-    <string name="update_available">Actualización disponible</string>
-    <string name="app_up_to_date">Aplicación actualizada</string>
-    <string name="update">Actualizar</string>
+    <string name="update_available">Actualización disponible.</string>
+    <string name="app_up_to_date">Aplicación actualizada.</string>
+    <string name="update">Actualizar app</string>
     <string name="add_address_title_label">Etiqueta</string>
     <string name="address_book_title_edit">Editar libreta de direcciones</string>
     <string name="address_book_delete_entry_title">¿Eliminar dirección?</string>

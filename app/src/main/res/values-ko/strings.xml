@@ -1113,9 +1113,9 @@
 
 
     <string name="check_updates_title">업데이트 확인</string>
-    <string name="update_available">업데이트가 있습니다</string>
-    <string name="app_up_to_date">앱이 최신 버전입니다</string>
-    <string name="update">업데이트</string>
+    <string name="update_available">업데이트가 있습니다.</string>
+    <string name="app_up_to_date">앱이 최신 버전입니다.</string>
+    <string name="update">앱 업데이트</string>
     <string name="add_address_title_label">라벨</string>
     <string name="address_book_title_edit">주소록 수정</string>
     <string name="address_book_delete_entry_title">주소를 삭제하시겠습니까?</string>

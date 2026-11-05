@@ -5,10 +5,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Icon
@@ -26,7 +27,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -37,7 +37,6 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.FAQSettingUiModel
 import com.vultisig.wallet.ui.models.settings.FAQSettingViewModel
 import com.vultisig.wallet.ui.models.settings.Faq
-import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -55,7 +54,7 @@ private fun FaqSettingScreen(onBackClick: () -> Unit, state: FAQSettingUiModel) 
         onBackClick = onBackClick,
     ) {
         V2Container(type = ContainerType.SECONDARY) {
-            LazyColumn(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)) {
+            LazyColumn {
                 itemsIndexed(state.questions, key = { _, faq -> faq.id }) { index, faq ->
                     FAQSettingItem(faq = faq, isLastItem = index == state.questions.lastIndex)
                 }
@@ -69,46 +68,56 @@ private fun FAQSettingItem(faq: Faq, isLastItem: Boolean) {
     val colors = Theme.v2.colors
     var isExpanded by remember { mutableStateOf(false) }
     val rotation =
-        animateFloatAsState(targetValue = if (isExpanded) 90f else 0f, label = "arrow angle")
-    Column(modifier = Modifier.animateContentSize()) {
+        animateFloatAsState(targetValue = if (isExpanded) 180f else 0f, label = "arrow angle")
+    Column(
+        modifier =
+            Modifier.animateContentSize()
+                .then(if (isLastItem) Modifier else Modifier.rowBottomDivider(colors.border.light))
+                .fillMaxWidth()
+                .heightIn(min = COLLAPSED_ROW_HEIGHT)
+                .padding(
+                    horizontal = 20.dp,
+                    vertical = if (isExpanded) EXPANDED_ROW_PADDING else COLLAPSED_ROW_PADDING,
+                ),
+        verticalArrangement = Arrangement.Center,
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth().clickable { isExpanded = !isExpanded },
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(CHEVRON_GAP),
         ) {
             Text(
                 text = faq.question,
-                color = Theme.v2.colors.text.secondary,
+                color = colors.text.secondary,
                 style = Theme.brockmann.body.s.medium,
-                lineHeight = 20.sp,
                 modifier = Modifier.weight(1f),
             )
 
-            UiSpacer(16.dp)
-
             Icon(
-                modifier = Modifier.rotate(rotation.value),
-                painter = painterResource(id = R.drawable.small_caret_down),
+                modifier = Modifier.size(CHEVRON_SIZE).rotate(rotation.value),
+                painter = painterResource(id = R.drawable.icon_chevron_down_small),
                 contentDescription = null,
                 tint = colors.text.tertiary,
             )
         }
 
         if (isExpanded) {
-            UiSpacer(4.dp)
+            UiSpacer(12.dp)
             Text(
                 text = faq.answer,
                 color = colors.neutrals.n50,
                 style = Theme.brockmann.supplementary.footnote,
-                lineHeight = 18.sp,
+                modifier = Modifier.padding(end = CHEVRON_GAP + CHEVRON_SIZE),
             )
-        }
-
-        if (isLastItem.not()) {
-            FadingHorizontalDivider(Modifier.padding(vertical = 16.dp))
         }
     }
 }
+
+private val CHEVRON_GAP = 12.dp
+private val CHEVRON_SIZE = 16.dp
+private val COLLAPSED_ROW_HEIGHT = 70.dp
+private val COLLAPSED_ROW_PADDING = 15.dp
+private val EXPANDED_ROW_PADDING = 16.dp
 
 @Preview
 @Composable

@@ -238,8 +238,6 @@ internal data class SettingsItemUiModel(
     val trailingIcon: Int? = null,
     val leadingIconTint: Color? = null,
     val trailingSwitch: Boolean? = null,
-    // False hides the trailing icon but keeps its room, so a selection never reflows the row.
-    val isTrailingIconVisible: Boolean = true,
     val value: String? = null,
     val backgroundColor: Color? = null,
 )

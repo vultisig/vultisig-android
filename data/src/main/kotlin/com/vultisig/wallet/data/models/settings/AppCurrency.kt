@@ -15,7 +15,7 @@ enum class AppCurrency(
 ) {
     USD(
         ticker = "USD",
-        fullName = "US Dollar (US$)",
+        fullName = "US Dollar ($)",
         formatLocale = Locale.forLanguageTag("en-US"),
     ),
     AUD(
@@ -37,7 +37,7 @@ enum class AppCurrency(
     ),
     JPY(
         ticker = "JPY",
-        fullName = "Japanese Yen (JP¥)",
+        fullName = "Japanese Yen (￥)",
         formatLocale = Locale.forLanguageTag("ja-JP"),
     ),
     CNY(
@@ -54,13 +54,13 @@ enum class AppCurrency(
     ),
     SGD(
         ticker = "SGD",
-        fullName = "Singapore Dollar (SGD)",
+        fullName = "Singapore Dollar (S$)",
         formatLocale = Locale.forLanguageTag("en-SG"),
         symbol = "S$",
     ),
     SEK(
         ticker = "SEK",
-        fullName = "Swedish Krona (SEK)",
+        fullName = "Swedish Krona (kr)",
         formatLocale = Locale.forLanguageTag("sv-SE"),
     ),
     RUB(

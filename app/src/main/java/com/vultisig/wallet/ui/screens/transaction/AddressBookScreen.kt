@@ -5,14 +5,15 @@ package com.vultisig.wallet.ui.screens.transaction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,11 +24,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -43,9 +48,9 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
+import com.vultisig.wallet.ui.components.settingsShade
 import com.vultisig.wallet.ui.components.v2.buttons.DesignType
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
-import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.vultiCircleShadeGradient
@@ -99,25 +104,22 @@ internal fun AddressBookScreen(
         actions = {
             if (state.entries.isNotEmpty()) {
                 if (isEditModeEnabled) {
-                    Text(
-                        text = stringResource(R.string.address_book_edit_mode_done),
-                        style = Theme.brockmann.button.medium.medium,
-                        color = Theme.v2.colors.primary.accent4,
-                        modifier =
-                            Modifier.clickOnce(onClick = onToggleEditMode)
-                                .background(
-                                    color = Theme.v2.colors.backgrounds.secondary,
-                                    shape = CircleShape,
-                                )
-                                .padding(all = 12.dp),
+                    val doneLabel = stringResource(R.string.address_book_edit_mode_done)
+                    VsCircleButton(
+                        modifier = Modifier.semantics { contentDescription = doneLabel },
+                        drawableResId = R.drawable.header_checkmark,
+                        tint = Color.Unspecified,
+                        iconSize = HEADER_ICON_SIZE,
+                        onClick = onToggleEditMode,
+                        designType = DesignType.Solid,
                     )
                 } else {
                     VsCircleButton(
+                        drawableResId = R.drawable.pen_writing_filled,
+                        tint = Color.Unspecified,
+                        iconSize = HEADER_ICON_SIZE,
                         onClick = onToggleEditMode,
-                        size = VsCircleButtonSize.Small,
                         type = VsCircleButtonType.Secondary,
-                        designType = DesignType.Shined,
-                        icon = R.drawable.reame,
                     )
                 }
             }
@@ -130,8 +132,11 @@ internal fun AddressBookScreen(
             if (state.entries.isNotEmpty()) {
                 VsButton(
                     label = stringResource(R.string.address_book_add_address_button),
+                    labelStyle = Theme.brockmann.button.medium.medium,
                     onClick = onAddAddressClick,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 16.dp),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 22.dp),
                 )
             }
         },
@@ -142,8 +147,8 @@ internal fun AddressBookScreen(
                 onMove = onMove,
                 key = { it.model.id },
                 isReorderEnabled = state.isEditModeEnabled,
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(top = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) { entry ->
                 AddressItem(
                     image = entry.image,
@@ -179,37 +184,49 @@ private fun DeleteAddressDialog(
 
 @Composable
 private fun NoAddressView(onAddAddressClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().shadeCircle().padding(48.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = stringResource(R.string.address_book_empty_title),
-            style = Theme.brockmann.button.semibold.regular,
-            color = Theme.v2.colors.neutrals.n50,
-            textAlign = TextAlign.Center,
-        )
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val bottomOffset = min(EMPTY_BOTTOM_OFFSET, maxHeight * EMPTY_BOTTOM_MAX_FRACTION)
+        Column(
+            Modifier.fillMaxSize()
+                .settingsShade(centerOffsetY = EMPTY_SHADE_CENTER_OFFSET)
+                .padding(start = 48.dp, end = 48.dp, top = 48.dp, bottom = bottomOffset),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = stringResource(R.string.address_book_empty_title),
+                style = Theme.brockmann.button.medium.regular,
+                color = Theme.v2.colors.neutrals.n50,
+                textAlign = TextAlign.Center,
+            )
 
-        UiSpacer(size = 12.dp)
+            UiSpacer(size = 12.dp)
 
-        Text(
-            text = stringResource(R.string.address_book_empty_description),
-            style = Theme.brockmann.button.medium.medium,
-            color = Theme.v2.colors.neutrals.n300,
-            textAlign = TextAlign.Center,
-        )
+            Text(
+                text = stringResource(R.string.address_book_empty_description),
+                style = Theme.brockmann.button.medium.medium,
+                color = Theme.v2.colors.text.tertiary,
+                textAlign = TextAlign.Center,
+            )
 
-        UiSpacer(size = 30.dp)
+            UiSpacer(size = 30.dp)
 
-        VsButton(
-            label = stringResource(R.string.address_book_add_address_button),
-            onClick = onAddAddressClick,
-            size = VsButtonSize.Medium,
-            variant = VsButtonVariant.Primary,
-        )
+            VsButton(
+                label = stringResource(R.string.address_book_add_address_button),
+                onClick = onAddAddressClick,
+                size = VsButtonSize.Wide,
+                variant = VsButtonVariant.Primary,
+            )
+        }
     }
 }
+
+private val HEADER_ICON_SIZE = 24.dp
+private val EMPTY_BOTTOM_OFFSET = 177.dp
+private const val EMPTY_BOTTOM_MAX_FRACTION = 0.25f
+private val EMPTY_SHADE_CENTER_OFFSET = (-44).dp
+private val ROW_HEIGHT = 66.dp
+private val GRIP_TO_ROW_GAP = 5.5.dp
 
 fun Modifier.shadeCircle() =
     this.drawBehind { drawCircle(brush = Brush.vultiCircleShadeGradient()) }
@@ -229,26 +246,25 @@ private fun AddressItem(
     onClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
+    val rowShape = if (isEditModeEnabled) Theme.v2.radius.pill else Theme.v2.radius.xl
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (isEditModeEnabled) {
-            UiIcon(drawableResId = R.drawable.ic_drag_handle, size = 24.dp)
-            UiSpacer(size = 8.dp)
+            UiIcon(
+                drawableResId = R.drawable.grip_dots_vertical,
+                size = 24.dp,
+                tint = Color.Unspecified,
+            )
+            UiSpacer(size = GRIP_TO_ROW_GAP)
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
                 Modifier.fillMaxWidth()
+                    .heightIn(min = ROW_HEIGHT)
                     .clickOnce(onClick = onClick)
-                    .background(
-                        color = Theme.v2.colors.backgrounds.secondary,
-                        shape = Theme.v2.radius.md,
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.light,
-                        shape = Theme.v2.radius.md,
-                    )
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .background(color = Theme.v2.colors.backgrounds.secondary, shape = rowShape)
+                    .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = rowShape)
+                    .padding(start = 16.dp, end = if (isEditModeEnabled) 20.dp else 16.dp),
         ) {
             TokenLogo(
                 logo = image,
@@ -275,11 +291,12 @@ private fun AddressItem(
             }
 
             if (isEditModeEnabled) {
-                UiSpacer(size = 16.dp)
+                UiSpacer(size = 12.dp)
                 UiIcon(
-                    drawableResId = R.drawable.trash_outline,
+                    drawableResId = R.drawable.trash_filled,
                     onClick = onDeleteClick,
                     size = 20.dp,
+                    tint = Theme.v2.colors.text.tertiary,
                 )
             }
         }

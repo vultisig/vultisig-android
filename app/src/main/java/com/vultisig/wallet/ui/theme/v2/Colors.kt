@@ -152,6 +152,7 @@ data class Variables(
     val buttonsCTAPrimary: Color = Color(0xFF0B4EFF),
     val backgroundsSurface12: Color = Color(0xFF0D2240),
     val bordersExtraLight: Color = Color(0x08FFFFFF),
+    val inputFieldsBackground: Color = Color(0xFF051937),
     val textButtonSecondaryLightDark: Color = Color(0xFFF0F4FC),
 )
 

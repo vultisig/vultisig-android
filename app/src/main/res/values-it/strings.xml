@@ -779,9 +779,9 @@
     <string name="vault_management">Gestione vault</string>
     <string name="other">Altro</string>
     <string name="check_updates_title">Controlla gli aggiornamenti</string>
-    <string name="update_available">È disponibile un aggiornamento</string>
-    <string name="app_up_to_date">L\'app è aggiornata</string>
-    <string name="update">Aggiorna</string>
+    <string name="update_available">È disponibile un aggiornamento.</string>
+    <string name="app_up_to_date">L\'app è aggiornata.</string>
+    <string name="update">Aggiorna app</string>
     <string name="add_address_title_label">Etichetta</string>
     <string name="address_book_title_edit">Modifica rubrica</string>
     <string name="address_book_delete_entry_title">Eliminare l\'indirizzo?</string>
