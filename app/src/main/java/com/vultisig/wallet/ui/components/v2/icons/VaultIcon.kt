@@ -14,6 +14,7 @@ internal fun VaultIcon(
     modifier: Modifier = Modifier,
     isFastVault: Boolean,
     size: Dp = 16.dp,
+    isSecureIconFilled: Boolean = false,
     contentDescription: String? =
         stringResource(if (isFastVault) R.string.name_vault_fast else R.string.name_vault_secure),
 ) {
@@ -22,6 +23,8 @@ internal fun VaultIcon(
         drawableResId =
             if (isFastVault) {
                 R.drawable.thunder
+            } else if (isSecureIconFilled) {
+                R.drawable.icon_shield_solid
             } else {
                 R.drawable.ic_shield
             },

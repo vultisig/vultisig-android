@@ -2,26 +2,21 @@ package com.vultisig.wallet.ui.components.referral
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.bottomsheet.SettingsModalBottomSheet
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
@@ -31,15 +26,11 @@ import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
 import com.vultisig.wallet.ui.theme.Theme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ReferralCodeBottomSheet(onContinue: () -> Unit, onDismissRequest: () -> Unit) {
-    ModalBottomSheet(
+    SettingsModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        containerColor = Theme.v2.colors.backgrounds.secondary,
-        shape = Theme.v2.radius.xl,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        dragHandle = null,
+        containerColor = Theme.v2.colors.backgrounds.surface1,
     ) {
         ReferralCodeBottomSheetContent(onContinue = onContinue)
     }
@@ -48,19 +39,19 @@ internal fun ReferralCodeBottomSheet(onContinue: () -> Unit, onDismissRequest: (
 @Composable
 internal fun ReferralCodeBottomSheetContent(onContinue: () -> Unit) {
     Column(
-        modifier = Modifier.padding(horizontal = 32.dp).fillMaxWidth().navigationBarsPadding(),
+        modifier =
+            Modifier.padding(horizontal = 35.dp)
+                .padding(top = 6.dp, bottom = 12.dp)
+                .fillMaxWidth()
+                .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top,
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(id = R.drawable.referralcodeiphone),
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth().height(200.dp).clip(Theme.v2.radius.xl),
-            )
-        }
-
-        UiSpacer(32.dp)
+        Image(
+            painter = painterResource(id = R.drawable.referralcodeiphone),
+            contentDescription = null,
+            modifier = Modifier.size(width = 241.dp, height = 194.dp),
+        )
 
         SequenceOfGradientText(
             listTextItems =
@@ -81,25 +72,21 @@ internal fun ReferralCodeBottomSheetContent(onContinue: () -> Unit) {
             style = Theme.brockmann.headings.title2,
         )
 
-        UiSpacer(32.dp)
-
         Text(
             text = stringResource(R.string.referral_invite_sheet_description),
             style = Theme.brockmann.body.s.medium,
             textAlign = TextAlign.Center,
             color = Theme.v2.colors.text.secondary,
-            modifier = Modifier.padding(horizontal = 32.dp).fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
         )
 
-        UiSpacer(32.dp)
-
         VsButton(
-            label = stringResource(R.string.referral_invite_next),
+            label = stringResource(R.string.referral_onboarding_get_started),
             variant = Primary,
             state = Enabled,
             size = Medium,
             onClick = onContinue,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

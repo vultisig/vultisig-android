@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -33,11 +35,11 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
+import com.vultisig.wallet.ui.components.bottomsheet.SheetGrabber
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
-import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareSheetGrabber
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,7 +79,7 @@ internal fun SettingsSecurityScannerBottomSheet(
         containerColor = Theme.v2.colors.backgrounds.background,
         shape = RoundedCornerShape(topStart = 38.dp, topEnd = 38.dp),
         scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.5f),
-        dragHandle = { ShareSheetGrabber(top = 5.dp, bottom = 16.dp) },
+        dragHandle = { SheetGrabber(top = 5.dp, bottom = 16.dp) },
     ) {
         SettingsSecurityScannerContent(
             onGoBack = onDismissRequest,
@@ -95,7 +97,7 @@ private fun SettingsSecurityScannerContent(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {

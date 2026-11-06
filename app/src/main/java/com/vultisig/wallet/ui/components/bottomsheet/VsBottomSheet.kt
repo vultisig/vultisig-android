@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -17,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.launch
@@ -35,12 +37,43 @@ object VsBottomSheet {
 }
 
 @Composable
+internal fun SheetGrabber(top: Dp = 8.dp, bottom: Dp = 13.dp) {
+    Box(
+        modifier =
+            Modifier.padding(top = top, bottom = bottom)
+                .size(width = 36.dp, height = 5.dp)
+                .background(
+                    color = Theme.v2.colors.neutrals.n50.copy(alpha = 0.3f),
+                    shape = Theme.v2.radius.pill,
+                )
+    )
+}
+
+/** The redesign's sheet in settings: large radius, lighter scrim, short grabber. */
+@Composable
+internal fun SettingsModalBottomSheet(
+    onDismissRequest: () -> Unit,
+    containerColor: Color = Theme.v2.colors.backgrounds.primary,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    VsModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        dragHandle = { SheetGrabber(top = 5.dp, bottom = 10.dp) },
+        shape = RoundedCornerShape(topStart = 38.dp, topEnd = 38.dp),
+        scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.5f),
+        containerColor = containerColor,
+        content = content,
+    )
+}
+
+@Composable
 fun VsModalBottomSheet(
     onDismissRequest: () -> Unit,
     showDragHandle: Boolean = true,
     dragHandle: @Composable () -> Unit = { VsBottomSheet.DragHandle() },
     shape: Shape = BottomSheetDefaults.ExpandedShape,
     scrimColor: Color = Theme.v2.colors.neutrals.n900.copy(alpha = 0.8f),
+    containerColor: Color = Theme.v2.colors.backgrounds.primary,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -51,7 +84,7 @@ fun VsModalBottomSheet(
         scrimColor = scrimColor,
         shape = shape,
         dragHandle = if (showDragHandle) dragHandle else null,
-        containerColor = Theme.v2.colors.backgrounds.primary,
+        containerColor = containerColor,
         modifier = Modifier.statusBarsPadding(),
         onDismissRequest = {
             scope.launch {

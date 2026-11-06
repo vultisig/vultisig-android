@@ -1,17 +1,29 @@
 package com.vultisig.wallet.ui.screens.passcode
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,8 +33,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.passcode.PASSCODE_LENGTH
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.drawSoftGlow
+import com.vultisig.wallet.ui.components.inputs.PasscodeDots
 import com.vultisig.wallet.ui.components.inputs.PasscodeInputField
 import com.vultisig.wallet.ui.components.inputs.PasscodeInputFieldState
+import com.vultisig.wallet.ui.components.inputs.PasscodeInputFieldStyle
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.passcode.PasscodeEntryError
 import com.vultisig.wallet.ui.models.passcode.PasscodeEntryStep
@@ -30,6 +46,22 @@ import com.vultisig.wallet.ui.models.passcode.PasscodeEntryUiModel
 import com.vultisig.wallet.ui.models.passcode.PasscodeEntryViewModel
 import com.vultisig.wallet.ui.navigation.Route.PasscodeEntryAction
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.v2.V2
+
+private val BLOCK_TOP_GAP = 106.dp
+private val CAPTION_MAX_WIDTH = 283.dp
+private val GLOW_CENTER_Y = 275.dp
+private val GLOW_RADIUS = 400.dp
+private val GLOW_COLOR = V2.colors.primary.accent4
+private val GLOW_STOPS =
+    arrayOf(
+        0f to GLOW_COLOR.copy(alpha = 0.11f),
+        0.2f to GLOW_COLOR.copy(alpha = 0.096f),
+        0.4f to GLOW_COLOR.copy(alpha = 0.062f),
+        0.6f to GLOW_COLOR.copy(alpha = 0.031f),
+        0.8f to GLOW_COLOR.copy(alpha = 0.011f),
+        1f to Color.Transparent,
+    )
 
 @Composable
 internal fun PasscodeEntryScreen(navController: NavHostController) {
@@ -50,49 +82,108 @@ private fun PasscodeEntryScreen(
     onBackClick: () -> Unit,
 ) {
     V2Scaffold(title = stringResource(state.action.titleRes()), onBackClick = onBackClick) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            // Same reason as the lock screen: the numeric keypad opens with the screen and covers
-            // a third of it, so the block has to centre in what is left rather than in the window.
-            modifier = Modifier.fillMaxSize().imePadding().padding(horizontal = 16.dp),
-        ) {
-            Text(
-                text = stringResource(state.step.headlineRes()),
-                color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.headings.title2,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
+        BoxWithConstraints(modifier = Modifier.fillMaxSize().imePadding().passcodeEntryGlow()) {
+            val density = LocalDensity.current
+            val scrollState = rememberScrollState()
+            var blockHeight by remember { mutableStateOf(0.dp) }
+            // The numeric keypad covers a third of the screen, so the block gives up its top gap
+            // as it needs the room, measured so font scale and long locales count.
+            val topGap = (maxHeight - blockHeight).coerceIn(0.dp, BLOCK_TOP_GAP)
 
-            Text(
-                text = state.step.caption(state.action),
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.supplementary.footnote,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-            )
+            // Past that it scrolls, and the live row and any error are last, so stay on them.
+            LaunchedEffect(scrollState.maxValue) { scrollState.scrollTo(scrollState.maxValue) }
 
-            PasscodeInputField(
-                textFieldState = textFieldState,
-                enabled = state.isInputEnabled,
-                state =
-                    if (state.error != null) PasscodeInputFieldState.Error
-                    else PasscodeInputFieldState.Default,
-                modifier = Modifier.fillMaxWidth().padding(top = 36.dp),
-            )
-
-            state.error?.let { error ->
-                Text(
-                    text = error.message(),
-                    color = Theme.v2.colors.alerts.error,
-                    style = Theme.brockmann.supplementary.footnote,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier =
+                    Modifier.fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(top = topGap)
+                        .onSizeChanged { blockHeight = with(density) { it.height.toDp() } },
+            ) {
+                PasscodeEntryBlock(state = state, textFieldState = textFieldState)
             }
         }
     }
+}
+
+@Composable
+private fun PasscodeEntryBlock(state: PasscodeEntryUiModel, textFieldState: TextFieldState) {
+    val isConfirmStep = state.step == PasscodeEntryStep.Confirm
+
+    UiIcon(
+        drawableResId = R.drawable.ic_lock_password,
+        size = 46.dp,
+        tint = Theme.v2.colors.primary.accent4,
+    )
+
+    Text(
+        text =
+            stringResource(
+                if (isConfirmStep) PasscodeEntryStep.New.headlineRes()
+                else state.step.headlineRes()
+            ),
+        color = Theme.v2.colors.text.primary,
+        style = Theme.brockmann.headings.title3,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+    )
+
+    state.step.caption(state.action)?.let { caption ->
+        Text(
+            text = caption,
+            color = Theme.v2.colors.text.secondary,
+            style = Theme.brockmann.body.s.regular,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(max = CAPTION_MAX_WIDTH).padding(top = 14.dp),
+        )
+    }
+
+    if (isConfirmStep) {
+        // The first row is already accepted by this step, so it is always full.
+        PasscodeDots(
+            filledCount = PASSCODE_LENGTH,
+            isError = false,
+            modifier = Modifier.padding(top = 24.dp),
+        )
+        Text(
+            text = stringResource(PasscodeEntryStep.Confirm.headlineRes()),
+            color = Theme.v2.colors.text.secondary,
+            style = Theme.brockmann.body.s.regular,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+        )
+    }
+
+    PasscodeInputField(
+        textFieldState = textFieldState,
+        enabled = state.isInputEnabled,
+        state =
+            if (state.error != null) PasscodeInputFieldState.Error
+            else PasscodeInputFieldState.Default,
+        modifier =
+            Modifier.fillMaxWidth().padding(top = if (isConfirmStep) 16.dp else 24.dp),
+        style = PasscodeInputFieldStyle.Dots,
+    )
+
+    state.error?.let { error ->
+        Text(
+            text = error.message(),
+            color = Theme.v2.colors.alerts.error,
+            style = Theme.brockmann.supplementary.footnote,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+        )
+    }
+}
+
+/** The blue wash Figma lays behind the block, a blurred ellipse. */
+private fun Modifier.passcodeEntryGlow(): Modifier = drawBehind {
+    drawSoftGlow(
+        glowCenter = Offset(center.x, GLOW_CENTER_Y.toPx()),
+        radius = GLOW_RADIUS.toPx(),
+        stops = GLOW_STOPS,
+    )
 }
 
 private fun PasscodeEntryAction.titleRes(): Int =
@@ -110,7 +201,7 @@ private fun PasscodeEntryStep.headlineRes(): Int =
     }
 
 @Composable
-private fun PasscodeEntryStep.caption(action: PasscodeEntryAction): String =
+private fun PasscodeEntryStep.caption(action: PasscodeEntryAction): String? =
     when (this) {
         PasscodeEntryStep.Current if action == PasscodeEntryAction.Disable ->
             stringResource(R.string.passcode_entry_caption_current_disable)
@@ -119,8 +210,7 @@ private fun PasscodeEntryStep.caption(action: PasscodeEntryAction): String =
         // cannot drift from the length actually enforced.
         PasscodeEntryStep.New ->
             stringResource(R.string.passcode_entry_caption_new, PASSCODE_LENGTH)
-        PasscodeEntryStep.Confirm ->
-            stringResource(R.string.passcode_entry_caption_confirm, PASSCODE_LENGTH)
+        PasscodeEntryStep.Confirm -> null
     }
 
 @Composable

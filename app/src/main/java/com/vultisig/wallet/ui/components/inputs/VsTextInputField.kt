@@ -34,6 +34,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.testTag
@@ -51,6 +52,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
+import com.vultisig.wallet.ui.theme.v2.V2
 
 internal sealed interface VsTextInputFieldType {
     data object Text : VsTextInputFieldType
@@ -69,10 +71,15 @@ internal enum class VsTextInputFieldInnerState {
 }
 
 /** The Settings styles are the redesign's sub-screen fields; other screens keep [Default]. */
-internal enum class VsTextInputFieldStyle {
-    Default,
+internal enum class VsTextInputFieldStyle(
+    val isSettings: Boolean = true,
+    val shape: Shape = V2.radius.lg,
+    val isAlwaysOutlined: Boolean = false,
+) {
+    Default(isSettings = false, shape = V2.radius.md),
     Settings,
-    SettingsOutlined,
+    SettingsOutlined(isAlwaysOutlined = true),
+    SettingsSmallRadius(shape = V2.radius.md),
 }
 
 @Composable
@@ -102,8 +109,7 @@ internal fun VsTextInputField(
     style: VsTextInputFieldStyle = VsTextInputFieldStyle.Default,
 ) {
     var focused by remember { mutableStateOf(false) }
-    val isSettingsStyle = style != VsTextInputFieldStyle.Default
-    val isOutlinedStyle = style == VsTextInputFieldStyle.SettingsOutlined
+    val isSettingsStyle = style.isSettings
     val fieldTextStyle =
         if (isSettingsStyle) Theme.brockmann.body.s.medium else Theme.brockmann.body.m.medium
     val trailingIconTint =
@@ -139,9 +145,6 @@ internal fun VsTextInputField(
             }
         }
 
-        val textFieldBackgroundShape =
-            if (isSettingsStyle) Theme.v2.radius.lg else Theme.v2.radius.md
-
         Row(
             modifier =
                 Modifier.border(
@@ -155,7 +158,7 @@ internal fun VsTextInputField(
                                         VsTextInputFieldInnerState.Error ->
                                             Theme.v2.colors.alerts.error
                                         VsTextInputFieldInnerState.Default if
-                                            focused || isOutlinedStyle ->
+                                            focused || style.isAlwaysOutlined ->
                                             Theme.v2.colors.border.normal
                                         VsTextInputFieldInnerState.Default if isSettingsStyle ->
                                             Theme.v2.colors.variables.bordersExtraLight
@@ -163,9 +166,9 @@ internal fun VsTextInputField(
                                             Theme.v2.colors.border.light
                                     },
                             ),
-                        shape = textFieldBackgroundShape,
+                        shape = style.shape,
                     )
-                    .clip(textFieldBackgroundShape)
+                    .clip(style.shape)
                     .background(
                         if (isSettingsStyle) Theme.v2.colors.variables.inputFieldsBackground
                         else Theme.v2.colors.backgrounds.secondary
