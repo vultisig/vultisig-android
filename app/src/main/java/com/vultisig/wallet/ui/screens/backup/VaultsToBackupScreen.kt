@@ -170,7 +170,7 @@ private fun BackupVaultContainer(
                     }
             ) {
                 Row(
-                    modifier = Modifier.height(HEADER_ROW_HEIGHT),
+                    modifier = Modifier.heightIn(min = HEADER_ROW_HEIGHT),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
