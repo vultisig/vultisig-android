@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.sign
 
+import com.vultisig.wallet.data.chains.helpers.BitcoinSignedMessage
 import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.common.remove0x
 import com.vultisig.wallet.data.models.Chain
@@ -67,6 +68,10 @@ constructor(
      * rendering of it is the whole truth.
      */
     suspend fun decode(method: String, message: String, chain: String?): DecodedCustomMessage? {
+        if (chain.equals(Chain.Bitcoin.raw, ignoreCase = true)) {
+            return BitcoinSignedMessage.displayText(message)?.let(DecodedCustomMessage::Text)
+        }
+
         if (method.equals(ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) {
             return if (message.startsWith(HEX_PREFIX)) digest(message)
             else typedData(message, chain)
