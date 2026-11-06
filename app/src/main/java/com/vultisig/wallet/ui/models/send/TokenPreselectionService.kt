@@ -188,6 +188,8 @@ internal class TokenPreselectionService(
             // arbitrary-first-account default — submitFor refuses to submit these regardless.
             DeFiNavActions.BOND,
             DeFiNavActions.UNBOND -> Coins.ThorChain.RUNE
+            // Submits only through the Deposit flow; a stale Send route gets the ordinary default.
+            DeFiNavActions.ADD_MAYA_LP,
             null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
         }
 }
