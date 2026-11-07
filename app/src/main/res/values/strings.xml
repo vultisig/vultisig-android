@@ -140,7 +140,7 @@
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
     <string name="vault_settings_dilithium_keygen_title">Post-Quantum Key</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Generate MLDSA-44 key for quantum resistance</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generate MLDSA-65 key for quantum resistance</string>
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_delete_subtitle">Delete your vault share permanently</string>
     <string name="vault_settings_security_title">On-chain security</string>

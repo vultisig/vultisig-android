@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.keygen
 
 import com.silencelaboratories.godilithium.BufferUtilJNI
 import com.silencelaboratories.godilithium.Handle
-import com.silencelaboratories.godilithium.MldsaSecurityLevel
 import com.silencelaboratories.godilithium.go_slice
 import com.silencelaboratories.godilithium.godilithium.mldsa_keygen_session_finish
 import com.silencelaboratories.godilithium.godilithium.mldsa_keygen_session_free
@@ -66,8 +65,7 @@ class MldsaKeygen(
         val ids = DklsHelper.arrayToBytes(keygenCommittee).toMldsaGoSlice()
         try {
             val threshold = DklsHelper.getThreshold(keygenCommittee.size)
-            val err =
-                mldsa_keygen_setupmsg_new(MldsaSecurityLevel.MlDsa44, threshold, null, ids, buf)
+            val err = mldsa_keygen_setupmsg_new(MLDSA_LEVEL, threshold, null, ids, buf)
             if (err != LIB_OK) {
                 error("fail to setup mldsa keygen message, error: $err")
             }
@@ -294,7 +292,7 @@ class MldsaKeygen(
                 val result =
                     try {
                         mldsa_keygen_session_from_setup(
-                            MldsaSecurityLevel.MlDsa44,
+                            MLDSA_LEVEL,
                             decodedSetupMsg,
                             localPartySlice,
                             handler,

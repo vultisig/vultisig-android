@@ -22,7 +22,7 @@
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Reshare de kluis met een nieuwe commissie</string>
     <string name="vault_settings_dilithium_keygen_title">Post-quantumsleutel</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Genereer een MLDSA-44-sleutel voor kwantumbestendigheid</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Genereer een MLDSA-65-sleutel voor kwantumbestendigheid</string>
     <string name="vault_settings_delete_title">Verwijderen</string>
     <string name="vault_settings_delete_subtitle">Verwijder je kluisdeel permanent</string>
     <string name="vault_settings_security_title">On-chain beveiliging</string>

@@ -21,7 +21,7 @@ class QBTCTransactionHelperTest {
 
     private val helper = QBTCTransactionHelper()
 
-    private val testPubKeyHex = "ab".repeat(1312)
+    private val testPubKeyHex = "ab".repeat(1952)
 
     private val nativeCoin =
         Coin(
