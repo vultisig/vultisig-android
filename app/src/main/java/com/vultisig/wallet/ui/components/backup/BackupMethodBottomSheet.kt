@@ -16,12 +16,11 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
+import com.vultisig.wallet.ui.components.bottomsheet.SettingsModalBottomSheet
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
@@ -34,7 +33,7 @@ internal fun BackupMethodBottomSheet(
     onDeviceBackupClick: () -> Unit,
     onServerBackupClick: () -> Unit,
 ) {
-    VsModalBottomSheet(onDismissRequest = onDismissRequest) {
+    SettingsModalBottomSheet(onDismissRequest = onDismissRequest) {
         BackupMethodBottomSheetContent(
             onDeviceBackupClick = onDeviceBackupClick,
             onServerBackupClick = onServerBackupClick,
@@ -48,36 +47,32 @@ private fun BackupMethodBottomSheetContent(
     onServerBackupClick: () -> Unit,
 ) {
     Column(
-        Modifier.padding(horizontal = 24.dp).verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp)
+            .verticalScroll(rememberScrollState())
     ) {
-        UiSpacer(24.dp)
-
         Text(
             text = stringResource(R.string.backup_choose_method_title),
             style = Theme.brockmann.headings.title2,
-            color = Theme.v2.colors.text.primary,
-        )
-
-        FadingHorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
-
-        BackupOption(
-            title = stringResource(R.string.backup_device_title),
-            description = stringResource(R.string.backup_device_desc),
-            icon = R.drawable.device_backup,
-            onClick = onDeviceBackupClick,
+            color = Theme.v2.colors.neutrals.n50,
         )
 
         UiSpacer(16.dp)
 
         BackupOption(
-            title = stringResource(R.string.backup_server_title),
-            description = stringResource(R.string.backup_server_desc),
-            icon = R.drawable.server_backup,
-            onClick = onServerBackupClick,
+            title = stringResource(R.string.backup_device_title),
+            description = stringResource(R.string.backup_device_desc),
+            icon = R.drawable.ic_laptop_mobile,
+            onClick = onDeviceBackupClick,
         )
 
-        UiSpacer(24.dp)
+        UiSpacer(14.dp)
+
+        BackupOption(
+            title = stringResource(R.string.backup_server_title),
+            description = stringResource(R.string.backup_server_desc),
+            icon = R.drawable.cloud_download,
+            onClick = onServerBackupClick,
+        )
     }
 }
 
@@ -93,15 +88,15 @@ private fun BackupOption(
         type = ContainerType.SECONDARY,
         borderType = ContainerBorderType.Bordered(color = Theme.v2.colors.border.light),
     ) {
-        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            UiIcon(drawableResId = icon, size = 24.dp, tint = Theme.v2.colors.primary.accent4)
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            UiIcon(drawableResId = icon, size = 20.dp, tint = Theme.v2.colors.primary.accent4)
 
-            UiSpacer(16.dp)
+            UiSpacer(12.dp)
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = Theme.brockmann.body.m.medium,
+                    style = Theme.brockmann.headings.subtitle,
                     color = Theme.v2.colors.text.primary,
                 )
 
@@ -109,7 +104,7 @@ private fun BackupOption(
 
                 Text(
                     text = description,
-                    style = Theme.brockmann.supplementary.footnote,
+                    style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.secondary,
                 )
             }
@@ -117,9 +112,9 @@ private fun BackupOption(
             UiSpacer(12.dp)
 
             UiIcon(
-                drawableResId = R.drawable.ic_caret_right,
-                size = 20.dp,
-                tint = Theme.v2.colors.text.secondary,
+                drawableResId = R.drawable.ic_small_caret_right,
+                size = 16.dp,
+                tint = Theme.v2.colors.text.tertiary,
             )
         }
     }

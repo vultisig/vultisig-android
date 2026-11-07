@@ -136,10 +136,10 @@
     <string name="vault_settings_rename_subtitle">볼트 이름 수정</string>
     <string name="vault_settings_reshare_title">재공유</string>
     <string name="vault_settings_reshare_subtitle">새로운 구성원과 볼트 재공유</string>
-    <string name="vault_settings_dilithium_keygen_title">QBTC 활성화</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">QBTC 체인을 활성화하기 위한 키 생성</string>
+    <string name="vault_settings_dilithium_keygen_title">양자 저항 키</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">양자 저항을 위한 MLDSA-44 키 생성</string>
     <string name="vault_settings_delete_title">삭제</string>
-    <string name="vault_settings_delete_subtitle">볼트를 영구적으로 삭제합니다.</string>
+    <string name="vault_settings_delete_subtitle">볼트 셰어를 영구적으로 삭제</string>
     <string name="vault_settings_security_title">온체인 보안</string>
     <string name="vault_settings_security_subtitle">온체인 보안 관리</string>
     <string name="vault_settings_discounts">$VULT 할인 등급</string>
@@ -173,8 +173,6 @@
     <string name="vault_tier_unlock_ultimate_part2">얼티밋</string>
     <string name="vault_tier_unlock_ultimate_part3"> 등급 잠금 해제</string>
 
-    <string name="vault_tier_banner_title">$VULT 보유</string>
-    <string name="vault_tier_banner_subtitle">거래 할인 받기</string>
     <string name="vault_tier_description">$VULT를 보유하고 더 낮은 거래 수수료 혜택을 받으세요.</string>
     <string name="vault_tier_bronze_description_part1">1,500 $VULT를 보유하면 브론즈 등급이 잠금 해제되어 </string>
     <string name="vault_tier_fee_discount_description_part2">%1$d%% 거래 수수료 할인</string>
@@ -255,6 +253,10 @@
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA 키 복사됨</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA 키 복사됨</string>
     <string name="vault_detail_screen_mldsa_key">MLDSA 키</string>
+    <string name="vault_detail_screen_ecdsa_key">ECDSA 키</string>
+    <string name="vault_detail_screen_eddsa_key">EdDSA 키</string>
+    <string name="vault_detail_this_device">이 기기</string>
+    <string name="vault_settings_onchain_security_title">온체인 보안</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA 키 복사됨</string>
     <string name="welcome_screen_skip">건너뛰기</string>
     <string name="keysign_screen_preparing_vault">볼트 준비 중…</string>
@@ -295,7 +297,6 @@
     <string name="passcode_lock_too_many_attempts_seconds">시도 횟수를 초과했습니다. %1$d초 후에 다시 시도하세요.</string>
     <string name="passcode_lock_too_many_attempts_minutes">시도 횟수를 초과했습니다. %1$d분 후에 다시 시도하세요.</string>
     <string name="passcode_lock_use_biometrics">생체 인증 사용</string>
-    <string name="passcode_settings_title">패스코드 암호화</string>
     <string name="passcode_settings_encryption_title">패스코드 암호화</string>
     <string name="passcode_settings_encryption_subtitle">이 기기의 볼트 저장소를 암호화하고 앱을 잠급니다.</string>
     <string name="passcode_settings_encryption_explanation">패스코드 암호화는 이 기기에만 적용됩니다. 언제든 볼트를 복원할 수 있도록 .vult 백업을 보관하세요.</string>
@@ -308,13 +309,14 @@
     <string name="passcode_biometric_not_available">이 기기에서는 생체 인증 잠금 해제를 사용할 수 없습니다.</string>
     <string name="passcode_biometric_enable_failed">생체 인증 잠금 해제를 켤 수 없습니다. 패스코드는 계속 사용할 수 있습니다.</string>
     <string name="passcode_biometric_unavailable">이 기기에서는 더 이상 생체 인증 잠금 해제를 사용할 수 없습니다. 패스코드를 입력하세요.</string>
-    <string name="auto_lock_setting_title">자동 잠금</string>
+    <string name="auto_lock_setting_title">잠금 시간</string>
+    <string name="auto_lock_setting_header">다음 시간이 지나면 Vultisig를 자동으로 잠급니다...</string>
     <string name="auto_lock_never">사용 안 함</string>
-    <string name="auto_lock_one_minute">1분 후</string>
-    <string name="auto_lock_five_minutes">5분 후</string>
-    <string name="auto_lock_ten_minutes">10분 후</string>
-    <string name="auto_lock_fifteen_minutes">15분 후</string>
-    <string name="auto_lock_thirty_minutes">30분 후</string>
+    <string name="auto_lock_one_minute">1분</string>
+    <string name="auto_lock_five_minutes">5분</string>
+    <string name="auto_lock_ten_minutes">10분</string>
+    <string name="auto_lock_fifteen_minutes">15분</string>
+    <string name="auto_lock_thirty_minutes">30분</string>
     <string name="passcode_entry_title_set">패스코드 설정</string>
     <string name="passcode_entry_title_change">패스코드 변경</string>
     <string name="passcode_entry_title_disable">패스코드 해제</string>
@@ -324,7 +326,6 @@
     <string name="passcode_entry_caption_current_change">패스코드를 변경하기 전에 본인임을 확인하세요.</string>
     <string name="passcode_entry_caption_current_disable">암호화를 끄기 전에 본인임을 확인하세요.</string>
     <string name="passcode_entry_caption_new">%1$d자리 숫자를 선택하세요. 앱이 잠길 때마다 필요합니다.</string>
-    <string name="passcode_entry_caption_confirm">같은 %1$d자리 숫자를 다시 입력하세요.</string>
     <string name="passcode_entry_mismatch">패스코드가 일치하지 않습니다. 다시 선택하세요.</string>
     <string name="passcode_operation_failed">실패했습니다. 패스코드는 변경되지 않았습니다.</string>
     <string name="passcode_not_digits">숫자만 입력하세요.</string>
@@ -382,7 +383,6 @@
     <string name="backup_password_screen_enter_password">비밀번호 입력</string>
     <string name="backup_password_screen_error_too_short">비밀번호는 최소 %1$d자 이상이어야 합니다</string>
     <string name="import_file_screen_enter_password_sub">이 비밀번호는 볼트 셰어를 내보낼 때 설정되었습니다.</string>
-    <string name="import_file_screen_hint_password">비밀번호</string>
     <string name="backup_password_screen_permission_required">백업 작업을 위해 파일 권한이 필요합니다.</string>
     <string name="token_selection_search_hint">검색…</string>
     <string name="verify_swap_agree_allowance">ERC20 허용량 제공에 동의합니다</string>
@@ -424,7 +424,6 @@
     <string name="add_address_address_title">주소</string>
     <string name="add_address_type_hint">여기에 입력하세요</string>
     <string name="join_keysign_invalid_qr">유효하지 않은 QR 코드 내용</string>
-    <string name="settings_screen_privacy">개인정보</string>
     <string name="settings_screen_prevent_screenshots">스크린샷 방지</string>
     <string name="settings_screen_legal">법적 고지</string>
     <string name="settings_screen_privacy_policy">개인정보 처리방침</string>
@@ -456,7 +455,7 @@
     <string name="add_folder_folder_name_title">폴더 이름</string>
 
     <string name="vault_settings_security_screen_title_bottomsheet">온체인 보안 비활성화됨</string>
-    <string name="vault_settings_security_screen_content_bottomsheet">온체인 보안을 비활성화하면 Blockaid가 거래를 확인할 수 없습니다. 보호 수준이 낮아집니다</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">온체인 보안을 비활성화하면 Blockaid가 거래를 확인할 수 없습니다. 보호 수준이 낮아집니다.</string>
     <string name="vault_settings_security_screen_title_switch">온체인 보안 관리</string>
     <string name="vault_settings_security_screen_title_content">Blockaid가 제공하는 실시간 온체인 보안을 비활성화할 수 있습니다.</string>
     <string name="vault_settings_security_screen_title">보안</string>
@@ -896,6 +895,7 @@
     <string name="keysign_app_version_text">버전 %1$s (%2$s)</string>
     <string name="backup_password_request_no_password_action">비밀번호 없이 백업</string>
     <string name="backup_password_request_with_password_action">비밀번호 사용</string>
+    <string name="backup_password_request_settings_with_password">비밀번호로 백업</string>
     <string name="backup_password_device_title">기기 백업 비밀번호</string>
     <string name="backup_password_screen_back_up_now">지금 이 기기 백업하기</string>
     <string name="function_transfer_ibc_dst_address_input_title">수신 주소</string>
@@ -960,7 +960,7 @@
     <string name="referral_invite_onboarding_1">친구를 초대하세요.</string>
     <string name="referral_invite_onboarding_2">보상을 받으세요.</string>
     <string name="referral_invite_onboarding_3">수수료를 절약하세요.</string>
-    <string name="referral_screen_title">Vultisig - 추천</string>
+    <string name="referral_screen_title">Vultisig 추천</string>
     <string name="referral_screen_code_hint">최대 4자 입력</string>
     <string name="referral_create_referral">추천 생성</string>
     <string name="referral_create_code_and_earn">나만의 코드를 만들고\u0020</string>
@@ -969,7 +969,7 @@
     <string name="referral_main_my_referral_body">추천 코드를 관리하고 보상을 받으세요.</string>
     <string name="referral_view_friend_active">활성</string>
     <string name="referral_edit_referral">추천 수정</string>
-    <string name="referral_external_not_linked">추천 코드가 존재하지 않습니다</string>
+    <string name="referral_external_not_linked">이 추천 코드는 존재하지 않습니다. 확인 후 다시 시도해 주세요.</string>
     <string name="referral_external_link_failed">추천 코드 확인 실패</string>
     <string name="referral_onboarding_title">추천</string>
     <string name="referral_onboarding_get_started">시작하기</string>
@@ -1022,14 +1022,14 @@
     <string name="referral_create_registration_fees">등록 수수료</string>
     <string name="referral_create_cost">비용</string>
     <string name="referral_create_fees_error">수수료를 불러오지 못했습니다. 다시 시도해 주세요.</string>
-    <string name="referral_create_create_referral_code">추천 코드 생성</string>
     <string name="referral_create_invalid">유효하지 않음</string>
     <string name="referral_create_available">사용 가능</string>
     <string name="referral_create_taken">이미 사용 중</string>
 
-    <string name="referral_edit_external_title">추천받은 코드 수정</string>
-    <string name="referral_use_referred_code">추천받은 코드 사용</string>
-    <string name="referral_save_referred_code">추천받은 코드 저장</string>
+    <string name="referral_save_referred_code">추천 저장</string>
+    <string name="referral_save_header">스왑에서 %1$s 절약 - 추천 추가</string>
+    <string name="referral_edit_extend_expiration">만료 기간 연장 (년 단위)</string>
+    <string name="referral_edit_new_expiration">새 만료 날짜:</string>
     <string name="referral_program_tag">추천 프로그램</string>
     <string name="referral_how_it_works">이용 방법</string>
     <string name="referral_create_code_title">추천 코드 생성</string>
@@ -1040,9 +1040,9 @@
     <string name="referral_earn_description">친구가 거래할 때마다 원하는 자산으로 보상을 받으세요.</string>
     <string name="referral_use_code_title">추천 코드 사용 - 10% 절약</string>
     <string name="referral_use_code_description">친구의 코드를 사용하여 스왑 수수료를 절약하세요.</string>
-    <string name="referral_not_found">아직 추천이 없습니다</string>
-    <string name="referral_cta">볼트를 보상 머신으로 바꾸세요. 지금 추천을 생성하고 수익을 시작하세요</string>
-    <string name="referral_top_bar_list">추천</string>
+    <string name="referral_not_found">아직 추천이 없습니다.</string>
+    <string name="referral_cta">볼트를 보상 머신으로 바꾸세요. 지금 추천을 생성하고 수익을 시작하세요.</string>
+    <string name="referral_top_bar_list">볼트 선택</string>
     <string name="referral_top_bar_list_vaults">볼트</string>
 
     <string name="tcy_auto_compound_enable_title">자동 복리 활성화</string>
@@ -1050,7 +1050,6 @@
     <string name="tcy_auto_compound_unstake_title">자동 복리 TCY 언스테이킹</string>
     <string name="tcy_auto_compound_unstake_subtitle">자동 복리 TCY 예치에서 언스테이킹</string>
 
-    <string name="referral_view_title">내 추천</string>
     <string name="referral_view_selected_vault">선택된 볼트</string>
     <string name="referral_view_your_referral_code">내 추천 코드</string>
     <string name="referral_view_edit_referral">추천 수정</string>
@@ -1116,7 +1115,6 @@
     <string name="address_book_empty_description">모든 중요한 주소를 한곳에서 관리하세요.</string>
     <string name="address_book_empty_title">주소록이 비어 있습니다</string>
     <string name="check_updates_settings_title">업데이트 확인</string>
-    <string name="vult_website_settings_title">Vultisig 웹사이트</string>
     <string name="vault">볼트</string>
     <string name="general">일반</string>
     <string name="support">지원</string>
@@ -1126,9 +1124,9 @@
 
 
     <string name="check_updates_title">업데이트 확인</string>
-    <string name="update_available">업데이트가 있습니다</string>
-    <string name="app_up_to_date">앱이 최신 버전입니다</string>
-    <string name="update">업데이트</string>
+    <string name="update_available">업데이트가 있습니다.</string>
+    <string name="app_up_to_date">앱이 최신 버전입니다.</string>
+    <string name="update">앱 업데이트</string>
     <string name="add_address_title_label">라벨</string>
     <string name="address_book_title_edit">주소록 수정</string>
     <string name="address_book_delete_entry_title">주소를 삭제하시겠습니까?</string>
@@ -1139,6 +1137,7 @@
     <string name="backup_password_request_caution_encrypt_desc">비밀번호를 추가하면 백업 파일을 암호화하는 데 사용됩니다.</string>
     <string name="backup_password_request_highlight_encrypt">암호화</string>
     <string name="backup_password_request_caution_cannot_reset_desc">주의: 볼트 비밀번호를 잊으면 재설정하거나 복구할 수 없습니다.</string>
+    <string name="backup_password_request_settings_cannot_reset">주의: 이 비밀번호를 잊으면 재설정하거나 복구할 수 없습니다.</string>
     <string name="backup_password_request_highlight_cannot">할 수 없습니다</string>
     <string name="backup_password_request_caution_secure_without_desc">기본적으로 백업은 추가 비밀번호 없이도 안전합니다. 볼트 셰어를 서로 다른 위치에 저장하기 때문입니다.</string>
     <string name="backup_password_request_highlight_secure_without">없이도 안전</string>
@@ -1158,11 +1157,17 @@
     <string name="transaction_type_button_buy">구매</string>
     <string name="transaction_type_button_receive">받기</string>
     <string name="vault_settings_view_vault">볼트 이름, 파트 및 유형 보기</string>
-    <string name="vault_settings_biometric_fast">생체 인증 빠른 서명</string>
+    <string name="vault_settings_biometric_fast">생체인식 빠른 서명</string>
     <string name="vault_settings_backup_vault">볼트 셰어 백업</string>
-    <string name="vault_settings_back_up_your">기기 또는 서버에 볼트 셰어를 백업합니다.</string>
+    <string name="vault_settings_back_up_your">원하는 위치에 볼트 셰어를 백업하세요</string>
     <string name="vault_settings_migrate_gg20">GG20 볼트를 DKLS로 마이그레이션</string>
     <string name="vault_settings_reshare_change">재공유, 보안 관리 또는 메시지 서명.</string>
+    <string name="settings_screen_vultisig_education">Vultisig 교육</string>
+    <string name="settings_community_website">웹사이트</string>
+    <string name="vault_settings_security_row_subtitle">패스코드 관리</string>
+    <string name="vault_settings_lock_time_title">잠금 시간</string>
+    <string name="vault_settings_lock_time_subtitle">앱이 자동으로 잠기기까지의 시간 설정</string>
+    <string name="vault_settings_sign_title">서명</string>
 
     <string name="transaction_buy">구매</string>
     <string name="search_bar_portfolio">포트폴리오</string>
@@ -1333,7 +1338,6 @@
     <string name="vault_confirmation_vault_upgraded">"볼트가 업그레이드되었습니다 "</string>
     <string name="vault_detail_vault_info">볼트 정보</string>
     <string name="vault_details_keys">키</string>
-    <string name="vault_password_biometric_enable_biometrics_fast_signing">생체 인증 빠른 서명 활성화</string>
     <string name="verify_send_send_overview">보내기 개요</string>
     <string name="verify_swap_swap_overview">스왑 개요</string>
     <string name="rename_vault_screen_rename_vault">볼트 이름 변경</string>
@@ -1690,7 +1694,7 @@
     <string name="server_backup_success_check_email">이메일 확인</string>
     <string name="server_backup_success_close">닫기</string>
     <string name="server_backup_error_timeout">서버 응답이 너무 오래 걸렸습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.</string>
-    <string name="server_backup_error_too_many_requests">백업 요청이 너무 많습니다. 나중에 다시 시도해 주세요.</string>
+    <string name="server_backup_error_too_many_requests">짧은 시간에 백업을 너무 자주 요청했습니다. 잠시 기다린 후 다시 시도해 주세요.</string>
     <string name="server_backup_error_bad_request">문제가 발생했습니다. 입력 정보를 확인하고 다시 시도해 주세요.</string>
     <string name="resend_notification">알림 재전송</string>
     <string name="apy_approx">APY (약)</string>

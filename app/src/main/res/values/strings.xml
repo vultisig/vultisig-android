@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Push Notifications -->
     <string name="notifications">Notifications</string>
-    <string name="push_notifications">Push notifications</string>
+    <string name="push_notifications">Push Notifications</string>
     <string name="push_notifications_failed">Push notification failed</string>
     <string name="push_notification_vault_not_found">Vault not found</string>
     <string name="deposit_deeplink_unsupported">This deposit link isn\'t supported</string>
@@ -31,7 +31,7 @@
     <string name="choose_vaults_for_notifications">Choose vaults for Notifications</string>
     <string name="notifications_vault_sheet_subtitle">You can manage notifications in system settings.</string>
     <string name="not_now">Not now</string>
-    <string name="vault_notifications">Vault notifications</string>
+    <string name="vault_notifications">Vault Notifications</string>
     <string name="enable_all">Enable all</string>
 
     <string name="deposit_option_bond">Bond</string>
@@ -139,11 +139,11 @@
     <string name="vault_settings_rename_subtitle">Edit your vault name</string>
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
-    <string name="vault_settings_dilithium_keygen_title">Enable QBTC</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Generate key to enable QBTC chain</string>
+    <string name="vault_settings_dilithium_keygen_title">Post-Quantum Key</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generate MLDSA-44 key for quantum resistance</string>
     <string name="vault_settings_delete_title">Delete</string>
-    <string name="vault_settings_delete_subtitle">Delete your vault permanently.</string>
-    <string name="vault_settings_security_title">On-chain Security</string>
+    <string name="vault_settings_delete_subtitle">Delete your vault share permanently</string>
+    <string name="vault_settings_security_title">On-chain security</string>
     <string name="vault_settings_security_subtitle">Manage your on-chain security</string>
     <string name="vault_settings_discounts">$VULT Discount Tiers</string>
     <string name="vault_tier_bronze">Bronze</string>
@@ -176,8 +176,6 @@
     <string name="vault_tier_unlock_ultimate_part2">Ultimate</string>
     <string name="vault_tier_unlock_ultimate_part3"> Tier</string>
 
-    <string name="vault_tier_banner_title">Hold $VULT</string>
-    <string name="vault_tier_banner_subtitle">receive a trading discount</string>
     <string name="vault_tier_description">Hold $VULT to unlock lower trading fees.</string>
     <string name="vault_tier_bronze_description_part1">By holding 1,500 $VULT, you\'ll unlock the Bronze Tier and receive a </string>
     <string name="vault_tier_fee_discount_description_part2">%1$d%% trading fee discount</string>
@@ -191,7 +189,7 @@
     <string name="vault_tier_diamond_description_part1">By holding 100,000 $VULT, you\'ll unlock the Diamond Tier and receive a </string>
     <string name="vault_tier_diamond_description_part3"> on all swaps.</string>
     <string name="vault_tier_ultimate_description_part1">By holding 1,000,000 $VULT, you\'ll unlock the Ultimate Tier and receive a </string>
-    <string name="vault_tier_ultimate_description_part2">a complete Vultisig fee waiver</string>
+    <string name="vault_tier_ultimate_description_part2">complete Vultisig fee waiver</string>
     <string name="vault_tier_ultimate_description_part3"> on all swaps.</string>
     <string name="join_keysign_missing_required_vault">You do not have the required vault for Keysign</string>
     <string name="send_screen_title">Send</string>
@@ -258,7 +256,11 @@
     <string name="vault_detail_screen_vault_name">Vault Name</string>
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA Key Copied</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA Key Copied</string>
-    <string name="vault_detail_screen_mldsa_key">MLDSA key</string>
+    <string name="vault_detail_screen_mldsa_key">MLDSA Key</string>
+    <string name="vault_detail_screen_ecdsa_key">ECDSA Key</string>
+    <string name="vault_detail_screen_eddsa_key">EdDSA Key</string>
+    <string name="vault_detail_this_device">This device</string>
+    <string name="vault_settings_onchain_security_title">On-chain Security</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA Key Copied</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
@@ -299,12 +301,11 @@
     <string name="passcode_lock_too_many_attempts_seconds">Too many attempts. Try again in %1$d s.</string>
     <string name="passcode_lock_too_many_attempts_minutes">Too many attempts. Try again in %1$d min.</string>
     <string name="passcode_lock_use_biometrics">Use biometrics</string>
-    <string name="passcode_settings_title">Passcode Encryption</string>
     <string name="passcode_settings_encryption_title">Passcode encryption</string>
     <string name="passcode_settings_encryption_subtitle">Encrypt vault storage on this device and lock the app.</string>
     <string name="passcode_settings_encryption_explanation">Passcode encryption is tied to this device. Keep a .vult backup so you can always restore your vaults.</string>
-    <string name="passcode_settings_change">Change passcode</string>
-    <string name="passcode_settings_auto_lock">Auto-lock</string>
+    <string name="passcode_settings_change">Change Passcode</string>
+    <string name="passcode_settings_auto_lock">Lock after</string>
     <string name="passcode_settings_biometrics">Unlock with biometrics</string>
     <string name="passcode_biometric_prompt_title">Unlock Vultisig</string>
     <string name="passcode_biometric_prompt_cancel">Use passcode</string>
@@ -312,13 +313,14 @@
     <string name="passcode_biometric_not_available">This device cannot use biometric unlock.</string>
     <string name="passcode_biometric_enable_failed">Biometric unlock could not be turned on. Your passcode still works.</string>
     <string name="passcode_biometric_unavailable">Biometric unlock is no longer available on this device. Enter your passcode.</string>
-    <string name="auto_lock_setting_title">Auto-lock</string>
+    <string name="auto_lock_setting_title">Lock Time</string>
+    <string name="auto_lock_setting_header">Lock Vultisig automatically after...</string>
     <string name="auto_lock_never">Never</string>
-    <string name="auto_lock_one_minute">After 1 minute</string>
-    <string name="auto_lock_five_minutes">After 5 minutes</string>
-    <string name="auto_lock_ten_minutes">After 10 minutes</string>
-    <string name="auto_lock_fifteen_minutes">After 15 minutes</string>
-    <string name="auto_lock_thirty_minutes">After 30 minutes</string>
+    <string name="auto_lock_one_minute">1 minute</string>
+    <string name="auto_lock_five_minutes">5 minutes</string>
+    <string name="auto_lock_ten_minutes">10 minutes</string>
+    <string name="auto_lock_fifteen_minutes">15 minutes</string>
+    <string name="auto_lock_thirty_minutes">30 minutes</string>
     <string name="passcode_entry_title_set">Set passcode</string>
     <string name="passcode_entry_title_change">Change passcode</string>
     <string name="passcode_entry_title_disable">Disable passcode</string>
@@ -328,7 +330,6 @@
     <string name="passcode_entry_caption_current_change">Confirm it is you before changing your passcode.</string>
     <string name="passcode_entry_caption_current_disable">Confirm it is you before turning encryption off.</string>
     <string name="passcode_entry_caption_new">Pick %1$d digits. You will need them every time the app locks.</string>
-    <string name="passcode_entry_caption_confirm">Enter the same %1$d digits again.</string>
     <string name="passcode_entry_mismatch">Those passcodes do not match. Choose again.</string>
     <string name="passcode_operation_failed">That did not work. Your passcode is unchanged.</string>
     <string name="passcode_not_digits">Enter digits only.</string>
@@ -393,7 +394,6 @@
     <string name="backup_password_screen_enter_password">Enter Password</string>
     <string name="backup_password_screen_error_too_short">Password must be at least %1$d characters</string>
     <string name="import_file_screen_enter_password_sub">This password was set when the vault share was exported.</string>
-    <string name="import_file_screen_hint_password">Password</string>
     <string name="backup_password_screen_permission_required">File permission is required for backup operations.</string>
     <string name="token_selection_search_hint">Search…</string>
     <string name="verify_swap_agree_allowance">I agree with providing ERC20 allowance</string>
@@ -435,7 +435,6 @@
     <string name="add_address_address_title">Address</string>
     <string name="add_address_type_hint">Type here</string>
     <string name="join_keysign_invalid_qr">Invalid QR code content</string>
-    <string name="settings_screen_privacy">Privacy</string>
     <string name="settings_screen_prevent_screenshots">Prevent Screenshots</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
@@ -467,7 +466,7 @@
     <string name="add_folder_folder_name_title">Folder Name</string>
 
     <string name="vault_settings_security_screen_title_bottomsheet">On-chain security disabled</string>
-    <string name="vault_settings_security_screen_content_bottomsheet">Disabling on-chain security means Blockaid can\'t verify transactions. You\'ll be less protected</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">Disabling on-chain security means Blockaid can\'t verify transactions. You\'ll be less protected.</string>
     <string name="vault_settings_security_screen_title_switch">Manage your on-chain security</string>
     <string name="vault_settings_security_screen_title_content">You can disable your realtime on-chain security provided by Blockaid.</string>
     <string name="vault_settings_security_screen_title">Security</string>
@@ -611,7 +610,7 @@
     <!-- Sign-message Verify: what the signed payload turned out to be -->
     <string name="verify_sign_message_decoded_message">Decoded message</string>
     <string name="verify_sign_message_message_hash">Message hash</string>
-    <string name="sign_message_sign_screen_title">Sign message</string>
+    <string name="sign_message_sign_screen_title">Sign Message</string>
     <string name="vault_settings_sign_message_description">Sign custom message</string>
     <string name="swap_screen_invalid_specific_and_utxo">Specific calculation failed</string>
     <string name="verify_sign_message_message_field_signature">Signature</string>
@@ -906,6 +905,7 @@
     <string name="keysign_app_version_text">Version %1$s (%2$s)</string>
     <string name="backup_password_request_no_password_action">Backup without password</string>
     <string name="backup_password_request_with_password_action">Use password</string>
+    <string name="backup_password_request_settings_with_password">Backup with password</string>
     <string name="backup_password_device_title">Device Backup Password</string>
     <string name="backup_password_screen_back_up_now">Back up this device now</string>
     <string name="function_transfer_ibc_dst_address_input_title">Destination Address</string>
@@ -970,16 +970,16 @@
     <string name="referral_invite_onboarding_1">Invite friends.</string>
     <string name="referral_invite_onboarding_2">Earn rewards.</string>
     <string name="referral_invite_onboarding_3">Save on fees.</string>
-    <string name="referral_screen_title">Vultisig - Referral</string>
+    <string name="referral_screen_title">Vultisig Referrals</string>
     <string name="referral_screen_code_hint">Enter up to 4 characters</string>
-    <string name="referral_create_referral">Create referral</string>
+    <string name="referral_create_referral">Create Referral</string>
     <string name="referral_create_code_and_earn">Create your own code and earn\u0020</string>
     <string name="referral_on_referred_swaps">\u0020on referred swaps</string>
     <string name="referral_main_my_referral_title">My Referral</string>
     <string name="referral_main_my_referral_body">Manage your referral code and collect rewards.</string>
     <string name="referral_view_friend_active">Active</string>
-    <string name="referral_edit_referral">Edit referral</string>
-    <string name="referral_external_not_linked">Referral code does not exist</string>
+    <string name="referral_edit_referral">Edit Referral</string>
+    <string name="referral_external_not_linked">This referral code doesn\'t exist. Please check and try again.</string>
     <string name="referral_external_link_failed">Failed to check referral code</string>
     <string name="referral_onboarding_title">Referral</string>
     <string name="referral_onboarding_get_started">Get started</string>
@@ -1031,17 +1031,17 @@
     <string name="referral_create_expiration_date">Expiration date</string>
     <string name="referral_create_set_expiration_years">Set Expiration (in years)</string>
     <string name="referral_choose_payout_asset">Choose payout asset</string>
-    <string name="referral_create_registration_fees">Registration Fees</string>
-    <string name="referral_create_cost">Cost</string>
+    <string name="referral_create_registration_fees">Registration Fee</string>
+    <string name="referral_create_cost">Costs</string>
     <string name="referral_create_fees_error">Failed to load fees. Please try again.</string>
-    <string name="referral_create_create_referral_code">Create referral code</string>
     <string name="referral_create_invalid">Invalid</string>
     <string name="referral_create_available">Available</string>
-    <string name="referral_create_taken">Already Taken</string>
+    <string name="referral_create_taken">Already taken</string>
 
-    <string name="referral_edit_external_title">Edit referred code</string>
-    <string name="referral_use_referred_code">Use referred code</string>
-    <string name="referral_save_referred_code">Save referred code</string>
+    <string name="referral_save_referred_code">Save Referral</string>
+    <string name="referral_save_header">Save %1$s on swaps - Add a Referral</string>
+    <string name="referral_edit_extend_expiration">Extend Expiration (in years)</string>
+    <string name="referral_edit_new_expiration">New expiration date:</string>
     <string name="referral_program_tag">Referral Program</string>
     <string name="referral_how_it_works">How it works</string>
     <string name="referral_create_code_title">Create your referral code</string>
@@ -1052,9 +1052,9 @@
     <string name="referral_earn_description">Get paid in your preferred asset every time they trade.</string>
     <string name="referral_use_code_title">Use Referral code - Save 10%</string>
     <string name="referral_use_code_description">Use a code from your friend and save on swap fees.</string>
-    <string name="referral_not_found">No referral yet</string>
-    <string name="referral_cta">Turn your vault into a rewards machine. Create your referral now and start earning</string>
-    <string name="referral_top_bar_list">Referral</string>
+    <string name="referral_not_found">No referral yet.</string>
+    <string name="referral_cta">Turn your vault into a rewards machine. Create your referral now and start earning.</string>
+    <string name="referral_top_bar_list">Select vault</string>
     <string name="referral_top_bar_list_vaults">Vaults</string>
 
     <string name="tcy_auto_compound_enable_title">Enable Auto-Compounding</string>
@@ -1062,11 +1062,10 @@
     <string name="tcy_auto_compound_unstake_title">Unstake Auto-Compound TCY</string>
     <string name="tcy_auto_compound_unstake_subtitle">Unstake from auto-compounding TCY deposits</string>
 
-    <string name="referral_view_title">Your Referral</string>
-    <string name="referral_view_selected_vault">Vault Selected</string>
-    <string name="referral_view_your_referral_code">Your referral code</string>
-    <string name="referral_view_edit_referral">Edit referral</string>
-    <string name="referral_view_collected_rewards">Collected Rewards</string>
+    <string name="referral_view_selected_vault">Vault selected</string>
+    <string name="referral_view_your_referral_code">Your Referral Code</string>
+    <string name="referral_view_edit_referral">Edit Referral</string>
+    <string name="referral_view_collected_rewards">Collected rewards</string>
     <string name="referral_view_add_friend">Add a Friend\'s Referral</string>
     <string name="referral_view_save">Save</string>
     <string name="referral_view_on_swaps">on swaps now</string>
@@ -1129,13 +1128,12 @@
     <string name="address_book_empty_title">Your Address Book is empty</string>
     <string name="check_updates_settings_title">Check for Updates</string>
     <string name="discord" translatable="false">Discord</string>
-    <string name="github" translatable="false">Github</string>
-    <string name="vult_website_settings_title">Vultisig Website</string>
+    <string name="github" translatable="false">GitHub</string>
     <string name="vault">Vault</string>
     <string name="general">General</string>
     <string name="support">Support</string>
     <string name="vultisig_community">Vultisig Community</string>
-    <string name="vault_management">Vault</string>
+    <string name="vault_management">Vault Management</string>
     <string name="other">Other</string>
 
     <string name="defi_action_stake" translatable="false">Stake</string>
@@ -1144,9 +1142,9 @@
     <string name="defi_action_redeem" translatable="false">Redeem</string>
 
     <string name="check_updates_title">Check Updates</string>
-    <string name="update_available">Update is available</string>
-    <string name="app_up_to_date">Application is up to date</string>
-    <string name="update">Update</string>
+    <string name="update_available">Update is available.</string>
+    <string name="app_up_to_date">Application is up to date.</string>
+    <string name="update">Update App</string>
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Edit Address Book</string>
     <string name="address_book_delete_entry_title">Delete address?</string>
@@ -1157,10 +1155,11 @@
     <string name="backup_password_request_caution_encrypt_desc">If you choose to add a password, it will be used to encrypt the backup file.</string>
     <string name="backup_password_request_highlight_encrypt">encrypt</string>
     <string name="backup_password_request_caution_cannot_reset_desc">Remember: If you forget your vault password, it cannot be reset or recovered.</string>
+    <string name="backup_password_request_settings_cannot_reset">Remember: If you forget this password, it cannot be reset or recovered.</string>
     <string name="backup_password_request_highlight_cannot">cannot</string>
     <string name="backup_password_request_caution_secure_without_desc">By default, your backup is secure without an extra password, since you store Vault shares in different locations.</string>
     <string name="backup_password_request_highlight_secure_without">secure without</string>
-    <string name="backup_select_vaults_title">Select vaults to backup</string>
+    <string name="backup_select_vaults_title">Select Vaults to Back Up</string>
     <string name="backup_select_vaults_subtitle">Choose whether to back up just this vault or all vaults in your app.</string>
     <string name="backup_this_vault_only">This Vault Only</string>
     <string name="backup_all_vaults">All Vaults</string>
@@ -1174,15 +1173,21 @@
     <string name="backup_server_title">Server Backup</string>
     <string name="backup_server_desc">Request Server Vault Share again.</string>
     <string name="share_sheet_more">More</string>
-    <string name="x_twitter" translatable="false">X (Twitter)</string>
     <string name="transaction_type_button_buy">Buy</string>
     <string name="transaction_type_button_receive">Receive</string>
     <string name="vault_settings_view_vault">View vault name, part and type</string>
-    <string name="vault_settings_biometric_fast">Biometrics fast sign</string>
+    <string name="vault_settings_biometric_fast">Biometrics Fast Signing</string>
     <string name="vault_settings_backup_vault">Backup Vault Share</string>
-    <string name="vault_settings_back_up_your">Back up your Vault Share to device or server.</string>
-    <string name="vault_settings_migrate_gg20">Migrate GG20 vault DKLS</string>
+    <string name="vault_settings_back_up_your">Back up your Vault Share to a preferred location</string>
+    <string name="vault_settings_migrate_gg20">Migrate GG20 vault to DKLS</string>
     <string name="vault_settings_reshare_change">Reshare, manage security or sign messages.</string>
+    <string name="settings_screen_vultisig_education">Vultisig Education</string>
+    <string name="settings_community_website">Website</string>
+    <string name="vault_settings_security_row_subtitle">Manage your passcode</string>
+    <string name="vault_settings_lock_time_title">Lock time</string>
+    <string name="vault_settings_lock_time_subtitle">Set the time until the app locks automatically</string>
+    <string name="vault_settings_sign_title">Sign</string>
+    <string name="settings_community_x" translatable="false">X</string>
 
     <string name="transaction_buy">Buy</string>
     <string name="search_bar_portfolio">Portfolio</string>
@@ -1362,7 +1367,6 @@
     <string name="vault_confirmation_vault_upgraded">"Vault upgraded"</string>
     <string name="vault_detail_vault_info">Vault Info</string>
     <string name="vault_details_keys">Keys</string>
-    <string name="vault_password_biometric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>
     <string name="verify_send_send_overview">Send overview</string>
     <string name="verify_swap_swap_overview">Swap overview</string>
     <string name="rename_vault_screen_rename_vault">Rename Vault</string>
@@ -1750,7 +1754,7 @@
     <string name="server_backup_success_check_email">Check email</string>
     <string name="server_backup_success_close">Close</string>
     <string name="server_backup_error_timeout">The server took too long to respond, please check your internet connection and try again.</string>
-    <string name="server_backup_error_too_many_requests">Too many backup requests. Please try again later.</string>
+    <string name="server_backup_error_too_many_requests">You\'ve requested your backup share too often in a short time. Please wait before trying again.</string>
     <string name="server_backup_error_bad_request">Something went wrong. Please check your details and try again.</string>
     <string name="resend_notification">Resend notification</string>
     <string name="apy_approx">APY (approx.)</string>

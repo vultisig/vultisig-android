@@ -1,0 +1,44 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="40"
+    android:viewportHeight="40">
+    <path
+        android:fillColor="#03132C"
+        android:pathData="M20,20m-19.25,0a19.25,19.25 0,1 1,38.5,0a19.25,19.25 0,1 1,-38.5,0"
+        android:strokeWidth="1.5"
+        android:strokeColor="#26FFFFFF" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M19.5007 27.0003C21.1547 24.0633 22.0357 23.3063 22.5187 23.4573C23.2927 23.6983 23.0677 26.2883 23.8867 26.4393C24.4907 26.5513 25.0257 25.2203 25.6757 25.3863C26.2007 25.5203 26.1687 26.4663 26.7627 26.6493C27.0017 26.7223 27.2587 26.6493 27.4997 26.5143"
+        android:strokeWidth="1.5"
+        android:strokeColor="#2155DF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#2155DF"
+        android:pathData="M16.4997 23.9997L14.9997 26.9997L13.4997 23.9997V13.9997C13.4997 13.4477 13.9477 12.9997 14.4997 12.9997H15.4997C16.0517 12.9997 16.4997 13.4477 16.4997 13.9997V23.9997Z"
+        android:strokeWidth="2"
+        android:strokeColor="#2155DF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M14.5007 16.0002H18.0007C18.8287 16.0002 19.5007 16.6722 19.5007 17.5002V21.0002"
+        android:strokeWidth="2"
+        android:strokeColor="#2155DF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path android:pathData="M20,20m-20,0a20,20 0,1 1,40,0a20,20 0,1 1,-40,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="19.75"
+                android:centerY="38.97"
+                android:endColor="#000C4EFF"
+                android:gradientRadius="20"
+                android:startColor="#330C4EFF"
+                android:type="radial" />
+        </aapt:attr>
+    </path>
+</vector>

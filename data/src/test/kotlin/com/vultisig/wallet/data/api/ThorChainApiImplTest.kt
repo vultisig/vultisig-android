@@ -176,6 +176,16 @@ class ThorChainApiImplTest {
     }
 
     @Test
+    fun `existsReferralCode returns false when the gateway answers a free name with 400`() =
+        runBlocking {
+            val body =
+                """{"code":3,"message":"fail to fetch THORName: THORName doesn't exist: ddde"}"""
+            val api = newApi(HttpStatusCode.BadRequest, body)
+
+            assertEquals(false, api.existsReferralCode("ddde"))
+        }
+
+    @Test
     fun `existsReferralCode returns true when aliases contains THOR chain entry`() = runBlocking {
         val body =
             """

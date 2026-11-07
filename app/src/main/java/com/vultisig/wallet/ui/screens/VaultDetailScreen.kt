@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -21,18 +22,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.ui.components.CopyIcon
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
@@ -47,6 +53,10 @@ import com.vultisig.wallet.ui.utils.VsClipboardService
 
 /** Caps the height of the long MLDSA public key row before it ellipsizes. */
 private const val MLDSA_KEY_MAX_LINES = 4
+
+private val DETAIL_ROW_MIN_HEIGHT = 66.dp
+private val KEY_ROW_VERTICAL_PADDING = 14.5.dp
+private val SIGNER_ICON_SIZE = 23.dp
 
 @Composable
 internal fun VaultDetailScreen(
@@ -82,7 +92,7 @@ internal fun VaultDetailScreen(
         V2Scaffold(
             title = stringResource(R.string.vault_settings_details_title),
             onBackClick = onBackClick,
-            rightIcon = R.drawable.ic_share,
+            rightIcon = R.drawable.ic_download_4,
             onRightIconClick = onShareClick,
         ) {
             Column(
@@ -116,7 +126,7 @@ internal fun VaultDetailScreen(
 
                 VaultDetailGroup(title = stringResource(R.string.vault_details_keys)) {
                     KeyItem(
-                        type = "ECDSA",
+                        type = stringResource(R.string.vault_detail_screen_ecdsa_key),
                         value = state.pubKeyECDSA,
                         onCopyCompleted = {
                             if (VsClipboardService.needsCopyConfirmation())
@@ -124,7 +134,7 @@ internal fun VaultDetailScreen(
                         },
                     )
                     KeyItem(
-                        type = "EdDSA",
+                        type = stringResource(R.string.vault_detail_screen_eddsa_key),
                         value = state.pubKeyEDDSA,
                         onCopyCompleted = {
                             if (VsClipboardService.needsCopyConfirmation())
@@ -236,7 +246,12 @@ private fun InfoItemPreview() {
 
 @Composable
 private fun InfoItem(key: String, value: String) {
-    SettingInfoHorizontalItem(key = key, value = value)
+    SettingInfoHorizontalItem(
+        modifier = Modifier.heightIn(min = DETAIL_ROW_MIN_HEIGHT),
+        key = key,
+        value = value,
+        keyStyle = Theme.brockmann.body.s.medium,
+    )
 }
 
 @Preview
@@ -246,10 +261,14 @@ private fun KeyItemPrev() {
 }
 
 @Composable
-internal fun Modifier.itemModifier(): Modifier =
-    border(width = 1.dp, color = Theme.v2.colors.border.light, shape = Theme.v2.radius.md)
-        .background(shape = Theme.v2.radius.md, color = Theme.v2.colors.backgrounds.disabled)
-        .padding(vertical = 24.dp, horizontal = 20.dp)
+internal fun Modifier.itemModifier(
+    shape: Shape = Theme.v2.radius.md,
+    verticalPadding: Dp = 16.dp,
+    horizontalPadding: Dp = 20.dp,
+): Modifier =
+    border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
+        .background(shape = shape, color = Theme.v2.colors.backgrounds.disabled)
+        .padding(vertical = verticalPadding, horizontal = horizontalPadding)
 
 @Composable
 private fun KeyItem(
@@ -261,7 +280,10 @@ private fun KeyItem(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().itemModifier(),
+        modifier =
+            Modifier.fillMaxWidth()
+                .heightIn(min = DETAIL_ROW_MIN_HEIGHT)
+                .itemModifier(verticalPadding = KEY_ROW_VERTICAL_PADDING),
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
@@ -278,22 +300,37 @@ private fun KeyItem(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        UiSpacer(16.dp)
-        CopyIcon(textToCopy = value, onCopyCompleted = onCopyCompleted)
+        UiSpacer(12.dp)
+        CopyIcon(
+            textToCopy = value,
+            onCopyCompleted = onCopyCompleted,
+            icon = R.drawable.copy2,
+            tint = Color.Unspecified,
+        )
     }
 }
 
 @Composable
-internal fun SettingInfoHorizontalItem(modifier: Modifier = Modifier, key: String, value: String?) {
+internal fun SettingInfoHorizontalItem(
+    modifier: Modifier = Modifier,
+    key: String,
+    value: String?,
+    keyStyle: TextStyle = Theme.brockmann.supplementary.footnote,
+    itemShape: Shape = Theme.v2.radius.md,
+    itemVerticalPadding: Dp = 16.dp,
+) {
 
     Row(
-        modifier = modifier.fillMaxWidth().itemModifier(),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .itemModifier(shape = itemShape, verticalPadding = itemVerticalPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = key,
-            style = Theme.brockmann.supplementary.footnote,
+            style = keyStyle,
             color = Theme.v2.colors.text.primary,
         )
 
@@ -308,55 +345,41 @@ internal fun SettingInfoHorizontalItem(modifier: Modifier = Modifier, key: Strin
 }
 
 @Composable
-internal fun SettingInfoItemVertical(
-    modifier: Modifier = Modifier,
-    key: String,
-    value: String,
-    content: (@Composable () -> Unit)? = null,
-) {
-    Column(
-        modifier = modifier.itemModifier(),
-        verticalArrangement = Arrangement.spacedBy(4.dp, alignment = Alignment.CenterVertically),
-    ) {
-        Text(
-            text = key,
-            style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.secondary,
-        )
-
-        Text(
-            text = value,
-            style = Theme.brockmann.button.medium.medium,
-            color = Theme.v2.colors.neutrals.n50,
-        )
-
-        content?.let { it() }
-    }
-}
-
-@Composable
 private fun DeviceItem(
     modifier: Modifier = Modifier,
     order: String,
     name: String,
     isThisDevice: Boolean,
 ) {
-
-    SettingInfoItemVertical(
-        modifier = modifier,
-        key = order,
-        value = name,
-        content =
-            if (isThisDevice) {
-                {
-                    Text(
-                        text = stringResource(R.string.peer_discovery_this_device),
-                        style = Theme.brockmann.supplementary.footnote,
-                        color = Theme.v2.colors.text.secondary,
-                    )
-                }
-            } else null,
-    )
+    Row(
+        modifier =
+            modifier.itemModifier(shape = Theme.v2.radius.lg, horizontalPadding = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = order,
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.secondary,
+            )
+            Text(
+                text = name,
+                style = Theme.brockmann.button.medium.medium,
+                color = Theme.v2.colors.neutrals.n50,
+            )
+            Text(
+                text = if (isThisDevice) stringResource(R.string.vault_detail_this_device) else "",
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.secondary,
+            )
+        }
+        UiIcon(
+            drawableResId = R.drawable.ic_laptop_mobile,
+            size = SIGNER_ICON_SIZE,
+            tint = Color.Unspecified,
+        )
+    }
 }
 
 @Preview

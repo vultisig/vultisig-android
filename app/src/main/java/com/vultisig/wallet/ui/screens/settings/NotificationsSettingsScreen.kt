@@ -14,10 +14,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -38,7 +39,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.VsSwitch
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
@@ -118,25 +118,19 @@ private fun NotificationsSettingsScreen(
             MasterNotificationToggle(isChecked = state.masterEnabled, onToggle = onMasterToggle)
 
             if (state.masterEnabled && state.isBlockedBySystem) {
-                UiSpacer(size = 16.dp)
+                UiSpacer(size = SECTION_GAP)
                 SystemNotificationsBlockedWarning(onClick = onOpenSystemSettings)
             }
 
             if (state.masterEnabled && state.vaults.isNotEmpty()) {
-                UiSpacer(size = 22.dp)
+                UiSpacer(size = SECTION_GAP)
                 Text(
                     text = stringResource(R.string.vault_notifications),
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.tertiary,
                 )
-                UiSpacer(size = 12.dp)
-                Column(
-                    modifier =
-                        Modifier.background(
-                            color = Theme.v2.colors.backgrounds.surface1,
-                            shape = Theme.v2.radius.md,
-                        )
-                ) {
+                UiSpacer(size = SECTION_GAP)
+                SettingsBorderedCard {
                     state.vaults.forEachIndexed { index, vault ->
                         VaultNotificationToggle(
                             vault = vault,
@@ -183,8 +177,10 @@ private fun SystemNotificationsBlockedWarning(onClick: () -> Unit) {
 
 @Composable
 private fun MasterNotificationToggle(isChecked: Boolean, onToggle: (Boolean) -> Unit) {
-
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(R.string.push_notifications),
@@ -199,12 +195,17 @@ private fun MasterNotificationToggle(isChecked: Boolean, onToggle: (Boolean) -> 
                         R.string
                             .get_notified_when_your_signature_is_required_or_a_device_requests_access
                     ),
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.tertiary,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.secondary,
+                modifier = Modifier.widthIn(max = MASTER_CAPTION_MAX_WIDTH),
             )
         }
-        UiSpacer(size = 70.dp)
-        VsSwitch(checked = isChecked, onCheckedChange = onToggle)
+        UiSpacer(size = TEXT_TO_SWITCH_GAP)
+        SettingsLargeSwitch(
+            checked = isChecked,
+            label = stringResource(R.string.push_notifications),
+            onCheckedChange = onToggle,
+        )
     }
 }
 
@@ -214,41 +215,50 @@ private fun VaultNotificationToggle(
     onToggle: (Boolean) -> Unit,
     isLastItem: Boolean,
 ) {
-    Column() {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            VaultIcon(
-                isFastVault = vault.isFastVault,
-                size = 16.dp,
-                contentDescription = null,
-                modifier =
-                    Modifier.border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.variables.bordersLight,
-                            shape = Theme.v2.radius.pill,
-                        )
-                        .background(
-                            color = Theme.v2.colors.variables.backgroundsSurface12,
-                            shape = Theme.v2.radius.pill,
-                        )
-                        .padding(12.dp),
-            )
-            Text(
-                text = vault.vaultName,
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.primary,
-                modifier = Modifier.weight(1f),
-            )
-            VsSwitch(checked = vault.isEnabled, onCheckedChange = onToggle)
-        }
-        if (!isLastItem) {
-            HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)
-        }
+    val dividerColor = Theme.v2.colors.border.light
+    Row(
+        modifier =
+            Modifier.then(if (isLastItem) Modifier else Modifier.rowBottomDivider(dividerColor))
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = VAULT_ROW_VERTICAL_PADDING),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        VaultIcon(
+            isFastVault = vault.isFastVault,
+            size = 16.dp,
+            contentDescription = null,
+            modifier =
+                Modifier.border(
+                        width = 1.dp,
+                        color = Theme.v2.colors.variables.bordersLight,
+                        shape = Theme.v2.radius.pill,
+                    )
+                    .background(
+                        color = Theme.v2.colors.variables.backgroundsSurface12,
+                        shape = Theme.v2.radius.pill,
+                    )
+                    .padding(12.dp),
+        )
+        UiSpacer(size = 12.dp)
+        Text(
+            text = vault.vaultName,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+            modifier = Modifier.weight(1f),
+        )
+        UiSpacer(size = TEXT_TO_SWITCH_GAP)
+        SettingsLargeSwitch(
+            checked = vault.isEnabled,
+            label = vault.vaultName,
+            onCheckedChange = onToggle,
+        )
     }
 }
+
+private val SECTION_GAP = 14.dp
+private val TEXT_TO_SWITCH_GAP = 4.dp
+private val MASTER_CAPTION_MAX_WIDTH = 233.dp
+private val VAULT_ROW_VERTICAL_PADDING = 11.dp
 
 @Preview(showBackground = true)
 @Composable

@@ -134,10 +134,10 @@
     <string name="vault_settings_rename_subtitle">编辑您的保险库名称</string>
     <string name="vault_settings_reshare_title">重新分享</string>
     <string name="vault_settings_reshare_subtitle">使用新的设备组重新共享保险库</string>
-    <string name="vault_settings_dilithium_keygen_title">启用 QBTC</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">生成密钥以启用 QBTC 链</string>
+    <string name="vault_settings_dilithium_keygen_title">后量子密钥</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">生成 MLDSA-44 密钥以实现抗量子能力</string>
     <string name="vault_settings_delete_title">删除</string>
-    <string name="vault_settings_delete_subtitle">永久删除您的保险库。</string>
+    <string name="vault_settings_delete_subtitle">永久删除您的保险库份额</string>
     <string name="vault_settings_security_title">链上安全</string>
     <string name="vault_settings_security_subtitle">管理您的链上安全</string>
     <string name="vault_settings_discounts">$VULT 折扣等级</string>
@@ -171,8 +171,6 @@
     <string name="vault_tier_unlock_platinum_part1">解锁</string>
     <string name="vault_tier_unlock_platinum_part2">铂金</string>
     <string name="vault_tier_unlock_platinum_part3">等级</string>
-    <string name="vault_tier_banner_title">持有 $VULT</string>
-    <string name="vault_tier_banner_subtitle">获得交易折扣</string>
     <string name="vault_tier_description">持有 $VULT 以解锁更低的交易费用。</string>
     <string name="vault_tier_bronze_description_part1">持有 1,500 $VULT，您将解锁青铜等级并获得</string>
     <string name="vault_tier_fee_discount_description_part2">%1$d%%交易费折扣</string>
@@ -297,6 +295,10 @@
     <string name="vault_detail_screen_ecdsa_key_copied">ECDSA 密钥已复制</string>
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA 密钥已复制</string>
     <string name="vault_detail_screen_mldsa_key">MLDSA 密钥</string>
+    <string name="vault_detail_screen_ecdsa_key">ECDSA 密钥</string>
+    <string name="vault_detail_screen_eddsa_key">EdDSA 密钥</string>
+    <string name="vault_detail_this_device">此设备</string>
+    <string name="vault_settings_onchain_security_title">链上安全</string>
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA 密钥已复制</string>
 
     <!-- Welcome Screen -->
@@ -354,7 +356,6 @@
     <string name="passcode_lock_too_many_attempts_seconds">尝试次数过多，请在 %1$d 秒后重试。</string>
     <string name="passcode_lock_too_many_attempts_minutes">尝试次数过多，请在 %1$d 分钟后重试。</string>
     <string name="passcode_lock_use_biometrics">使用生物识别</string>
-    <string name="passcode_settings_title">密码加密</string>
     <string name="passcode_settings_encryption_title">密码加密</string>
     <string name="passcode_settings_encryption_subtitle">加密本设备的保险库存储并锁定应用。</string>
     <string name="passcode_settings_encryption_explanation">密码加密与本设备绑定。保留一份 .vult 备份，您随时都能恢复保险库。</string>
@@ -367,13 +368,14 @@
     <string name="passcode_biometric_not_available">本设备无法使用生物识别解锁。</string>
     <string name="passcode_biometric_enable_failed">无法开启生物识别解锁。您的密码仍然可用。</string>
     <string name="passcode_biometric_unavailable">本设备已无法使用生物识别解锁。请输入密码。</string>
-    <string name="auto_lock_setting_title">自动锁定</string>
+    <string name="auto_lock_setting_title">锁定时间</string>
+    <string name="auto_lock_setting_header">在以下时间后自动锁定 Vultisig...</string>
     <string name="auto_lock_never">从不</string>
-    <string name="auto_lock_one_minute">1 分钟后</string>
-    <string name="auto_lock_five_minutes">5 分钟后</string>
-    <string name="auto_lock_ten_minutes">10 分钟后</string>
-    <string name="auto_lock_fifteen_minutes">15 分钟后</string>
-    <string name="auto_lock_thirty_minutes">30 分钟后</string>
+    <string name="auto_lock_one_minute">1 分钟</string>
+    <string name="auto_lock_five_minutes">5 分钟</string>
+    <string name="auto_lock_ten_minutes">10 分钟</string>
+    <string name="auto_lock_fifteen_minutes">15 分钟</string>
+    <string name="auto_lock_thirty_minutes">30 分钟</string>
     <string name="passcode_entry_title_set">设置密码</string>
     <string name="passcode_entry_title_change">更改密码</string>
     <string name="passcode_entry_title_disable">关闭密码</string>
@@ -383,7 +385,6 @@
     <string name="passcode_entry_caption_current_change">更改密码前请确认您的身份。</string>
     <string name="passcode_entry_caption_current_disable">关闭加密前请确认您的身份。</string>
     <string name="passcode_entry_caption_new">选择 %1$d 位数字。每次应用锁定时都会用到。</string>
-    <string name="passcode_entry_caption_confirm">再次输入相同的 %1$d 位数字。</string>
     <string name="passcode_entry_mismatch">两次输入的密码不一致，请重新设定。</string>
     <string name="passcode_operation_failed">操作失败。您的密码未更改。</string>
     <string name="passcode_not_digits">请仅输入数字。</string>
@@ -471,7 +472,6 @@
     <string name="backup_password_screen_enter_password">输入密码</string>
     <string name="backup_password_screen_error_too_short">密码至少需要 %1$d 个字符</string>
     <string name="import_file_screen_enter_password_sub">此密码是在导出保险库份额时设置的。</string>
-    <string name="import_file_screen_hint_password">密码</string>
     <string name="backup_password_screen_permission_required">备份操作需要文件权限。</string>
 
     <!-- Token Selection -->
@@ -545,7 +545,6 @@
     <string name="join_keysign_invalid_qr">无效的二维码内容</string>
 
     <!-- Settings Screen -->
-    <string name="settings_screen_privacy">隐私</string>
     <string name="settings_screen_prevent_screenshots">防止截图</string>
     <string name="settings_screen_legal">法律</string>
     <string name="settings_screen_privacy_policy">隐私政策</string>
@@ -589,7 +588,7 @@
 
     <!-- Vault Settings Security -->
     <string name="vault_settings_security_screen_title_bottomsheet">链上安全已禁用</string>
-    <string name="vault_settings_security_screen_content_bottomsheet">禁用链上安全意味着 Blockaid 无法验证交易。您将受到较少的保护</string>
+    <string name="vault_settings_security_screen_content_bottomsheet">禁用链上安全意味着 Blockaid 无法验证交易。您将受到较少的保护。</string>
     <string name="vault_settings_security_screen_title_switch">管理您的链上安全</string>
     <string name="vault_settings_security_screen_title_content">您可以禁用由 Blockaid 提供的实时链上安全。</string>
     <string name="vault_settings_security_screen_title">安全</string>
@@ -860,7 +859,7 @@
     <string name="security_scanner_default_description">此交易已被标记为潜在危险。</string>
     <string name="security_scanner_continue_anyway">仍然继续</string>
     <string name="security_scanner_continue_go_back">返回</string>
-    <string name="security_scanner_powered_by">由…提供支持</string>
+    <string name="security_scanner_powered_by">技术支持：</string>
     <string name="security_scanner_transaction_scanned_by">交易已扫描</string>
     <string name="security_scanner_transaction_scanning">扫描中…</string>
     <string name="security_scanner_transaction_not_scanned">交易未扫描</string>
@@ -885,7 +884,7 @@
     <!-- Referral -->
     <string name="referral_invite_sheet_description">分享您的独特推荐代码邀请朋友。他们获得折扣，他们交易越多，您赚得越多 - 直接发送到您的保险库</string>
     <string name="referral_invite_next">下一步</string>
-    <string name="referral_screen_title">Vultisig - 推荐链接</string>
+    <string name="referral_screen_title">Vultisig 推荐</string>
     <string name="referral_screen_code_hint">输入最多 4 个字符</string>
     <string name="referral_create_referral">创建推荐</string>
     <string name="referral_invite_onboarding_3">节省费用。</string>
@@ -895,7 +894,7 @@
     <string name="referral_main_my_referral_body">管理您的推荐代码并领取奖励。</string>
     <string name="referral_view_friend_active">已激活</string>
     <string name="referral_edit_referral">编辑推荐</string>
-    <string name="referral_external_not_linked">推荐代码不存在</string>
+    <string name="referral_external_not_linked">此推荐代码不存在。请检查后重试。</string>
     <string name="referral_external_link_failed">检查推荐代码失败</string>
     <string name="referral_onboarding_title">推荐</string>
     <string name="referral_onboarding_get_started">开始</string>
@@ -933,13 +932,13 @@
     <string name="referral_create_registration_fees">注册费</string>
     <string name="referral_create_cost">成本</string>
     <string name="referral_create_fees_error">加载费用失败，请重试。</string>
-    <string name="referral_create_create_referral_code">创建推荐代码</string>
     <string name="referral_create_invalid">无效</string>
     <string name="referral_create_available">可用</string>
     <string name="referral_create_taken">已被占用</string>
-    <string name="referral_edit_external_title">编辑推荐代码</string>
-    <string name="referral_use_referred_code">使用推荐代码</string>
-    <string name="referral_save_referred_code">保存推荐代码</string>
+    <string name="referral_save_referred_code">保存推荐</string>
+    <string name="referral_save_header">兑换节省 %1$s - 添加推荐</string>
+    <string name="referral_edit_extend_expiration">延长到期（年）</string>
+    <string name="referral_edit_new_expiration">新到期日期：</string>
     <string name="referral_program_tag">推荐计划</string>
     <string name="referral_how_it_works">如何运作</string>
     <string name="referral_create_code_title">创建您的推荐代码</string>
@@ -950,9 +949,8 @@
     <string name="referral_earn_description">每次他们交易时，以您喜欢的资产获得报酬。</string>
     <string name="referral_use_code_title">使用推荐代码 - 节省 10%</string>
     <string name="referral_use_code_description">使用好友的推荐码，节省兑换手续费。</string>
-    <string name="referral_not_found">还没有推荐</string>
-    <string name="referral_cta">将您的保险库变成奖励机器。立即创建您的推荐并开始赚钱</string>
-    <string name="referral_view_title">您的推荐</string>
+    <string name="referral_not_found">还没有推荐。</string>
+    <string name="referral_cta">将您的保险库变成奖励机器。立即创建您的推荐并开始赚钱。</string>
     <string name="referral_view_selected_vault">已选择保险库</string>
     <string name="referral_view_your_referral_code">您的推荐代码</string>
     <string name="referral_view_edit_referral">编辑推荐</string>
@@ -1128,7 +1126,6 @@
     <!-- Vault Details -->
     <string name="vault_detail_vault_info">保险库信息</string>
     <string name="vault_details_keys">密钥</string>
-    <string name="vault_password_biometric_enable_biometrics_fast_signing">启用生物识别快速签名</string>
 
     <!-- Verify -->
     <string name="verify_send_send_overview">发送概览</string>
@@ -1136,7 +1133,6 @@
 
     <!-- Settings -->
     <string name="check_updates_settings_title">检查更新</string>
-    <string name="vult_website_settings_title">Vultisig 网站</string>
     <string name="vault">保险库</string>
     <string name="general">通用</string>
     <string name="support">支持</string>
@@ -1148,9 +1144,9 @@
 
     <!-- Check Updates -->
     <string name="check_updates_title">检查更新</string>
-    <string name="update_available">有可用更新</string>
-    <string name="app_up_to_date">应用程序是最新的</string>
-    <string name="update">更新</string>
+    <string name="update_available">有可用更新。</string>
+    <string name="app_up_to_date">应用程序是最新的。</string>
+    <string name="update">更新应用</string>
 
     <!-- Share Vault QR -->
 
@@ -1169,6 +1165,7 @@
     <string name="backup_password_request_caution_encrypt_desc">如果您选择添加密码，这将用于加密备份文件。</string>
     <string name="backup_password_request_highlight_encrypt">加密</string>
     <string name="backup_password_request_caution_cannot_reset_desc">记住：如果您忘记保险库密码，它无法重置或恢复。</string>
+    <string name="backup_password_request_settings_cannot_reset">记住：如果您忘记此密码，它无法重置或恢复。</string>
     <string name="backup_password_request_highlight_cannot">无法</string>
     <string name="backup_password_request_caution_secure_without_desc">默认情况下，您的备份无需额外密码即可安全，因为您将保险库份额存储在不同位置。</string>
     <string name="backup_password_request_highlight_secure_without">无需额外密码即可安全</string>
@@ -1204,9 +1201,15 @@
     <string name="vault_settings_view_vault">查看保险库名称、部分和类型</string>
     <string name="vault_settings_biometric_fast">生物识别快速签名</string>
     <string name="vault_settings_backup_vault">备份保险库份额</string>
-    <string name="vault_settings_back_up_your">将您的保险库份额备份到设备或服务器。</string>
+    <string name="vault_settings_back_up_your">将您的保险库份额备份到首选位置</string>
     <string name="vault_settings_migrate_gg20">将 GG20 保险库迁移到 DKLS</string>
     <string name="vault_settings_reshare_change">重新分享、管理安全性或签署消息。</string>
+    <string name="settings_screen_vultisig_education">Vultisig 教育</string>
+    <string name="settings_community_website">网站</string>
+    <string name="vault_settings_security_row_subtitle">管理您的密码</string>
+    <string name="vault_settings_lock_time_title">锁定时间</string>
+    <string name="vault_settings_lock_time_subtitle">设置应用自动锁定前的时间</string>
+    <string name="vault_settings_sign_title">签名</string>
 
     <!-- Transaction -->
     <string name="transaction_buy">购买</string>
@@ -1498,6 +1501,7 @@
     <string name="home_positions">仓位</string>
     <string name="home_swipe_hint_got_it">知道了</string>
     <string name="backup_password_request_with_password_action">使用密码</string>
+    <string name="backup_password_request_settings_with_password">使用密码备份</string>
     <string name="backup_password_device_title">设备备份密码</string>
     <string name="backup_password_screen_back_up_now">立即备份此设备</string>
     <string name="function_transfer_ibc_dst_address_input_title">目标地址</string>
@@ -1619,7 +1623,7 @@
     <string name="select_vault_type_fast_desc_1">仅需一台设备</string>
     <string name="scan_qr_code_modal_scan_the">在其他设备上扫描二维码</string>
     <string name="fast_vault_password_screen_warning">密码无法重置或恢复</string>
-    <string name="referral_top_bar_list">推荐</string>
+    <string name="referral_top_bar_list">选择保险库</string>
     <string name="onboarding_desc_page_1_part_3">您的新</string>
     <string name="onboarding_desc_page_1_part_4">恢复方法</string>
     <string name="vault_backup_screen_restart_keygen">重启密钥生成器</string>
@@ -1988,7 +1992,7 @@
     <string name="server_backup_success_check_email">查看邮箱</string>
     <string name="server_backup_success_close">关闭</string>
     <string name="server_backup_error_timeout">服务器响应时间过长，请检查您的网络连接并重试。</string>
-    <string name="server_backup_error_too_many_requests">备份请求过多。请稍后重试。</string>
+    <string name="server_backup_error_too_many_requests">您在短时间内请求备份过于频繁。请稍候再试。</string>
     <string name="server_backup_error_bad_request">出错了。请检查您的信息并重试。</string>
     <string name="resend_notification">重新发送通知</string>
     <string name="apy_approx">APY（约）</string>

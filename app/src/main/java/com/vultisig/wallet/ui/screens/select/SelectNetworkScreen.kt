@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,7 +34,11 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.bottomsheet.VsModalBottomSheet
 import com.vultisig.wallet.ui.components.inputs.VsSearchTextField
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionGridUiModel
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionList
+import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.vault.NetworkUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -41,15 +46,58 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun SelectNetworkScreen(model: SelectNetworkViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
-    VsModalBottomSheet(
-        onDismissRequest = model::back,
-        content = {
-            SelectNetworkScreen(
-                state = state,
-                searchFieldState = model.searchFieldState,
-                onNetworkClick = model::selectNetwork,
+    // Only Address Book lists every chain, and it shows no balances.
+    if (state.showAllChains) {
+        AddressBookChainPicker(
+            state = state,
+            searchFieldState = model.searchFieldState,
+            onNetworkClick = model::selectNetwork,
+            onDismiss = model::back,
+        )
+    } else {
+        VsModalBottomSheet(
+            onDismissRequest = model::back,
+            content = {
+                SelectNetworkScreen(
+                    state = state,
+                    searchFieldState = model.searchFieldState,
+                    onNetworkClick = model::selectNetwork,
+                )
+            },
+        )
+    }
+}
+
+/** The vault home's chain grid, picking one chain: a tap selects and closes, so no Done button. */
+@Composable
+private fun AddressBookChainPicker(
+    state: SelectNetworkUiModel,
+    searchFieldState: TextFieldState,
+    onNetworkClick: (NetworkUiModel) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    TokenSelectionList(
+        titleContent = {
+            Text(
+                text = stringResource(R.string.select_chain_title),
+                style = Theme.brockmann.headings.title2,
+                color = Theme.v2.colors.neutrals.n100,
             )
         },
+        items = state.networks.map { GridTokenUiModel.SingleToken(data = it) },
+        mapper = {
+            TokenSelectionGridUiModel(
+                tokenSelectionUiModel =
+                    TokenSelectionUiModel.TokenUiSingle(name = it.data.title, logo = it.data.logo),
+                isChecked = it.data.chain == state.selectedNetwork,
+            )
+        },
+        searchTextFieldState = searchFieldState,
+        onDoneClick = null,
+        onCancelClick = onDismiss,
+        notFoundContent = { NoFoundContent(message = stringResource(R.string.no_chains_found)) },
+        onCheckChange = { _, network -> onNetworkClick(network) },
+        onSetSearchText = { searchFieldState.setTextAndPlaceCursorAtEnd(it) },
     )
 }
 

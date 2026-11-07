@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.settings.LanguageSettingUiModel
 import com.vultisig.wallet.ui.models.settings.LanguageSettingViewModel
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asUiText
 
 @Composable
@@ -81,10 +82,13 @@ private fun LanguageSettingItem(
                 title = name.asUiText(),
                 subTitle = englishName?.asUiText(),
                 leadingIcon = null,
-                trailingIcon = if (isSelected) R.drawable.check_2 else null,
+                trailingIcon = if (isSelected) R.drawable.loading_bar_checkmark else null,
+                backgroundColor =
+                    if (isSelected) Theme.v2.colors.variables.backgroundsSurface12 else null,
             ),
         onClick = onClick,
         isLastItem = isLastItem,
+        layout = SettingItemLayout.Choice,
     )
 }
 

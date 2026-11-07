@@ -108,6 +108,7 @@ private fun SignMessageScreen(
 ) {
     V2Scaffold(
         title = title,
+        applyDefaultPaddings = false,
         onBackClick = onBackClick.takeIf { !isKeysignFinished },
         rightIcon = rightIcon,
         onRightIconClick = onRightIconClick.takeIf { rightIcon != null },

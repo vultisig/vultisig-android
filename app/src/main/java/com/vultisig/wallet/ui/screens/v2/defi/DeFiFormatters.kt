@@ -69,11 +69,14 @@ internal fun Date.formatChurnDate(): String =
     SimpleDateFormat("MMM d, yyyy", Locale.US).format(this)
 
 internal fun Double.formatToString(): String {
-    val value = BigDecimal.valueOf(this).setScale(6, RoundingMode.DOWN)
+    val value = BigDecimal.valueOf(this).setScale(REWARD_DECIMALS, RoundingMode.DOWN)
     return value.formatTokenAmount(Chain.ThorChain.coinType.symbol)
 }
 
 private const val PERCENTAGE_DECIMALS = 2
+
+/** Matches the 4 places the reward history rows show. */
+private const val REWARD_DECIMALS = 4
 private val ONE_HUNDRED = BigDecimal(100)
 
 /** Scale 1 so an empty position keeps reading "0.0", separator aside, as it always has. */

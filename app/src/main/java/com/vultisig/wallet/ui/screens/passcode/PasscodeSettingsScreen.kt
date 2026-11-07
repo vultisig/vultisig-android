@@ -25,13 +25,13 @@ import com.vultisig.wallet.ui.components.BiometricUnlockAvailability
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.biometricUnlockAvailability
 import com.vultisig.wallet.ui.components.rememberBiometricUnlockLauncher
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.passcode.PasscodeSettingsUiModel
 import com.vultisig.wallet.ui.models.passcode.PasscodeSettingsViewModel
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.screens.settings.SettingItem
+import com.vultisig.wallet.ui.screens.settings.SettingItemLayout
+import com.vultisig.wallet.ui.screens.settings.SettingsBox
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -74,91 +74,92 @@ internal fun PasscodeSettingsScreen(
     onBiometricUnlockChange: (Boolean) -> Unit,
 ) {
     V2Scaffold(
-        title = stringResource(R.string.passcode_settings_title),
+        title = stringResource(R.string.vault_settings_security_screen_title),
         onBackClick = onBackClick,
     ) {
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-            V2Container(type = ContainerType.SECONDARY) {
-                Column {
+            SettingsBox(layout = SettingItemLayout.Security) {
+                SettingItem(
+                    item =
+                        SettingsItemUiModel(
+                            title =
+                                UiText.StringResource(R.string.passcode_settings_encryption_title),
+                            subTitle =
+                                UiText.StringResource(
+                                    R.string.passcode_settings_encryption_subtitle
+                                ),
+                            trailingSwitch = state.isPasscodeEnabled,
+                        ),
+                    onClick = {
+                        if (state.isReady) onPasscodeEnabledChange(!state.isPasscodeEnabled)
+                    },
+                    // Change and auto-lock only exist once a passcode does, so with the
+                    // switch off this row is both first and last.
+                    isLastItem = !state.isPasscodeEnabled,
+                    titleStyle = Theme.brockmann.body.m.medium,
+                    layout = SettingItemLayout.Security,
+                )
+
+                if (state.isPasscodeEnabled) {
+                    SettingItem(
+                        item =
+                            SettingsItemUiModel(
+                                title = UiText.StringResource(R.string.passcode_settings_change),
+                                trailingIcon = R.drawable.ic_small_caret_right,
+                            ),
+                        onClick = onChangePasscodeClick,
+                        isLastItem = true,
+                        titleStyle = Theme.brockmann.body.m.medium,
+                        layout = SettingItemLayout.Security,
+                    )
+                }
+            }
+
+            if (state.isPasscodeEnabled) {
+                UiSpacer(size = 14.dp)
+
+                SettingsBox(layout = SettingItemLayout.Security) {
                     SettingItem(
                         item =
                             SettingsItemUiModel(
                                 title =
-                                    UiText.StringResource(
-                                        R.string.passcode_settings_encryption_title
-                                    ),
-                                subTitle =
-                                    UiText.StringResource(
-                                        R.string.passcode_settings_encryption_subtitle
-                                    ),
-                                leadingIcon = R.drawable.security,
-                                trailingSwitch = state.isPasscodeEnabled,
+                                    UiText.StringResource(R.string.passcode_settings_biometrics),
+                                trailingSwitch = state.isBiometricUnlockEnabled,
                             ),
+                        // The row stays visible on a device that cannot do this, with the note
+                        // below saying why — a capability that silently is not there reads as
+                        // one the app forgot to build.
                         onClick = {
-                            if (state.isReady) onPasscodeEnabledChange(!state.isPasscodeEnabled)
+                            val enable = !state.isBiometricUnlockEnabled
+                            // Only enabling asks anything of the sensor. Turning it off
+                            // deletes a stored copy, and gating that direction too strands
+                            // the row: deleting the last enrolled biometric leaves the
+                            // keystore key invalidated rather than gone, so the store still
+                            // reads as enabled while availability reads NotEnrolled — the
+                            // switch would sit at ON with every tap swallowed and the copy
+                            // unremovable.
+                            val canToggle =
+                                !enable ||
+                                    biometricAvailability == BiometricUnlockAvailability.Available
+                            if (canToggle) onBiometricUnlockChange(enable)
                         },
-                        // Change and auto-lock only exist once a passcode does, so with the
-                        // switch off this row is both first and last.
-                        isLastItem = !state.isPasscodeEnabled,
+                        isLastItem = false,
+                        titleStyle = Theme.brockmann.body.m.medium,
+                        layout = SettingItemLayout.Security,
                     )
 
-                    if (state.isPasscodeEnabled) {
-                        SettingItem(
-                            item =
-                                SettingsItemUiModel(
-                                    title =
-                                        UiText.StringResource(R.string.passcode_settings_change),
-                                    leadingIcon = R.drawable.lock,
-                                    trailingIcon = R.drawable.ic_small_caret_right,
-                                ),
-                            onClick = onChangePasscodeClick,
-                            isLastItem = false,
-                        )
-
-                        SettingItem(
-                            item =
-                                SettingsItemUiModel(
-                                    title =
-                                        UiText.StringResource(R.string.passcode_settings_auto_lock),
-                                    value = stringResource(state.autoLockTimeout.labelRes()),
-                                    leadingIcon = R.drawable.ic_clock_filled,
-                                    trailingIcon = R.drawable.ic_small_caret_right,
-                                ),
-                            onClick = onAutoLockClick,
-                            isLastItem = false,
-                        )
-
-                        SettingItem(
-                            item =
-                                SettingsItemUiModel(
-                                    title =
-                                        UiText.StringResource(
-                                            R.string.passcode_settings_biometrics
-                                        ),
-                                    leadingIcon = R.drawable.ic_biometrics,
-                                    trailingSwitch = state.isBiometricUnlockEnabled,
-                                ),
-                            // The row stays visible on a device that cannot do this, with the note
-                            // below saying why — a capability that silently is not there reads as
-                            // one the app forgot to build.
-                            onClick = {
-                                val enable = !state.isBiometricUnlockEnabled
-                                // Only enabling asks anything of the sensor. Turning it off
-                                // deletes a stored copy, and gating that direction too strands
-                                // the row: deleting the last enrolled biometric leaves the
-                                // keystore key invalidated rather than gone, so the store still
-                                // reads as enabled while availability reads NotEnrolled — the
-                                // switch would sit at ON with every tap swallowed and the copy
-                                // unremovable.
-                                val canToggle =
-                                    !enable ||
-                                        biometricAvailability ==
-                                            BiometricUnlockAvailability.Available
-                                if (canToggle) onBiometricUnlockChange(enable)
-                            },
-                            isLastItem = true,
-                        )
-                    }
+                    SettingItem(
+                        item =
+                            SettingsItemUiModel(
+                                title = UiText.StringResource(R.string.passcode_settings_auto_lock),
+                                value = stringResource(state.autoLockTimeout.labelRes()),
+                                trailingIcon = R.drawable.ic_small_caret_right,
+                            ),
+                        onClick = onAutoLockClick,
+                        isLastItem = true,
+                        titleStyle = Theme.brockmann.body.m.medium,
+                        layout = SettingItemLayout.Security,
+                    )
                 }
             }
 

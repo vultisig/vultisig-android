@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.backup
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -43,7 +45,7 @@ import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
+import com.vultisig.wallet.ui.screens.settings.rowBottomDivider
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -118,6 +120,8 @@ internal fun VaultsToBackupScreen(
 @Composable
 private fun SelectVaultTypeHeader(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
+        UiSpacer(size = 12.dp)
+
         Text(
             text = stringResource(R.string.backup_select_vaults_title),
             style = Theme.brockmann.headings.title1,
@@ -149,7 +153,7 @@ private fun BackupVaultContainer(
         borderType = ContainerBorderType.Bordered(),
         modifier = modifier.clickOnce(onClick = onClick),
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 14.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(all = 14.dp)) {
             var headerHeight by remember { mutableStateOf(0.dp) }
             val topSpacerHeight = 12.dp
             val bottomSpacerHeight = 12.dp
@@ -165,7 +169,10 @@ private fun BackupVaultContainer(
                         }
                     }
             ) {
-                Row {
+                Row(
+                    modifier = Modifier.heightIn(min = HEADER_ROW_HEIGHT),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
                         text = title,
                         color = Theme.v2.colors.text.tertiary,
@@ -257,9 +264,8 @@ private fun BackupVaultContainer(
                 }
             }
 
-            UiSpacer(size = bottomSpacerHeight)
-
             if (availableHeight != null && remainingCount != 0) {
+                UiSpacer(size = bottomSpacerHeight)
                 RemainedCountText(remainingCount)
             }
         }
@@ -281,60 +287,59 @@ private fun RemainedCountText(remainedCount: Int?) {
 
 @Composable
 internal fun VaultToBackup(model: VaultToBackupUiModel, isLastItem: Boolean) {
-    Column {
-        Row(
-            modifier = Modifier.padding(all = 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = model.name,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
+    Row(
+        modifier =
+            Modifier.heightIn(min = VAULT_ROW_MIN_HEIGHT)
+                .then(
+                    if (isLastItem) Modifier
+                    else Modifier.rowBottomDivider(Theme.v2.colors.border.light)
+                )
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = model.name,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
 
-            UiSpacer(24.dp)
+        UiSpacer(16.dp)
 
-            VaultMetaInfo(model)
-        }
-        if (!isLastItem) {
-            FadingHorizontalDivider()
-        }
+        VaultMetaInfo(model)
     }
 }
 
 @Composable
 private fun VaultMetaInfo(model: VaultToBackupUiModel) {
-    V2Container(
-        type = ContainerType.SECONDARY,
-        borderType = ContainerBorderType.Bordered(),
-        // A small inline tag, two levels inside the card and one inside the vault-list group
-        // that already takes md — so it steps down again rather than matching its parent.
-        radius = Theme.v2.radius.sm,
+    Row(
+        modifier =
+            Modifier.background(Theme.v2.colors.backgrounds.secondary, Theme.v2.radius.pill)
+                .border(1.5.dp, Theme.v2.colors.border.light, Theme.v2.radius.pill)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            VaultIcon(isFastVault = model.isFast)
-            UiSpacer(size = 4.dp)
+        VaultIcon(isFastVault = model.isFast, isSecureIconFilled = true)
+        UiSpacer(size = 4.dp)
 
-            Text(
-                text =
-                    stringResource(
-                        R.string.vault_details_screen_vault_part_desc,
-                        model.part,
-                        model.size,
-                    ),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
-            )
-        }
+        Text(
+            text =
+                stringResource(
+                    R.string.vault_details_screen_vault_part_desc,
+                    model.part,
+                    model.size,
+                ),
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.tertiary,
+        )
     }
 }
+
+private val HEADER_ROW_HEIGHT = 24.dp
+private val VAULT_ROW_MIN_HEIGHT = 58.dp
 
 @Composable
 @Preview

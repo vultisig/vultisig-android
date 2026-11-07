@@ -147,6 +147,11 @@ class UtxoHelper(
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val inputData = getBitcoinPreSigningInputData(keysignPayload)
+        if (coinType == CoinType.ZCASH) {
+            return ZcashV5Transaction.preImageHashes(inputData)
+                .map { Numeric.toHexStringNoPrefix(it) }
+                .sorted()
+        }
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes).checkError()
         return preSigningOutput.hashPublicKeysList
@@ -318,7 +323,7 @@ class UtxoHelper(
 
         val plan =
             if (coinType == CoinType.ZCASH) {
-                // The live ZIP-243 branch id is resolved at send time and carried on the payload's
+                // The live consensus branch id is resolved at send time and carried on the payload's
                 // UTXO specific. All co-signing devices resolve the same network-global value (the
                 // initiator via BlockChainSpecificRepository, joiners via JoinKeysignViewModel) so
                 // the digest stays identical across them. There is no compiled-in fallback: signing
@@ -327,7 +332,7 @@ class UtxoHelper(
                 val branchId =
                     (keysignPayload.blockChainSpecific as? BlockChainSpecific.UTXO)?.zcashBranchId
                 require(!branchId.isNullOrEmpty()) {
-                    "Zcash ZIP-243 consensus branch id is unavailable; cannot sign the ZEC " +
+                    "Zcash consensus branch id is unavailable; cannot sign the ZEC " +
                         "transaction without the live branch id"
                 }
                 initialPlan.toBuilder().setBranchId(ByteString.fromHex(branchId)).build()
@@ -343,7 +348,34 @@ class UtxoHelper(
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val inputData = getBitcoinPreSigningInputData(keysignPayload)
+        if (coinType == CoinType.ZCASH) {
+            return getZcashSignedTransaction(inputData, signatures)
+        }
         return getSignedTransaction(inputData, signatures)
+    }
+
+    /**
+     * Compiles a native Zcash send or THORChain/Maya memo swap as a v5 transaction; throws unless
+     * every input's ZIP-244 digest has a signature that verifies against the vault key.
+     */
+    fun getZcashSignedTransaction(
+        inputData: ByteArray,
+        signatures: Map<String, KeysignResponse>,
+    ): SignedTransactionResult {
+        val publicKey = deriveVaultPublicKey()
+        val derSignatures =
+            ZcashV5Transaction.preImageHashes(inputData).map { preImageHash ->
+                val key = Numeric.toHexStringNoPrefix(preImageHash)
+                val signature =
+                    signatures[key]?.derSignature?.hexToByteArray()
+                        ?: error("Missing signature for Zcash pre-image hash $key")
+                if (!publicKey.verifyAsDER(signature, preImageHash)) {
+                    Timber.d("Invalid signature")
+                    throw Exception("Invalid signature")
+                }
+                signature
+            }
+        return ZcashV5Transaction.compile(inputData, derSignatures, publicKey.data())
     }
 
     fun getSignedTransaction(
