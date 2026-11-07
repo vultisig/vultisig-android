@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.crypto
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper.Companion.DEFAULT_COSMOS_GAS_LIMIT
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
+import com.vultisig.wallet.data.chains.helpers.applyAminoTimeoutHeight
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.CosmoSignature
@@ -530,6 +531,7 @@ class ThorChainHelper(
             )
         }
         inputBuilder.setFee(feeBuilder)
+        inputBuilder.applyAminoTimeoutHeight(signAmino)
 
         memo?.let { inputBuilder.memo = it }
 
