@@ -137,7 +137,7 @@
     <string name="vault_settings_reshare_title">재공유</string>
     <string name="vault_settings_reshare_subtitle">새로운 구성원과 볼트 재공유</string>
     <string name="vault_settings_dilithium_keygen_title">양자 저항 키</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">양자 저항을 위한 MLDSA-44 키 생성</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">양자 저항을 위한 MLDSA-65 키 생성</string>
     <string name="vault_settings_delete_title">삭제</string>
     <string name="vault_settings_delete_subtitle">볼트 셰어를 영구적으로 삭제</string>
     <string name="vault_settings_security_title">온체인 보안</string>

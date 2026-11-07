@@ -28,10 +28,10 @@ class QbtcStakingSignDataResolverTests {
         const val ACCOUNT_NUMBER = 100L
         const val SEQUENCE = 42L
         const val DENOM = "qbtc"
-        // ~1312-byte ML-DSA-44 pubkey — far larger than secp256k1's 33 bytes. A deterministic
+        // ~1952-byte ML-DSA-65 pubkey — far larger than secp256k1's 33 bytes. A deterministic
         // all-0xAB fill keeps the AuthInfo bytes stable across runs.
-        val MLDSA_PUBKEY_HEX = "ab".repeat(1312)
-        val MLDSA_PUBKEY: ByteArray = ByteArray(1312) { 0xAB.toByte() }
+        val MLDSA_PUBKEY_HEX = "ab".repeat(1952)
+        val MLDSA_PUBKEY: ByteArray = ByteArray(1952) { 0xAB.toByte() }
         const val MLDSA_PUBKEY_TYPE_URL = "/cosmos.crypto.mldsa.PubKey"
 
         val VALIDATOR_A = makeValoper(seedByte = 0x0A)
@@ -178,7 +178,7 @@ class QbtcStakingSignDataResolverTests {
     // MARK: - PubKey guard divergence (the core of the ML-DSA path)
 
     @Test
-    fun `ML-DSA resolve accepts a 1312-byte ML-DSA pubkey that the secp256k1 guard would reject`() {
+    fun `ML-DSA resolve accepts a 1952-byte ML-DSA pubkey that the secp256k1 guard would reject`() {
         // Must not throw — the secp256k1 33-byte guard is skipped on the ML-DSA path.
         resolve(CosmosStakingPayload.Delegate(FX.VALIDATOR_A, amount = "100000000"))
     }

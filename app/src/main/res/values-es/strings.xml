@@ -10,7 +10,7 @@
     <string name="vault_settings_reshare_title">Recompartir</string>
     <string name="vault_settings_reshare_subtitle">Recompartir bóveda con un nuevo comité</string>
     <string name="vault_settings_dilithium_keygen_title">Clave post-cuántica</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Genera una clave MLDSA-44 para resistencia cuántica</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Genera una clave MLDSA-65 para resistencia cuántica</string>
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="swap_form_on_chain">en</string>
     <string name="select_asset_title">Seleccionar activo</string>
