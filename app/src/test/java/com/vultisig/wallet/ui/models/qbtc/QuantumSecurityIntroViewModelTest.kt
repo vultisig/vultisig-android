@@ -94,7 +94,7 @@ internal class QuantumSecurityIntroViewModelTest {
         }
 
     @Test
-    fun `getStarted on fast vault without key navigates to VerifyExistingVault single keygen`() =
+    fun `getStarted on fast vault without key goes back while VultiServer lacks the ML-DSA level`() =
         runTest(mainDispatcher) {
             coEvery { vaultRepository.get(VAULT_ID) } returns vault()
             coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
@@ -102,15 +102,8 @@ internal class QuantumSecurityIntroViewModelTest {
             createViewModel().getStarted()
             advanceUntilIdle()
 
-            coVerify {
-                navigator.route(
-                    Route.VerifyExistingVault(
-                        name = VAULT_NAME,
-                        tssAction = TssAction.SingleKeygen,
-                        vaultId = VAULT_ID,
-                    )
-                )
-            }
+            coVerify { navigator.navigate(Destination.Back) }
+            coVerify(exactly = 0) { navigator.route(any()) }
         }
 
     @Test
