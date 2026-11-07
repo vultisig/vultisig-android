@@ -47,8 +47,8 @@ class QbtcHelperTest {
 
     @Test
     fun `deriveAddress handles large MLDSA public key`() {
-        // ML-DSA-44 public key is 1312 bytes
-        val largePubKeyHex = "ab".repeat(1312)
+        // ML-DSA-65 public key is 1952 bytes
+        val largePubKeyHex = "ab".repeat(1952)
         val address = QbtcHelper.deriveAddress(largePubKeyHex)
 
         assertTrue(address.startsWith("qbtc1"))
@@ -59,15 +59,15 @@ class QbtcHelperTest {
     fun `deriveAddress produces consistent length output`() {
         val key32 = "ab".repeat(32)
         val key64 = "cd".repeat(64)
-        val key1312 = "ef".repeat(1312)
+        val key1952 = "ef".repeat(1952)
 
         val addr32 = QbtcHelper.deriveAddress(key32)
         val addr64 = QbtcHelper.deriveAddress(key64)
-        val addr1312 = QbtcHelper.deriveAddress(key1312)
+        val addr1952 = QbtcHelper.deriveAddress(key1952)
 
         // RIPEMD160 always produces 20 bytes -> same bech32 length
         assertEquals(addr32.length, addr64.length)
-        assertEquals(addr64.length, addr1312.length)
+        assertEquals(addr64.length, addr1952.length)
     }
 
     @Test

@@ -15,7 +15,7 @@ class QBTCTransactionHelper {
 
     companion object {
         private const val DENOM = "qbtc"
-        // Higher than typical Cosmos chains — ML-DSA-44 signatures are ~2.4 KB
+        // Higher than typical Cosmos chains — ML-DSA-65 signatures are ~3.3 KB
         internal const val GAS_LIMIT = 300_000L
         internal const val PUB_KEY_TYPE_URL = "/cosmos.crypto.mldsa.PubKey"
         private const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"

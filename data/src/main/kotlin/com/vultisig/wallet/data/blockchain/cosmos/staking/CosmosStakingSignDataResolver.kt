@@ -101,7 +101,7 @@ object CosmosStakingSignDataResolver {
     /**
      * Decodes the signer pubkey and its Cosmos `Any` type URL for the chain's signing scheme.
      *
-     * QBTC signs with ML-DSA (post-quantum), so its ~1312-byte pubkey can't pass the compressed-
+     * QBTC signs with ML-DSA (post-quantum), so its ~1952-byte pubkey can't pass the compressed-
      * secp256k1 33-byte guard and its AuthInfo must carry `/cosmos.crypto.mldsa.PubKey`. The
      * resulting `signDirect` bytes round-trip through the relay proto so the co-signing peer
      * rebuilds the identical SignDoc hash;

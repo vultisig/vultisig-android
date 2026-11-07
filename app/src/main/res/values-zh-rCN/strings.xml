@@ -135,7 +135,7 @@
     <string name="vault_settings_reshare_title">重新分享</string>
     <string name="vault_settings_reshare_subtitle">使用新的设备组重新共享保险库</string>
     <string name="vault_settings_dilithium_keygen_title">后量子密钥</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">生成 MLDSA-44 密钥以实现抗量子能力</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">生成 MLDSA-65 密钥以实现抗量子能力</string>
     <string name="vault_settings_delete_title">删除</string>
     <string name="vault_settings_delete_subtitle">永久删除您的保险库份额</string>
     <string name="vault_settings_security_title">链上安全</string>

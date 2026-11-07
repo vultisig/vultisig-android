@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.keygen
 
 import com.silencelaboratories.godilithium.BufferUtilJNI
 import com.silencelaboratories.godilithium.Handle
-import com.silencelaboratories.godilithium.MldsaSecurityLevel
 import com.silencelaboratories.godilithium.go_slice
 import com.silencelaboratories.godilithium.godilithium.mldsa_decode_message
 import com.silencelaboratories.godilithium.godilithium.mldsa_keyshare_free
@@ -35,7 +34,7 @@ import timber.log.Timber
 import tss.KeysignResponse
 
 /**
- * ML-DSA-44 (Dilithium) multi-party keysign.
+ * ML-DSA (Dilithium) multi-party keysign.
  *
  * Coordinates a threshold signing session between [keysignCommittee] members via the relay
  * [mediatorURL]. Each message hash in [messageToSign] is signed sequentially with automatic retry
@@ -222,7 +221,7 @@ class MldsaKeysign(
             val localPartySlice = localPartyID.toByteArray().toMldsaGoSlice()
             try {
                 mldsa_sign_session_from_setup(
-                        MldsaSecurityLevel.MlDsa44,
+                        MLDSA_LEVEL,
                         setupMsgSlice,
                         localPartySlice,
                         keyshareHandle,
@@ -385,7 +384,7 @@ class MldsaKeysign(
         val idsSlice = DklsHelper.arrayToBytes(keysignCommittee).toMldsaGoSlice()
         try {
             mldsa_sign_setupmsg_new(
-                    MldsaSecurityLevel.MlDsa44,
+                    MLDSA_LEVEL,
                     keyIdSlice,
                     null,
                     msgSlice,
