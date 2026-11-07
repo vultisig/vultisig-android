@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.keygen.VULTISERVER_SUPPORTS_MLDSA_LEVEL
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.hasValidMldsaKey
@@ -363,7 +364,10 @@ constructor(
             // Only DKLS vaults can run the post-quantum (Dilithium/MLDSA) keygen: KeyImport vaults
             // receive the key at import, and GG20 vaults must migrate to DKLS first — so the option
             // stays hidden for them (an isEnabled=false item is filtered out of the list).
-            val supportsDilithiumKeygen = vault != null && vault.libType == SigningLibType.DKLS
+            val supportsDilithiumKeygen =
+                vault != null &&
+                    vault.libType == SigningLibType.DKLS &&
+                    (!hasFastSign || VULTISERVER_SUPPORTS_MLDSA_LEVEL)
 
             val newItems =
                 uiModel.value.settingGroups.map { group ->

@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.keygen.VULTISERVER_SUPPORTS_MLDSA_LEVEL
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.hasValidMldsaKey
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -15,6 +16,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import timber.log.Timber
 
 @HiltViewModel
 internal class QuantumSecurityIntroViewModel
@@ -41,7 +43,12 @@ constructor(
                 return@safeLaunch
             }
             val hasFastSign = isVaultHasFastSignById(vaultId) && vault.signers.count() == 2
-            if (hasFastSign) {
+            if (hasFastSign && !VULTISERVER_SUPPORTS_MLDSA_LEVEL) {
+                // The settings row and the BTC banner are hidden for these vaults, so this is
+                // only reachable from a stale entry point.
+                Timber.w("Fast Vault post-quantum keygen is not supported by VultiServer yet")
+                navigator.back()
+            } else if (hasFastSign) {
                 navigator.route(
                     Route.VerifyExistingVault(
                         name = vault.name,

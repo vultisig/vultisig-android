@@ -361,6 +361,27 @@ internal class VaultSettingsViewModelTest {
             dilithium.enabled.shouldBeTrue()
         }
 
+    /** VultiServer can't join a post-quantum keygen yet, so a Fast Vault doesn't get the row. */
+    @Test
+    fun `dilithium keygen row is hidden for a fast vault`() =
+        runTest(testDispatcher) {
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(
+                    id = VAULT_ID,
+                    name = "Test",
+                    libType = SigningLibType.DKLS,
+                    signers = listOf("device1", "Server-1"),
+                )
+            val vm = createViewModel()
+            val dilithium =
+                vm.uiModel.value.settingGroups
+                    .flatMap { it.items }
+                    .filterIsInstance<VaultSettingsItem.DilithiumKeygen>()
+                    .single()
+            dilithium.enabled.shouldBeFalse()
+        }
+
     /** GG20 vaults must migrate to DKLS first, so the post-quantum keygen row is hidden. */
     @Test
     fun `dilithium keygen row is hidden for a GG20 vault`() =

@@ -171,13 +171,30 @@ internal class ChainTokensViewModelTest {
         vm.uiState.value.showQbtcClaimBanner shouldBe false
     }
 
+    @Test
+    fun `the qbtc claim banner is hidden for a fast vault without a quantum key`() {
+        val vm =
+            createEligibleViewModel(
+                Vault(
+                    id = VAULT_ID,
+                    name = "vault",
+                    libType = SigningLibType.DKLS,
+                    localPartyID = "device1",
+                    signers = listOf("device1", "Server-1"),
+                )
+            )
+
+        vm.uiState.value.showQbtcClaimBanner shouldBe false
+    }
+
     /** A view model on the Bitcoin screen of a DKLS vault — the state that surfaces the banner. */
-    private fun createEligibleViewModel(): ChainTokensViewModel {
+    private fun createEligibleViewModel(
+        vault: Vault = Vault(id = VAULT_ID, name = "vault", libType = SigningLibType.DKLS)
+    ): ChainTokensViewModel {
         // A relaxed mock answers this Unit-returning function type with an Object, which the call
         // site then fails to cast.
         every { discoverTokenUseCase(any(), any()) } returns Unit
-        coEvery { vaultRepository.get(VAULT_ID) } returns
-            Vault(id = VAULT_ID, name = "vault", libType = SigningLibType.DKLS)
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault
 
         return createViewModel().apply { initData(vaultId = VAULT_ID, chainId = Chain.Bitcoin.raw) }
     }
