@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
@@ -256,6 +257,140 @@ internal class AccountsLoaderTest {
 
             val sRuji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.sRUJI.id, true) }
             assertEquals(BigInteger.ZERO, sRuji.tokenValue?.value)
+        }
+
+    // ──────── UNSTAKE_RUJI ────────
+
+    @Test
+    fun `UNSTAKE_RUJI carries the bonded position when the vault holds no RUJI wallet token`() =
+        runTest(mainDispatcher) {
+            // The DeFi tab reads the bonded position against the RUNE address, so the card can
+            // show it for a vault that never enabled RUJI — or bonded all of it. The form must
+            // still have an account to unstake against, valued at that position.
+            defiType = DeFiNavActions.UNSTAKE_RUJI
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.RUJI.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("2500000000"))
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts =
+                                listOf(
+                                    thorAccount(
+                                        Coins.ThorChain.RUNE.copy(
+                                            address = "thor1",
+                                            hexPublicKey = THOR_PUBLIC_KEY,
+                                        )
+                                    )
+                                ),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ruji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
+            assertEquals(BigInteger("2500000000"), ruji.tokenValue?.value)
+            assertTrue(loadedAccounts.any { it.token.id.equals(Coins.ThorChain.RUNE.id, true) })
+            assertEquals("thor1", ruji.token.address)
+            assertEquals(THOR_PUBLIC_KEY, ruji.token.hexPublicKey)
+        }
+
+    @Test
+    fun `UNSTAKE_RUJI ceiling is the bonded position, not the wallet balance`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.UNSTAKE_RUJI
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.RUJI.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("2500000000"))
+            val walletRuji = Coins.ThorChain.RUJI.copy(address = "thor1", hexPublicKey = "key")
+            val rujiPrice = FiatValue(value = BigDecimal("0.4"), currency = "USD")
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts =
+                                listOf(
+                                    thorAccount(Coins.ThorChain.RUNE.copy(address = "thor1")),
+                                    thorAccount(walletRuji).copy(price = rujiPrice),
+                                ),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ruji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
+            assertEquals(BigInteger("2500000000"), ruji.tokenValue?.value)
+            assertEquals(walletRuji, ruji.token)
+            assertEquals(rujiPrice, ruji.price)
+        }
+
+    @Test
+    fun `UNSTAKE_RUJI publishes a zero ceiling when no position is cached`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.UNSTAKE_RUJI
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.RUJI.id,
+                )
+            } returns null
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts =
+                                listOf(
+                                    thorAccount(Coins.ThorChain.RUNE),
+                                    thorAccount(Coins.ThorChain.RUJI),
+                                ),
+                        )
+                    )
+                )
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ruji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
+            assertEquals(BigInteger.ZERO, ruji.tokenValue?.value)
+        }
+
+    @Test
+    fun `UNSTAKE_RUJI publishes an empty list when the RUNE account is missing`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.UNSTAKE_RUJI
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.RUJI.id,
+                )
+            } returns stakingDetails(stakeAmount = BigInteger("2500000000"))
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns flowOf(emptyList())
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            assertEquals(emptyList(), loadedAccounts)
         }
 
     // ──────── UNSTAKE_YBRUNE ────────

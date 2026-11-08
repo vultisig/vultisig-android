@@ -58,6 +58,11 @@ internal class AccountsLoader(
                         loadCircleUSDCAccount(vaultId, generation)
                     }
 
+                DeFiNavActions.UNSTAKE_RUJI ->
+                    scope.safeLaunch(onError = ::onLoadError) {
+                        loadBondedRujiAccount(vaultId, generation)
+                    }
+
                 DeFiNavActions.UNSTAKE_SRUJI ->
                     scope.safeLaunch(onError = ::onLoadError) {
                         loadAutoCompoundRujiAccount(vaultId, generation)
@@ -434,6 +439,51 @@ internal class AccountsLoader(
         } else {
             publishLoaded(emptyList(), generation)
         }
+    }
+
+    // The bonded RUJI position is held by the staking contract, not by the wallet: the DeFi tab
+    // reads it against the RUNE address whether or not the vault carries RUJI as a wallet token,
+    // and a staker who bonded everything holds no RUJI there at all. The wallet balance is
+    // therefore never the ceiling — the cached position the card showed is.
+    private suspend fun loadBondedRujiAccount(vaultId: VaultId, generation: Long) {
+        val cachedDetails =
+            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
+        accountsRepository
+            .loadAddresses(vaultId)
+            .map { addrs -> addrs.flatMap { it.accounts } }
+            .collect { accountsLoaded ->
+                publishBondedRuji(accountsLoaded, cachedDetails?.stakeAmount, generation)
+            }
+    }
+
+    private fun publishBondedRuji(
+        accountsLoaded: List<Account>,
+        bondedAmount: BigInteger?,
+        generation: Long,
+    ) {
+        if (generation != currentGeneration) return
+        val thorchainAccount =
+            accountsLoaded.findSourceOrPublishEmpty(
+                tokenId = Coins.ThorChain.RUNE.id,
+                generation = generation,
+                missingReason = "THORChain account not available for RUJI unstake",
+            ) ?: return
+
+        val walletRuji = accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
+        val ruji =
+            walletRuji?.token
+                ?: Coins.ThorChain.RUJI.copy(
+                    address = thorchainAccount.token.address,
+                    hexPublicKey = thorchainAccount.token.hexPublicKey,
+                )
+        val rujiAccount =
+            Account(
+                token = ruji,
+                tokenValue = TokenValue(value = bondedAmount ?: BigInteger.ZERO, token = ruji),
+                fiatValue = null,
+                price = walletRuji?.price,
+            )
+        publishLoaded(listOf(rujiAccount, thorchainAccount), generation)
     }
 
     // The auto-compounding RUJI position is not a wallet token: its sRUJI receipt is deliberately
