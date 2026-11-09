@@ -203,6 +203,7 @@ constructor(
                             vaultRepository.get(vaultId)?.hasPreGeneratedKey(chain) ?: true
                         },
                         addressProvider = context.address,
+                        formFeeProvider = { context.state().gasFeeDecimal },
                         requireTokenAmount = context.requireTokenAmount,
                         blockChainSpecificRepository = context.blockChainSpecificRepository,
                         calculateGasFee = context.calculateGasFee,

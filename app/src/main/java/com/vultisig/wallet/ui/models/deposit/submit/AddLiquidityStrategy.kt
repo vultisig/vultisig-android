@@ -58,6 +58,7 @@ internal class AddLiquidityStrategy(
     private val resolvePairedAddress: suspend (Chain, String, String) -> String?,
     private val canHoldChain: suspend (vaultId: String, chain: Chain) -> Boolean,
     private val addressProvider: () -> Address?,
+    private val formFeeProvider: () -> BigDecimal?,
     private val requireTokenAmount: (Coin, Account, Address, TokenValue) -> BigInteger,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val calculateGasFee: suspend (Chain, Coin, String) -> TokenValue,
@@ -316,23 +317,22 @@ internal class AddLiquidityStrategy(
         runeAddress: String,
     ): DepositTransaction {
         val inbound = requireThorChainInbound(poolId, token.chain)
-        requireAboveInboundDust(
-            amount = amount,
-            decimals = token.decimal,
-            ticker = token.ticker,
-            inbound = inbound,
-            chain = token.chain,
-            isThresholdDropped = false,
-        )
-
         val vault =
             withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: error("Vault not found")
-        val transfer =
+        val balance = formBalance(token)
+        // Max fills balance minus the fee the form reserved, so only an amount the form itself
+        // accepted is refitted to the fee priced here; anything above it is refused as before.
+        val isWithinFormReserve =
+            formFeeProvider()?.let { fee ->
+                amount + fee.movePointRight(token.decimal).toBigInteger() <= balance
+            } ?: false
+
+        suspend fun plan(planAmount: BigInteger, isMax: Boolean) =
             planInboundMemoTransfer(
                 vaultId = vaultId,
                 vault = vault,
                 token = token,
-                amount = amount,
+                amount = planAmount,
                 dstAddress = inbound.address,
                 memo = memo,
                 feeServiceComposite = feeServiceComposite,
@@ -340,17 +340,28 @@ internal class AddLiquidityStrategy(
                 blockChainSpecificRepository = blockChainSpecificRepository,
                 gasFeeToEstimate = gasFeeToEstimate,
                 getBitcoinTransactionPlan = getBitcoinTransactionPlan,
+                isMax = isMax,
             )
 
-        // A UTXO plan already refuses an amount its inputs cannot cover, with its own error.
-        if (!token.chain.isPlannedUtxoChain) {
-            requireCoveredByFormBalance(
-                addressProvider(),
-                token,
-                transfer.gasFee,
-                requireTokenAmount,
-            )
-        }
+        val (transfer, signedAmount) =
+            if (token.chain.isPlannedUtxoChain) {
+                planUtxoAssetSide(amount, balance, isWithinFormReserve) { a, isMax ->
+                    plan(a, isMax)
+                }
+            } else {
+                val transfer = plan(amount, isMax = false)
+                transfer to
+                    fitToSignedFee(amount, balance, transfer.gasFee.value, isWithinFormReserve)
+            }
+
+        requireAboveInboundDust(
+            amount = signedAmount,
+            decimals = token.decimal,
+            ticker = token.ticker,
+            inbound = inbound,
+            chain = token.chain,
+            isThresholdDropped = false,
+        )
 
         return DepositTransaction(
             id = Uuid.random().toString(),
@@ -359,7 +370,7 @@ internal class AddLiquidityStrategy(
             srcAddress = token.address,
             dstAddress = inbound.address,
             memo = memo,
-            srcTokenValue = TokenValue(value = amount, token = token),
+            srcTokenValue = TokenValue(value = signedAmount, token = token),
             estimatedFees = transfer.gasFee,
             estimateFeesFiat = transfer.estimatedGasFee.formattedFiatValue,
             blockChainSpecific = transfer.specific.blockChainSpecific,
@@ -370,52 +381,84 @@ internal class AddLiquidityStrategy(
         )
     }
 
+    /** The form's balance of [token], which the asset half spends from. */
+    private fun formBalance(token: Coin): BigInteger {
+        val address =
+            addressProvider()
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+        val account =
+            address.accounts.firstOrNull { it.token.id == token.id }
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+        return account.tokenValue?.value
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_token)
+            )
+    }
+
     /**
-     * THORChain's live inbound for [poolId]'s chain, read on every build because vaults churn.
-     * Fails closed on an unreachable thornode, a chain missing from the inbound set, or one that is
-     * halted, trading-paused or LP-paused — the same gate iOS applies to an LP add.
+     * Plans a UTXO asset half. The form sizes Max from a sweep, which has no change output, so an
+     * amount near the balance does not fit a plan that adds one. When that plan fails on an amount
+     * within the form's reserve, the inputs are swept instead and the sweep's own amount is signed
+     * — never more than was entered. Anything else fails with the first plan's error.
+     */
+    private suspend fun planUtxoAssetSide(
+        amount: BigInteger,
+        balance: BigInteger,
+        isWithinFormReserve: Boolean,
+        plan: suspend (BigInteger, Boolean) -> InboundMemoTransfer,
+    ): Pair<InboundMemoTransfer, BigInteger> =
+        try {
+            plan(amount, false) to amount
+        } catch (e: InvalidTransactionDataException) {
+            if (!isWithinFormReserve) throw e
+            val sweep = plan(balance, true)
+            val swept = sweep.plannedAmount?.takeIf { it > BigInteger.ZERO && it <= amount }
+            if (swept == null) throw e
+            sweep to swept
+        }
+
+    /**
+     * Fits an account-chain [amount] to the fee about to be signed. The form reserved the fee it
+     * read at load, and [build] prices it again, so a fee that rose in between leaves a Max amount
+     * short by the difference. Reduces only, and only an amount within the form's reserve; anything
+     * else that the fee does not fit, or a fee that leaves nothing, is refused.
+     */
+    private fun fitToSignedFee(
+        amount: BigInteger,
+        balance: BigInteger,
+        fee: BigInteger,
+        isWithinFormReserve: Boolean,
+    ): BigInteger {
+        val affordable = balance - fee
+        if (amount <= affordable) return amount
+        if (!isWithinFormReserve || affordable <= BigInteger.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_insufficient_balance)
+            )
+        }
+        return affordable
+    }
+
+    /**
+     * THORChain's live inbound for [poolId]'s chain, read on every build because vaults churn — the
+     * same gate iOS applies to an LP add.
      */
     private suspend fun requireThorChainInbound(
         poolId: String,
         chain: Chain,
-    ): THORChainInboundAddress {
-        val chainPrefix = poolId.substringBefore('.')
-        val inbound =
-            try {
-                withContext(Dispatchers.IO) { thorChainApi.getTHORChainInboundAddresses() }
-                    .firstOrNull { it.chain.equals(chainPrefix, ignoreCase = true) }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch THORChain inbound for %s", chainPrefix)
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.deposit_error_thorchain_inbound_unavailable)
-                )
-            }
-                ?: throw InvalidTransactionDataException(
-                    UiText.FormattedText(R.string.deposit_error_pool_not_available, listOf(poolId))
-                )
-
-        if (
-            inbound.halted ||
-                inbound.chainLPActionsPaused ||
-                inbound.chainTradingPaused ||
-                inbound.globalTradingPaused
-        ) {
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.deposit_error_thorchain_chain_halted,
-                    listOf(chain.raw),
-                )
-            )
-        }
-        if (inbound.address.isBlank()) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-        }
-        return inbound
-    }
+    ): THORChainInboundAddress =
+        requireLiveInbound(
+            pool = poolId,
+            chain = chain,
+            protocol = "THORChain",
+            fetchInbounds = thorChainApi::getTHORChainInboundAddresses,
+            unavailableRes = R.string.deposit_error_thorchain_inbound_unavailable,
+            haltedRes = R.string.deposit_error_thorchain_chain_halted,
+        )
 
     /** Reads the vault's record; an unreadable one refuses rather than risk a refunded inbound. */
     private suspend fun checkMayaPairing(

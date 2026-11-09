@@ -198,44 +198,14 @@ internal class AddMayaLiquidityStrategy(
         throw InvalidTransactionDataException(UiText.FormattedText(reason, listOf(pool)))
     }
 
-    /**
-     * The live Maya inbound for [pool]'s chain. Fails closed: an unreachable mayanode, a chain
-     * missing from the inbound set, or one reporting a halt or paused LP actions all refuse the
-     * deposit rather than sending funds to an address MayaChain may not credit.
-     */
-    private suspend fun requireInbound(pool: String, chain: Chain): THORChainInboundAddress {
-        val chainPrefix = pool.substringBefore('.')
-        val inbound =
-            try {
-                withContext(Dispatchers.IO) { mayaChainApi.getInboundAddresses() }
-                    .firstOrNull { it.chain.equals(chainPrefix, ignoreCase = true) }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch MayaChain inbound for %s", chainPrefix)
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.deposit_error_maya_inbound_unavailable)
-                )
-            }
-                ?: throw InvalidTransactionDataException(
-                    UiText.FormattedText(R.string.deposit_error_pool_not_available, listOf(pool))
-                )
-
-        if (
-            inbound.halted ||
-                inbound.chainLPActionsPaused ||
-                inbound.chainTradingPaused ||
-                inbound.globalTradingPaused
-        ) {
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(R.string.deposit_error_maya_chain_halted, listOf(chain.raw))
-            )
-        }
-        if (inbound.address.isBlank()) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-        }
-        return inbound
-    }
+    /** The live Maya inbound for [pool]'s chain. */
+    private suspend fun requireInbound(pool: String, chain: Chain): THORChainInboundAddress =
+        requireLiveInbound(
+            pool = pool,
+            chain = chain,
+            protocol = "MayaChain",
+            fetchInbounds = mayaChainApi::getInboundAddresses,
+            unavailableRes = R.string.deposit_error_maya_inbound_unavailable,
+            haltedRes = R.string.deposit_error_maya_chain_halted,
+        )
 }

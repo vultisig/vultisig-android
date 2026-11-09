@@ -27,8 +27,10 @@ import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
@@ -36,12 +38,14 @@ import wallet.core.jni.proto.Common.SigningError
  * Fee, chain-specific data and UTXOs for a memo-carrying transfer into a protocol inbound vault.
  *
  * [gasFee] is the total the transaction pays — on a planned UTXO chain the planner's fee, not the
- * per-byte rate the chain-specific data carries for signing.
+ * per-byte rate the chain-specific data carries for signing. [plannedAmount] is what a planned UTXO
+ * transaction sends, which for a sweep is the balance minus that fee; null off a planned chain.
  */
 internal data class InboundMemoTransfer(
     val gasFee: TokenValue,
     val estimatedGasFee: EstimatedGasFee,
     val specific: BlockChainSpecificAndUtxo,
+    val plannedAmount: BigInteger? = null,
 )
 
 /**
@@ -130,7 +134,50 @@ internal suspend fun planInboundMemoTransfer(
         gasFee = gasFee,
         estimatedGasFee = estimatedGasFee,
         specific = plannedSpecific,
+        plannedAmount = plan?.amount?.let(BigInteger::valueOf),
     )
+}
+
+/**
+ * The live inbound [fetchInbounds] lists for [pool]'s chain. Fails closed: an unreachable node, a
+ * chain missing from the inbound set, or one that is halted, trading-paused or LP-paused refuses
+ * the deposit rather than sending funds to an address the protocol may not credit.
+ */
+internal suspend fun requireLiveInbound(
+    pool: String,
+    chain: Chain,
+    protocol: String,
+    fetchInbounds: suspend () -> List<THORChainInboundAddress>,
+    unavailableRes: Int,
+    haltedRes: Int,
+): THORChainInboundAddress {
+    val chainPrefix = pool.substringBefore('.')
+    val inbound =
+        try {
+            withContext(Dispatchers.IO) { fetchInbounds() }
+                .firstOrNull { it.chain.equals(chainPrefix, ignoreCase = true) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch %s inbound for %s", protocol, chainPrefix)
+            throw InvalidTransactionDataException(UiText.StringResource(unavailableRes))
+        }
+            ?: throw InvalidTransactionDataException(
+                UiText.FormattedText(R.string.deposit_error_pool_not_available, listOf(pool))
+            )
+
+    if (
+        inbound.halted ||
+            inbound.chainLPActionsPaused ||
+            inbound.chainTradingPaused ||
+            inbound.globalTradingPaused
+    ) {
+        throw InvalidTransactionDataException(UiText.FormattedText(haltedRes, listOf(chain.raw)))
+    }
+    if (inbound.address.isBlank()) {
+        throw InvalidTransactionDataException(UiText.StringResource(R.string.send_error_no_address))
+    }
+    return inbound
 }
 
 /** UTXO chains whose spend is planned by WalletCore's Bitcoin planner (Cardano is not). */
