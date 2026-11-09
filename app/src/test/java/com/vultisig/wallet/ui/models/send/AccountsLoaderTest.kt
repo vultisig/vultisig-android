@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.send
 
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
+import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -54,6 +55,7 @@ internal class AccountsLoaderTest {
     private val accountsRepository: AccountsRepository = mockk(relaxed = true)
     private val stakingDetailsRepository: StakingDetailsRepository = mockk(relaxed = true)
     private val defaultStakingPositionService: DefaultStakingPositionService = mockk(relaxed = true)
+    private val rujiStakingService: RujiStakingService = mockk()
 
     private var defiType: DeFiNavActions? = null
     private var preselectedTokenId: String? = null
@@ -342,29 +344,26 @@ internal class AccountsLoaderTest {
         }
 
     @Test
-    fun `UNSTAKE_RUJI publishes a zero ceiling when no position is cached`() =
+    fun `UNSTAKE_RUJI reads the bonded position from the network when none is cached`() =
         runTest(mainDispatcher) {
-            defiType = DeFiNavActions.UNSTAKE_RUJI
-            coEvery {
-                stakingDetailsRepository.getStakingDetailsByCoindId(
-                    VAULT_ID,
-                    Coins.ThorChain.RUJI.id,
-                )
-            } returns null
-            every { accountsRepository.loadAddresses(VAULT_ID) } returns
-                flowOf(
-                    listOf(
-                        Address(
-                            chain = Chain.ThorChain,
-                            address = "thor1",
-                            accounts =
-                                listOf(
-                                    thorAccount(Coins.ThorChain.RUNE),
-                                    thorAccount(Coins.ThorChain.RUJI),
-                                ),
-                        )
-                    )
-                )
+            givenUncachedBondedRuji()
+            coEvery { rujiStakingService.getStakingDetailsFromNetwork(RUNE_ADDRESS) } returns
+                listOf(stakingDetails(stakeAmount = BigInteger("11032525")))
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ruji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
+            assertEquals(BigInteger("11032525"), ruji.tokenValue?.value)
+        }
+
+    @Test
+    fun `UNSTAKE_RUJI publishes a zero ceiling when neither cache nor network has a position`() =
+        runTest(mainDispatcher) {
+            givenUncachedBondedRuji()
+            coEvery { rujiStakingService.getStakingDetailsFromNetwork(RUNE_ADDRESS) } returns
+                emptyList()
             val loader = build(backgroundScope)
 
             loader.load(VAULT_ID)
@@ -373,6 +372,42 @@ internal class AccountsLoaderTest {
             val ruji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
             assertEquals(BigInteger.ZERO, ruji.tokenValue?.value)
         }
+
+    @Test
+    fun `UNSTAKE_RUJI publishes a zero ceiling when the network read fails`() =
+        runTest(mainDispatcher) {
+            givenUncachedBondedRuji()
+            coEvery { rujiStakingService.getStakingDetailsFromNetwork(RUNE_ADDRESS) } throws
+                RuntimeException("thornode down")
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            val ruji = loadedAccounts.single { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
+            assertEquals(BigInteger.ZERO, ruji.tokenValue?.value)
+        }
+
+    private fun givenUncachedBondedRuji() {
+        defiType = DeFiNavActions.UNSTAKE_RUJI
+        coEvery {
+            stakingDetailsRepository.getStakingDetailsByCoindId(VAULT_ID, Coins.ThorChain.RUJI.id)
+        } returns null
+        every { accountsRepository.loadAddresses(VAULT_ID) } returns
+            flowOf(
+                listOf(
+                    Address(
+                        chain = Chain.ThorChain,
+                        address = RUNE_ADDRESS,
+                        accounts =
+                            listOf(
+                                thorAccount(Coins.ThorChain.RUNE.copy(address = RUNE_ADDRESS)),
+                                thorAccount(Coins.ThorChain.RUJI),
+                            ),
+                    )
+                )
+            )
+    }
 
     @Test
     fun `UNSTAKE_RUJI publishes an empty list when the RUNE account is missing`() =
@@ -1276,6 +1311,7 @@ internal class AccountsLoaderTest {
             accountsRepository = accountsRepository,
             stakingDetailsRepository = stakingDetailsRepository,
             defaultStakingPositionService = defaultStakingPositionService,
+            rujiStakingService = rujiStakingService,
             defiTypeProvider = { defiType },
             preselectedTokenIdProvider = { preselectedTokenId },
             mscaAddressProvider = { mscaAddress },
@@ -1316,6 +1352,7 @@ internal class AccountsLoaderTest {
     private companion object {
         const val VAULT_ID = "vault-id"
         const val VAULT_ID_2 = "vault-id-2"
+        const val RUNE_ADDRESS = "thor1self"
         const val THOR_PUBLIC_KEY =
             "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
     }

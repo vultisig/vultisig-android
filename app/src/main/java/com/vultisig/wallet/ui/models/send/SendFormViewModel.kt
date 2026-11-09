@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
+import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.tron.GetTronFrozenBalancesUseCase
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.Account
@@ -75,6 +76,7 @@ constructor(
     private val tokenRepository: TokenRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val defaultStakingPositionService: DefaultStakingPositionService,
+    private val rujiStakingService: RujiStakingService,
     private val feeServiceComposite: FeeServiceComposite,
     private val chainValidationService: ChainValidationService,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
@@ -151,6 +153,7 @@ constructor(
             tokenRepository = tokenRepository,
             stakingDetailsRepository = stakingDetailsRepository,
             defaultStakingPositionService = defaultStakingPositionService,
+            rujiStakingService = rujiStakingService,
             feeServiceComposite = feeServiceComposite,
             chainValidationService = chainValidationService,
             getTronFrozenBalances = getTronFrozenBalances,

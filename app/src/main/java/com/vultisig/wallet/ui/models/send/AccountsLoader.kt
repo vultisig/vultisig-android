@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send
 
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
+import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -28,6 +29,7 @@ internal class AccountsLoader(
     private val accountsRepository: AccountsRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val defaultStakingPositionService: DefaultStakingPositionService,
+    private val rujiStakingService: RujiStakingService,
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val preselectedTokenIdProvider: () -> TokenId?,
     private val mscaAddressProvider: () -> String?,
@@ -446,14 +448,40 @@ internal class AccountsLoader(
     // and a staker who bonded everything holds no RUJI there at all. The wallet balance is
     // therefore never the ceiling — the cached position the card showed is.
     private suspend fun loadBondedRujiAccount(vaultId: VaultId, generation: Long) {
-        val cachedDetails =
-            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
+        var bondedAmount =
+            stakingDetailsRepository
+                .getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
+                ?.stakeAmount
         accountsRepository
             .loadAddresses(vaultId)
             .map { addrs -> addrs.flatMap { it.accounts } }
             .collect { accountsLoaded ->
-                publishBondedRuji(accountsLoaded, cachedDetails?.stakeAmount, generation)
+                if (bondedAmount == null) bondedAmount = fetchBondedRuji(accountsLoaded)
+                publishBondedRuji(accountsLoaded, bondedAmount, generation)
             }
+    }
+
+    // The cached row is keyed by coin, not vault, so another vault's refresh can replace it while
+    // the card still shows this vault's position straight from the network. Read the network the
+    // same way then, rather than sizing the form at zero.
+    private suspend fun fetchBondedRuji(accountsLoaded: List<Account>): BigInteger? {
+        val runeAddress =
+            accountsLoaded
+                .find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
+                ?.token
+                ?.address
+                ?.takeIf { it.isNotBlank() } ?: return null
+        return try {
+            rujiStakingService
+                .getStakingDetailsFromNetwork(runeAddress)
+                .firstOrNull { it.coin.id == Coins.ThorChain.RUJI.id }
+                ?.stakeAmount
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to read the bonded RUJI position for unstake")
+            null
+        }
     }
 
     private fun publishBondedRuji(

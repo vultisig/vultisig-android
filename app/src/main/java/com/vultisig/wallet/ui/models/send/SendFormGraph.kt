@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
+import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.tron.GetTronFrozenBalancesUseCase
 import com.vultisig.wallet.data.blockchain.tron.TronFrozenBalanceState
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
@@ -92,6 +93,7 @@ internal class SendFormGraph(
     private val tokenRepository: TokenRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val defaultStakingPositionService: DefaultStakingPositionService,
+    private val rujiStakingService: RujiStakingService,
     private val feeServiceComposite: FeeServiceComposite,
     private val chainValidationService: ChainValidationService,
     private val getTronFrozenBalances: GetTronFrozenBalancesUseCase,
@@ -165,6 +167,7 @@ internal class SendFormGraph(
             accountsRepository = accountsRepository,
             stakingDetailsRepository = stakingDetailsRepository,
             defaultStakingPositionService = defaultStakingPositionService,
+            rujiStakingService = rujiStakingService,
             defiTypeProvider = defiTypeProvider,
             preselectedTokenIdProvider = preselectedTokenIdProvider,
             mscaAddressProvider = mscaAddressProvider,
