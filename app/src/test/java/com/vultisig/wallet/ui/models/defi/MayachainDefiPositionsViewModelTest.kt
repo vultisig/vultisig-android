@@ -1290,7 +1290,6 @@ internal class MayachainDefiPositionsViewModelTest {
             pool = pool,
             pendingCacao = BigInteger(cacao),
             pendingAsset = BigInteger(asset),
-            pendingTxId = "TX",
             pairedAddress = pairedAddress,
             assetAddress = assetAddress,
             blocksUntilAddedAlone = 1_000L,

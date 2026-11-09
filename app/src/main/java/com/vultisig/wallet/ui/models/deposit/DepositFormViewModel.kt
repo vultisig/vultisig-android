@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.defi.MAYA_NATIVE_LP_POOLS
+import com.vultisig.wallet.ui.models.defi.canAddMayaLiquidity
 import com.vultisig.wallet.ui.models.defi.mayaLpPairedChain
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
@@ -511,6 +512,7 @@ constructor(
             isPrefillTokenApplied = { isCustomPrefillTokenApplied },
             onPrefillTokenApplied = { isCustomPrefillTokenApplied = true },
             loadMayaLpPairing = ::loadMayaLpPairing,
+            canAddMayaLiquidity = { vaultRepository.get(vaultId)?.canAddMayaLiquidity() ?: true },
             loadGasFeeForDisplay = { vaultId, chain, address ->
                 gasFeeHelper.loadGasFeeForDisplay(
                     scope = viewModelScope,

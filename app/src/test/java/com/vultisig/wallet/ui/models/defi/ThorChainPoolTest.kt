@@ -1,8 +1,13 @@
 package com.vultisig.wallet.ui.models.defi
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.ChainPublicKey
+import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.Vault
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
 internal class ThorChainPoolTest {
@@ -98,4 +103,40 @@ internal class ThorChainPoolTest {
         assertNull(mayaLpPairedChain(Chain.Ethereum, "ARB.ETH"))
         assertNull(mayaLpPairedChain(Chain.ThorChain, "BTC.BTC"))
     }
+
+    @Test
+    fun `a key-import vault without a MayaChain key cannot add Maya liquidity`() {
+        val vault = keyImportVault(ChainPublicKey(Chain.Dash.raw, "02aa", isEddsa = false))
+
+        assertFalse(vault.canAddMayaLiquidity())
+        assertFalse(vault.canDepositOn(Chain.Dash))
+        assertFalse(vault.canDepositOn(Chain.Zcash))
+        assertFalse(vault.canDepositOn(Chain.Arbitrum))
+        assertTrue(vault.canDepositOn(Chain.Bitcoin))
+    }
+
+    @Test
+    fun `a key-import vault with a MayaChain key can add Maya liquidity`() {
+        val vault = keyImportVault(ChainPublicKey(Chain.MayaChain.raw, "02aa", isEddsa = false))
+
+        assertTrue(vault.canAddMayaLiquidity())
+        assertTrue(vault.canDepositOn(Chain.Dash))
+    }
+
+    @Test
+    fun `a regular vault can always add Maya liquidity`() {
+        val vault = Vault(id = "v", name = "v")
+
+        assertTrue(vault.canAddMayaLiquidity())
+        assertTrue(vault.canDepositOn(Chain.Zcash))
+        assertFalse(vault.canDepositOn(Chain.Solana))
+    }
+
+    private fun keyImportVault(vararg keys: ChainPublicKey) =
+        Vault(
+            id = "v",
+            name = "v",
+            libType = SigningLibType.KeyImport,
+            chainPublicKeys = keys.toList(),
+        )
 }
