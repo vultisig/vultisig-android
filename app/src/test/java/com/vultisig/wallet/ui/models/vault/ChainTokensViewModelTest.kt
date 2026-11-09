@@ -187,6 +187,22 @@ internal class ChainTokensViewModelTest {
         vm.uiState.value.showQbtcClaimBanner shouldBe false
     }
 
+    @Test
+    fun `the qbtc claim banner is hidden for a fast vault with more than two signers`() {
+        val vm =
+            createEligibleViewModel(
+                Vault(
+                    id = VAULT_ID,
+                    name = "vault",
+                    libType = SigningLibType.DKLS,
+                    localPartyID = "device1",
+                    signers = listOf("device1", "device2", "Server-1"),
+                )
+            )
+
+        vm.uiState.value.showQbtcClaimBanner shouldBe false
+    }
+
     /** A view model on the Bitcoin screen of a DKLS vault — the state that surfaces the banner. */
     private fun createEligibleViewModel(
         vault: Vault = Vault(id = VAULT_ID, name = "vault", libType = SigningLibType.DKLS)

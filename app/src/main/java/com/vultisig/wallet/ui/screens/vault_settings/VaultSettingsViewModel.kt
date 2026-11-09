@@ -358,7 +358,8 @@ constructor(
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
             val hasMigration = vault?.libType == SigningLibType.GG20
-            hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
+            val hasServerShare = isVaultHasFastSignById(vaultId)
+            hasFastSign = hasServerShare && vault?.signers?.count() == 2
             val hasPassword = vaultPasswordRepository.getPassword(vaultId) != null
             val hasMldsaKey = vault != null && vault.hasValidMldsaKey()
             // Only DKLS vaults can run the post-quantum (Dilithium/MLDSA) keygen: KeyImport vaults
@@ -367,7 +368,7 @@ constructor(
             val supportsDilithiumKeygen =
                 vault != null &&
                     vault.libType == SigningLibType.DKLS &&
-                    (!hasFastSign || VULTISERVER_SUPPORTS_MLDSA_LEVEL)
+                    (!hasServerShare || VULTISERVER_SUPPORTS_MLDSA_LEVEL)
 
             val newItems =
                 uiModel.value.settingGroups.map { group ->

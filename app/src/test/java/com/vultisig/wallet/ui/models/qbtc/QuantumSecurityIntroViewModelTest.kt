@@ -107,6 +107,20 @@ internal class QuantumSecurityIntroViewModelTest {
         }
 
     @Test
+    fun `getStarted on a fast vault with more than two signers goes back too`() =
+        runTest(mainDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                vault(signers = listOf("device1", "device2", "Server-1"))
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+
+            createViewModel().getStarted()
+            advanceUntilIdle()
+
+            coVerify { navigator.navigate(Destination.Back) }
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    @Test
     fun `getStarted on secure vault without key navigates to peer discovery single keygen`() =
         runTest(mainDispatcher) {
             coEvery { vaultRepository.get(VAULT_ID) } returns
