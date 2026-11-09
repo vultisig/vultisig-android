@@ -1394,6 +1394,7 @@
     <string name="substrate_dapp_transaction">%1$s-transactie</string>
     <string name="substrate_call_index">Aanroep %1$s</string>
     <string name="cosmos_sign_direct_transaction">%1$s-transactie</string>
+    <string name="cosmos_transaction_not_fully_summarized">Een deel van deze transactie wordt hier niet samengevat. Controleer de volledige details hieronder voordat u ondertekent.</string>
     <string name="substrate_signer_payload">Signer-payload</string>
     <string name="substrate_field_call_data">Aanroepgegevens</string>
     <string name="substrate_field_nonce">Nonce</string>

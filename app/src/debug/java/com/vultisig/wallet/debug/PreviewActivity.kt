@@ -164,6 +164,7 @@ import com.vultisig.wallet.ui.models.token.TokenDetailUiModel
 import com.vultisig.wallet.ui.models.token.TokenInfoUiModel
 import com.vultisig.wallet.ui.models.token.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.token.TokenUiModel
+import com.vultisig.wallet.ui.models.transaction.CosmosTransfersUiModel
 import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.transaction.TransactionFailureExplanation
 import com.vultisig.wallet.ui.models.transaction.TransactionHistoryGroupUiModel
@@ -505,6 +506,41 @@ class PreviewActivity : ComponentActivity() {
                         JoinAminoSendPreview(dstAddress = AMINO_RECIPIENT_B, value = "1000")
                     "join_amino_multi_before" ->
                         JoinAminoSendPreview(dstAddress = "", value = "1001", multi = true)
+                    "join_amino_multi_transfers" ->
+                        JoinAminoSendPreview(
+                            dstAddress = "",
+                            value = "0",
+                            multi = true,
+                            unverified = true,
+                            transfers =
+                                CosmosTransfersUiModel(
+                                    recipients = listOf(AMINO_RECIPIENT_A, AMINO_RECIPIENT_B),
+                                    amounts = listOf("1001 ATOM"),
+                                    memos = emptyList(),
+                                    isPartial = false,
+                                ),
+                        )
+                    "join_amino_partial_before" ->
+                        JoinAminoSendPreview(
+                            dstAddress = "",
+                            value = "0",
+                            partial = true,
+                            unverified = true,
+                        )
+                    "join_amino_partial_after" ->
+                        JoinAminoSendPreview(
+                            dstAddress = "",
+                            value = "0",
+                            partial = true,
+                            unverified = true,
+                            transfers =
+                                CosmosTransfersUiModel(
+                                    recipients = listOf(AMINO_RECIPIENT_A, AMINO_CONTRACT),
+                                    amounts = listOf("3 ATOM"),
+                                    memos = emptyList(),
+                                    isPartial = true,
+                                ),
+                        )
                     "join_amino_multi_after" ->
                         JoinAminoSendPreview(
                             dstAddress = "",
@@ -2086,17 +2122,22 @@ private fun VerifyDecodedSendHeroPreview(hero: HeroContent?) {
 /**
  * The co-signer's join review of a dApp `signAmino` request, as `JoinSendUiModelBuilder` builds it:
  * a single send of 1000 ATOM to B whose wire copy claims 1 ATOM to A, or two sends (1 ATOM to A,
- * 1000 ATOM to B) that the extension relays with a blank `toAddress` and a 1001 ATOM total.
+ * 1000 ATOM to B) that the extension relays with a blank `toAddress` and a 1001 ATOM total. A
+ * [partial] request pairs a 1 ATOM send to A with a contract call carrying 2 ATOM of funds.
  */
 @Composable
 private fun JoinAminoSendPreview(
     dstAddress: String,
     value: String,
     multi: Boolean = false,
+    partial: Boolean = false,
     unverified: Boolean = false,
+    transfers: CosmosTransfersUiModel? = null,
 ) {
     val msgs =
-        if (multi) {
+        if (partial) {
+            listOf(aminoSendJson(AMINO_RECIPIENT_A, "1000000"), AMINO_CONTRACT_CALL_JSON)
+        } else if (multi) {
             listOf(
                 aminoSendJson(AMINO_RECIPIENT_A, "1000000"),
                 aminoSendJson(AMINO_RECIPIENT_B, "1000000000"),
@@ -2123,6 +2164,7 @@ private fun JoinAminoSendPreview(
                         signAmino =
                             msgs.joinToString(separator = ",\n", prefix = "[\n", postfix = "\n]"),
                         isUnverifiedCosmosSign = unverified,
+                        cosmosTransfers = transfers,
                     )
             ),
         isConsentsEnabled = false,
@@ -2146,6 +2188,20 @@ private fun aminoSendJson(recipient: String, amount: String) =
 
 private const val AMINO_SENDER = "cosmos1x8n4jcc3jm8l4mjvzvcyvlz0ysgsd0e5svh5mw"
 private const val AMINO_RECIPIENT_A = "cosmos1aaq6ccxt5xsu4wnxdzrvjx3g7xq2cvjhd8w0ax"
+private const val AMINO_CONTRACT =
+    "cosmos14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s4hmalr"
+
+private const val AMINO_CONTRACT_CALL_JSON =
+    """  {
+    "type": "wasm/MsgExecuteContract",
+    "value": {
+      "sender": "$AMINO_SENDER",
+      "contract": "$AMINO_CONTRACT",
+      "msg": { "swap": {} },
+      "funds": [{ "denom": "uatom", "amount": "2000000" }]
+    }
+  }"""
+
 private const val AMINO_RECIPIENT_B = "cosmos1bbz5u7e8v4yq2rf3lc0m9xgqh6x7d3n2kx5pfb"
 
 /** The 32-byte digest from the reported case: opaque, and not calldata. */

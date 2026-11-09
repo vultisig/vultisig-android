@@ -131,6 +131,11 @@ internal data class TransactionDetailsUiModel(
      */
     val isUnverifiedCosmosSign: Boolean = false,
     /**
+     * What an [isUnverifiedCosmosSign] request moves, read from its signed messages: every
+     * recipient, one total per coin and any transfer memo. Null when there is no such request.
+     */
+    val cosmosTransfers: CosmosTransfersUiModel? = null,
+    /**
      * Per-message rows for a TonConnect signing request, each decoded from its BOC body into an
      * operation label, real recipient, forward amount, and the raw payload. Empty for non-TON or
      * undecodable requests. Built in [com.vultisig.wallet.ui.models.keysign.mapTonMessages].
@@ -197,6 +202,19 @@ internal data class TransactionDetailsUiModel(
                 (signSubstrate != null && signSubstrate.transfer == null) ||
                 isUnverifiedCosmosSign
 }
+
+/**
+ * The transfers of a Cosmos sign request that a single To / amount row can't describe, already
+ * formatted for display. [isPartial] is set when part of the request isn't summarized here, so the
+ * signed content below has to be checked.
+ */
+@Immutable
+internal data class CosmosTransfersUiModel(
+    val recipients: List<String>,
+    val amounts: List<String>,
+    val memos: List<String>,
+    val isPartial: Boolean,
+)
 
 @Immutable
 internal data class VerifyTransactionUiModel(

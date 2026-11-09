@@ -60,6 +60,7 @@ import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSh
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transaction.CosmosTransfersUiModel
 import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
 import com.vultisig.wallet.ui.models.transaction.VerifyTransactionUiModel
@@ -635,6 +636,8 @@ private fun VerifySendDetails(
             )
         }
 
+        tx.cosmosTransfers?.let { CosmosTransfersRows(transfers = it, rowDivider = rowDivider) }
+
         // A memo that merely echoes the destination tag is signed as tag-only, so it is
         // not shown as a separate Memo row (it appears in the Destination Tag row
         // below).
@@ -992,4 +995,66 @@ private fun JoinKeysignSendVerifyPreview() {
         onFastSignClick = {},
         onConfirm = {},
     )
+}
+
+/**
+ * What a Cosmos sign request moves, read from its signed messages: every recipient, one total per
+ * coin and any transfer memo. Warns first when part of the request isn't summarized, so the signed
+ * content below has to be checked.
+ */
+@Composable
+private fun CosmosTransfersRows(
+    transfers: CosmosTransfersUiModel,
+    rowDivider: @Composable () -> Unit,
+) {
+    if (transfers.isPartial) {
+        rowDivider()
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        ) {
+            UiIcon(
+                drawableResId = R.drawable.ic_triangle_alert,
+                tint = Theme.v2.colors.alerts.warning,
+                size = 16.dp,
+            )
+            Text(
+                text = stringResource(R.string.cosmos_transaction_not_fully_summarized),
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.alerts.warning,
+            )
+        }
+    }
+
+    if (transfers.amounts.isEmpty()) return
+
+    if (transfers.recipients.isNotEmpty()) {
+        rowDivider()
+
+        VerifyCardDetails(
+            title = stringResource(R.string.verify_transaction_to_title),
+            subtitle = transfers.recipients.joinToString(separator = "\n"),
+            showAllContent = true,
+        )
+    }
+
+    rowDivider()
+
+    VerifyCardDetails(
+        title = stringResource(R.string.verify_transaction_amount_title),
+        subtitle = transfers.amounts.joinToString(separator = "\n"),
+        showAllContent = true,
+    )
+
+    if (transfers.memos.isNotEmpty()) {
+        rowDivider()
+
+        VerifyCardDetails(
+            title = stringResource(R.string.verify_transaction_memo_title),
+            subtitle = transfers.memos.joinToString(separator = "\n"),
+            showAllContent = true,
+        )
+    }
 }
