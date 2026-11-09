@@ -22,9 +22,11 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CheckMayaLpPairingUseCase
+import com.vultisig.wallet.data.usecases.CheckThorChainLpPairingUseCase
 import com.vultisig.wallet.data.usecases.MayaChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.MayaChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.MayaLpPairing
+import com.vultisig.wallet.data.usecases.ThorChainLpPairing
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositFieldStates
@@ -54,6 +56,7 @@ internal class AddLiquidityStrategyTest {
     private val preflight: ThorChainLpPreflightUseCase = mockk()
     private val mayaPreflight: MayaChainLpPreflightUseCase = mockk()
     private val checkPairing: CheckMayaLpPairingUseCase = mockk()
+    private val checkThorPairing: CheckThorChainLpPairingUseCase = mockk()
     private val specificRepo: BlockChainSpecificRepository = mockk()
     private val thorChainApi: ThorChainApi = mockk()
     private val vaultRepository: VaultRepository = mockk()
@@ -75,6 +78,7 @@ internal class AddLiquidityStrategyTest {
         coEvery { preflight(BTC_POOL, any(), any()) } returns null
         coEvery { mayaPreflight(any(), any()) } returns null
         coEvery { checkPairing(any(), any(), any()) } returns MayaLpPairing.Pairable
+        coEvery { checkThorPairing(any(), any(), any()) } returns ThorChainLpPairing.Pairable
         coEvery { vaultRepository.get(VAULT_ID) } returns Vault(id = VAULT_ID, name = "vault")
         coEvery { thorChainApi.getTHORChainInboundAddresses() } returns
             listOf(inbound("BTC", BTC_INBOUND), inbound("ETH", ETH_INBOUND))
@@ -95,6 +99,17 @@ internal class AddLiquidityStrategyTest {
         coVerify(exactly = 1) {
             preflight(STAGED_POOL, isPairedAdd = true, checkAssetChainInbound = true)
         }
+    }
+
+    @Test
+    fun `RUNE-side add to the ZEC pool names the vault's Zcash address`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+        coEvery { preflight(ZEC_POOL, any(), any()) } returns null
+
+        val tx = build(Chain.ThorChain, pairedAddress = ZEC_ADDRESS, pool = ZEC_POOL).build()
+
+        assertEquals("+:$ZEC_POOL:$ZEC_ADDRESS", tx.memo)
+        coVerify(exactly = 1) { checkThorPairing(ZEC_POOL, RUNE_ADDRESS, ZEC_ADDRESS) }
     }
 
     @Test
@@ -636,6 +651,134 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
+    fun `RUNE add with no record keeps the paired memo`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+
+        val tx = build(Chain.ThorChain, pairedAddress = ETH_ADDRESS, pool = ETH_POOL).build()
+
+        assertEquals("+:$ETH_POOL:$ETH_ADDRESS", tx.memo)
+        coVerify(exactly = 1) { checkThorPairing(ETH_POOL, RUNE_ADDRESS, ETH_ADDRESS) }
+        coVerify(exactly = 1) {
+            preflight(ETH_POOL, isPairedAdd = true, checkAssetChainInbound = true)
+        }
+    }
+
+    @Test
+    fun `RUNE add into a live RUNE-only position stays single-sided`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+        coEvery { checkThorPairing(ETH_POOL, RUNE_ADDRESS, ETH_ADDRESS) } returns
+            ThorChainLpPairing.SingleSidedPosition
+
+        val tx = build(Chain.ThorChain, pairedAddress = ETH_ADDRESS, pool = ETH_POOL).build()
+
+        assertEquals("+:$ETH_POOL", tx.memo)
+        assertEquals("", tx.pairedAddress)
+        coVerify(exactly = 1) {
+            preflight(ETH_POOL, isPairedAdd = false, checkAssetChainInbound = true)
+        }
+    }
+
+    @Test
+    fun `RUNE add into a live position paired elsewhere is refused`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+        coEvery { checkThorPairing(ETH_POOL, RUNE_ADDRESS, ETH_ADDRESS) } returns
+            ThorChainLpPairing.PairedWithOtherAddress
+
+        val text =
+            assertFailsWith<InvalidTransactionDataException> {
+                    build(Chain.ThorChain, pairedAddress = ETH_ADDRESS, pool = ETH_POOL).build()
+                }
+                .text
+        assertTrue(text is UiText.FormattedText)
+        assertEquals(R.string.deposit_error_thorchain_lp_address_mismatch, text.resId)
+        coVerify(exactly = 0) { preflight(any(), any(), any()) }
+    }
+
+    @Test
+    fun `RUNE top-up of a live paired position without the asset chain asks to enable it`() =
+        runTest {
+            givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+            coEvery { checkThorPairing(ETH_POOL, RUNE_ADDRESS, null) } returns
+                ThorChainLpPairing.PairedWithOtherAddress
+
+            val text =
+                assertFailsWith<InvalidTransactionDataException> {
+                        build(Chain.ThorChain, pairedAddress = null, pool = ETH_POOL).build()
+                    }
+                    .text
+            assertTrue(text is UiText.FormattedText)
+            assertEquals(R.string.deposit_error_lp_paired_chain_not_enabled, text.resId)
+        }
+
+    @Test
+    fun `RUNE top-up of a live position needs no asset chain enabled`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+        coEvery { checkThorPairing(ETH_POOL, RUNE_ADDRESS, null) } returns
+            ThorChainLpPairing.SingleSidedPosition
+
+        val tx = build(Chain.ThorChain, pairedAddress = null, pool = ETH_POOL).build()
+
+        assertEquals("+:$ETH_POOL", tx.memo)
+    }
+
+    @Test
+    fun `single-sided RUNE top-up of a staged pool is blocked with the staged-pool reason`() =
+        runTest {
+            givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+            coEvery { checkThorPairing(STAGED_POOL, RUNE_ADDRESS, ETH_ADDRESS) } returns
+                ThorChainLpPairing.SingleSidedPosition
+
+            val text =
+                assertFailsWith<InvalidTransactionDataException> {
+                        build(Chain.ThorChain, pairedAddress = ETH_ADDRESS).build()
+                    }
+                    .text
+            assertTrue(text is UiText.FormattedText)
+            assertEquals(R.string.deposit_error_pool_staged_unpaired, text.resId)
+        }
+
+    @Test
+    fun `RUNE add against a pending half from another asset address is refused`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+        coEvery { checkThorPairing(ETH_POOL, RUNE_ADDRESS, ETH_ADDRESS) } returns
+            ThorChainLpPairing.AddressMismatch
+
+        val text =
+            assertFailsWith<InvalidTransactionDataException> {
+                    build(Chain.ThorChain, pairedAddress = ETH_ADDRESS, pool = ETH_POOL).build()
+                }
+                .text
+        assertTrue(text is UiText.FormattedText)
+        assertEquals(R.string.deposit_error_thorchain_lp_address_mismatch, text.resId)
+        coVerify(exactly = 0) { preflight(any(), any(), any()) }
+    }
+
+    @Test
+    fun `RUNE add refuses when the record cannot be read`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+        coEvery { checkThorPairing(any(), any(), any()) } throws RuntimeException("timeout")
+
+        val text =
+            assertFailsWith<InvalidTransactionDataException> {
+                    build(Chain.ThorChain, pairedAddress = ETH_ADDRESS, pool = ETH_POOL).build()
+                }
+                .text
+        assertTrue(text is UiText.StringResource)
+        assertEquals(R.string.deposit_error_thorchain_lp_unverified, text.resId)
+    }
+
+    @Test
+    fun `asset-side and CACAO adds never read the THORChain record`() = runTest {
+        givenNativeAccount(Chain.Ethereum, ETH_ADDRESS)
+        build(Chain.Ethereum, pairedAddress = RUNE_ADDRESS, pool = ETH_POOL).build()
+
+        givenNativeAccount(Chain.MayaChain, CACAO_ADDRESS)
+        build(Chain.MayaChain, pairedAddress = BTC_ADDRESS, pool = MAYA_BTC_POOL).build()
+
+        coVerify(exactly = 0) { checkThorPairing(any(), any(), any()) }
+    }
+
+    @Test
     fun `THORChain adds never read the Maya record`() = runTest {
         givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
 
@@ -662,6 +805,7 @@ internal class AddLiquidityStrategyTest {
             thorChainLpPreflight = preflight,
             mayaChainLpPreflight = mayaPreflight,
             checkMayaLpPairing = checkPairing,
+            checkThorChainLpPairing = checkThorPairing,
             resolvePairedAddress = { _, _, _ -> pairedAddress },
             canHoldChain = { _, _ -> canHoldChain },
             addressProvider = {
@@ -821,6 +965,8 @@ internal class AddLiquidityStrategyTest {
         const val MAYA_USDC_POOL = "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"
         const val ETH_POOL = "ETH.ETH"
         const val BTC_POOL = "BTC.BTC"
+        const val ZEC_POOL = "ZEC.ZEC"
+        const val ZEC_ADDRESS = "t1self"
         const val ETH_INBOUND = "0xinbound"
         const val BTC_INBOUND = "bc1qinbound"
         const val PLAN_FEE = 2_500L
