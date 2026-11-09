@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.TextFieldState
@@ -32,6 +33,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldStyle
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.transaction.AddAddressEntryUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressEntryViewModel
@@ -88,12 +90,15 @@ internal fun AddAddressEntryScreen(
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.add_vault_save),
+                labelStyle = Theme.brockmann.button.medium.medium,
                 onClick = onSaveAddressClick,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 16.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 22.dp),
             )
         },
     ) {
-        Column {
+        Column(modifier = Modifier.padding(top = 4.dp)) {
             SelectChain(
                 selectedChain = state.selectedChain,
                 modifier = Modifier.clickOnce(onClick = { onSelectChainClick(state.selectedChain) }),
@@ -105,6 +110,7 @@ internal fun AddAddressEntryScreen(
                 label = stringResource(R.string.add_address_title_label),
                 hint = stringResource(R.string.add_address_type_hint),
                 textFieldState = titleTextFieldState,
+                style = VsTextInputFieldStyle.Settings,
                 keyboardType = KeyboardType.Text,
                 footNote = state.titleError?.asString(),
                 innerState =
@@ -119,7 +125,8 @@ internal fun AddAddressEntryScreen(
                 label = stringResource(R.string.add_address_address_title),
                 hint = stringResource(R.string.add_address_type_hint),
                 textFieldState = addressTextFieldState,
-                trailingIcon = R.drawable.camera,
+                style = VsTextInputFieldStyle.Settings,
+                trailingIcon = R.drawable.camera_filled,
                 onTrailingIconClick = onScan,
                 keyboardType = KeyboardType.Text,
                 autoCorrectEnabled = false,
@@ -150,16 +157,17 @@ internal fun SelectChain(modifier: Modifier = Modifier, selectedChain: NetworkUi
         Row(
             modifier =
                 Modifier.fillMaxWidth()
+                    .heightIn(min = CHAIN_FIELD_HEIGHT)
                     .border(
                         width = 1.dp,
                         color = Theme.v2.colors.border.light,
-                        shape = Theme.v2.radius.md,
+                        shape = Theme.v2.radius.lg,
                     )
                     .background(
                         color = Theme.v2.colors.backgrounds.secondary,
-                        shape = Theme.v2.radius.md,
+                        shape = Theme.v2.radius.lg,
                     )
-                    .padding(all = 16.dp),
+                    .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (selectedChain == null) {
@@ -185,10 +193,16 @@ internal fun SelectChain(modifier: Modifier = Modifier, selectedChain: NetworkUi
 
             UiSpacer(weight = 1f)
 
-            UiIcon(drawableResId = R.drawable.ic_caret_right, size = 16.dp)
+            UiIcon(
+                drawableResId = R.drawable.ic_chevron_right_small,
+                size = 20.dp,
+                tint = Theme.v2.colors.text.primary,
+            )
         }
     }
 }
+
+private val CHAIN_FIELD_HEIGHT = 56.dp
 
 private class SelectChainPreviewParameterProvider : PreviewParameterProvider<NetworkUiModel?> {
     override val values: Sequence<NetworkUiModel?>

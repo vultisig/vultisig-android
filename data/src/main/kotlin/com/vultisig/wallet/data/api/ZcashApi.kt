@@ -17,7 +17,7 @@ import timber.log.Timber
 
 interface ZcashApi {
     /**
-     * Resolves the active ZIP-243 consensus branch id for the next block, as the little-endian hex
+     * Resolves the active consensus branch id for the next block, as the little-endian hex
      * string WalletCore expects on the transaction plan (e.g. `30f33754`). The Zcash node reports
      * it big-endian (`consensus.nextblock`, e.g. `5437f330`); this reverses the four bytes.
      *

@@ -623,8 +623,10 @@ constructor(
             return false
         }
 
+        // The gateway answers a free name with 400 and the node itself with 500.
         if (
-            response.status == HttpStatusCode.InternalServerError &&
+            (response.status == HttpStatusCode.BadRequest ||
+                response.status == HttpStatusCode.InternalServerError) &&
                 response.bodyAsText().contains(THORNAME_FETCH_FAILED_ERROR)
         ) {
             return false

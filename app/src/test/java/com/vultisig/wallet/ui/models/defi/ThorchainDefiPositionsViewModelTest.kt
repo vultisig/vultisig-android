@@ -27,6 +27,8 @@ import com.vultisig.wallet.data.usecases.BondChurnReward
 import com.vultisig.wallet.data.usecases.BondRewardHistoryUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainPendingLpDepositsUseCase
+import com.vultisig.wallet.data.usecases.TcyRewardHistoryUseCase
+import com.vultisig.wallet.data.usecases.TcyRewardPayout
 import com.vultisig.wallet.data.usecases.ThorChainLpPositions
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.NetworkException
@@ -102,6 +104,7 @@ internal class ThorchainDefiPositionsViewModelTest {
     // The real cache, not a mock: these tests assert the round trip a nav pop and a re-entry make.
     private lateinit var snapshotCache: DeFiPositionsSnapshotCache
     private lateinit var bondRewardHistoryUseCase: BondRewardHistoryUseCase
+    private lateinit var tcyRewardHistoryUseCase: TcyRewardHistoryUseCase
     private val defaultTimeZone: TimeZone = TimeZone.getDefault()
 
     @BeforeEach
@@ -127,6 +130,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         getThorChainPendingLpDepositsUseCase = mockk(relaxed = true)
         snapshotCache = DeFiPositionsSnapshotCache()
         bondRewardHistoryUseCase = mockk()
+        tcyRewardHistoryUseCase = mockk()
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
@@ -1650,13 +1654,13 @@ internal class ThorchainDefiPositionsViewModelTest {
         requireNotNull(sheet)
         assertFalse(sheet.isLoading)
         assertFalse(sheet.isError)
-        assertEquals(NODE_ADDRESS, sheet.nodeAddress)
+        assertEquals(RewardHistorySource.BondedNode(NODE_ADDRESS), sheet.source)
         assertEquals(vm.state.value.bonded.nodes.single().nextAward, sheet.upcoming)
         assertEquals("42.0000 RUNE", sheet.totalEarned)
         assertEquals(
             listOf(
-                BondRewardRowUiModel(amount = "22.0000 RUNE", date = "Sep 20, 2026"),
-                BondRewardRowUiModel(amount = "20.0000 RUNE", date = "Sep 17, 2026"),
+                RewardRowUiModel(amount = "22.0000 RUNE", date = "Sep 20, 2026"),
+                RewardRowUiModel(amount = "20.0000 RUNE", date = "Sep 17, 2026"),
             ),
             sheet.rows,
         )
@@ -1690,6 +1694,120 @@ internal class ThorchainDefiPositionsViewModelTest {
         vm.onDismissRewardHistory()
 
         assertNull(vm.state.value.rewardHistory)
+    }
+
+    @Test
+    fun `only the TCY stake card opens a reward history`() = runTest {
+        selectPositions("TCY", "RUJI")
+        coEvery { tcyStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(tcyStakeWithEstimatedReward())
+        coEvery { rujiStakingService.getStakingDetails(any(), any()) } returns
+            flowOf(
+                listOf(stakingDetails(coin = Coins.ThorChain.RUJI, stakeAmount = BigInteger.ONE))
+            )
+
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        val positions = vm.state.value.staking.positions
+        assertTrue(positions.single { it.coin.id == TCY_ID }.hasRewardHistory)
+        assertFalse(positions.single { it.coin.id == RUJI_ID }.hasRewardHistory)
+    }
+
+    @Test
+    fun `the TCY estimated reward opens the history sheet with payouts summed newest first`() =
+        runTest {
+            selectPositions("TCY")
+            coEvery { tcyStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+                flowOf(tcyStakeWithEstimatedReward())
+            coEvery { tcyRewardHistoryUseCase(RUNE_ADDRESS) } returns
+                listOf(
+                    TcyRewardPayout(date = SEP_20_NOON_UTC, amount = BigInteger("2200000000")),
+                    TcyRewardPayout(date = SEP_17_NOON_UTC, amount = BigInteger("2000000000")),
+                )
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            vm.onClickTcyRewardHistory()
+
+            val sheet = requireNotNull(vm.state.value.rewardHistory)
+            assertFalse(sheet.isLoading)
+            assertFalse(sheet.isError)
+            assertEquals(RewardHistorySource.TcyStake, sheet.source)
+            assertEquals(
+                vm.state.value.staking.positions.single { it.coin.id == TCY_ID }.nextReward,
+                sheet.upcoming,
+            )
+            assertEquals("42.0000 RUNE", sheet.totalEarned)
+            assertEquals(
+                listOf(
+                    RewardRowUiModel(amount = "22.0000 RUNE", date = "Sep 20, 2026"),
+                    RewardRowUiModel(amount = "20.0000 RUNE", date = "Sep 17, 2026"),
+                ),
+                sheet.rows,
+            )
+        }
+
+    @Test
+    fun `the TCY history opens without an estimate and leaves the upcoming row out`() = runTest {
+        selectPositions("TCY")
+        coEvery { tcyStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(
+                stakingDetails(coin = Coins.ThorChain.TCY, stakeAmount = BigInteger("300000000"))
+            )
+        coEvery { tcyRewardHistoryUseCase(RUNE_ADDRESS) } returns emptyList()
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onClickTcyRewardHistory()
+
+        val sheet = requireNotNull(vm.state.value.rewardHistory)
+        assertNull(sheet.upcoming)
+        assertFalse(sheet.isError)
+    }
+
+    @Test
+    fun `the TCY estimated reward shows four decimals`() = runTest {
+        selectPositions("TCY")
+        coEvery { tcyStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(
+                stakingDetails(coin = Coins.ThorChain.TCY, stakeAmount = BigInteger("300000000"))
+                    .copy(estimatedRewards = BigDecimal("0.123456"))
+            )
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        assertEquals(
+            "0.1234 RUNE",
+            vm.state.value.staking.positions.single { it.coin.id == TCY_ID }.nextReward,
+        )
+    }
+
+    @Test
+    fun `an Error from the TCY history flags the sheet instead of crashing`() = runTest {
+        selectPositions("TCY")
+        coEvery { tcyStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(tcyStakeWithEstimatedReward())
+        coEvery { tcyRewardHistoryUseCase(any()) } throws StackOverflowError("decoder")
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onClickTcyRewardHistory()
+
+        val sheet = requireNotNull(vm.state.value.rewardHistory)
+        assertTrue(sheet.isError)
+        assertFalse(sheet.isLoading)
+    }
+
+    @Test
+    fun `a failed TCY history reading flags the sheet instead of closing it`() = runTest {
+        selectPositions("TCY")
+        coEvery { tcyStakingService.getStakingDetails(RUNE_ADDRESS, VAULT_ID) } returns
+            flowOf(tcyStakeWithEstimatedReward())
+        coEvery { tcyRewardHistoryUseCase(any()) } throws IllegalStateException("midgard down")
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+        vm.onClickTcyRewardHistory()
+
+        val sheet = requireNotNull(vm.state.value.rewardHistory)
+        assertTrue(sheet.isError)
+        assertNull(sheet.totalEarned)
+        assertTrue(sheet.rows.isEmpty())
     }
 
     @Test
@@ -1780,6 +1898,10 @@ internal class ThorchainDefiPositionsViewModelTest {
     private fun churnReward(amount: BigInteger, date: Date = Date(0)) =
         BondChurnReward(churnHeight = 1L, date = date, amount = amount)
 
+    private fun tcyStakeWithEstimatedReward() =
+        stakingDetails(coin = Coins.ThorChain.TCY, stakeAmount = BigInteger("300000000"))
+            .copy(estimatedRewards = BigDecimal("0.5"))
+
     private fun selectPositions(vararg keys: String) {
         coEvery { defiPositionsRepository.getSelectedPositions(Chain.ThorChain, VAULT_ID) } returns
             flowOf(keys.toSet())
@@ -1864,6 +1986,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             getThorChainPendingLpDepositsUseCase = getThorChainPendingLpDepositsUseCase,
             snapshotCache = snapshotCache,
             bondRewardsLoader = BondRewardsLoader(bondRewardHistoryUseCase),
+            tcyRewardHistoryUseCase = tcyRewardHistoryUseCase,
             ioDispatcher = testDispatcher,
         )
 

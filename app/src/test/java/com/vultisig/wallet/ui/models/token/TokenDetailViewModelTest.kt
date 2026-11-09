@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TokenPriceChartRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -61,6 +62,7 @@ internal class TokenDetailViewModelTest {
     private lateinit var explorerLinkRepository: ExplorerLinkRepository
     private lateinit var tokenPriceChartRepository: TokenPriceChartRepository
     private lateinit var appCurrencyRepository: AppCurrencyRepository
+    private lateinit var vaultRepository: VaultRepository
     private lateinit var currencyFlow: MutableStateFlow<AppCurrency>
 
     private val coin =
@@ -104,6 +106,8 @@ internal class TokenDetailViewModelTest {
         explorerLinkRepository = mockk(relaxed = true)
         tokenPriceChartRepository = mockk()
         appCurrencyRepository = mockk()
+        vaultRepository = mockk()
+        coEvery { vaultRepository.get(any()) } returns null
         currencyFlow = MutableStateFlow(AppCurrency.USD)
         coEvery { appCurrencyRepository.currency } returns currencyFlow
         coEvery { appCurrencyRepository.getCurrencyFormat() } returns
@@ -140,6 +144,7 @@ internal class TokenDetailViewModelTest {
             explorerLinkRepository = explorerLinkRepository,
             tokenPriceChartRepository = tokenPriceChartRepository,
             appCurrencyRepository = appCurrencyRepository,
+            vaultRepository = vaultRepository,
         )
 
     private fun chart(sign: Int) =

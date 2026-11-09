@@ -136,6 +136,10 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindTcyRewardHistoryUseCase(impl: TcyRewardHistoryUseCaseImpl): TcyRewardHistoryUseCase
+
+    @Binds
+    @Singleton
     fun bindGetGlobalBackupReminderStatus(
         impl: IsGlobalBackupReminderRequiredUseCaseImpl
     ): IsGlobalBackupReminderRequiredUseCase

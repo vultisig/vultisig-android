@@ -139,7 +139,6 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaChainPendingLpDepos
                     pool = pool,
                     pendingCacao = cacaoPending,
                     pendingAsset = assetPending,
-                    pendingTxId = pendingTxId?.takeIf { it.isNotBlank() },
                     pairedAddress =
                         if (cacaoPending.signum() > 0) assetAddress?.takeIf { it.isNotBlank() }
                         else cacaoAddress?.takeIf { it.isNotBlank() },

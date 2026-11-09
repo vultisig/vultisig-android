@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -21,6 +22,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Mini
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Small
+import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Wide
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Default
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Disabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
@@ -42,6 +44,7 @@ enum class VsButtonState {
 }
 
 enum class VsButtonSize {
+    Wide,
     Medium,
     Small,
     Mini,
@@ -108,6 +111,8 @@ fun VsButton(
                 .clickable(enabled = state != Disabled, onClick = onClick)
                 .then(
                     when (size) {
+                        Wide -> Modifier.padding(vertical = 14.dp, horizontal = 32.dp)
+
                         Medium -> Modifier.padding(vertical = 14.dp, horizontal = 24.dp)
 
                         Small -> Modifier.padding(vertical = 12.dp, horizontal = 24.dp)
@@ -130,6 +135,7 @@ fun VsButton(
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
     shape: Shape? = null,
+    labelStyle: TextStyle = Theme.brockmann.button.semibold.medium,
     onClick: () -> Unit,
 ) {
     VsButton(
@@ -154,6 +160,7 @@ fun VsButton(
 
         val iconSize =
             when (size) {
+                Wide,
                 Medium -> 20.dp
                 Small,
                 Mini -> 16.dp
@@ -166,7 +173,7 @@ fun VsButton(
         if (label != null) {
             AutoSizingText(
                 text = label,
-                style = Theme.brockmann.button.semibold.medium,
+                style = labelStyle,
                 color = contentColor,
             )
         }

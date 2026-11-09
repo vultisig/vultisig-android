@@ -33,6 +33,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.testTag
@@ -40,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.editableText
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +52,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
+import com.vultisig.wallet.ui.theme.v2.V2
 
 internal sealed interface VsTextInputFieldType {
     data object Text : VsTextInputFieldType
@@ -64,6 +68,18 @@ internal enum class VsTextInputFieldInnerState {
     Default,
     Success,
     Error,
+}
+
+/** The Settings styles are the redesign's sub-screen fields; other screens keep [Default]. */
+internal enum class VsTextInputFieldStyle(
+    val isSettings: Boolean = true,
+    val shape: Shape = V2.radius.lg,
+    val isAlwaysOutlined: Boolean = false,
+) {
+    Default(isSettings = false, shape = V2.radius.md),
+    Settings,
+    SettingsOutlined(isAlwaysOutlined = true),
+    SettingsSmallRadius(shape = V2.radius.md),
 }
 
 @Composable
@@ -90,8 +106,14 @@ internal fun VsTextInputField(
     keyboardType: KeyboardType = KeyboardType.Unspecified,
     autoCorrectEnabled: Boolean = true,
     enabled: Boolean = true,
+    style: VsTextInputFieldStyle = VsTextInputFieldStyle.Default,
 ) {
     var focused by remember { mutableStateOf(false) }
+    val isSettingsStyle = style.isSettings
+    val fieldTextStyle =
+        if (isSettingsStyle) Theme.brockmann.body.s.medium else Theme.brockmann.body.m.medium
+    val trailingIconTint =
+        if (isSettingsStyle) Color.Unspecified else Theme.v2.colors.text.button.primary
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -106,7 +128,9 @@ internal fun VsTextInputField(
                 if (!label.isNullOrBlank()) {
                     Text(
                         text = label,
-                        color = Theme.v2.colors.text.primary,
+                        color =
+                            if (isSettingsStyle) Theme.v2.colors.text.tertiary
+                            else Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.s.medium,
                     )
                 }
@@ -121,8 +145,6 @@ internal fun VsTextInputField(
             }
         }
 
-        val textFieldBackgroundShape = Theme.v2.radius.md
-
         Row(
             modifier =
                 Modifier.border(
@@ -135,22 +157,27 @@ internal fun VsTextInputField(
                                             Theme.v2.colors.alerts.success
                                         VsTextInputFieldInnerState.Error ->
                                             Theme.v2.colors.alerts.error
-                                        VsTextInputFieldInnerState.Default if focused ->
+                                        VsTextInputFieldInnerState.Default if
+                                            focused || style.isAlwaysOutlined ->
                                             Theme.v2.colors.border.normal
+                                        VsTextInputFieldInnerState.Default if isSettingsStyle ->
+                                            Theme.v2.colors.variables.bordersExtraLight
                                         VsTextInputFieldInnerState.Default ->
                                             Theme.v2.colors.border.light
                                     },
                             ),
-                        shape = textFieldBackgroundShape,
+                        shape = style.shape,
                     )
-                    .clip(textFieldBackgroundShape)
-                    .background(Theme.v2.colors.backgrounds.secondary)
+                    .clip(style.shape)
+                    .background(
+                        if (isSettingsStyle) Theme.v2.colors.variables.inputFieldsBackground
+                        else Theme.v2.colors.backgrounds.secondary
+                    )
                     .padding(all = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
         ) {
-            val inputTextStyle =
-                Theme.brockmann.body.m.medium.copy(color = Theme.v2.colors.text.primary)
+            val inputTextStyle = fieldTextStyle.copy(color = Theme.v2.colors.text.primary)
 
             when (type) {
                 is VsTextInputFieldType.Password -> {
@@ -193,6 +220,7 @@ internal fun VsTextInputField(
                             TextInputFieldHint(
                                 textFieldState = textFieldState,
                                 hint = hint,
+                                style = fieldTextStyle,
                                 modifier = Modifier.weight(1f),
                             )
                             textField()
@@ -246,7 +274,11 @@ internal fun VsTextInputField(
                                     onFocusChanged?.invoke(it.isFocused)
                                 },
                         decorator = { textField ->
-                            TextInputFieldHint(textFieldState = textFieldState, hint = hint)
+                            TextInputFieldHint(
+                                textFieldState = textFieldState,
+                                hint = hint,
+                                style = fieldTextStyle,
+                            )
                             textField()
                         },
                         enabled = enabled,
@@ -265,7 +297,7 @@ internal fun VsTextInputField(
                             UiSpacer(8.dp)
                             Icon(
                                 painter = painterResource(trailingIcon),
-                                tint = Theme.v2.colors.text.button.primary,
+                                tint = trailingIconTint,
                                 contentDescription = null,
                                 modifier =
                                     Modifier.width(20.dp)
@@ -280,7 +312,7 @@ internal fun VsTextInputField(
                             UiSpacer(8.dp)
                             Icon(
                                 painter = painterResource(trailingIcon2),
-                                tint = Theme.v2.colors.text.button.primary,
+                                tint = trailingIconTint,
                                 contentDescription = null,
                                 modifier =
                                     Modifier.size(20.dp)
@@ -314,13 +346,14 @@ internal fun VsTextInputField(
 private fun TextInputFieldHint(
     textFieldState: TextFieldState,
     hint: String?,
+    style: TextStyle,
     modifier: Modifier = Modifier,
 ) {
     if (textFieldState.text.isEmpty() && hint != null) {
         Text(
             text = hint,
             color = Theme.v2.colors.text.tertiary,
-            style = Theme.brockmann.body.m.medium,
+            style = style,
             modifier = modifier,
         )
     }

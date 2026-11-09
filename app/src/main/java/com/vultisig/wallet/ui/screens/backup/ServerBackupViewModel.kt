@@ -148,7 +148,7 @@ constructor(
                 }
             }
         ) {
-            state.update { it.copy(isLoading = true) }
+            state.update { it.copy(isLoading = true, errorBanner = UiText.Empty) }
 
             val result = requestServerBackup(vaultId = vaultId, email = email, password = password)
 

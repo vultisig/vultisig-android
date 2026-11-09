@@ -149,6 +149,8 @@ internal data class StakePositionUiModel(
     val rewards: String? = null,
     val nextReward: String? = null,
     val nextPayout: String? = null,
+    /** True when tapping [nextReward] opens the Total Rewards Earned sheet; the TCY stake only. */
+    val hasRewardHistory: Boolean = false,
     // Maya CACAO pool only: remaining time until the position becomes unstake-eligible.
     // Drives the "Unlocks in N days, H hours" hint next to the disabled Unstake button.
     val unstakeUnlocksInSeconds: Long? = null,
@@ -186,17 +188,27 @@ internal sealed interface LastRewardUiModel {
     data class Paid(val amount: String) : LastRewardUiModel
 }
 
-/** The Total Rewards Earned sheet for one bonded node. */
-internal data class BondRewardHistoryUiModel(
-    val nodeAddress: String,
-    /** The live accruing share, paid at the next churn; already carries its ticker. */
-    val upcoming: String,
+/** The position a Total Rewards Earned sheet reads its payouts for. */
+internal sealed interface RewardHistorySource {
+    data class BondedNode(val nodeAddress: String) : RewardHistorySource
+
+    data object TcyStake : RewardHistorySource
+}
+
+/** The Total Rewards Earned sheet for one bonded node or for the TCY stake. */
+internal data class RewardHistoryUiModel(
+    val source: RewardHistorySource,
+    /**
+     * The live accruing share, paid at the next churn or distribution; carries its ticker. Null
+     * hides the row.
+     */
+    val upcoming: String?,
     val isLoading: Boolean = true,
     val isError: Boolean = false,
     /** Sum of [rows], null until the history has loaded. */
     val totalEarned: String? = null,
-    /** Newest churn first. */
-    val rows: List<BondRewardRowUiModel> = emptyList(),
+    /** Newest payout first. */
+    val rows: List<RewardRowUiModel> = emptyList(),
 )
 
-internal data class BondRewardRowUiModel(val amount: String, val date: String)
+internal data class RewardRowUiModel(val amount: String, val date: String)

@@ -127,7 +127,7 @@ internal data class MayachainDefiPositionsUiModel(
     val isTotalAmountLoading: Boolean = true,
     val isBalanceVisible: Boolean = true,
     // Total Rewards Earned sheet for one bonded node, open while non-null
-    val rewardHistory: BondRewardHistoryUiModel? = null,
+    val rewardHistory: RewardHistoryUiModel? = null,
     val selectedTab: Int = DeFiTab.BONDED.displayNameRes,
     val showPositionSelectionDialog: Boolean = false,
     val bondPositionsDialog: List<PositionUiModelDialog> = MAYA_BOND_POSITIONS_DIALOG,
@@ -717,15 +717,20 @@ constructor(
     fun onClickLastReward(nodeAddress: String) {
         val bondAddress = bondAddress ?: return
         val node = currentModel.bonded.nodes.find { it.fullAddress == nodeAddress } ?: return
-        val sheet = BondRewardHistoryUiModel(nodeAddress = nodeAddress, upcoming = node.nextAward)
+        val sheet =
+            RewardHistoryUiModel(
+                source = RewardHistorySource.BondedNode(nodeAddress),
+                upcoming = node.nextAward,
+            )
         updateModel { it.copy(rewardHistory = sheet) }
         rewardHistoryJob?.cancel()
         rewardHistoryJob =
             viewModelScope.launch {
-                val loaded = bondRewardsLoader.loadHistory(Chain.MayaChain, sheet, bondAddress)
+                val loaded =
+                    bondRewardsLoader.loadHistory(Chain.MayaChain, nodeAddress, sheet, bondAddress)
                 // A sheet closed, or reopened on another node, while this ran is left alone.
                 updateModel {
-                    if (it.rewardHistory?.nodeAddress == nodeAddress) {
+                    if (it.rewardHistory?.source == sheet.source) {
                         it.copy(rewardHistory = loaded)
                     } else {
                         it

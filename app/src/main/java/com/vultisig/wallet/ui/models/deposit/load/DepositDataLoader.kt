@@ -156,6 +156,8 @@ constructor(
      * @param isPrefillTokenApplied whether the link's coin was already selected, kept by the caller
      *   so a re-entered screen neither re-applies it nor resets the user's later pick.
      * @param onPrefillTokenApplied called once the link's coin is selected.
+     * @param canAddMayaLiquidity whether the vault can hold the CACAO account an Add Maya LP
+     *   credits; when it cannot, the option is dropped from the list.
      */
     fun wireInitialState(
         vaultId: String,
@@ -170,6 +172,7 @@ constructor(
         customPrefill: CustomDepositPrefill? = null,
         isPrefillTokenApplied: () -> Boolean = { false },
         onPrefillTokenApplied: () -> Unit = {},
+        canAddMayaLiquidity: suspend () -> Boolean = { true },
     ) {
         val depositOptions =
             when (chain) {
@@ -228,6 +231,17 @@ constructor(
                     if (customPrefill != null && isPrefillTokenApplied()) it.selectedToken
                     else defaultToken,
             )
+        }
+
+        if (DepositOption.AddMayaLiquidity in depositOptions) {
+            scope.launch {
+                if (canAddMayaLiquidity()) return@launch
+                val remaining = depositOptions - DepositOption.AddMayaLiquidity
+                state.update { it.copy(depositOptions = remaining) }
+                if (state.value.depositOption == DepositOption.AddMayaLiquidity) {
+                    selectDepositOption(remaining.firstOrNull() ?: DepositOption.Custom)
+                }
+            }
         }
 
         val coinList = tokensToMerge.let {

@@ -37,11 +37,14 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldStyle
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.utils.roundToPx
 import com.vultisig.wallet.ui.models.auth.BackupPasswordState
 import com.vultisig.wallet.ui.models.auth.BackupPasswordViewModel
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.backup.isBackupOpenedOutsideKeygen
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
@@ -87,6 +90,7 @@ internal fun BackupPasswordScreen(
         onHideMoreInfo = model::hideMoreInfo,
         onTogglePasswordVisibilityClick = model::togglePasswordVisibility,
         onToggleConfirmPasswordVisibilityClick = model::toggleConfirmPasswordVisibility,
+        isSettingsLook = isBackupOpenedOutsideKeygen<Route.BackupPassword> { it.backupType },
     )
 }
 
@@ -101,7 +105,10 @@ internal fun BackupPasswordScreen(
     onHideMoreInfo: () -> Unit,
     onTogglePasswordVisibilityClick: () -> Unit,
     onToggleConfirmPasswordVisibilityClick: () -> Unit,
+    isSettingsLook: Boolean = false,
 ) {
+    val fieldStyle =
+        if (isSettingsLook) VsTextInputFieldStyle.Settings else VsTextInputFieldStyle.Default
     var hintBoxOffset by remember { mutableIntStateOf(0) }
     val defaultVerticalPadding = 12.dp.roundToPx()
     val topbarHeight = 64.dp.roundToPx()
@@ -122,6 +129,9 @@ internal fun BackupPasswordScreen(
                         text = stringResource(R.string.fast_vault_password_screen_warning),
                         variant = BannerVariant.Warning,
                         showLeadingIcon = false,
+                        fill =
+                            if (isSettingsLook) Theme.v2.colors.alerts.warning.copy(alpha = 0.05f)
+                            else null,
                         actions = {
                             UiIcon(
                                 drawableResId = R.drawable.ic_info,
@@ -161,6 +171,7 @@ internal fun BackupPasswordScreen(
                             focusRequester = focusRequester,
                             imeAction = ImeAction.Next,
                             modifier = Modifier.testTag("BackupPasswordScreen.passwordField"),
+                            style = fieldStyle,
                         )
 
                         VsTextInputField(
@@ -184,6 +195,7 @@ internal fun BackupPasswordScreen(
                             onKeyboardAction = { if (state.isNextButtonEnabled) onBackupClick() },
                             modifier =
                                 Modifier.testTag("BackupPasswordScreen.confirmPasswordField"),
+                            style = fieldStyle,
                         )
                     }
                 }

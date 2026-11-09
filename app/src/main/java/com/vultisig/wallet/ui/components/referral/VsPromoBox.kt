@@ -33,12 +33,12 @@ fun VsPromoBox(
                 .fillMaxWidth()
                 .background(
                     color = Theme.v2.colors.backgrounds.secondary,
-                    shape = Theme.v2.radius.md,
+                    shape = Theme.v2.radius.lg,
                 )
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = Theme.v2.radius.md,
+                    shape = Theme.v2.radius.lg,
                 )
                 .padding(all = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -47,7 +47,7 @@ fun VsPromoBox(
 
         UiSpacer(12.dp)
 
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = title,
                 color = Theme.v2.colors.text.primary,
@@ -56,7 +56,7 @@ fun VsPromoBox(
 
             Text(
                 text = description,
-                color = Theme.v2.colors.text.tertiary,
+                color = Theme.v2.colors.text.secondary,
                 style = Theme.brockmann.supplementary.captionSmall,
             )
         }
@@ -73,13 +73,12 @@ fun VsPromoTag(@DrawableRes icon: Int, text: String, modifier: Modifier = Modifi
     Row(
         modifier =
             modifier
-                .padding(start = 16.dp)
                 .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
                 .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        UiIcon(drawableResId = icon, size = 14.dp, tint = Theme.v2.colors.primary.accent4)
+        UiIcon(drawableResId = icon, size = 16.dp, tint = Theme.v2.colors.alerts.info)
 
         UiSpacer(8.dp)
 

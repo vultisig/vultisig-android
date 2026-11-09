@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
@@ -12,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -20,6 +18,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldStyle
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.vault.VaultRenameViewModel
 import com.vultisig.wallet.ui.utils.asString
@@ -56,12 +55,12 @@ private fun VaultRenameScreen(
     ) {
         Column {
             VsTextInputField(
-                modifier = Modifier.padding(vertical = 24.dp),
                 hint = stringResource(id = R.string.rename_vault_screen_vault_name),
                 textFieldState = textFieldState,
                 footNote = errorText,
                 trailingIcon = R.drawable.close_circle,
                 onTrailingIconClick = onCloseClick,
+                style = VsTextInputFieldStyle.SettingsOutlined,
                 innerState =
                     VsTextInputFieldInnerState.Error.takeIf { errorText != null }
                         ?: VsTextInputFieldInnerState.Default,
