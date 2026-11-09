@@ -141,6 +141,7 @@ internal class SendFormViewModelSubmitEvmTest {
             tokenRepository = mockk(relaxed = true),
             stakingDetailsRepository = mockk(relaxed = true),
             defaultStakingPositionService = mockk(relaxed = true),
+            rujiStakingService = mockk(relaxed = true),
             feeServiceComposite = mockk(relaxed = true),
             chainValidationService = mockk(relaxed = true),
             requestAddressBookEntry = mockk(relaxed = true),

@@ -209,6 +209,21 @@ internal class TokenPreselectionServiceTest {
         }
 
     @Test
+    fun `preSelect UNSTAKE_RUJI - Loaded(empty) does not preselect static template coin`() =
+        runTest(mainDispatcher) {
+            // The bonded RUJI account is synthesized on top of the vault's RUNE account too, so an
+            // empty load means there is no THORChain address to unstake from.
+            defiType = DeFiNavActions.UNSTAKE_RUJI
+            accountsState.value = AccountsLoadState.Loaded(emptyList())
+            val service = build(backgroundScope)
+
+            service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
+            advanceUntilIdle()
+
+            assertEquals(emptyList<Any>(), selectedTokens)
+        }
+
+    @Test
     fun `preSelect UNSTAKE_YBRUNE - Loaded(empty) does not preselect static template coin`() =
         runTest(mainDispatcher) {
             // Same shape as sRUJI above: the ybRUNE account is synthesized on top of the vault's
