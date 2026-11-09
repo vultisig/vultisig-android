@@ -42,13 +42,15 @@ constructor(
                 navigator.route(Route.QbtcClaim(vaultId = vaultId))
                 return@safeLaunch
             }
-            val hasFastSign = isVaultHasFastSignById(vaultId) && vault.signers.count() == 2
-            if (hasFastSign && !VULTISERVER_SUPPORTS_MLDSA_LEVEL) {
+            // Any vault with a VultiServer share needs the server in the ceremony, whatever its
+            // signer count; only a 2-of-2 one takes the password route.
+            val hasServerShare = isVaultHasFastSignById(vaultId)
+            if (hasServerShare && !VULTISERVER_SUPPORTS_MLDSA_LEVEL) {
                 // The settings row and the BTC banner are hidden for these vaults, so this is
                 // only reachable from a stale entry point.
                 Timber.w("Fast Vault post-quantum keygen is not supported by VultiServer yet")
                 navigator.back()
-            } else if (hasFastSign) {
+            } else if (hasServerShare && vault.signers.count() == 2) {
                 navigator.route(
                     Route.VerifyExistingVault(
                         name = vault.name,

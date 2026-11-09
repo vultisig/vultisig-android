@@ -195,7 +195,7 @@ constructor(
     // The BTC banner also shows pre-keygen for DKLS vaults, which can still generate the
     // MLDSA key via the quantum-security intro. GG20 keyshares can't take part in the DKLS
     // claim ceremony, and KeyImport vaults receive the MLDSA key at import time — so for
-    // those, no key means no claim path. A 2-of-2 Fast Vault can't generate it either until
+    // those, no key means no claim path. A Fast Vault can't generate it either until
     // VultiServer runs the same ML-DSA level.
     private fun checkQbtcClaimEligibility(chain: Chain) {
         val vault = currentVault
@@ -203,8 +203,7 @@ constructor(
         val canGenerateMldsaKey =
             vault != null &&
                 vault.libType == SigningLibType.DKLS &&
-                (!(vault.isFastVault() && vault.signers.size == 2) ||
-                    VULTISERVER_SUPPORTS_MLDSA_LEVEL)
+                (!vault.isFastVault() || VULTISERVER_SUPPORTS_MLDSA_LEVEL)
         val isEligible = chain == Chain.Bitcoin && (hasMldsaKey || canGenerateMldsaKey)
 
         uiState.update { it.copy(showClaimQbtcButton = chain == Chain.Qbtc && hasMldsaKey) }
