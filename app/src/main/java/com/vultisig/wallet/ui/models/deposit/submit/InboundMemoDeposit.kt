@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.deposit.submit
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
@@ -23,9 +24,13 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
@@ -33,12 +38,14 @@ import wallet.core.jni.proto.Common.SigningError
  * Fee, chain-specific data and UTXOs for a memo-carrying transfer into a protocol inbound vault.
  *
  * [gasFee] is the total the transaction pays — on a planned UTXO chain the planner's fee, not the
- * per-byte rate the chain-specific data carries for signing.
+ * per-byte rate the chain-specific data carries for signing. [plannedAmount] is what a planned UTXO
+ * transaction sends, which for a sweep is the balance minus that fee; null off a planned chain.
  */
 internal data class InboundMemoTransfer(
     val gasFee: TokenValue,
     val estimatedGasFee: EstimatedGasFee,
     val specific: BlockChainSpecificAndUtxo,
+    val plannedAmount: BigInteger? = null,
 )
 
 /**
@@ -48,6 +55,9 @@ internal data class InboundMemoTransfer(
  *
  * UTXO chains (Cardano aside) are planned with [getBitcoinTransactionPlan] and spend only the UTXOs
  * the plan selected; the amount must clear the chain dust threshold and the plan must succeed.
+ *
+ * With [isMax] a UTXO plan sweeps every input into [amount] minus the fee, so its fee is the
+ * largest any amount up to that balance pays.
  */
 internal suspend fun planInboundMemoTransfer(
     vaultId: String,
@@ -61,6 +71,7 @@ internal suspend fun planInboundMemoTransfer(
     blockChainSpecificRepository: BlockChainSpecificRepository,
     gasFeeToEstimate: suspend (GasFeeParams) -> EstimatedGasFee,
     getBitcoinTransactionPlan: BitcoinTransactionPlanBuilder,
+    isMax: Boolean = false,
 ): InboundMemoTransfer {
     val chain = token.chain
     val transfer =
@@ -74,7 +85,7 @@ internal suspend fun planInboundMemoTransfer(
             amount = amount,
             to = dstAddress,
             memo = memo,
-            isMax = false,
+            isMax = isMax,
         )
 
     val fees = withContext(Dispatchers.IO) { feeServiceComposite.calculateFees(transfer) }
@@ -92,7 +103,7 @@ internal suspend fun planInboundMemoTransfer(
             memo = memo,
             isSwap = false,
             dstAddress = dstAddress,
-            isMaxAmountEnabled = false,
+            isMaxAmountEnabled = isMax,
             isDeposit = true,
             tokenAmountValue = amount,
         )
@@ -109,8 +120,10 @@ internal suspend fun planInboundMemoTransfer(
     // The planner's fee is what the signer pays: on Zcash it already includes the ZIP-317 charge a
     // memo output adds, which the flat seed above knows nothing about.
     val gasFee =
-        plan?.fee?.takeIf { it > 0 }?.let { TokenValue(value = BigInteger.valueOf(it), token = nativeCoin) }
-            ?: feeRate
+        plan
+            ?.fee
+            ?.takeIf { it > 0 }
+            ?.let { TokenValue(value = BigInteger.valueOf(it), token = nativeCoin) } ?: feeRate
 
     val estimatedGasFee =
         gasFeeToEstimate(
@@ -121,7 +134,50 @@ internal suspend fun planInboundMemoTransfer(
         gasFee = gasFee,
         estimatedGasFee = estimatedGasFee,
         specific = plannedSpecific,
+        plannedAmount = plan?.amount?.let(BigInteger::valueOf),
     )
+}
+
+/**
+ * The live inbound [fetchInbounds] lists for [pool]'s chain. Fails closed: an unreachable node, a
+ * chain missing from the inbound set, or one that is halted, trading-paused or LP-paused refuses
+ * the deposit rather than sending funds to an address the protocol may not credit.
+ */
+internal suspend fun requireLiveInbound(
+    pool: String,
+    chain: Chain,
+    protocol: String,
+    fetchInbounds: suspend () -> List<THORChainInboundAddress>,
+    unavailableRes: Int,
+    haltedRes: Int,
+): THORChainInboundAddress {
+    val chainPrefix = pool.substringBefore('.')
+    val inbound =
+        try {
+            withContext(Dispatchers.IO) { fetchInbounds() }
+                .firstOrNull { it.chain.equals(chainPrefix, ignoreCase = true) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch %s inbound for %s", protocol, chainPrefix)
+            throw InvalidTransactionDataException(UiText.StringResource(unavailableRes))
+        }
+            ?: throw InvalidTransactionDataException(
+                UiText.FormattedText(R.string.deposit_error_pool_not_available, listOf(pool))
+            )
+
+    if (
+        inbound.halted ||
+            inbound.chainLPActionsPaused ||
+            inbound.chainTradingPaused ||
+            inbound.globalTradingPaused
+    ) {
+        throw InvalidTransactionDataException(UiText.FormattedText(haltedRes, listOf(chain.raw)))
+    }
+    if (inbound.address.isBlank()) {
+        throw InvalidTransactionDataException(UiText.StringResource(R.string.send_error_no_address))
+    }
+    return inbound
 }
 
 /** UTXO chains whose spend is planned by WalletCore's Bitcoin planner (Cardano is not). */
@@ -154,7 +210,11 @@ internal fun selectPlannedUtxos(
  * Validates that [amount] is above the chain dust threshold and that [plan] resolved successfully,
  * throwing [InvalidTransactionDataException] otherwise.
  */
-internal fun validateBtcLikeAmount(amount: BigInteger, chain: Chain, plan: Bitcoin.TransactionPlan?) {
+internal fun validateBtcLikeAmount(
+    amount: BigInteger,
+    chain: Chain,
+    plan: Bitcoin.TransactionPlan?,
+) {
     val minAmount = chain.getDustThreshold
     if (amount < minAmount) {
         throw InvalidTransactionDataException(
@@ -168,3 +228,48 @@ internal fun validateBtcLikeAmount(amount: BigInteger, chain: Chain, plan: Bitco
         throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
     }
 }
+
+/**
+ * Refuses an inbound Bifrost would never credit: one under the chain's `dust_threshold`, published
+ * by THORChain and MayaChain alike in 1e8 fixed point whatever the coin's own decimals. Such a
+ * deposit confirms on the source chain and is dropped.
+ *
+ * THORChain's scanners drop only amounts below the threshold (`LT`), so an amount equal to it is
+ * credited. MayaChain's do not agree among themselves (its Bitcoin client drops at the threshold
+ * with `LTE`), so a Maya add passes [isThresholdDropped] and must clear it.
+ *
+ * The minimum named in the error is rounded up to the coin's own precision, so it is an amount the
+ * user can enter and that clears the check.
+ */
+internal fun requireAboveInboundDust(
+    amount: BigInteger,
+    decimals: Int,
+    ticker: String,
+    inbound: THORChainInboundAddress,
+    chain: Chain,
+    isThresholdDropped: Boolean,
+) {
+    val dust = inbound.dustThreshold?.toBigIntegerOrNull() ?: return
+    if (dust <= BigInteger.ZERO) return
+    val amountFixed8 = BigDecimal(amount).movePointLeft(decimals - INBOUND_FIXED_POINT_DECIMALS)
+    val dustFixed8 = BigDecimal(dust)
+    val isDropped =
+        if (isThresholdDropped) amountFixed8 <= dustFixed8 else amountFixed8 < dustFixed8
+    if (!isDropped) return
+
+    val minimumFixed8 = if (isThresholdDropped) dust + BigInteger.ONE else dust
+    val minimum =
+        BigDecimal(minimumFixed8)
+            .movePointLeft(INBOUND_FIXED_POINT_DECIMALS)
+            .setScale(decimals, RoundingMode.UP)
+            .stripTrailingZeros()
+            .toPlainString()
+    throw InvalidTransactionDataException(
+        UiText.FormattedText(
+            R.string.send_form_minimum_send_amount_is_requires_this,
+            listOf(minimum, ticker, chain.raw),
+        )
+    )
+}
+
+private const val INBOUND_FIXED_POINT_DECIMALS = 8

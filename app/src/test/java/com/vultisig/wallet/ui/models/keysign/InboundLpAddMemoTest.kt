@@ -9,6 +9,8 @@ import java.math.BigInteger
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
+import vultisig.keysign.v1.SignSolana
+import vultisig.keysign.v1.TransactionType
 
 internal class InboundLpAddMemoTest {
 
@@ -26,6 +28,33 @@ internal class InboundLpAddMemoTest {
     fun `single-sided and long-form adds are LP adds`() {
         assertTrue(payload(UTXO, "+:BTC.BTC").isInboundLpAddMemo())
         assertTrue(payload(UTXO, "add:BTC.BTC:thor1self").isInboundLpAddMemo())
+    }
+
+    @Test
+    fun `asset side of a THORChain add from Gaia, Solana, Tron and XRP is an LP add`() {
+        assertTrue(payload(COSMOS_SEND, "+:GAIA.ATOM:thor1self").isInboundLpAddMemo())
+        assertTrue(payload(SOLANA, "+:SOL.SOL:thor1self").isInboundLpAddMemo())
+        assertTrue(payload(TRON, "+:TRON.TRX:thor1self").isInboundLpAddMemo())
+        assertTrue(payload(RIPPLE, "+:XRP.XRP:thor1self").isInboundLpAddMemo())
+    }
+
+    @Test
+    fun `a Cosmos IBC transfer or XRP trust line carrying an LP memo is not an LP add`() {
+        val ibc = COSMOS_SEND.copy(transactionType = TransactionType.TRANSACTION_TYPE_IBC_TRANSFER)
+        val trustSet =
+            RIPPLE.copy(transactionType = TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET)
+
+        assertFalse(payload(ibc, "+:GAIA.ATOM:thor1self").isInboundLpAddMemo())
+        assertFalse(payload(trustSet, "+:XRP.XRP:thor1self").isInboundLpAddMemo())
+    }
+
+    @Test
+    fun `a pre-built Solana transaction is not reread from its memo`() {
+        val prebuilt =
+            payload(SOLANA, "+:SOL.SOL:thor1self")
+                .copy(signSolana = SignSolana(rawTransactions = listOf("AQ==")))
+
+        assertFalse(prebuilt.isInboundLpAddMemo())
     }
 
     @Test
@@ -82,6 +111,33 @@ internal class InboundLpAddMemoTest {
         )
 
     private companion object {
+        val COSMOS_SEND =
+            BlockChainSpecific.Cosmos(
+                accountNumber = BigInteger.ONE,
+                sequence = BigInteger.ZERO,
+                gas = BigInteger.ONE,
+                ibcDenomTraces = null,
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+            )
+        val SOLANA =
+            BlockChainSpecific.Solana(
+                recentBlockHash = "hash",
+                priorityFee = BigInteger.ONE,
+                priorityLimit = BigInteger.ONE,
+            )
+        val TRON =
+            BlockChainSpecific.Tron(
+                timestamp = 0u,
+                expiration = 0u,
+                blockHeaderTimestamp = 0u,
+                blockHeaderNumber = 0u,
+                blockHeaderVersion = 0u,
+                blockHeaderTxTrieRoot = "",
+                blockHeaderParentHash = "",
+                blockHeaderWitnessAddress = "",
+                gasFeeEstimation = 0u,
+            )
+        val RIPPLE = BlockChainSpecific.Ripple(sequence = 1u, gas = 12u, lastLedgerSequence = 2u)
         val UTXO = BlockChainSpecific.UTXO(byteFee = BigInteger.ONE, sendMaxAmount = false)
         val EVM =
             BlockChainSpecific.Ethereum(

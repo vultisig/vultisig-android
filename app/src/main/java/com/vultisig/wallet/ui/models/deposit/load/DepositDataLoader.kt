@@ -274,7 +274,10 @@ constructor(
                             ?.find { it.token.isNativeToken }
                             ?.token
                 selectedToken?.let { state.update { it.copy(selectedToken = selectedToken) } }
-                if (depositTypeActionProvider() == DeFiNavActions.ADD_LP.type) {
+                // Keyed on the option, not the deep link: setMetadataInfo consumes the link on the
+                // first address, which carries no balance yet, and the asset half's fee is priced
+                // from the balance that arrives after it.
+                if (state.value.depositOption == DepositOption.AddLiquidity) {
                     loadGasFeeForDisplay(vaultId, chain, address)
                 }
             }

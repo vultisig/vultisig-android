@@ -33,7 +33,7 @@ import java.math.BigInteger
  * @property requireTokenAmount validates and converts the entered amount to base units.
  * @property resolvePairedAddress resolves the paired-chain address for a symmetric LP add.
  * @property resolveSecuredAssetInboundAddress resolves the THORChain inbound vault for a deposit.
- * @property getBitcoinTransactionPlan builds a Bitcoin transaction plan for secured-asset deposits.
+ * @property getBitcoinTransactionPlan builds a Bitcoin transaction plan for inbound memo deposits.
  */
 internal class DepositStrategyContext(
     val vaultId: () -> String?,

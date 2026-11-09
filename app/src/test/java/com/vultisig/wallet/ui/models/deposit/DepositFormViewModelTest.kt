@@ -308,6 +308,7 @@ internal class DepositFormViewModelTest {
             mayaChainLpPreflight = mayaChainLpPreflight,
             checkMayaLpPairing = mockk(relaxed = true),
             mayaChainApi = mayaChainApi,
+            thorChainApi = thorChainApi,
             validateMayaTransactionHeight = validateMayaTransactionHeight,
             isAssetCharsValid = isAssetCharsValid,
             fieldValidator = fieldValidator,
