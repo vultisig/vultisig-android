@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -237,7 +238,8 @@ internal fun VerifyAmountHero(header: String, valuedToken: ValuedToken) {
 
 /**
  * The source and destination of a transfer as two stacked cards joined by a chevron, the way the
- * overview sheet draws them in place of the From / To rows.
+ * overview sheet draws them in place of the From / To rows. With no [toAddress] only the source
+ * card is drawn, so a request without a recipient never shows an empty To card.
  *
  * Each card leads with a name when one is known (the vault, an address-book entry, a contract
  * label) and always carries the address, so a name never hides where the funds actually go.
@@ -247,9 +249,19 @@ internal fun VerifyAccountCards(
     fromName: String?,
     fromAddress: String,
     toName: String?,
-    toAddress: String,
+    toAddress: String?,
     modifier: Modifier = Modifier,
 ) {
+    if (toAddress == null) {
+        VerifyAccountCard(
+            name = fromName,
+            address = fromAddress,
+            shape = RoundedCornerShape(Theme.v2.radius.lg.size),
+            modifier = modifier,
+        )
+        return
+    }
+
     Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Column(verticalArrangement = Arrangement.spacedBy(PairCardGap)) {
             VerifyAccountCard(
@@ -323,12 +335,18 @@ internal fun VerifyPairNotch(@DrawableRes chevron: Int) {
 }
 
 @Composable
-private fun VerifyAccountCard(name: String?, address: String, shape: Shape) {
+private fun VerifyAccountCard(
+    name: String?,
+    address: String,
+    shape: Shape,
+    modifier: Modifier = Modifier,
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         modifier =
-            Modifier.fillMaxWidth()
+            modifier
+                .fillMaxWidth()
                 .defaultMinSize(minHeight = 82.dp)
                 .background(color = Theme.v2.colors.backgrounds.surface2, shape = shape)
                 .padding(16.dp),

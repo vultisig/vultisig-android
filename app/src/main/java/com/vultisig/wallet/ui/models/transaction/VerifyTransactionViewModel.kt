@@ -124,11 +124,12 @@ internal data class TransactionDetailsUiModel(
      */
     val signSubstrate: SubstrateDappTx? = null,
     /**
-     * True on the co-signer side when a Cosmos `signDirect` body is not a single bank `MsgSend` in
-     * the expected denom, so no recipient or amount could be read out of the signed bytes. The
-     * [dstAddress] and [token] amount are then placeholders and must not be shown as a send.
+     * True on the co-signer side when a Cosmos `signDirect` body or `signAmino` request is not a
+     * single bank send in the expected denom, so no recipient or amount could be read out of the
+     * signed content. The [dstAddress] and [token] amount are then placeholders and must not be
+     * shown as a send.
      */
-    val isUnverifiedSignDirect: Boolean = false,
+    val isUnverifiedCosmosSign: Boolean = false,
     /**
      * Per-message rows for a TonConnect signing request, each decoded from its BOC body into an
      * operation label, real recipient, forward amount, and the raw payload. Empty for non-TON or
@@ -186,15 +187,15 @@ internal data class TransactionDetailsUiModel(
      * True when the payload has no native recipient / amount for the "right address" and "amount is
      * correct" consents to attest to: a dApp XRPL tx (an OfferCreate has no Destination and the
      * native amount is 0), a Substrate dApp call that is not a Balances transfer, or a Cosmos
-     * `signDirect` body with no readable transfer. Those get a single "reviewed the details"
-     * consent instead. A Substrate or `signDirect` transfer keeps the two-checkbox flow because its
-     * recipient and amount were read out of the signed bytes.
+     * `signDirect` / `signAmino` request with no readable transfer. Those get a single "reviewed
+     * the details" consent instead. A Substrate or Cosmos transfer keeps the two-checkbox flow
+     * because its recipient and amount were read out of the signed content.
      */
     val requiresDappConsent: Boolean
         get() =
             signRipple != null ||
                 (signSubstrate != null && signSubstrate.transfer == null) ||
-                isUnverifiedSignDirect
+                isUnverifiedCosmosSign
 }
 
 @Immutable

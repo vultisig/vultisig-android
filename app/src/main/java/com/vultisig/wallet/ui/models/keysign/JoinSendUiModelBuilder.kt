@@ -40,6 +40,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -49,6 +50,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import timber.log.Timber
+import vultisig.keysign.v1.SignAmino
 import wallet.core.jni.TONAddressConverter
 import wallet.core.jni.proto.Common.SigningError
 
@@ -111,30 +113,38 @@ constructor(
                 }
                 ?.transfer
 
-        // A Cosmos `signDirect` request is signed as the SignDoc bytes, so the recipient and
-        // amount must be read out of those bytes — never from the wire `toAddress` / `toAmount`,
-        // which are the initiator's unverified display copy. A compromised initiator could
-        // otherwise show the co-signer one recipient while the signed body pays another. When the
-        // body isn't a single bank `MsgSend` (staking, multi-message, dApp calls) no simple To/
-        // amount is shown; the full decoded SignDoc is rendered below in the Direct Sign card.
+        // A Cosmos `signDirect` / `signAmino` request is signed as its SignDoc bytes or amino
+        // `msgs`, so the recipient and amount must be read out of that signed content — never from
+        // the wire `toAddress` / `toAmount`, which are the initiator's unverified display copy. A
+        // compromised initiator could otherwise show the co-signer one recipient while the signed
+        // messages pay another. When the request isn't a single bank send (staking, multi-message,
+        // dApp calls) no simple To/amount is shown; the signed content is rendered below in its
+        // Direct Sign / amino card.
         val signDirectMessage = payload.signDirect?.let { parseCosmosMessage(it) }
+        val isCosmosSignDoc = payload.signDirect != null || payload.signAmino != null
+        // CosmosHelper signs `signAmino` ahead of `signDirect` when a payload carries both, so the
+        // review reads the same one.
+        val signAmino = payload.signAmino
         // The signed coin's denom has to match what the row will be labelled with, or the signed
         // integer would render under the wrong ticker/decimals. Native sends carry the chain's
         // native denom; other Cosmos assets carry their denom in the coin's contract address.
-        val expectedSignDirectDenom =
-            if (payloadToken.isNativeToken) chain.cosmosNativeDenom else payloadToken.contractAddress
-        val signDirectTransfer = signDirectMessage?.singleMsgSendTransfer(expectedSignDirectDenom)
+        val expectedCosmosDenom =
+            if (payloadToken.isNativeToken) chain.cosmosNativeDenom
+            else payloadToken.contractAddress
+        val cosmosSignedTransfer =
+            if (signAmino != null) signAmino.singleAminoSendTransfer(expectedCosmosDenom, json)
+            else signDirectMessage?.singleMsgSendTransfer(expectedCosmosDenom)
 
         val dstAddress =
             when {
                 substrateDapp != null -> substrateTransfer?.recipient.orEmpty()
-                payload.signDirect != null -> signDirectTransfer?.recipient.orEmpty()
+                isCosmosSignDoc -> cosmosSignedTransfer?.recipient.orEmpty()
                 else -> payload.toAddress
             }
         val amount =
             when {
                 substrateDapp != null -> substrateTransfer?.amount ?: BigInteger.ZERO
-                payload.signDirect != null -> signDirectTransfer?.amount ?: BigInteger.ZERO
+                isCosmosSignDoc -> cosmosSignedTransfer?.amount ?: BigInteger.ZERO
                 else -> payload.toAmount
             }
 
@@ -143,7 +153,7 @@ constructor(
         // the chain's native denom, label it from the locally known native token so a doctored
         // `decimal` can't rescale the signed integer.
         val displayToken =
-            if (signDirectTransfer != null && expectedSignDirectDenom == chain.cosmosNativeDenom) {
+            if (cosmosSignedTransfer != null && expectedCosmosDenom == chain.cosmosNativeDenom) {
                 nativeCoin.copy(address = address)
             } else {
                 payloadToken
@@ -351,7 +361,7 @@ constructor(
                 decodedFunctionParams = decodedExtras.decodedFunctionParams,
                 isUniversalRouterSwap = decodedExtras.isUniversalRouterSwap,
                 tonMessages = tonMessages,
-                isUnverifiedSignDirect = payload.signDirect != null && signDirectTransfer == null,
+                isUnverifiedCosmosSign = isCosmosSignDoc && cosmosSignedTransfer == null,
             )
         return JoinSendUiModelResult(
             result =
@@ -387,15 +397,15 @@ constructor(
 }
 
 /**
- * Pulls the recipient and amount out of a decoded `signDirect` SignDoc, but only when the body
- * is exactly one bank `MsgSend` carrying a single coin whose denom is [expectedDenom]. That is
- * the one case where a simple "To / amount" row can faithfully stand in for the signed bytes.
- * Anything else — staking, governance, multi-message or dApp bodies, or a coin in a denom that
- * doesn't match what the row would be labelled with — returns null so the verify screen shows
- * no spoofable To/amount and relies on the full Direct Sign card instead. The recipient and
- * amount are taken verbatim from the signed bytes, so what the co-signer sees is what it signs.
+ * Pulls the recipient and amount out of a decoded `signDirect` SignDoc, but only when the body is
+ * exactly one bank `MsgSend` carrying a single coin whose denom is [expectedDenom]. That is the one
+ * case where a simple "To / amount" row can faithfully stand in for the signed bytes. Anything else
+ * — staking, governance, multi-message or dApp bodies, or a coin in a denom that doesn't match what
+ * the row would be labelled with — returns null so the verify screen shows no spoofable To/amount
+ * and relies on the full Direct Sign card instead. The recipient and amount are taken verbatim from
+ * the signed bytes, so what the co-signer sees is what it signs.
  */
-internal fun CosmosMessage.singleMsgSendTransfer(expectedDenom: String?): SignDirectTransfer? {
+internal fun CosmosMessage.singleMsgSendTransfer(expectedDenom: String?): CosmosSignedTransfer? {
     if (expectedDenom.isNullOrEmpty()) return null
     val message = messages.singleOrNull() ?: return null
     if (message.typeUrl != MSG_SEND_TYPE_URL) return null
@@ -405,9 +415,49 @@ internal fun CosmosMessage.singleMsgSendTransfer(expectedDenom: String?): SignDi
     val denom = (coin["denom"] as? JsonPrimitive)?.content ?: return null
     if (denom != expectedDenom) return null
     val amount = (coin["amount"] as? JsonPrimitive)?.content?.toBigIntegerOrNull() ?: return null
-    return SignDirectTransfer(recipient = recipient, amount = amount)
+    return CosmosSignedTransfer(recipient = recipient, amount = amount)
 }
 
-internal data class SignDirectTransfer(val recipient: String, val amount: BigInteger)
+/**
+ * Pulls the recipient and amount out of a `signAmino` request's signed `msgs`, under the same rule
+ * as [singleMsgSendTransfer]: exactly one bank send (`cosmos-sdk/MsgSend`, `thorchain/MsgSend` or
+ * `bank/MsgSend`) carrying a single coin whose denom is [expectedDenom]. Anything else — other
+ * message types, several messages, several coins, a mismatched denom, or a `value` that isn't
+ * readable JSON — returns null, so no recipient or amount is shown from the unsigned wire fields.
+ */
+internal fun SignAmino.singleAminoSendTransfer(
+    expectedDenom: String?,
+    json: Json,
+): CosmosSignedTransfer? {
+    if (expectedDenom.isNullOrEmpty()) return null
+    val message = msgs.singleOrNull() ?: return null
+    if (message.type !in AMINO_SEND_TYPES) return null
+    val body =
+        try {
+            json.parseToJsonElement(message.value) as? JsonObject
+        } catch (_: SerializationException) {
+            null
+        } ?: return null
+    val recipient =
+        (body["to_address"] as? JsonPrimitive)
+            ?.takeIf { it.isString }
+            ?.content
+            ?.takeIf { it.isNotEmpty() } ?: return null
+    val coin = (body["amount"] as? JsonArray)?.singleOrNull() as? JsonObject ?: return null
+    val denom = (coin["denom"] as? JsonPrimitive)?.takeIf { it.isString }?.content ?: return null
+    if (denom != expectedDenom) return null
+    val amount =
+        (coin["amount"] as? JsonPrimitive)
+            ?.takeIf { it.isString }
+            ?.content
+            ?.takeIf { it.isNotEmpty() && it.all(Char::isDigit) }
+            ?.toBigInteger() ?: return null
+    return CosmosSignedTransfer(recipient = recipient, amount = amount)
+}
+
+/** A recipient and amount read out of a Cosmos request's signed content. */
+internal data class CosmosSignedTransfer(val recipient: String, val amount: BigInteger)
 
 private const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
+
+private val AMINO_SEND_TYPES = setOf("cosmos-sdk/MsgSend", "thorchain/MsgSend", "bank/MsgSend")

@@ -23,7 +23,8 @@ internal class SingleMsgSendTransferTest {
     fun `single MsgSend in the expected denom yields its recipient and amount`() {
         val transfer = signDoc(msgSend()).singleMsgSendTransfer("uatom")
 
-        transfer shouldBe SignDirectTransfer(recipient = RECIPIENT, amount = BigInteger("1500000"))
+        transfer shouldBe
+            CosmosSignedTransfer(recipient = RECIPIENT, amount = BigInteger("1500000"))
     }
 
     @Test

@@ -493,16 +493,21 @@ private fun VerifySendDetails(
                         textAlign = TextAlign.Center,
                     )
                 }
-            } else if (tx.isUnverifiedSignDirect) {
-                // A signDirect body that is not a plain bank send (contract call, vote,
-                // multi-message) has no amount read out of the signed bytes, so name it
-                // instead of showing "0 ATOM"; the Direct Sign card below carries the body.
+            } else if (tx.isUnverifiedCosmosSign) {
+                // A signDirect / signAmino request that is not a plain bank send (contract
+                // call, vote, multi-message) has no amount read out of the signed content, so
+                // name it instead of showing "0 ATOM"; the Direct Sign / Amino Sign card below
+                // carries the signed content.
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = stringResource(R.string.amino_direct),
+                        text =
+                            stringResource(
+                                if (tx.signAmino.isNullOrBlank()) R.string.amino_direct
+                                else R.string.amino_sign
+                            ),
                         style = Theme.brockmann.supplementary.captionSmall,
                         color = Theme.v2.colors.text.tertiary,
                         textAlign = TextAlign.Center,
@@ -562,13 +567,13 @@ private fun VerifySendDetails(
             tx.signRipple == null &&
                 tx.signSubstrate == null &&
                 !tx.isRippleTrustSet &&
-                !tx.isUnverifiedSignDirect
+                !tx.isUnverifiedCosmosSign
         if (inSheet && isPlainSend) {
             VerifyAccountCards(
                 fromName = tx.srcVaultName,
                 fromAddress = tx.srcAddress,
                 toName = toDstLabel,
-                toAddress = tx.dstAddress,
+                toAddress = tx.dstAddress.takeIf { it.isNotBlank() },
             )
 
             UiSpacer(8.dp)
@@ -618,7 +623,9 @@ private fun VerifySendDetails(
                     subtitleColor = Theme.v2.colors.alerts.error,
                 )
             }
-        } else if (!tx.requiresDappConsent && !(inSheet && isPlainSend)) {
+        } else if (
+            !tx.requiresDappConsent && !(inSheet && isPlainSend) && tx.dstAddress.isNotBlank()
+        ) {
             rowDivider()
 
             VerifyCardDetails(
