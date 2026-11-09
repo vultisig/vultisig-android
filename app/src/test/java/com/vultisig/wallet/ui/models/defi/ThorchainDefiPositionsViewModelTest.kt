@@ -1779,15 +1779,19 @@ internal class ThorchainDefiPositionsViewModelTest {
     }
 
     @Test
-    fun `an asset-first card on a pool whose chain the app cannot hold still completes`() =
-        runTest {
-            coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
-                listOf(pendingDeposit(ZEC_POOL, assetAddress = "t1zcashaddress"))
+    fun `an asset-first ZEC card completes only from the vault's Zcash address`() = runTest {
+        coEvery { vaultRepository.get(VAULT_ID) } returns VAULT.copy(coins = VAULT.coins + ZEC_COIN)
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
+            listOf(pendingDeposit(ZEC_POOL, assetAddress = "t1strangeraddress"))
+        val vm = createViewModel().also { it.setData(VAULT_ID) }
+        vm.state.value.lp.pendingDeposits.single().canComplete shouldBe false
 
-            val vm = createViewModel().also { it.setData(VAULT_ID) }
+        coEvery { getThorChainPendingLpDepositsUseCase(RUNE_ADDRESS) } returns
+            listOf(pendingDeposit(ZEC_POOL, assetAddress = ZEC_ADDRESS))
+        vm.onScreenResumed()
 
-            vm.state.value.lp.pendingDeposits.single().canComplete shouldBe true
-        }
+        vm.state.value.lp.pendingDeposits.single().canComplete shouldBe true
+    }
 
     @Test
     fun `a RUNE-first pending card paired with another asset address cannot be completed`() =
@@ -1952,6 +1956,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         const val USDC_POOL = "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"
         const val ETH_ADDRESS = "0xethaddress"
         const val BTC_ADDRESS = "bc1qbtcaddress"
+        const val ZEC_ADDRESS = "t1zcashaddress"
 
         val AppCurrencyUsd = com.vultisig.wallet.data.models.settings.AppCurrency.USD
 
@@ -1964,6 +1969,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         val RUJI_COIN = Coins.ThorChain.RUJI.copy(address = RUJI_ADDRESS)
         val ETH_COIN = Coins.Ethereum.ETH.copy(address = ETH_ADDRESS)
         val BTC_COIN = Coins.Bitcoin.BTC.copy(address = BTC_ADDRESS)
+        val ZEC_COIN = Coins.Zcash.ZEC.copy(address = ZEC_ADDRESS)
 
         val VAULT =
             Vault(

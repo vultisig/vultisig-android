@@ -144,7 +144,8 @@ internal class AddLiquidityStrategy(
         // compares only when the add names one, so a live RUNE-only position takes `+:POOL` as it
         // is. A live position paired with another asset address is refused outright: anyone can
         // fix that address with an asset add naming the vault's RUNE address, and a `+:POOL` into
-        // it would pay half its value out to that address on withdrawal. See
+        // it would pay half its value out to that address on withdrawal. Without an asset address
+        // the vault has that chain disabled, so it is asked to enable it instead. See
         // [CheckThorChainLpPairingUseCase].
         val thorPairing =
             if (chain == Chain.ThorChain && isSymmetricPool) {
@@ -166,7 +167,7 @@ internal class AddLiquidityStrategy(
         }
         if (
             thorPairing == ThorChainLpPairing.AddressMismatch ||
-                thorPairing == ThorChainLpPairing.PairedWithOtherAddress
+                (thorPairing == ThorChainLpPairing.PairedWithOtherAddress && pairedAddress != null)
         ) {
             throw InvalidTransactionDataException(
                 UiText.FormattedText(

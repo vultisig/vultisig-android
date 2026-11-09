@@ -101,6 +101,17 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
+    fun `RUNE-side add to the ZEC pool names the vault's Zcash address`() = runTest {
+        givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
+        coEvery { preflight(ZEC_POOL, any(), any()) } returns null
+
+        val tx = build(Chain.ThorChain, pairedAddress = ZEC_ADDRESS, pool = ZEC_POOL).build()
+
+        assertEquals("+:$ZEC_POOL:$ZEC_ADDRESS", tx.memo)
+        coVerify(exactly = 1) { checkThorPairing(ZEC_POOL, RUNE_ADDRESS, ZEC_ADDRESS) }
+    }
+
+    @Test
     fun `asset-side EVM add goes to the live inbound naming the RUNE address`() = runTest {
         givenNativeAccount(Chain.Ethereum, ETH_ADDRESS)
 
@@ -614,7 +625,7 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
-    fun `RUNE top-up of a live position paired elsewhere is refused without an asset chain`() =
+    fun `RUNE top-up of a live paired position without the asset chain asks to enable it`() =
         runTest {
             givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
             coEvery { checkThorPairing(ETH_POOL, RUNE_ADDRESS, null) } returns
@@ -626,7 +637,7 @@ internal class AddLiquidityStrategyTest {
                     }
                     .text
             assertTrue(text is UiText.FormattedText)
-            assertEquals(R.string.deposit_error_thorchain_lp_address_mismatch, text.resId)
+            assertEquals(R.string.deposit_error_lp_paired_chain_not_enabled, text.resId)
         }
 
     @Test
@@ -865,6 +876,8 @@ internal class AddLiquidityStrategyTest {
         const val MAYA_USDC_POOL = "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48"
         const val ETH_POOL = "ETH.ETH"
         const val BTC_POOL = "BTC.BTC"
+        const val ZEC_POOL = "ZEC.ZEC"
+        const val ZEC_ADDRESS = "t1self"
         const val ETH_INBOUND = "0xinbound"
         const val BTC_INBOUND = "bc1qinbound"
         const val PLAN_FEE = 2_500L

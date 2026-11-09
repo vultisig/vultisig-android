@@ -39,6 +39,7 @@ internal fun thorPoolChainPrefixToChain(prefix: String): Chain? =
         "SOL" -> Chain.Solana
         "TRON" -> Chain.Tron
         "XRP" -> Chain.Ripple
+        "ZEC" -> Chain.Zcash
         else -> null
     }
 
