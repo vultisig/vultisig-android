@@ -1,7 +1,9 @@
 package com.vultisig.wallet.ui.screens.referral
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -33,13 +36,14 @@ import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
-import com.vultisig.wallet.ui.components.UiGradientDivider
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldStyle
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.referral.EditVaultReferralUiState
 import com.vultisig.wallet.ui.models.referral.EditVaultReferralViewModel
@@ -106,108 +110,23 @@ private fun ReferralEditVaultScreen(
                     Modifier.fillMaxSize()
                         .verticalScroll(rememberScrollState())
                         .imePadding()
-                        .navigationBarsPadding()
+                        .navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(REFERRAL_FORM_GAP),
             ) {
-                Text(
-                    text = stringResource(R.string.referral_view_your_referral_code),
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                )
-
-                UiSpacer(8.dp)
-
-                VsTextInputField(
-                    textFieldState = referralTextFieldState,
-                    innerState = VsTextInputFieldInnerState.Default,
-                    focusRequester = null,
-                    trailingIcon = R.drawable.ic_copy,
-                    onTrailingIconClick = {
-                        val text = referralTextFieldState.text.toString()
-                        onCopyReferralCode(text)
-                    },
-                    imeAction = ImeAction.Go,
-                    keyboardType = KeyboardType.Text,
-                    enabled = false,
-                )
-
-                UiSpacer(16.dp)
-
-                UiGradientDivider(
-                    initialColor = Theme.v2.colors.backgrounds.primary,
-                    endColor = Theme.v2.colors.backgrounds.primary,
-                )
-
-                UiSpacer(16.dp)
-
-                CounterYearExpiration(
-                    count = state.referralCounter,
-                    defaultInitCounter = 0,
-                    onIncrement = onIncrementCounter,
-                    onDecrement = onDecrementCounter,
-                )
-
-                UiSpacer(16.dp)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        color = Theme.v2.colors.text.tertiary,
-                        style = Theme.brockmann.body.s.medium,
-                        text = stringResource(R.string.referral_create_expiration_date),
-                        textAlign = TextAlign.Start,
-                    )
-
-                    UiSpacer(1f)
-
-                    Text(
-                        color = Theme.v2.colors.text.primary,
-                        style = Theme.brockmann.body.s.medium,
-                        text = state.referralExpiration,
-                        textAlign = TextAlign.Start,
-                    )
-                }
-
-                UiSpacer(16.dp)
-
-                UiGradientDivider(
-                    initialColor = Theme.v2.colors.backgrounds.primary,
-                    endColor = Theme.v2.colors.backgrounds.primary,
-                )
-
-                UiSpacer(16.dp)
-
-                Text(
-                    text = stringResource(R.string.referral_choose_payout_asset),
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                )
-
-                UiSpacer(8.dp)
-
-                PayoutAssetSelection(asset = state.payoutAsset, onClick = onSelectPayoutAsset)
-
-                UiSpacer(16.dp)
-
-                UiGradientDivider(
-                    initialColor = Theme.v2.colors.backgrounds.primary,
-                    endColor = Theme.v2.colors.backgrounds.primary,
-                )
-
-                UiSpacer(16.dp)
-
-                EstimatedNetworkFee(
-                    title = stringResource(R.string.referral_create_cost),
-                    tokenGas = state.referralCostAmountFormatted,
-                    fiatGas = state.referralCostFiatFormatted,
+                EditReferralForm(
+                    state = state,
+                    referralTextFieldState = referralTextFieldState,
+                    onCopyReferralCode = onCopyReferralCode,
+                    onIncrementCounter = onIncrementCounter,
+                    onDecrementCounter = onDecrementCounter,
+                    onSelectPayoutAsset = onSelectPayoutAsset,
                 )
             }
         },
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.save_changes),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp).fillMaxWidth(),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp).fillMaxWidth(),
                 variant = VsButtonVariant.Primary,
                 state =
                     if (state.isSaveEnabled) {
@@ -222,12 +141,106 @@ private fun ReferralEditVaultScreen(
 }
 
 @Composable
+private fun EditReferralForm(
+    state: EditVaultReferralUiState,
+    referralTextFieldState: TextFieldState,
+    onCopyReferralCode: (String) -> Unit,
+    onIncrementCounter: () -> Unit,
+    onDecrementCounter: () -> Unit,
+    onSelectPayoutAsset: () -> Unit,
+) {
+    VsTextInputField(
+        textFieldState = referralTextFieldState,
+        label = stringResource(R.string.referral_view_your_referral_code),
+        innerState = VsTextInputFieldInnerState.Default,
+        focusRequester = null,
+        trailingIcon = R.drawable.copy2,
+        onTrailingIconClick = {
+            val text = referralTextFieldState.text.toString()
+            onCopyReferralCode(text)
+        },
+        imeAction = ImeAction.Go,
+        keyboardType = KeyboardType.Text,
+        enabled = false,
+        style = VsTextInputFieldStyle.Settings,
+    )
+
+    UiHorizontalDivider()
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.referral_edit_extend_expiration),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+        )
+
+        CounterYearExpiration(
+            count = state.referralCounter,
+            defaultInitCounter = 0,
+            onIncrement = onIncrementCounter,
+            onDecrement = onDecrementCounter,
+        )
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            color = Theme.v2.colors.text.primary,
+            style = Theme.brockmann.supplementary.caption,
+            text =
+                stringResource(
+                    if (state.referralCounter > 0) {
+                        R.string.referral_edit_new_expiration
+                    } else {
+                        R.string.referral_create_expiration_date
+                    }
+                ),
+            textAlign = TextAlign.Start,
+        )
+
+        UiSpacer(1f)
+
+        Text(
+            color = Theme.v2.colors.text.primary,
+            style = Theme.brockmann.supplementary.caption,
+            text = state.referralExpiration,
+            textAlign = TextAlign.Start,
+        )
+    }
+
+    UiHorizontalDivider()
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.referral_choose_payout_asset),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+        )
+
+        PayoutAssetSelection(asset = state.payoutAsset, onClick = onSelectPayoutAsset)
+    }
+
+    UiHorizontalDivider()
+
+    EstimatedNetworkFee(
+        title = stringResource(R.string.referral_create_cost),
+        tokenGas = state.referralCostAmountFormatted,
+        fiatGas = state.referralCostFiatFormatted,
+    )
+}
+
+@Composable
 private fun PayoutAssetSelection(asset: PayoutAssetUiModel?, onClick: () -> Unit) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .background(
-                    color = Theme.v2.colors.backgrounds.secondary,
+                .clip(Theme.v2.radius.md)
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.light,
                     shape = Theme.v2.radius.md,
                 )
                 .clickable(onClick = onClick)
@@ -242,7 +255,7 @@ private fun PayoutAssetSelection(asset: PayoutAssetUiModel?, onClick: () -> Unit
                 modifier = Modifier.size(32.dp),
             )
 
-            UiSpacer(8.dp)
+            UiSpacer(6.dp)
 
             Text(
                 text = asset.ticker,
@@ -257,7 +270,7 @@ private fun PayoutAssetSelection(asset: PayoutAssetUiModel?, onClick: () -> Unit
             painter = painterResource(id = R.drawable.ic_caret_right),
             contentDescription = null,
             tint = Theme.v2.colors.text.primary,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(20.dp),
         )
     }
 }

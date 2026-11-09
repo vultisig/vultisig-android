@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -53,6 +54,7 @@ fun V2BottomSheet(
     rightAction: (@Composable () -> Unit)? = null,
     title: String? = null,
     dragHandlerColor: Color = Theme.v2.colors.vibrant.primary,
+    scrimColor: Color = BottomSheetDefaults.ScrimColor,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -60,6 +62,7 @@ fun V2BottomSheet(
         modifier = modifier.statusBarsPadding(),
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
+        scrimColor = scrimColor,
         dragHandle = null,
         containerColor = Color.Transparent,
         shape = RectangleShape,

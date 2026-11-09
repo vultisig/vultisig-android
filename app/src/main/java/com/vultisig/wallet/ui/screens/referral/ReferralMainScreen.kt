@@ -72,10 +72,7 @@ private fun ReferralScreen(
     ) {
         Column(
             modifier =
-                Modifier.fillMaxSize()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp)
-                    .navigationBarsPadding(),
+                Modifier.fillMaxSize().padding(bottom = 16.dp).navigationBarsPadding(),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -114,7 +111,7 @@ private fun CreateReferralCard(titleRes: Int, enabled: Boolean, onClick: () -> U
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(Theme.v2.radius.xl)
+                .clip(Theme.v2.radius.lg)
                 .background(Theme.v2.colors.backgrounds.surface1)
                 .clickable(enabled = enabled, onClick = onClick)
                 .alpha(if (enabled) 1f else DISABLED_CARD_ALPHA)
@@ -176,7 +173,7 @@ private fun ReferralEntryCard(
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(Theme.v2.radius.xl)
+                .clip(Theme.v2.radius.lg)
                 .background(Theme.v2.colors.backgrounds.surface1)
                 .clickable(enabled = enabled, onClick = onClick)
                 .alpha(if (enabled) 1f else DISABLED_CARD_ALPHA)

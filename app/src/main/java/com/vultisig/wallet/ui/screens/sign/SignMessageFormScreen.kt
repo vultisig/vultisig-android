@@ -24,6 +24,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldStyle
 import com.vultisig.wallet.ui.models.sign.SignMessageFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -68,7 +69,10 @@ private fun SignMessageFormScreen(
                 label = stringResource(id = R.string.sign_message_continue),
                 state = state,
                 onClick = onSign,
-                modifier = Modifier.fillMaxWidth().padding(all = 16.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 22.dp),
+                labelStyle = Theme.brockmann.button.medium.medium,
             )
         }
     ) {
@@ -78,6 +82,7 @@ private fun SignMessageFormScreen(
                 hint = stringResource(id = R.string.hint_signing_method),
                 keyboardType = KeyboardType.Text,
                 autoCorrectEnabled = false,
+                style = VsTextInputFieldStyle.SettingsOutlined,
             )
 
             UiSpacer(14.dp)
@@ -87,6 +92,7 @@ private fun SignMessageFormScreen(
                 hint = stringResource(id = R.string.hint_message_to_sign),
                 keyboardType = KeyboardType.Text,
                 autoCorrectEnabled = false,
+                style = VsTextInputFieldStyle.SettingsOutlined,
             )
 
             if (error != null) {

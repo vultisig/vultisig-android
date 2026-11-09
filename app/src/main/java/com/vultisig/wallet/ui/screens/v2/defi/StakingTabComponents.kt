@@ -50,6 +50,7 @@ internal fun StakingTabContent(
     onClickWithdraw: () -> Unit,
     onClickTransfer: (Coin) -> Unit,
     isBalanceVisible: Boolean = true,
+    onClickRewardHistory: () -> Unit = {},
 ) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         state.positions.forEach { stakingPosition ->
@@ -61,6 +62,7 @@ internal fun StakingTabContent(
                 onClickWithdraw = onClickWithdraw,
                 onClickTransfer = onClickTransfer,
                 isBalanceVisible = isBalanceVisible,
+                onClickRewardHistory = onClickRewardHistory,
             )
         }
     }
@@ -75,6 +77,7 @@ internal fun StakingWidget(
     onClickWithdraw: () -> Unit,
     onClickTransfer: (Coin) -> Unit,
     isBalanceVisible: Boolean = true,
+    onClickRewardHistory: () -> Unit = {},
 ) {
     Column(
         modifier =
@@ -148,7 +151,10 @@ internal fun StakingWidget(
             PositionUnavailableNotice()
         }
 
-        if (state.apy != null || (state.nextReward != null || state.nextPayout != null)) {
+        // The TCY stake keeps its reward cell without an estimate: it is the way into the history.
+        val showsReward = state.nextReward != null || state.hasRewardHistory
+
+        if (state.apy != null || showsReward || state.nextPayout != null) {
             UiSpacer(16.dp)
 
             UiHorizontalDivider(color = Theme.v2.colors.border.light)
@@ -174,7 +180,7 @@ internal fun StakingWidget(
             }
         }
 
-        if (state.nextPayout != null || state.nextReward != null) {
+        if (state.nextPayout != null || showsReward) {
             UiSpacer(16.dp)
         }
 
@@ -192,13 +198,33 @@ internal fun StakingWidget(
                 }
             }
 
-            if (state.nextReward != null) {
+            if (showsReward) {
+                val nextReward =
+                    when {
+                        state.nextReward == null -> NO_REWARD_VALUE
+                        isBalanceVisible -> state.nextReward
+                        else -> HIDE_BALANCE_CHARS
+                    }
                 Box(modifier = Modifier.weight(1f)) {
-                    InfoItem(
-                        icon = R.drawable.ic_cup,
-                        label = stringResource(R.string.next_award),
-                        value = if (isBalanceVisible) state.nextReward else HIDE_BALANCE_CHARS,
-                    )
+                    if (state.hasRewardHistory) {
+                        ChevronInfoItem(
+                            icon = R.drawable.ic_cup,
+                            label = stringResource(R.string.next_award),
+                            onClick = onClickRewardHistory,
+                        ) {
+                            Text(
+                                text = nextReward,
+                                style = Theme.brockmann.body.m.medium,
+                                color = Theme.v2.colors.text.secondary,
+                            )
+                        }
+                    } else {
+                        InfoItem(
+                            icon = R.drawable.ic_cup,
+                            label = stringResource(R.string.next_award),
+                            value = nextReward,
+                        )
+                    }
                 }
             }
         }
@@ -506,3 +532,5 @@ private fun StakingWidgetLoadingPreview() {
 }
 
 private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
+
+private const val NO_REWARD_VALUE = "—"

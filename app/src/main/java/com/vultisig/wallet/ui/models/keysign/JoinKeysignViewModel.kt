@@ -1477,7 +1477,7 @@ constructor(
                     // The UTXOSpecific proto can't carry the live ZEC branch id, so a payload
                     // rebuilt from the initiator's QR/relay proto arrives with it null. Re-resolve
                     // it here (same network-global value the initiator used) before computing
-                    // sighashes so this co-signer's ZIP-243 digest matches the rest of the
+                    // sighashes so this co-signer's digest matches the rest of the
                     // committee.
                     val payload =
                         withZcashBranchId(
@@ -1513,7 +1513,7 @@ constructor(
     }
 
     /**
-     * Stamps the live ZIP-243 branch id onto a Zcash UTXO payload rebuilt from proto. Returns the
+     * Stamps the live consensus branch id onto a Zcash UTXO payload rebuilt from proto. Returns the
      * payload unchanged for non-Zcash chains, non-UTXO specifics, or when the RPC is unreachable —
      * in the Zcash case that leaves the branch id null, so signing refuses (there is no compiled-in
      * fallback).

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +34,7 @@ internal fun CopyIcon(
     size: Dp = 20.dp,
     onCopyCompleted: (String) -> Unit = {},
     tint: Color? = null,
+    @DrawableRes icon: Int = R.drawable.copy,
 ) {
     val context = LocalContext.current
     var copyCount by remember { mutableIntStateOf(0) }
@@ -54,7 +56,7 @@ internal fun CopyIcon(
             )
         } else {
             UiIcon(
-                drawableResId = R.drawable.copy,
+                drawableResId = icon,
                 size = size,
                 onClick = {
                     VsClipboardService.copy(context, textToCopy)

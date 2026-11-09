@@ -7,7 +7,7 @@ import vultisig.keysign.v1.TransactionType
 
 sealed class BlockChainSpecific {
     /**
-     * @param zcashBranchId live ZIP-243 consensus branch id (little-endian hex, e.g. `30f33754`)
+     * @param zcashBranchId live consensus branch id (little-endian hex, e.g. `30f33754`)
      *   fetched at send time for Zcash; null for every other UTXO chain and when the RPC was
      *   unreachable, in which case signing refuses (there is no compiled-in fallback). Transient:
      *   it is NOT carried by the `UTXOSpecific` proto, so a co-signing device that rebuilds the
@@ -170,7 +170,7 @@ sealed class BlockChainSpecific {
 }
 
 /**
- * Live ZIP-243 branch id carried on a Zcash payload's UTXO specific, or null for non-Zcash payloads
+ * Live consensus branch id carried on a Zcash payload's UTXO specific, or null for non-Zcash payloads
  * and when the RPC was unreachable (signing then refuses; there is no compiled-in fallback).
  */
 val KeysignPayload.zcashBranchId: String?

@@ -14,16 +14,20 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
+import com.vultisig.wallet.ui.components.bottomsheet.SheetGrabber
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
@@ -70,17 +75,88 @@ internal fun SettingsSecurityScannerBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = Theme.v2.colors.backgrounds.background,
         shape = RoundedCornerShape(topStart = 38.dp, topEnd = 38.dp),
-        dragHandle = null,
+        scrimColor = Theme.v2.colors.neutrals.n900.copy(alpha = 0.5f),
+        dragHandle = { SheetGrabber(top = 5.dp, bottom = 16.dp) },
     ) {
-        SecurityScannerBottomSheetContent(
-            contentStyle = buildSettingsSecurityScannerBottomSheeStyle(),
-            securityScannerProvider = null,
-            onDismissRequest = onDismissRequest,
+        SettingsSecurityScannerContent(
+            onGoBack = onDismissRequest,
             onContinueAnyway = onContinueAnyway,
-            modifier = Modifier.padding(16.dp).navigationBarsPadding(),
+            modifier = Modifier.padding(horizontal = 16.dp).navigationBarsPadding(),
         )
+    }
+}
+
+/** The settings disable warning: names its provider first, then the medallion and the choice. */
+@Composable
+private fun SettingsSecurityScannerContent(
+    onGoBack: () -> Unit,
+    onContinueAnyway: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.security_scanner_powered_by).trim(),
+                color = Theme.v2.colors.text.tertiary,
+                style = Theme.brockmann.supplementary.caption,
+            )
+            Image(
+                painter = painterResource(R.drawable.blockaid_logo),
+                contentDescription = null,
+                colorFilter = ColorFilter.tint(Theme.v2.colors.text.tertiary),
+                modifier = Modifier.height(BLOCKAID_LOGO_HEIGHT),
+            )
+        }
+
+        Image(
+            painter = painterResource(R.drawable.ic_security_scanner_warning_medallion),
+            contentDescription = null,
+        )
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.vault_settings_security_screen_title_bottomsheet),
+                color = Theme.v2.colors.alerts.warning,
+                style = Theme.brockmann.headings.title2,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = stringResource(R.string.vault_settings_security_screen_content_bottomsheet),
+                color = Theme.v2.colors.text.tertiary,
+                style = Theme.brockmann.body.s.medium,
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            VsButton(
+                label = stringResource(R.string.security_scanner_continue_go_back),
+                variant = Primary,
+                state = Enabled,
+                size = Medium,
+                labelStyle = Theme.brockmann.button.medium.medium,
+                onClick = onGoBack,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            ContinueAnywayButton(enabled = true, onClick = onContinueAnyway)
+        }
     }
 }
 
@@ -158,30 +234,28 @@ fun SecurityScannerBottomSheetContent(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            // "Continue anyway" intentionally reads as the secondary action,
-            // but in Figma it sat at 10sp text/disabled which was barely
-            // legible. Bumped to caption (12sp) on text/tertiary so users can
-            // discover the override path without losing the visual hierarchy
-            // that points them at "Go back" first.
-            // Wrap the override text in a 48dp-tall clickable box. Caption-sized text alone has
-            // ~36dp height with our padding, well below the 48dp accessibility minimum, and an
-            // override on a "high risk" sheet is exactly the surface that needs a generous tap
-            // zone — not a needle-thin one.
-            Box(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .heightIn(min = 48.dp)
-                        .alpha(if (isContinueAnywayEnabled) 1f else DisabledContinueAnywayAlpha)
-                        .clickable(enabled = isContinueAnywayEnabled) { onContinueAnyway() },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(R.string.security_scanner_continue_anyway),
-                    color = Theme.v2.colors.text.tertiary,
-                    style = Theme.brockmann.supplementary.caption,
-                )
-            }
+            ContinueAnywayButton(enabled = isContinueAnywayEnabled, onClick = onContinueAnyway)
         }
+    }
+}
+
+// Figma's 10sp text/disabled was barely legible, so this is caption on text/tertiary; the 48dp box
+// keeps a real tap target on the override of a high-risk warning.
+@Composable
+private fun ContinueAnywayButton(enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier =
+            Modifier.fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .alpha(if (enabled) 1f else DisabledContinueAnywayAlpha)
+                .clickable(enabled = enabled) { onClick() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.security_scanner_continue_anyway),
+            color = Theme.v2.colors.text.tertiary,
+            style = Theme.brockmann.supplementary.caption,
+        )
     }
 }
 
@@ -276,15 +350,6 @@ fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerB
     )
 }
 
-@Composable
-private fun buildSettingsSecurityScannerBottomSheeStyle() =
-    SecurityScannerBottomSheetStyle(
-        title = stringResource(R.string.vault_settings_security_screen_title_bottomsheet),
-        description = stringResource(R.string.vault_settings_security_screen_content_bottomsheet),
-        imageColor = Theme.v2.colors.alerts.warning,
-        image = R.drawable.alert,
-    )
-
 @Immutable
 data class SecurityScannerBottomSheetStyle(
     val title: String,
@@ -294,3 +359,4 @@ data class SecurityScannerBottomSheetStyle(
 )
 
 private const val DisabledContinueAnywayAlpha = 0.4f
+private val BLOCKAID_LOGO_HEIGHT = 9.dp

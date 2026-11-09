@@ -156,6 +156,8 @@ constructor(
      * @param isPrefillTokenApplied whether the link's coin was already selected, kept by the caller
      *   so a re-entered screen neither re-applies it nor resets the user's later pick.
      * @param onPrefillTokenApplied called once the link's coin is selected.
+     * @param canAddMayaLiquidity whether the vault can hold the CACAO account an Add Maya LP
+     *   credits; when it cannot, the option is dropped from the list.
      */
     fun wireInitialState(
         vaultId: String,
@@ -170,6 +172,7 @@ constructor(
         customPrefill: CustomDepositPrefill? = null,
         isPrefillTokenApplied: () -> Boolean = { false },
         onPrefillTokenApplied: () -> Unit = {},
+        canAddMayaLiquidity: suspend () -> Boolean = { true },
     ) {
         val depositOptions =
             when (chain) {
@@ -230,6 +233,17 @@ constructor(
             )
         }
 
+        if (DepositOption.AddMayaLiquidity in depositOptions) {
+            scope.launch {
+                if (canAddMayaLiquidity()) return@launch
+                val remaining = depositOptions - DepositOption.AddMayaLiquidity
+                state.update { it.copy(depositOptions = remaining) }
+                if (state.value.depositOption == DepositOption.AddMayaLiquidity) {
+                    selectDepositOption(remaining.firstOrNull() ?: DepositOption.Custom)
+                }
+            }
+        }
+
         val coinList = tokensToMerge.let {
             if (chain == Chain.Osmosis) it.filter { it.ticker.equals("LVN", ignoreCase = true) }
             else it
@@ -260,7 +274,10 @@ constructor(
                             ?.find { it.token.isNativeToken }
                             ?.token
                 selectedToken?.let { state.update { it.copy(selectedToken = selectedToken) } }
-                if (depositTypeActionProvider() == DeFiNavActions.ADD_LP.type) {
+                // Keyed on the option, not the deep link: setMetadataInfo consumes the link on the
+                // first address, which carries no balance yet, and the asset half's fee is priced
+                // from the balance that arrives after it.
+                if (state.value.depositOption == DepositOption.AddLiquidity) {
                     loadGasFeeForDisplay(vaultId, chain, address)
                 }
             }

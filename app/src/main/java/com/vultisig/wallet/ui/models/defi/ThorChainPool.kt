@@ -1,6 +1,9 @@
 package com.vultisig.wallet.ui.models.defi
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.hasPreGeneratedKey
+import com.vultisig.wallet.data.models.isDepositSupported
 
 internal data class ThorChainPoolAsset(
     val chain: Chain?,
@@ -74,6 +77,19 @@ internal val MAYA_NATIVE_LP_POOLS: Map<Chain, String> =
         Chain.Dash to "DASH.DASH",
         Chain.Zcash to "ZEC.ZEC",
     )
+
+/**
+ * Whether [this] vault can ever hold the CACAO account a Maya LP add credits. A KeyImport vault
+ * without a MayaChain key cannot enable MayaChain, so Add Maya LP would only lead to that refusal.
+ */
+internal fun Vault.canAddMayaLiquidity(): Boolean = hasPreGeneratedKey(Chain.MayaChain)
+
+/** Chains whose Functions flow offers Add Maya LP and nothing else. */
+private val MAYA_LP_ONLY_DEPOSIT_CHAINS = setOf(Chain.Arbitrum, Chain.Dash, Chain.Zcash)
+
+/** Whether [chain]'s Functions button opens a flow [this] vault can use. */
+internal fun Vault.canDepositOn(chain: Chain): Boolean =
+    chain.isDepositSupported && (chain !in MAYA_LP_ONLY_DEPOSIT_CHAINS || canAddMayaLiquidity())
 
 /**
  * The chain whose vault address a MayaChain LP memo names as its paired side when [chain] signs the

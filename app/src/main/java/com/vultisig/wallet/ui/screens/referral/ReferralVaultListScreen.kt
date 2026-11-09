@@ -1,8 +1,7 @@
 package com.vultisig.wallet.ui.screens.referral
 
-import com.vultisig.wallet.ui.utils.asString
-import com.vultisig.wallet.ui.utils.asUiText
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -32,14 +32,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiGradientDivider
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.v2.icons.VaultIcon
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListUiState
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel
 import com.vultisig.wallet.ui.models.referral.ReferralVaultListViewModel.Companion.VAULT_ID_SELECTED
 import com.vultisig.wallet.ui.models.referral.VaultItem
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.asUiText
 
 @Composable
 internal fun ReferralVaultListScreen(
@@ -77,30 +79,21 @@ internal fun ReferralVaultListContentScreen(
                         .navigationBarsPadding()
             ) {
                 Text(
-                    style = Theme.brockmann.body.m.medium,
+                    style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.tertiary,
                     text = stringResource(R.string.referral_top_bar_list_vaults),
                     textAlign = TextAlign.Start,
                 )
 
-                UiSpacer(16.dp)
+                UiSpacer(10.dp)
 
                 LazyColumn(
                     modifier =
-                        Modifier.background(
-                            Theme.v2.colors.backgrounds.secondary,
-                            shape = Theme.v2.radius.xl,
-                        )
+                        Modifier.clip(Theme.v2.radius.xl)
+                            .background(Theme.v2.colors.backgrounds.secondary)
                 ) {
-                    itemsIndexed(state.vaults, key = { _, vault -> vault.id }) { index, vault ->
+                    itemsIndexed(state.vaults, key = { _, vault -> vault.id }) { _, vault ->
                         VaultRow(vault, onVaultClicked)
-
-                        if (index < state.vaults.size - 1) {
-                            UiGradientDivider(
-                                initialColor = Theme.v2.colors.backgrounds.secondary,
-                                endColor = Theme.v2.colors.backgrounds.secondary,
-                            )
-                        }
                     }
                 }
             }
@@ -113,76 +106,82 @@ internal fun VaultRow(vault: VaultItem, onVaultClicked: (String) -> Unit) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
+                .then(
+                    if (vault.isSelected) {
+                        Modifier.background(Theme.v2.colors.backgrounds.tertiary_2)
+                    } else {
+                        Modifier
+                    }
+                )
                 .clickable { onVaultClicked(vault.id) }
-                .padding(horizontal = 18.dp, vertical = 12.dp),
+                .padding(horizontal = 20.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Image(
+            painter = painterResource(R.drawable.referral_vault_avatar),
+            contentDescription = null,
+            modifier = Modifier.size(28.dp),
+        )
+
+        UiSpacer(12.dp)
+
         Text(
             text = vault.name,
             color = Theme.v2.colors.text.primary,
             maxLines = 1,
-            style = Theme.brockmann.body.m.medium,
+            style = Theme.brockmann.body.s.medium,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
 
         UiSpacer(8.dp)
 
-        Row(
-            modifier =
-                Modifier.background(
-                        Theme.v2.colors.backgrounds.secondary,
-                        shape = Theme.v2.radius.md,
-                    )
-                    .border(
-                        border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
-                        shape = Theme.v2.radius.md,
-                    )
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (vault.isFastVault) {
-                Icon(
-                    painter = painterResource(id = R.drawable.biomatrics_fast),
-                    contentDescription = null,
-                    tint = Theme.v2.colors.backgrounds.orange,
-                    modifier = Modifier.size(14.dp),
+        VaultSigningPill(vault)
+
+        UiSpacer(8.dp)
+
+        Icon(
+            modifier = Modifier.size(if (vault.isSelected) 16.dp else 14.dp),
+            painter =
+                painterResource(
+                    id = if (vault.isSelected) R.drawable.ic_check else R.drawable.ic_caret_right
+                ),
+            contentDescription = null,
+            tint =
+                if (vault.isSelected) Theme.v2.colors.alerts.success
+                else Theme.v2.colors.text.primary,
+        )
+    }
+}
+
+@Composable
+private fun VaultSigningPill(vault: VaultItem) {
+    Row(
+        modifier =
+            Modifier.background(
+                    Theme.v2.colors.backgrounds.secondary,
+                    shape = Theme.v2.radius.pill,
                 )
-            } else {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_shield),
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = Theme.v2.colors.alerts.success,
+                .border(
+                    border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
+                    shape = Theme.v2.radius.pill,
                 )
-            }
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        VaultIcon(
+            isFastVault = vault.isFastVault,
+            isSecureIconFilled = true,
+            contentDescription = null,
+        )
 
-            UiSpacer(6.dp)
+        UiSpacer(4.dp)
 
-            Text(
-                text = vault.signingInfo.asString(),
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.tertiary,
-            )
-        }
-
-        UiSpacer(6.dp)
-
-        if (vault.isSelected) {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                painter = painterResource(id = R.drawable.ic_check),
-                contentDescription = null,
-                tint = Theme.v2.colors.alerts.success,
-            )
-        } else {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                painter = painterResource(id = R.drawable.ic_caret_right),
-                contentDescription = null,
-                tint = Theme.v2.colors.text.primary,
-            )
-        }
+        Text(
+            text = vault.signingInfo.asString(),
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.v2.colors.text.tertiary,
+        )
     }
 }
 

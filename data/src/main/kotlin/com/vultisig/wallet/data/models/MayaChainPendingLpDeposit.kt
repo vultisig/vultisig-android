@@ -16,8 +16,6 @@ data class MayaChainPendingLpDeposit(
     val pool: String,
     val pendingCacao: BigInteger,
     val pendingAsset: BigInteger,
-    /** Inbound hash of the side that already arrived. */
-    val pendingTxId: String?,
     /**
      * The address MayaChain expects the missing side to come from — the asset-side address when
      * CACAO is pending, the CACAO address when the asset is pending.

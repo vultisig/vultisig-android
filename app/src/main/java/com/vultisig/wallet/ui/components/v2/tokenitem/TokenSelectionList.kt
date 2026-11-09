@@ -58,7 +58,7 @@ internal fun <T> TokenSelectionList(
     titleContent: @Composable () -> Unit,
     notFoundContent: @Composable () -> Unit,
     onCheckChange: (Boolean, T) -> Unit,
-    onDoneClick: () -> Unit,
+    onDoneClick: (() -> Unit)?,
     onCancelClick: () -> Unit,
     plusUiModel: GridPlusUiModel? = null,
     onSetSearchText: (String) -> Unit = {},
@@ -104,7 +104,7 @@ internal fun <T> TokenSelectionList(
     titleContent: @Composable () -> Unit,
     notFoundContent: @Composable () -> Unit,
     onCheckChange: (Boolean, GridTokenUiModel<T>) -> Unit,
-    onDoneClick: () -> Unit,
+    onDoneClick: (() -> Unit)?,
     onCancelClick: () -> Unit,
     onPasteClick: (String) -> Unit = {},
     bannerContent: (@Composable () -> Unit)? = null,
@@ -119,13 +119,16 @@ internal fun <T> TokenSelectionList(
                 size = VsCircleButtonSize.Small,
             )
         },
-        rightAction = {
-            VsCircleButton(
-                drawableResId = R.drawable.big_tick,
-                onClick = onDoneClick,
-                size = VsCircleButtonSize.Small,
-            )
-        },
+        rightAction =
+            if (onDoneClick != null) {
+                {
+                    VsCircleButton(
+                        drawableResId = R.drawable.big_tick,
+                        onClick = onDoneClick,
+                        size = VsCircleButtonSize.Small,
+                    )
+                }
+            } else null,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             UiSpacer(size = 24.dp)

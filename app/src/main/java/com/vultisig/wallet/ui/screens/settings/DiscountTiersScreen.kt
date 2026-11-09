@@ -6,17 +6,22 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,7 +38,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCaseImpl.Companion.BRONZE_DISCOUNT_BPS
@@ -49,6 +56,7 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.v3.V3Topbar
 import com.vultisig.wallet.ui.models.swap.discountPercentOfListFee
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
@@ -57,118 +65,141 @@ import com.vultisig.wallet.ui.utils.VsUriHandler
 import java.text.NumberFormat
 import java.util.Locale
 
-private val BannerGradientStart = Color(0xFF0F1C3E)
-private val BannerHeight = 170.dp
-private val BannerCardHeight = 139.dp
-private val BannerCoinsHeight = 178.dp
+// Where the frame's width, toolbar bottom and subtitle sit on the hero art.
+private val HeroFrameWidth = 393.dp
+private val HeroToolbarBottom = 113.dp
+private val HeroSubtitleTop = 313.dp
+private val TierFooterOverlap = 22.dp
+private const val TIER_CARD_Z_INDEX = 1f
+private const val COLLAPSED_BORDER_FADE_START = 0.7f
 
 @Composable
 internal fun DiscountTiersScreen(model: DiscountTiersViewModel = hiltViewModel()) {
     val uriHandler = VsUriHandler()
     val state by model.state.collectAsState()
 
-    V2Scaffold(
-        title = stringResource(R.string.vault_settings_discounts),
+    DiscountTiersScreen(
+        state = state,
         onBackClick = model::back,
-        actions = {
-            VsCircleButton(
-                icon = R.drawable.settings_globe,
-                onClick = { uriHandler.openUri(VsAuxiliaryLinks.VULT_TOKEN_DOCS) },
-                type = VsCircleButtonType.Secondary,
-                designType = DesignType.Shined,
-                size = VsCircleButtonSize.Small,
-                hasBorder = false,
-            )
+        onDocsClick = { uriHandler.openUri(VsAuxiliaryLinks.VULT_TOKEN_DOCS) },
+        onTierUnlockClick = model::onTierUnlockClick,
+        onUnlockContinue = {
+            model.dismissBottomSheet()
+            model.navigateToSwaps()
         },
-    ) {
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-            TierBanner()
+        onDismissSheet = model::dismissBottomSheet,
+    )
+}
 
-            UiSpacer(size = 24.dp)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun DiscountTiersScreen(
+    state: DiscountTiersUiModel,
+    onBackClick: () -> Unit,
+    onDocsClick: () -> Unit,
+    onTierUnlockClick: (TierType) -> Unit,
+    onUnlockContinue: () -> Unit,
+    onDismissSheet: () -> Unit,
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val artScale = maxWidth / HeroFrameWidth
+        val toolbarHeight = TopAppBarDefaults.TopAppBarExpandedHeight
+        val artAboveContent = HeroToolbarBottom * artScale
+        V2Scaffold(
+            applyDefaultPaddings = false,
+            applyScaffoldPaddings = true,
+            topBar = {
+                TierHeroTopBar(
+                    artTop = artAboveContent - toolbarHeight,
+                    height = toolbarHeight,
+                    onBackClick = onBackClick,
+                    onDocsClick = onDocsClick,
+                )
+            },
+        ) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Box {
+                    TierHero(modifier = Modifier.offset(y = -artAboveContent))
 
-            Text(
-                text = stringResource(R.string.vault_tier_description),
-                style = Theme.brockmann.body.s.regular,
-                color = Theme.v2.colors.text.primary,
-            )
+                    Column(
+                        modifier =
+                            Modifier.padding(
+                                top = (HeroSubtitleTop - HeroToolbarBottom) * artScale,
+                                start = 16.dp,
+                                end = 16.dp,
+                                bottom = 16.dp,
+                            )
+                    ) {
+                        Text(
+                            text = stringResource(R.string.vault_tier_description),
+                            style = Theme.brockmann.body.s.regular,
+                            color = Theme.v2.colors.text.primary,
+                        )
 
-            UiSpacer(size = 16.dp)
+                        UiSpacer(size = 13.dp)
 
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                TierType.entries.forEach { tier ->
-                    val isActive = state.activeTier == tier
-                    TierCard(
-                        tierType = tier,
-                        isActive = isActive,
-                        onClick = { if (!isActive) model.onTierUnlockClick(tier) },
-                    )
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            TierType.entries.forEach { tier ->
+                                val isActive = state.activeTier == tier
+                                TierCard(
+                                    tierType = tier,
+                                    isActive = isActive,
+                                    onClick = { if (!isActive) onTierUnlockClick(tier) },
+                                )
+                            }
+                        }
+                    }
                 }
             }
-
-            UiSpacer(size = 16.dp)
         }
     }
 
     if (state.showBottomSheetDialog && state.tierClicked != null) {
         TierDiscountBottomSheet(
             tier = state.tierClicked!!,
-            onContinue = {
-                model.dismissBottomSheet()
-                model.navigateToSwaps()
-            },
-            onDismissRequest = { model.dismissBottomSheet() },
+            onContinue = onUnlockContinue,
+            onDismissRequest = onDismissSheet,
         )
     }
 }
 
 @Composable
-private fun TierBanner() {
-    // The medallion stack is taller than the gradient card and anchored to the bottom, so the
-    // top globe coin overflows above the card's top edge (as in Figma). The outer box reserves
-    // that overhang in its height; clipToBounds crops only the lowest coin at the banner bottom.
-    Box(modifier = Modifier.fillMaxWidth().height(BannerHeight).clipToBounds()) {
-        Box(
-            modifier =
-                Modifier.align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .height(BannerCardHeight)
-                    .clip(Theme.v2.radius.xl)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(BannerGradientStart, Theme.v2.colors.primary.accent1)
-                        )
-                    )
-        ) {
-            Column(
-                modifier =
-                    Modifier.align(Alignment.CenterStart).padding(start = 24.dp, end = 150.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.vault_tier_banner_title),
-                    style = Theme.brockmann.headings.title1,
-                    color = Color.White,
+private fun TierHeroTopBar(
+    artTop: Dp,
+    height: Dp,
+    onBackClick: () -> Unit,
+    onDocsClick: () -> Unit,
+) {
+    Box(modifier = Modifier.height(height).clipToBounds()) {
+        TierHero(modifier = Modifier.offset(y = -artTop))
+        V3Topbar(
+            title = stringResource(R.string.vault_settings_discounts),
+            onBackClick = onBackClick,
+            transparentBackground = true,
+            actions = {
+                VsCircleButton(
+                    icon = R.drawable.settings_globe,
+                    onClick = onDocsClick,
+                    type = VsCircleButtonType.Secondary,
+                    designType = DesignType.Shined,
+                    size = VsCircleButtonSize.Small,
+                    hasBorder = false,
                 )
-
-                UiSpacer(size = 4.dp)
-
-                Text(
-                    text = stringResource(R.string.vault_tier_banner_subtitle),
-                    style = Theme.brockmann.supplementary.footnote,
-                    color = Theme.v2.colors.text.primary,
-                )
-            }
-        }
-
-        Image(
-            painter = painterResource(id = R.drawable.tiers_header_coins),
-            contentDescription = null,
-            contentScale = ContentScale.Fit,
-            modifier =
-                Modifier.align(Alignment.BottomEnd)
-                    .height(BannerCoinsHeight)
-                    .aspectRatio(169f / 167f),
+            },
         )
     }
+}
+
+/** The frame's art, full width. Its top sits at the top of the frame, above the toolbar. */
+@Composable
+private fun TierHero(modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(id = R.drawable.tiers_hero),
+        contentDescription = null,
+        contentScale = ContentScale.FillWidth,
+        alignment = Alignment.TopCenter,
+        modifier = modifier.fillMaxWidth().wrapContentHeight(Alignment.Top, unbounded = true),
+    )
 }
 
 @Composable
@@ -203,7 +234,9 @@ private fun CollapsedTierCard(style: TierStyle, shape: Shape, onClick: () -> Uni
                     width = 1.dp,
                     brush =
                         Brush.verticalGradient(
-                            colors = listOf(Theme.v2.colors.border.light, style.accentColor)
+                            0f to Theme.v2.colors.border.light,
+                            COLLAPSED_BORDER_FADE_START to Theme.v2.colors.border.light,
+                            1f to style.accentColor,
                         ),
                     shape = shape,
                 )
@@ -214,16 +247,20 @@ private fun CollapsedTierCard(style: TierStyle, shape: Shape, onClick: () -> Uni
 
 @Composable
 private fun ActiveTierCard(style: TierStyle, shape: Shape) {
-    Column(modifier = Modifier.fillMaxWidth().clip(shape)) {
+    Column(verticalArrangement = Arrangement.spacedBy(-TierFooterOverlap)) {
         Column(
             modifier =
                 Modifier.fillMaxWidth()
+                    .zIndex(TIER_CARD_Z_INDEX)
+                    .clip(shape)
                     .background(Theme.v2.colors.backgrounds.surface1)
-                    .padding(horizontal = 20.dp, vertical = 24.dp),
+                    .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
+                    .padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             TierHeaderRow(style = style, modifier = Modifier.fillMaxWidth())
+
+            UiSpacer(size = 24.dp)
 
             Box(
                 modifier =
@@ -247,6 +284,8 @@ private fun ActiveTierCard(style: TierStyle, shape: Shape) {
                 )
             }
 
+            UiSpacer(size = 12.dp)
+
             Text(
                 text = stringResource(R.string.vault_tier_more_coming_soon),
                 style = Theme.brockmann.body.xs.medium,
@@ -254,34 +293,47 @@ private fun ActiveTierCard(style: TierStyle, shape: Shape) {
             )
         }
 
-        Row(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .background(
-                        // Figma: darker tier shade at the top fading to the bright accent at the
-                        // bottom (gold #997437 -> #ffc25c == accent*0.6 -> accent).
+        ActiveTierFooter(accentColor = style.accentColor)
+    }
+}
+
+@Composable
+private fun ActiveTierFooter(accentColor: Color) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(
+                    // Figma: darker tier shade at the top fading to the bright accent at the
+                    // bottom (gold #997437 -> #ffc25c == accent*0.6 -> accent).
+                    brush =
                         Brush.verticalGradient(
                             colors =
                                 listOf(
-                                    lerp(style.accentColor, Color.Black, 0.4f),
-                                    style.accentColor,
+                                    lerp(accentColor, Color.Black, 0.4f),
+                                    accentColor,
                                 )
-                        )
-                    )
-                    .padding(vertical = 14.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            UiIcon(drawableResId = R.drawable.ic_check, size = 20.dp, tint = Color.White)
+                        ),
+                    shape =
+                        RoundedCornerShape(
+                            bottomStart = Theme.v2.radius.xl.size,
+                            bottomEnd = Theme.v2.radius.xl.size,
+                        ),
+                )
+                .padding(top = 37.dp, bottom = 19.dp),
+        horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.ic_check,
+            size = 20.dp,
+            tint = Theme.v2.colors.text.primary,
+        )
 
-            UiSpacer(size = 5.dp)
-
-            Text(
-                text = stringResource(R.string.vault_tier_active),
-                style = Theme.brockmann.button.semibold.medium,
-                color = Color.White,
-            )
-        }
+        Text(
+            text = stringResource(R.string.vault_tier_active),
+            style = Theme.brockmann.button.semibold.medium,
+            color = Theme.v2.colors.text.primary,
+        )
     }
 }
 
@@ -423,7 +475,7 @@ internal fun DiscountTiersScreenPreview() {
             Modifier.fillMaxWidth().background(Theme.v2.colors.backgrounds.primary).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        TierBanner()
+        TierHero()
         TierType.entries.forEach { tier ->
             TierCard(tierType = tier, isActive = tier == TierType.GOLD, onClick = {})
         }

@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -382,6 +383,75 @@ internal class AddLiquidityStrategyTest {
     }
 
     @Test
+    fun `UTXO Max sized from the sweep fee signs the sweep`() = runTest {
+        givenNativeAccount(Chain.Bitcoin, BTC_ADDRESS)
+        val balance = ONE_COIN
+        val max = balance - SWEEP_FEE
+        tokenAmount.setTextAndPlaceCursorAtEnd(BigDecimal(max).movePointLeft(8).toPlainString())
+
+        val tx =
+            build(
+                    Chain.Bitcoin,
+                    pairedAddress = RUNE_ADDRESS,
+                    pool = BTC_POOL,
+                    formBalance = balance,
+                    formFee = BigDecimal(SWEEP_FEE).movePointLeft(8),
+                    utxoPlan = sweepOnly(balance),
+                )
+                .build()
+
+        assertEquals(max, tx.srcTokenValue.value)
+        assertEquals(listOf(max, balance), plannedAmounts)
+    }
+
+    @Test
+    fun `UTXO amount past the form's reserve is not swept down`() = runTest {
+        givenNativeAccount(Chain.Bitcoin, BTC_ADDRESS)
+        val balance = ONE_COIN
+        tokenAmount.setTextAndPlaceCursorAtEnd("0.99999999")
+
+        val text =
+            assertFailsWith<InvalidTransactionDataException> {
+                    build(
+                            Chain.Bitcoin,
+                            pairedAddress = RUNE_ADDRESS,
+                            pool = BTC_POOL,
+                            formBalance = balance,
+                            formFee = BigDecimal(SWEEP_FEE).movePointLeft(8),
+                            utxoPlan = sweepOnly(balance),
+                        )
+                        .build()
+                }
+                .text
+
+        assertTrue(text is UiText.StringResource)
+        assertEquals(R.string.insufficient_utxos_error, text.resId)
+        assertEquals(listOf(balance - BigInteger.ONE), plannedAmounts)
+    }
+
+    @Test
+    fun `account-chain Max is refitted to a fee that rose since the form read it`() = runTest {
+        givenNativeAccount(Chain.Ethereum, ETH_ADDRESS)
+        val formFee = BigInteger.valueOf(5)
+        val signedFee = BigInteger.TEN
+        val max = ONE_COIN - formFee
+        tokenAmount.setTextAndPlaceCursorAtEnd(BigDecimal(max).movePointLeft(8).toPlainString())
+
+        val tx =
+            build(
+                    Chain.Ethereum,
+                    pairedAddress = RUNE_ADDRESS,
+                    pool = ETH_POOL,
+                    formBalance = ONE_COIN,
+                    formFee = BigDecimal(formFee).movePointLeft(8),
+                )
+                .build()
+
+        assertEquals(ONE_COIN - signedFee, tx.srcTokenValue.value)
+        assertEquals(signedFee, tx.estimatedFees.value)
+    }
+
+    @Test
     fun `add the balance covers with the fee keeps the amount and empty destination`() = runTest {
         givenNativeAccount(Chain.ThorChain, RUNE_ADDRESS)
 
@@ -723,6 +793,8 @@ internal class AddLiquidityStrategyTest {
         pool: String = STAGED_POOL,
         formBalance: BigInteger = ONE_COIN * BigInteger.TEN,
         canHoldChain: Boolean = true,
+        formFee: BigDecimal? = null,
+        utxoPlan: (BigInteger) -> Bitcoin.TransactionPlan = ::plannedInputs,
     ) =
         AddLiquidityStrategy(
             vaultIdProvider = { VAULT_ID },
@@ -739,6 +811,7 @@ internal class AddLiquidityStrategyTest {
             addressProvider = {
                 gateAddress(gateAccount(nativeCoin(chain, addressOf(chain)), formBalance))
             },
+            formFeeProvider = { formFee },
             requireTokenAmount = amountGate(chain, fields)::requireTokenAmount,
             blockChainSpecificRepository = specificRepo,
             calculateGasFee = { _, coin, _ -> TokenValue(BigInteger.ONE, coin) },
@@ -750,21 +823,37 @@ internal class AddLiquidityStrategyTest {
             gasFeeToEstimate = { params -> estimatedFee(params.gasFee) },
             getBitcoinTransactionPlan = { _, _, _, amount, _, _ ->
                 plannedAmounts += amount
-                Bitcoin.TransactionPlan.newBuilder()
-                    .setFee(PLAN_FEE)
-                    .setError(SigningError.OK)
-                    .addUtxos(
-                        Bitcoin.UnspentTransaction.newBuilder()
-                            .setOutPoint(
-                                Bitcoin.OutPoint.newBuilder()
-                                    .setHash(ByteString.copyFrom(byteArrayOf(0x01, 0x02)))
-                                    .setIndex(1)
-                            )
-                            .setAmount(200_000L)
-                    )
-                    .build()
+                utxoPlan(amount)
             },
         )
+
+    private fun plannedInputs(amount: BigInteger): Bitcoin.TransactionPlan =
+        Bitcoin.TransactionPlan.newBuilder()
+            .setFee(PLAN_FEE)
+            .setAmount(amount.toLong())
+            .setError(SigningError.OK)
+            .addUtxos(
+                Bitcoin.UnspentTransaction.newBuilder()
+                    .setOutPoint(
+                        Bitcoin.OutPoint.newBuilder()
+                            .setHash(ByteString.copyFrom(byteArrayOf(0x01, 0x02)))
+                            .setIndex(1)
+                    )
+                    .setAmount(200_000L)
+            )
+            .build()
+
+    /** Only a sweep of [balance] fits: a plan with a change output pays more than it leaves. */
+    private fun sweepOnly(balance: BigInteger): (BigInteger) -> Bitcoin.TransactionPlan =
+        { amount ->
+            if (amount == balance) {
+                plannedInputs(amount).toBuilder().setAmount((balance - SWEEP_FEE).toLong()).build()
+            } else {
+                Bitcoin.TransactionPlan.newBuilder()
+                    .setError(SigningError.Error_not_enough_utxos)
+                    .build()
+            }
+        }
 
     private suspend fun assertAssetSideRefusedBy(ethInbound: THORChainInboundAddress) {
         givenNativeAccount(Chain.Ethereum, ETH_ADDRESS)
@@ -881,6 +970,7 @@ internal class AddLiquidityStrategyTest {
         const val ETH_INBOUND = "0xinbound"
         const val BTC_INBOUND = "bc1qinbound"
         const val PLAN_FEE = 2_500L
+        val SWEEP_FEE: BigInteger = BigInteger.valueOf(1_740L)
         // The plan's outpoint hash bytes, reversed into display order.
         const val PLANNED_UTXO_HASH = "0201"
     }

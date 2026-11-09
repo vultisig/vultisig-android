@@ -1,29 +1,24 @@
 package com.vultisig.wallet.ui.screens.referral
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.referral.VsPromoBox
 import com.vultisig.wallet.ui.components.referral.VsPromoTag
@@ -38,27 +33,40 @@ internal fun ReferralOnboardingScreen(model: OnBoardingReferralViewModel = hiltV
 
 @Composable
 private fun ReferralOnboardingScreen(onGetStarted: () -> Unit, onBackClick: () -> Unit) {
+    val timelineColor = Theme.v2.colors.backgrounds.surface1
     V2Scaffold(
         title = stringResource(R.string.referral_onboarding_title),
         onBackClick = onBackClick,
+        applyDefaultPaddings = false,
         content = {
-            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                ReferralTag()
-                Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-                    Box(
-                        modifier =
-                            Modifier.padding(start = 24.dp)
-                                .width(1.dp)
-                                .fillMaxHeight(0.92f)
-                                .background(Theme.v2.colors.border.light)
-                    )
+            Column(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp)
+                        .padding(top = 24.dp)
+            ) {
+                VsPromoTag(
+                    icon = R.drawable.megaphone,
+                    text = stringResource(R.string.referral_program_tag),
+                )
 
-                    Column {
-                        HowItWorksTitle()
+                Text(
+                    text = stringResource(R.string.referral_how_it_works),
+                    style = Theme.brockmann.headings.largeTitle,
+                    color = Theme.v2.colors.text.primary,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .drawBehind {
+                                drawRect(
+                                    color = timelineColor,
+                                    size = Size(TIMELINE_WIDTH.toPx(), size.height),
+                                )
+                            }
+                            .padding(start = 20.dp, top = 32.dp, bottom = 48.dp),
+                )
 
-                        TimeLineList()
-                    }
-                }
+                TimeLineList(lineColor = timelineColor)
             }
         },
         bottomBar = { FooterButton(onGetStarted = onGetStarted) },
@@ -67,92 +75,69 @@ private fun ReferralOnboardingScreen(onGetStarted: () -> Unit, onBackClick: () -
 
 @Composable
 private fun FooterButton(onGetStarted: () -> Unit) {
-    Column(modifier = Modifier.navigationBarsPadding().padding(bottom = 24.dp)) {
-        VsButton(
-            onClick = onGetStarted,
-            label = stringResource(R.string.referral_onboarding_get_started),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+    VsButton(
+        onClick = onGetStarted,
+        label = stringResource(R.string.referral_invite_next),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+    )
+}
+
+@Composable
+private fun TimeLineList(lineColor: Color) {
+    val items =
+        listOf(
+            Triple(
+                R.drawable.ic_referral_keyboard,
+                R.string.referral_create_code_title,
+                R.string.referral_create_code_description,
+            ),
+            Triple(
+                R.drawable.share_up_right_2,
+                R.string.referral_share_title,
+                R.string.referral_share_description,
+            ),
+            Triple(
+                R.drawable.ic_cup,
+                R.string.referral_earn_title,
+                R.string.referral_earn_description,
+            ),
+            Triple(
+                R.drawable.ic_referral_users,
+                R.string.referral_use_code_title,
+                R.string.referral_use_code_description,
+            ),
         )
-    }
-}
 
-@Composable
-private fun TimeLineList() {
-    Column(modifier = Modifier.padding(end = 16.dp)) {
-        TimeLineItem {
+    Column(verticalArrangement = Arrangement.spacedBy(TIMELINE_ROW_GAP)) {
+        items.forEachIndexed { index, (icon, title, description) ->
             VsPromoBox(
-                title = stringResource(R.string.referral_create_code_title),
-                description = stringResource(R.string.referral_create_code_description),
-                icon = R.drawable.ic_referral,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-
-        UiSpacer(16.dp)
-
-        TimeLineItem {
-            VsPromoBox(
-                title = stringResource(R.string.referral_share_title),
-                description = stringResource(R.string.referral_share_description),
-                icon = R.drawable.ic_share_referral,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-
-        UiSpacer(16.dp)
-
-        TimeLineItem {
-            VsPromoBox(
-                title = stringResource(R.string.referral_earn_title),
-                description = stringResource(R.string.referral_earn_description),
-                icon = R.drawable.ic_cup,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-
-        UiSpacer(16.dp)
-
-        TimeLineItem {
-            VsPromoBox(
-                title = stringResource(R.string.referral_use_code_title),
-                description = stringResource(R.string.referral_use_code_description),
-                icon = R.drawable.ic_user,
-                modifier = Modifier.fillMaxWidth(),
+                title = stringResource(title),
+                description = stringResource(description),
+                icon = icon,
+                modifier =
+                    Modifier.timeLineBranch(color = lineColor, isLast = index == items.lastIndex)
+                        .padding(start = TIMELINE_BRANCH_LENGTH),
             )
         }
     }
 }
 
-@Composable
-private fun TimeLineItem(content: @Composable () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        Box(modifier = Modifier.width(24.dp).height(1.dp).background(Theme.v2.colors.border.light))
-
-        Box(modifier = Modifier.weight(1f)) { content() }
-    }
+/** Draws the trunk through this row and the branch from it to the row's vertical center. */
+private fun Modifier.timeLineBranch(color: Color, isLast: Boolean) = drawBehind {
+    val lineWidth = TIMELINE_WIDTH.toPx()
+    val center = size.height / 2
+    val trunkEnd = if (isLast) center + lineWidth / 2 else size.height + TIMELINE_ROW_GAP.toPx()
+    drawRect(color = color, size = Size(lineWidth, trunkEnd))
+    drawRect(
+        color = color,
+        topLeft = Offset(0f, center - lineWidth / 2),
+        size = Size(TIMELINE_BRANCH_LENGTH.toPx(), lineWidth),
+    )
 }
 
-@Composable
-private fun ReferralTag() {
-    Box {
-        VsPromoTag(
-            icon = R.drawable.ic_trumpet,
-            text = stringResource(R.string.referral_program_tag),
-        )
-    }
-}
-
-@Composable
-private fun HowItWorksTitle() {
-    Box {
-        Text(
-            text = stringResource(R.string.referral_how_it_works),
-            style = Theme.brockmann.headings.largeTitle,
-            color = Theme.v2.colors.text.primary,
-            modifier = Modifier.padding(top = 32.dp, bottom = 32.dp, start = 48.dp),
-        )
-    }
-}
+private val TIMELINE_WIDTH = 2.dp
+private val TIMELINE_BRANCH_LENGTH = 22.dp
+private val TIMELINE_ROW_GAP = 16.dp
 
 @Preview(showBackground = true)
 @Composable

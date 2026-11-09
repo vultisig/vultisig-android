@@ -180,7 +180,7 @@ constructor(
 
             // Get user distributions
             val distributionData = thorChainApi.fetchTcyUserDistributions(address)
-            val distributions = distributionData.distributions
+            val distributions = distributionData.distributions.orEmpty()
 
             if (distributions.isEmpty()) {
                 return 0.0
