@@ -188,7 +188,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         evmApi: EvmApi,
     ): Eip1559 = coroutineScope {
         val baseNetworkPriceDeferred = async { evmApi.getBaseFee() }
-        val feeHistoryDeferred = async { evmApi.getFeeHistory() }
+        val feeHistoryDeferred = async { evmApi.getFeeHistory(rewardPercentile(chain, isSwap)) }
 
         val rewardsFeeHistory = feeHistoryDeferred.await()
 
@@ -258,6 +258,10 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
             val sample = rewardsFeeHistory.lastOrNull() ?: BigInteger.ZERO
             val capped = sample.min(ETHEREUM_SWAP_PRIORITY_FEE_CAP)
             maxOf(capped, ETHEREUM_SWAP_PRIORITY_FEE_FLOOR)
+        } else if (isEthereumSend(chain, isSwap)) {
+            // An empty window keeps the 1 GWEI tip sends used before the market-rate floor.
+            rewardsFeeHistory.median()?.max(ETHEREUM_SEND_PRIORITY_FEE_FLOOR)
+                ?: GWEI.also { Timber.w("Fee history is empty for %s, using fallback", chain) }
         } else {
             when (chain) {
                 // Arb, Mantle and Robinhood (Arbitrum Orbit) require no miner tip
@@ -288,7 +292,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
                     )
                 }
 
-                // picked medium with min of 1 GWEI (other EVM chains, plus non-swap Ethereum)
+                // picked medium with min of 1 GWEI (other EVM chains)
                 else -> {
                     if (rewardsFeeHistory.isEmpty()) {
                         Timber.w("Fee history is empty for %s, using fallback", chain)
@@ -298,6 +302,13 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
             }
         }
     }
+
+    private fun isEthereumSend(chain: Chain, isSwap: Boolean): Boolean =
+        chain == Chain.Ethereum && !isSwap
+
+    private fun rewardPercentile(chain: Chain, isSwap: Boolean): Int =
+        if (isEthereumSend(chain, isSwap)) ETHEREUM_SEND_REWARD_PERCENTILE
+        else DEFAULT_REWARD_PERCENTILE
 
     // Carried on the fee as well as folded into the total: a max send is re-fitted to the gas bond
     // that ends up signed, and that bond is re-priced after this point, so the L1 term has to
@@ -344,6 +355,10 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         // ceiling (~3 consecutive max EIP-1559 base-fee increases of 12.5%) so a transfer
         // survives a base-fee climb during the MPC review + sign window without stalling.
         private const val NON_SWAP_BASE_FEE_BUMP_PERCENT = 25
+
+        private const val DEFAULT_REWARD_PERCENTILE = 5
+        private const val ETHEREUM_SEND_REWARD_PERCENTILE = 75
+        private val ETHEREUM_SEND_PRIORITY_FEE_FLOOR = BigInteger.valueOf(200_000_000) // 0.2 GWEI
 
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()

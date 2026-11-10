@@ -41,7 +41,7 @@ internal class EthereumFeeServiceTest {
     fun setUp() {
         every { evmApiFactory.createEvmApi(any()) } returns evmApi
         coEvery { evmApi.getBaseFee() } returns BigInteger.ZERO
-        coEvery { evmApi.getFeeHistory() } returns emptyList()
+        coEvery { evmApi.getFeeHistory(any()) } returns emptyList()
         coEvery {
             evmApi.getOpStackL1Fee(any(), any(), any(), any(), any(), any(), any(), any())
         } returns BigInteger.ZERO
@@ -187,7 +187,7 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
-    fun `Ethereum uses the median reward when it exceeds 1 GWEI`() = runTest {
+    fun `Ethereum uses the median reward when it exceeds the 0_2 GWEI send floor`() = runTest {
         stubFeeHistory(listOf(gwei(2), gwei(4), gwei(6)))
 
         val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
@@ -196,12 +196,50 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
-    fun `Ethereum uses the 1 GWEI floor when the median is below it`() = runTest {
+    fun `Ethereum uses the 0_2 GWEI send floor when the median is below it`() = runTest {
         stubFeeHistory(listOf(BigInteger.ONE, BigInteger.TEN, BigInteger.valueOf(100)))
 
         val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
 
-        assertEquals(GWEI, fee.maxPriorityFeePerGas)
+        assertEquals(ETH_SEND_TIP_FLOOR, fee.maxPriorityFeePerGas)
+    }
+
+    @Test
+    fun `Ethereum send with a 0_015 GWEI median tips the 0_2 GWEI floor`() = runTest {
+        stubFeeHistory(
+            listOf(BigInteger("10000000"), BigInteger("15000000"), BigInteger("20000000"))
+        )
+
+        val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
+
+        assertEquals(ETH_SEND_TIP_FLOOR, fee.maxPriorityFeePerGas)
+    }
+
+    @Test
+    fun `Ethereum send with a 0_31 GWEI median tips the median`() = runTest {
+        stubFeeHistory(
+            listOf(BigInteger("200000000"), BigInteger("310000000"), BigInteger("500000000"))
+        )
+
+        val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
+
+        assertEquals(BigInteger("310000000"), fee.maxPriorityFeePerGas)
+    }
+
+    @Test
+    fun `Ethereum send reads the 75th-percentile reward`() = runTest {
+        service.calculateDefaultFees(transfer(Chain.Ethereum))
+
+        coVerify(exactly = 1) { evmApi.getFeeHistory(75) }
+    }
+
+    @Test
+    fun `Ethereum swap and other chains keep reading the 5th-percentile reward`() = runTest {
+        service.calculateDefaultFees(swap(Chain.Ethereum))
+        service.calculateDefaultFees(transfer(Chain.Polygon))
+
+        coVerify(exactly = 2) { evmApi.getFeeHistory(5) }
+        coVerify(exactly = 0) { evmApi.getFeeHistory(75) }
     }
 
     // ---------- Median edge cases ----------
@@ -244,7 +282,7 @@ internal class EthereumFeeServiceTest {
 
     @Test
     fun `even-length fee history with an odd sum truncates down instead of rounding`() = runTest {
-        // Both values clear the 1 GWEI floor so the averaged median (not the floor) is asserted.
+        // Both values clear the send floor so the averaged median (not the floor) is asserted.
         stubFeeHistory(listOf(BigInteger("5000000000"), BigInteger("5000000001")))
 
         val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
@@ -681,7 +719,7 @@ internal class EthereumFeeServiceTest {
         )
 
     private fun stubFeeHistory(rewards: List<BigInteger>) {
-        coEvery { evmApi.getFeeHistory() } returns rewards
+        coEvery { evmApi.getFeeHistory(any()) } returns rewards
     }
 
     private fun gwei(n: Long): BigInteger = GWEI.multiply(BigInteger.valueOf(n))
@@ -692,6 +730,7 @@ internal class EthereumFeeServiceTest {
         private val HUNDRED = BigInteger("100")
         private val POLYGON_MIN_TIP = GWEI.multiply(BigInteger("30"))
         private val ETH_SWAP_TIP_FLOOR = GWEI.divide(BigInteger.valueOf(2)) // 0.5 GWEI
+        private val ETH_SEND_TIP_FLOOR = BigInteger("200000000") // 0.2 GWEI
         private val L2_DEFAULT_TIP = BigInteger("20")
         private val BLAST_MIN_TIP = BigInteger.TEN.pow(7) // 0.01 GWEI
     }

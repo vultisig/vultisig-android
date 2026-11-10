@@ -80,7 +80,8 @@ interface EvmApi {
 
     suspend fun getBaseFee(): BigInteger
 
-    suspend fun getFeeHistory(): List<BigInteger>
+    /** The [rewardPercentile] reward of each of the last 10 blocks, sorted ascending. */
+    suspend fun getFeeHistory(rewardPercentile: Int): List<BigInteger>
 
     suspend fun zkEstimateFee(srcAddress: String, dstAddress: String, data: String): ZkGasFee
 
@@ -721,7 +722,7 @@ class EvmApiImp(
         return response.result?.baseFeePerGas.convertToBigIntegerOrZero()
     }
 
-    override suspend fun getFeeHistory(): List<BigInteger> {
+    override suspend fun getFeeHistory(rewardPercentile: Int): List<BigInteger> {
         val response =
             fetch<EvmFeeHistoryResponseJson>(
                 method = "eth_feeHistory",
@@ -729,7 +730,7 @@ class EvmApiImp(
                     buildJsonArray {
                         add(10)
                         add("latest")
-                        addJsonArray { add(5) }
+                        addJsonArray { add(rewardPercentile) }
                     },
             )
 
