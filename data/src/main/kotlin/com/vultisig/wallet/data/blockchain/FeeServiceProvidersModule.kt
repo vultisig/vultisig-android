@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.MempoolApi
 import com.vultisig.wallet.data.api.NearApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
@@ -103,5 +104,6 @@ object FeeServiceProvidersModule {
     @Provides
     @Singleton
     @UtxoFee
-    fun provideUtxoService(blockChairApi: BlockChairApi): FeeService = UtxoFeeService(blockChairApi)
+    fun provideUtxoService(blockChairApi: BlockChairApi, mempoolApi: MempoolApi): FeeService =
+        UtxoFeeService(blockChairApi, mempoolApi)
 }

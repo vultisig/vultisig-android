@@ -56,6 +56,8 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindBlockChairApi(impl: BlockChairApiImp): BlockChairApi
 
+    @Binds @Singleton fun bindMempoolApi(impl: MempoolApiImpl): MempoolApi
+
     @Binds @Singleton fun bindDashApi(impl: DashApiImpl): DashApi
 
     @Binds @Singleton fun bindZcashApi(impl: ZcashApiImpl): ZcashApi
