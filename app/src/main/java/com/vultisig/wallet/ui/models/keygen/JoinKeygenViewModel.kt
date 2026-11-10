@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.hasValidMldsaKey
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.models.proto.v1.SingleKeygenMessageProto
@@ -274,7 +275,8 @@ constructor(
                                         )
                                     )
 
-                            require(existingVault.pubKeyMLDSA.isBlank()) {
+                            // A legacy ML-DSA-44 key can't sign, so it may be replaced.
+                            require(!existingVault.hasValidMldsaKey()) {
                                 "Vault already has an MLDSA key"
                             }
 

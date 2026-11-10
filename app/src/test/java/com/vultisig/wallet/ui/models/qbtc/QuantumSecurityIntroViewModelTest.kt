@@ -96,7 +96,8 @@ internal class QuantumSecurityIntroViewModelTest {
     @Test
     fun `getStarted on fast vault without key goes back while VultiServer lacks the ML-DSA level`() =
         runTest(mainDispatcher) {
-            coEvery { vaultRepository.get(VAULT_ID) } returns vault()
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                vault(signers = listOf("device1", "Server-1"))
             coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
 
             createViewModel().getStarted()
@@ -125,6 +126,52 @@ internal class QuantumSecurityIntroViewModelTest {
         runTest(mainDispatcher) {
             coEvery { vaultRepository.get(VAULT_ID) } returns
                 vault(signers = listOf("device1", "device2", "device3"))
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns false
+
+            createViewModel().getStarted()
+            advanceUntilIdle()
+
+            coVerify {
+                navigator.route(
+                    Route.Keygen.PeerDiscovery(
+                        action = TssAction.SingleKeygen,
+                        vaultName = VAULT_NAME,
+                        vaultId = VAULT_ID,
+                    )
+                )
+            }
+        }
+
+    @Test
+    fun `getStarted on a secure vault with a backend fast-sign record still starts keygen`() =
+        runTest(mainDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                vault(signers = listOf("device1", "device2", "device3"))
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+
+            createViewModel().getStarted()
+            advanceUntilIdle()
+
+            coVerify {
+                navigator.route(
+                    Route.Keygen.PeerDiscovery(
+                        action = TssAction.SingleKeygen,
+                        vaultName = VAULT_NAME,
+                        vaultId = VAULT_ID,
+                    )
+                )
+            }
+        }
+
+    @Test
+    fun `getStarted with a legacy ML-DSA-44 key starts keygen instead of claim`() =
+        runTest(mainDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                vault(
+                    pubKeyMLDSA = LEGACY_MLDSA44_KEY,
+                    keyshares = listOf(KeyShare(pubKey = LEGACY_MLDSA44_KEY, keyShare = "share")),
+                    signers = listOf("device1", "device2", "device3"),
+                )
             coEvery { isVaultHasFastSignById(VAULT_ID) } returns false
 
             createViewModel().getStarted()
@@ -173,6 +220,7 @@ internal class QuantumSecurityIntroViewModelTest {
     private companion object {
         private const val VAULT_ID = "vaultId"
         private const val VAULT_NAME = "vaultName"
-        private const val MLDSA_KEY = "mldsaPubKey"
+        private val MLDSA_KEY = "ab".repeat(1952)
+        private val LEGACY_MLDSA44_KEY = "cd".repeat(1312)
     }
 }

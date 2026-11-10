@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.settings
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.passcode.PasscodeConfig
@@ -400,6 +401,50 @@ internal class VaultSettingsViewModelTest {
                     .filterIsInstance<VaultSettingsItem.DilithiumKeygen>()
                     .single()
             dilithium.enabled.shouldBeFalse()
+        }
+
+    /** A Secure Vault with a backend fast-sign record has no server signer in the ceremony. */
+    @Test
+    fun `dilithium keygen row is enabled for a secure vault with a backend fast-sign record`() =
+        runTest(testDispatcher) {
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(
+                    id = VAULT_ID,
+                    name = "Test",
+                    libType = SigningLibType.DKLS,
+                    signers = listOf("device1", "device2", "device3"),
+                )
+            val vm = createViewModel()
+            val dilithium =
+                vm.uiModel.value.settingGroups
+                    .flatMap { it.items }
+                    .filterIsInstance<VaultSettingsItem.DilithiumKeygen>()
+                    .single()
+            dilithium.enabled.shouldBeTrue()
+        }
+
+    /** A legacy ML-DSA-44 key can't sign, so the vault may generate an ML-DSA-65 key. */
+    @Test
+    fun `dilithium keygen row is enabled for a vault with only a legacy ML-DSA-44 key`() =
+        runTest(testDispatcher) {
+            val legacyKey = "cd".repeat(1312)
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(
+                    id = VAULT_ID,
+                    name = "Test",
+                    libType = SigningLibType.DKLS,
+                    pubKeyMLDSA = legacyKey,
+                    keyshares = listOf(KeyShare(pubKey = legacyKey, keyShare = "share")),
+                )
+            val vm = createViewModel()
+            val items = vm.uiModel.value.settingGroups.flatMap { it.items }
+            items
+                .filterIsInstance<VaultSettingsItem.DilithiumKeygen>()
+                .single()
+                .enabled
+                .shouldBeTrue()
+            items.filterIsInstance<VaultSettingsItem.Reshare>().single().enabled.shouldBeFalse()
         }
 
     /** GG20 vaults must migrate to DKLS first, so the post-quantum keygen row is hidden. */
