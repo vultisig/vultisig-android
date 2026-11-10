@@ -12,6 +12,8 @@ import com.vultisig.wallet.data.keygen.VULTISERVER_SUPPORTS_MLDSA_LEVEL
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.hasValidMldsaKey
+import com.vultisig.wallet.data.models.isFastVault
+import com.vultisig.wallet.data.models.legacyMldsa44PublicKey
 import com.vultisig.wallet.data.passcode.PasscodeConfig
 import com.vultisig.wallet.data.passcode.PasscodeRepository
 import com.vultisig.wallet.data.passcode.isConfigured
@@ -358,17 +360,18 @@ constructor(
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
             val hasMigration = vault?.libType == SigningLibType.GG20
-            val hasServerShare = isVaultHasFastSignById(vaultId)
-            hasFastSign = hasServerShare && vault?.signers?.count() == 2
+            hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
             val hasPassword = vaultPasswordRepository.getPassword(vaultId) != null
             val hasMldsaKey = vault != null && vault.hasValidMldsaKey()
+            // A legacy ML-DSA-44 key no longer signs but still blocks reshare on joining devices.
+            val hasLegacyMldsaKey = vault != null && vault.legacyMldsa44PublicKey().isNotBlank()
             // Only DKLS vaults can run the post-quantum (Dilithium/MLDSA) keygen: KeyImport vaults
             // receive the key at import, and GG20 vaults must migrate to DKLS first — so the option
             // stays hidden for them (an isEnabled=false item is filtered out of the list).
             val supportsDilithiumKeygen =
                 vault != null &&
                     vault.libType == SigningLibType.DKLS &&
-                    (!hasServerShare || VULTISERVER_SUPPORTS_MLDSA_LEVEL)
+                    (!vault.isFastVault() || VULTISERVER_SUPPORTS_MLDSA_LEVEL)
 
             val newItems =
                 uiModel.value.settingGroups.map { group ->
@@ -387,7 +390,10 @@ constructor(
                                     // Reshare regenerates only ECDSA/EdDSA, so the MLDSA share
                                     // would stay tied to the old committee.
                                     is VaultSettingsItem.Reshare ->
-                                        it.copy(isEnabled = !hasFastSign && !hasMldsaKey)
+                                        it.copy(
+                                            isEnabled =
+                                                !hasFastSign && !hasMldsaKey && !hasLegacyMldsaKey
+                                        )
                                     is VaultSettingsItem.DilithiumKeygen ->
                                         it.copy(isEnabled = supportsDilithiumKeygen && !hasMldsaKey)
                                     else -> it

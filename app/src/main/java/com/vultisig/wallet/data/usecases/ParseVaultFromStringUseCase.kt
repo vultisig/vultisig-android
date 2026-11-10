@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.OldJsonVault
 import com.vultisig.wallet.data.models.OldJsonVaultRoot
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isMldsa65PublicKey
 import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
 import com.vultisig.wallet.data.models.proto.v1.toSigningLibType
 import com.vultisig.wallet.data.utils.runCatchingCancellable
@@ -148,11 +149,26 @@ constructor(
             signers = signers,
             resharePrefix = resharePrefix,
             keyshares = keyShares.toDomainKeyShares(),
-            pubKeyMLDSA = publicKeyMldsa44,
+            pubKeyMLDSA = mldsaPublicKey(),
             coins = emptyList(),
             libType = libType.toSigningLibType(),
             chainPublicKeys = chainPublicKeys.toDomainChainPublicKeys(),
         )
+
+    // The ML-DSA-65 key wins. A backup with only the legacy ML-DSA-44 key keeps it, as a vault
+    // already stored with one does: it can't sign, and the vault may generate a 65 key later.
+    private fun VaultProto.mldsaPublicKey(): String =
+        if (publicKeyMldsa65.isNotBlank()) {
+            publicKeyMldsa65.also {
+                if (!isMldsa65PublicKey(it)) {
+                    throw MalformedVaultException(
+                        IllegalArgumentException("Invalid ML-DSA-65 public key in the backup")
+                    )
+                }
+            }
+        } else {
+            publicKeyMldsa44
+        }
 
     private fun Iterable<VaultProto.KeyShare?>.toDomainKeyShares(): List<KeyShare> =
         filterNotNull()

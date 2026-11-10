@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isMldsa65PublicKey
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
@@ -80,6 +81,10 @@ class MldsaKeysign(
      * completed one through [onMessageSigned].
      */
     suspend fun keysignWithRetry() {
+        check(isMldsa65PublicKey(publicKeyMldsa)) {
+            "This vault's post-quantum key is ML-DSA-44, which can no longer sign. " +
+                "Generate a new post-quantum key in Vault settings."
+        }
         messageToSign.forEachIndexed { index, msg ->
             keysignOneMessage(attempt = 0, messageToSign = msg)
             onMessageSigned?.invoke(index + 1)
