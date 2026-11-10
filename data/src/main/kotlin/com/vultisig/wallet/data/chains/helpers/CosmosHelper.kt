@@ -447,11 +447,25 @@ class CosmosHelper(
             )
         }
         inputBuilder.setFee(feeBuilder)
+        inputBuilder.applyAminoTimeoutHeight(signAmino)
 
         memo?.let { inputBuilder.memo = it }
 
         return inputBuilder.build().toByteArray()
     }
+}
+
+/**
+ * Carries a dApp amino sign doc's tx-level `timeout_height` into the signing input. The chain
+ * rebuilds the amino sign bytes from the broadcast `TxBody`, which includes it, so dropping it
+ * signs a different preimage and the broadcast fails signature verification.
+ *
+ * Unset and `0` both mean none and leave the field untouched; WalletCore omits the key at `0`, so
+ * every other amino doc keeps its preimage byte for byte.
+ */
+internal fun Cosmos.SigningInput.Builder.applyAminoTimeoutHeight(signAmino: SignAmino) {
+    val timeoutHeight = signAmino.timeoutHeight?.takeIf { it != 0uL } ?: return
+    setTimeoutHeight(timeoutHeight.toLong())
 }
 
 /**
