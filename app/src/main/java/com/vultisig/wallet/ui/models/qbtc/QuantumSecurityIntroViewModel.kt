@@ -45,12 +45,18 @@ constructor(
             }
             // VultiServer is in the ceremony when it is one of the vault's signers, whatever the
             // signer count; only a 2-of-2 vault with a fast-sign record takes the password route.
+            // That route always runs the keygen through VultiServer, so it stays closed until the
+            // server signs at this ML-DSA level, even for a vault with no `Server-` signer.
             if (vault.isFastVault() && !VULTISERVER_SUPPORTS_MLDSA_LEVEL) {
                 // The settings row and the BTC banner are hidden for these vaults, so this is
                 // only reachable from a stale entry point.
                 Timber.w("Fast Vault post-quantum keygen is not supported by VultiServer yet")
                 navigator.back()
-            } else if (isVaultHasFastSignById(vaultId) && vault.signers.count() == 2) {
+            } else if (
+                VULTISERVER_SUPPORTS_MLDSA_LEVEL &&
+                    isVaultHasFastSignById(vaultId) &&
+                    vault.signers.count() == 2
+            ) {
                 navigator.route(
                     Route.VerifyExistingVault(
                         name = vault.name,

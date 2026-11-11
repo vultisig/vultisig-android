@@ -164,6 +164,27 @@ internal class QuantumSecurityIntroViewModelTest {
         }
 
     @Test
+    fun `getStarted on a two-signer secure vault with a fast-sign record stays off VultiServer`() =
+        runTest(mainDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns vault()
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+
+            createViewModel().getStarted()
+            advanceUntilIdle()
+
+            coVerify {
+                navigator.route(
+                    Route.Keygen.PeerDiscovery(
+                        action = TssAction.SingleKeygen,
+                        vaultName = VAULT_NAME,
+                        vaultId = VAULT_ID,
+                    )
+                )
+            }
+            coVerify(exactly = 0) { navigator.route(match { it is Route.VerifyExistingVault }) }
+        }
+
+    @Test
     fun `getStarted with a legacy ML-DSA-44 key starts keygen instead of claim`() =
         runTest(mainDispatcher) {
             coEvery { vaultRepository.get(VAULT_ID) } returns
