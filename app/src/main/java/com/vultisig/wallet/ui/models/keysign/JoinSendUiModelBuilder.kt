@@ -40,6 +40,8 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -132,7 +134,7 @@ constructor(
             if (payloadToken.isNativeToken) chain.cosmosNativeDenom
             else payloadToken.contractAddress
         val cosmosSignedTransfer =
-            if (signAmino != null) signAmino.singleAminoSendTransfer(expectedCosmosDenom, json)
+            if (signAmino != null) signAmino.singleAminoSendTransfer(expectedCosmosDenom)
             else signDirectMessage?.singleMsgSendTransfer(expectedCosmosDenom)
 
         val dstAddress =
@@ -425,35 +427,33 @@ internal fun CosmosMessage.singleMsgSendTransfer(expectedDenom: String?): Cosmos
  * message types, several messages, several coins, a mismatched denom, or a `value` that isn't
  * readable JSON — returns null, so no recipient or amount is shown from the unsigned wire fields.
  */
-internal fun SignAmino.singleAminoSendTransfer(
-    expectedDenom: String?,
-    json: Json,
-): CosmosSignedTransfer? {
+internal fun SignAmino.singleAminoSendTransfer(expectedDenom: String?): CosmosSignedTransfer? {
     if (expectedDenom.isNullOrEmpty()) return null
     val message = msgs.singleOrNull() ?: return null
     if (message.type !in AMINO_SEND_TYPES) return null
     val body =
         try {
-            json.parseToJsonElement(message.value) as? JsonObject
+            aminoSendJson.decodeFromString<AminoSendValue>(message.value)
         } catch (_: SerializationException) {
-            null
-        } ?: return null
-    val recipient =
-        (body["to_address"] as? JsonPrimitive)
-            ?.takeIf { it.isString }
-            ?.content
-            ?.takeIf { it.isNotEmpty() } ?: return null
-    val coin = (body["amount"] as? JsonArray)?.singleOrNull() as? JsonObject ?: return null
-    val denom = (coin["denom"] as? JsonPrimitive)?.takeIf { it.isString }?.content ?: return null
-    if (denom != expectedDenom) return null
+            return null
+        }
+    val recipient = body.toAddress.takeIf { it.isNotEmpty() } ?: return null
+    val coin = body.amount.singleOrNull()?.takeIf { it.denom == expectedDenom } ?: return null
     val amount =
-        (coin["amount"] as? JsonPrimitive)
-            ?.takeIf { it.isString }
-            ?.content
-            ?.takeIf { it.isNotEmpty() && it.all(Char::isDigit) }
-            ?.toBigInteger() ?: return null
+        coin.amount.takeIf { it.isNotEmpty() && it.all { c -> c in '0'..'9' } }?.toBigInteger()
+            ?: return null
     return CosmosSignedTransfer(recipient = recipient, amount = amount)
 }
+
+@Serializable
+private data class AminoSendValue(
+    @SerialName("to_address") val toAddress: String,
+    val amount: List<AminoCoin>,
+)
+
+@Serializable private data class AminoCoin(val denom: String, val amount: String)
+
+private val aminoSendJson = Json { ignoreUnknownKeys = true }
 
 /** A recipient and amount read out of a Cosmos request's signed content. */
 internal data class CosmosSignedTransfer(val recipient: String, val amount: BigInteger)
