@@ -89,6 +89,17 @@ internal class CosmosSignDataReviewTest {
     }
 
     @Test
+    fun `an amount in non-ASCII digits is unsummarized`() {
+        val review =
+            amino(aminoSend(RECIPIENT_A, "1"), aminoSend(RECIPIENT_B, "١٠٠"))
+                .toSignDataReview(Chain.GaiaChain, json)
+
+        review.recipients shouldBe listOf(RECIPIENT_A)
+        review.coinTotals shouldBe listOf(CosmosSignedCoin("uatom", BigInteger.ONE))
+        review.hasUnsummarizedMessages shouldBe true
+    }
+
+    @Test
     fun `a request with no messages is unsummarized`() {
         SignAmino(msgs = emptyList())
             .toSignDataReview(Chain.GaiaChain, json)
@@ -217,10 +228,7 @@ internal class CosmosSignDataReviewTest {
         )
 
     private fun directSend(recipient: String, amount: String): Message =
-        Message(
-            typeUrl = "/cosmos.bank.v1beta1.MsgSend",
-            value = sendBody(recipient, amount),
-        )
+        Message(typeUrl = "/cosmos.bank.v1beta1.MsgSend", value = sendBody(recipient, amount))
 
     private fun sendBody(recipient: String, amount: String): JsonElement =
         json.parseToJsonElement(

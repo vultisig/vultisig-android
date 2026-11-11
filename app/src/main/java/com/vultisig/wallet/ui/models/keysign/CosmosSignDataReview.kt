@@ -124,7 +124,7 @@ private fun JsonElement?.optionalString(): String? {
 private fun JsonElement?.amount(): BigInteger {
     val primitive = this as? JsonPrimitive ?: throw UnreadableMessage()
     val content = primitive.content
-    if (!primitive.isString || content.isEmpty() || !content.all(Char::isDigit)) {
+    if (!primitive.isString || content.isEmpty() || !content.all { it in '0'..'9' }) {
         throw UnreadableMessage()
     }
     return content.toBigInteger()

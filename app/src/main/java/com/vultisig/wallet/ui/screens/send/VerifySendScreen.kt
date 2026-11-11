@@ -60,11 +60,13 @@ import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSh
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.transaction.CosmosTransfersRow
 import com.vultisig.wallet.ui.models.transaction.CosmosTransfersUiModel
 import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.transaction.TransactionScanStatus
 import com.vultisig.wallet.ui.models.transaction.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.transaction.VerifyTransactionViewModel
+import com.vultisig.wallet.ui.models.transaction.rows
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.verify.VerifyAccountCards
@@ -1007,54 +1009,52 @@ private fun CosmosTransfersRows(
     transfers: CosmosTransfersUiModel,
     rowDivider: @Composable () -> Unit,
 ) {
-    if (transfers.isPartial) {
+    transfers.rows().forEach { row ->
         rowDivider()
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-        ) {
-            UiIcon(
-                drawableResId = R.drawable.ic_triangle_alert,
-                tint = Theme.v2.colors.alerts.warning,
-                size = 16.dp,
-            )
-            Text(
-                text = stringResource(R.string.cosmos_transaction_not_fully_summarized),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.alerts.warning,
-            )
+        when (row) {
+            CosmosTransfersRow.PartialWarning ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                ) {
+                    UiIcon(
+                        drawableResId = R.drawable.ic_triangle_alert,
+                        tint = Theme.v2.colors.alerts.warning,
+                        size = 16.dp,
+                    )
+                    Text(
+                        text = stringResource(R.string.cosmos_transaction_not_fully_summarized),
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.alerts.warning,
+                    )
+                }
+            is CosmosTransfersRow.Recipients ->
+                VerifyCardDetails(
+                    title = stringResource(R.string.verify_transaction_to_title),
+                    subtitle = row.recipients.joinToString(separator = "\n"),
+                    showAllContent = true,
+                )
+            is CosmosTransfersRow.Amounts ->
+                VerifyCardDetails(
+                    title = stringResource(R.string.verify_transaction_amount_title),
+                    subtitle =
+                        row.amounts
+                            .map {
+                                if (it.isKnownDenom) it.text
+                                else
+                                    stringResource(R.string.cosmos_amount_unverified_denom, it.text)
+                            }
+                            .joinToString(separator = "\n"),
+                    showAllContent = true,
+                )
+            is CosmosTransfersRow.Memos ->
+                VerifyCardDetails(
+                    title = stringResource(R.string.verify_transaction_memo_title),
+                    subtitle = row.memos.joinToString(separator = "\n"),
+                    showAllContent = true,
+                )
         }
-    }
-
-    if (transfers.amounts.isEmpty()) return
-
-    if (transfers.recipients.isNotEmpty()) {
-        rowDivider()
-
-        VerifyCardDetails(
-            title = stringResource(R.string.verify_transaction_to_title),
-            subtitle = transfers.recipients.joinToString(separator = "\n"),
-            showAllContent = true,
-        )
-    }
-
-    rowDivider()
-
-    VerifyCardDetails(
-        title = stringResource(R.string.verify_transaction_amount_title),
-        subtitle = transfers.amounts.joinToString(separator = "\n"),
-        showAllContent = true,
-    )
-
-    if (transfers.memos.isNotEmpty()) {
-        rowDivider()
-
-        VerifyCardDetails(
-            title = stringResource(R.string.verify_transaction_memo_title),
-            subtitle = transfers.memos.joinToString(separator = "\n"),
-            showAllContent = true,
-        )
     }
 }

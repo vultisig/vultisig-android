@@ -1400,6 +1400,7 @@
     <string name="substrate_call_index">Aufruf %1$s</string>
     <string name="cosmos_sign_direct_transaction">%1$s-Transaktion</string>
     <string name="cosmos_transaction_not_fully_summarized">Ein Teil dieser Transaktion ist hier nicht zusammengefasst. Bitte prüfen Sie die vollständigen Details unten, bevor Sie signieren.</string>
+    <string name="cosmos_amount_unverified_denom">%1$s (nicht verifizierter Token)</string>
     <string name="substrate_signer_payload">Signer-Payload</string>
     <string name="substrate_field_call_data">Aufrufdaten</string>
     <string name="substrate_field_nonce">Nonce</string>

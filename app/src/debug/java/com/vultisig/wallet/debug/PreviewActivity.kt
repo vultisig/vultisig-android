@@ -164,6 +164,7 @@ import com.vultisig.wallet.ui.models.token.TokenDetailUiModel
 import com.vultisig.wallet.ui.models.token.TokenInfoUiModel
 import com.vultisig.wallet.ui.models.token.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.token.TokenUiModel
+import com.vultisig.wallet.ui.models.transaction.CosmosAmountUiModel
 import com.vultisig.wallet.ui.models.transaction.CosmosTransfersUiModel
 import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.transaction.TransactionFailureExplanation
@@ -515,7 +516,10 @@ class PreviewActivity : ComponentActivity() {
                             transfers =
                                 CosmosTransfersUiModel(
                                     recipients = listOf(AMINO_RECIPIENT_A, AMINO_RECIPIENT_B),
-                                    amounts = listOf("1001 ATOM"),
+                                    amounts =
+                                        listOf(
+                                            CosmosAmountUiModel("1001 ATOM", isKnownDenom = true)
+                                        ),
                                     memos = emptyList(),
                                     isPartial = false,
                                 ),
@@ -536,7 +540,8 @@ class PreviewActivity : ComponentActivity() {
                             transfers =
                                 CosmosTransfersUiModel(
                                     recipients = listOf(AMINO_RECIPIENT_A, AMINO_CONTRACT),
-                                    amounts = listOf("3 ATOM"),
+                                    amounts =
+                                        listOf(CosmosAmountUiModel("3 ATOM", isKnownDenom = true)),
                                     memos = emptyList(),
                                     isPartial = true,
                                 ),

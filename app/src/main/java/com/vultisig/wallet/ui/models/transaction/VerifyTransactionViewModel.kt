@@ -211,10 +211,40 @@ internal data class TransactionDetailsUiModel(
 @Immutable
 internal data class CosmosTransfersUiModel(
     val recipients: List<String>,
-    val amounts: List<String>,
+    val amounts: List<CosmosAmountUiModel>,
     val memos: List<String>,
     val isPartial: Boolean,
 )
+
+/**
+ * One coin total. [isKnownDenom] is false when the denom isn't the chain's native denom or a listed
+ * token's, so [text] is the raw amount and denom and is shown with an unverified-denom marker.
+ */
+@Immutable internal data class CosmosAmountUiModel(val text: String, val isKnownDenom: Boolean)
+
+/** A row of the Cosmos transfers block on the verify screen, in display order. */
+internal sealed interface CosmosTransfersRow {
+    data object PartialWarning : CosmosTransfersRow
+
+    data class Recipients(val recipients: List<String>) : CosmosTransfersRow
+
+    data class Amounts(val amounts: List<CosmosAmountUiModel>) : CosmosTransfersRow
+
+    data class Memos(val memos: List<String>) : CosmosTransfersRow
+}
+
+/**
+ * The rows to render: the partial warning first when part of the request isn't summarized, then To
+ * / Amount / Memo only when there is an amount to show, since recipients or memos without an amount
+ * would describe nothing that moves.
+ */
+internal fun CosmosTransfersUiModel.rows(): List<CosmosTransfersRow> = buildList {
+    if (isPartial) add(CosmosTransfersRow.PartialWarning)
+    if (amounts.isEmpty()) return@buildList
+    if (recipients.isNotEmpty()) add(CosmosTransfersRow.Recipients(recipients))
+    add(CosmosTransfersRow.Amounts(amounts))
+    if (memos.isNotEmpty()) add(CosmosTransfersRow.Memos(memos))
+}
 
 @Immutable
 internal data class VerifyTransactionUiModel(

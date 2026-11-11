@@ -1428,6 +1428,7 @@
     <string name="substrate_call_index">호출 %1$s</string>
     <string name="cosmos_sign_direct_transaction">%1$s 거래</string>
     <string name="cosmos_transaction_not_fully_summarized">이 거래의 일부는 여기에 요약되어 있지 않습니다. 서명하기 전에 아래의 전체 세부 정보를 검토하세요.</string>
+    <string name="cosmos_amount_unverified_denom">%1$s (확인되지 않은 토큰)</string>
     <string name="substrate_signer_payload">서명자 페이로드</string>
     <string name="substrate_field_call_data">호출 데이터</string>
     <string name="substrate_field_nonce">논스</string>

@@ -1401,6 +1401,7 @@
     <string name="substrate_call_index">Chiamata %1$s</string>
     <string name="cosmos_sign_direct_transaction">Transazione %1$s</string>
     <string name="cosmos_transaction_not_fully_summarized">Una parte di questa transazione non è riassunta qui. Controlla tutti i dettagli qui sotto prima di firmare.</string>
+    <string name="cosmos_amount_unverified_denom">%1$s (token non verificato)</string>
     <string name="substrate_signer_payload">Payload del firmatario</string>
     <string name="substrate_field_call_data">Dati della chiamata</string>
     <string name="substrate_field_nonce">Nonce</string>

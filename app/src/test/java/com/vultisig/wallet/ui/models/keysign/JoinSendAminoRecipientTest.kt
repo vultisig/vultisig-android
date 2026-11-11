@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.usecases.Message
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapperImpl
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.transaction.CosmosAmountUiModel
 import com.vultisig.wallet.ui.models.transaction.CosmosTransfersUiModel
 import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import io.kotest.matchers.shouldBe
@@ -121,7 +122,7 @@ internal class JoinSendAminoRecipientTest {
         result.transfers() shouldBe
             CosmosTransfersUiModel(
                 recipients = listOf(RECIPIENT_A, RECIPIENT_B),
-                amounts = listOf("1001 ATOM"),
+                amounts = listOf(CosmosAmountUiModel("1001 ATOM", isKnownDenom = true)),
                 memos = emptyList(),
                 isPartial = false,
             )
@@ -143,7 +144,7 @@ internal class JoinSendAminoRecipientTest {
         result.transfers() shouldBe
             CosmosTransfersUiModel(
                 recipients = listOf(RECIPIENT_A, CONTRACT),
-                amounts = listOf("3 ATOM"),
+                amounts = listOf(CosmosAmountUiModel("3 ATOM", isKnownDenom = true)),
                 memos = emptyList(),
                 isPartial = true,
             )

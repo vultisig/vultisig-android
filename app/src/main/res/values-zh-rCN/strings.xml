@@ -1730,6 +1730,7 @@
     <string name="substrate_call_index">调用 %1$s</string>
     <string name="cosmos_sign_direct_transaction">%1$s 交易</string>
     <string name="cosmos_transaction_not_fully_summarized">此交易的部分内容未在此处汇总。签名前请查看下方的完整详情。</string>
+    <string name="cosmos_amount_unverified_denom">%1$s（未验证的代币）</string>
     <string name="substrate_signer_payload">签名者负载</string>
     <string name="substrate_field_call_data">调用数据</string>
     <string name="substrate_field_nonce">Nonce</string>
