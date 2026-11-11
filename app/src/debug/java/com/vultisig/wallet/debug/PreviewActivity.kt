@@ -499,6 +499,19 @@ class PreviewActivity : ComponentActivity() {
                         VerifyDecodedDepositPreview(
                             hero = decodedUnstakeProjection(resolved = false)
                         )
+                    "join_amino_send_before" ->
+                        JoinAminoSendPreview(dstAddress = AMINO_RECIPIENT_A, value = "1")
+                    "join_amino_send_after" ->
+                        JoinAminoSendPreview(dstAddress = AMINO_RECIPIENT_B, value = "1000")
+                    "join_amino_multi_before" ->
+                        JoinAminoSendPreview(dstAddress = "", value = "1001", multi = true)
+                    "join_amino_multi_after" ->
+                        JoinAminoSendPreview(
+                            dstAddress = "",
+                            value = "0",
+                            multi = true,
+                            unverified = true,
+                        )
                     "verify_decoded_send_before" -> VerifyDecodedSendHeroPreview(hero = null)
                     "verify_decoded_send_after" ->
                         VerifyDecodedSendHeroPreview(hero = decodedBondHero())
@@ -2069,6 +2082,71 @@ private fun VerifyDecodedSendHeroPreview(hero: HeroContent?) {
         onBackClick = {},
     )
 }
+
+/**
+ * The co-signer's join review of a dApp `signAmino` request, as `JoinSendUiModelBuilder` builds it:
+ * a single send of 1000 ATOM to B whose wire copy claims 1 ATOM to A, or two sends (1 ATOM to A,
+ * 1000 ATOM to B) that the extension relays with a blank `toAddress` and a 1001 ATOM total.
+ */
+@Composable
+private fun JoinAminoSendPreview(
+    dstAddress: String,
+    value: String,
+    multi: Boolean = false,
+    unverified: Boolean = false,
+) {
+    val msgs =
+        if (multi) {
+            listOf(
+                aminoSendJson(AMINO_RECIPIENT_A, "1000000"),
+                aminoSendJson(AMINO_RECIPIENT_B, "1000000000"),
+            )
+        } else {
+            listOf(aminoSendJson(AMINO_RECIPIENT_B, "1000000000"))
+        }
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        token =
+                            ValuedToken(
+                                token = Coins.GaiaChain.ATOM,
+                                value = value,
+                                fiatValue = "",
+                            ),
+                        srcAddress = AMINO_SENDER,
+                        srcVaultName = "Main Vault",
+                        dstAddress = dstAddress,
+                        networkFeeTokenValue = "0.0075 ATOM",
+                        networkFeeFiatValue = "$0.03",
+                        signAmino =
+                            msgs.joinToString(separator = ",\n", prefix = "[\n", postfix = "\n]"),
+                        isUnverifiedCosmosSign = unverified,
+                    )
+            ),
+        isConsentsEnabled = false,
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
+    )
+}
+
+private fun aminoSendJson(recipient: String, amount: String) =
+    """  {
+    "type": "cosmos-sdk/MsgSend",
+    "value": {
+      "from_address": "$AMINO_SENDER",
+      "to_address": "$recipient",
+      "amount": [{ "denom": "uatom", "amount": "$amount" }]
+    }
+  }"""
+
+private const val AMINO_SENDER = "cosmos1x8n4jcc3jm8l4mjvzvcyvlz0ysgsd0e5svh5mw"
+private const val AMINO_RECIPIENT_A = "cosmos1aaq6ccxt5xsu4wnxdzrvjx3g7xq2cvjhd8w0ax"
+private const val AMINO_RECIPIENT_B = "cosmos1bbz5u7e8v4yq2rf3lc0m9xgqh6x7d3n2kx5pfb"
 
 /** The 32-byte digest from the reported case: opaque, and not calldata. */
 private const val SIGN_MESSAGE_DIGEST =
