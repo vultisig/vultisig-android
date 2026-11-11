@@ -29,8 +29,7 @@ import wallet.core.jni.proto.Bitcoin
 /**
  * The Zcash v5 golden vectors (`/zcash/zcash-v5-golden.json`) through [UtxoHelper] with real
  * WalletCore: address scripts, RFC6979 signing, DER verification, and for the first fixture the
- * planner and branch-id stamping of a native send. Instrumented because all of those are JNI; the
- * pure-JVM `ZcashV5TransactionTest` covers the builder's own guards.
+ * planner and branch-id stamping of a native send. Instrumented because all of those are JNI.
  */
 class ZcashV5SigningTest {
 
