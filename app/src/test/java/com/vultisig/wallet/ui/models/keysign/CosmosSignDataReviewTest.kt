@@ -8,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
 import vultisig.keysign.v1.CosmosMsg
@@ -149,13 +150,20 @@ internal class CosmosSignDataReviewTest {
     fun `undelegate and votes move nothing and stay summarized`() {
         val review =
             direct(
-                    Message("/cosmos.staking.v1beta1.MsgUndelegate", JsonPrimitive("x")),
-                    Message("/cosmos.gov.v1beta1.MsgVote", JsonPrimitive("x")),
+                    Message("/cosmos.staking.v1beta1.MsgUndelegate", JsonObject(emptyMap())),
+                    Message("/cosmos.gov.v1beta1.MsgVote", JsonObject(emptyMap())),
                 )
                 .toSignDataReview(Chain.GaiaChain)
 
         review.transfers shouldBe emptyList()
         review.hasUnsummarizedMessages shouldBe false
+    }
+
+    @Test
+    fun `an undelegate or vote the decoder left as base64 is unsummarized`() {
+        direct(Message("/cosmos.gov.v1beta1.MsgVote", JsonPrimitive("CgVhYmNkZQ==")))
+            .toSignDataReview(Chain.GaiaChain)
+            .hasUnsummarizedMessages shouldBe true
     }
 
     @Test

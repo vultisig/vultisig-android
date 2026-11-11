@@ -208,7 +208,11 @@ private val readAminoSend: MessageReader = { value, _ ->
     MessageReading(transfers(body["to_address"].string(), body["amount"].coins()), true)
 }
 
-private val noTransfers: MessageReader = { _, _ -> NO_TRANSFERS }
+// A message that failed to decode arrives as a base64 primitive, which isn't a readable body.
+private val noTransfers: MessageReader = { value, _ ->
+    value.obj()
+    NO_TRANSFERS
+}
 
 /**
  * Readers for the message bodies [com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase]
