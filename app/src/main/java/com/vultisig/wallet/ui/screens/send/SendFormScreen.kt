@@ -26,21 +26,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
+import androidx.navigation.compose.composable
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFocusField
@@ -56,17 +56,15 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
-internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
-    contentWithFastSelection<Route.Send.SendMain, Route.Send>(navController = navController) {
-        onNetworkDragStart,
-        onNetworkDrag,
-        onNetworkDragEnd ->
+internal fun NavGraphBuilder.sendScreen() {
+    composable<Route.Send.SendMain> {
         val viewModel: SendFormViewModel = hiltViewModel()
         val state by viewModel.uiState.collectAsState()
 
         val addressFocusRequester = remember { FocusRequester() }
         val amountFocusRequester = remember { FocusRequester() }
 
+        // DeFi forms only; a plain send focuses through pendingFocusField in the step on screen.
         LaunchedEffect(Unit) {
             viewModel.focusFieldFlow.collect { field ->
                 when (field) {
@@ -88,8 +86,6 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
             onDstAddressLostFocus = { /* no-op */ },
             onTokenAmountLostFocus = viewModel::validateTokenAmount,
             onDismissError = viewModel::dismissError,
-            onSelectNetworkRequest = viewModel::selectNetwork,
-            onSelectTokenRequest = viewModel::openTokenSelection,
             onSetOutputAddress = viewModel::setOutputAddress,
             onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
             onChoosePercentageAmount = viewModel::choosePercentageAmount,
@@ -101,16 +97,12 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
             onBackClick = viewModel::back,
             onToggleAmountInputType = viewModel::toggleAmountInputType,
             onExpandSection = viewModel::expandSection,
-            onNetworkDragStart = onNetworkDragStart,
-            onNetworkDrag = onNetworkDrag,
-            onNetworkDragEnd = onNetworkDragEnd,
-            onNetworkDragCancel = onNetworkDragEnd,
-            onNetworkLongPressStarted = viewModel::onNetworkLongPressStarted,
-            onAssetDragStart = onNetworkDragStart,
-            onAssetDrag = onNetworkDrag,
-            onAssetDragEnd = onNetworkDragEnd,
-            onAssetDragCancel = onNetworkDragEnd,
-            onAssetLongPressStarted = viewModel::openTokenSelectionPopup,
+            onSelectStep = viewModel::selectStep,
+            onPendingFocusApplied = viewModel::onPendingFocusApplied,
+            assetSearchFieldState = viewModel.assetSearchFieldState,
+            onSelectAssetChainFilter = viewModel::selectAssetChainFilter,
+            onSelectAsset = viewModel::selectAsset,
+            onAddCustomToken = viewModel::addCustomToken,
             slippageFieldState = viewModel.slippageFieldState,
             onAutoCompound = { viewModel.onAutoCompound(it) },
             onTronResourceTypeChange = viewModel::setTronResourceType,
@@ -123,6 +115,7 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
             GasSettingsScreen(
                 chain = selectedChain,
                 specific = specific,
+                savedSettings = viewModel.savedGasSettings(selectedChain),
                 onSaveGasSettings = viewModel::saveGasSettings,
                 onDismissGasSettings = viewModel::dismissGasSettings,
             )
@@ -143,8 +136,6 @@ internal fun SendFormScreen(
     onDstAddressLostFocus: () -> Unit = {},
     onTokenAmountLostFocus: () -> Unit = {},
     onDismissError: () -> Unit = {},
-    onSelectNetworkRequest: () -> Unit = {},
-    onSelectTokenRequest: () -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onChooseMaxTokenAmount: () -> Unit = {},
     onChoosePercentageAmount: (AmountFraction) -> Unit = {},
@@ -156,16 +147,14 @@ internal fun SendFormScreen(
     onBackClick: () -> Unit = {},
     onToggleAmountInputType: (Boolean) -> Unit = {},
     onExpandSection: (SendSections) -> Unit = {},
-    onNetworkDragStart: (Offset) -> Unit,
-    onNetworkDrag: (Offset) -> Unit,
-    onNetworkDragEnd: () -> Unit,
-    onNetworkDragCancel: () -> Unit,
-    onNetworkLongPressStarted: (Offset) -> Unit,
-    onAssetDragStart: (Offset) -> Unit,
-    onAssetDrag: (Offset) -> Unit,
-    onAssetDragEnd: () -> Unit,
-    onAssetDragCancel: () -> Unit,
-    onAssetLongPressStarted: (Offset) -> Unit,
+    onSelectStep: (SendSections) -> Unit = {},
+    onPendingFocusApplied: () -> Unit = {},
+
+    // plain-send asset step
+    assetSearchFieldState: TextFieldState,
+    onSelectAssetChainFilter: (Chain?) -> Unit = {},
+    onSelectAsset: (Coin) -> Unit = {},
+    onAddCustomToken: () -> Unit = {},
 
     // trade
     slippageFieldState: TextFieldState,
@@ -177,6 +166,23 @@ internal fun SendFormScreen(
     onTronResourceTypeChange: (TronResourceType) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
+    val amountInputs =
+        AmountInputs(
+            tokenAmountFieldState = tokenAmountFieldState,
+            fiatAmountFieldState = fiatAmountFieldState,
+            focusRequester = amountFocusRequester,
+            onToggleAmountInputType = onToggleAmountInputType,
+            onChoosePercentageAmount = onChoosePercentageAmount,
+            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+            onTokenAmountLostFocus = onTokenAmountLostFocus,
+        )
+    val optionalInputs =
+        OptionalInputs(
+            memoFieldState = memoFieldState,
+            destinationTagFieldState = destinationTagFieldState,
+            slippageFieldState = slippageFieldState,
+            onAutoCompoundCheckedChange = onAutoCompound,
+        )
 
     val errorText = state.errorText
     if (errorText != null) {
@@ -186,6 +192,60 @@ internal fun SendFormScreen(
             confirmTitle = stringResource(R.string.try_again),
             onDismiss = onDismissError,
         )
+    }
+
+    if (state.defiType == null) {
+        SendStepFlowScreen(
+            state = state,
+            onBackClick = onBackClick,
+            onSelectStep = onSelectStep,
+            onContinue = onSend,
+            onRefreshRequest = onRefreshRequest,
+        ) { step, contentPadding ->
+            // Each pane renders the step it belongs to, also while it slides out.
+            val paneState = state.copy(expandedSection = step)
+            // A sliding-out pane's fields take no focus, so typing never lands behind the new step.
+            val isActive = step == state.expandedSection
+            when (step) {
+                SendSections.Asset ->
+                    SendAssetStep(
+                        state = paneState,
+                        searchFieldState = assetSearchFieldState,
+                        contentPadding = contentPadding,
+                        onSelectChainFilter = onSelectAssetChainFilter,
+                        onSelectAsset = onSelectAsset,
+                        onAddCustomToken = onAddCustomToken,
+                    )
+                SendSections.Address ->
+                    SendStepScrollPane(contentPadding) {
+                        SendAddressStep(
+                            state = paneState,
+                            addressFieldState = addressFieldState,
+                            addressFocusRequester = addressFocusRequester,
+                            onDstAddressLostFocus = onDstAddressLostFocus,
+                            onSetOutputAddress = onSetOutputAddress,
+                            onScanDstAddressRequest = onScanDstAddressRequest,
+                            onAddressBookClick = onAddressBookClick,
+                            onPendingFocusApplied = onPendingFocusApplied,
+                            isActive = isActive,
+                        )
+                    }
+                SendSections.Amount ->
+                    SendStepScrollPane(contentPadding) {
+                        SendAmountStep(
+                            state = paneState,
+                            amountInputs = amountInputs,
+                            optionalInputs = optionalInputs,
+                            focusManager = focusManager,
+                            onGasSettingsClick = onGasSettingsClick,
+                            onSend = onSend,
+                            onPendingFocusApplied = onPendingFocusApplied,
+                            isActive = isActive,
+                        )
+                    }
+            }
+        }
+        return
     }
 
     V2Scaffold(
@@ -253,40 +313,12 @@ internal fun SendFormScreen(
                     SendFormContent(
                         state = state,
                         onExpandSection = onExpandSection,
-                        onSelectNetworkRequest = onSelectNetworkRequest,
-                        onNetworkDragCancel = onNetworkDragCancel,
-                        onNetworkDrag = onNetworkDrag,
-                        onNetworkDragStart = onNetworkDragStart,
-                        onNetworkDragEnd = onNetworkDragEnd,
-                        onNetworkLongPressStarted = onNetworkLongPressStarted,
-                        onSelectTokenRequest = onSelectTokenRequest,
-                        onAssetDragCancel = onAssetDragCancel,
-                        onAssetDrag = onAssetDrag,
-                        onAssetDragStart = onAssetDragStart,
-                        onAssetDragEnd = onAssetDragEnd,
-                        onAssetLongPressStarted = onAssetLongPressStarted,
                         addressFieldState = addressFieldState,
-                        addressFocusRequester = addressFocusRequester,
-                        amountFocusRequester = amountFocusRequester,
-                        onDstAddressLostFocus = onDstAddressLostFocus,
-                        onSetOutputAddress = onSetOutputAddress,
-                        onScanDstAddressRequest = onScanDstAddressRequest,
-                        onAddressBookClick = onAddressBookClick,
                         onGasSettingsClick = onGasSettingsClick,
-                        tokenAmountFieldState = tokenAmountFieldState,
-                        fiatAmountFieldState = fiatAmountFieldState,
                         focusManager = focusManager,
                         onSend = onSend,
-                        onToggleAmountInputType = onToggleAmountInputType,
-                        onChoosePercentageAmount = onChoosePercentageAmount,
-                        onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-                        onTokenAmountLostFocus = onTokenAmountLostFocus,
-                        memoFieldState = memoFieldState,
-                        destinationTagFieldState = destinationTagFieldState,
-
-                        // trade
-                        slippageFieldState = slippageFieldState,
-                        onAutoCompoundCheckedChange = onAutoCompound,
+                        amountInputs = amountInputs,
+                        optionalInputs = optionalInputs,
                         onTronResourceTypeChange = onTronResourceTypeChange,
                     )
                 }
@@ -299,114 +331,29 @@ internal fun SendFormScreen(
 private fun SendFormContent(
     state: SendFormUiModel,
     onExpandSection: (SendSections) -> Unit,
-    onSelectNetworkRequest: () -> Unit,
-    onNetworkDragCancel: () -> Unit,
-    onNetworkDrag: (Offset) -> Unit,
-    onNetworkDragStart: (Offset) -> Unit,
-    onNetworkDragEnd: () -> Unit,
-    onNetworkLongPressStarted: (Offset) -> Unit,
-    onSelectTokenRequest: () -> Unit,
-    onAssetDragCancel: () -> Unit,
-    onAssetDrag: (Offset) -> Unit,
-    onAssetDragStart: (Offset) -> Unit,
-    onAssetDragEnd: () -> Unit,
-    onAssetLongPressStarted: (Offset) -> Unit,
     addressFieldState: TextFieldState,
-    addressFocusRequester: FocusRequester,
-    amountFocusRequester: FocusRequester,
-    onDstAddressLostFocus: () -> Unit,
-    onSetOutputAddress: (String) -> Unit,
-    onScanDstAddressRequest: () -> Unit,
-    onAddressBookClick: () -> Unit,
     onGasSettingsClick: () -> Unit,
-    tokenAmountFieldState: TextFieldState,
-    fiatAmountFieldState: TextFieldState,
     focusManager: FocusManager,
     onSend: () -> Unit,
-    onToggleAmountInputType: (Boolean) -> Unit,
-    onChoosePercentageAmount: (AmountFraction) -> Unit,
-    onChooseMaxTokenAmount: () -> Unit,
-    onTokenAmountLostFocus: () -> Unit = {},
-    memoFieldState: TextFieldState,
-    destinationTagFieldState: TextFieldState,
-
-    // trade
-    slippageFieldState: TextFieldState,
-
-    // stake tcy
-    onAutoCompoundCheckedChange: (Boolean) -> Unit,
-
-    // tron freeze/unfreeze
+    amountInputs: AmountInputs,
+    optionalInputs: OptionalInputs,
     onTronResourceTypeChange: (TronResourceType) -> Unit,
 ) {
-    val amountInputs =
-        AmountInputs(
-            tokenAmountFieldState = tokenAmountFieldState,
-            fiatAmountFieldState = fiatAmountFieldState,
-            focusRequester = amountFocusRequester,
-            onToggleAmountInputType = onToggleAmountInputType,
-            onChoosePercentageAmount = onChoosePercentageAmount,
-            onChooseMaxTokenAmount = onChooseMaxTokenAmount,
-            onTokenAmountLostFocus = onTokenAmountLostFocus,
+    val resourceType = state.tronResourceType
+    if (resourceType != null) {
+        TronResourceTypeTab(
+            selected = resourceType,
+            onSelectionChange = onTronResourceTypeChange,
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
-    val optionalInputs =
-        OptionalInputs(
-            memoFieldState = memoFieldState,
-            destinationTagFieldState = destinationTagFieldState,
-            slippageFieldState = slippageFieldState,
-            onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
+    }
+    if (state.hasTronFrozenBalancesError) {
+        Text(
+            text = stringResource(R.string.tron_frozen_balances_error),
+            color = Theme.v2.colors.alerts.error,
+            style = Theme.brockmann.supplementary.footnote,
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
-
-    when (state.defiType) {
-        // send asset
-        null -> {
-            FoldableAssetWidget(
-                state = state,
-                onExpandSection = onExpandSection,
-                onSelectNetworkRequest = onSelectNetworkRequest,
-                onNetworkDragCancel = onNetworkDragCancel,
-                onNetworkDrag = onNetworkDrag,
-                onNetworkDragStart = onNetworkDragStart,
-                onNetworkDragEnd = onNetworkDragEnd,
-                onNetworkLongPressStarted = onNetworkLongPressStarted,
-                onSelectTokenRequest = onSelectTokenRequest,
-                onAssetDragCancel = onAssetDragCancel,
-                onAssetDrag = onAssetDrag,
-                onAssetDragStart = onAssetDragStart,
-                onAssetDragEnd = onAssetDragEnd,
-                onAssetLongPressStarted = onAssetLongPressStarted,
-            )
-
-            FoldableDestinationAddressWidget(
-                state = state,
-                onExpandSection = onExpandSection,
-                addressFieldState = addressFieldState,
-                addressFocusRequester = addressFocusRequester,
-                onDstAddressLostFocus = onDstAddressLostFocus,
-                onSetOutputAddress = onSetOutputAddress,
-                onScanDstAddressRequest = onScanDstAddressRequest,
-                onAddressBookClick = onAddressBookClick,
-            )
-        }
-
-        else -> {
-            val resourceType = state.tronResourceType
-            if (resourceType != null) {
-                TronResourceTypeTab(
-                    selected = resourceType,
-                    onSelectionChange = onTronResourceTypeChange,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-            }
-            if (state.hasTronFrozenBalancesError) {
-                Text(
-                    text = stringResource(R.string.tron_frozen_balances_error),
-                    color = Theme.v2.colors.alerts.error,
-                    style = Theme.brockmann.supplementary.footnote,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-            }
-        }
     }
 
     FoldableAmountWidget(
@@ -431,7 +378,7 @@ private fun SendFormContent(
  * @param error the error to show, or null when the amount is valid.
  */
 @Composable
-private fun ReapingErrorMessage(error: UiText?) {
+internal fun ReapingErrorMessage(error: UiText?) {
     AnimatedContent(targetState = error, label = "error message") { errorMessage ->
         if (errorMessage != null) {
             Column {
@@ -464,16 +411,7 @@ private fun SendScreenPreview() {
         fiatAmountFieldState = TextFieldState("$2,000.56"),
         memoFieldState = TextFieldState(),
         destinationTagFieldState = TextFieldState(),
-        onNetworkDragStart = {},
-        onNetworkDrag = {},
-        onNetworkDragEnd = {},
-        onNetworkDragCancel = {},
-        onNetworkLongPressStarted = {},
-        onAssetDragStart = {},
-        onAssetDrag = {},
-        onAssetDragEnd = {},
-        onAssetDragCancel = {},
-        onAssetLongPressStarted = {},
+        assetSearchFieldState = TextFieldState(),
         slippageFieldState = TextFieldState(),
     )
 }

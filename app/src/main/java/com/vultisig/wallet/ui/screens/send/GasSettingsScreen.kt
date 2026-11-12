@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.supportsLegacyGas
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
+import com.vultisig.wallet.ui.components.PercentageChip
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -37,6 +38,7 @@ import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.send.GasSettings
 import com.vultisig.wallet.ui.models.send.GasSettingsUiModel
 import com.vultisig.wallet.ui.models.send.GasSettingsViewModel
+import com.vultisig.wallet.ui.models.send.PriorityFee
 import com.vultisig.wallet.ui.theme.Theme
 import java.math.BigInteger
 
@@ -46,11 +48,12 @@ internal fun GasSettingsScreen(
     specific: BlockChainSpecificAndUtxo,
     onDismissGasSettings: () -> Unit,
     onSaveGasSettings: (GasSettings) -> Unit,
+    savedSettings: GasSettings? = null,
     model: GasSettingsViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) { model.loadData(chain, specific) }
+    LaunchedEffect(Unit) { model.loadData(chain, specific, savedSettings) }
 
     BasicAlertDialog(onDismissRequest = onDismissGasSettings) {
         GasSettingsScreen(
@@ -60,6 +63,7 @@ internal fun GasSettingsScreen(
             baseFeeState = model.baseFeeState,
             priorityFeeState = model.priorityFeeState,
             byteFeeState = model.byteFeeState,
+            onSelectPriority = model::selectPriority,
             onSaveClick = {
                 onSaveGasSettings(model.save())
                 onDismissGasSettings()
@@ -79,6 +83,7 @@ internal fun GasSettingsScreen(
     byteFeeState: TextFieldState,
     onCloseClick: () -> Unit,
     onSaveClick: () -> Unit,
+    onSelectPriority: (PriorityFee) -> Unit = {},
 ) {
     Column(
         modifier =
@@ -112,6 +117,17 @@ internal fun GasSettingsScreen(
 
         UiSpacer(14.dp)
 
+        if (state.showsPriority) {
+            PrioritySelector(
+                selected = state.selectedPriority,
+                // Tiers fill a field, so they wait until the field's own value has loaded.
+                isEnabled = state.priorityTiers != null && !state.isLoadingEthFee,
+                onSelect = onSelectPriority,
+            )
+
+            UiSpacer(14.dp)
+        }
+
         when (state.chainSpecific) {
             is BlockChainSpecific.Ethereum -> {
                 EthGasSettings(
@@ -143,6 +159,41 @@ internal fun GasSettingsScreen(
         )
     }
 }
+
+@Composable
+private fun PrioritySelector(
+    selected: PriorityFee?,
+    isEnabled: Boolean,
+    onSelect: (PriorityFee) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.gas_settings_priority),
+        style = Theme.brockmann.body.s.medium,
+        color = Theme.v2.colors.text.primary,
+    )
+
+    UiSpacer(8.dp)
+
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        PriorityFee.entries.forEach { priority ->
+            PercentageChip(
+                title = stringResource(priority.title),
+                isSelected = priority == selected,
+                isEnabled = isEnabled,
+                onClick = { onSelect(priority) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+private val PriorityFee.title: Int
+    get() =
+        when (this) {
+            PriorityFee.LOW -> R.string.gas_settings_priority_low
+            PriorityFee.NORMAL -> R.string.gas_settings_priority_normal
+            PriorityFee.FAST -> R.string.gas_settings_priority_fast
+        }
 
 @Composable
 private fun UTXOSettings(state: GasSettingsUiModel, byteFeeState: TextFieldState) {
@@ -238,6 +289,32 @@ private fun LegacyGasSettingsScreenPreview() {
         byteFeeState = TextFieldState(),
         baseFeeState = TextFieldState("3"),
         priorityFeeState = TextFieldState("0"),
+        onSaveClick = {},
+        onCloseClick = {},
+    )
+}
+
+@Preview
+@Composable
+private fun EthGasSettingsPriorityPreview() {
+    GasSettingsScreen(
+        isLegacyGas = false,
+        state =
+            GasSettingsUiModel(
+                chainSpecific = previewEthSpec,
+                showsPriority = true,
+                priorityTiers =
+                    mapOf(
+                        PriorityFee.LOW to BigInteger.valueOf(1_000_000_000L),
+                        PriorityFee.NORMAL to BigInteger.valueOf(1_500_000_000L),
+                        PriorityFee.FAST to BigInteger.valueOf(3_000_000_000L),
+                    ),
+                selectedPriority = PriorityFee.NORMAL,
+            ),
+        gasLimitState = TextFieldState("21000"),
+        byteFeeState = TextFieldState(),
+        baseFeeState = TextFieldState("3"),
+        priorityFeeState = TextFieldState("1.5"),
         onSaveClick = {},
         onCloseClick = {},
     )

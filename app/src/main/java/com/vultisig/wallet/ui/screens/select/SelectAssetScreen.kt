@@ -171,8 +171,9 @@ internal fun SelectAssetScreen(
     )
 }
 
+/** One asset row: logo, ticker, chain (or secured) pill, balance and fiat value. */
 @Composable
-private fun AssetItem(
+internal fun AssetItem(
     logo: ImageModel,
     title: String,
     subtitle: String,

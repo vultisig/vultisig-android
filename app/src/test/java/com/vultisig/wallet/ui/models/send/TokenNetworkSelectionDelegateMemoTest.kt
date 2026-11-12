@@ -60,6 +60,7 @@ internal class TokenNetworkSelectionDelegateMemoTest {
             navigator = mockk(relaxed = true),
             requestResultRepository = mockk(relaxed = true),
             tokenRepository = mockk(relaxed = true),
+            enableToken = mockk(relaxed = true),
             vaultRepository = mockk(relaxed = true),
             chainAccountAddressRepository = mockk(relaxed = true),
             tokenPreselectionService = mockk(relaxed = true),
@@ -74,7 +75,6 @@ internal class TokenNetworkSelectionDelegateMemoTest {
             uiState = MutableStateFlow(SendFormUiModel()),
             isSwitchingAccounts = MutableStateFlow(false),
             defiTypeProvider = { null },
-            expandSection = {},
             onRecipientPicked = onRecipientPicked,
         )
 }

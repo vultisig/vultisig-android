@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -16,6 +17,8 @@ import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,8 +31,13 @@ internal data class GasSettingsUiModel(
     // pressable while baseFee/priorityFee are blanked, or a slow/failed fetch would let the
     // user save a zero fee (issue #5397).
     val isLoadingEthFee: Boolean = false,
+    // Tier values to fill in; null while loading or after a failure, which disables the chips.
+    val showsPriority: Boolean = false,
+    val priorityTiers: Map<PriorityFee, BigInteger>? = null,
+    val selectedPriority: PriorityFee? = null,
 )
 
+/** The priority tiers of the advanced gas settings, in display order. */
 internal enum class PriorityFee {
     LOW,
     NORMAL,
@@ -54,23 +62,117 @@ constructor(
 
     val byteFeeState = TextFieldState()
 
-    fun loadData(chain: Chain, spec: BlockChainSpecificAndUtxo) {
-        val specific = spec.blockChainSpecific
+    private var tiersJob: Job? = null
 
-        state.update { it.copy(chainSpecific = specific) }
+    init {
+        // A chip stays selected only while its field still holds the value Save would sign.
+        viewModelScope.launch {
+            snapshotFlow { priorityFeeState.text.toString() to byteFeeState.text.toString() }
+                .collect { deselectIfEdited() }
+        }
+    }
+
+    /**
+     * Fills the sheet for [chain]. With [saved] settings made for this chain the fields show those;
+     * otherwise they load as before.
+     */
+    fun loadData(chain: Chain, spec: BlockChainSpecificAndUtxo, saved: GasSettings? = null) {
+        val specific = spec.blockChainSpecific
+        tiersJob?.cancel()
+
+        state.update {
+            it.copy(
+                chainSpecific = specific,
+                showsPriority = chain.hasPriorityTiers,
+                priorityTiers = null,
+                selectedPriority = null,
+            )
+        }
 
         when (specific) {
             is BlockChainSpecific.Ethereum -> {
-                loadEthData(chain, specific)
+                if (saved is GasSettings.Eth) showSavedEth(saved) else loadEthData(chain, specific)
+                if (chain.hasPriorityTiers) loadEthTiers(chain, isSaved = saved is GasSettings.Eth)
             }
 
             is BlockChainSpecific.UTXO -> {
-                loadUTXOData(chain)
+                if (saved is GasSettings.UTXO) {
+                    byteFeeState.setTextAndPlaceCursorAtEnd(saved.byteFee.toString())
+                }
+                loadUTXOData(chain, isSaved = saved is GasSettings.UTXO)
             }
 
             else -> Unit
         }
     }
+
+    /**
+     * Fills the field a tier sets with [priority]'s value; does nothing while tiers are missing.
+     */
+    fun selectPriority(priority: PriorityFee) {
+        val value = state.value.priorityTiers?.get(priority) ?: return
+        when (state.value.chainSpecific) {
+            is BlockChainSpecific.Ethereum ->
+                priorityFeeState.setTextAndPlaceCursorAtEnd(convertWeiToGwei(value).toPlainString())
+            is BlockChainSpecific.UTXO -> byteFeeState.setTextAndPlaceCursorAtEnd(value.toString())
+            else -> return
+        }
+        state.update { it.copy(selectedPriority = priority) }
+    }
+
+    private fun showSavedEth(saved: GasSettings.Eth) {
+        gasLimitState.setTextAndPlaceCursorAtEnd(saved.gasLimit.toString())
+        baseFeeState.setTextAndPlaceCursorAtEnd(convertWeiToGwei(saved.baseFee).toPlainString())
+        priorityFeeState.setTextAndPlaceCursorAtEnd(
+            convertWeiToGwei(saved.priorityFee).toPlainString()
+        )
+        state.update { it.copy(isLoadingEthFee = false) }
+    }
+
+    private fun loadEthTiers(chain: Chain, isSaved: Boolean) {
+        tiersJob = viewModelScope.launch {
+            val tiers =
+                try {
+                    val history = evmApiFactory.createEvmApi(chain).getFeeHistory()
+                    evmPriorityFeeTiers(chain, history)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.w(e, "Fee history unavailable for %s", chain)
+                    null
+                }
+            showTiers(tiers, isSaved)
+        }
+    }
+
+    // A reopened sheet shows a chip only when the saved value is still exactly that tier's.
+    private fun showTiers(tiers: Map<PriorityFee, BigInteger>?, isSaved: Boolean) {
+        val current = currentTierFieldValue()
+        val matching =
+            if (isSaved && tiers != null && current != null) {
+                PriorityFee.entries.firstOrNull { tiers[it] == current }
+            } else null
+        state.update { it.copy(priorityTiers = tiers, selectedPriority = matching) }
+    }
+
+    private fun deselectIfEdited() {
+        val selected = state.value.selectedPriority ?: return
+        val tierValue = state.value.priorityTiers?.get(selected)
+        if (tierValue != currentTierFieldValue()) {
+            state.update { it.copy(selectedPriority = null) }
+        }
+    }
+
+    /** The value in the field a tier fills (priority fee in wei, or byte fee), as Save reads it. */
+    private fun currentTierFieldValue(): BigInteger? =
+        when (state.value.chainSpecific) {
+            is BlockChainSpecific.Ethereum ->
+                priorityFeeState.text.toString().toBigDecimalOrNull()?.let {
+                    convertGweiToWei(it).toBigInteger()
+                }
+            is BlockChainSpecific.UTXO -> byteFeeState.text.toString().toBigIntegerOrNull()
+            else -> null
+        }
 
     private fun loadEthData(chain: Chain, spec: BlockChainSpecific.Ethereum) {
         gasLimitState.setTextAndPlaceCursorAtEnd(spec.gasLimit.toString())
@@ -111,14 +213,18 @@ constructor(
         }
     }
 
-    private fun loadUTXOData(chain: Chain) {
-        viewModelScope.launch {
-            if (byteFeeState.text.toBigInteger() > BigInteger.ZERO) return@launch
+    private fun loadUTXOData(chain: Chain, isSaved: Boolean) {
+        val offersTiers = chain.hasPriorityTiers
+        tiersJob = viewModelScope.launch {
+            val hasValue = byteFeeState.text.toBigInteger() > BigInteger.ZERO
+            if (hasValue && !offersTiers) return@launch
             try {
                 val byteFee = utxoFeeService.getDefaultGasFee(chain)
-                byteFeeState.setTextAndPlaceCursorAtEnd(byteFee.toString())
+                if (!hasValue) byteFeeState.setTextAndPlaceCursorAtEnd(byteFee.toString())
+                if (offersTiers) showTiers(utxoByteFeeTiers(byteFee), isSaved)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
             }
         }

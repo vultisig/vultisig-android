@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
 import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.blockchain.utxo.UtxoFeeService
@@ -11,6 +12,8 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.usecases.ConvertGweiToWeiUseCase
 import com.vultisig.wallet.data.usecases.ConvertWeiToGweiUseCase
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -78,6 +81,156 @@ internal class GasSettingsViewModelTest {
                     nonce = BigInteger.ZERO,
                     gasLimit = gasLimit,
                 )
+        )
+
+    @Test
+    fun `with no tier picked, the sheet saves exactly what it did before tiers existed`() =
+        runTest {
+            coEvery { evmApi.getFeeHistory() } returns FEE_HISTORY
+            val vm = viewModel()
+
+            vm.loadData(
+                Chain.Ethereum,
+                ethSpec(priorityFeeWei = BigInteger("1500000000"), gasLimit = BigInteger("21000")),
+            )
+            advanceUntilIdle()
+
+            vm.state.value.selectedPriority.shouldBeNull()
+            vm.save() shouldBe
+                GasSettings.Eth(
+                    baseFee = BigInteger("3000000000"),
+                    priorityFee = BigInteger("1500000000"),
+                    gasLimit = BigInteger("21000"),
+                )
+        }
+
+    @Test
+    fun `picking a tier fills the priority fee field and Save signs what it shows`() = runTest {
+        coEvery { evmApi.getFeeHistory() } returns FEE_HISTORY
+        val vm = viewModel()
+        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1500000000")))
+        advanceUntilIdle()
+
+        vm.selectPriority(PriorityFee.FAST)
+
+        vm.priorityFeeState.text.toString() shouldBe "4"
+        vm.state.value.selectedPriority shouldBe PriorityFee.FAST
+        val saved = vm.save() as GasSettings.Eth
+        saved.priorityFee shouldBe BigInteger("4000000000")
+        saved.baseFee shouldBe BigInteger("3000000000")
+        saved.gasLimit shouldBe BigInteger("21000")
+    }
+
+    @Test
+    fun `editing the field a tier filled deselects the tier`() = runTest {
+        coEvery { evmApi.getFeeHistory() } returns FEE_HISTORY
+        val vm = viewModel()
+        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1500000000")))
+        advanceUntilIdle()
+        vm.selectPriority(PriorityFee.LOW)
+
+        vm.priorityFeeState.setTextAndPlaceCursorAtEnd("1.25")
+        Snapshot.sendApplyNotifications()
+        advanceUntilIdle()
+
+        vm.state.value.selectedPriority.shouldBeNull()
+        (vm.save() as GasSettings.Eth).priorityFee shouldBe BigInteger("1250000000")
+    }
+
+    @Test
+    fun `tiers stay unavailable when the fee history fails, and picking does nothing`() = runTest {
+        coEvery { evmApi.getFeeHistory() } throws IllegalStateException("rpc down")
+        val vm = viewModel()
+        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1500000000")))
+        advanceUntilIdle()
+
+        vm.state.value.showsPriority shouldBe true
+        vm.state.value.priorityTiers.shouldBeNull()
+        vm.selectPriority(PriorityFee.FAST)
+        vm.priorityFeeState.text.toString() shouldBe "1.5"
+        vm.state.value.selectedPriority.shouldBeNull()
+    }
+
+    @Test
+    fun `a legacy-gas chain offers no tiers`() = runTest {
+        coEvery { evmApi.getGasPrice() } returns BigInteger("5000000000")
+        val vm = viewModel()
+
+        vm.loadData(Chain.BscChain, ethSpec(priorityFeeWei = BigInteger.ZERO))
+        advanceUntilIdle()
+
+        vm.state.value.showsPriority shouldBe false
+    }
+
+    @Test
+    fun `reopening shows the saved values and marks the tier they still equal`() = runTest {
+        coEvery { evmApi.getFeeHistory() } returns FEE_HISTORY
+        val saved =
+            GasSettings.Eth(
+                baseFee = BigInteger("2500000000"),
+                priorityFee = BigInteger("2500000000"),
+                gasLimit = BigInteger("30000"),
+            )
+        val vm = viewModel()
+
+        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1500000000")), saved)
+        advanceUntilIdle()
+
+        vm.baseFeeState.text.toString() shouldBe "2.5"
+        vm.priorityFeeState.text.toString() shouldBe "2.5"
+        vm.gasLimitState.text.toString() shouldBe "30000"
+        vm.state.value.selectedPriority shouldBe PriorityFee.NORMAL
+        vm.save() shouldBe saved
+    }
+
+    @Test
+    fun `reopening with saved values that match no tier marks none`() = runTest {
+        coEvery { evmApi.getFeeHistory() } returns FEE_HISTORY
+        val saved =
+            GasSettings.Eth(
+                baseFee = BigInteger("2500000000"),
+                priorityFee = BigInteger("2600000000"),
+                gasLimit = BigInteger("30000"),
+            )
+        val vm = viewModel()
+
+        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1500000000")), saved)
+        advanceUntilIdle()
+
+        vm.state.value.selectedPriority.shouldBeNull()
+    }
+
+    @Test
+    fun `UTXO tiers scale today's byte fee and Save signs the picked one`() = runTest {
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } returns BigInteger("30")
+        val vm = viewModel()
+
+        vm.loadData(Chain.Bitcoin, utxoSpec())
+        advanceUntilIdle()
+        vm.byteFeeState.text.toString() shouldBe "30"
+        vm.state.value.selectedPriority.shouldBeNull()
+
+        vm.selectPriority(PriorityFee.LOW)
+
+        vm.byteFeeState.text.toString() shouldBe "22"
+        vm.save() shouldBe GasSettings.UTXO(byteFee = BigInteger("22"))
+    }
+
+    @Test
+    fun `UTXO with no tier picked saves today's byte fee`() = runTest {
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } returns BigInteger("30")
+        val vm = viewModel()
+
+        vm.loadData(Chain.Bitcoin, utxoSpec())
+        advanceUntilIdle()
+
+        vm.save() shouldBe GasSettings.UTXO(byteFee = BigInteger("30"))
+    }
+
+    private fun utxoSpec() =
+        BlockChainSpecificAndUtxo(
+            blockChainSpecific =
+                BlockChainSpecific.UTXO(byteFee = BigInteger("30"), sendMaxAmount = false)
         )
 
     @Test
@@ -283,5 +436,16 @@ internal class GasSettingsViewModelTest {
                 gasLimit = BigInteger("21000"),
             )
         }
+    }
+
+    private companion object {
+        // Ascending, as getFeeHistory returns it: Low 1 gwei, Normal 2.5 gwei, Fast 4 gwei.
+        val FEE_HISTORY =
+            listOf(
+                BigInteger("1000000000"),
+                BigInteger("2000000000"),
+                BigInteger("3000000000"),
+                BigInteger("4000000000"),
+            )
     }
 }

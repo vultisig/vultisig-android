@@ -83,6 +83,19 @@ internal data class SendFormUiModel(
     val showGasSettings: Boolean = false,
     val specific: BlockChainSpecificAndUtxo? = null,
     val expandedSection: SendSections = SendSections.Asset,
+    // Plain send only: the Asset step has been left once, by a pick, Continue or a token entry.
+    val isAssetStepComplete: Boolean = false,
+    // The recipient field holds the address that validation accepted for the selected chain.
+    val isDstAddressValid: Boolean = false,
+    // Plain send: a field to focus once its step is on screen and the field is attached.
+    val pendingFocusField: SendFocusField? = null,
+
+    // Plain-send asset step: chain chip (null = all), its rows and chips, custom-token offer.
+    val assetChainFilter: Chain? = null,
+    val assetRows: List<TokenBalanceUiModel> = emptyList(),
+    val assetChains: List<Chain> = emptyList(),
+    val canAddCustomToken: Boolean = false,
+    val isAssetListLoaded: Boolean = false,
     val usingTokenAmountInput: Boolean = true,
     // Whether the entered token amount is present and valid. Used to gate Continue on the TRON
     // freeze/unfreeze screens, where the network fee is amount-independent and resolves on entry.

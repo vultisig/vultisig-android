@@ -78,6 +78,10 @@
     <string name="send_amount">Importo</string>
     <string name="send_amount_currency_hint">Inserisci l\'importo</string>
     <string name="send_continue_button">Continua</string>
+    <string name="send_step_choose_asset">Scegli un asset</string>
+    <string name="send_step_enter_address">Inserisci l\'indirizzo</string>
+    <string name="send_step_enter_amount">Inserisci l\'importo</string>
+    <string name="send_all_chains">Tutte le chain</string>
     <string name="circle_defi_description">Deposita i tuoi USDC in un account Circle e guadagna rendimenti. In modo sicuro all\'interno del tuo vault Vultisig.</string>
     <string name="circle_defi_control_info">I fondi rimangono completamente sotto il controllo del tuo vault. Gli account Circle sono auto-custoditi e il rendimento è generato attraverso tesorerie sicure off-chain.</string>
     <string name="open_account_button">Apri account</string>
@@ -428,7 +432,6 @@
     <string name="verify_swap_screen_total_fees">Commissioni totali max.</string>
     <string name="scan_qr_code_error_text">Hai scansionato un codice QR non pertinente</string>
     <string name="scan_qr_code_error_button">Indietro</string>
-    <string name="form_token_selection_balance">Saldo: %s</string>
     <string name="form_token_selection_asset">Asset</string>
     <string name="insufficient_native_token">%1$s insufficienti per le commissioni del gas</string>
     <string name="swap_error_amount_too_low">Importo troppo basso per coprire le commissioni. Aumenta l’importo.</string>
@@ -973,6 +976,10 @@
     <string name="gas_settings_gas_price_gwei">Prezzo del gas (GWEI)</string>
     <string name="gas_settings_max_base_fee_gwei">Tariffa base massima (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">Tariffa prioritaria (GWEI)</string>
+    <string name="gas_settings_priority">Priorità</string>
+    <string name="gas_settings_priority_low">Bassa</string>
+    <string name="gas_settings_priority_normal">Normale</string>
+    <string name="gas_settings_priority_fast">Veloce</string>
     <string name="import_file_import_your_vault_share">Importa la tua quota del vault</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Tipi di file supportati: .dat, .bak e .vult]]></string>
     <string name="must_be_enabled_before_proceeding">%1$s deve essere abilitato prima di procedere.</string>

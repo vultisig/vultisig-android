@@ -1,13 +1,8 @@
 package com.vultisig.wallet.ui.screens.v2.home.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -16,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -25,6 +19,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.RollingText
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -60,7 +55,7 @@ internal fun BalanceBanner(
                     style = Theme.satoshi.price.largeTitle,
                 )
             } else {
-                RollingText(
+                BalanceRollingText(
                     text = value,
                     isVisible = isVisible,
                     color = Theme.v2.colors.text.primary,
@@ -80,35 +75,13 @@ internal fun BalanceBanner(
     }
 }
 
-/** Characters are matched from the end, so the cents stay put when the figure gains a digit. */
 @Composable
-private fun RollingText(text: String, isVisible: Boolean, color: Color, style: TextStyle) {
+private fun BalanceRollingText(text: String, isVisible: Boolean, color: Color, style: TextStyle) {
     if (!isVisible) {
         ToggleVisibilityText(text = text, isVisible = false, color = color, style = style)
         return
     }
-    val isReduceMotion = rememberIsReduceMotionEnabled()
-    Row {
-        text.forEachIndexed { index, char ->
-            key(text.length - index) {
-                AnimatedContent(
-                    targetState = char,
-                    transitionSpec = {
-                        if (isReduceMotion) {
-                            EnterTransition.None togetherWith ExitTransition.None
-                        } else {
-                            val direction = if (targetState > initialState) 1 else -1
-                            (slideInVertically { it * direction } + fadeIn()) togetherWith
-                                (slideOutVertically { -it * direction } + fadeOut()) using
-                                SizeTransform(clip = false)
-                        }
-                    },
-                ) { shown ->
-                    Text(text = shown.toString(), color = color, style = style)
-                }
-            }
-        }
-    }
+    RollingText(text = text, color = color, style = style)
 }
 
 @Composable

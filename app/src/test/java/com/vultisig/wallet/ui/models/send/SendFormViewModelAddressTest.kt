@@ -225,8 +225,10 @@ internal class SendFormViewModelAddressTest {
             feeServiceComposite = mockk(relaxed = true),
             chainValidationService = mockk(relaxed = true),
             requestAddressBookEntry = requestAddressBookEntry,
+            enableToken = mockk(relaxed = true),
             getTronFrozenBalances = mockk(relaxed = true),
             sendStrategyFactory = fakeSendStrategyFactory(),
+            defaultDispatcher = mainDispatcher,
         )
     }
 

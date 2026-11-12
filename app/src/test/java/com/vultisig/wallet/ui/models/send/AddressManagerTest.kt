@@ -22,6 +22,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -588,6 +589,39 @@ internal class AddressManagerTest {
         advanceTimeBy(400)
         advanceUntilIdle()
     }
+
+    @Test
+    fun `a name lookup that finishes after a chain switch is ignored`() =
+        runTest(mainDispatcher) {
+            val lookup = CompletableDeferred<String>()
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "vitalik.eth") } returns
+                false
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "0xres") } returns true
+            coEvery { addressParserRepository.resolveName("vitalik.eth", Chain.Ethereum) } coAnswers
+                {
+                    lookup.await()
+                }
+            coEvery { addressParserRepository.resolveName("vitalik.eth", Chain.Solana) } throws
+                IllegalStateException("no name on this chain")
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+            val emissions = collectValidations(manager)
+
+            addressFieldState.setTextAndPlaceCursorAtEnd("vitalik.eth")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+            selectedToken.value = token(Chain.Solana, "SOL")
+            advanceUntilIdle()
+            lookup.complete("0xres")
+            advanceUntilIdle()
+
+            manager.resolvedDstAddress.value.shouldBeNull()
+            manager.addressError.value shouldBe RecipientValidity.InvalidForChain
+            addressFieldState.text.toString() shouldBe "vitalik.eth"
+            emissions.shouldBeEmpty()
+        }
 
     private fun TestScope.collectValidations(manager: AddressManager): MutableList<Unit> {
         val emissions = mutableListOf<Unit>()

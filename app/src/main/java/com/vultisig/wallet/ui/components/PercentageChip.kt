@@ -20,11 +20,12 @@ internal fun PercentageChip(
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
 ) {
     Box(
         modifier =
             modifier
-                .clickable(onClick = onClick)
+                .clickable(enabled = isEnabled, onClick = onClick)
                 .then(
                     if (isSelected)
                         Modifier.background(
@@ -44,7 +45,8 @@ internal fun PercentageChip(
         Text(
             text = title,
             style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.secondary,
+            color =
+                if (isEnabled) Theme.v2.colors.text.secondary else Theme.v2.colors.text.tertiary,
             textAlign = TextAlign.Center,
         )
     }

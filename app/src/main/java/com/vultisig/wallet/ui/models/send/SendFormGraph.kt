@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.data.models.canAddCustomToken
 import com.vultisig.wallet.data.models.carriesMemo
 import com.vultisig.wallet.data.models.isRippleIssuedToken
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -32,6 +33,7 @@ import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
@@ -49,14 +51,22 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asAddressInput
 import com.vultisig.wallet.ui.utils.textAsFlow
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -101,6 +111,7 @@ internal class SendFormGraph(
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
+    private val enableToken: EnableTokenUseCase,
     private val uiState: MutableStateFlow<SendFormUiModel>,
     private val selectedToken: MutableStateFlow<Coin?>,
     private val accountsState: MutableStateFlow<AccountsLoadState>,
@@ -112,6 +123,8 @@ internal class SendFormGraph(
     private val memoFieldState: TextFieldState,
     private val destinationTagFieldState: TextFieldState,
     private val slippageFieldState: TextFieldState,
+    private val assetSearchFieldState: TextFieldState,
+    private val listingDispatcher: CoroutineDispatcher,
     private val selectedTokenProvider: () -> Coin?,
     private val selectedAccountProvider: () -> Account?,
     private val isAutocompoundProvider: () -> Boolean,
@@ -220,6 +233,7 @@ internal class SendFormGraph(
             appCurrency = appCurrency,
             chainValidationService = chainValidationService,
             tokenPriceRepository = tokenPriceRepository,
+            roundsFiatDerivedAmount = { defiType == null },
         )
     }
 
@@ -305,6 +319,7 @@ internal class SendFormGraph(
             navigator = navigator,
             requestResultRepository = requestResultRepository,
             tokenRepository = tokenRepository,
+            enableToken = enableToken,
             vaultRepository = vaultRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
             tokenPreselectionService = tokenPreselectionService,
@@ -319,7 +334,6 @@ internal class SendFormGraph(
             uiState = uiState,
             isSwitchingAccounts = isSwitchingAccounts,
             defiTypeProvider = defiTypeProvider,
-            expandSection = expandSection,
             onRecipientPicked = { addressManager.markPicked(it) },
         )
     }
@@ -441,6 +455,14 @@ internal class SendFormGraph(
             addressManager.onAddressValidated.collect { expandSection(SendSections.Amount) }
         }
         scope.launch {
+            combine(addressManager.resolvedDstAddress, addressFieldState.textAsFlow()) {
+                    resolved,
+                    text ->
+                    resolved != null && resolved == text.asAddressInput()
+                }
+                .collect { isValid -> uiState.update { it.copy(isDstAddressValid = isValid) } }
+        }
+        scope.launch {
             addressManager.destinationTagLocked.collect { locked ->
                 uiState.update { it.copy(destinationTagLocked = locked) }
             }
@@ -469,6 +491,16 @@ internal class SendFormGraph(
                                 null -> null
                             }
                     )
+                }
+                // A rejected recipient sends a plain send back to Address, where the reason shows.
+                val state = uiState.value
+                if (
+                    error != null &&
+                        error != RecipientValidity.Valid &&
+                        state.defiType == null &&
+                        state.expandedSection == SendSections.Amount
+                ) {
+                    expandSection(SendSections.Address)
                 }
             }
         }
@@ -513,6 +545,51 @@ internal class SendFormGraph(
             }
             .launchIn(scope)
         scope.launch { collectSelectedAccount() }
+        if (defiType == null) scope.launch { collectAssetListing() }
+    }
+
+    /**
+     * Mirrors the inline asset step's rows and chain chips into [uiState] per input change. Reads
+     * the loaded accounts only, so the step can tell "not loaded yet" from "no coins".
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private suspend fun collectAssetListing() {
+        combine(
+                accountsState.filterIsInstance<AccountsLoadState.Loaded>().map { it.accounts },
+                assetSearchFieldState.textAsFlow(),
+                uiState.map { it.assetChainFilter }.distinctUntilChanged(),
+                selectedToken.map { it?.id }.distinctUntilChanged(),
+            ) { accounts, query, chainFilter, selectedTokenId ->
+                val listing =
+                    buildSendAssetListing(accounts, chainFilter, query.toString(), selectedTokenId)
+                val canAddCustomToken =
+                    listing.rows.isEmpty() &&
+                        query.isNotBlank() &&
+                        chainFilter?.canAddCustomToken == true
+                listing to canAddCustomToken
+            }
+            .mapLatest { (listing, canAddCustomToken) ->
+                val rows =
+                    listing.rows.map { account ->
+                        val token = account.token
+                        accountToTokenBalanceUiModelMapper(
+                            SendSrc(Address(token.chain, token.address, listOf(account)), account)
+                        )
+                    }
+                Triple(rows, listing.chains, canAddCustomToken)
+            }
+            // Sorting, summing and formatting every coin stays off the main thread.
+            .flowOn(listingDispatcher)
+            .collect { (rows, chains, canAddCustomToken) ->
+                uiState.update {
+                    it.copy(
+                        assetRows = rows,
+                        assetChains = chains,
+                        canAddCustomToken = canAddCustomToken,
+                        isAssetListLoaded = true,
+                    )
+                }
+            }
     }
 
     private suspend fun collectSelectedAccount() {

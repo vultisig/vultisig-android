@@ -76,6 +76,10 @@
     <string name="send_amount">Valor</string>
     <string name="send_amount_currency_hint">Insira o valor</string>
     <string name="send_continue_button">Continuar</string>
+    <string name="send_step_choose_asset">Escolha um ativo</string>
+    <string name="send_step_enter_address">Insira o endereço</string>
+    <string name="send_step_enter_amount">Insira o valor</string>
+    <string name="send_all_chains">Todas as cadeias</string>
     <string name="chain_account_view_swap">Trocar</string>
     <string name="circle_defi_description">Deposite seu USDC em uma conta Circle e obtenha rendimento. Com segurança dentro do seu cofre Vultisig.</string>
     <string name="circle_defi_control_info">Os fundos permanecem totalmente sob o controle do seu cofre. As contas Circle são autocustodiais e o rendimento é gerado através de tesourarias seguras fora da cadeia.</string>
@@ -428,7 +432,6 @@
     <string name="verify_swap_screen_total_fees">Taxa total máx.</string>
     <string name="scan_qr_code_error_text">Este código QR não é relacionado</string>
     <string name="scan_qr_code_error_button">Voltar</string>
-    <string name="form_token_selection_balance">Saldo: %s</string>
     <string name="form_token_selection_asset">Ativo</string>
     <string name="insufficient_native_token">%1$s insuficiente para taxas de gás</string>
     <string name="swap_error_amount_too_low">Valor muito baixo para cobrir as taxas. Aumente o valor.</string>
@@ -972,6 +975,10 @@
     <string name="gas_settings_gas_price_gwei">Preço do gás (GWEI)</string>
     <string name="gas_settings_max_base_fee_gwei">Taxa básica máxima (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">Taxa de prioridade (GWEI)</string>
+    <string name="gas_settings_priority">Prioridade</string>
+    <string name="gas_settings_priority_low">Baixa</string>
+    <string name="gas_settings_priority_normal">Normal</string>
+    <string name="gas_settings_priority_fast">Rápida</string>
     <string name="import_file_import_your_vault_share">Importe sua parte do cofre</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Tipos de arquivo suportados: .dat, .bak e .vult]]></string>
     <string name="must_be_enabled_before_proceeding">%1$s deve ser ativado antes de prosseguir.</string>

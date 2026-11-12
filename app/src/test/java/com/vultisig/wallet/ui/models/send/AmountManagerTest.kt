@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -209,10 +210,126 @@ internal class AmountManagerTest {
             Snapshot.sendApplyNotifications()
             advanceUntilIdle()
 
-            // 1000 / 2000 = 0.5, scaled to token decimal (18) — fiat→token branch does NOT
-            // stripTrailingZeros (intentional: preserves the user's typed precision in the field).
-            assertEquals("0.500000000000000000", tokenAmountFieldState.text.toString())
+            // 1000 / 2000 = 0.5, rounded down to five significant digits and trimmed.
+            assertEquals("0.5", tokenAmountFieldState.text.toString())
+            assertEquals("1000", fiatAmountFieldState.text.toString())
         }
+
+    @Test
+    fun `a fiat entry rounds the token amount down to five significant digits`() =
+        runTest(mainDispatcher) {
+            every { tokenPriceRepository.getPrice(any(), any()) } returns
+                flowOf(BigDecimal("2943.37"))
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            fiatAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            // 1 / 2943.37 = 0.000339746…; the typed fiat stays as typed.
+            tokenAmountFieldState.text.toString() shouldBe "0.00033974"
+            fiatAmountFieldState.text.toString() shouldBe "1"
+        }
+
+    @Test
+    fun `a DeFi form keeps the full-precision fiat-derived amount`() =
+        runTest(mainDispatcher) {
+            every { tokenPriceRepository.getPrice(any(), any()) } returns
+                flowOf(BigDecimal("2943.37"))
+            val manager = build(backgroundScope, isPlainSend = false)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            fiatAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            // 1 / 2943.37 truncated to ETH's 18 decimals (Python Decimal, ROUND_DOWN).
+            tokenAmountFieldState.text.toString() shouldBe "0.000339746616973061"
+        }
+
+    @Test
+    fun `a DeFi form keeps main's unstripped scale on a fiat entry`() =
+        runTest(mainDispatcher) {
+            every { tokenPriceRepository.getPrice(any(), any()) } returns flowOf(BigDecimal("2000"))
+            val manager = build(backgroundScope, isPlainSend = false)
+            manager.start()
+            selectedToken.value = ethToken()
+
+            fiatAmountFieldState.setTextAndPlaceCursorAtEnd("1000")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            // The value main's own test expected before plain send's rounding existed.
+            tokenAmountFieldState.text.toString() shouldBe "0.500000000000000000"
+        }
+
+    @Test
+    fun `a fiat-derived amount equal to the max snapshot is Max, as submit treats it`() =
+        runTest(mainDispatcher) {
+            every { tokenPriceRepository.getPrice(any(), any()) } returns flowOf(BigDecimal("2000"))
+            val manager = build(backgroundScope)
+            manager.start()
+            selectedToken.value = ethToken()
+            manager.markMax(BigDecimal("0.5"))
+
+            fiatAmountFieldState.setTextAndPlaceCursorAtEnd("1000")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+
+            tokenAmountFieldState.text.toString() shouldBe "0.5"
+            manager.isMaxAmount.value shouldBe true
+        }
+
+    @Test
+    fun `rounding keeps five significant digits, never cuts whole units, trims zeros`() {
+        val cases =
+            listOf(
+                "0.000339871234" to "0.00033987",
+                "0.00714285714" to "0.0071428",
+                "25.000000" to "25",
+                "1234.56789" to "1234.5",
+                "1234567.89" to "1234567",
+                "0.999999" to "0.99999",
+                "100000" to "100000",
+            )
+        cases.forEach { (input, expected) ->
+            BigDecimal(input)
+                .roundedDownToSignificant(FIAT_DERIVED_SIGNIFICANT_DIGITS, 18)
+                .toPlainString() shouldBe expected
+        }
+    }
+
+    @Test
+    fun `rounding never keeps more decimals than the coin has`() {
+        BigDecimal("0.000339871234").roundedDownToSignificant(5, 6).toPlainString() shouldBe
+            "0.000339"
+        BigDecimal("0.0000001").roundedDownToSignificant(5, 6).toPlainString() shouldBe "0"
+    }
+
+    @Test
+    fun `rounding passes non-positive values through`() {
+        BigDecimal.ZERO.roundedDownToSignificant(5, 18) shouldBe BigDecimal.ZERO
+    }
+
+    @Test
+    fun `rounding stays below the exact value and within one unit of the fifth digit`() {
+        val random = java.util.Random(ROUNDING_SEED)
+        repeat(ROUNDING_SAMPLES) {
+            val exact =
+                BigDecimal(java.math.BigInteger(64, random).add(java.math.BigInteger.ONE))
+                    .movePointLeft(random.nextInt(30))
+            val rounded = exact.roundedDownToSignificant(5, 18)
+            val magnitude = exact.precision() - exact.scale() - 1
+            val places = (5 - 1 - magnitude).coerceIn(0, 18)
+            val step = BigDecimal.ONE.movePointLeft(places)
+
+            (rounded <= exact) shouldBe true
+            (exact - rounded < step) shouldBe true
+        }
+    }
 
     @Test
     fun `zero price leaves fiat field empty`() =
@@ -397,7 +514,7 @@ internal class AmountManagerTest {
             )
         }
 
-    private fun build(scope: CoroutineScope) =
+    private fun build(scope: CoroutineScope, isPlainSend: Boolean = true) =
         AmountManager(
             scope = scope,
             tokenAmountFieldState = tokenAmountFieldState,
@@ -408,6 +525,7 @@ internal class AmountManagerTest {
             appCurrency = appCurrency,
             chainValidationService = chainValidationService,
             tokenPriceRepository = tokenPriceRepository,
+            roundsFiatDerivedAmount = { isPlainSend },
         )
 
     /** Empty scope for tests that only call pure helpers (no flow plumbing). */
@@ -454,4 +572,9 @@ internal class AmountManagerTest {
 
     /** Convenience: pull the StringResource id out of a UiText for terse assertions. */
     private fun UiText?.stringId(): Int? = (this as? UiText.StringResource)?.resId
+
+    private companion object {
+        const val ROUNDING_SEED = 5L
+        const val ROUNDING_SAMPLES = 2_000
+    }
 }

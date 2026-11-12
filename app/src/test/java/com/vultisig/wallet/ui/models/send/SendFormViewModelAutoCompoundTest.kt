@@ -326,7 +326,9 @@ internal class SendFormViewModelAutoCompoundTest {
             feeServiceComposite = mockk(relaxed = true),
             chainValidationService = mockk(relaxed = true),
             requestAddressBookEntry = mockk(relaxed = true),
+            enableToken = mockk(relaxed = true),
             getTronFrozenBalances = mockk(relaxed = true),
+            defaultDispatcher = mainDispatcher,
             sendStrategyFactory = fakeSendStrategyFactory(),
         )
 

@@ -588,6 +588,7 @@ class PreviewActivity : ComponentActivity() {
                     "withdraw_usdc_circle" -> WithdrawUsdcCirclePreview()
                     "send_form_amount_loading" -> SendFormAmountLoadingPreview()
                     "send_form_address" -> SendFormAddressPreview()
+                    "send_form_asset" -> SendFormAssetPreview()
                     "limit_order_cancel_done" -> LimitOrderCancelDonePreview()
                     "limit_orders_tab_empty" -> LimitOrdersTabPreview(orders = emptyList())
                     "empty_referral" -> EmptyReferralBanner(onClickedCreateReferral = {})
@@ -5130,6 +5131,8 @@ private fun SendFormAmountLoadingPreview() {
                         chainLogo = Chain.Dash.logo,
                     ),
                 expandedSection = SendSections.Amount,
+                isAssetStepComplete = true,
+                isDstAddressValid = true,
                 showGasFee = true,
                 totalGas = UiText.DynamicString("0.0000247 DASH"),
                 estimatedFee = UiText.DynamicString("$0.01"),
@@ -5143,16 +5146,7 @@ private fun SendFormAmountLoadingPreview() {
         fiatAmountFieldState = rememberTextFieldState(),
         memoFieldState = rememberTextFieldState(),
         destinationTagFieldState = rememberTextFieldState(),
-        onNetworkDragStart = {},
-        onNetworkDrag = {},
-        onNetworkDragEnd = {},
-        onNetworkDragCancel = {},
-        onNetworkLongPressStarted = {},
-        onAssetDragStart = {},
-        onAssetDrag = {},
-        onAssetDragEnd = {},
-        onAssetDragCancel = {},
-        onAssetLongPressStarted = {},
+        assetSearchFieldState = rememberTextFieldState(),
         slippageFieldState = rememberTextFieldState(),
     )
 }
@@ -5190,6 +5184,7 @@ private fun SendFormAddressPreview() {
                 srcVaultName = "Main Vault",
                 srcAddress = "XdN9i1nCqzUcXn1n2pQqCkrwiKRv5vJv4z",
                 expandedSection = SendSections.Address,
+                isAssetStepComplete = true,
             ),
         addressFieldState = rememberTextFieldState(),
         addressFocusRequester = remember { FocusRequester() },
@@ -5198,16 +5193,67 @@ private fun SendFormAddressPreview() {
         fiatAmountFieldState = rememberTextFieldState(),
         memoFieldState = rememberTextFieldState(),
         destinationTagFieldState = rememberTextFieldState(),
-        onNetworkDragStart = {},
-        onNetworkDrag = {},
-        onNetworkDragEnd = {},
-        onNetworkDragCancel = {},
-        onNetworkLongPressStarted = {},
-        onAssetDragStart = {},
-        onAssetDrag = {},
-        onAssetDragEnd = {},
-        onAssetDragCancel = {},
-        onAssetLongPressStarted = {},
+        assetSearchFieldState = rememberTextFieldState(),
+        slippageFieldState = rememberTextFieldState(),
+    )
+}
+
+/** A plain send on the Asset step: all chains, three funded coins, DASH selected. */
+@Composable
+private fun SendFormAssetPreview() {
+    fun row(coin: Coin, address: String, balance: String, fiat: String): TokenBalanceUiModel {
+        val account = Account(token = coin, tokenValue = null, fiatValue = null, price = null)
+        return TokenBalanceUiModel(
+            model =
+                SendSrc(
+                    address =
+                        Address(chain = coin.chain, address = address, accounts = listOf(account)),
+                    account = account,
+                ),
+            title = coin.ticker,
+            balance = balance,
+            fiatValue = fiat,
+            isNativeToken = coin.isNativeToken,
+            isLayer2 = false,
+            tokenStandard = null,
+            tokenLogo = coin.logo,
+            chainLogo = coin.chain.logo,
+        )
+    }
+    val dash = row(Coins.Dash.DASH, "XdN9i1nCqzUcXn1n2pQqCkrwiKRv5vJv4z", "12.4801", "$318.42")
+    val rows =
+        listOf(
+            dash,
+            row(
+                Coins.Bitcoin.BTC,
+                "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+                "0.0421",
+                "$2,904.11",
+            ),
+            row(
+                Coins.Ethereum.ETH,
+                "0x14F6Ed6b2b1d05C1F7Fd0Eb46E9C61a19c89B6",
+                "0.512",
+                "$1,507.03",
+            ),
+        )
+    SendFormScreen(
+        state =
+            SendFormUiModel(
+                fiatCurrency = "USD",
+                selectedCoin = dash,
+                expandedSection = SendSections.Asset,
+                assetRows = rows,
+                assetChains = listOf(Chain.Bitcoin, Chain.Ethereum, Chain.Dash),
+            ),
+        addressFieldState = rememberTextFieldState(),
+        addressFocusRequester = remember { FocusRequester() },
+        amountFocusRequester = remember { FocusRequester() },
+        tokenAmountFieldState = rememberTextFieldState(),
+        fiatAmountFieldState = rememberTextFieldState(),
+        memoFieldState = rememberTextFieldState(),
+        destinationTagFieldState = rememberTextFieldState(),
+        assetSearchFieldState = rememberTextFieldState(),
         slippageFieldState = rememberTextFieldState(),
     )
 }
@@ -5253,16 +5299,7 @@ private fun WithdrawUsdcCirclePreview() {
         fiatAmountFieldState = rememberTextFieldState(),
         memoFieldState = rememberTextFieldState(),
         destinationTagFieldState = rememberTextFieldState(),
-        onNetworkDragStart = {},
-        onNetworkDrag = {},
-        onNetworkDragEnd = {},
-        onNetworkDragCancel = {},
-        onNetworkLongPressStarted = {},
-        onAssetDragStart = {},
-        onAssetDrag = {},
-        onAssetDragEnd = {},
-        onAssetDragCancel = {},
-        onAssetLongPressStarted = {},
+        assetSearchFieldState = rememberTextFieldState(),
         slippageFieldState = rememberTextFieldState(),
     )
 }

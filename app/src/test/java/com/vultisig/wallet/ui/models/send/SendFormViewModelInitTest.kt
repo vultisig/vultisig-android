@@ -2,6 +2,8 @@
 
 package com.vultisig.wallet.ui.models.send
 
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Account
@@ -13,10 +15,13 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RecipientValidity
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -28,6 +33,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestScope
@@ -49,6 +55,7 @@ internal class SendFormViewModelInitTest {
     private val vaultRepository: VaultRepository = mockk(relaxed = true)
     private val accountsRepository: AccountsRepository = mockk(relaxed = true)
     private val appCurrencyRepository: AppCurrencyRepository = mockk(relaxed = true)
+    private val chainAccountAddressRepository: ChainAccountAddressRepository = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
@@ -317,6 +324,43 @@ internal class SendFormViewModelInitTest {
         assertEquals("", vm.memoFieldState.text.toString())
     }
 
+    @Test
+    fun `a validated recipient makes Amount reachable, a rejected one sends Amount back`() =
+        runTest {
+            coEvery { chainAccountAddressRepository.validateRecipient(any(), "0xgood") } returns
+                RecipientValidity.Valid
+            coEvery { chainAccountAddressRepository.validateRecipient(any(), "0xbad") } returns
+                RecipientValidity.NotAWalletAddress
+            val vm = buildViewModelWithPreselectedToken(Coins.Ethereum.ETH)
+
+            vm.addressFieldState.setTextAndPlaceCursorAtEnd("0xgood")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+            vm.uiState.value.isDstAddressValid shouldBe true
+            vm.uiState.value.expandedSection shouldBe SendSections.Amount
+
+            vm.addressFieldState.setTextAndPlaceCursorAtEnd("0xbad")
+            Snapshot.sendApplyNotifications()
+            advanceUntilIdle()
+            vm.uiState.value.isDstAddressValid shouldBe false
+            vm.uiState.value.expandedSection shouldBe SendSections.Address
+        }
+
+    @Test
+    fun `the asset list reads as loading until accounts arrive, then loaded even when empty`() =
+        runTest {
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns emptyFlow()
+            val pending = buildViewModel()
+            advanceUntilIdle()
+            pending.uiState.value.isAssetListLoaded shouldBe false
+
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns flowOf(emptyList())
+            val loaded = buildViewModel()
+            advanceUntilIdle()
+            loaded.uiState.value.isAssetListLoaded shouldBe true
+            loaded.uiState.value.assetRows shouldBe emptyList()
+        }
+
     private fun tonAddress(vararg accounts: Account) =
         Address(chain = Chain.Ton, address = TON_ADDRESS, accounts = accounts.toList())
 
@@ -352,7 +396,7 @@ internal class SendFormViewModelInitTest {
             requestQrScan = mockk(relaxed = true),
             accountsRepository = accountsRepository,
             appCurrencyRepository = appCurrencyRepository,
-            chainAccountAddressRepository = mockk(relaxed = true),
+            chainAccountAddressRepository = chainAccountAddressRepository,
             tokenPriceRepository = mockk(relaxed = true),
             blockChainSpecificRepository = mockk(relaxed = true),
             requestResultRepository = mockk(relaxed = true),
@@ -368,7 +412,9 @@ internal class SendFormViewModelInitTest {
             feeServiceComposite = mockk(relaxed = true),
             chainValidationService = mockk(relaxed = true),
             requestAddressBookEntry = mockk(relaxed = true),
+            enableToken = mockk(relaxed = true),
             getTronFrozenBalances = mockk(relaxed = true),
+            defaultDispatcher = mainDispatcher,
             sendStrategyFactory = fakeSendStrategyFactory(),
         )
     }

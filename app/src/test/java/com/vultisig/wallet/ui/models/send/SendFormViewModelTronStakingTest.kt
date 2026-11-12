@@ -170,8 +170,10 @@ internal class SendFormViewModelTronStakingTest {
             feeServiceComposite = mockk(relaxed = true),
             chainValidationService = mockk(relaxed = true),
             requestAddressBookEntry = mockk(relaxed = true),
+            enableToken = mockk(relaxed = true),
             getTronFrozenBalances = getTronFrozenBalances,
             sendStrategyFactory = fakeSendStrategyFactory(),
+            defaultDispatcher = mainDispatcher,
         )
     }
 

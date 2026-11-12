@@ -1,10 +1,6 @@
 package com.vultisig.wallet.ui.screens.send
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,23 +10,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -40,7 +30,6 @@ import com.vultisig.wallet.ui.components.TokenFiatToggle
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
-import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.models.send.AmountFraction
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSections
@@ -50,7 +39,6 @@ import com.vultisig.wallet.ui.models.send.isDstAddressBlocking
 import com.vultisig.wallet.ui.screens.deposit.components.AutoCompoundToggle
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -74,6 +62,7 @@ internal data class OptionalInputs(
     val onAutoCompoundCheckedChange: (Boolean) -> Unit,
 )
 
+/** The DeFi forms' amount card; a plain send uses [SendAmountStep]. */
 @Composable
 internal fun FoldableAmountWidget(
     state: SendFormUiModel,
@@ -92,8 +81,6 @@ internal fun FoldableAmountWidget(
     val onChoosePercentageAmount = amountInputs.onChoosePercentageAmount
     val onChooseMaxTokenAmount = amountInputs.onChooseMaxTokenAmount
     val onTokenAmountLostFocus = amountInputs.onTokenAmountLostFocus
-    val memoFieldState = optionalInputs.memoFieldState
-    val destinationTagFieldState = optionalInputs.destinationTagFieldState
     val slippageTextFieldState = optionalInputs.slippageFieldState
     val onAutoCompoundCheckedChange = optionalInputs.onAutoCompoundCheckedChange
     val isCircleMode = state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
@@ -207,59 +194,25 @@ internal fun FoldableAmountWidget(
 
             UiSpacer(12.dp)
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                state.amountFractionEntries.forEach { fraction ->
-                    PercentageChip(
-                        title = fraction.title.asString(),
-                        isSelected = fraction == state.selectedAmountFraction,
-                        onClick = {
-                            if (fraction == AmountFraction.F100) {
-                                onChooseMaxTokenAmount()
-                            } else {
-                                onChoosePercentageAmount(fraction)
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
+            AmountFractionChips(
+                state = state,
+                onChoosePercentageAmount = onChoosePercentageAmount,
+                onChooseMaxTokenAmount = onChooseMaxTokenAmount,
+            )
 
             UiSpacer(12.dp)
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier =
-                    if (isCircleMode) Modifier.padding(all = 16.dp)
-                    else
-                        Modifier.background(
-                                color = Theme.v2.colors.backgrounds.secondary,
-                                shape = Theme.v2.radius.md,
-                            )
-                            .padding(all = 16.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.send_form_balance_available),
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                )
-
-                val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
-                // Unfreezing is per-resource, so only the override says how much can be unfrozen.
-                // The coin's balance here is the whole Tron DeFi position and includes TRX already
-                // in the unfreeze cooldown, which cannot be unfrozen again.
-                val fallbackBalance =
-                    if (state.defiType == DeFiNavActions.UNFREEZE_TRX) null
-                    else state.selectedCoin?.balance
-                val balanceText = state.tronBalanceAvailableOverride ?: fallbackBalance ?: "0"
-
-                Text(
-                    text = balanceText + ticker,
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.secondary,
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+            // Unfreezing is per-resource, so only the override says how much can be unfrozen.
+            // The coin's balance here is the whole Tron DeFi position and includes TRX already
+            // in the unfreeze cooldown, which cannot be unfrozen again.
+            val fallbackBalance =
+                if (state.defiType == DeFiNavActions.UNFREEZE_TRX) null
+                else state.selectedCoin?.balance
+            BalanceAvailableRow(
+                balance = state.tronBalanceAvailableOverride ?: fallbackBalance ?: "0",
+                ticker = state.selectedCoin?.title,
+                hasBackground = !isCircleMode,
+            )
 
             if (state.exceedsStakeBalance(tokenAmountFieldState.text.toString())) {
                 UiSpacer(8.dp)
@@ -272,151 +225,6 @@ internal fun FoldableAmountWidget(
             }
 
             UiSpacer(12.dp)
-
-            // memo
-            if (state.hasMemo && state.defiType == null) {
-                // Open when the form starts with a memo (e.g. prefilled by a send deeplink), so the
-                // user sees what will be signed.
-                var isMemoExpanded by remember {
-                    mutableStateOf(memoFieldState.text.isNotEmpty())
-                }
-
-                // Reveal the field while the memo is over the chain's limit: the inline error is
-                // the only visible reason Continue is disabled.
-                LaunchedEffect(state.memoError) {
-                    if (state.memoError != null) isMemoExpanded = true
-                }
-
-                val rotationAngle by
-                    animateFloatAsState(
-                        targetValue = if (isMemoExpanded) 180f else 0f,
-                        animationSpec = tween(durationMillis = 200),
-                        label = "caretRotation",
-                    )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier.clickable {
-                                // Collapsing while the memo is over the limit would hide that
-                                // error, so it stays open until the memo fits.
-                                isMemoExpanded = state.memoError != null || !isMemoExpanded
-                            }
-                            .padding(vertical = 2.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.send_form_add_memo),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.tertiary,
-                        modifier = Modifier.weight(1f),
-                    )
-
-                    UiIcon(
-                        drawableResId = R.drawable.ic_caret_down,
-                        tint = Theme.v2.colors.text.primary,
-                        size = 16.dp,
-                        modifier = Modifier.rotate(rotationAngle),
-                    )
-                }
-
-                UiSpacer(12.dp)
-
-                AnimatedVisibility(visible = isMemoExpanded) {
-                    val clipboardData = VsClipboardService.getClipboardData()
-                    Column {
-                        VsTextInputField(
-                            textFieldState = memoFieldState,
-                            hint = stringResource(R.string.send_form_enter_memo),
-                            autoCorrectEnabled = false,
-                            innerState =
-                                if (state.memoError != null) VsTextInputFieldInnerState.Error
-                                else VsTextInputFieldInnerState.Default,
-                            footNote = state.memoError?.asString(),
-                            trailingIcon = R.drawable.paste,
-                            onTrailingIconClick = {
-                                clipboardData.value
-                                    ?.takeIf { it.isNotEmpty() }
-                                    ?.let { memoFieldState.setTextAndPlaceCursorAtEnd(text = it) }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-
-                        UiSpacer(12.dp)
-                    }
-                }
-            }
-
-            // XRP destination tag: a collapsible field shown below the memo. Locked when
-            // auto-filled
-            // from a pasted X-address (which also auto-expands it so the value is visible).
-            if (state.isDestinationTag && state.defiType == null) {
-                var isTagExpanded by remember {
-                    mutableStateOf(destinationTagFieldState.text.isNotEmpty())
-                }
-
-                // Reveal the field when an X-address paste locks/fills the tag.
-                LaunchedEffect(state.destinationTagLocked) {
-                    if (state.destinationTagLocked) isTagExpanded = true
-                }
-
-                val tagRotationAngle by
-                    animateFloatAsState(
-                        targetValue = if (isTagExpanded) 180f else 0f,
-                        animationSpec = tween(durationMillis = 200),
-                        label = "tagCaretRotation",
-                    )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier.clickable { isTagExpanded = !isTagExpanded }
-                            .padding(vertical = 2.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.send_form_add_destination_tag),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.tertiary,
-                        modifier = Modifier.weight(1f),
-                    )
-
-                    UiIcon(
-                        drawableResId = R.drawable.ic_caret_down,
-                        tint = Theme.v2.colors.text.primary,
-                        size = 16.dp,
-                        modifier = Modifier.rotate(tagRotationAngle),
-                    )
-                }
-
-                UiSpacer(12.dp)
-
-                AnimatedVisibility(visible = isTagExpanded) {
-                    val tagClipboardData = VsClipboardService.getClipboardData()
-                    Column {
-                        VsTextInputField(
-                            textFieldState = destinationTagFieldState,
-                            hint = stringResource(R.string.send_form_enter_destination_tag),
-                            keyboardType = KeyboardType.Number,
-                            autoCorrectEnabled = false,
-                            enabled = !state.destinationTagLocked,
-                            trailingIcon = R.drawable.paste.takeIf { !state.destinationTagLocked },
-                            onTrailingIconClick = {
-                                tagClipboardData.value
-                                    ?.takeIf { it.isNotEmpty() }
-                                    ?.let {
-                                        destinationTagFieldState.setTextAndPlaceCursorAtEnd(
-                                            text = it
-                                        )
-                                    }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-
-                        UiSpacer(12.dp)
-                    }
-                }
-            }
 
             if (
                 state.defiType == DeFiNavActions.REDEEM_YRUNE ||
@@ -477,5 +285,60 @@ internal fun FoldableAmountWidget(
                 )
             }
         }
+    }
+}
+
+/** The 25 / 50 / 75 % and Max chips; Max goes through its own calculation. */
+@Composable
+internal fun AmountFractionChips(
+    state: SendFormUiModel,
+    onChoosePercentageAmount: (AmountFraction) -> Unit,
+    onChooseMaxTokenAmount: () -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        state.amountFractionEntries.forEach { fraction ->
+            PercentageChip(
+                title = fraction.title.asString(),
+                isSelected = fraction == state.selectedAmountFraction,
+                onClick = {
+                    if (fraction == AmountFraction.F100) {
+                        onChooseMaxTokenAmount()
+                    } else {
+                        onChoosePercentageAmount(fraction)
+                    }
+                },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+/** "Balance available" with [balance] and [ticker], on a tinted strip when [hasBackground]. */
+@Composable
+internal fun BalanceAvailableRow(balance: String, ticker: String?, hasBackground: Boolean = true) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier =
+            if (hasBackground)
+                Modifier.background(
+                        color = Theme.v2.colors.backgrounds.secondary,
+                        shape = Theme.v2.radius.md,
+                    )
+                    .padding(all = 16.dp)
+            else Modifier.padding(all = 16.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.send_form_balance_available),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+        )
+
+        Text(
+            text = balance + (ticker?.let { " $it" } ?: ""),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.secondary,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
+        )
     }
 }

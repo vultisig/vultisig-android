@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
@@ -107,6 +108,7 @@ internal fun VsTextInputField(
     autoCorrectEnabled: Boolean = true,
     enabled: Boolean = true,
     style: VsTextInputFieldStyle = VsTextInputFieldStyle.Default,
+    isFocusable: Boolean = true,
 ) {
     var focused by remember { mutableStateOf(false) }
     val isSettingsStyle = style.isSettings
@@ -202,6 +204,7 @@ internal fun VsTextInputField(
                                         Modifier.focusRequester(focusRequester)
                                     else Modifier
                                 )
+                                .focusProperties { canFocus = isFocusable }
                                 .then(
                                     if (onKeyEvent != null) Modifier.onKeyEvent(onKeyEvent)
                                     else Modifier
@@ -265,6 +268,7 @@ internal fun VsTextInputField(
                                         Modifier.focusRequester(focusRequester)
                                     else Modifier
                                 )
+                                .focusProperties { canFocus = isFocusable }
                                 .then(
                                     if (onKeyEvent != null) Modifier.onKeyEvent(onKeyEvent)
                                     else Modifier

@@ -202,6 +202,10 @@
     <string name="send_amount">金额</string>
     <string name="send_amount_currency_hint">输入金额</string>
     <string name="send_continue_button">继续</string>
+    <string name="send_step_choose_asset">选择资产</string>
+    <string name="send_step_enter_address">输入地址</string>
+    <string name="send_step_enter_amount">输入金额</string>
+    <string name="send_all_chains">全部区块链</string>
 
     <!-- Chain Account -->
     <string name="chain_account_view_swap">兑换</string>
@@ -745,7 +749,6 @@
     <string name="scan_qr_code_error_button">返回</string>
 
     <!-- Form Token Selection -->
-    <string name="form_token_selection_balance">余额：%s</string>
     <string name="form_token_selection_asset">资产</string>
 
     <!-- Insufficient Native Token -->
@@ -1066,6 +1069,10 @@
     <string name="gas_settings_gas_price_gwei">Gas 价格（GWEI）</string>
     <string name="gas_settings_max_base_fee_gwei">最大基础费用（GWEI）</string>
     <string name="gas_settings_priority_fee_gwei">优先费用（GWEI）</string>
+    <string name="gas_settings_priority">优先级</string>
+    <string name="gas_settings_priority_low">低</string>
+    <string name="gas_settings_priority_normal">普通</string>
+    <string name="gas_settings_priority_fast">快速</string>
 
     <!-- Keygen & Keysign -->
     <string name="join_key_gen_vault_with_duplicate_name_exists">名为 \"%1$s\" 的保险库已存在</string>

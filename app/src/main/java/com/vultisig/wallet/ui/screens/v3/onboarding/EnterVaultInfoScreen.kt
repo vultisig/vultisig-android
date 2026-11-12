@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.v3.onboarding
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -274,8 +276,9 @@ private fun VaultInfoSteps(stepsState: Map<StepType, StepState>) {
     }
 }
 
+/** The hairline joining two step icons. */
 @Composable
-private fun StepSeparator() {
+internal fun StepSeparator() {
     Box(
         modifier =
             Modifier.width(16.dp).height(1.dp).background(color = Theme.v2.colors.border.light)
@@ -284,10 +287,22 @@ private fun StepSeparator() {
 
 @Composable
 fun StepIcon(type: StepType, state: StepState) {
+    StepIcon(logo = type.logo, state = state)
+}
 
+/** A round step icon drawn in [state]'s colours; [size] is the circle, [iconSize] the glyph. */
+@Composable
+internal fun StepIcon(
+    @DrawableRes logo: Int,
+    state: StepState,
+    modifier: Modifier = Modifier,
+    size: Dp = 44.dp,
+    iconSize: Dp = 18.dp,
+) {
     Box(
         modifier =
-            Modifier.size(44.dp)
+            modifier
+                .size(size)
                 .clip(shape = CircleShape)
                 .background(color = state.backgroundColor)
                 .then(
@@ -298,10 +313,10 @@ fun StepIcon(type: StepType, state: StepState) {
         contentAlignment = Alignment.Center,
     ) {
         UiIcon(
-            drawableResId = type.logo,
+            drawableResId = logo,
             tint = state.logoTint,
             contentDescription = null,
-            size = 18.dp,
+            size = iconSize,
         )
     }
 }

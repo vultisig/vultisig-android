@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
@@ -27,19 +28,38 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * The estimated network fee row. With [onClick] the title carries a caret and the row opens the gas
+ * settings; without it the row is a plain label.
+ */
 @Composable
 internal fun EstimatedNetworkFee(
     tokenGas: String,
     fiatGas: String,
     isLoading: Boolean = false,
     title: String = stringResource(R.string.send_form_est_network_fee),
+    onClick: (() -> Unit)? = null,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier =
+            if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick)
+            else Modifier,
+    ) {
         Text(
             text = title,
             style = Theme.brockmann.supplementary.footnote,
             color = Theme.v2.colors.text.tertiary,
         )
+
+        if (onClick != null) {
+            UiSpacer(4.dp)
+            UiIcon(
+                drawableResId = R.drawable.ic_chevron_right_small,
+                size = 12.dp,
+                tint = Theme.v2.colors.text.tertiary,
+            )
+        }
 
         Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
             if (isLoading) {

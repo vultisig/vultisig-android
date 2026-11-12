@@ -1,17 +1,20 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.DefaultDispatcher
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.tron.GetTronFrozenBalancesUseCase
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenId
@@ -27,6 +30,7 @@ import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
@@ -42,6 +46,7 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -80,8 +85,10 @@ constructor(
     private val feeServiceComposite: FeeServiceComposite,
     private val chainValidationService: ChainValidationService,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
+    private val enableToken: EnableTokenUseCase,
     private val getTronFrozenBalances: GetTronFrozenBalancesUseCase,
     private val sendStrategyFactory: SendStrategyFactory,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Send>()
@@ -101,6 +108,9 @@ constructor(
 
     // Trade
     val slippageFieldState = TextFieldState()
+
+    // Plain-send asset step search
+    val assetSearchFieldState = TextFieldState()
 
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
@@ -161,6 +171,7 @@ constructor(
             mapTokenValueToString = mapTokenValueToString,
             accountToTokenBalanceUiModelMapper = accountToTokenBalanceUiModelMapper,
             requestAddressBookEntry = requestAddressBookEntry,
+            enableToken = enableToken,
             uiState = uiState,
             selectedToken = selectedToken,
             accountsState = accountsState,
@@ -172,6 +183,8 @@ constructor(
             memoFieldState = memoFieldState,
             destinationTagFieldState = destinationTagFieldState,
             slippageFieldState = slippageFieldState,
+            assetSearchFieldState = assetSearchFieldState,
+            listingDispatcher = defaultDispatcher,
             selectedTokenProvider = { selectedTokenValue },
             selectedAccountProvider = { selectedAccount },
             isAutocompoundProvider = { uiState.value.isAutocompound },
@@ -179,7 +192,7 @@ constructor(
             showLoading = ::showLoading,
             hideLoading = ::hideLoading,
             showError = ::showError,
-            emitFocusField = { field -> _focusFieldChannel.trySend(field) },
+            emitFocusField = ::requestFieldFocus,
         )
 
     init {
@@ -204,15 +217,33 @@ constructor(
         uiState.update { it.copy(tokenAmountError = errorText) }
     }
 
-    fun selectNetwork() = graph.tokenNetworkSelectionDelegate.selectNetwork()
+    /**
+     * Asset step chip: shows [chain] (null = every chain); a search ignores chips, so it clears.
+     */
+    fun selectAssetChainFilter(chain: Chain?) {
+        assetSearchFieldState.clearText()
+        uiState.update { it.copy(assetChainFilter = chain) }
+    }
 
-    fun onNetworkLongPressStarted(position: Offset) =
-        graph.tokenNetworkSelectionDelegate.onNetworkLongPressStarted(position)
+    /**
+     * Asset step row: selects [token] and moves on to Address, also for the coin already chosen.
+     */
+    fun selectAsset(token: Coin) {
+        if (!token.id.equals(selectedTokenValue?.id, ignoreCase = true)) {
+            graph.tokenNetworkSelectionDelegate.selectToken(token)
+        }
+        expandSection(SendSections.Address)
+    }
 
-    fun openTokenSelection() = graph.tokenNetworkSelectionDelegate.openTokenSelection()
-
-    fun openTokenSelectionPopup(position: Offset) =
-        graph.tokenNetworkSelectionDelegate.openTokenSelectionPopup(position)
+    /**
+     * Asset step empty search: adds a custom token on the chain chip picked and searches for it.
+     */
+    fun addCustomToken() {
+        val chain = uiState.value.assetChainFilter ?: return
+        graph.tokenNetworkSelectionDelegate.addCustomToken(chain) { token ->
+            assetSearchFieldState.setTextAndPlaceCursorAtEnd(token.ticker)
+        }
+    }
 
     fun openGasSettings() {
         viewModelScope.launch { advanceGasUiRepository.showSettings() }
@@ -253,7 +284,15 @@ constructor(
         advanceGasUiRepository.hideSettings()
     }
 
+    // The chain the saved settings belong to, so another chain's sheet never shows them.
+    private var gasSettingsChain: Chain? = null
+
+    /** The advanced gas settings last saved for [chain], for the sheet to show again. */
+    fun savedGasSettings(chain: Chain): GasSettings? =
+        graph.gasSettings.value.takeIf { gasSettingsChain == chain }
+
     fun saveGasSettings(settings: GasSettings) {
+        gasSettingsChain = uiState.value.selectedCoin?.model?.address?.chain
         graph.gasSettings.value = settings
         if (settings is GasSettings.UTXO) {
             val currentSpec = graph.specific.value ?: return
@@ -272,7 +311,50 @@ constructor(
         uiState.update { it.copy(errorText = null) }
     }
 
-    fun onClickContinue() = graph.strategies.submitFor(uiState.value.defiType)
+    /**
+     * Continue: DeFi forms submit; a plain send moves Asset → Address → Amount and submits from
+     * Amount. Address only moves on once the recipient is valid, so its inline error stays in view.
+     */
+    fun onClickContinue() {
+        val state = uiState.value
+        if (state.defiType != null) {
+            graph.strategies.submitFor(state.defiType)
+            return
+        }
+        when (state.expandedSection) {
+            SendSections.Asset ->
+                if (state.isSelectedAssetListed) expandSection(SendSections.Address)
+            SendSections.Address ->
+                when {
+                    state.isDstAddressValid -> expandSection(SendSections.Amount)
+                    addressFieldState.text.isBlank() -> requestFieldFocus(SendFocusField.ADDRESS)
+                }
+            SendSections.Amount -> graph.strategies.submitFor(null)
+        }
+    }
+
+    /**
+     * Moves focus to [field]. A plain send composes only the step on screen, so the request waits
+     * in [SendFormUiModel.pendingFocusField] for the step that owns the field; DeFi forms focus at
+     * once.
+     */
+    private fun requestFieldFocus(field: SendFocusField) {
+        if (uiState.value.defiType == null) {
+            uiState.update { it.copy(pendingFocusField = field) }
+        } else {
+            _focusFieldChannel.trySend(field)
+        }
+    }
+
+    /** The step owning [SendFormUiModel.pendingFocusField] has focused it. */
+    fun onPendingFocusApplied() {
+        uiState.update { it.copy(pendingFocusField = null) }
+    }
+
+    /** Header tap: jumps to [step] when every earlier step is complete. */
+    fun selectStep(step: SendSections) {
+        if (uiState.value.canNavigate(step)) expandSection(step)
+    }
 
     private fun hideLoading() {
         uiState.update { it.copy(isLoading = false) }
@@ -295,7 +377,12 @@ constructor(
     }
 
     fun expandSection(section: SendSections) {
-        uiState.update { it.copy(expandedSection = section) }
+        uiState.update {
+            it.copy(
+                expandedSection = section,
+                isAssetStepComplete = it.isAssetStepComplete || section != SendSections.Asset,
+            )
+        }
     }
 
     fun refreshGasFee() = graph.gasFeeOrchestrator.refresh()

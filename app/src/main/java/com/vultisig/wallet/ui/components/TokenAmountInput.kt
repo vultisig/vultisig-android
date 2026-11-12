@@ -50,24 +50,7 @@ internal fun TokenAmountInput(
         FlowRow(horizontalArrangement = Arrangement.Center) {
             BasicTextField(
                 state = primaryFieldState,
-                inputTransformation =
-                    InputTransformation {
-                        val raw = asCharSequence().toString()
-                        if (raw.isEmpty()) return@InputTransformation
-                        val normalized = raw.replace(',', '.')
-                        val dotCount = normalized.count { it == '.' }
-                        val isValid = dotCount <= 1 && normalized.all { it.isDigit() || it == '.' }
-                        if (!isValid) {
-                            revertAllChanges()
-                            return@InputTransformation
-                        }
-                        if (maxBalance != null) {
-                            val entered = normalized.toBigDecimalOrNull()
-                            if (entered != null && entered > maxBalance) {
-                                revertAllChanges()
-                            }
-                        }
-                    },
+                inputTransformation = amountInputTransformation(maxBalance),
                 lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 3),
                 textStyle =
                     Theme.brockmann.headings.largeTitle.copy(
@@ -130,6 +113,25 @@ internal fun TokenAmountInput(
                 style = Theme.brockmann.body.s.medium,
                 textAlign = TextAlign.Center,
             )
+        }
+    }
+}
+
+/** Accepts digits and one decimal separator (`.` or `,`); with [maxBalance], nothing above it. */
+internal fun amountInputTransformation(maxBalance: BigDecimal? = null) = InputTransformation {
+    val raw = asCharSequence().toString()
+    if (raw.isEmpty()) return@InputTransformation
+    val normalized = raw.replace(',', '.')
+    val dotCount = normalized.count { it == '.' }
+    val isValid = dotCount <= 1 && normalized.all { it.isDigit() || it == '.' }
+    if (!isValid) {
+        revertAllChanges()
+        return@InputTransformation
+    }
+    if (maxBalance != null) {
+        val entered = normalized.toBigDecimalOrNull()
+        if (entered != null && entered > maxBalance) {
+            revertAllChanges()
         }
     }
 }

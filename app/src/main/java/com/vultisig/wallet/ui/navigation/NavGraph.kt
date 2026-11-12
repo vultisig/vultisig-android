@@ -411,9 +411,7 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         dialog<SelectNetwork> { SelectNetworkScreen() }
 
         // send
-        navigation<Send>(startDestination = Send.SendMain) {
-            sendScreen(navController = navController)
-        }
+        navigation<Send>(startDestination = Send.SendMain) { sendScreen() }
 
         // The review floats over the form as a sheet, so the form stays visible behind it.
         dialog<VerifySend> { VerifySendScreen() }

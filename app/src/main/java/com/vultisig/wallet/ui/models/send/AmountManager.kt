@@ -25,6 +25,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+/** Significant digits kept in a coin amount derived from a fiat entry. */
+internal const val FIAT_DERIVED_SIGNIFICANT_DIGITS = 5
+
+/**
+ * Keeps the token and fiat amount fields in sync and validates amounts. With
+ * [roundsFiatDerivedAmount] (plain send only) a fiat entry's coin amount rounds down to
+ * [FIAT_DERIVED_SIGNIFICANT_DIGITS]; otherwise it keeps the full-precision truncation.
+ */
 internal class AmountManager(
     private val scope: CoroutineScope,
     private val tokenAmountFieldState: TextFieldState,
@@ -35,6 +43,7 @@ internal class AmountManager(
     private val appCurrency: StateFlow<AppCurrency>,
     private val chainValidationService: ChainValidationService,
     private val tokenPriceRepository: TokenPriceRepository,
+    private val roundsFiatDerivedAmount: () -> Boolean,
 ) {
     private var lastTokenValueUserInput = ""
     private var lastFiatValueUserInput = ""
@@ -165,7 +174,15 @@ internal class AmountManager(
     private suspend fun handleFiatInput(token: Coin, fiatString: String) {
         val tokenValue =
             convertValue(fiatString, token) { value, price, t ->
-                    value.divide(price, t.decimal, RoundingMode.DOWN)
+                    val truncated = value.divide(price, t.decimal, RoundingMode.DOWN)
+                    if (roundsFiatDerivedAmount()) {
+                        truncated.roundedDownToSignificant(
+                            FIAT_DERIVED_SIGNIFICANT_DIGITS,
+                            t.decimal,
+                        )
+                    } else {
+                        truncated
+                    }
                 }
                 ?.takeIf { it.isNotEmpty() }
 
@@ -230,4 +247,22 @@ internal class AmountManager(
             }
             .collect()
     }
+}
+
+/**
+ * This value rounded down to [significantDigits] significant digits with at most [maxPlaces]
+ * decimals, trailing zeros trimmed; whole units are never cut. Rounding down keeps an amount
+ * derived from fiat from buying more than the fiat entered. Non-positive values pass through.
+ */
+internal fun BigDecimal.roundedDownToSignificant(
+    significantDigits: Int,
+    maxPlaces: Int,
+): BigDecimal {
+    require(significantDigits > 0) { "significantDigits must be positive" }
+    require(maxPlaces >= 0) { "maxPlaces must not be negative" }
+    if (signum() <= 0) return this
+    // floor(log10(this)) for any positive BigDecimal.
+    val magnitude = precision() - scale() - 1
+    val places = (significantDigits - 1 - magnitude).coerceIn(0, maxPlaces)
+    return setScale(places, RoundingMode.DOWN).stripTrailingZeros()
 }

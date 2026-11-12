@@ -1,10 +1,7 @@
-@file:OptIn(kotlin.uuid.ExperimentalUuidApi::class)
-
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.ui.geometry.Offset
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
@@ -17,13 +14,15 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.isRecognizedAs
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.token.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -33,15 +32,16 @@ import timber.log.Timber
 /**
  * Owns token & network selection and the chain-switching navigation around it.
  *
- * Navigates to the selection screens, awaits the result via [RequestResultRepository], lazily adds
- * a missing native token to the vault, and pins the new token selection. Extracted from
+ * Pins the token the asset step or a chain switch selects, adds a missing native or custom token to
+ * the vault, and awaits the custom-token search via [RequestResultRepository]. Extracted from
  * `SendFormViewModel` to keep the coordinator focused; it operates on the same shared
  * [selectedToken] state the ViewModel exposes, so selection stays in sync across collaborators.
  *
  * @param scope the owning ViewModel's `viewModelScope`.
- * @param navigator app navigator used to route to the selection screens.
- * @param requestResultRepository channel used to await a selection result by request id.
+ * @param navigator app navigator used to route to the custom-token search.
+ * @param requestResultRepository channel used to await the custom-token search result.
  * @param tokenRepository source of native tokens when one must be added to the vault.
+ * @param enableToken adds a custom token found by search to the vault.
  * @param vaultRepository vault store used to persist a newly added native token.
  * @param chainAccountAddressRepository derives the address/public key for an added token.
  * @param tokenPreselectionService preselects a token after a forced chain switch.
@@ -55,13 +55,13 @@ import timber.log.Timber
  * @param uiState shared form UI state updated by [onAutoCompound].
  * @param isSwitchingAccounts gates account-dependent UI while [onAutoCompound] swaps data sources.
  * @param defiTypeProvider supplies the active DeFi action.
- * @param expandSection callback used to expand a form section after a selection.
  */
 internal class TokenNetworkSelectionDelegate(
     private val scope: CoroutineScope,
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
     private val tokenRepository: TokenRepository,
+    private val enableToken: EnableTokenUseCase,
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tokenPreselectionService: TokenPreselectionService,
@@ -76,129 +76,30 @@ internal class TokenNetworkSelectionDelegate(
     private val uiState: MutableStateFlow<SendFormUiModel>,
     private val isSwitchingAccounts: MutableStateFlow<Boolean>,
     private val defiTypeProvider: () -> DeFiNavActions?,
-    private val expandSection: (SendSections) -> Unit,
     private val onRecipientPicked: (String) -> Unit,
 ) {
 
     private val selectedTokenValue: Coin?
         get() = selectedToken.value
 
-    /** Navigates to the network selection screen and applies the chosen chain. */
-    fun selectNetwork() {
-        scope.launch {
-            val vaultId = vaultIdProvider() ?: return@launch
-            val selectedChain = selectedTokenValue?.chain ?: return@launch
-
-            val requestId = Uuid.random().toString()
-
-            navigator.route(
-                Route.SelectNetwork(
-                    vaultId = vaultId,
-                    selectedNetworkId = selectedChain.id,
-                    requestId = requestId,
-                    filters = Route.SelectNetwork.Filters.None,
-                )
-            )
-
-            updateChain(requestId = requestId, selectedChain = selectedChain)
-        }
-    }
+    private var addCustomTokenJob: Job? = null
 
     /**
-     * Opens the network selection popup anchored at [position] and applies the chosen chain.
-     *
-     * @param position the screen offset of the long-press that triggered the popup.
+     * Opens the custom-token search for [chain], adds the token found there to the vault and
+     * reloads the accounts so the asset step lists it; [onAdded] then receives the token.
      */
-    fun onNetworkLongPressStarted(position: Offset) {
-        scope.launch {
-            val vaultId = vaultIdProvider() ?: return@launch
-            val selectedChain = selectedTokenValue?.chain ?: return@launch
-
-            val requestId = Uuid.random().toString()
-
-            navigator.route(
-                Route.SelectNetworkPopup(
-                    requestId = requestId,
-                    pressX = position.x,
-                    pressY = position.y,
-                    vaultId = vaultId,
-                    selectedNetworkId = selectedChain.id,
-                    filters = Route.SelectNetwork.Filters.None,
-                )
-            )
-
-            updateChain(requestId, selectedChain)
-        }
-    }
-
-    private suspend fun updateChain(requestId: String, selectedChain: Chain) {
-        val chain: Chain? = requestResultRepository.request(requestId)
-
-        if (chain == null || chain == selectedChain) {
-            return
-        }
-
-        val account =
-            accounts.value.find { it.token.isNativeToken && it.token.chain == chain } ?: return
-
-        selectToken(account.token)
-    }
-
-    /** Navigates to the token selection screen and applies the chosen token. */
-    fun openTokenSelection() {
+    fun addCustomToken(chain: Chain, onAdded: (Coin) -> Unit) {
         val vaultId = vaultIdProvider() ?: return
-        scope.launch {
-            val requestId = Uuid.random().toString()
-
-            val selectedChain = selectedToken.value?.chain ?: Chain.ThorChain
-            navigator.route(
-                Route.SelectAsset(
-                    vaultId = vaultId,
-                    preselectedNetworkId = selectedChain.id,
-                    networkFilters = Route.SelectNetwork.Filters.None,
-                    requestId = requestId,
-                )
-            )
-
-            val newAssetSelected = requestResultRepository.request<AssetSelected?>(requestId)
-            val newToken = newAssetSelected?.token
-
-            if (newToken != null) {
-                selectToken(newToken)
-                expandSection(SendSections.Address)
-            }
-        }
-    }
-
-    /**
-     * Opens the token selection popup anchored at [position] and applies the chosen token.
-     *
-     * @param position the screen offset of the long-press that triggered the popup.
-     */
-    fun openTokenSelectionPopup(position: Offset) {
-        val vaultId = vaultIdProvider() ?: return
-        scope.launch {
-            val requestId = Uuid.random().toString()
-
-            val selectedChain = selectedToken.value?.chain ?: Chain.ThorChain
-            navigator.route(
-                Route.SelectAssetPopup(
-                    vaultId = vaultId,
-                    preselectedNetworkId = selectedChain.id,
-                    requestId = requestId,
-                    pressX = position.x,
-                    pressY = position.y,
-                    selectedAssetId = selectedToken.value?.id.orEmpty(),
-                )
-            )
-
-            val newAssetSelected = requestResultRepository.request<AssetSelected?>(requestId)
-            val newToken = newAssetSelected?.token
-
-            if (newToken != null) {
-                selectToken(newToken)
-                expandSection(SendSections.Address)
-            }
+        // One waiter at a time: dismissing the search leaves the previous request suspended.
+        addCustomTokenJob?.cancel()
+        addCustomTokenJob = scope.safeLaunch {
+            navigator.route(Route.CustomToken(chain.raw))
+            val token =
+                requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID)
+                    ?: return@safeLaunch
+            enableToken(vaultId, token)
+            accountsLoader.load(vaultId)
+            onAdded(token)
         }
     }
 

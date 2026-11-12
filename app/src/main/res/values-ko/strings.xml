@@ -196,6 +196,10 @@
     <string name="send_amount">금액</string>
     <string name="send_amount_currency_hint">금액 입력</string>
     <string name="send_continue_button">계속</string>
+    <string name="send_step_choose_asset">자산 선택</string>
+    <string name="send_step_enter_address">주소 입력</string>
+    <string name="send_step_enter_amount">금액 입력</string>
+    <string name="send_all_chains">모든 체인</string>
     <string name="chain_account_view_swap">스왑</string>
     <string name="vault_settings_error_backup_file">오류가 발생했습니다</string>
     <string name="vault_settings_error_backup_failed">백업에 실패했습니다. 파일이 저장되지 않았습니다. 다시 시도해 주세요.</string>
@@ -550,7 +554,6 @@
     <string name="verify_swap_screen_total_fees">최대 총 수수료</string>
     <string name="scan_qr_code_error_text">관련 없는 QR 코드가 스캔되었습니다</string>
     <string name="scan_qr_code_error_button">뒤로</string>
-    <string name="form_token_selection_balance">잔액: %s</string>
     <string name="form_token_selection_asset">자산</string>
     <string name="insufficient_native_token">가스 수수료를 충당할 %1$s이(가) 부족합니다</string>
     <string name="swap_error_amount_too_low">수수료를 충당하기에 금액이 너무 적습니다. 금액을 늘리세요.</string>
@@ -1277,6 +1280,10 @@
     <string name="gas_settings_gas_price_gwei">가스 가격 (GWEI)</string>
     <string name="gas_settings_max_base_fee_gwei">최대 기본 수수료 (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">우선 수수료 (GWEI)</string>
+    <string name="gas_settings_priority">우선순위</string>
+    <string name="gas_settings_priority_low">낮음</string>
+    <string name="gas_settings_priority_normal">보통</string>
+    <string name="gas_settings_priority_fast">빠름</string>
     <string name="import_file_import_your_vault_share">볼트 셰어 가져오기</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[지원 파일 형식: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">\"%1$s\" 이름의 볼트가 이미 존재합니다</string>

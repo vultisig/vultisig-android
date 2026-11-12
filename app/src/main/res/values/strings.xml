@@ -199,6 +199,10 @@
     <string name="send_amount">Amount</string>
     <string name="send_amount_currency_hint">Enter Amount</string>
     <string name="send_continue_button">Continue</string>
+    <string name="send_step_choose_asset">Choose an asset</string>
+    <string name="send_step_enter_address">Enter the address</string>
+    <string name="send_step_enter_amount">Enter the amount</string>
+    <string name="send_all_chains">All chains</string>
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_swap">Swap</string>
     <string name="vault_settings_error_backup_file">An error occurred</string>
@@ -561,7 +565,6 @@
     <string name="verify_swap_screen_total_fees">Max. Total Fee</string>
     <string name="scan_qr_code_error_text">Unrelated QR code is scanned</string>
     <string name="scan_qr_code_error_button">Back</string>
-    <string name="form_token_selection_balance">Balance: %s</string>
     <string name="form_token_selection_asset">Asset</string>
     <string name="insufficient_native_token">Not enough %1$s to cover gas fees</string>
     <string name="swap_error_amount_too_low">Amount too low to cover fees. Increase the amount.</string>
@@ -1305,6 +1308,10 @@
     <string name="gas_settings_gas_price_gwei">Gas price (GWEI)</string>
     <string name="gas_settings_max_base_fee_gwei">Max base fee (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">Priority fee (GWEI)</string>
+    <string name="gas_settings_priority">Priority</string>
+    <string name="gas_settings_priority_low">Low</string>
+    <string name="gas_settings_priority_normal">Normal</string>
+    <string name="gas_settings_priority_fast">Fast</string>
     <string name="import_file_import_your_vault_share">Import your vault share</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Supported file types: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">A vault named \"%1$s\" already exists</string>

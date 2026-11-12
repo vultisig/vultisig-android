@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
+@file:OptIn(ExperimentalCoroutinesApi::class)
 
 package com.vultisig.wallet.ui.models.send
 
@@ -21,12 +21,9 @@ import io.mockk.unmockkStatic
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -63,32 +60,35 @@ internal class SendFormViewModelSubmitEvmTest {
     }
 
     @Test
-    fun `send with blank address expands the Address section and emits ADDRESS focus`() = runTest {
-        val vm = buildViewModel()
-        advanceUntilIdle()
-        // tokenAmountFieldState is blank too, but the address check runs first.
+    fun `send with blank address expands the Address section and asks to focus the address`() =
+        runTest {
+            val vm = buildViewModel()
+            advanceUntilIdle()
+            // tokenAmountFieldState is blank too, but the address check runs first.
+            // A plain send submits from the Amount step.
+            vm.expandSection(SendSections.Amount)
 
-        vm.onClickContinue()
-        advanceUntilIdle()
+            vm.onClickContinue()
+            advanceUntilIdle()
 
-        assertEquals(SendSections.Address, vm.uiState.value.expandedSection)
-        val focused = vm.focusFieldFlow.timeout(1.seconds).first()
-        assertEquals(SendFocusField.ADDRESS, focused)
-    }
+            assertEquals(SendSections.Address, vm.uiState.value.expandedSection)
+            // A plain send holds the request until the Address step is on screen.
+            assertEquals(SendFocusField.ADDRESS, vm.uiState.value.pendingFocusField)
+        }
 
     @Test
-    fun `send with non-blank address but blank amount expands Amount and emits AMOUNT focus`() =
+    fun `send with non-blank address but blank amount expands Amount and asks to focus the amount`() =
         runTest {
             val vm = buildViewModel()
             advanceUntilIdle()
             vm.addressFieldState.setTextAndPlaceCursorAtEnd("0xabc")
+            vm.expandSection(SendSections.Amount)
 
             vm.onClickContinue()
             advanceUntilIdle()
 
             assertEquals(SendSections.Amount, vm.uiState.value.expandedSection)
-            val focused = vm.focusFieldFlow.timeout(1.seconds).first()
-            assertEquals(SendFocusField.AMOUNT, focused)
+            assertEquals(SendFocusField.AMOUNT, vm.uiState.value.pendingFocusField)
         }
 
     @Test
@@ -97,6 +97,7 @@ internal class SendFormViewModelSubmitEvmTest {
         advanceUntilIdle()
         vm.addressFieldState.setTextAndPlaceCursorAtEnd("0xabc")
         vm.tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.1")
+        vm.expandSection(SendSections.Amount)
 
         vm.onClickContinue()
         advanceUntilIdle()
@@ -145,7 +146,9 @@ internal class SendFormViewModelSubmitEvmTest {
             feeServiceComposite = mockk(relaxed = true),
             chainValidationService = mockk(relaxed = true),
             requestAddressBookEntry = mockk(relaxed = true),
+            enableToken = mockk(relaxed = true),
             getTronFrozenBalances = mockk(relaxed = true),
+            defaultDispatcher = mainDispatcher,
             sendStrategyFactory =
                 fakeSendStrategyFactory(
                     transactionRepository = transactionRepository,

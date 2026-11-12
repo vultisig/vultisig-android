@@ -85,6 +85,10 @@
     <string name="send_amount">Сумма</string>
     <string name="send_amount_currency_hint">Введите сумму</string>
     <string name="send_continue_button">Продолжить</string>
+    <string name="send_step_choose_asset">Выберите актив</string>
+    <string name="send_step_enter_address">Введите адрес</string>
+    <string name="send_step_enter_amount">Введите сумму</string>
+    <string name="send_all_chains">Все сети</string>
     <string name="chain_account_view_swap">Обмен</string>
     <string name="circle_defi_description">Внесите свой USDC на счет Circle и получайте доход. Безопасно в вашем хранилище Vultisig.</string>
     <string name="circle_defi_control_info">Средства остаются полностью под контролем вашего хранилища. Счета Circle некастодиальные, а доход формируется через надёжные офчейн-казначейства.</string>
@@ -427,7 +431,6 @@
     <string name="verify_swap_screen_total_fees">Макс. общая комиссия</string>
     <string name="scan_qr_code_error_text">Сканируется несвязанный QR-код</string>
     <string name="scan_qr_code_error_button">Назад</string>
-    <string name="form_token_selection_balance">Баланс: %s</string>
     <string name="form_token_selection_asset">Актив</string>
     <string name="insufficient_native_token">Недостаточно %1$s для комиссии за газ</string>
     <string name="swap_error_amount_too_low">Сумма слишком мала для покрытия комиссий. Увеличьте сумму.</string>
@@ -976,6 +979,10 @@
     <string name="gas_settings_gas_price_gwei">Цена газа (GWEI)</string>
     <string name="gas_settings_max_base_fee_gwei">Максимальная базовая комиссия (GWEI)</string>
     <string name="gas_settings_priority_fee_gwei">Приоритетная комиссия (GWEI)</string>
+    <string name="gas_settings_priority">Приоритет</string>
+    <string name="gas_settings_priority_low">Низкий</string>
+    <string name="gas_settings_priority_normal">Обычный</string>
+    <string name="gas_settings_priority_fast">Быстрый</string>
     <string name="import_file_import_your_vault_share">Импортируйте долю хранилища</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Поддерживаемые типы файлов: .dat, .bak и .vult]]></string>
     <string name="must_be_enabled_before_proceeding">%1$s необходимо включить перед продолжением.</string>
