@@ -454,7 +454,17 @@ class UtxoHelper(
                     .setSighashType(BitcoinSigHashType.ALL.value())
                     .setScriptBuilder(
                         BitcoinV2.Input.InputBuilder.newBuilder()
-                            .setP2Pkh(BitcoinV2.PublicKeyOrHash.newBuilder().setPubkey(publicKey))
+                            .setP2Pkh(
+                                // Key hash of the plan's own script (the coin address, as iOS), not
+                                // a re-derived vault key.
+                                BitcoinV2.PublicKeyOrHash.newBuilder()
+                                    .setHash(
+                                        ByteString.copyFrom(
+                                            BitcoinScript(utxo.script.toByteArray())
+                                                .matchPayToPubkeyHash()
+                                        )
+                                    )
+                            )
                     )
             )
         }
