@@ -85,7 +85,6 @@ private class MessageReading(
 )
 
 private val UNSUMMARIZED = MessageReading(emptyList(), isSummarized = false)
-private val NO_TRANSFERS = MessageReading(emptyList(), isSummarized = true)
 
 private typealias MessageReader = (value: JsonElement, chain: Chain) -> MessageReading
 
@@ -208,15 +207,11 @@ private val readAminoSend: MessageReader = { value, _ ->
     MessageReading(transfers(body["to_address"].string(), body["amount"].coins()), true)
 }
 
-// A message that failed to decode arrives as a base64 primitive, which isn't a readable body.
-private val noTransfers: MessageReader = { value, _ ->
-    value.obj()
-    NO_TRANSFERS
-}
-
 /**
  * Readers for the message bodies [com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase]
- * decodes, keyed by type url. A type it leaves as base64, or one not listed, is unsummarized.
+ * decodes, keyed by type url. A type it leaves as base64, or one not listed, is unsummarized: like
+ * iOS, only sends, IBC transfers and delegations are summarized, and any other message (staking
+ * changes, votes, reward claims) raises the partial warning.
  */
 private val DIRECT_READERS: Map<String, MessageReader> =
     mapOf(
@@ -254,10 +249,6 @@ private val DIRECT_READERS: Map<String, MessageReader> =
                     isSummarized = true,
                 )
             },
-        "/cosmos.staking.v1beta1.MsgUndelegate" to noTransfers,
-        "/cosmos.staking.v1beta1.MsgBeginRedelegate" to noTransfers,
-        "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" to noTransfers,
-        "/cosmos.gov.v1beta1.MsgVote" to noTransfers,
     )
 
 private val AMINO_READERS: Map<String, MessageReader> =
@@ -300,11 +291,4 @@ private val AMINO_READERS: Map<String, MessageReader> =
                     isSummarized = true,
                 )
             },
-        "cosmos-sdk/MsgUndelegate" to noTransfers,
-        "cosmos-sdk/MsgBeginRedelegate" to noTransfers,
-        "cosmos-sdk/MsgWithdrawDelegationReward" to noTransfers,
-        "cosmos-sdk/MsgVote" to noTransfers,
-        "cosmos-sdk/v1/MsgVote" to noTransfers,
-        "cosmos-sdk/MsgVoteWeighted" to noTransfers,
-        "cosmos-sdk/v1/MsgVoteWeighted" to noTransfers,
     )

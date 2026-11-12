@@ -147,23 +147,20 @@ internal class CosmosSignDataReviewTest {
     }
 
     @Test
-    fun `undelegate and votes move nothing and stay summarized`() {
-        val review =
-            direct(
-                    Message("/cosmos.staking.v1beta1.MsgUndelegate", JsonObject(emptyMap())),
-                    Message("/cosmos.gov.v1beta1.MsgVote", JsonObject(emptyMap())),
-                )
-                .toSignDataReview(Chain.GaiaChain)
+    fun `staking changes votes and reward claims are unsummarized like on iOS`() {
+        listOf(
+                "/cosmos.staking.v1beta1.MsgUndelegate",
+                "/cosmos.staking.v1beta1.MsgBeginRedelegate",
+                "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+                "/cosmos.gov.v1beta1.MsgVote",
+            )
+            .forEach { type ->
+                val review =
+                    direct(Message(type, JsonObject(emptyMap()))).toSignDataReview(Chain.GaiaChain)
 
-        review.transfers shouldBe emptyList()
-        review.hasUnsummarizedMessages shouldBe false
-    }
-
-    @Test
-    fun `an undelegate or vote the decoder left as base64 is unsummarized`() {
-        direct(Message("/cosmos.gov.v1beta1.MsgVote", JsonPrimitive("CgVhYmNkZQ==")))
-            .toSignDataReview(Chain.GaiaChain)
-            .hasUnsummarizedMessages shouldBe true
+                review.transfers shouldBe emptyList()
+                review.hasUnsummarizedMessages shouldBe true
+            }
     }
 
     @Test
