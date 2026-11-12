@@ -37,7 +37,9 @@ internal fun buildSendAssetListing(
     for (account in accounts) {
         val token = account.token
         val chainHolding = holdings[token.chain] ?: continue
-        if (token.ticker.uppercase() in DEFI_ONLY_TICKERS) continue
+        // A send opened on a DeFi receipt (the ybRUNE Transfer) keeps that receipt's row.
+        val isSelected = token.id.equals(selectedTokenId, true)
+        if (token.ticker.uppercase() in DEFI_ONLY_TICKERS && !isSelected) continue
         val fiat = account.fiatAmount
         holdings[token.chain] = chainHolding + fiat
         val isVisible =

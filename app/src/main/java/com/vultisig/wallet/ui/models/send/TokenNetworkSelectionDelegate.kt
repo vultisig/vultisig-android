@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
@@ -21,6 +22,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.utils.UiText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,15 +94,25 @@ internal class TokenNetworkSelectionDelegate(
         val vaultId = vaultIdProvider() ?: return
         // One waiter at a time: dismissing the search leaves the previous request suspended.
         addCustomTokenJob?.cancel()
-        addCustomTokenJob = scope.safeLaunch {
-            navigator.route(Route.CustomToken(chain.raw))
-            val token =
-                requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID)
-                    ?: return@safeLaunch
-            enableToken(vaultId, token)
-            accountsLoader.load(vaultId)
-            onAdded(token)
-        }
+        addCustomTokenJob =
+            scope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Adding a custom token on %s failed", chain)
+                    uiState.update {
+                        it.copy(
+                            errorText = UiText.StringResource(R.string.dialog_default_error_body)
+                        )
+                    }
+                }
+            ) {
+                navigator.route(Route.CustomToken(chain.raw))
+                val token =
+                    requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID)
+                        ?: return@safeLaunch
+                enableToken(vaultId, token)
+                accountsLoader.load(vaultId)
+                onAdded(token)
+            }
     }
 
     /**

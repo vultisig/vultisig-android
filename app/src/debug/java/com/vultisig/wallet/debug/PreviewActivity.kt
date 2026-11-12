@@ -5245,6 +5245,7 @@ private fun SendFormAssetPreview() {
                 expandedSection = SendSections.Asset,
                 assetRows = rows,
                 assetChains = listOf(Chain.Bitcoin, Chain.Ethereum, Chain.Dash),
+                isAssetListLoaded = true,
             ),
         addressFieldState = rememberTextFieldState(),
         addressFocusRequester = remember { FocusRequester() },

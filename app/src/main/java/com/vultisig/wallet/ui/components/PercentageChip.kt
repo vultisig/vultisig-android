@@ -10,6 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
@@ -25,6 +27,7 @@ internal fun PercentageChip(
     Box(
         modifier =
             modifier
+                .semantics { selected = isSelected }
                 .clickable(enabled = isEnabled, onClick = onClick)
                 .then(
                     if (isSelected)

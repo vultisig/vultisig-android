@@ -131,10 +131,27 @@ class SendAssetListingTest {
         val ybrune = account(Coins.ThorChain.ybRUNE, "500")
         val accounts = listOf(rune, stcy, ybrune, btc)
 
-        val listing = buildSendAssetListing(accounts, null, "", Coins.ThorChain.ybRUNE.id)
+        val listing = buildSendAssetListing(accounts, null, "", Coins.ThorChain.RUNE.id)
 
-        listing.rows.tickers() shouldContainExactly listOf("BTC", "RUNE")
+        listing.rows.tickers() shouldContainExactly listOf("RUNE", "BTC")
         listing.chains shouldContainExactly listOf(Chain.Bitcoin, Chain.ThorChain)
+    }
+
+    @Test
+    fun `a send opened on a DeFi receipt keeps that receipt's row, pinned`() {
+        val rune = account(Coins.ThorChain.RUNE, "1")
+        val stcy = account(Coins.ThorChain.sTCY, "500")
+        val ybrune = account(Coins.ThorChain.ybRUNE, "500")
+
+        val listing =
+            buildSendAssetListing(
+                listOf(rune, stcy, ybrune, btc),
+                null,
+                "",
+                Coins.ThorChain.ybRUNE.id,
+            )
+
+        listing.rows.tickers() shouldContainExactly listOf("ybRUNE", "BTC", "RUNE")
     }
 
     @Test

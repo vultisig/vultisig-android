@@ -132,8 +132,9 @@ internal fun SendAmountStep(
     isActive: Boolean,
 ) {
     val fiatFocusRequester = remember { FocusRequester() }
-    // Read after the delay: the step may have been left while this pane slid in.
+    // Read after the delay: the step or the input unit may change while this pane slides in.
     val isActiveNow by rememberUpdatedState(isActive)
+    val usesTokenInputNow by rememberUpdatedState(state.usingTokenAmountInput)
     // Focus once on arrival, after the slide, and once per request, on the block on screen.
     var hasArrived by remember { mutableStateOf(false) }
     LaunchedEffect(state.pendingFocusField) {
@@ -144,7 +145,7 @@ internal fun SendAmountStep(
         hasArrived = true
         if (!shouldFocusAmountField(isActiveNow, isArrival, isRequested)) return@LaunchedEffect
         val visibleField =
-            if (state.usingTokenAmountInput) amountInputs.focusRequester else fiatFocusRequester
+            if (usesTokenInputNow) amountInputs.focusRequester else fiatFocusRequester
         visibleField.requestFocus()
         if (isRequested) onPendingFocusApplied()
     }
@@ -328,6 +329,8 @@ private fun AmountEntry(
 
         AmountUnitSwitch(
             isTokenSelected = isTokenShown,
+            tokenLabel = ticker,
+            fiatLabel = state.fiatCurrency,
             isReduceMotion = isReduceMotion,
             onSelect = selectUnit,
             modifier = Modifier.align(Alignment.CenterEnd).zIndex(2f),
@@ -391,6 +394,8 @@ private fun AmountCounterpart(fieldState: TextFieldState, unit: String) {
 @Composable
 private fun AmountUnitSwitch(
     isTokenSelected: Boolean,
+    tokenLabel: String,
+    fiatLabel: String,
     isReduceMotion: Boolean,
     onSelect: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -416,23 +421,27 @@ private fun AmountUnitSwitch(
                     .background(color = Theme.v2.colors.primary.accent3, shape = CircleShape)
         )
         Column(verticalArrangement = Arrangement.spacedBy(SwitchOptionGap)) {
-            listOf(true to R.drawable.ic_coins, false to R.drawable.ic_dollar_sign).forEach {
-                (isToken, icon) ->
-                UiIcon(
-                    drawableResId = icon,
-                    size = SwitchIconSize,
-                    tint = Theme.v2.colors.text.secondary,
-                    modifier =
-                        Modifier.size(SwitchOptionSize)
-                            .clip(CircleShape)
-                            .selectable(
-                                selected = isToken == isTokenSelected,
-                                role = Role.RadioButton,
-                                onClick = { onSelect(isToken) },
-                            )
-                            .wrapContentSize(),
+            listOf(
+                    Triple(true, R.drawable.ic_coins, tokenLabel),
+                    Triple(false, R.drawable.ic_dollar_sign, fiatLabel),
                 )
-            }
+                .forEach { (isToken, icon, label) ->
+                    UiIcon(
+                        drawableResId = icon,
+                        size = SwitchIconSize,
+                        tint = Theme.v2.colors.text.secondary,
+                        contentDescription = label,
+                        modifier =
+                            Modifier.size(SwitchOptionSize)
+                                .clip(CircleShape)
+                                .selectable(
+                                    selected = isToken == isTokenSelected,
+                                    role = Role.RadioButton,
+                                    onClick = { onSelect(isToken) },
+                                )
+                                .wrapContentSize(),
+                    )
+                }
         }
     }
 }

@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.usecases.ConvertGweiToWeiUseCase
 import com.vultisig.wallet.data.usecases.ConvertWeiToGweiUseCase
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
@@ -225,6 +226,22 @@ internal class GasSettingsViewModelTest {
         advanceUntilIdle()
 
         vm.save() shouldBe GasSettings.UTXO(byteFee = BigInteger("30"))
+    }
+
+    @Test
+    fun `a failed Ethereum fee fetch does not keep a later UTXO sheet disabled`() = runTest {
+        coEvery { evmApi.getBaseFee() } throws RuntimeException("network error")
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } returns BigInteger("30")
+        val vm = viewModel()
+        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        advanceUntilIdle()
+        vm.state.value.isLoadingEthFee shouldBe true
+
+        vm.loadData(Chain.Bitcoin, utxoSpec())
+        advanceUntilIdle()
+
+        vm.state.value.isLoadingEthFee shouldBe false
+        vm.state.value.priorityTiers.shouldNotBeNull()
     }
 
     private fun utxoSpec() =

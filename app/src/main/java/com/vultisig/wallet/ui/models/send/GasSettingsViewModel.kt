@@ -13,11 +13,11 @@ import com.vultisig.wallet.data.models.supportsLegacyGas
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.usecases.ConvertGweiToWeiUseCase
 import com.vultisig.wallet.data.usecases.ConvertWeiToGweiUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -86,6 +86,8 @@ constructor(
                 showsPriority = chain.hasPriorityTiers,
                 priorityTiers = null,
                 selectedPriority = null,
+                // A failed fee fetch on an earlier chain must not keep this sheet disabled.
+                isLoadingEthFee = false,
             )
         }
 
@@ -130,19 +132,16 @@ constructor(
     }
 
     private fun loadEthTiers(chain: Chain, isSaved: Boolean) {
-        tiersJob = viewModelScope.launch {
-            val tiers =
-                try {
-                    val history = evmApiFactory.createEvmApi(chain).getFeeHistory()
-                    evmPriorityFeeTiers(chain, history)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
+        tiersJob =
+            viewModelScope.safeLaunch(
+                onError = { e ->
                     Timber.w(e, "Fee history unavailable for %s", chain)
-                    null
+                    showTiers(null, isSaved)
                 }
-            showTiers(tiers, isSaved)
-        }
+            ) {
+                val history = evmApiFactory.createEvmApi(chain).getFeeHistory()
+                showTiers(evmPriorityFeeTiers(chain, history), isSaved)
+            }
     }
 
     // A reopened sheet shows a chip only when the saved value is still exactly that tier's.
@@ -215,18 +214,12 @@ constructor(
 
     private fun loadUTXOData(chain: Chain, isSaved: Boolean) {
         val offersTiers = chain.hasPriorityTiers
-        tiersJob = viewModelScope.launch {
+        tiersJob = viewModelScope.safeLaunch {
             val hasValue = byteFeeState.text.toBigInteger() > BigInteger.ZERO
-            if (hasValue && !offersTiers) return@launch
-            try {
-                val byteFee = utxoFeeService.getDefaultGasFee(chain)
-                if (!hasValue) byteFeeState.setTextAndPlaceCursorAtEnd(byteFee.toString())
-                if (offersTiers) showTiers(utxoByteFeeTiers(byteFee), isSaved)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e)
-            }
+            if (hasValue && !offersTiers) return@safeLaunch
+            val byteFee = utxoFeeService.getDefaultGasFee(chain)
+            if (!hasValue) byteFeeState.setTextAndPlaceCursorAtEnd(byteFee.toString())
+            if (offersTiers) showTiers(utxoByteFeeTiers(byteFee), isSaved)
         }
     }
 
