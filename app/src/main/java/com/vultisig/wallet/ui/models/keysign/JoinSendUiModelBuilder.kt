@@ -8,6 +8,8 @@ import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.SubstrateDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -31,8 +33,11 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.transaction.CosmosAmountUiModel
+import com.vultisig.wallet.ui.models.transaction.CosmosTransfersUiModel
 import com.vultisig.wallet.ui.models.transaction.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.utils.resolveDstVaultName
+import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
@@ -364,6 +369,13 @@ constructor(
                 isUniversalRouterSwap = decodedExtras.isUniversalRouterSwap,
                 tonMessages = tonMessages,
                 isUnverifiedCosmosSign = isCosmosSignDoc && cosmosSignedTransfer == null,
+                cosmosTransfers =
+                    if (isCosmosSignDoc && cosmosSignedTransfer == null) {
+                        val review =
+                            if (signAmino != null) signAmino.toSignDataReview(chain, json)
+                            else signDirectMessage?.toSignDataReview(chain)
+                        review?.toUiModel(chain, nativeCoin)
+                    } else null,
             )
         return JoinSendUiModelResult(
             result =
@@ -454,6 +466,38 @@ private data class AminoSendValue(
 @Serializable private data class AminoCoin(val denom: String, val amount: String)
 
 private val aminoSendJson = Json { ignoreUnknownKeys = true }
+
+/**
+ * Formats a review for the verify screen. A coin is labelled with its ticker and decimals only when
+ * its denom is the chain's native denom or a known token's; otherwise it shows the raw amount and
+ * denom and is flagged unverified, so an unlisted denom named like a known coin can't pass for it.
+ * Every dApp-supplied string is stripped of control, bidi and zero-width characters, so a newline
+ * or reordering mark can't fake an extra line in the joined rows.
+ */
+internal fun CosmosSignDataReview.toUiModel(
+    chain: Chain,
+    nativeCoin: Coin,
+): CosmosTransfersUiModel =
+    CosmosTransfersUiModel(
+        recipients = recipients.map(::sanitizeDisplayString).distinct(),
+        amounts = coinTotals.map { it.format(chain, nativeCoin) },
+        memos = memos.map(::sanitizeDisplayString).distinct(),
+        isPartial = hasUnsummarizedMessages,
+    )
+
+private fun CosmosSignedCoin.format(chain: Chain, nativeCoin: Coin): CosmosAmountUiModel {
+    val metadata =
+        if (denom == chain.cosmosNativeDenom) nativeCoin
+        else Coins.coins[chain]?.firstOrNull { !it.isNativeToken && it.contractAddress == denom }
+    if (metadata == null) {
+        return CosmosAmountUiModel(
+            text = "$amount ${sanitizeDisplayString(denom)}",
+            isKnownDenom = false,
+        )
+    }
+    val value = BigDecimal(amount, metadata.decimal).stripTrailingZeros().toPlainString()
+    return CosmosAmountUiModel(text = "$value ${metadata.ticker}", isKnownDenom = true)
+}
 
 /** A recipient and amount read out of a Cosmos request's signed content. */
 internal data class CosmosSignedTransfer(val recipient: String, val amount: BigInteger)

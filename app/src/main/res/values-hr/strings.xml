@@ -1403,6 +1403,8 @@
     <string name="substrate_dapp_transaction">%1$s transakcija</string>
     <string name="substrate_call_index">Poziv %1$s</string>
     <string name="cosmos_sign_direct_transaction">%1$s transakcija</string>
+    <string name="cosmos_transaction_not_fully_summarized">Dio ove transakcije nije ovdje sažet. Prije potpisivanja pregledajte sve detalje u nastavku.</string>
+    <string name="cosmos_amount_unverified_denom">%1$s (neprovjereni token)</string>
     <string name="substrate_signer_payload">Payload potpisnika</string>
     <string name="substrate_field_call_data">Podaci poziva</string>
     <string name="substrate_field_nonce">Nonce</string>

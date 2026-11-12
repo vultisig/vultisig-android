@@ -1404,6 +1404,8 @@
     <string name="substrate_dapp_transaction">Транзакция %1$s</string>
     <string name="substrate_call_index">Вызов %1$s</string>
     <string name="cosmos_sign_direct_transaction">Транзакция %1$s</string>
+    <string name="cosmos_transaction_not_fully_summarized">Часть этой транзакции здесь не описана. Перед подписанием проверьте полные данные ниже.</string>
+    <string name="cosmos_amount_unverified_denom">%1$s (непроверенный токен)</string>
     <string name="substrate_signer_payload">Payload подписанта</string>
     <string name="substrate_field_call_data">Данные вызова</string>
     <string name="substrate_field_nonce">Nonce</string>

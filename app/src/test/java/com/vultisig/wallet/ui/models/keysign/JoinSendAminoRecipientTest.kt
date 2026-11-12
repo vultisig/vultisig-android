@@ -19,6 +19,8 @@ import com.vultisig.wallet.data.usecases.Message
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapperImpl
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.transaction.CosmosAmountUiModel
+import com.vultisig.wallet.ui.models.transaction.CosmosTransfersUiModel
 import com.vultisig.wallet.ui.models.transaction.TransactionDetailsUiModel
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -109,6 +111,52 @@ internal class JoinSendAminoRecipientTest {
     }
 
     @Test
+    fun `a two-recipient amino request lists both recipients and the total`() = runTest {
+        val result =
+            build(
+                amino(send(RECIPIENT_A, "1000000"), send(RECIPIENT_B, "1000000000")),
+                toAddress = "",
+                toAmount = "1001000000",
+            )
+
+        result.transfers() shouldBe
+            CosmosTransfersUiModel(
+                recipients = listOf(RECIPIENT_A, RECIPIENT_B),
+                amounts = listOf(CosmosAmountUiModel("1001 ATOM", isKnownDenom = true)),
+                memos = emptyList(),
+                isPartial = false,
+            )
+    }
+
+    @Test
+    fun `a send next to a contract call is listed and flagged as partial`() = runTest {
+        val contractCall =
+            CosmosMsg(
+                type = "wasm/MsgExecuteContract",
+                value =
+                    """{"sender":"$SENDER","contract":"$CONTRACT","msg":{"swap":{}},""" +
+                        """"funds":[{"denom":"uatom","amount":"2000000"}]}""",
+            )
+
+        val result =
+            build(amino(send(RECIPIENT_A, "1000000"), contractCall), toAddress = "", toAmount = "0")
+
+        result.transfers() shouldBe
+            CosmosTransfersUiModel(
+                recipients = listOf(RECIPIENT_A, CONTRACT),
+                amounts = listOf(CosmosAmountUiModel("3 ATOM", isKnownDenom = true)),
+                memos = emptyList(),
+                isPartial = true,
+            )
+    }
+
+    @Test
+    fun `a single readable send keeps the To and amount rows and no transfer list`() = runTest {
+        build(amino(send(RECIPIENT_B, "1000000000")), RECIPIENT_B, "1000000000")
+            .transfers() shouldBe null
+    }
+
+    @Test
     fun `with both sign docs the amino one the signer uses is shown`() = runTest {
         // CosmosHelper signs signAmino ahead of signDirect, so a signDirect body paying A must not
         // stand in for the amino message that pays B.
@@ -180,6 +228,11 @@ internal class JoinSendAminoRecipientTest {
         )
     }
 
+    private fun JoinSendUiModelResult.transfers(): CosmosTransfersUiModel? {
+        val send = result.transactionTypeUiModel.shouldBeInstanceOf<TransactionTypeUiModel.Send>()
+        return send.tx.cosmosTransfers
+    }
+
     private fun JoinSendUiModelResult.isUnverified(): Boolean {
         val send = result.transactionTypeUiModel.shouldBeInstanceOf<TransactionTypeUiModel.Send>()
         return send.tx.isUnverifiedCosmosSign
@@ -225,6 +278,7 @@ internal class JoinSendAminoRecipientTest {
         const val VAULT_ID = "vault"
         const val SENDER = "cosmos1sender0000000000000000000000000000000"
         const val RECIPIENT_A = "cosmos1recipienta000000000000000000000000000"
+        const val CONTRACT = "cosmos1contract00000000000000000000000000000"
         const val RECIPIENT_B = "cosmos1recipientb000000000000000000000000000"
     }
 }

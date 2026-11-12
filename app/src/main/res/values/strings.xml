@@ -1460,6 +1460,8 @@
     <string name="substrate_dapp_transaction">%1$s Transaction</string>
     <string name="substrate_call_index">Call %1$s</string>
     <string name="cosmos_sign_direct_transaction">%1$s Transaction</string>
+    <string name="cosmos_transaction_not_fully_summarized">Part of this transaction isn\'t summarized here. Review the full details below before you sign.</string>
+    <string name="cosmos_amount_unverified_denom">%1$s (unverified token)</string>
     <string name="substrate_signer_payload">Signer payload</string>
     <string name="substrate_field_call_data">Call data</string>
     <string name="substrate_field_nonce">Nonce</string>

@@ -1399,6 +1399,8 @@
     <string name="substrate_dapp_transaction">Transação %1$s</string>
     <string name="substrate_call_index">Chamada %1$s</string>
     <string name="cosmos_sign_direct_transaction">Transação %1$s</string>
+    <string name="cosmos_transaction_not_fully_summarized">Parte desta transação não está resumida aqui. Revise os detalhes completos abaixo antes de assinar.</string>
+    <string name="cosmos_amount_unverified_denom">%1$s (token não verificado)</string>
     <string name="substrate_signer_payload">Payload do signatário</string>
     <string name="substrate_field_call_data">Dados da chamada</string>
     <string name="substrate_field_nonce">Nonce</string>
