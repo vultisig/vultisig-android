@@ -388,7 +388,7 @@ class UtxoHelper(
                 // own coin type (ZCASH), so route the compile through it.
                 TransactionCompiler.compileWithSignatures(
                     CoinType.BITCOIN,
-                    zcashV2Input(inputData, spendWithVaultKey = true),
+                    zcashV2Input(inputData),
                     signatureVector,
                     publicKeyVector,
                 )
@@ -410,10 +410,7 @@ class UtxoHelper(
     private fun zcashPreImageHashes(inputData: ByteArray): List<ByteArray> {
         val output =
             Bitcoin.PreSigningOutput.parseFrom(
-                TransactionCompiler.preImageHashes(
-                    coinType,
-                    zcashV2Input(inputData, spendWithVaultKey = false),
-                )
+                TransactionCompiler.preImageHashes(coinType, zcashV2Input(inputData))
             )
         check(output.error == Common.SigningError.OK) {
             "Zcash pre-image failed: ${output.errorMessage}"
@@ -430,7 +427,7 @@ class UtxoHelper(
      * WalletCore's legacy Zcash signer only emits v4, which NU7 invalidates. Inputs and outputs are
      * the plan's, in order (`UseAll`, so nothing is reselected and the fee is inputs − outputs).
      */
-    private fun zcashV2Input(inputData: ByteArray, spendWithVaultKey: Boolean): ByteArray {
+    private fun zcashV2Input(inputData: ByteArray): ByteArray {
         val input = Bitcoin.SigningInput.parseFrom(inputData)
         val plan = input.plan
         val publicKey = ByteString.copyFrom(deriveVaultPublicKey().data())
@@ -446,7 +443,7 @@ class UtxoHelper(
                         .setTxVersion(Zcash.TransactionVersion.V5)
                 )
         plan.utxosList.forEach { utxo ->
-            val v2Input =
+            builder.addInputs(
                 BitcoinV2.Input.newBuilder()
                     .setOutPoint(
                         Utxo.OutPoint.newBuilder()
@@ -455,17 +452,11 @@ class UtxoHelper(
                     )
                     .setValue(utxo.amount)
                     .setSighashType(BitcoinSigHashType.ALL.value())
-            if (spendWithVaultKey) {
-                v2Input.setScriptBuilder(
-                    BitcoinV2.Input.InputBuilder.newBuilder()
-                        .setP2Pkh(BitcoinV2.PublicKeyOrHash.newBuilder().setPubkey(publicKey))
-                )
-            } else {
-                // The ZIP-244 sighash only commits to the plan's own script (the coin address, as
-                // iOS), so hash it as-is rather than re-deriving a vault key that may not match.
-                v2Input.setScriptData(utxo.script)
-            }
-            builder.addInputs(v2Input)
+                    .setScriptBuilder(
+                        BitcoinV2.Input.InputBuilder.newBuilder()
+                            .setP2Pkh(BitcoinV2.PublicKeyOrHash.newBuilder().setPubkey(publicKey))
+                    )
+            )
         }
         builder.addOutputs(
             BitcoinV2.Output.newBuilder().setValue(plan.amount).setToAddress(input.toAddress)

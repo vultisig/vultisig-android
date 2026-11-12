@@ -803,7 +803,12 @@ class ChainHelpersTest {
             val payload = transaction.keysignPayload.toInternalKeySignPayload()
             val coin = payload.coin.coinType
 
-            val helper = UtxoHelper(coin, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
+            // The Zcash vector's address is the payload coin's own key (already derived), so use it
+            // with an empty chain code, as iOS does; deriving from the shared vault key would give
+            // a different address and script.
+            val helper =
+                if (coin == CoinType.ZCASH) UtxoHelper(coin, payload.coin.hexPublicKey, "")
+                else UtxoHelper(coin, HEX_PUBLIC_KEY, HEX_CHAIN_CODE)
             val preImageHashes =
                 helper.getPreSignedImageHash(transaction.keysignPayload.toInternalKeySignPayload())
 
