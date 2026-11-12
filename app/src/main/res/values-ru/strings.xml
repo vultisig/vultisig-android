@@ -916,8 +916,8 @@
     <string name="backup_banner_title">Запросите полный контроль над хранилищем</string>
     <string name="referral_rewards_banner_caption">Не упустите награды</string>
     <string name="referral_rewards_banner_title">Добавьте свой реферальный код</string>
-    <string name="kamino_banner_caption">Новое на Solana</string>
-    <string name="kamino_banner_title">Начните зарабатывать с Kamino</string>
+    <string name="kamino_banner_caption">С Kamino</string>
+    <string name="kamino_banner_title">Заставьте свободные USDC работать</string>
     <string name="vault_detail_vault_info">Информация о хранилище</string>
     <string name="vault_details_keys">Ключи</string>
     <string name="verify_send_send_overview">Обзор отправки</string>

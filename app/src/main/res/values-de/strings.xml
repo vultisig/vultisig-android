@@ -917,8 +917,8 @@
     <string name="backup_banner_title">Vollständige Tresor-Kontrolle anfordern</string>
     <string name="referral_rewards_banner_caption">Keine Prämien verpassen</string>
     <string name="referral_rewards_banner_title">Referral-Code hinzufügen</string>
-    <string name="kamino_banner_caption">Neu auf Solana</string>
-    <string name="kamino_banner_title">Jetzt mit Kamino verdienen</string>
+    <string name="kamino_banner_caption">Mit Kamino</string>
+    <string name="kamino_banner_title">Ungenutzte USDC arbeiten lassen</string>
     <string name="vault_detail_vault_info">Tresorinformationen</string>
     <string name="vault_details_keys">Schlüssel</string>
     <string name="verify_send_send_overview">Sendeübersicht</string>

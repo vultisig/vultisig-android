@@ -1249,8 +1249,8 @@
     <string name="backup_banner_title">볼트의 완전한 소유권을 요청하세요</string>
     <string name="referral_rewards_banner_caption">보상을 놓치지 마세요</string>
     <string name="referral_rewards_banner_title">추천 코드를 추가하세요</string>
-    <string name="kamino_banner_caption">솔라나 신규</string>
-    <string name="kamino_banner_title">Kamino로 수익을 시작하세요</string>
+    <string name="kamino_banner_caption">Kamino와 함께</string>
+    <string name="kamino_banner_title">잠자는 USDC를 굴려보세요</string>
     <string name="home_display">홈 화면 표시</string>
     <string name="home_display_separate_title">지갑과 DeFi 분리</string>
     <string name="home_display_separate_description">지갑 탭에는 지갑 잔액만, DeFi 탭에는 DeFi 잔액이 표시됩니다.</string>

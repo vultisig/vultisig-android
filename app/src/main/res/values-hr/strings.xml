@@ -918,8 +918,8 @@
     <string name="backup_banner_title">Zatražite potpuno skrbništvo nad trezorom</string>
     <string name="referral_rewards_banner_caption">Ne propustite nagrade</string>
     <string name="referral_rewards_banner_title">Dodajte svoj kod preporuke</string>
-    <string name="kamino_banner_caption">Novo na Solani</string>
-    <string name="kamino_banner_title">Počnite zarađivati uz Kamino</string>
+    <string name="kamino_banner_caption">Uz Kamino</string>
+    <string name="kamino_banner_title">Neka neiskorišteni USDC radi za vas</string>
     <string name="vault_detail_vault_info">Informacije o trezoru</string>
     <string name="vault_details_keys">ključevi</string>
     <string name="verify_send_send_overview">Pregled slanja</string>

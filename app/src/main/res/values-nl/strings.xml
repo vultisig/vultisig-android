@@ -912,8 +912,8 @@
     <string name="backup_banner_title">Vraag volledig kluisbeheer aan</string>
     <string name="referral_rewards_banner_caption">Mis geen beloningen</string>
     <string name="referral_rewards_banner_title">Voeg je verwijzingscode toe</string>
-    <string name="kamino_banner_caption">Nieuw op Solana</string>
-    <string name="kamino_banner_title">Begin met verdienen via Kamino</string>
+    <string name="kamino_banner_caption">Met Kamino</string>
+    <string name="kamino_banner_title">Laat ongebruikte USDC voor je werken</string>
     <string name="vault_detail_vault_info">Kluisinfo</string>
     <string name="vault_details_keys">Sleutels</string>
     <string name="verify_send_send_overview">Overzicht verzenden</string>
