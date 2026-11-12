@@ -27,7 +27,12 @@ import wallet.core.jni.Hash
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
+import wallet.core.jni.BitcoinSigHashType
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.BitcoinV2
+import wallet.core.jni.proto.Common
+import wallet.core.jni.proto.Utxo
+import wallet.core.jni.proto.Zcash
 import wallet.core.jni.proto.Common.SigningError
 
 class UtxoHelper(
@@ -148,9 +153,7 @@ class UtxoHelper(
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val inputData = getBitcoinPreSigningInputData(keysignPayload)
         if (coinType == CoinType.ZCASH) {
-            return ZcashV5Transaction.preImageHashes(inputData)
-                .map { Numeric.toHexStringNoPrefix(it) }
-                .sorted()
+            return zcashPreImageHashes(inputData).map { Numeric.toHexStringNoPrefix(it) }.sorted()
         }
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes).checkError()
@@ -364,7 +367,7 @@ class UtxoHelper(
     ): SignedTransactionResult {
         val publicKey = deriveVaultPublicKey()
         val derSignatures =
-            ZcashV5Transaction.preImageHashes(inputData).map { preImageHash ->
+            zcashPreImageHashes(inputData).map { preImageHash ->
                 val key = Numeric.toHexStringNoPrefix(preImageHash)
                 val signature =
                     signatures[key]?.derSignature?.hexToByteArray()
@@ -375,7 +378,118 @@ class UtxoHelper(
                 }
                 signature
             }
-        return ZcashV5Transaction.compile(inputData, derSignatures, publicKey.data())
+        val signatureVector = DataVector()
+        derSignatures.forEach { signatureVector.add(it) }
+        val publicKeyVector = DataVector().apply { add(publicKey.data()) }
+        val output =
+            Bitcoin.SigningOutput.parseFrom(
+                // WalletCore's Zcash entry compiles with the legacy signer even for signing V2 and
+                // asks for a private key. The Bitcoin entry forwards V2 to Rust using the input's
+                // own coin type (ZCASH), so route the compile through it.
+                TransactionCompiler.compileWithSignatures(
+                    CoinType.BITCOIN,
+                    zcashV2Input(inputData),
+                    signatureVector,
+                    publicKeyVector,
+                )
+            )
+        check(output.error == Common.SigningError.OK) {
+            "Zcash compile failed: ${output.errorMessage}"
+        }
+        val result = output.signingResultV2
+        check(result.error == Common.SigningError.OK) {
+            "Zcash compile failed: ${result.errorMessage}"
+        }
+        return SignedTransactionResult(
+            rawTransaction = Numeric.toHexStringNoPrefix(result.encoded.toByteArray()),
+            transactionHash = Numeric.toHexStringNoPrefix(result.txid.toByteArray()),
+        )
+    }
+
+    /** ZIP-244 sighash of every input, from WalletCore's v5 transaction builder (signing V2). */
+    private fun zcashPreImageHashes(inputData: ByteArray): List<ByteArray> {
+        val output =
+            Bitcoin.PreSigningOutput.parseFrom(
+                TransactionCompiler.preImageHashes(coinType, zcashV2Input(inputData))
+            )
+        check(output.error == Common.SigningError.OK) {
+            "Zcash pre-image failed: ${output.errorMessage}"
+        }
+        val result = output.preSigningResultV2
+        check(result.error == Common.SigningError.OK) {
+            "Zcash pre-image failed: ${result.errorMessage}"
+        }
+        return result.sighashesList.map { it.sighash.toByteArray() }
+    }
+
+    /**
+     * Re-expresses the planned legacy [Bitcoin.SigningInput] as a signing-V2 transaction builder:
+     * WalletCore's legacy Zcash signer only emits v4, which NU7 invalidates. Inputs and outputs are
+     * the plan's, in order (`UseAll`, so nothing is reselected and the fee is inputs − outputs).
+     */
+    private fun zcashV2Input(inputData: ByteArray): ByteArray {
+        val input = Bitcoin.SigningInput.parseFrom(inputData)
+        val plan = input.plan
+        val publicKey = ByteString.copyFrom(deriveVaultPublicKey().data())
+        val builder =
+            BitcoinV2.TransactionBuilder.newBuilder()
+                .setVersion(BitcoinV2.TransactionVersion.UseDefault)
+                .setLockTime(input.lockTime)
+                .setInputSelector(BitcoinV2.InputSelector.UseAll)
+                .setFixedDustThreshold(0)
+                .setZcashExtraData(
+                    Zcash.TransactionBuilderExtraData.newBuilder()
+                        .setBranchId(plan.branchId)
+                        .setTxVersion(Zcash.TransactionVersion.V5)
+                )
+        plan.utxosList.forEach { utxo ->
+            builder.addInputs(
+                BitcoinV2.Input.newBuilder()
+                    .setOutPoint(
+                        Utxo.OutPoint.newBuilder()
+                            .setHash(utxo.outPoint.hash)
+                            .setVout(utxo.outPoint.index)
+                    )
+                    .setValue(utxo.amount)
+                    .setSighashType(BitcoinSigHashType.ALL.value())
+                    .setScriptBuilder(
+                        BitcoinV2.Input.InputBuilder.newBuilder()
+                            .setP2Pkh(BitcoinV2.PublicKeyOrHash.newBuilder().setPubkey(publicKey))
+                    )
+            )
+        }
+        builder.addOutputs(
+            BitcoinV2.Output.newBuilder().setValue(plan.amount).setToAddress(input.toAddress)
+        )
+        if (plan.change > 0) {
+            builder.addOutputs(
+                BitcoinV2.Output.newBuilder()
+                    .setValue(plan.change)
+                    .setToAddress(input.changeAddress)
+            )
+        }
+        if (!plan.outputOpReturn.isEmpty) {
+            builder.addOutputs(
+                BitcoinV2.Output.newBuilder()
+                    .setValue(0)
+                    .setBuilder(
+                        BitcoinV2.Output.OutputBuilder.newBuilder().setOpReturn(plan.outputOpReturn)
+                    )
+            )
+        }
+        return Bitcoin.SigningInput.newBuilder()
+            .setCoinType(coinType.value())
+            .setSigningV2(
+                BitcoinV2.SigningInput.newBuilder()
+                    .setBuilder(builder)
+                    .addPublicKeys(publicKey)
+                    .setChainInfo(
+                        // Low byte of Zcash's two-byte t-address prefixes (0x1CB8, 0x1CBD).
+                        BitcoinV2.ChainInfo.newBuilder().setP2PkhPrefix(184).setP2ShPrefix(189)
+                    )
+            )
+            .build()
+            .toByteArray()
     }
 
     fun getSignedTransaction(
