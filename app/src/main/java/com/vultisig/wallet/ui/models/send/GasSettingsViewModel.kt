@@ -76,7 +76,7 @@ constructor(
      * Fills the sheet for [chain]. With [saved] settings made for this chain the fields show those;
      * otherwise they load as before.
      */
-    fun loadData(chain: Chain, spec: BlockChainSpecificAndUtxo, saved: GasSettings? = null) {
+    fun loadData(chain: Chain, spec: BlockChainSpecificAndUtxo, saved: GasSettings?) {
         val specific = spec.blockChainSpecific
         tiersJob?.cancel()
 

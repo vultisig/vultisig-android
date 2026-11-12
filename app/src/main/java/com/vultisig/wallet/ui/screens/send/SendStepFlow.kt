@@ -1,16 +1,21 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.vultisig.wallet.ui.screens.send
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -36,12 +41,8 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,11 +68,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.v2.animation.stepSlideAndFadeSpec
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
@@ -97,6 +98,8 @@ private val ContinueHorizontalPadding = 16.dp
 private val ContinueVerticalPadding = 12.dp
 private const val STEP_STATE_FADE_MS = 300
 private const val STEP_POP_SCALE = 1.08f
+private const val STEP_SLIDE_DURATION_MS = 300
+private const val STEP_FADE_DURATION_MS = 200
 
 /** Test tags of the step header icons; QA flows tap them. */
 internal object SendStepTestTags {
@@ -183,28 +186,14 @@ internal fun SendStepFlowScreen(
                         top = ScrollEdgeFadeHeight,
                         bottom = with(density) { continueBlockHeightPx.toDp() } + FloatingButtonGap,
                     )
-                val pullToRefreshState = rememberPullToRefreshState()
-                PullToRefreshBox(
+                SendPullToRefreshBox(
                     isRefreshing = state.isRefreshing,
                     onRefresh = onRefreshRequest,
-                    state = pullToRefreshState,
-                    indicator = {
-                        Indicator(
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            isRefreshing = state.isRefreshing,
-                            color = Theme.v2.colors.primary.accent3,
-                            state = pullToRefreshState,
-                        )
-                    },
                     modifier = Modifier.padding(top = TitleToScrollGap).weight(1f),
                 ) {
                     AnimatedContent(
                         targetState = state.expandedSection,
-                        transitionSpec =
-                            stepSlideAndFadeSpec(
-                                index = { it.ordinal },
-                                isReduceMotion = isReduceMotion,
-                            ),
+                        transitionSpec = stepSlideAndFadeSpec(isReduceMotion),
                         label = "send step",
                         modifier = Modifier.fillMaxSize(),
                     ) { step ->
@@ -223,6 +212,24 @@ internal fun SendStepFlowScreen(
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
+    }
+}
+
+/**
+ * Slide plus fade between steps: a later step comes in from the trailing edge, an earlier one from
+ * the leading edge. With [isReduceMotion] it only crossfades.
+ */
+private fun stepSlideAndFadeSpec(
+    isReduceMotion: Boolean
+): AnimatedContentTransitionScope<SendSections>.() -> ContentTransform = {
+    if (isReduceMotion) {
+        fadeIn(tween(STEP_FADE_DURATION_MS)) togetherWith fadeOut(tween(STEP_FADE_DURATION_MS))
+    } else {
+        val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
+        val slide = tween<IntOffset>(STEP_SLIDE_DURATION_MS, easing = EaseInOut)
+        val fade = tween<Float>(STEP_SLIDE_DURATION_MS, easing = EaseInOut)
+        (slideInHorizontally(slide) { it * direction } + fadeIn(fade)) togetherWith
+            (slideOutHorizontally(slide) { -it * direction } + fadeOut(fade))
     }
 }
 
@@ -250,10 +257,8 @@ private fun FloatingContinue(
             label = stringResource(R.string.send_continue_button),
             state = if (isDisabled) VsButtonState.Disabled else VsButtonState.Enabled,
             onClick = {
-                if (!isDisabled) {
-                    if (clearsFocus) focusManager.clearFocus()
-                    onContinue()
-                }
+                if (clearsFocus) focusManager.clearFocus()
+                onContinue()
             },
             modifier = Modifier.fillMaxWidth(),
         )

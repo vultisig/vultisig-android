@@ -295,14 +295,12 @@ fun StepIcon(type: StepType, state: StepState) {
 internal fun StepIcon(
     @DrawableRes logo: Int,
     state: StepState,
-    modifier: Modifier = Modifier,
     size: Dp = 44.dp,
     iconSize: Dp = 18.dp,
 ) {
     Box(
         modifier =
-            modifier
-                .size(size)
+            Modifier.size(size)
                 .clip(shape = CircleShape)
                 .background(color = state.backgroundColor)
                 .then(

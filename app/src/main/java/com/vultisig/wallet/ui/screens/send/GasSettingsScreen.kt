@@ -48,7 +48,7 @@ internal fun GasSettingsScreen(
     specific: BlockChainSpecificAndUtxo,
     onDismissGasSettings: () -> Unit,
     onSaveGasSettings: (GasSettings) -> Unit,
-    savedSettings: GasSettings? = null,
+    savedSettings: GasSettings?,
     model: GasSettingsViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()

@@ -93,6 +93,7 @@ internal class GasSettingsViewModelTest {
             vm.loadData(
                 Chain.Ethereum,
                 ethSpec(priorityFeeWei = BigInteger("1500000000"), gasLimit = BigInteger("21000")),
+                saved = null,
             )
             advanceUntilIdle()
 
@@ -109,7 +110,11 @@ internal class GasSettingsViewModelTest {
     fun `picking a tier fills the priority fee field and Save signs what it shows`() = runTest {
         coEvery { evmApi.getFeeHistory() } returns FEE_HISTORY
         val vm = viewModel()
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1500000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1500000000")),
+            saved = null,
+        )
         advanceUntilIdle()
 
         vm.selectPriority(PriorityFee.FAST)
@@ -126,7 +131,11 @@ internal class GasSettingsViewModelTest {
     fun `editing the field a tier filled deselects the tier`() = runTest {
         coEvery { evmApi.getFeeHistory() } returns FEE_HISTORY
         val vm = viewModel()
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1500000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1500000000")),
+            saved = null,
+        )
         advanceUntilIdle()
         vm.selectPriority(PriorityFee.LOW)
 
@@ -142,7 +151,11 @@ internal class GasSettingsViewModelTest {
     fun `tiers stay unavailable when the fee history fails, and picking does nothing`() = runTest {
         coEvery { evmApi.getFeeHistory() } throws IllegalStateException("rpc down")
         val vm = viewModel()
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1500000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1500000000")),
+            saved = null,
+        )
         advanceUntilIdle()
 
         vm.state.value.showsPriority shouldBe true
@@ -157,7 +170,7 @@ internal class GasSettingsViewModelTest {
         coEvery { evmApi.getGasPrice() } returns BigInteger("5000000000")
         val vm = viewModel()
 
-        vm.loadData(Chain.BscChain, ethSpec(priorityFeeWei = BigInteger.ZERO))
+        vm.loadData(Chain.BscChain, ethSpec(priorityFeeWei = BigInteger.ZERO), saved = null)
         advanceUntilIdle()
 
         vm.state.value.showsPriority shouldBe false
@@ -206,7 +219,7 @@ internal class GasSettingsViewModelTest {
         coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } returns BigInteger("30")
         val vm = viewModel()
 
-        vm.loadData(Chain.Bitcoin, utxoSpec())
+        vm.loadData(Chain.Bitcoin, utxoSpec(), saved = null)
         advanceUntilIdle()
         vm.byteFeeState.text.toString() shouldBe "30"
         vm.state.value.selectedPriority.shouldBeNull()
@@ -222,7 +235,7 @@ internal class GasSettingsViewModelTest {
         coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } returns BigInteger("30")
         val vm = viewModel()
 
-        vm.loadData(Chain.Bitcoin, utxoSpec())
+        vm.loadData(Chain.Bitcoin, utxoSpec(), saved = null)
         advanceUntilIdle()
 
         vm.save() shouldBe GasSettings.UTXO(byteFee = BigInteger("30"))
@@ -233,11 +246,15 @@ internal class GasSettingsViewModelTest {
         coEvery { evmApi.getBaseFee() } throws RuntimeException("network error")
         coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } returns BigInteger("30")
         val vm = viewModel()
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
         advanceUntilIdle()
         vm.state.value.isLoadingEthFee shouldBe true
 
-        vm.loadData(Chain.Bitcoin, utxoSpec())
+        vm.loadData(Chain.Bitcoin, utxoSpec(), saved = null)
         advanceUntilIdle()
 
         vm.state.value.isLoadingEthFee shouldBe false
@@ -254,7 +271,11 @@ internal class GasSettingsViewModelTest {
     fun `loads stored wei priority fee into the field as gwei`() = runTest {
         val vm = viewModel()
 
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
         advanceUntilIdle()
 
         assertEquals("1", vm.priorityFeeState.text.toString())
@@ -263,7 +284,11 @@ internal class GasSettingsViewModelTest {
     @Test
     fun `saves gwei priority fee input back as wei`() = runTest {
         val vm = viewModel()
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
         advanceUntilIdle()
 
         vm.priorityFeeState.setTextAndPlaceCursorAtEnd("2")
@@ -278,6 +303,7 @@ internal class GasSettingsViewModelTest {
         vm.loadData(
             Chain.Ethereum,
             ethSpec(priorityFeeWei = BigInteger("1500000000"), gasLimit = BigInteger("21000")),
+            saved = null,
         )
         advanceUntilIdle()
 
@@ -292,7 +318,11 @@ internal class GasSettingsViewModelTest {
     @Test
     fun `blank priority fee saves as zero`() = runTest {
         val vm = viewModel()
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
         advanceUntilIdle()
 
         vm.priorityFeeState.setTextAndPlaceCursorAtEnd("")
@@ -307,6 +337,7 @@ internal class GasSettingsViewModelTest {
         vm.loadData(
             Chain.Ethereum,
             ethSpec(priorityFeeWei = BigInteger("1500000000")), // 1.5 gwei
+            saved = null,
         )
         advanceUntilIdle()
         // baseFee mocked to 3 gwei in setUp.
@@ -320,7 +351,11 @@ internal class GasSettingsViewModelTest {
     fun `negative base fee input clamps to zero and no longer drags the sum below priority fee`() =
         runTest {
             val vm = viewModel()
-            vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+            vm.loadData(
+                Chain.Ethereum,
+                ethSpec(priorityFeeWei = BigInteger("1000000000")),
+                saved = null,
+            )
             advanceUntilIdle()
 
             vm.baseFeeState.setTextAndPlaceCursorAtEnd("-5")
@@ -333,7 +368,11 @@ internal class GasSettingsViewModelTest {
     @Test
     fun `negative priority fee input clamps to zero`() = runTest {
         val vm = viewModel()
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
         advanceUntilIdle()
 
         vm.priorityFeeState.setTextAndPlaceCursorAtEnd("-2")
@@ -349,7 +388,11 @@ internal class GasSettingsViewModelTest {
             coEvery { evmApi.getGasPrice() } returns BigInteger("5000000000") // 5 gwei
             val vm = viewModel()
 
-            vm.loadData(Chain.BscChain, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+            vm.loadData(
+                Chain.BscChain,
+                ethSpec(priorityFeeWei = BigInteger("1000000000")),
+                saved = null,
+            )
             advanceUntilIdle()
 
             // Not the mocked 3 gwei getBaseFee() — BSC's base fee is meaningless (BEP-226).
@@ -361,7 +404,11 @@ internal class GasSettingsViewModelTest {
     fun `legacy gas chain save sums to the entered gas price alone`() = runTest {
         coEvery { evmApi.getGasPrice() } returns BigInteger("5000000000")
         val vm = viewModel()
-        vm.loadData(Chain.BscChain, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.BscChain,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
         advanceUntilIdle()
 
         val settings = vm.save() as GasSettings.Eth
@@ -379,7 +426,11 @@ internal class GasSettingsViewModelTest {
     @Test
     fun `switching chains blanks stale fields before the new chain's fetch resolves`() = runTest {
         val vm = viewModel()
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
         advanceUntilIdle()
         // Left over from the prior (Ethereum) session; the dialog was closed without saving.
         vm.priorityFeeState.setTextAndPlaceCursorAtEnd("9")
@@ -393,14 +444,22 @@ internal class GasSettingsViewModelTest {
                 BigInteger("5000000000")
             }
 
-        vm.loadData(Chain.BscChain, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.BscChain,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
     }
 
     @Test
     fun `isLoadingEthFee clears once the fetch resolves`() = runTest {
         val vm = viewModel()
 
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
         advanceUntilIdle()
 
         assertEquals(false, vm.state.value.isLoadingEthFee)
@@ -417,7 +476,11 @@ internal class GasSettingsViewModelTest {
         coEvery { evmApi.getBaseFee() } throws RuntimeException("network error")
         val vm = viewModel()
 
-        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.Ethereum,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
         advanceUntilIdle()
 
         assertEquals(true, vm.state.value.isLoadingEthFee)
@@ -430,7 +493,11 @@ internal class GasSettingsViewModelTest {
         coEvery { evmApi.getGasPrice() } throws RuntimeException("network error")
         val vm = viewModel()
 
-        vm.loadData(Chain.BscChain, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        vm.loadData(
+            Chain.BscChain,
+            ethSpec(priorityFeeWei = BigInteger("1000000000")),
+            saved = null,
+        )
         advanceUntilIdle()
 
         assertEquals(true, vm.state.value.isLoadingEthFee)

@@ -14,15 +14,11 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
@@ -287,20 +283,9 @@ internal fun SendFormScreen(
             )
         },
         content = {
-            val pullToRefreshState = rememberPullToRefreshState()
-
-            PullToRefreshBox(
+            SendPullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = onRefreshRequest,
-                state = pullToRefreshState,
-                indicator = {
-                    Indicator(
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        isRefreshing = state.isRefreshing,
-                        color = Theme.v2.colors.primary.accent3,
-                        state = pullToRefreshState,
-                    )
-                },
                 modifier = Modifier.fillMaxSize(),
             ) {
                 val isCircleMode = state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE

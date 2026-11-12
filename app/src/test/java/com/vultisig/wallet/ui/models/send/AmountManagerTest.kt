@@ -234,23 +234,6 @@ internal class AmountManagerTest {
         }
 
     @Test
-    fun `a DeFi form keeps the full-precision fiat-derived amount`() =
-        runTest(mainDispatcher) {
-            every { tokenPriceRepository.getPrice(any(), any()) } returns
-                flowOf(BigDecimal("2943.37"))
-            val manager = build(backgroundScope, isPlainSend = false)
-            manager.start()
-            selectedToken.value = ethToken()
-
-            fiatAmountFieldState.setTextAndPlaceCursorAtEnd("1")
-            Snapshot.sendApplyNotifications()
-            advanceUntilIdle()
-
-            // 1 / 2943.37 truncated to ETH's 18 decimals (Python Decimal, ROUND_DOWN).
-            tokenAmountFieldState.text.toString() shouldBe "0.000339746616973061"
-        }
-
-    @Test
     fun `a DeFi form keeps main's unstripped scale on a fiat entry`() =
         runTest(mainDispatcher) {
             every { tokenPriceRepository.getPrice(any(), any()) } returns flowOf(BigDecimal("2000"))

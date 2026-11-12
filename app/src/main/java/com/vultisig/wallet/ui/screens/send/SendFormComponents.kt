@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -13,7 +14,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -170,4 +175,31 @@ internal fun FoldableSection(
             }
         }
     }
+}
+
+/** Pull-to-refresh with the accent indicator, shared by the step flow and the DeFi forms. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun SendPullToRefreshBox(
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val pullToRefreshState = rememberPullToRefreshState()
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        state = pullToRefreshState,
+        indicator = {
+            Indicator(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isRefreshing = isRefreshing,
+                color = Theme.v2.colors.primary.accent3,
+                state = pullToRefreshState,
+            )
+        },
+        modifier = modifier,
+        content = content,
+    )
 }
