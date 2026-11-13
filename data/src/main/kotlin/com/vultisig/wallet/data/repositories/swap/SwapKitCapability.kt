@@ -41,7 +41,7 @@ internal object SwapKitCapability {
             Chain.BitcoinCash,
             Chain.Dash,
             Chain.Dogecoin,
-            // Sapling-v4 transparent PSBT, ZIP-243 sighash, via SwapKitZcashSigner. Transparent
+            // NU5 v5 transparent PSBT, ZIP-244 sighash, via SwapKitZcashSigner. Transparent
             // only — Vultisig cannot manage shielded keys.
             Chain.Zcash,
             // Pre-built hex CBOR via SwapKitCardanoSigner (Blake2b-256 of the tx body, Ed25519 vkey

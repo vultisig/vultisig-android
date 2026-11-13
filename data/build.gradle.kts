@@ -156,4 +156,5 @@ dependencies {
     // itself; nothing else puts it there.
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(files("../app/libs/mobile-tss-lib.aar"))
 }
