@@ -16,6 +16,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -54,25 +55,30 @@ constructor(
 
     val byteFeeState = TextFieldState()
 
+    private var loadJob: Job? = null
+
     fun loadData(chain: Chain, spec: BlockChainSpecificAndUtxo) {
         val specific = spec.blockChainSpecific
+
+        // A reload for another chain must not be overwritten by the previous chain's late fetch.
+        loadJob?.cancel()
 
         state.update { it.copy(chainSpecific = specific) }
 
         when (specific) {
             is BlockChainSpecific.Ethereum -> {
-                loadEthData(chain, specific)
+                loadJob = loadEthData(chain, specific)
             }
 
             is BlockChainSpecific.UTXO -> {
-                loadUTXOData(chain)
+                loadJob = loadUTXOData(chain)
             }
 
             else -> Unit
         }
     }
 
-    private fun loadEthData(chain: Chain, spec: BlockChainSpecific.Ethereum) {
+    private fun loadEthData(chain: Chain, spec: BlockChainSpecific.Ethereum): Job {
         gasLimitState.setTextAndPlaceCursorAtEnd(spec.gasLimit.toString())
         // This ViewModel is Hilt-scoped to the Send screen, not to one dialog open, so these
         // fields survive a close-without-saving. Blank them synchronously (before the network
@@ -82,7 +88,7 @@ constructor(
         priorityFeeState.setTextAndPlaceCursorAtEnd("")
         state.update { it.copy(isLoadingEthFee = true) }
 
-        viewModelScope.launch {
+        return viewModelScope.launch {
             val evmApi = evmApiFactory.createEvmApi(chain)
             try {
                 if (chain.supportsLegacyGas) {
@@ -111,7 +117,7 @@ constructor(
         }
     }
 
-    private fun loadUTXOData(chain: Chain) {
+    private fun loadUTXOData(chain: Chain): Job =
         viewModelScope.launch {
             if (byteFeeState.text.toBigInteger() > BigInteger.ZERO) return@launch
             try {
@@ -122,7 +128,6 @@ constructor(
                 Timber.e(e)
             }
         }
-    }
 
     fun save(): GasSettings {
         return when (state.value.chainSpecific) {
