@@ -207,6 +207,80 @@ class RippleIssuedCurrencySigningTest {
         )
     }
 
+    // Some SDK releases declare native sends RIPPLE_PAYMENT too. On native XRP the declaration
+    // must change nothing: the pre-image the SDK signs, declared or not.
+    @Test
+    fun aNativeSendDeclaredRipplePaymentSignsTheSdkGoldenHash() {
+        for (transactionType in
+            listOf(
+                TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                TransactionType.TRANSACTION_TYPE_RIPPLE_PAYMENT,
+            )) {
+            val payload =
+                sdkGoldenPayload(
+                    contractAddress = "",
+                    toAmount = SDK_NATIVE_AMOUNT_DROPS,
+                    transactionType = transactionType,
+                )
+
+            assertEquals(
+                "native XRP declared $transactionType",
+                listOf(SDK_NATIVE_SIGNING_HASH),
+                RippleHelper.getPreSignedImageHash(payload),
+            )
+        }
+    }
+
+    // The operation the discriminator exists for: an issued-currency Payment declared
+    // RIPPLE_PAYMENT signs the SDK's pre-image byte for byte.
+    @Test
+    fun anIssuedPaymentDeclaredRipplePaymentSignsTheSdkGoldenHash() {
+        val payload =
+            sdkGoldenPayload(
+                contractAddress = rippleTokenContractAddress(RLUSD_HEX, SDK_ISSUER),
+                toAmount = SDK_ISSUED_AMOUNT,
+                destinationTag = SDK_ISSUED_DESTINATION_TAG,
+                transactionType = TransactionType.TRANSACTION_TYPE_RIPPLE_PAYMENT,
+            )
+
+        assertEquals(listOf(SDK_ISSUED_SIGNING_HASH), RippleHelper.getPreSignedImageHash(payload))
+    }
+
+    private fun sdkGoldenPayload(
+        contractAddress: String,
+        toAmount: BigInteger,
+        transactionType: TransactionType,
+        destinationTag: UInt? = null,
+    ) =
+        KeysignPayload(
+            coin =
+                Coin(
+                    chain = Chain.Ripple,
+                    ticker = if (contractAddress.isEmpty()) "XRP" else "RLUSD",
+                    logo = "",
+                    address = SDK_SENDER,
+                    decimal = if (contractAddress.isEmpty()) 6 else RIPPLE_TOKEN_DECIMALS,
+                    hexPublicKey = SDK_SENDER_PUBLIC_KEY,
+                    priceProviderID = "",
+                    contractAddress = contractAddress,
+                    isNativeToken = contractAddress.isEmpty(),
+                ),
+            toAddress = SDK_RECIPIENT,
+            toAmount = toAmount,
+            blockChainSpecific =
+                BlockChainSpecific.Ripple(
+                    sequence = 5UL,
+                    gas = 12UL,
+                    lastLedgerSequence = 32_000_000UL,
+                    destinationTag = destinationTag,
+                    transactionType = transactionType,
+                ),
+            vaultPublicKeyECDSA = SDK_SENDER_PUBLIC_KEY,
+            vaultLocalPartyID = "local",
+            libType = null,
+            wasmExecuteContractPayload = null,
+        )
+
     private fun tokenPayload(
         currency: String = "USD",
         destinationTag: UInt? = null,
@@ -247,5 +321,20 @@ class RippleIssuedCurrencySigningTest {
         const val DESTINATION = "rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh"
         const val RLUSD_HEX = "524C555344000000000000000000000000000000"
         const val PUBLIC_KEY = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+
+        // vultisig-sdk `testdata/cross-encoder-golden/ripple-payment.json` and
+        // `ripple-issued-payment.json`: both SDK encoders derive these signing hashes.
+        const val SDK_SENDER = "rUaRcsApnVHudsdLD2mut2qCKWq6iLRT2D"
+        const val SDK_RECIPIENT = "r4VYvnjmi9JREsu1PZJQmJEJ6bQ6iPNSTP"
+        const val SDK_ISSUER = "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De"
+        const val SDK_SENDER_PUBLIC_KEY =
+            "031b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f"
+        val SDK_NATIVE_AMOUNT_DROPS: BigInteger = BigInteger.valueOf(1_000_000)
+        const val SDK_NATIVE_SIGNING_HASH =
+            "d66908156861d2629068359705f1e40254cf80a51800db82cb2d68b0ebafea57"
+        val SDK_ISSUED_AMOUNT = BigInteger("1234567890123456")
+        const val SDK_ISSUED_DESTINATION_TAG = 998_877u
+        const val SDK_ISSUED_SIGNING_HASH =
+            "5a98864c297e0066ca21410e955a578d4969c2a7edf738300f429feb6e73382b"
     }
 }
