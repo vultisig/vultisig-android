@@ -98,6 +98,15 @@ internal class FyndQuoteValidatorTest {
     }
 
     @Test
+    fun `refuses an inflated router fee that would hide a near-zero minimum`() {
+        val inflated =
+            order(minReceived = "1").let {
+                it.copy(feeBreakdown = it.feeBreakdown!!.copy(routerFee = (AMOUNT_OUT - 2).toString()))
+            }
+        shouldThrow<SwapException> { FyndQuoteValidator.validate(inflated, expectation()) }
+    }
+
+    @Test
     fun `refuses an unrequested client fee`() {
         shouldThrow<SwapException> {
             FyndQuoteValidator.validate(order(clientFee = "1"), expectation())

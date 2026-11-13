@@ -59,6 +59,7 @@ internal object FyndQuoteValidator {
     // Keysign across devices takes a while; a fee signature that expires sooner reverts on-chain.
     const val MIN_FEE_DEADLINE_SECONDS = 15 * 60L
     private const val SIGNATURE_BYTES = 65
+    private const val MAX_ROUTER_FEE_BPS = 10
 
     fun validate(quote: FyndOrderQuoteJson, expected: FyndQuoteExpectation): ValidatedFyndQuote {
         if (quote.status != "success") throw fyndStatusException(quote.status)
@@ -80,6 +81,16 @@ internal object FyndQuoteValidator {
         val routerFee = int(fees.routerFee, "router_fee")
         val clientFee = int(fees.clientFee, "client_fee")
         val minReceived = int(fees.minAmountReceived, "min_amount_received")
+        // Fynd's own fee defaults to 0 bps; anything above its share of our client fee plus a
+        // small negotiated rate would let a quote hide an unlimited minimum behind fees.
+        val grossFeeBps = expected.fee?.grossBps ?: 0
+        val routerShareOfClientFee =
+            amountOut * grossFeeBps.toBigInteger() / BigInteger.valueOf(10_000) -
+                fyndExpectedClientFee(amountOut, grossFeeBps)
+        val maxRouterFee =
+            routerShareOfClientFee +
+                amountOut * MAX_ROUTER_FEE_BPS.toBigInteger() / BigInteger.valueOf(10_000)
+        ensure(routerFee <= maxRouterFee) { "Fynd router_fee $routerFee is above $maxRouterFee" }
         val afterFees = amountOut - routerFee - clientFee
         ensure(minReceived.signum() > 0 && minReceived <= afterFees) {
             "Fynd min_amount_received $minReceived outside (0, $afterFees]"
