@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.api.swapAggregators
 
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
@@ -45,6 +46,7 @@ internal object EvmSwapTxGuard {
             // Called for its throws only: a deposit-shaped tx must be exactly the deposit.
             swapPayload.swapKitDepositRecipient(chain)
         }
+        if (provider == SwapProvider.FYND) checkFyndCall(swapPayload)
         val routers =
             when {
                 provider == SwapProvider.SWAPKIT -> null
@@ -78,6 +80,40 @@ internal object EvmSwapTxGuard {
             }
         }
     }
+
+    /**
+     * Fynd's router call names its own amounts, tokens and receiver; they must be the swap this
+     * payload shows, paid to the signing vault, with a minimum no higher than the quoted output.
+     */
+    private fun checkFyndCall(swapPayload: EVMSwapPayloadJson) {
+        val call = FyndRouterCalldata.decode(swapPayload.quote.tx.data)
+        val from = swapPayload.fromCoin
+        val to = swapPayload.toCoin
+        require(call.amountIn == swapPayload.fromAmount) {
+            "Fynd swap sells ${call.amountIn}, payload shows ${swapPayload.fromAmount}"
+        }
+        require(call.tokenIn.equals(from.fyndTokenAddress(), ignoreCase = true)) {
+            "Fynd swap sells ${call.tokenIn}, not ${from.ticker}"
+        }
+        require(call.tokenOut.equals(to.fyndTokenAddress(), ignoreCase = true)) {
+            "Fynd swap buys ${call.tokenOut}, not ${to.ticker}"
+        }
+        require(call.receiver.equals(from.address, ignoreCase = true)) {
+            "Fynd swap pays ${call.receiver}, not the signing vault"
+        }
+        val quoted = requireNotNull(swapPayload.quote.dstAmount.toBigIntegerOrNull()) {
+            "Fynd swap quote dstAmount '${swapPayload.quote.dstAmount}' is not an integer"
+        }
+        require(call.minAmountOut.signum() > 0 && call.minAmountOut <= quoted) {
+            "Fynd swap minimum ${call.minAmountOut} outside (0, $quoted]"
+        }
+        require(call.maxClientContribution.signum() == 0) {
+            "Fynd swap lets the fee receiver subsidise slippage"
+        }
+    }
+
+    private fun Coin.fyndTokenAddress(): String =
+        if (isNativeToken) "0x0000000000000000000000000000000000000000" else contractAddress
 
     private fun exactValueRouters(chain: Chain): Set<String> =
         routersFor(SwapProvider.ONEINCH, chain) +

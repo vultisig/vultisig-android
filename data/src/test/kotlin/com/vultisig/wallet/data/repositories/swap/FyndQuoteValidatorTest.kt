@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.FyndFeeBreakdownJson
 import com.vultisig.wallet.data.api.models.quotes.FyndOrderQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.FyndTransactionJson
+import com.vultisig.wallet.data.api.swapAggregators.FyndCalldataFixtures
 import io.kotest.assertions.throwables.shouldThrow
 import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -73,6 +74,20 @@ internal class FyndQuoteValidatorTest {
     }
 
     @Test
+    fun `refuses calldata that pays someone other than the vault`() {
+        shouldThrow<SwapException> {
+            FyndQuoteValidator.validate(order(data = FyndCalldataFixtures.SINGLE_TO_ATTACKER), expectation())
+        }
+    }
+
+    @Test
+    fun `refuses calldata whose minimum differs from the reported one`() {
+        shouldThrow<SwapException> {
+            FyndQuoteValidator.validate(order(minReceived = "1834763990"), expectation())
+        }
+    }
+
+    @Test
     fun `refuses an unrequested client fee`() {
         shouldThrow<SwapException> {
             FyndQuoteValidator.validate(order(clientFee = "1"), expectation())
@@ -91,8 +106,9 @@ internal class FyndQuoteValidatorTest {
                 feeOrder(receiver = OTHER),
                 feeOrder(deadline = NOW + 60),
                 feeOrder(deadline = null),
-                feeOrder(data = "0x" + "11".repeat(4) + "00".repeat(65)),
-                feeOrder(offset = null),
+                feeOrder(deadline = FIXTURE_DEADLINE + 3_600),
+                feeOrder(data = FyndCalldataFixtures.SPLIT_WITH_UNSIGNED_FEE),
+                feeOrder(data = FyndCalldataFixtures.SINGLE_NO_FEE),
                 feeOrder(offset = 1_000),
             )
             .forEach { bad ->
@@ -117,6 +133,9 @@ internal class FyndQuoteValidatorTest {
         FyndQuoteExpectation(
             router = ROUTER,
             amountIn = BigInteger("1000000000000000000"),
+            tokenIn = FyndCalldataFixtures.NATIVE,
+            tokenOut = FyndCalldataFixtures.USDC,
+            receiver = FyndCalldataFixtures.VAULT,
             sellsNative = sellsNative,
             slippageBps = 50,
             fee = fee,
@@ -130,6 +149,7 @@ internal class FyndQuoteValidatorTest {
         value: String = "1000000000000000000",
         clientFee: String = "0",
         minReceived: String = "1834763986",
+        data: String = FyndCalldataFixtures.SINGLE_NO_FEE,
     ) =
         FyndOrderQuoteJson(
             status = "success",
@@ -137,7 +157,7 @@ internal class FyndQuoteValidatorTest {
             amountOut = "1844002345",
             gasEstimate = "219652",
             gasPrice = "108908625",
-            transaction = FyndTransactionJson(to = to, value = value, data = "0xce25e49e"),
+            transaction = FyndTransactionJson(to = to, value = value, data = data),
             feeBreakdown =
                 FyndFeeBreakdownJson(
                     routerFee = "18440",
@@ -148,11 +168,11 @@ internal class FyndQuoteValidatorTest {
         )
 
     private fun feeOrder(
-        clientFee: String = fyndExpectedClientFee(BigInteger.valueOf(AMOUNT_OUT), 63).toString(),
+        clientFee: String = fyndExpectedClientFee(BigInteger.valueOf(AMOUNT_OUT), 57).toString(),
         receiver: String? = RECEIVER,
-        deadline: Long? = NOW + 20 * 60,
-        data: String = "0x" + "11".repeat(4) + "ab".repeat(65),
-        offset: Int? = 4,
+        deadline: Long? = FIXTURE_DEADLINE,
+        data: String = FyndCalldataFixtures.SPLIT_WITH_FEE,
+        offset: Int? = 484,
     ): FyndOrderQuoteJson {
         val afterFees = AMOUNT_OUT - 0 - clientFee.toLong()
         return FyndOrderQuoteJson(
@@ -171,8 +191,8 @@ internal class FyndQuoteValidatorTest {
                 FyndFeeBreakdownJson(
                     routerFee = "0",
                     clientFee = clientFee,
-                    maxSlippage = (afterFees / 200).toString(),
-                    minAmountReceived = (afterFees - afterFees / 200).toString(),
+                    maxSlippage = (afterFees - FyndCalldataFixtures.SPLIT_FEE_MIN_OUT).toString(),
+                    minAmountReceived = FyndCalldataFixtures.SPLIT_FEE_MIN_OUT.toString(),
                 ),
             clientFeeReceiver = receiver,
             clientFeeDeadline = deadline,
@@ -182,9 +202,10 @@ internal class FyndQuoteValidatorTest {
     private companion object {
         const val ROUTER = "0x1644d2477f809cc2c71bccfd6dc9497e3f83210d"
         const val OTHER = "0x00000000000000000000000000000000000000bb"
-        const val RECEIVER = "0x00000000000000000000000000000000000000cc"
+        const val RECEIVER = FyndCalldataFixtures.FEE_RECEIVER
         const val NOW = 1_800_000_000L
+        const val FIXTURE_DEADLINE = 1_800_001_200L
         const val AMOUNT_OUT = 1_844_002_345L
-        val FEE = FyndExpectedFee(grossBps = 63, receiver = RECEIVER)
+        val FEE = FyndExpectedFee(grossBps = 57, receiver = RECEIVER)
     }
 }

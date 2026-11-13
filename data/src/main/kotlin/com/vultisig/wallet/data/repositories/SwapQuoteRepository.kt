@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.swap.FyndFeatureGate
 import com.vultisig.wallet.data.repositories.swap.SwapKitQuoteSource
 import com.vultisig.wallet.data.repositories.swap.SwapPoolEligibilityRepository
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTable
@@ -46,6 +47,7 @@ constructor(
     private val swapKitQuoteSource: SwapKitQuoteSource,
     private val providerTable: SwapProviderTable,
     private val poolEligibility: SwapPoolEligibilityRepository,
+    private val fyndGate: FyndFeatureGate,
 ) : SwapQuoteRepository {
 
     override suspend fun getQuote(
@@ -60,9 +62,14 @@ constructor(
         swapKitQuoteSource.fetchInboundFee(request)
 
     override fun getEligibleProviders(srcToken: Coin, dstToken: Coin): List<SwapProvider> =
-        providerTable.eligibleProvidersFor(srcToken, dstToken)
+        providerTable.eligibleProvidersFor(srcToken, dstToken).filter {
+            it != SwapProvider.FYND || fyndGate.isUsable()
+        }
 
-    override suspend fun refreshSwapEligibility() = poolEligibility.refresh()
+    override suspend fun refreshSwapEligibility() {
+        fyndGate.refresh()
+        poolEligibility.refresh()
+    }
 
     override val swapEligibilityVersion: StateFlow<Int>
         get() = poolEligibility.eligibilityVersion

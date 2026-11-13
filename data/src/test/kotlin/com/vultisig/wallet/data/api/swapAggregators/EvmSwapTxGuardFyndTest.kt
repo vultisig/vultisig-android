@@ -63,8 +63,49 @@ internal class EvmSwapTxGuardFyndTest {
     @Test
     fun `accepts an ERC-20 sale with no native value`() {
         EvmSwapTxGuard.check(
-            payload(Chain.Ethereum, tx(to = ETH_ROUTER, value = "0"), from = usdc(Chain.Ethereum))
+            payload(
+                Chain.Ethereum,
+                tx(ETH_ROUTER, "0", FyndCalldataFixtures.SINGLE_USDC_TO_ETH),
+                from = usdc(Chain.Ethereum),
+                to = eth(Chain.Ethereum),
+            )
         )
+    }
+
+    @Test
+    fun `refuses Fynd calldata that pays someone other than the vault`() {
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(
+                payload(
+                    Chain.Ethereum,
+                    tx(ETH_ROUTER, SOLD.toString(), FyndCalldataFixtures.SINGLE_TO_ATTACKER),
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `refuses Fynd calldata for another amount, token or a minimum above the quote`() {
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(
+                payload(Chain.Ethereum, tx(ETH_ROUTER, "1"), fromAmount = BigInteger.ONE)
+            )
+        }
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(
+                payload(Chain.Ethereum, tx(ETH_ROUTER, "0"), from = usdc(Chain.Ethereum))
+            )
+        }
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(
+                payload(Chain.Ethereum, tx(ETH_ROUTER, SOLD.toString()), dstAmount = "1000")
+            )
+        }
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(
+                payload(Chain.Ethereum, tx(ETH_ROUTER, SOLD.toString(), "0xce25e49e"))
+            )
+        }
     }
 
     @Test
@@ -73,22 +114,29 @@ internal class EvmSwapTxGuardFyndTest {
         assertEquals(ETH_ROUTER.lowercase(), EvmSwapTxGuard.fyndRouter(Chain.Ethereum))
     }
 
-    private fun payload(chain: Chain, tx: OneInchSwapTxJson, from: Coin = eth(chain)) =
+    private fun payload(
+        chain: Chain,
+        tx: OneInchSwapTxJson,
+        from: Coin = eth(chain),
+        to: Coin = usdc(chain),
+        fromAmount: BigInteger = SOLD,
+        dstAmount: String = "1843983905",
+    ) =
         EVMSwapPayloadJson(
             fromCoin = from,
-            toCoin = usdc(chain),
-            fromAmount = SOLD,
-            toAmountDecimal = BigDecimal("4.5"),
-            quote = EVMSwapQuoteJson(dstAmount = "4500000", tx = tx),
+            toCoin = to,
+            fromAmount = fromAmount,
+            toAmountDecimal = BigDecimal("1843.983905"),
+            quote = EVMSwapQuoteJson(dstAmount = dstAmount, tx = tx),
             provider = "fynd",
         )
 
-    private fun tx(to: String, value: String) =
+    private fun tx(to: String, value: String, data: String = FyndCalldataFixtures.SINGLE_NO_FEE) =
         OneInchSwapTxJson(
             from = VAULT,
             to = to,
             gas = 300_000,
-            data = "0xce25e49e",
+            data = data,
             value = value,
             gasPrice = "1000000",
         )
@@ -116,8 +164,8 @@ internal class EvmSwapTxGuardFyndTest {
             )
 
     private companion object {
-        val SOLD: BigInteger = BigInteger("1500000000000000")
-        const val VAULT = "0x00000000000000000000000000000000000000aa"
+        val SOLD: BigInteger = BigInteger.TEN.pow(18)
+        const val VAULT = FyndCalldataFixtures.VAULT
         const val ETH_ROUTER = "0x1644D2477f809cc2C71bCCFd6Dc9497E3F83210d"
         const val JIT_ROUTER = "0xdaa2fe509de861d53e81940fdb8353b33126c930"
         const val KYBER_ROUTER = "0x6131b5fae19ea4f9d964eac0408e4408b66337b5"

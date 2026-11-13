@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.models.quotes.FyndQuoteRequestJson
 import com.vultisig.wallet.data.api.models.quotes.FyndQuoteResponseJson
 import com.vultisig.wallet.data.api.models.quotes.FyndTransactionJson
 import com.vultisig.wallet.data.api.swapAggregators.FyndApi
+import com.vultisig.wallet.data.api.swapAggregators.FyndCalldataFixtures
 import com.vultisig.wallet.data.api.swapAggregators.FyndConfig
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -15,6 +16,8 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import io.kotest.assertions.throwables.shouldThrow
 import java.math.BigInteger
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -89,6 +92,40 @@ internal class FyndQuoteSourceTest {
         }
     }
 
+    @Test
+    fun `gate keeps Fynd out of the candidates until the flag is on and a fee can be signed`() =
+        runTest {
+            val off = gate(direct = true, receiver = null, flag = false)
+            assertEquals(false, off.isUsable())
+            assertEquals(false, off.refresh())
+
+            val direct = gate(direct = true, receiver = null, flag = true)
+            assertEquals(false, direct.isUsable()) // unknown until the first refresh
+            assertEquals(true, direct.refresh())
+            assertEquals(true, direct.isUsable())
+
+            assertEquals(false, gate(direct = false, receiver = null, flag = true).refresh())
+            assertEquals(true, gate(direct = false, receiver = RECEIVER, flag = true).refresh())
+        }
+
+    private fun gate(direct: Boolean, receiver: String?, flag: Boolean): FyndFeatureGate {
+        val config = config(direct, receiver)
+        return FyndFeatureGate(flags(flag), config)
+    }
+
+    private fun config(direct: Boolean, receiver: String?) =
+        object : FyndConfig {
+            override val baseUrl = FyndConfig.PROXY_BASE_URL
+            override val apiKey = if (direct) "key" else null
+            override val forceEnabled = false
+            override val feeReceiver = receiver
+        }
+
+    private fun flags(flag: Boolean) =
+        object : FeatureFlagRepository {
+            override suspend fun getFeatureFlags() = FeatureFlagJson(isFyndSwapEnabled = flag)
+        }
+
     private fun source(
         direct: Boolean,
         receiver: String? = null,
@@ -105,7 +142,11 @@ internal class FyndQuoteSourceTest {
             object : FeatureFlagRepository {
                 override suspend fun getFeatureFlags() = FeatureFlagJson(isFyndSwapEnabled = flag)
             }
-        return FyndQuoteSource(api, config, FyndFeatureGate(flags, config))
+        val clock =
+            object : Clock {
+                override fun now() = Instant.fromEpochSeconds(FIXTURE_DEADLINE - 20 * 60)
+            }
+        return FyndQuoteSource(api, config, FyndFeatureGate(flags, config), clock)
     }
 
     private fun request(chain: Chain = Chain.Ethereum, affiliateBps: Int = 50) =
@@ -124,13 +165,13 @@ internal class FyndQuoteSourceTest {
                 quote(clientFee = clientFee, minReceived = afterFees - afterFees / 200)
                     .copy(
                         clientFeeReceiver = RECEIVER,
-                        clientFeeDeadline = System.currentTimeMillis() / 1000 + 20 * 60,
+                        clientFeeDeadline = FIXTURE_DEADLINE,
                         transaction =
                             FyndTransactionJson(
                                 to = ROUTER,
                                 value = AMOUNT_IN.toString(),
-                                data = "0x" + "11".repeat(4) + "ab".repeat(65),
-                                clientFeeSignatureOffset = 4,
+                                data = FyndCalldataFixtures.SPLIT_WITH_FEE,
+                                clientFeeSignatureOffset = 484,
                             ),
                     )
             )
@@ -172,6 +213,7 @@ internal class FyndQuoteSourceTest {
         val AMOUNT_IN: BigInteger = BigInteger.TEN.pow(18)
         const val AMOUNT_OUT = 1_844_002_345L
         const val ROUTER_FEE = 18_440L
+        const val FIXTURE_DEADLINE = 1_800_001_200L
 
         fun quote(clientFee: Long = 0, minReceived: Long = 1_834_763_986) =
             FyndOrderQuoteJson(
@@ -181,7 +223,11 @@ internal class FyndQuoteSourceTest {
                 gasEstimate = "219652",
                 gasPrice = "108908625",
                 transaction =
-                    FyndTransactionJson(to = ROUTER, value = AMOUNT_IN.toString(), data = "0xce25e49e"),
+                    FyndTransactionJson(
+                        to = ROUTER,
+                        value = AMOUNT_IN.toString(),
+                        data = FyndCalldataFixtures.SINGLE_NO_FEE,
+                    ),
                 feeBreakdown =
                     FyndFeeBreakdownJson(
                         routerFee = if (clientFee == 0L) ROUTER_FEE.toString() else "0",

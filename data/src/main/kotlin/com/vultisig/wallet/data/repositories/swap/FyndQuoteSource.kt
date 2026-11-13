@@ -16,28 +16,39 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Clock
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-/** Remote `fynd-swap` flag (default off), cached so quoting doesn't refetch it per keystroke. */
+/**
+ * Whether Fynd may be quoted: the remote `fynd-swap` flag (default off), cached so quoting doesn't
+ * refetch it per keystroke, and a fee receiver whenever quotes go through the proxy. While Fynd is
+ * unusable it is left out of the candidates entirely; a failing candidate would put its "no route"
+ * above a sibling's transient error.
+ */
 @Singleton
 internal class FyndFeatureGate
 @Inject
 constructor(private val featureFlags: FeatureFlagRepository, private val config: FyndConfig) {
     private val mutex = Mutex()
-    private var cached: Boolean? = null
+    @Volatile private var cached: Boolean? = null
     private var fetchedAtMs = 0L
 
-    suspend fun isEnabled(): Boolean {
-        if (config.forceEnabled) return true
-        return mutex.withLock {
-            val now = System.currentTimeMillis()
-            cached?.takeIf { now - fetchedAtMs < CACHE_MS }
-                ?: featureFlags.getFeatureFlags().isFyndSwapEnabled.also {
-                    cached = it
+    /** Last known answer, without I/O; false until [refresh] has run once. */
+    fun isUsable(): Boolean =
+        (config.forceEnabled || cached == true) && (config.isDirect || config.feeReceiver != null)
+
+    suspend fun refresh(): Boolean {
+        if (!config.forceEnabled) {
+            mutex.withLock {
+                val now = System.currentTimeMillis()
+                if (cached == null || now - fetchedAtMs >= CACHE_MS) {
+                    cached = featureFlags.getFeatureFlags().isFyndSwapEnabled
                     fetchedAtMs = now
                 }
+            }
         }
+        return isUsable()
     }
 
     private companion object {
@@ -51,11 +62,12 @@ constructor(
     private val api: FyndApi,
     private val config: FyndConfig,
     private val gate: FyndFeatureGate,
+    private val clock: Clock,
 ) : SwapQuoteSource {
 
     override suspend fun fetch(request: SwapQuoteRequest): SwapQuoteResult =
         swapApiCall("Fynd") {
-            if (!gate.isEnabled()) throw SwapException.SwapRouteNotAvailable("Fynd is disabled")
+            if (!gate.refresh()) throw SwapException.SwapRouteNotAvailable("Fynd is disabled")
             val src = request.srcToken
             val dst = request.dstToken
             if (src.chain != dst.chain) {
@@ -104,10 +116,13 @@ constructor(
                     FyndQuoteExpectation(
                         router = router,
                         amountIn = amountIn,
+                        tokenIn = src.fyndToken(),
+                        tokenOut = dst.fyndToken(),
+                        receiver = src.address,
                         sellsNative = src.isNativeToken,
                         slippageBps = slippageBps,
                         fee = fee,
-                        nowEpochSeconds = System.currentTimeMillis() / 1000,
+                        nowEpochSeconds = clock.now().epochSeconds,
                     ),
                 )
             SwapQuoteResult.Evm(quote.toEvmQuote(src, dst))

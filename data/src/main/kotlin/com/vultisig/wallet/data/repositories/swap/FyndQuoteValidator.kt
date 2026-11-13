@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories.swap
 
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.FyndOrderQuoteJson
+import com.vultisig.wallet.data.api.swapAggregators.FyndRouterCalldata
 import com.vultisig.wallet.data.api.swapAggregators.fyndStatusException
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -29,6 +30,9 @@ internal data class FyndExpectedFee(val grossBps: Int, val receiver: String)
 internal data class FyndQuoteExpectation(
     val router: String,
     val amountIn: BigInteger,
+    val tokenIn: String,
+    val tokenOut: String,
+    val receiver: String,
     val sellsNative: Boolean,
     val slippageBps: Int,
     val fee: FyndExpectedFee?,
@@ -99,8 +103,8 @@ internal object FyndQuoteValidator {
             ensure(deadline >= expected.nowEpochSeconds + MIN_FEE_DEADLINE_SECONDS) {
                 "Fynd fee signature expires too soon ($deadline)"
             }
-            checkSignaturePatched(tx.data, tx.clientFeeSignatureOffset)
         }
+        checkCalldata(tx.data, tx.clientFeeSignatureOffset, quote.clientFeeDeadline, amountOut, minReceived, expected)
 
         return ValidatedFyndQuote(
             amountOut = amountOut,
@@ -115,14 +119,58 @@ internal object FyndQuoteValidator {
         )
     }
 
-    private fun checkSignaturePatched(data: String, offset: Int?) {
-        val start = invalid(offset, "Fynd fee quote has no signature offset")
-        val hex = data.removePrefix("0x")
-        val from = start * 2
-        val to = from + SIGNATURE_BYTES * 2
-        ensure(start >= 0 && to <= hex.length) { "Fynd signature offset $start out of calldata" }
-        ensure(hex.substring(from, to).any { it != '0' }) {
-            "Fynd client fee signature is still the zero placeholder"
+    /** Binds the calldata the vault will sign to the swap that was asked for and just validated. */
+    private fun checkCalldata(
+        data: String,
+        reportedSignatureOffset: Int?,
+        reportedDeadline: Long?,
+        amountOut: BigInteger,
+        minReceived: BigInteger,
+        expected: FyndQuoteExpectation,
+    ) {
+        val call =
+            try {
+                FyndRouterCalldata.decode(data)
+            } catch (e: IllegalArgumentException) {
+                throw SwapException.UnkownSwapError(e.message ?: "Fynd calldata is malformed")
+            } catch (e: ArithmeticException) {
+                throw SwapException.UnkownSwapError("Fynd calldata is malformed")
+            }
+        ensure(call.amountIn == expected.amountIn) { "Fynd calldata sells ${call.amountIn}" }
+        ensure(call.tokenIn.equals(expected.tokenIn, ignoreCase = true)) {
+            "Fynd calldata sells ${call.tokenIn}"
+        }
+        ensure(call.tokenOut.equals(expected.tokenOut, ignoreCase = true)) {
+            "Fynd calldata buys ${call.tokenOut}"
+        }
+        ensure(call.receiver.equals(expected.receiver, ignoreCase = true)) {
+            "Fynd calldata pays ${call.receiver}, not the vault"
+        }
+        ensure(call.expectedAmountOut == amountOut) { "Fynd calldata expects ${call.expectedAmountOut}" }
+        ensure(call.minAmountOut == minReceived) { "Fynd calldata minimum ${call.minAmountOut}" }
+
+        val fee = expected.fee
+        if (fee == null) {
+            ensure(call.clientFeeUnits.signum() == 0) { "Fynd calldata charges ${call.clientFeeUnits}" }
+            return
+        }
+        ensure(call.clientFeeUnits == (fee.grossBps * FyndRouterCalldata.FEE_UNITS_PER_BPS).toBigInteger()) {
+            "Fynd calldata fee ${call.clientFeeUnits} is not ${fee.grossBps} bps"
+        }
+        ensure(call.clientFeeReceiver.equals(fee.receiver, ignoreCase = true)) {
+            "Fynd calldata fee receiver ${call.clientFeeReceiver} is not ${fee.receiver}"
+        }
+        ensure(call.maxClientContribution.signum() == 0) {
+            "Fynd calldata lets the fee receiver subsidise slippage"
+        }
+        ensure(reportedDeadline != null && call.clientFeeDeadline == reportedDeadline.toBigInteger()) {
+            "Fynd calldata deadline ${call.clientFeeDeadline} is not the reported $reportedDeadline"
+        }
+        ensure(call.clientSignature.length == SIGNATURE_BYTES * 2 && call.clientSignature.any { it != '0' }) {
+            "Fynd client fee signature is missing or still the zero placeholder"
+        }
+        ensure(reportedSignatureOffset == null || reportedSignatureOffset == call.clientSignatureOffset) {
+            "Fynd signature offset $reportedSignatureOffset disagrees with the calldata"
         }
     }
 
