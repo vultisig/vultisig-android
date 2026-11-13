@@ -46,7 +46,10 @@ internal object EvmSwapTxGuard {
             // Called for its throws only: a deposit-shaped tx must be exactly the deposit.
             swapPayload.swapKitDepositRecipient(chain)
         }
-        if (provider == SwapProvider.FYND) checkFyndCall(swapPayload)
+        // Keyed on the destination, not the label: a provider-less payload may target the router too.
+        if (provider == SwapProvider.FYND || tx.to.equals(fyndRouter(chain), ignoreCase = true)) {
+            checkFyndCall(swapPayload)
+        }
         val routers =
             when {
                 provider == SwapProvider.SWAPKIT -> null

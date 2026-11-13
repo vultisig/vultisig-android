@@ -122,6 +122,22 @@ internal class EvmSwapTxGuardFyndTest {
     }
 
     @Test
+    fun `checks Fynd calldata on a provider-less payload aimed at a Fynd router`() {
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(
+                payload(
+                        Chain.Ethereum,
+                        tx(ETH_ROUTER, SOLD.toString(), FyndCalldataFixtures.SINGLE_TO_ATTACKER),
+                    )
+                    .copy(provider = "")
+            )
+        }
+        EvmSwapTxGuard.check(
+            payload(Chain.Ethereum, tx(ETH_ROUTER, SOLD.toString())).copy(provider = "")
+        )
+    }
+
+    @Test
     fun `knows no Fynd router outside Ethereum, Base and Arbitrum`() {
         assertNull(EvmSwapTxGuard.fyndRouter(Chain.Polygon))
         assertEquals(ETH_ROUTER.lowercase(), EvmSwapTxGuard.fyndRouter(Chain.Ethereum))
