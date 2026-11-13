@@ -1,37 +1,31 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
-import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.utils.Numeric
 import java.math.BigInteger
 import java.security.MessageDigest
 import tss.KeysignResponse
 import wallet.core.jni.Base58
-import wallet.core.jni.BitcoinScript
+import wallet.core.jni.BitcoinSigHashType
 import wallet.core.jni.CoinType
-import wallet.core.jni.TransactionCompiler
-import wallet.core.jni.proto.Bitcoin
-import wallet.core.jni.proto.Common.SigningError
+import wallet.core.jni.proto.BitcoinV2
+import wallet.core.jni.proto.BitcoinV2.Input.Sequence
+import wallet.core.jni.proto.Utxo
+import wallet.core.jni.proto.Zcash
 
 internal class SwapKitZcashSignerException(message: String) : Exception(message)
 
 /**
- * Signs SwapKit's pre-built ZEC PSBT. Ported from iOS' `SwapKitZcashSigner`. The transparent ZEC tx
- * is wrapped in a BIP-174 envelope but the inner unsigned-tx body is **Sapling-v4**, not BIP-144
- * segwit: extra `nVersionGroupId` (4B), `expiryHeight` (4B), `valueBalance` (i64), and three varint
- * zeros for shielded counts. We walk those, assert the chain is on Sapling-v4 transparent-only (v5
- * NU5 hard-rejected; non-zero shielded fields hard-rejected), then hand the P2PKH inputs to
- * WalletCore's `CoinType.ZCASH` path.
+ * Signs SwapKit's pre-built ZEC PSBT. The transparent ZEC tx is wrapped in a BIP-174 envelope; the
+ * inner unsigned-tx body is **NU5 v5 (ZIP-225)**: header `0x80000005`, version group `0x26A7270A`,
+ * consensus branch id, lock time, expiry height, the transparent bundle, then three zero counts for
+ * Sapling spends/outputs and Orchard actions. Sapling v4 is refused (invalid on mainnet since NU7),
+ * as are shielded bundles, non-P2PKH inputs and a branch id that differs from the live one.
  *
- * Sighash: WalletCore's ZEC signer implements ZIP-243 (the Sapling signature digest with the
- * personalised Blake2b-256). It reads the branch id from the plan — we feed it the live consensus
- * branch id resolved at send time (the same value the native ZEC send uses), so the digest is
- * identical to a manually sent ZEC transaction. (Deviating to the Sapling-v4 spec id `0x76b809bb`
- * would produce a different digest the chain rejects.)
- *
- * The frozen-plan pattern is load-bearing for the same reason as [SwapKitLegacyP2PKHSigner]: NEAR
- * Intents tracks the route by the tx_id SwapKit baked into the PSBT, so we sign verbatim.
+ * Sighash: ZIP-244 through WalletCore's signing-V2 builder ([UtxoHelper.zcashPreImageHashesV2]).
+ * SwapKit's inputs, output scripts (verbatim) and their order are kept untouched, so the signed txid
+ * is the one SwapKit / NEAR Intents tracks the route by.
  */
 internal class SwapKitZcashSigner(
     private val vaultHexPublicKey: String,
@@ -41,7 +35,7 @@ internal class SwapKitZcashSigner(
     private val utxo = UtxoHelper(coinType, vaultHexPublicKey, vaultHexChainCode)
 
     /**
-     * ZIP-243 preimage hashes (sorted hex) for every input. [zcashBranchId] is the live branch id
+     * ZIP-244 sighashes (sorted hex) for every input. [zcashBranchId] is the live branch id
      * resolved at send time (carried on the source-chain payload's UTXO specific); a null/empty
      * branch id is rejected (buildSigningInputData throws) — there is no compiled-in fallback.
      */
@@ -52,18 +46,12 @@ internal class SwapKitZcashSigner(
         zcashBranchId: String? = null,
     ): List<String> {
         val inputData = buildSigningInputData(psbtBytes, targetAddress, fromAmount, zcashBranchId)
-        val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes).checkError()
-        return preSigningOutput.hashPublicKeysList
-            .map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
-            .sorted()
+        return utxo.zcashPreImageHashesV2(inputData).map { Numeric.toHexStringNoPrefix(it) }.sorted()
     }
 
     /**
-     * Assemble the signed broadcast tx with the Sapling-v4 header + ZIP-243 sighash baked into
-     * WalletCore's compileWithSignatures. Reuses [UtxoHelper.getSignedTransaction] over the
-     * frozen-plan input data (re-derives the vault pubkey, verifies each ECDSA-DER signature, then
-     * compiles).
+     * Assemble the signed v5 broadcast tx through [UtxoHelper.compileZcashV2] (verifies each
+     * ECDSA-DER signature against the vault key, then compiles).
      */
     fun getSignedTransaction(
         psbtBytes: ByteArray,
@@ -73,13 +61,13 @@ internal class SwapKitZcashSigner(
         zcashBranchId: String? = null,
     ): SignedTransactionResult {
         val inputData = buildSigningInputData(psbtBytes, targetAddress, fromAmount, zcashBranchId)
-        return utxo.getSignedTransaction(inputData, signatures)
+        return utxo.compileZcashV2(inputData, signatures)
     }
 
     /**
-     * Build the serialized [Bitcoin.SigningInput] with a frozen [Bitcoin.TransactionPlan] (branch
-     * id set) derived directly from the Sapling PSBT bytes. [fromAmount] is the quoted swap amount
-     * (zatoshi) used to bound the miner fee. Exposed `internal` for unit tests.
+     * Build the serialized signing-V2 input replaying the PSBT's inputs and outputs verbatim.
+     * [fromAmount] is the quoted swap amount (zatoshi) used to bound the miner fee. Exposed
+     * `internal` for unit tests.
      */
     internal fun buildSigningInputData(
         psbtBytes: ByteArray,
@@ -91,9 +79,10 @@ internal class SwapKitZcashSigner(
             throw SwapKitZcashSignerException("SwapKit ZEC PSBT payload is empty")
         }
 
-        // 1. Parse BIP-174 framing + the Sapling-v4 body.
+        // 1. Parse BIP-174 framing + the v5 body.
         val header = SwapKitPsbtParser.parseFramingHeader(psbtBytes)
-        val parsedTx = parseSaplingUnsignedTx(header.unsignedTxBytes)
+        val parsedTx = parseUnsignedTx(header.unsignedTxBytes)
+        requireLiveBranchId(zcashBranchId, parsedTx.branchId)
 
         // 2. Drain per-input + per-output maps.
         val cursor = header.cursor
@@ -112,7 +101,7 @@ internal class SwapKitZcashSigner(
                         index,
                     )
                 val keyHash = assertP2PKHAndExtractKeyHash(scriptPubKey, index, "input")
-                SaplingInput(
+                ZcashInput(
                     prevTxIdLE = parsedInput.prevTxIdLE,
                     prevIndex = parsedInput.prevIndex,
                     sequence = parsedInput.sequence,
@@ -124,44 +113,35 @@ internal class SwapKitZcashSigner(
 
         return assembleSigningInput(
             inputs,
-            parsedTx.outputs,
-            parsedTx.lockTime,
+            parsedTx,
             fromAmount,
-            targetAddress,
-            zcashBranchId,
         )
     }
 
     private fun assembleSigningInput(
-        inputs: List<SaplingInput>,
-        outputs: List<SaplingOutput>,
-        lockTime: Long,
+        inputs: List<ZcashInput>,
+        tx: ParsedZcashTx,
         fromAmount: BigInteger,
-        targetAddressHint: String,
-        zcashBranchId: String?,
     ): ByteArray {
-        // ZEC ZIP-243 needs the live consensus branch id on the plan — WalletCore reads it during
-        // preimage construction. There is no compiled-in fallback because signing with a stale id
-        // produces a tx the network rejects, so refuse up front when it could not be resolved.
-        if (zcashBranchId.isNullOrEmpty()) {
-            throw SwapKitZcashSignerException(
-                "Zcash ZIP-243 consensus branch id is unavailable; cannot sign the SwapKit ZEC " +
-                    "transaction without the live branch id"
-            )
-        }
+        val outputs = tx.outputs
         if (inputs.isEmpty() || outputs.isEmpty()) {
             throw SwapKitZcashSignerException("SwapKit ZEC PSBT has empty inputs or outputs")
         }
-        if (outputs.size > 2) {
+        // Deposit + optional change + optional OP_RETURN memo.
+        if (outputs.size > 3) {
             throw SwapKitZcashSignerException(
-                "SwapKit ZEC PSBT has ${outputs.size} outputs; ZEC signer expects 1 deposit + " +
-                    "optional 1 change"
+                "SwapKit ZEC PSBT has ${outputs.size} outputs; ZEC signer expects at most 1 " +
+                    "deposit + 1 change + 1 OP_RETURN"
             )
         }
-        val outputKeyHashes =
-            outputs.mapIndexed { idx, out ->
+        if (outputs.count { isOpReturn(it.scriptPubKey) } > 1) {
+            throw SwapKitZcashSignerException("SwapKit ZEC PSBT has more than one OP_RETURN output")
+        }
+        outputs.forEachIndexed { idx, out ->
+            if (!isOpReturn(out.scriptPubKey)) {
                 assertP2PKHAndExtractKeyHash(out.scriptPubKey, idx, "output")
             }
+        }
         val totalIn = inputs.sumOf { it.amount }
         val totalOut = outputs.sumOf { it.amount }
         val fee = totalIn - totalOut
@@ -171,9 +151,8 @@ internal class SwapKitZcashSigner(
             )
         }
         // Fee ceiling — bound the miner fee by the quoted swap amount (the Verify screen never
-        // shows
-        // the fee and the deposit address isn't bound, so an under-allocated change output would
-        // otherwise burn the remainder to the miner). Mirrors the legacy signer.
+        // shows the fee and the deposit address isn't bound, so an under-allocated change output
+        // would otherwise burn the remainder to the miner). Mirrors the legacy signer.
         if (BigInteger.valueOf(fee) > fromAmount) {
             throw SwapKitZcashSignerException(
                 "SwapKit ZEC PSBT miner fee $fee exceeds the quoted swap amount $fromAmount; " +
@@ -182,71 +161,45 @@ internal class SwapKitZcashSigner(
         }
         verifyVaultBinding(inputs, outputs, fromAmount)
 
-        val depositAmount = outputs[0].amount
-        val changeAmount = outputs.drop(1).sumOf { it.amount }
-        // Derive t1 addresses from the parsed output hash160s (NOT from `targetAddress` — the route
-        // may allocate a transparent deposit address that differs from the SwapKit hint). Fall back
-        // to the hint only if derivation fails.
-        val depositAddress = zcashAddress(outputKeyHashes[0]) ?: targetAddressHint
-        val changeAddress =
-            if (outputs.size >= 2) {
-                zcashAddress(outputKeyHashes[1]) ?: targetAddressHint
-            } else {
-                zcashAddress(inputs[0].keyHash) ?: targetAddressHint
-            }
-
-        val utxos =
-            inputs.map { input ->
-                Bitcoin.UnspentTransaction.newBuilder()
-                    .setAmount(input.amount)
-                    .setOutPoint(
-                        Bitcoin.OutPoint.newBuilder()
-                            .setHash(ByteString.copyFrom(input.prevTxIdLE))
-                            .setIndex(input.prevIndex.toInt())
-                            .setSequence(input.sequence.toInt())
-                            .build()
-                    )
-                    .setScript(ByteString.copyFrom(input.scriptPubKey))
-                    .build()
-            }
-
-        // Branch id validated at the top of this function; land it verbatim on the plan so digest
-        // derivation matches the native send path and the rest of the co-signing committee.
-        val plan =
-            Bitcoin.TransactionPlan.newBuilder()
-                .setAmount(depositAmount)
-                .setAvailableAmount(totalIn)
-                .setFee(fee)
-                .setChange(changeAmount)
-                .setError(SigningError.OK)
-                .setBranchId(ByteString.fromHex(zcashBranchId))
-                .addAllUtxos(utxos)
-                .build()
-
-        val signingInput =
-            Bitcoin.SigningInput.newBuilder()
-                .setHashType(BitcoinScript.hashTypeForCoin(coinType))
-                .setByteFee(1L)
-                .setUseMaxAmount(false)
-                .setAmount(depositAmount)
-                .setCoinType(coinType.value())
-                // Reproduce the PSBT's lockTime so the rebuilt tx_id matches the one the NEAR route
-                // tracks; WalletCore otherwise defaults it to 0.
-                .setLockTime(lockTime.toInt())
-                .setToAddress(depositAddress)
-                .setChangeAddress(changeAddress)
-                .addAllUtxo(utxos)
-                .setPlan(plan)
-
+        val publicKey = ByteString.copyFrom(utxo.deriveVaultPublicKey().data())
+        val builder =
+            BitcoinV2.TransactionBuilder.newBuilder()
+                .setVersion(BitcoinV2.TransactionVersion.UseDefault)
+                .setLockTime(tx.lockTime.toInt())
+                .setInputSelector(BitcoinV2.InputSelector.UseAll)
+                .setFixedDustThreshold(0)
+                .setZcashExtraData(
+                    Zcash.TransactionBuilderExtraData.newBuilder()
+                        .setBranchId(ByteString.copyFrom(tx.branchId))
+                        .setExpiryHeight(tx.expiryHeight.toInt())
+                        .setTxVersion(Zcash.TransactionVersion.V5)
+                )
         inputs.forEach { input ->
-            val redeem = BitcoinScript.buildPayToPublicKeyHash(input.keyHash)
-            signingInput.putScripts(
-                Numeric.toHexStringNoPrefix(input.keyHash),
-                ByteString.copyFrom(redeem.data()),
+            builder.addInputs(
+                BitcoinV2.Input.newBuilder()
+                    .setOutPoint(
+                        Utxo.OutPoint.newBuilder()
+                            .setHash(ByteString.copyFrom(input.prevTxIdLE))
+                            .setVout(input.prevIndex.toInt())
+                    )
+                    .setValue(input.amount)
+                    .setSequence(Sequence.newBuilder().setSequence(input.sequence.toInt()))
+                    .setSighashType(BitcoinSigHashType.ALL.value())
+                    .setScriptBuilder(
+                        BitcoinV2.Input.InputBuilder.newBuilder()
+                            .setP2Pkh(BitcoinV2.PublicKeyOrHash.newBuilder().setPubkey(publicKey))
+                    )
             )
         }
-
-        return signingInput.build().toByteArray()
+        // Output scripts verbatim and in order, so the txid matches the one SwapKit baked in.
+        outputs.forEach { out ->
+            builder.addOutputs(
+                BitcoinV2.Output.newBuilder()
+                    .setValue(out.amount)
+                    .setCustomScriptPubkey(ByteString.copyFrom(out.scriptPubKey))
+            )
+        }
+        return utxo.zcashSigningInputV2(builder)
     }
 
     /**
@@ -256,8 +209,8 @@ internal class SwapKitZcashSigner(
      * SwapKit's declared `targetAddress`.
      */
     private fun verifyVaultBinding(
-        inputs: List<SaplingInput>,
-        outputs: List<SaplingOutput>,
+        inputs: List<ZcashInput>,
+        outputs: List<ZcashOutput>,
         fromAmount: BigInteger,
     ) {
         val vaultScript = utxo.vaultP2pkhLockScript()
@@ -357,7 +310,7 @@ internal class SwapKitZcashSigner(
         return amount to script
     }
 
-    private data class SaplingInput(
+    private data class ZcashInput(
         val prevTxIdLE: ByteArray,
         val prevIndex: Long,
         val sequence: Long,
@@ -366,21 +319,22 @@ internal class SwapKitZcashSigner(
         val keyHash: ByteArray,
     )
 
-    private data class SaplingOutput(val amount: Long, val scriptPubKey: ByteArray)
+    private data class ZcashOutput(val amount: Long, val scriptPubKey: ByteArray)
 
-    private data class ParsedSaplingTxInput(
+    private data class ParsedZcashTxInput(
         val prevTxIdLE: ByteArray,
         val prevIndex: Long,
         val sequence: Long,
     )
 
-    private data class ParsedSaplingTx(
+    private data class ParsedZcashTx(
+        val branchId: ByteArray,
         val lockTime: Long,
-        val inputs: List<ParsedSaplingTxInput>,
-        val outputs: List<SaplingOutput>,
+        val expiryHeight: Long,
+        val inputs: List<ParsedZcashTxInput>,
+        val outputs: List<ZcashOutput>,
     )
 
-    /** ZEC transparent `t1…` address from a 20-byte hash160 (two-byte prefix `0x1C 0xB8`). */
     private fun sha256d(data: ByteArray): ByteArray {
         val digest = MessageDigest.getInstance("SHA-256")
         return digest.digest(digest.digest(data))
@@ -390,10 +344,10 @@ internal class SwapKitZcashSigner(
         private const val KEY_NON_WITNESS_UTXO = "00"
         private const val KEY_WITNESS_UTXO = "01"
 
-        /** Overwinter flag (high bit) + version 4 — `0x80000004`. */
-        private const val SAPLING_TX_VERSION = 0x80000004L
-        /** Sapling consensus group id. */
-        private const val SAPLING_VERSION_GROUP_ID = 0x892F2085L
+        /** Overwinter flag (high bit) + version 5 — `0x80000005`. */
+        private const val ZCASH_TX_VERSION = 0x80000005L
+        /** NU5 (ZIP-225) version group id. */
+        private const val ZCASH_VERSION_GROUP_ID = 0x26A7270AL
 
         /**
          * The transparent address the PSBT's deposit output pays: the `toAddress`
@@ -406,35 +360,38 @@ internal class SwapKitZcashSigner(
         fun depositAddress(psbtBytes: ByteArray, targetAddressHint: String): String {
             val header = SwapKitPsbtParser.parseFramingHeader(psbtBytes)
             val deposit =
-                parseSaplingUnsignedTx(header.unsignedTxBytes).outputs.firstOrNull()
+                parseUnsignedTx(header.unsignedTxBytes).outputs.firstOrNull {
+                    !isOpReturn(it.scriptPubKey)
+                }
                     ?: throw SwapKitZcashSignerException("SwapKit ZEC PSBT has no outputs")
             val keyHash = assertP2PKHAndExtractKeyHash(deposit.scriptPubKey, 0, "output")
             return zcashAddress(keyHash) ?: targetAddressHint
         }
 
         /**
-         * Parse the Sapling-v4 unsigned-tx body. Rejects NU5 (v5) outright — a different sighash
-         * construction (ZIP-244) — and any tx with shielded value flowing (we can't sign shielded
-         * bundles with MPC).
+         * Parse the NU5 v5 (ZIP-225) unsigned-tx body. Rejects Sapling v4 outright (invalid since
+         * NU7) and any shielded bundle (we can't sign those with MPC).
          */
-        private fun parseSaplingUnsignedTx(data: ByteArray): ParsedSaplingTx {
+        private fun parseUnsignedTx(data: ByteArray): ParsedZcashTx {
             val cursor = PsbtCursor(data)
             val version = cursor.readUInt32LE()
             val versionGroupID = cursor.readUInt32LE()
-            if (version != SAPLING_TX_VERSION || versionGroupID != SAPLING_VERSION_GROUP_ID) {
+            if (version != ZCASH_TX_VERSION || versionGroupID != ZCASH_VERSION_GROUP_ID) {
                 throw SwapKitZcashSignerException(
                     "SwapKit ZEC unsupported Zcash version 0x${version.toString(16)} / group " +
-                        "0x${versionGroupID.toString(16)} (only Sapling-v4 transparent is supported)"
+                        "0x${versionGroupID.toString(16)} (only NU5 v5 transparent can be signed)"
                 )
             }
+            val branchId = cursor.readBytes(4)
+            val lockTime = cursor.readUInt32LE()
+            val expiryHeight = cursor.readUInt32LE()
             val inCount = cursor.readCompactSize()
             val inputs =
                 (0L until inCount).map {
                     val prevBytes = cursor.readBytes(32)
                     val prevIndex = cursor.readUInt32LE()
                     // Unsigned-tx inputs must carry empty scriptSigs; reject a non-empty one rather
-                    // than silently skip it (the frozen plan rebuilds the tx from these fields, so
-                    // dropped bytes would change the broadcast tx_id the route is tracked by).
+                    // than silently drop it from the rebuilt tx (it would change the txid).
                     val sigLen = cursor.readCompactSize()
                     if (sigLen != 0L) {
                         throw SwapKitZcashSignerException(
@@ -442,51 +399,48 @@ internal class SwapKitZcashSigner(
                         )
                     }
                     val sequence = cursor.readUInt32LE()
-                    ParsedSaplingTxInput(prevBytes, prevIndex, sequence)
+                    ParsedZcashTxInput(prevBytes, prevIndex, sequence)
                 }
             val outCount = cursor.readCompactSize()
             val outputs =
                 (0L until outCount).map {
                     val amount = cursor.readUInt64LE()
                     val scriptLen = cursor.readCompactSize()
-                    SaplingOutput(amount, cursor.readBytes(cursor.asLength(scriptLen)))
+                    ZcashOutput(amount, cursor.readBytes(cursor.asLength(scriptLen)))
                 }
-            val lockTime = cursor.readUInt32LE()
-            val expiryHeight = cursor.readUInt32LE()
-            // WalletCore's `Bitcoin.SigningInput` has no expiryHeight field, so a non-zero
-            // expiryHeight can't be threaded into the rebuilt tx — WalletCore would emit it with
-            // expiryHeight 0 and a different tx_id than the PSBT the NEAR route is tracked by.
-            // Reject it loudly rather than silently mistrack. (lockTime, by contrast, IS settable —
-            // see assembleSigningInput.)
-            if (expiryHeight != 0L) {
-                throw SwapKitZcashSignerException(
-                    "SwapKit ZEC PSBT has expiryHeight $expiryHeight; only 0 (no expiry) is supported " +
-                        "because WalletCore can't reproduce a non-zero expiry in the rebuilt tx"
-                )
-            }
-            // Sapling-v4 transparent-only: all shielded fields must be zero.
-            val valueBalance = cursor.readUInt64LE()
-            val nShieldedSpend = cursor.readCompactSize()
-            val nShieldedOutput = cursor.readCompactSize()
-            val nJoinSplit = cursor.readCompactSize()
-            if (
-                valueBalance != 0L ||
-                    nShieldedSpend != 0L ||
-                    nShieldedOutput != 0L ||
-                    nJoinSplit != 0L
-            ) {
+            // Transparent-only: Sapling spends, Sapling outputs and Orchard actions must all be
+            // zero, and nothing may follow (trailing bytes would be dropped from the rebuilt tx).
+            val nSaplingSpend = cursor.readCompactSize()
+            val nSaplingOutput = cursor.readCompactSize()
+            val nOrchardAction = cursor.readCompactSize()
+            if (nSaplingSpend != 0L || nSaplingOutput != 0L || nOrchardAction != 0L) {
                 throw SwapKitZcashSignerException(
                     "SwapKit ZEC PSBT carries a shielded bundle; only transparent-only txs are supported"
                 )
             }
-            // Transparent-only Sapling v4 ends right after the (all-zero) shielded counts — there
-            // is no joinSplit/binding-sig payload. Trailing bytes would be dropped from the rebuilt
-            // tx and diverge it from the quoted PSBT body, so consume the body exactly.
             if (!cursor.isAtEnd) {
                 throw SwapKitZcashSignerException("SwapKit ZEC unsigned-tx body has trailing bytes")
             }
-            return ParsedSaplingTx(lockTime, inputs, outputs)
+            return ParsedZcashTx(branchId, lockTime, expiryHeight, inputs, outputs)
         }
+
+        /** The PSBT's branch id must be the live one, or the signed tx is rejected on-chain. */
+        private fun requireLiveBranchId(liveHex: String?, psbtBranchId: ByteArray) {
+            if (liveHex.isNullOrEmpty()) {
+                throw SwapKitZcashSignerException(
+                    "Zcash consensus branch id is unavailable; cannot sign the SwapKit ZEC " +
+                        "transaction without the live branch id"
+                )
+            }
+            if (!Numeric.hexStringToByteArray(liveHex).contentEquals(psbtBranchId)) {
+                throw SwapKitZcashSignerException(
+                    "SwapKit ZEC PSBT branch id ${Numeric.toHexStringNoPrefix(psbtBranchId)} " +
+                        "differs from the live branch id $liveHex"
+                )
+            }
+        }
+
+        private fun isOpReturn(script: ByteArray) = script.isNotEmpty() && script[0] == 0x6a.toByte()
 
         private fun assertP2PKHAndExtractKeyHash(
             scriptPubKey: ByteArray,

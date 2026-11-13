@@ -364,10 +364,16 @@ class UtxoHelper(
     fun getZcashSignedTransaction(
         inputData: ByteArray,
         signatures: Map<String, KeysignResponse>,
+    ): SignedTransactionResult = compileZcashV2(zcashV2Input(inputData), signatures)
+
+    /** Compiles a ready signing-V2 Zcash input; see [getZcashSignedTransaction]. */
+    internal fun compileZcashV2(
+        v2Input: ByteArray,
+        signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val publicKey = deriveVaultPublicKey()
         val derSignatures =
-            zcashPreImageHashes(inputData).map { preImageHash ->
+            zcashPreImageHashesV2(v2Input).map { preImageHash ->
                 val key = Numeric.toHexStringNoPrefix(preImageHash)
                 val signature =
                     signatures[key]?.derSignature?.hexToByteArray()
@@ -388,7 +394,7 @@ class UtxoHelper(
                 // own coin type (ZCASH), so route the compile through it.
                 TransactionCompiler.compileWithSignatures(
                     CoinType.BITCOIN,
-                    zcashV2Input(inputData),
+                    v2Input,
                     signatureVector,
                     publicKeyVector,
                 )
@@ -407,11 +413,12 @@ class UtxoHelper(
     }
 
     /** ZIP-244 sighash of every input, from WalletCore's v5 transaction builder (signing V2). */
-    private fun zcashPreImageHashes(inputData: ByteArray): List<ByteArray> {
+    private fun zcashPreImageHashes(inputData: ByteArray): List<ByteArray> =
+        zcashPreImageHashesV2(zcashV2Input(inputData))
+
+    internal fun zcashPreImageHashesV2(v2Input: ByteArray): List<ByteArray> {
         val output =
-            Bitcoin.PreSigningOutput.parseFrom(
-                TransactionCompiler.preImageHashes(coinType, zcashV2Input(inputData))
-            )
+            Bitcoin.PreSigningOutput.parseFrom(TransactionCompiler.preImageHashes(coinType, v2Input))
         check(output.error == Common.SigningError.OK) {
             "Zcash pre-image failed: ${output.errorMessage}"
         }
@@ -477,6 +484,12 @@ class UtxoHelper(
                     )
             )
         }
+        return zcashSigningInputV2(builder)
+    }
+
+    /** Wraps a v5 [builder] with the vault key and Zcash t-address prefixes. */
+    internal fun zcashSigningInputV2(builder: BitcoinV2.TransactionBuilder.Builder): ByteArray {
+        val publicKey = ByteString.copyFrom(deriveVaultPublicKey().data())
         return Bitcoin.SigningInput.newBuilder()
             .setCoinType(coinType.value())
             .setSigningV2(
@@ -1021,7 +1034,7 @@ class UtxoHelper(
 
     private fun Char.isHexChar(): Boolean = this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
 
-    private fun deriveVaultPublicKey(): PublicKey {
+    internal fun deriveVaultPublicKey(): PublicKey {
         val derivedPublicKey =
             PublicKeyHelper.getDerivedPublicKey(
                 vaultHexPublicKey,

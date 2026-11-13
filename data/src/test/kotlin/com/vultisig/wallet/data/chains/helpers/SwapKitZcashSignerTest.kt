@@ -11,15 +11,15 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import wallet.core.jni.Hash
 import wallet.core.jni.proto.Bitcoin
-import wallet.core.jni.proto.Common.SigningError
+import wallet.core.jni.proto.BitcoinV2
 
 /**
- * Tests for [SwapKitZcashSigner] (transparent ZEC Sapling-v4 PSBT signing).
+ * Tests for [SwapKitZcashSigner] (transparent ZEC NU5 v5 PSBT signing).
  *
- * The Sapling-v4 body parsing + structural validation (version/group gate, shielded-field
+ * The v5 body parsing + structural validation (version/group gate, shielded-field
  * rejection, P2PKH shape, output count, fee sign) is pure JVM and runs headlessly — those
  * rejections fire before any WalletCore call. The presigning happy path needs the WalletCore JNI
- * (frozen plan + branch id → `TransactionCompiler`, t1 address derivation) and skips gracefully
+ * (V2 builder → `TransactionCompiler`) and skips gracefully
  * when it is unavailable.
  */
 class SwapKitZcashSignerTest {
@@ -42,34 +42,19 @@ class SwapKitZcashSignerTest {
     }
 
     @Test
-    fun `rejects a non-Sapling-v4 version group (NU5)`() {
+    fun `rejects a Sapling v4 PSBT`() {
         val psbt =
             encodeSaplingPsbt(
-                versionGroupId = NU5_VERSION_GROUP_ID,
+                version = SAPLING_TX_VERSION,
+                versionGroupId = SAPLING_VERSION_GROUP_ID,
                 inputs = listOf(saplingIn(amount = 100_000)),
                 outputs = listOf(SaplingOut(99_000, p2pkh("22".repeat(20)))),
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
             }
         assertTrue(e.message!!.contains("unsupported Zcash version"))
-    }
-
-    @Test
-    fun `rejects a shielded bundle (non-zero valueBalance)`() {
-        val psbt =
-            encodeSaplingPsbt(
-                inputs = listOf(saplingIn(amount = 100_000)),
-                outputs = listOf(SaplingOut(99_000, p2pkh("22".repeat(20)))),
-                valueBalance =
-                    1, // any non-zero shielded value is unsignable via MPC transparent path
-            )
-        val e =
-            assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
-            }
-        assertTrue(e.message!!.contains("shielded"))
     }
 
     @Test
@@ -82,7 +67,7 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
             }
         assertTrue(e.message!!.contains("shielded"))
     }
@@ -111,27 +96,44 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
             }
         assertTrue(e.message!!.contains("input #0"))
         assertTrue(e.message!!.contains("not P2PKH"))
     }
 
     @Test
-    fun `rejects a non-zero expiryHeight`() {
-        // WalletCore can't reproduce a non-zero expiryHeight in the rebuilt tx, so a route shipping
-        // one is rejected loudly rather than mistracked under a diverging tx_id.
+    fun `rejects a PSBT branch id that differs from the live one`() {
         val psbt =
             encodeSaplingPsbt(
                 inputs = listOf(saplingIn(amount = 100_000)),
                 outputs = listOf(SaplingOut(99_000, p2pkh("22".repeat(20)))),
-                expiryHeight = 1_000_000,
+                branchIdHex = "01020304",
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
             }
-        assertTrue(e.message!!.contains("expiryHeight"))
+        assertTrue(e.message!!.contains("differs from the live branch id"))
+    }
+
+    @Test
+    fun `rejects more than one OP_RETURN output`() {
+        val psbt =
+            encodeSaplingPsbt(
+                inputs = listOf(saplingIn(amount = 100_000, prevScriptHex = p2pkh(VAULT_HASH_HEX))),
+                outputs =
+                    listOf(
+                        SaplingOut(0, "6a0161"),
+                        SaplingOut(0, "6a0162"),
+                        SaplingOut(99_000, p2pkh("22".repeat(20))),
+                    ),
+            )
+        val e =
+            assertThrows(SwapKitZcashSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
+            }
+        assertTrue(e.message!!.contains("more than one OP_RETURN"))
     }
 
     @Test
@@ -143,7 +145,7 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
             }
         assertTrue(e.message!!.contains("scriptSig must be empty"))
     }
@@ -190,7 +192,7 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
             }
         assertTrue(e.message!!.contains("trailing bytes"))
     }
@@ -217,13 +219,9 @@ class SwapKitZcashSignerTest {
     }
 
     @Test
-    fun `buildSigningInputData - frozen plan reproduces inputs, outputs, lockTime, branchId (ZEC)`() {
+    fun `buildSigningInputData - V2 input replays inputs, outputs, lockTime, expiry, branchId`() {
         try {
-            // Building the Sapling Bitcoin.SigningInput needs the WalletCore JNI; parsing the proto
-            // back is pure and the expectations come from the PSBT, so this pins the reconstruction
-            // (the bytes WalletCore compiles into the broadcast tx) without a precomputed golden.
-            val depositHash = "22".repeat(20)
-            val changeHash = vaultKeyHash()
+            val changeHash = VAULT_HASH_HEX
             val psbt =
                 encodeSaplingPsbt(
                     inputs =
@@ -231,53 +229,51 @@ class SwapKitZcashSignerTest {
                             SaplingIn(
                                 prevTxIdDisplay = TXID_ONE,
                                 vout = 2,
-                                sequence = 0xFFFFFFFFL,
+                                sequence = 0xFFFFFFFEL,
                                 amount = 100_000,
                                 prevScriptHex = p2pkh(changeHash),
                             )
                         ),
                     outputs =
                         listOf(
-                            SaplingOut(60_000, p2pkh(depositHash)),
+                            SaplingOut(60_000, p2pkh("22".repeat(20))),
+                            SaplingOut(0, "6a0461626364"),
                             SaplingOut(39_000, p2pkh(changeHash)),
                         ),
                     lockTime = 880_000,
+                    expiryHeight = 3_600_000,
                 )
 
-            val input =
+            val builder =
                 Bitcoin.SigningInput.parseFrom(
-                    signer().buildSigningInputData(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
-                )
+                        signer().buildSigningInputData(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
+                    )
+                    .signingV2
+                    .builder
 
-            assertEquals(880_000, input.lockTime)
-
-            assertEquals(SigningError.OK, input.plan.error)
-            assertEquals(100_000L, input.plan.availableAmount)
-            assertEquals(60_000L, input.plan.amount)
-            assertEquals(39_000L, input.plan.change)
-            assertEquals(1_000L, input.plan.fee)
-            // The branch id passed in must land verbatim on the plan, or WalletCore derives the
-            // wrong ZIP-243 digest.
+            assertEquals(880_000, builder.lockTime)
+            assertEquals(3_600_000, builder.zcashExtraData.expiryHeight)
             assertEquals(
                 TEST_BRANCH_ID,
-                Numeric.toHexStringNoPrefix(input.plan.branchId.toByteArray()),
+                Numeric.toHexStringNoPrefix(builder.zcashExtraData.branchId.toByteArray()),
             )
-
-            assertEquals(1, input.utxoCount)
-            val utxo = input.getUtxo(0)
+            assertEquals(1, builder.inputsCount)
+            val input = builder.getInputs(0)
             assertArrayEquals(
                 Numeric.hexStringToByteArray(TXID_ONE).reversedArray(),
-                utxo.outPoint.hash.toByteArray(),
+                input.outPoint.hash.toByteArray(),
             )
-            assertEquals(2, utxo.outPoint.index)
-            assertEquals(100_000L, utxo.amount)
-            assertEquals(p2pkh(changeHash), Numeric.toHexStringNoPrefix(utxo.script.toByteArray()))
-
-            // Derived from the PSBT output hash160s as transparent `t1…` addresses.
-            assertTrue(input.toAddress.startsWith("t1"), "deposit ${input.toAddress}")
-            assertTrue(input.changeAddress.startsWith("t1"), "change ${input.changeAddress}")
-            // The review's vault-free decode names the same deposit the signer pays.
-            assertEquals(input.toAddress, SwapKitZcashSigner.depositAddress(psbt, ""))
+            assertEquals(2, input.outPoint.vout)
+            assertEquals(100_000L, input.value)
+            assertEquals(0xFFFFFFFE.toInt(), input.sequence.sequence)
+            // Output scripts verbatim and in the PSBT's order (OP_RETURN stays in the middle).
+            assertEquals(
+                listOf(p2pkh("22".repeat(20)), "6a0461626364", p2pkh(changeHash)),
+                builder.outputsList.map {
+                    Numeric.toHexStringNoPrefix(it.customScriptPubkey.toByteArray())
+                },
+            )
+            assertEquals(listOf(60_000L, 0L, 39_000L), builder.outputsList.map { it.value })
         } catch (e: Throwable) {
             skipIfJniUnavailable(e)
         }
@@ -311,26 +307,29 @@ class SwapKitZcashSignerTest {
     private fun p2pkh(hash20Hex: String): String = "76a914$hash20Hex" + "88ac"
 
     /**
-     * Minimal BIP-174 PSBT encoder whose unsigned-tx body is **Sapling-v4**: version +
-     * versionGroupId
-     * + transparent inputs/outputs + lockTime + expiryHeight + valueBalance + three shielded varint
-     *   counts. Per-input maps carry WITNESS_UTXO (key 0x01), matching the captured ZEC fixture.
+     * Minimal BIP-174 PSBT encoder whose unsigned-tx body is **NU5 v5**: version, versionGroupId,
+     * branch id, lockTime, expiryHeight, transparent inputs/outputs and three shielded varint
+     * counts. Per-input maps carry WITNESS_UTXO (key 0x01), matching the captured ZEC fixture.
      */
     private fun encodeSaplingPsbt(
         inputs: List<SaplingIn>,
         outputs: List<SaplingOut>,
-        versionGroupId: Long = SAPLING_VERSION_GROUP_ID,
+        version: Long = ZCASH_TX_VERSION,
+        versionGroupId: Long = ZCASH_VERSION_GROUP_ID,
+        branchIdHex: String = TEST_BRANCH_ID,
         lockTime: Long = 0,
         expiryHeight: Long = 0,
-        valueBalance: Long = 0,
         nShieldedSpend: Long = 0,
         nShieldedOutput: Long = 0,
-        nJoinSplit: Long = 0,
+        nOrchardAction: Long = 0,
         unsignedTxTrailerHex: String? = null,
     ): ByteArray {
         val unsigned = ByteArrayOutputStream()
-        unsigned.write(le32(SAPLING_TX_VERSION)) // 0x80000004
+        unsigned.write(le32(version))
         unsigned.write(le32(versionGroupId))
+        unsigned.write(Numeric.hexStringToByteArray(branchIdHex))
+        unsigned.write(le32(lockTime))
+        unsigned.write(le32(expiryHeight))
         unsigned.write(varInt(inputs.size.toLong()))
         inputs.forEach { input ->
             unsigned.write(Numeric.hexStringToByteArray(input.prevTxIdDisplay).reversedArray())
@@ -348,12 +347,9 @@ class SwapKitZcashSignerTest {
             unsigned.write(varInt(script.size.toLong()))
             unsigned.write(script)
         }
-        unsigned.write(le32(lockTime))
-        unsigned.write(le32(expiryHeight))
-        unsigned.write(le64(valueBalance))
         unsigned.write(varInt(nShieldedSpend))
         unsigned.write(varInt(nShieldedOutput))
-        unsigned.write(varInt(nJoinSplit))
+        unsigned.write(varInt(nOrchardAction))
         unsignedTxTrailerHex?.let { unsigned.write(Numeric.hexStringToByteArray(it)) }
 
         val psbt = ByteArrayOutputStream()
@@ -412,10 +408,13 @@ class SwapKitZcashSignerTest {
         // Sample little-endian ZIP-243 branch id passed into the signer in place of the (now
         // removed) compiled-in constant; the signer must land it verbatim on the plan.
         private const val TEST_BRANCH_ID = "30f33754"
+        // hash160 of VAULT_PUB_KEY, so tests need no JNI to build vault-owned scripts.
+        private const val VAULT_HASH_HEX = "1d0f172a0ecb48aee1be1f2687d2963ae33f71a1"
         private const val TXID_ONE =
             "0000000000000000000000000000000000000000000000000000000000000001"
         private const val SAPLING_TX_VERSION = 0x80000004L
         private const val SAPLING_VERSION_GROUP_ID = 0x892F2085L
-        private const val NU5_VERSION_GROUP_ID = 0x26A7270AL
+        private const val ZCASH_TX_VERSION = 0x80000005L
+        private const val ZCASH_VERSION_GROUP_ID = 0x26A7270AL
     }
 }

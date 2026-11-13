@@ -121,10 +121,9 @@ data class SwapKitSwapPayloadJson(
 
         /**
          * `meta.txType` discriminator for the **transparent Zcash** signing path. The unsigned tx
-         * is wrapped in a BIP-174 envelope but the body is Sapling-v4 (extra version-group id,
-         * expiry height, value-balance, shielded counts) and the sighash is ZIP-243; handled by
-         * [com.vultisig.wallet.data.chains.helpers.SwapKitZcashSigner] via `CoinType.ZCASH` with
-         * the native branch id. Legacy; dispatch now keys off `chain` (see [isUtxoPsbtTxType]).
+         * is wrapped in a BIP-174 envelope but the body is NU5 v5 (ZIP-225) and the sighash is
+         * ZIP-244; handled by [com.vultisig.wallet.data.chains.helpers.SwapKitZcashSigner] with the
+         * live branch id. Legacy; dispatch now keys off `chain` (see [isUtxoPsbtTxType]).
          */
         const val TX_TYPE_PSBT_ZEC = "PSBT_ZEC"
 
