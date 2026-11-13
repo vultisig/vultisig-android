@@ -914,8 +914,8 @@
     <string name="backup_banner_title">Solicite a custódia total do cofre</string>
     <string name="referral_rewards_banner_caption">Não perca recompensas</string>
     <string name="referral_rewards_banner_title">Adicione seu código de indicação</string>
-    <string name="kamino_banner_caption">Novo na Solana</string>
-    <string name="kamino_banner_title">Comece a ganhar com a Kamino</string>
+    <string name="kamino_banner_caption">Com a Kamino</string>
+    <string name="kamino_banner_title">Coloque seus USDC parados para render</string>
     <string name="vault_detail_vault_info">Informações do Cofre</string>
     <string name="vault_details_keys">Chaves</string>
     <string name="verify_send_send_overview">Resumo do envio</string>

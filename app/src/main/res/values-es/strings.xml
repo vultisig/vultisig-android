@@ -915,8 +915,8 @@
     <string name="backup_banner_title">Solicita la custodia total de la bóveda</string>
     <string name="referral_rewards_banner_caption">No te pierdas las recompensas</string>
     <string name="referral_rewards_banner_title">Añade tu código de referido</string>
-    <string name="kamino_banner_caption">Nuevo en Solana</string>
-    <string name="kamino_banner_title">Empieza a ganar con Kamino</string>
+    <string name="kamino_banner_caption">Con Kamino</string>
+    <string name="kamino_banner_title">Pon a trabajar tus USDC inactivos</string>
     <string name="vault_detail_vault_info">Información de la bóveda</string>
     <string name="vault_details_keys">Claves</string>
     <string name="verify_send_send_overview">Resumen del envío</string>

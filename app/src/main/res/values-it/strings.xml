@@ -915,8 +915,8 @@
     <string name="backup_banner_title">Richiedi la custodia completa del vault</string>
     <string name="referral_rewards_banner_caption">Non perdere i premi</string>
     <string name="referral_rewards_banner_title">Aggiungi il tuo codice referral</string>
-    <string name="kamino_banner_caption">Novità su Solana</string>
-    <string name="kamino_banner_title">Inizia a guadagnare con Kamino</string>
+    <string name="kamino_banner_caption">Con Kamino</string>
+    <string name="kamino_banner_title">Fai fruttare i tuoi USDC inattivi</string>
     <string name="vault_detail_vault_info">Informazioni sul Vault</string>
     <string name="vault_details_keys">Chiavi</string>
     <string name="verify_send_send_overview">Riepilogo invio</string>

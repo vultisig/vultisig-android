@@ -1316,8 +1316,8 @@
     <string name="backup_banner_title">申请完整保管您的保险库</string>
     <string name="referral_rewards_banner_caption">不要错过奖励</string>
     <string name="referral_rewards_banner_title">添加您的推荐代码</string>
-    <string name="kamino_banner_caption">Solana 新功能</string>
-    <string name="kamino_banner_title">通过 Kamino 开始赚取收益</string>
+    <string name="kamino_banner_caption">借助 Kamino</string>
+    <string name="kamino_banner_title">让闲置的 USDC 发挥作用</string>
     <string name="rename_vault_screen_rename_vault">改名</string>
     <string name="custom_token_screen_finding_token">查找代币</string>
     <string name="retry">重试</string>
