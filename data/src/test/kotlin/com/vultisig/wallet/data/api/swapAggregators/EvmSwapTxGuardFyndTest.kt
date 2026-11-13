@@ -109,6 +109,19 @@ internal class EvmSwapTxGuardFyndTest {
     }
 
     @Test
+    fun `refuses a client fee while no Vultisig fee receiver is configured`() {
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(
+                payload(
+                    Chain.Ethereum,
+                    tx(ETH_ROUTER, SOLD.toString(), FyndCalldataFixtures.SPLIT_WITH_FEE),
+                    dstAmount = FyndCalldataFixtures.SPLIT_FEE_MIN_OUT.toString(),
+                )
+            )
+        }
+    }
+
+    @Test
     fun `knows no Fynd router outside Ethereum, Base and Arbitrum`() {
         assertNull(EvmSwapTxGuard.fyndRouter(Chain.Polygon))
         assertEquals(ETH_ROUTER.lowercase(), EvmSwapTxGuard.fyndRouter(Chain.Ethereum))

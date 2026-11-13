@@ -110,6 +110,19 @@ internal object EvmSwapTxGuard {
         require(call.maxClientContribution.signum() == 0) {
             "Fynd swap lets the fee receiver subsidise slippage"
         }
+        // The payload carries no slippage, so the minimum can't be floored here (as for 1inch and
+        // Kyber); the fee, though, can only ever be Vultisig's, at no more than the list rate.
+        if (call.clientFeeUnits.signum() != 0) {
+            val receiver = requireNotNull(FyndApiImpl.FEE_RECEIVER) {
+                "Fynd swap charges a client fee but no Vultisig fee receiver is configured"
+            }
+            require(call.clientFeeReceiver.equals(receiver, ignoreCase = true)) {
+                "Fynd swap pays its client fee to ${call.clientFeeReceiver}, not Vultisig"
+            }
+            require(call.clientFeeUnits <= FYND_MAX_CLIENT_FEE_UNITS) {
+                "Fynd swap client fee ${call.clientFeeUnits} is above the list rate"
+            }
+        }
     }
 
     private fun Coin.fyndTokenAddress(): String =
@@ -161,6 +174,8 @@ internal object EvmSwapTxGuard {
     private const val LIFI_DIAMOND_HYPERLIQUID = "0x0a0758d937d1059c356d4714e57f5df0239bce1a"
     private const val LIFI_DIAMOND_ROBINHOOD = "0xb477751b76cf82d00a686a1232f5fcd772414af3"
     private const val LIFI_DIAMOND_ZKSYNC = "0x341e94069f53234fe6dabef707ad424830525715"
+    // 50 bps list rate grossed up for Fynd's 20% share (63 bps), in router fee units.
+    private val FYND_MAX_CLIENT_FEE_UNITS = BigInteger.valueOf(630_000)
     // TychoRouterV3, active since 2026-09-01 in propeller-heads/tycho deployment_registry.json.
     private const val FYND_ROUTER_ETHEREUM = "0x1644d2477f809cc2c71bccfd6dc9497e3f83210d"
     private const val FYND_ROUTER_BASE = "0xaba5b53b03eafad1c5fc8bd5fc765fc85bb3de67"
