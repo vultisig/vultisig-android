@@ -18,6 +18,7 @@ internal fun getProviderLogo(providerName: String): ImageModel? {
         SwapProvider.JUPITER -> R.drawable.jup
         SwapProvider.ONEINCH -> R.drawable.oneinch
         SwapProvider.KYBER -> R.drawable.kyberswap
+        SwapProvider.FYND -> R.drawable.fynd
         SwapProvider.LIFI -> R.drawable.lifi
         SwapProvider.SWAPKIT -> R.drawable.swapkit
     }

@@ -6,6 +6,8 @@ import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.chains.ton.TonApiImpl
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApi
 import com.vultisig.wallet.data.api.chains.ton.TonStakingApiImpl
+import com.vultisig.wallet.data.api.swapAggregators.FyndApi
+import com.vultisig.wallet.data.api.swapAggregators.FyndApiImpl
 import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.api.swapAggregators.KyberApiImpl
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
@@ -95,6 +97,8 @@ internal interface ApiModule {
     @Binds @Singleton fun bindCardanoApi(impl: CardanoApiImpl): CardanoApi
 
     @Binds @Singleton fun bindKyberApi(impl: KyberApiImpl): KyberApi
+
+    @Binds @Singleton fun bindFyndApi(impl: FyndApiImpl): FyndApi
 
     @Binds @Singleton fun bindSwapKitApi(impl: SwapKitApiImpl): SwapKitApi
 

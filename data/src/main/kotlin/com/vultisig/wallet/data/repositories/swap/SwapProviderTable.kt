@@ -70,12 +70,16 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
         setOf(SwapProvider.MAYA, SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
 
     /** Providers that only quote same-chain swaps; filtered out for cross-chain pairs. */
-    private val sameChainOnly = setOf(SwapProvider.ONEINCH, SwapProvider.KYBER)
+    private val sameChainOnly = setOf(SwapProvider.ONEINCH, SwapProvider.KYBER, SwapProvider.FYND)
+
+    /** Chains Fynd routes on; its quote source still checks the remote flag before any I/O. */
+    private val fyndChains = setOf(Chain.Ethereum, Chain.Base, Chain.Arbitrum)
 
     override fun providersFor(coin: Coin): Set<SwapProvider> {
         val natural = naturalProvidersFor(coin)
-        return if (SwapKitCapability.canReceiveOn(coin.chain)) natural + SwapProvider.SWAPKIT
-        else natural
+        val withFynd = if (coin.chain in fyndChains) natural + SwapProvider.FYND else natural
+        return if (SwapKitCapability.canReceiveOn(coin.chain)) withFynd + SwapProvider.SWAPKIT
+        else withFynd
     }
 
     /**

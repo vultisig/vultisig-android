@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.daggerHiltAndroid)
@@ -10,6 +12,17 @@ plugins {
 }
 
 ktfmt { kotlinLangStyle() }
+
+// Debug-only Fynd overrides from local.properties (never committed): fynd.baseUrl, fynd.apiKey,
+// fynd.forceEnabled. Release builds always use the Vultisig proxy and never embed a key.
+val localProperties =
+    Properties().apply {
+        val file = rootProject.file("local.properties")
+        if (file.exists()) file.inputStream().use { load(it) }
+    }
+
+fun localStringField(key: String): String =
+    "\"" + localProperties.getProperty(key, "").replace("\\", "").replace("\"", "") + "\""
 
 android {
     namespace = "com.vultisig.wallet"
@@ -28,7 +41,19 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "FYND_BASE_URL", localStringField("fynd.baseUrl"))
+            buildConfigField("String", "FYND_API_KEY", localStringField("fynd.apiKey"))
+            buildConfigField(
+                "boolean",
+                "FYND_FORCE_ENABLED",
+                (localProperties.getProperty("fynd.forceEnabled") == "true").toString(),
+            )
+        }
         release {
+            buildConfigField("String", "FYND_BASE_URL", "\"\"")
+            buildConfigField("String", "FYND_API_KEY", "\"\"")
+            buildConfigField("boolean", "FYND_FORCE_ENABLED", "false")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

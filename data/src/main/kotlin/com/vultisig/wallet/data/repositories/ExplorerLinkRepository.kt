@@ -65,9 +65,10 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                     "https://orb.helius.dev/tx/${tx}"
                 } else if (
                     payload.data.provider == SwapProvider.KYBER.getSwapProviderId() ||
-                        payload.data.provider == SwapProvider.ONEINCH.getSwapProviderId()
+                        payload.data.provider == SwapProvider.ONEINCH.getSwapProviderId() ||
+                        payload.data.provider == SwapProvider.FYND.getSwapProviderId()
                 ) {
-                    // KyberSwap and 1inch aren't indexed by LI.FI's scanner; use the source
+                    // KyberSwap, 1inch and Fynd aren't indexed by LI.FI's scanner; use the source
                     // chain's own explorer instead.
                     getTransactionLink(payload.data.fromCoin.chain, tx)
                 } else "https://scan.li.fi/tx/${tx}"

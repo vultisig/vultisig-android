@@ -182,6 +182,7 @@ internal class SwapProviderTableTest {
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
                 SwapProvider.KYBER,
+                SwapProvider.FYND,
                 SwapProvider.SWAPKIT,
             ),
             table.providersFor(coin(Chain.Arbitrum, "ARB", isNative = false)),
@@ -192,10 +193,35 @@ internal class SwapProviderTableTest {
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
                 SwapProvider.KYBER,
+                SwapProvider.FYND,
                 SwapProvider.SWAPKIT,
             ),
             table.providersFor(coin(Chain.Arbitrum, "ZZZ", isNative = false)),
             "Generic Arbitrum token should get the full evmAggregators set",
+        )
+    }
+
+    @Test
+    fun `Fynd is offered same-chain on Ethereum, Base and Arbitrum only`() {
+        listOf(Chain.Ethereum, Chain.Base, Chain.Arbitrum).forEach { chain ->
+            val eth = coin(chain, "ETH", isNative = true)
+            val token = coin(chain, "ZZZ", isNative = false)
+            assertTrue(SwapProvider.FYND in table.providersFor(token), "$chain token")
+            assertTrue(SwapProvider.FYND in table.eligibleProvidersFor(eth, token), "$chain pair")
+        }
+        listOf(Chain.Polygon, Chain.BscChain, Chain.Optimism, Chain.Robinhood).forEach { chain ->
+            assertFalse(
+                SwapProvider.FYND in table.providersFor(coin(chain, "ZZZ", isNative = false)),
+                "$chain",
+            )
+        }
+        assertFalse(
+            SwapProvider.FYND in
+                table.eligibleProvidersFor(
+                    coin(Chain.Ethereum, "ETH", isNative = true),
+                    coin(Chain.Base, "ETH", isNative = true),
+                ),
+            "cross-chain",
         )
     }
 
