@@ -11,4 +11,6 @@ data class FeatureFlagJson(
     // remote payload doesn't carry the key yet, so the default is what users get, and publishing
     // `"limit-swap": false` remains the kill switch.
     @SerialName("limit-swap") val isLimitSwapEnabled: Boolean = true,
+    // Fynd swap quoting. Off until api.vultisig.com/fynd (key + fee signing) is live.
+    @SerialName("fynd-swap") val isFyndSwapEnabled: Boolean = false,
 )

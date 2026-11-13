@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.models
 
 enum class SwapProvider {
+    FYND,
     JUPITER,
     KYBER,
     LIFI,
@@ -12,6 +13,7 @@ enum class SwapProvider {
 
 fun SwapProvider.getSwapProviderId(): String {
     return when (this) {
+        SwapProvider.FYND -> "Fynd"
         SwapProvider.JUPITER -> "Jupiter"
         SwapProvider.KYBER -> "KyberSwap"
         SwapProvider.LIFI -> "LI.FI"
@@ -31,6 +33,7 @@ fun SwapProvider.getSwapProviderId(): String {
  */
 fun SwapProvider.getWireId(): String =
     when (this) {
+        SwapProvider.FYND -> "fynd"
         SwapProvider.JUPITER -> "jupiter"
         SwapProvider.KYBER -> "kyber"
         SwapProvider.LIFI -> "li.fi"
@@ -50,6 +53,7 @@ fun swapProviderFromWireId(wireId: String): SwapProvider? =
         "kyber",
         "kyberswap" -> SwapProvider.KYBER
         "jupiter" -> SwapProvider.JUPITER
+        "fynd" -> SwapProvider.FYND
         "swapkit" -> SwapProvider.SWAPKIT
         else -> null
     }

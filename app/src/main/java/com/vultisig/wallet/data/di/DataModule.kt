@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.di
 
 import android.content.Context
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.vultisig.wallet.BuildConfig
+import com.vultisig.wallet.data.api.swapAggregators.FyndConfig
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.services.AndroidSystemNotificationStatus
 import com.vultisig.wallet.data.services.FcmTokenProvider
@@ -54,6 +56,15 @@ internal interface DataModule {
         }
 
         @Provides @Singleton @PrettyJson fun providePrettyJson() = Json { prettyPrint = true }
+
+        @Provides
+        @Singleton
+        fun provideFyndConfig(): FyndConfig =
+            object : FyndConfig {
+                override val baseUrl = BuildConfig.FYND_BASE_URL.ifBlank { FyndConfig.PROXY_BASE_URL }
+                override val apiKey = BuildConfig.FYND_API_KEY.ifBlank { null }
+                override val forceEnabled = BuildConfig.FYND_FORCE_ENABLED
+            }
 
         @Provides
         @Singleton

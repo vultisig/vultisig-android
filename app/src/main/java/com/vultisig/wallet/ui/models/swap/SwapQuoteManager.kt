@@ -452,6 +452,18 @@ constructor(
                         slippageBps,
                     )
 
+                SwapProvider.FYND ->
+                    fetchFyndQuote(
+                        srcToken,
+                        dstToken,
+                        srcTokenValue,
+                        tokenValue,
+                        vultBPSDiscount,
+                        provider,
+                        srcNativeToken,
+                        slippageBps,
+                    )
+
                 SwapProvider.ONEINCH ->
                     fetchOneInchQuote(
                         srcToken,
@@ -875,6 +887,7 @@ constructor(
             SwapProvider.KYBER -> 4
             SwapProvider.ONEINCH -> 5
             SwapProvider.LIFI -> 6
+            SwapProvider.FYND -> 7
         }
 
     /**
@@ -893,7 +906,8 @@ constructor(
             SwapProvider.SWAPKIT,
             SwapProvider.KYBER,
             SwapProvider.ONEINCH,
-            SwapProvider.LIFI -> true
+            SwapProvider.LIFI,
+            SwapProvider.FYND -> true
         }
 
     /**
@@ -906,7 +920,8 @@ constructor(
         when (provider) {
             SwapProvider.ONEINCH,
             SwapProvider.KYBER,
-            SwapProvider.LIFI ->
+            SwapProvider.LIFI,
+            SwapProvider.FYND ->
                 (quote as? SwapQuote.OneInch)?.data?.tx?.let { tx ->
                     tx.gasPrice
                         .toBigIntegerOrNull()
@@ -1183,6 +1198,61 @@ constructor(
                 )
             }
         return swapQuote to R.string.swap_for_provider_kyber.asUiText()
+    }
+
+    private suspend fun fetchFyndQuote(
+        srcToken: Coin,
+        dstToken: Coin,
+        srcTokenValue: BigInteger,
+        tokenValue: TokenValue,
+        vultBPSDiscount: Int?,
+        provider: SwapProvider,
+        srcNativeToken: Coin,
+        slippageBps: Int?,
+    ): Pair<SwapQuote, UiText> {
+        val swapQuote =
+            getCachedQuoteOrFetch(
+                srcToken.id,
+                dstToken.id,
+                srcToken.address,
+                dstToken.address,
+                srcTokenValue,
+                SwapProvider.FYND,
+                slippageBps,
+            ) {
+                val apiQuote =
+                    swapQuoteRepository
+                        .getQuote(
+                            SwapProvider.FYND,
+                            SwapQuoteRequest(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                tokenValue = tokenValue,
+                                affiliateBps =
+                                    maxOf(0, FYND_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)),
+                                slippageBps = slippageBps,
+                            ),
+                        )
+                        .expectEvm(SwapProvider.FYND)
+                val expectedDstValue =
+                    TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
+                val gasFees = apiQuote.tx.gasPrice.toBigInteger() * apiQuote.tx.gas.toBigInteger()
+                val (feeAmount, feeCoin) =
+                    resolveSwapFee(
+                        apiQuote.tx.swapFeeTokenContract,
+                        apiQuote.tx.swapFee,
+                        srcNativeToken,
+                        gasFees,
+                    )
+                SwapQuote.OneInch(
+                    expectedDstValue = expectedDstValue,
+                    fees = TokenValue(value = feeAmount, token = feeCoin),
+                    data = apiQuote.copy(tx = apiQuote.tx.withResolvedSwapFee(feeAmount, feeCoin)),
+                    expiredAt = clock.now() + expiredAfter,
+                    provider = provider.getSwapProviderId(),
+                )
+            }
+        return swapQuote to R.string.swap_for_provider_fynd.asUiText()
     }
 
     private suspend fun fetchOneInchQuote(
@@ -1736,6 +1806,7 @@ constructor(
         // the base changes, and a provider that genuinely needs a different rate has to break the
         // link visibly (#5358 review).
         private const val KYBER_AFFILIATE_FEE_BPS = BASE_AFFILIATE_FEE_BPS
+        private const val FYND_AFFILIATE_FEE_BPS = BASE_AFFILIATE_FEE_BPS
         /** Clamped to SwapKit's documented 0..1000 range at the call site. */
         private const val SWAPKIT_AFFILIATE_FEE_BPS = BASE_AFFILIATE_FEE_BPS
         /** Jupiter's `platformFeeBps`. */

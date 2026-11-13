@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.repositories.order.FolderOrderRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSource
+import com.vultisig.wallet.data.repositories.swap.FyndQuoteSource
 import com.vultisig.wallet.data.repositories.swap.KyberQuoteSource
 import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSource
 import com.vultisig.wallet.data.repositories.swap.LimitSwapConfig
@@ -265,6 +266,12 @@ internal interface RepositoriesModule {
     @SwapProviderKey(SwapProvider.KYBER)
     @Reusable
     fun bindKyberQuoteSource(impl: KyberQuoteSource): SwapQuoteSource
+
+    @Binds
+    @IntoMap
+    @SwapProviderKey(SwapProvider.FYND)
+    @Reusable
+    fun bindFyndQuoteSource(impl: FyndQuoteSource): SwapQuoteSource
 
     @Binds
     @IntoMap

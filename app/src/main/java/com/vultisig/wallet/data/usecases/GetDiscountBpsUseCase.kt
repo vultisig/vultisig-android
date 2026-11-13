@@ -194,6 +194,7 @@ constructor(
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
                 SwapProvider.KYBER,
+                SwapProvider.FYND,
                 SwapProvider.SWAPKIT,
                 // Jupiter now charges a VULT-scaled affiliate fee too (#5053), so the holder's tier
                 // discount must reach it — without this the Jupiter candidate always pays full bps.

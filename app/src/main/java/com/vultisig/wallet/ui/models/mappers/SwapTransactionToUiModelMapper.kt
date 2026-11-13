@@ -69,6 +69,7 @@ constructor(
 
                 SwapProvider.ONEINCH,
                 SwapProvider.KYBER,
+                SwapProvider.FYND,
                 SwapProvider.SWAPKIT -> tokenRepository.getNativeToken(from.srcToken.chain.id)
             }
 
