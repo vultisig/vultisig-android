@@ -81,6 +81,16 @@ internal class FyndQuoteValidatorTest {
     }
 
     @Test
+    fun `refuses calldata naming the native coin address(0) instead of ETH_ADDRESS`() {
+        shouldThrow<SwapException> {
+            FyndQuoteValidator.validate(
+                order(data = FyndCalldataFixtures.SINGLE_ZERO_ADDRESS_IN),
+                expectation(),
+            )
+        }
+    }
+
+    @Test
     fun `refuses calldata whose minimum differs from the reported one`() {
         shouldThrow<SwapException> {
             FyndQuoteValidator.validate(order(minReceived = "1834763990"), expectation())

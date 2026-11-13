@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.swapAggregators.EvmSwapTxGuard
 import com.vultisig.wallet.data.api.swapAggregators.FyndApi
 import com.vultisig.wallet.data.api.swapAggregators.FyndConfig
+import com.vultisig.wallet.data.api.swapAggregators.FyndRouterCalldata
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
@@ -116,8 +117,8 @@ constructor(
                     FyndQuoteExpectation(
                         router = router,
                         amountIn = amountIn,
-                        tokenIn = src.fyndToken(),
-                        tokenOut = dst.fyndToken(),
+                        tokenIn = src.routerToken(),
+                        tokenOut = dst.routerToken(),
                         receiver = src.address,
                         sellsNative = src.isNativeToken,
                         slippageBps = slippageBps,
@@ -161,10 +162,14 @@ constructor(
                 ),
         )
 
+    // The quote API names the native coin address(0); the router call it encodes uses ETH_ADDRESS.
     private fun Coin.fyndToken(): String = if (isNativeToken) ZERO_ADDRESS else contractAddress
 
+    private fun Coin.routerToken(): String =
+        if (isNativeToken) FyndRouterCalldata.NATIVE_TOKEN else contractAddress
+
     private companion object {
-        const val DEFAULT_SLIPPAGE_BPS = 50
+        const val DEFAULT_SLIPPAGE_BPS = 100
         const val TIMEOUT_MS = 5_000
         const val CALL_OVERHEAD_GAS = 60_000L
         const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"

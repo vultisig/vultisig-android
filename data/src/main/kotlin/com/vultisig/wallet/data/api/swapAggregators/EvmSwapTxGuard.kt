@@ -129,7 +129,7 @@ internal object EvmSwapTxGuard {
     }
 
     private fun Coin.fyndTokenAddress(): String =
-        if (isNativeToken) "0x0000000000000000000000000000000000000000" else contractAddress
+        if (isNativeToken) FyndRouterCalldata.NATIVE_TOKEN else contractAddress
 
     private fun exactValueRouters(chain: Chain): Set<String> =
         routersFor(SwapProvider.ONEINCH, chain) +

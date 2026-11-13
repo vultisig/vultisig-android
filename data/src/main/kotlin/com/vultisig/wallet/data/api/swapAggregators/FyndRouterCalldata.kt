@@ -28,6 +28,9 @@ internal object FyndRouterCalldata {
 
     const val FEE_UNITS_PER_BPS = 10_000
 
+    /** TychoRouterV3's native-coin token (`ETH_ADDRESS`); the router reverts on `address(0)`. */
+    const val NATIVE_TOKEN = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+
     // keccak256 of the TychoRouterV3 entrypoints with
     // ClientFeeParams = (uint32,address,uint256,uint256,bytes).
     private const val SINGLE_SWAP = "0c1a0ee7"

@@ -138,6 +138,18 @@ internal class EvmSwapTxGuardFyndTest {
     }
 
     @Test
+    fun `refuses Fynd calldata naming the native coin address(0)`() {
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(
+                payload(
+                    Chain.Ethereum,
+                    tx(ETH_ROUTER, SOLD.toString(), FyndCalldataFixtures.SINGLE_ZERO_ADDRESS_IN),
+                )
+            )
+        }
+    }
+
+    @Test
     fun `knows no Fynd router outside Ethereum, Base and Arbitrum`() {
         assertNull(EvmSwapTxGuard.fyndRouter(Chain.Polygon))
         assertEquals(ETH_ROUTER.lowercase(), EvmSwapTxGuard.fyndRouter(Chain.Ethereum))

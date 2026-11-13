@@ -33,7 +33,7 @@ internal class FyndQuoteSourceTest {
 
         val sent = api.requests.single()
         assertNull(sent.options.encodingOptions.clientFeeParams)
-        assertEquals("0.005", sent.options.encodingOptions.slippage)
+        assertEquals("0.01", sent.options.encodingOptions.slippage)
         assertEquals("transfer_from", sent.options.encodingOptions.transferType)
         assertEquals(ZERO_ADDRESS, sent.orders.single().tokenIn)
         assertEquals(VAULT, sent.orders.single().sender)
