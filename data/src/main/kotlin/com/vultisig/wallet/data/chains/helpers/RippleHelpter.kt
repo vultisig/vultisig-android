@@ -110,7 +110,9 @@ object RippleHelper {
                 .setLastLedgerSequence(lastLedgerSequence.toInt())
 
         when (val transactionType = rippleSpecific.transactionType) {
-            TransactionType.TRANSACTION_TYPE_UNSPECIFIED -> Unit
+            // SDK-built payloads (Windows) declare RIPPLE_PAYMENT; it never reaches the signed bytes.
+            TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+            TransactionType.TRANSACTION_TYPE_RIPPLE_PAYMENT -> Unit
 
             TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET -> {
                 val limit =

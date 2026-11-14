@@ -38,6 +38,20 @@ class KeysignPayloadProtoMapperRippleTransactionTypeTest {
         restored.transactionType shouldBe TransactionType.TRANSACTION_TYPE_RIPPLE_TRUST_SET
     }
 
+    // SDK-built payloads (Windows) declare a Payment explicitly; the joiner must hand the signer
+    // the operation the initiator declared, not a value the marshalling dropped or remapped.
+    @Test
+    fun `a declared Payment survives the KeysignPayload to proto round-trip`() {
+        val payload = ripplePayload(TransactionType.TRANSACTION_TYPE_RIPPLE_PAYMENT)
+
+        val proto = requireNotNull(outbound(payload))
+        proto.rippleSpecific?.transactionType shouldBe
+            TransactionType.TRANSACTION_TYPE_RIPPLE_PAYMENT
+
+        val restored = inbound(proto).blockChainSpecific as BlockChainSpecific.Ripple
+        restored.transactionType shouldBe TransactionType.TRANSACTION_TYPE_RIPPLE_PAYMENT
+    }
+
     // A plain XRP send must serialize exactly as it did before the field existed, or every payload
     // in flight between a new and an old device would differ by a byte neither could reconcile.
     @Test
