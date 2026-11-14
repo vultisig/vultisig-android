@@ -94,7 +94,77 @@ internal class QuantumSecurityIntroViewModelTest {
         }
 
     @Test
-    fun `getStarted on fast vault without key navigates to VerifyExistingVault single keygen`() =
+    fun `getStarted on fast vault without key goes back while VultiServer lacks the ML-DSA level`() =
+        runTest(mainDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                vault(signers = listOf("device1", "Server-1"))
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+
+            createViewModel().getStarted()
+            advanceUntilIdle()
+
+            coVerify { navigator.navigate(Destination.Back) }
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    @Test
+    fun `getStarted on a fast vault with more than two signers goes back too`() =
+        runTest(mainDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                vault(signers = listOf("device1", "device2", "Server-1"))
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+
+            createViewModel().getStarted()
+            advanceUntilIdle()
+
+            coVerify { navigator.navigate(Destination.Back) }
+            coVerify(exactly = 0) { navigator.route(any()) }
+        }
+
+    @Test
+    fun `getStarted on secure vault without key navigates to peer discovery single keygen`() =
+        runTest(mainDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                vault(signers = listOf("device1", "device2", "device3"))
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns false
+
+            createViewModel().getStarted()
+            advanceUntilIdle()
+
+            coVerify {
+                navigator.route(
+                    Route.Keygen.PeerDiscovery(
+                        action = TssAction.SingleKeygen,
+                        vaultName = VAULT_NAME,
+                        vaultId = VAULT_ID,
+                    )
+                )
+            }
+        }
+
+    @Test
+    fun `getStarted on a secure vault with a backend fast-sign record still starts keygen`() =
+        runTest(mainDispatcher) {
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                vault(signers = listOf("device1", "device2", "device3"))
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+
+            createViewModel().getStarted()
+            advanceUntilIdle()
+
+            coVerify {
+                navigator.route(
+                    Route.Keygen.PeerDiscovery(
+                        action = TssAction.SingleKeygen,
+                        vaultName = VAULT_NAME,
+                        vaultId = VAULT_ID,
+                    )
+                )
+            }
+        }
+
+    @Test
+    fun `getStarted on a two-signer secure vault with a fast-sign record stays off VultiServer`() =
         runTest(mainDispatcher) {
             coEvery { vaultRepository.get(VAULT_ID) } returns vault()
             coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
@@ -104,20 +174,25 @@ internal class QuantumSecurityIntroViewModelTest {
 
             coVerify {
                 navigator.route(
-                    Route.VerifyExistingVault(
-                        name = VAULT_NAME,
-                        tssAction = TssAction.SingleKeygen,
+                    Route.Keygen.PeerDiscovery(
+                        action = TssAction.SingleKeygen,
+                        vaultName = VAULT_NAME,
                         vaultId = VAULT_ID,
                     )
                 )
             }
+            coVerify(exactly = 0) { navigator.route(match { it is Route.VerifyExistingVault }) }
         }
 
     @Test
-    fun `getStarted on secure vault without key navigates to peer discovery single keygen`() =
+    fun `getStarted with a legacy ML-DSA-44 key starts keygen instead of claim`() =
         runTest(mainDispatcher) {
             coEvery { vaultRepository.get(VAULT_ID) } returns
-                vault(signers = listOf("device1", "device2", "device3"))
+                vault(
+                    pubKeyMLDSA = LEGACY_MLDSA44_KEY,
+                    keyshares = listOf(KeyShare(pubKey = LEGACY_MLDSA44_KEY, keyShare = "share")),
+                    signers = listOf("device1", "device2", "device3"),
+                )
             coEvery { isVaultHasFastSignById(VAULT_ID) } returns false
 
             createViewModel().getStarted()
@@ -166,6 +241,7 @@ internal class QuantumSecurityIntroViewModelTest {
     private companion object {
         private const val VAULT_ID = "vaultId"
         private const val VAULT_NAME = "vaultName"
-        private const val MLDSA_KEY = "mldsaPubKey"
+        private val MLDSA_KEY = "ab".repeat(1952)
+        private val LEGACY_MLDSA44_KEY = "cd".repeat(1312)
     }
 }

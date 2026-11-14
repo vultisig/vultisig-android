@@ -75,12 +75,36 @@ fun Vault.isFastVault(): Boolean {
 
 fun Vault.isSecureVault() = !isFastVault()
 
+/** Size of an ML-DSA-65 public key, the only level a vault signs with. */
+const val MLDSA65_PUBLIC_KEY_BYTES = 1952
+
+/** Size of an ML-DSA-44 public key. Such a key can no longer sign; it is kept only for backups. */
+const val MLDSA44_PUBLIC_KEY_BYTES = 1312
+
+/** True when [hex] is a hex-encoded ML-DSA-65 public key. */
+fun isMldsa65PublicKey(hex: String): Boolean = hex.isHexKeyOf(MLDSA65_PUBLIC_KEY_BYTES)
+
+private fun String.isHexKeyOf(bytes: Int): Boolean =
+    length == bytes * 2 && all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+
 /**
- * True when the vault holds a usable MLDSA (quantum) key: the public key is set and the matching
- * keyshare is present, so the vault can actually take part in an MLDSA signing ceremony.
+ * True when the vault holds a usable MLDSA (quantum) key: an ML-DSA-65 public key whose keyshare is
+ * present, so the vault can actually take part in an MLDSA signing ceremony. A legacy ML-DSA-44 key
+ * doesn't count, so such a vault can generate an ML-DSA-65 key.
  */
 fun Vault.hasValidMldsaKey(): Boolean =
-    pubKeyMLDSA.isNotBlank() && keyshares.any { it.pubKey == pubKeyMLDSA }
+    isMldsa65PublicKey(pubKeyMLDSA) && keyshares.any { it.pubKey == pubKeyMLDSA }
+
+/**
+ * The vault's obsolete ML-DSA-44 public key, or an empty string when it has none.
+ *
+ * It is [Vault.pubKeyMLDSA] until an ML-DSA-65 keygen replaces it; after that only its keyshare
+ * remains, so it is recovered from there. Backups carry it in `public_key_mldsa44`, as iOS does.
+ */
+fun Vault.legacyMldsa44PublicKey(): String =
+    pubKeyMLDSA.takeIf { it.isHexKeyOf(MLDSA44_PUBLIC_KEY_BYTES) }
+        ?: keyshares.firstOrNull { it.pubKey.isHexKeyOf(MLDSA44_PUBLIC_KEY_BYTES) }?.pubKey
+        ?: ""
 
 /**
  * Returns (publicKey, chainCode) for ECDSA signing on the given [chain].

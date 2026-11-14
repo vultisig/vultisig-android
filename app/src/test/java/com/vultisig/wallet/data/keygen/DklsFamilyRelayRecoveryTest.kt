@@ -5,8 +5,11 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.models.KeyShare
+import com.vultisig.wallet.data.models.MLDSA44_PUBLIC_KEY_BYTES
+import com.vultisig.wallet.data.models.MLDSA65_PUBLIC_KEY_BYTES
 import com.vultisig.wallet.data.models.Vault
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -40,7 +43,7 @@ class DklsFamilyRelayRecoveryTest {
             name = "test-vault",
             pubKeyECDSA = "pub-ecdsa",
             pubKeyEDDSA = "pub-eddsa",
-            pubKeyMLDSA = "pub-mldsa",
+            pubKeyMLDSA = "ab".repeat(MLDSA65_PUBLIC_KEY_BYTES),
             localPartyID = "deviceA",
             keyshares = listOf(KeyShare("pub-ecdsa", "share")),
         )
@@ -199,4 +202,26 @@ class DklsFamilyRelayRecoveryTest {
 
         sessionApi.completionLookups shouldContain expectedMsgHash
     }
+
+    @Test
+    fun `MLDSA refuses to sign with a legacy ML-DSA-44 key before contacting the relay`() =
+        runTest {
+            val sessionApi = FakeSessionApi()
+            val keysign =
+                MldsaKeysign(
+                    keysignCommittee = listOf("deviceA", "deviceB"),
+                    mediatorURL = "http://relay.example",
+                    sessionID = "session-1",
+                    messageToSign = listOf(message),
+                    vault = vault().copy(pubKeyMLDSA = "cd".repeat(MLDSA44_PUBLIC_KEY_BYTES)),
+                    encryptionKeyHex = "00".repeat(32),
+                    isInitiateDevice = false,
+                    sessionApi = sessionApi,
+                    encryption = mockk(relaxed = true),
+                )
+
+            shouldThrow<IllegalStateException> { keysign.keysignWithRetry() }
+
+            sessionApi.completionLookups.shouldBeEmpty()
+        }
 }

@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isMldsa65PublicKey
+import com.vultisig.wallet.data.models.legacyMldsa44PublicKey
 import com.vultisig.wallet.data.models.proto.v1.ChainPublicKeyProto
 import com.vultisig.wallet.data.models.proto.v1.KeyShareProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
@@ -70,7 +72,8 @@ internal class MapVaultToProtoImpl @Inject constructor() : MapVaultToProto {
                         isEddsa = it.isEddsa,
                     )
                 },
-            publicKeyMldsa44 = from.pubKeyMLDSA,
+            publicKeyMldsa44 = from.legacyMldsa44PublicKey(),
+            publicKeyMldsa65 = from.pubKeyMLDSA.takeIf(::isMldsa65PublicKey).orEmpty(),
         )
     }
 }

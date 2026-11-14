@@ -303,8 +303,8 @@ class CosmosStakingHelperTests {
 
     @Test
     fun `AuthInfo stamps the provided pubKey type URL for ML-DSA`() {
-        // QBTC reuses this encoder with the ML-DSA pubkey URL and its ~1312-byte post-quantum key.
-        val mldsaPubKey = ByteArray(1312) { 0xAB.toByte() }
+        // QBTC reuses this encoder with the ML-DSA pubkey URL and its ~1952-byte post-quantum key.
+        val mldsaPubKey = ByteArray(1952) { 0xAB.toByte() }
         val authInfo =
             CosmosStakingHelper.buildAuthInfo(
                 pubKey = mldsaPubKey,

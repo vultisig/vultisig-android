@@ -43,7 +43,7 @@ class CosmosHelper(
 
         fun getChainGasLimit(chain: Chain): Long =
             when (chain) {
-                Chain.Qbtc, // ML-DSA-44 signatures are ~2.4 KB, needs more gas
+                Chain.Qbtc, // ML-DSA-65 signatures are ~3.3 KB, needs more gas
                 Chain.Terra,
                 Chain.TerraClassic,
                 Chain.Osmosis -> 300000L
