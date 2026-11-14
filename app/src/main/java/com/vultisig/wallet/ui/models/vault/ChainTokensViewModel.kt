@@ -37,6 +37,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.RippleTrustLines
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.defi.canDepositOn
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.scan.ScanQrUiModel
@@ -393,7 +394,8 @@ constructor(
                                 tokens = uiTokens,
                                 explorerURL = explorerUrl,
                                 totalBalance = totalBalance,
-                                canDeposit = chain.isDepositSupported,
+                                canDeposit =
+                                    currentVault?.canDepositOn(chain) ?: chain.isDepositSupported,
                                 canSwap = chain.isSwapSupported,
                                 canBuy = chain.isBuySupported,
                                 canSelectTokens = chain.canSelectTokens,

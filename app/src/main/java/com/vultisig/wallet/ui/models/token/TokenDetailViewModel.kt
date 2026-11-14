@@ -24,7 +24,9 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TokenPriceChartRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.defi.canDepositOn
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.vault.ChainTokenUiModel
@@ -168,6 +170,7 @@ constructor(
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val tokenPriceChartRepository: TokenPriceChartRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
 
     private val tokenDetail = savedStateHandle.toRoute<Route.TokenDetail>()
@@ -287,6 +290,8 @@ constructor(
                 updateRefreshing(true)
 
                 val chain = Chain.fromRaw(chainRaw)
+                val canDeposit =
+                    vaultRepository.get(vaultId)?.canDepositOn(chain) ?: chain.isDepositSupported
 
                 accountsRepository
                     .loadAddress(vaultId = vaultId, chain = chain)
@@ -341,7 +346,7 @@ constructor(
                                 uiState.update {
                                     it.copy(
                                         token = tokenUiModel,
-                                        canDeposit = chain.isDepositSupported,
+                                        canDeposit = canDeposit,
                                         // No provider routes an LP receipt or an XRPL issued
                                         // currency, whatever the chain supports.
                                         canSwap =

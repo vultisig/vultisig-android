@@ -278,7 +278,11 @@ val Chain.isDepositSupported: Boolean
             Chain.Avalanche,
             Chain.Dogecoin,
             Chain.BscChain,
-            Chain.Litecoin -> true
+            Chain.Litecoin,
+            // Reachable for Add Maya LP only: MayaChain pools them, THORChain does not.
+            Chain.Arbitrum,
+            Chain.Dash,
+            Chain.Zcash -> true
             else -> false
         }
 

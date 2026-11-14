@@ -1909,7 +1909,7 @@ internal class ThorchainDefiPositionsViewModelTest {
             pendingAsset = BigInteger("100000000"),
             pendingTxId = null,
             pairedAddress = RUNE_ADDRESS,
-            blocksUntilRefund = null,
+            blocksUntilAddedAlone = null,
         )
 
     private fun poolStats(asset: String) =

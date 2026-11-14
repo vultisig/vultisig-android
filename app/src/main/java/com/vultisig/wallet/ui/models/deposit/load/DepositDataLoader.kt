@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.defi.MAYA_NATIVE_LP_POOLS
 import com.vultisig.wallet.ui.models.deposit.CustomDepositPrefill
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
@@ -120,6 +121,7 @@ constructor(
             DeFiNavActions.STAKE_CACAO -> DepositOption.AddCacaoPool
             DeFiNavActions.UNSTAKE_CACAO -> DepositOption.RemoveCacaoPool
             DeFiNavActions.ADD_LP -> DepositOption.AddLiquidity
+            DeFiNavActions.ADD_MAYA_LP -> DepositOption.AddMayaLiquidity
             DeFiNavActions.REMOVE_LP -> DepositOption.RemoveLiquidity
             else -> DepositOption.Bond
         }
@@ -146,12 +148,16 @@ constructor(
      * @param selectDstChain callback that selects the first IBC transfer destination chain.
      * @param collectSecuredAssetAddresses trigger that populates the user's own THORChain address
      *   on the SecuredAsset form.
+     * @param loadMayaLpPairing trigger that populates the pool and CACAO address the Add Maya LP
+     *   form names.
      * @param loadGasFeeForDisplay callback that loads and displays gas fees for the ADD_LP
      *   deep-link.
      * @param customPrefill deep-link prefill: opens the form on Custom with its coin selected.
      * @param isPrefillTokenApplied whether the link's coin was already selected, kept by the caller
      *   so a re-entered screen neither re-applies it nor resets the user's later pick.
      * @param onPrefillTokenApplied called once the link's coin is selected.
+     * @param canAddMayaLiquidity whether the vault can hold the CACAO account an Add Maya LP
+     *   credits; when it cannot, the option is dropped from the list.
      */
     fun wireInitialState(
         vaultId: String,
@@ -161,10 +167,12 @@ constructor(
         updateTokenAmount: suspend (Account?, Chain, String?, String) -> Unit,
         selectDstChain: (Chain) -> Unit,
         collectSecuredAssetAddresses: () -> Unit,
+        loadMayaLpPairing: () -> Unit,
         loadGasFeeForDisplay: (String, Chain, Address) -> Unit,
         customPrefill: CustomDepositPrefill? = null,
         isPrefillTokenApplied: () -> Boolean = { false },
         onPrefillTokenApplied: () -> Unit = {},
+        canAddMayaLiquidity: suspend () -> Boolean = { true },
     ) {
         val depositOptions =
             when (chain) {
@@ -191,6 +199,7 @@ constructor(
                         //                    add(DepositOption.Stake)
                         //                    add(DepositOption.Unstake)
                         if (chain.ticker() in SECURE_ASSETS_TICKERS) add(DepositOption.SecuredAsset)
+                        if (chain in MAYA_NATIVE_LP_POOLS) add(DepositOption.AddMayaLiquidity)
                     }
             }
         // The dropdown list is empty for chains that expose no self-service deposit action (any
@@ -222,6 +231,17 @@ constructor(
                     if (customPrefill != null && isPrefillTokenApplied()) it.selectedToken
                     else defaultToken,
             )
+        }
+
+        if (DepositOption.AddMayaLiquidity in depositOptions) {
+            scope.launch {
+                if (canAddMayaLiquidity()) return@launch
+                val remaining = depositOptions - DepositOption.AddMayaLiquidity
+                state.update { it.copy(depositOptions = remaining) }
+                if (state.value.depositOption == DepositOption.AddMayaLiquidity) {
+                    selectDepositOption(remaining.firstOrNull() ?: DepositOption.Custom)
+                }
+            }
         }
 
         val coinList = tokensToMerge.let {
@@ -309,6 +329,9 @@ constructor(
                     // destination always matches the currently-selected asset's chain.
                     if (depositOption == DepositOption.SecuredAsset) {
                         collectSecuredAssetAddresses()
+                    }
+                    if (depositOption == DepositOption.AddMayaLiquidity) {
+                        loadMayaLpPairing()
                     }
                     setMetadataInfo()
                 }
