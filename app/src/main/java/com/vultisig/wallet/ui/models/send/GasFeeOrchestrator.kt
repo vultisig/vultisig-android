@@ -221,7 +221,7 @@ internal class GasFeeOrchestrator(
                                         tokenRepository.getNativeToken(chain.id)
                                     }
 
-                                TokenValue(value = fees.amount, token = nativeCoin)
+                                chain to TokenValue(value = fees.amount, token = nativeCoin)
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (e: Exception) {
@@ -238,8 +238,8 @@ internal class GasFeeOrchestrator(
                         .catch { Timber.e(it) },
                     gasSettings,
                     specific,
-                ) { gasFeeValue, gasSettings, specific ->
-                    gasFee.value = adjustGasFee(gasFeeValue, gasSettings, specific)
+                ) { (chain, gasFeeValue), gasSettings, specific ->
+                    gasFee.value = adjustGasFee(gasFeeValue, gasSettings, specific, chain)
                 }
                 .collect()
         }
@@ -479,17 +479,23 @@ internal class GasFeeOrchestrator(
     }
 }
 
+/**
+ * Folds the fee the transaction will actually carry back into [gasFee]. [chain] is the chain
+ * [gasFee] was computed for; saved [gasSettings] from any other chain are ignored (issue #6168).
+ */
 internal fun adjustGasFee(
     gasFee: TokenValue,
     gasSettings: GasSettings?,
     spec: BlockChainSpecificAndUtxo?,
+    chain: Chain,
 ): TokenValue {
+    val saved = gasSettings.forChain(chain)
     val cardanoSpecific = spec?.blockChainSpecific as? BlockChainSpecific.Cardano
     return gasFee.copy(
         value =
             when {
-                gasSettings is GasSettings.UTXO &&
-                    spec?.blockChainSpecific is BlockChainSpecific.UTXO -> gasSettings.byteFee
+                saved is GasSettings.UTXO && spec?.blockChainSpecific is BlockChainSpecific.UTXO ->
+                    saved.byteFee
                 // Cardano transmits the initiator's size-derived fee as byteFee; surface it so the
                 // displayed fee, validation and the signed/forced fee all agree.
                 cardanoSpecific != null -> BigInteger.valueOf(cardanoSpecific.byteFee)

@@ -56,8 +56,16 @@ constructor(
 
     private var loadJob: Job? = null
 
+    // The chain the sheet was last loaded for; save() tags its settings with it (issue #6168).
+    private var chain: Chain? = null
+
+    // The chain whose byte fee byteFeeState holds, so reopening the sheet on that chain keeps the
+    // user's edit while another UTXO chain never shows it.
+    private var byteFeeChain: Chain? = null
+
     fun loadData(chain: Chain, spec: BlockChainSpecificAndUtxo) {
         val specific = spec.blockChainSpecific
+        this.chain = chain
 
         // A reload for another chain must not be overwritten by the previous chain's late fetch.
         loadJob?.cancel()
@@ -111,14 +119,22 @@ constructor(
         }
     }
 
-    private fun loadUTXOData(chain: Chain): Job =
-        viewModelScope.safeLaunch {
+    private fun loadUTXOData(chain: Chain): Job {
+        // Byte-fee scales differ by orders of magnitude between UTXO chains (Dogecoin's default is
+        // far above Bitcoin's), so a value typed for one must not pre-fill another's sheet.
+        if (byteFeeChain != chain) {
+            byteFeeState.setTextAndPlaceCursorAtEnd("")
+            byteFeeChain = chain
+        }
+        return viewModelScope.safeLaunch {
             if (byteFeeState.text.toBigInteger() > BigInteger.ZERO) return@safeLaunch
             val byteFee = utxoFeeService.getDefaultGasFee(chain)
             byteFeeState.setTextAndPlaceCursorAtEnd(byteFee.toString())
         }
+    }
 
     fun save(): GasSettings {
+        val chain = checkNotNull(chain) { "save() called before loadData()" }
         return when (state.value.chainSpecific) {
             is BlockChainSpecific.Ethereum -> {
                 // Neither field's format is restricted to non-negative (the keyboard still
@@ -133,6 +149,7 @@ constructor(
                         .toBigInteger()
                         .coerceAtLeast(BigInteger.ZERO)
                 GasSettings.Eth(
+                    chain = chain,
                     baseFee = baseFeeWei,
                     priorityFee = priorityFeeWei,
                     gasLimit = gasLimitState.text.toString().toBigInteger(),
@@ -140,9 +157,12 @@ constructor(
             }
 
             is BlockChainSpecific.UTXO ->
-                GasSettings.UTXO(byteFee = byteFeeState.text.toString().toBigInteger())
+                GasSettings.UTXO(
+                    chain = chain,
+                    byteFee = byteFeeState.text.toString().toBigInteger(),
+                )
 
-            else -> throw IllegalStateException("Unsupported chain specific")
+            else -> error("Unsupported chain specific")
         }
     }
 

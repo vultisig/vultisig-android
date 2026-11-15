@@ -62,6 +62,7 @@ import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -203,6 +204,7 @@ internal class DefaultSendStrategyTest {
 
                 val advancedGasSettings =
                     GasSettings.Eth(
+                        chain = Chain.Ethereum,
                         baseFee = BigInteger.valueOf(30_000_000_000L),
                         priorityFee = BigInteger.valueOf(2_000_000_000L),
                         gasLimit = BigInteger.valueOf(21_000),
@@ -228,6 +230,161 @@ internal class DefaultSendStrategyTest {
                 unmockkStatic(Dispatchers::class)
             }
         }
+
+    /**
+     * Regression for #6168: Ethereum and Base share BlockChainSpecific.Ethereum, so matching on the
+     * spec type alone signed a fee and gas limit saved on Ethereum into a Base transaction.
+     */
+    @Test
+    fun `submit does not sign Advanced Gas Settings saved on another EVM chain`() = runTest {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            val captured =
+                arrangeSuccessfulEthSubmit(
+                    ethCoin().copy(chain = Chain.Base),
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = BigInteger.ONE,
+                        priorityFeeWei = BigInteger.ONE,
+                        nonce = BigInteger.ZERO,
+                        gasLimit = BigInteger.valueOf(21000),
+                    ),
+                )
+            gasSettings.value =
+                GasSettings.Eth(
+                    chain = Chain.Ethereum,
+                    baseFee = BigInteger.valueOf(30_000_000_000L),
+                    priorityFee = BigInteger.valueOf(2_000_000_000L),
+                    gasLimit = BigInteger.valueOf(90_000),
+                )
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            assertNull(lastError, "Expected no error; got $lastError")
+            val signedSpec = captured.captured.blockChainSpecific as BlockChainSpecific.Ethereum
+            assertEquals(BigInteger.ONE, signedSpec.maxFeePerGasWei)
+            assertEquals(BigInteger.ONE, signedSpec.priorityFeeWei)
+            assertEquals(BigInteger.valueOf(21000), signedSpec.gasLimit)
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * Regression for #6168: Bitcoin and Dogecoin share BlockChainSpecific.UTXO, and their byte-fee
+     * scales differ by orders of magnitude, so a byte fee saved on one must never reach the other's
+     * plan.
+     */
+    @Test
+    fun `submit does not plan with a byte fee saved on another UTXO chain`() = runTest {
+        val planned = arrangeUtxoSubmitCapturingPlannedSpec(btcCoin().copy(chain = Chain.Dogecoin))
+        gasSettings.value = GasSettings.UTXO(chain = Chain.Bitcoin, byteFee = BigInteger("500"))
+
+        submitOnMainDispatcher()
+
+        assertNull(lastError, "Expected no error; got $lastError")
+        assertEquals(
+            BigInteger.TEN,
+            (planned.captured.blockChainSpecific as BlockChainSpecific.UTXO).byteFee,
+        )
+    }
+
+    @Test
+    fun `submit plans with a byte fee saved on the same UTXO chain`() = runTest {
+        val planned = arrangeUtxoSubmitCapturingPlannedSpec(btcCoin())
+        gasSettings.value = GasSettings.UTXO(chain = Chain.Bitcoin, byteFee = BigInteger("500"))
+
+        submitOnMainDispatcher()
+
+        assertNull(lastError, "Expected no error; got $lastError")
+        assertEquals(
+            BigInteger("500"),
+            (planned.captured.blockChainSpecific as BlockChainSpecific.UTXO).byteFee,
+        )
+    }
+
+    private fun TestScope.submitOnMainDispatcher() {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            build(this).submit()
+            advanceUntilIdle()
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    /**
+     * Arranges a native UTXO submit whose network byte fee is 10, returning the specific handed to
+     * the planner — the one applyGasSettings has already patched.
+     */
+    private fun arrangeUtxoSubmitCapturingPlannedSpec(
+        coin: Coin
+    ): CapturingSlot<BlockChainSpecificAndUtxo> {
+        val account =
+            Account(
+                token = coin,
+                tokenValue = TokenValue(BigInteger.valueOf(100_000_000L), coin),
+                fiatValue = null,
+                price = null,
+            )
+        vaultId = "vault-1"
+        selectedAccount = account
+        addressFieldState.setTextAndPlaceCursorAtEnd("utxo-dest")
+        // 0.05 clears every UTXO chain's dust floor (Dogecoin's is 0.01).
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.05")
+        coEvery { accountValidator.validate() } returns
+            ValidatedAccount(
+                vaultId = "vault-1",
+                selectedAccount = account,
+                chain = coin.chain,
+                gasFee = TokenValue(BigInteger.TEN, coin),
+                dstAddress = "utxo-dest",
+            )
+        coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+        coEvery {
+            blockChainSpecificRepository.getSpecific(
+                chain = any(),
+                address = any(),
+                token = any(),
+                gasFee = any(),
+                isSwap = any(),
+                isMaxAmountEnabled = any(),
+                isDeposit = any(),
+                dstAddress = any(),
+                tokenAmountValue = any(),
+                memo = any(),
+                isThorchainRouterDeposit = any(),
+            )
+        } returns
+            BlockChainSpecificAndUtxo(
+                BlockChainSpecific.UTXO(byteFee = BigInteger.TEN, sendMaxAmount = false)
+            )
+        every { amountManager.currentMaxAmount } returns BigDecimal.ZERO
+        coEvery { getAvailableTokenBalance(any(), any()) } returns
+            TokenValue(BigInteger.valueOf(100_000_000L), coin)
+        coEvery { gasFeeToEstimatedFee(any()) } returns
+            EstimatedGasFee(
+                formattedFiatValue = "$0.10",
+                formattedTokenValue = "0.0000001",
+                tokenValue = TokenValue(BigInteger.ONE, coin),
+                fiatValue = mockk(relaxed = true),
+            )
+        coEvery { transactionRepository.addTransaction(any()) } returns Unit
+        val planned = slot<BlockChainSpecificAndUtxo>()
+        coEvery {
+            bitcoinPlanService.getPlan(
+                vaultId = any(),
+                selectedToken = any(),
+                dstAddress = any(),
+                tokenAmountInt = any(),
+                specific = capture(planned),
+                memo = any(),
+            )
+        } returns okPlan(2_000L)
+        return planned
+    }
 
     /**
      * Production regression for #4152: when the user reaches the Send form via the THORChain LP
@@ -1341,6 +1498,7 @@ internal class DefaultSendStrategyTest {
                 // 200 gwei cap × 21000 gas = 0.0042 ETH — nearly 3× the network estimate.
                 gasSettings.value =
                     GasSettings.Eth(
+                        chain = Chain.Ethereum,
                         baseFee = BigInteger.valueOf(198_000_000_000L),
                         priorityFee = BigInteger.valueOf(2_000_000_000L),
                         gasLimit = BigInteger.valueOf(21_000),
@@ -1712,6 +1870,7 @@ internal class DefaultSendStrategyTest {
                     // Left over from an earlier Ethereum send: 0.0042 ETH worth of wei.
                     gasSettings.value =
                         GasSettings.Eth(
+                            chain = Chain.Ethereum,
                             baseFee = BigInteger.valueOf(198_000_000_000L),
                             priorityFee = BigInteger.valueOf(2_000_000_000L),
                             gasLimit = BigInteger.valueOf(21_000),
@@ -2070,6 +2229,7 @@ internal class DefaultSendStrategyTest {
         ethCoin: Coin,
         blockChainSpecific: BlockChainSpecific.Ethereum,
     ): CapturingSlot<Transaction> {
+        val chain = ethCoin.chain
         val account =
             Account(
                 token = ethCoin,
@@ -2085,7 +2245,7 @@ internal class DefaultSendStrategyTest {
             ValidatedAccount(
                 vaultId = "vault-1",
                 selectedAccount = account,
-                chain = Chain.Ethereum,
+                chain = chain,
                 gasFee = TokenValue(BigInteger.valueOf(21_000), ethCoin),
                 dstAddress = "0xdest",
             )

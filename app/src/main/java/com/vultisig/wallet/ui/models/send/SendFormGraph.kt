@@ -55,8 +55,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -507,6 +509,13 @@ internal class SendFormGraph(
                 uiState.update { it.copy(fiatCurrency = currency.ticker) }
             }
         }
+        // Saved Advanced Gas Settings were priced for one chain; drop them once the form moves to
+        // another, so a fee saved on Ethereum is never signed on Base (issue #6168).
+        selectedToken
+            .map { it?.chain }
+            .distinctUntilChanged()
+            .onEach { chain -> gasSettings.update { saved -> saved?.takeIf { it.chain == chain } } }
+            .launchIn(scope)
         advanceGasUiRepository.showSettings
             .onEach { showGasSettings ->
                 uiState.update { it.copy(showGasSettings = showGasSettings) }

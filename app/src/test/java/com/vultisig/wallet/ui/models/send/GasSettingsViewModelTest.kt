@@ -267,10 +267,62 @@ internal class GasSettingsViewModelTest {
         assertEquals("", vm.baseFeeState.text.toString())
     }
 
+    private val utxoSpec =
+        BlockChainSpecificAndUtxo(
+            BlockChainSpecific.UTXO(byteFee = BigInteger.ZERO, sendMaxAmount = false)
+        )
+
+    @Test
+    fun `save tags the settings with the chain the sheet was loaded for`() = runTest {
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Dogecoin) } returns BigInteger("500000")
+        val vm = viewModel()
+        vm.loadData(Chain.Base, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        advanceUntilIdle()
+
+        assertEquals(Chain.Base, vm.save().chain)
+
+        vm.loadData(Chain.Dogecoin, utxoSpec)
+        advanceUntilIdle()
+
+        assertEquals(Chain.Dogecoin, vm.save().chain)
+    }
+
+    // Issue #6168: Dogecoin's default byte fee is far above Bitcoin's, so a value typed on one
+    // UTXO chain must not pre-fill the next one's sheet.
+    @Test
+    fun `a byte fee typed for one UTXO chain does not pre-fill another chain's sheet`() = runTest {
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } returns BigInteger("20")
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Dogecoin) } returns BigInteger("500000")
+        val vm = viewModel()
+        vm.loadData(Chain.Bitcoin, utxoSpec)
+        advanceUntilIdle()
+        vm.byteFeeState.setTextAndPlaceCursorAtEnd("35")
+
+        vm.loadData(Chain.Dogecoin, utxoSpec)
+        advanceUntilIdle()
+
+        assertEquals("500000", vm.byteFeeState.text.toString())
+    }
+
+    @Test
+    fun `reopening the sheet on the same UTXO chain keeps the typed byte fee`() = runTest {
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } returns BigInteger("20")
+        val vm = viewModel()
+        vm.loadData(Chain.Bitcoin, utxoSpec)
+        advanceUntilIdle()
+        vm.byteFeeState.setTextAndPlaceCursorAtEnd("35")
+
+        vm.loadData(Chain.Bitcoin, utxoSpec)
+        advanceUntilIdle()
+
+        assertEquals("35", vm.byteFeeState.text.toString())
+    }
+
     @Test
     fun `GasSettings Eth rejects a negative baseFee or priorityFee`() {
         assertThrows<IllegalArgumentException> {
             GasSettings.Eth(
+                chain = Chain.Ethereum,
                 baseFee = BigInteger.valueOf(-1),
                 priorityFee = BigInteger.ZERO,
                 gasLimit = BigInteger("21000"),
@@ -278,6 +330,7 @@ internal class GasSettingsViewModelTest {
         }
         assertThrows<IllegalArgumentException> {
             GasSettings.Eth(
+                chain = Chain.Ethereum,
                 baseFee = BigInteger.ZERO,
                 priorityFee = BigInteger.valueOf(-1),
                 gasLimit = BigInteger("21000"),

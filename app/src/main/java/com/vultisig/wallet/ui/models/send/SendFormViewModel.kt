@@ -254,6 +254,9 @@ constructor(
     }
 
     fun saveGasSettings(settings: GasSettings) {
+        // The sheet was opened for one chain; if the form has since moved to another, the values
+        // were priced for a chain this send no longer targets (issue #6168).
+        if (settings.chain != selectedTokenValue?.chain) return
         graph.gasSettings.value = settings
         if (settings is GasSettings.UTXO) {
             val currentSpec = graph.specific.value ?: return

@@ -8,17 +8,25 @@ import com.vultisig.wallet.ui.utils.UiText
 import java.math.BigInteger
 
 /**
- * The Advanced Gas Settings entry that actually applies to [chain].
+ * The saved Advanced Gas Settings, only if they were saved for [chain].
  *
- * `saveGasSettings` never clears what it stored, so an `Eth` entry set on an EVM chain outlives a
- * switch to a Cosmos, UTXO, Solana, Substrate, Sui or Ripple one. Reading it there would size both
- * the gas-limit multiplier and the displayed fee off a wei-denominated value that chain never
- * charges — [selectGasFeeForFeeEstimation] only special-cases Cardano and UTXO, so every other
- * non-EVM chain would take the `evmGasSettings != null` branch. Resolve the settings through here
- * instead of casting at the call site.
+ * The form clears them on a chain change, but a reader can still race that clear, so every reader
+ * resolves through here: settings priced for Ethereum must not be signed on Base, and a Bitcoin
+ * byte fee must not be signed on Dogecoin (issue #6168).
+ */
+internal fun GasSettings?.forChain(chain: Chain): GasSettings? = this?.takeIf { it.chain == chain }
+
+/**
+ * The EVM Advanced Gas Settings entry that actually applies to [chain].
+ *
+ * Reading an `Eth` entry on a non-EVM chain would size both the gas-limit multiplier and the
+ * displayed fee off a wei-denominated value that chain never charges —
+ * [selectGasFeeForFeeEstimation] only special-cases Cardano and UTXO, so every other non-EVM chain
+ * would take the `evmGasSettings != null` branch. Resolve the settings through here instead of
+ * casting at the call site.
  */
 internal fun GasSettings?.evmSettingsFor(chain: Chain): GasSettings.Eth? =
-    (this as? GasSettings.Eth)?.takeIf { chain.standard == TokenStandard.EVM }
+    (forChain(chain) as? GasSettings.Eth)?.takeIf { chain.standard == TokenStandard.EVM }
 
 /**
  * Picks the gas fee value passed to GasFeeToEstimatedFeeUseCase for a given chain.
