@@ -61,6 +61,8 @@ internal fun checkForBannedParty(resultValue: Int, keysignCommittee: List<String
  * @param onWaitingForPeers Invoked when no inbound messages have arrived for ~10 s; receives the
  *   silent peer IDs.
  * @param onPeersResumed Invoked when messages resume after [onWaitingForPeers] was called.
+ * @param onMessageSigned Invoked after each entry of [messageToSign] is signed, with the number of
+ *   messages signed so far.
  */
 class DKLSKeysign(
     val keysignCommittee: List<String>,
@@ -76,6 +78,7 @@ class DKLSKeysign(
     private val encryption: Encryption,
     val onWaitingForPeers: ((List<String>) -> Unit)? = null,
     val onPeersResumed: (() -> Unit)? = null,
+    val onMessageSigned: ((signedCount: Int) -> Unit)? = null,
 ) {
     /** The local party ID derived from the vault. */
     val localPartyID: String = vault.localPartyID
@@ -469,10 +472,14 @@ class DKLSKeysign(
         }
     }
 
-    /** Signs all [messageToSign] entries, retrying each on failure. */
+    /**
+     * Signs all [messageToSign] entries, retrying each on failure, and reports each completed one
+     * through [onMessageSigned].
+     */
     suspend fun keysignWithRetry() {
-        for (msg in messageToSign) {
+        messageToSign.forEachIndexed { index, msg ->
             keysignOneMessageWithRetry(0, msg)
+            onMessageSigned?.invoke(index + 1)
         }
     }
 }

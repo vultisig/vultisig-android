@@ -83,6 +83,7 @@ internal const val RIVE_TO_TOKEN_IMAGE_MAX_PX = 256
 @Composable
 internal fun KeysignView(
     state: KeysignState,
+    signingProgress: Float = state.progress,
     txHash: String,
     approveTransactionHash: String,
     transactionLink: String,
@@ -222,7 +223,7 @@ internal fun KeysignView(
                 }
 
                 else -> {
-                    KeysignRiveProgress(progress = targetState.progress, coinLogoRes = coinLogoRes)
+                    KeysignRiveProgress(progress = signingProgress, coinLogoRes = coinLogoRes)
                 }
             }
         }

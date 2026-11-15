@@ -157,8 +157,9 @@ internal sealed class KeysignState {
      * Emitted when a keysign peer has been silent for ~10 s.
      *
      * @property missingPeers Party IDs that have not sent any messages in the current attempt.
-     * @property signingProgress Rive progress value at the time silence was detected (0.33 for
-     *   ECDSA, 0.66 for EdDSA/MLDSA); used to avoid animating the progress indicator backward.
+     * @property signingProgress Phase progress value at the time silence was detected (0.33 for
+     *   ECDSA, 0.66 for EdDSA/MLDSA); [keysignProgress] adds the signed-message share on top, so
+     *   the progress indicator does not animate backward.
      */
     data class WaitingForPeer(val missingPeers: List<String>, val signingProgress: Float = 0.33f) :
         KeysignState()
@@ -194,6 +195,23 @@ internal val KeysignState.progress: Float
             is KeysignState.KeysignFinished -> 1f
             else -> 0f
         }
+
+/**
+ * Bar value for [state] once [signedCount] of [totalCount] messages are signed.
+ *
+ * A multi-message transaction (e.g. one signature per UTXO input) signs its messages one after
+ * another, which can take minutes. While signing, the bar moves from the phase's own value to 100%
+ * in proportion to the messages signed, so it never moves backwards and only reaches 100% once
+ * every signature is done. Single-message signing and every non-signing state keep [progress].
+ */
+internal fun keysignProgress(state: KeysignState, signedCount: Int, totalCount: Int): Float {
+    val phaseProgress = state.progress
+    if (totalCount <= 1 || !state.isInProgress || state is KeysignState.CreatingInstance) {
+        return phaseProgress
+    }
+    val signedFraction = signedCount.coerceIn(0, totalCount).toFloat() / totalCount
+    return phaseProgress + (1f - phaseProgress) * signedFraction
+}
 
 /** Discriminated union of transaction types shown in the keysign confirmation UI. */
 internal sealed interface TransactionTypeUiModel {
@@ -294,6 +312,8 @@ private val TransactionStatus.isSuccessful: Boolean
  * @property swapProgressLink Deep-link to the swap progress page, or null when not a swap.
  * @property showSaveToAddressBook True when the destination address is not yet saved and is not
  *   another vault.
+ * @property signedMessageCount Messages signed so far in the current signing attempt.
+ * @property totalMessageCount Messages the current signing attempt has to sign.
  */
 @Immutable
 internal data class KeysignUiState(
@@ -310,18 +330,25 @@ internal data class KeysignUiState(
      * resolves, and null for every reading the normal-send card already describes better.
      */
     val operationHero: HeroContent? = null,
+    val signedMessageCount: Int = 0,
+    val totalMessageCount: Int = 0,
 )
+
+/** Bar value for the keysign progress animation, see [keysignProgress]. */
+internal val KeysignUiState.signingProgress: Float
+    get() = keysignProgress(signingState, signedMessageCount, totalMessageCount)
 
 /**
  * One keyType-specific signing attempt: builds and runs the native helper, reporting peer-wait
- * transitions via [onWaitingForPeers]/[onPeersResumed], and returns the produced signatures keyed
- * by message hash.
+ * transitions via [onWaitingForPeers]/[onPeersResumed] and each completed message via
+ * [onMessageSigned], and returns the produced signatures keyed by message hash.
  */
 private typealias RunKeysign =
-    suspend (onWaitingForPeers: (List<String>) -> Unit, onPeersResumed: () -> Unit) -> Map<
-            String,
-            KeysignResponse,
-        >
+    suspend (
+        onWaitingForPeers: (List<String>) -> Unit,
+        onPeersResumed: () -> Unit,
+        onMessageSigned: (signedCount: Int) -> Unit,
+    ) -> Map<String, KeysignResponse>
 
 /** ViewModel that drives the keysign screen: starts the TSS signing flow and tracks its state. */
 internal class KeysignViewModel
@@ -672,7 +699,7 @@ constructor(
                     signWithKeyType(
                         activeState = KeysignState.KeysignECDSA,
                         waitingProgress = 0.33f,
-                    ) { onWaitingForPeers, onPeersResumed ->
+                    ) { onWaitingForPeers, onPeersResumed, onMessageSigned ->
                         val dkls =
                             DKLSKeysign(
                                 vault = vault,
@@ -688,6 +715,7 @@ constructor(
                                 encryption = encryption,
                                 onWaitingForPeers = onWaitingForPeers,
                                 onPeersResumed = onPeersResumed,
+                                onMessageSigned = onMessageSigned,
                             )
                         dkls.keysignWithRetry()
                         dkls.signatures
@@ -697,7 +725,7 @@ constructor(
                     signWithKeyType(
                         activeState = KeysignState.KeysignEdDSA,
                         waitingProgress = 0.66f,
-                    ) { onWaitingForPeers, onPeersResumed ->
+                    ) { onWaitingForPeers, onPeersResumed, onMessageSigned ->
                         val schnorr =
                             SchnorrKeysign(
                                 vault = vault,
@@ -712,6 +740,7 @@ constructor(
                                 encryption = encryption,
                                 onWaitingForPeers = onWaitingForPeers,
                                 onPeersResumed = onPeersResumed,
+                                onMessageSigned = onMessageSigned,
                             )
                         schnorr.keysignWithRetry()
                         schnorr.signatures
@@ -727,7 +756,7 @@ constructor(
                     signWithKeyType(
                         activeState = KeysignState.KeysignMLDSA,
                         waitingProgress = 0.66f,
-                    ) { onWaitingForPeers, onPeersResumed ->
+                    ) { onWaitingForPeers, onPeersResumed, onMessageSigned ->
                         val mldsa =
                             MldsaKeysign(
                                 keysignCommittee = keysignCommittee,
@@ -741,6 +770,7 @@ constructor(
                                 encryption = encryption,
                                 onWaitingForPeers = onWaitingForPeers,
                                 onPeersResumed = onPeersResumed,
+                                onMessageSigned = onMessageSigned,
                             )
                         mldsa.keysignWithRetry()
                         mldsa.signatures
@@ -770,11 +800,22 @@ constructor(
                     }
                 },
                 { state.update { it.copy(signingState = activeState) } },
+                ::recordSignedMessages,
             )
         if (newSignatures.isEmpty()) {
             error("Failed to sign transaction, signatures empty")
         }
         this.signatures += newSignatures
+    }
+
+    /** Records [signedCount] signed messages; the count only ever grows within an attempt. */
+    private fun recordSignedMessages(signedCount: Int) {
+        state.update { it.copy(signedMessageCount = maxOf(it.signedMessageCount, signedCount)) }
+    }
+
+    /** Starts the signed-message count for a new signing attempt over [messagesToSign]. */
+    private fun resetSignedMessageCount() {
+        state.update { it.copy(signedMessageCount = 0, totalMessageCount = messagesToSign.size) }
     }
 
     /**
@@ -789,6 +830,7 @@ constructor(
         sign: suspend () -> Unit,
     ) {
         try {
+            resetSignedMessageCount()
             sign()
             Timber.d("All messages signed, broadcasting transaction")
             onAllSigned()
@@ -904,9 +946,10 @@ constructor(
                     ?: error("Failed to create TSS instance")
             tssInstance = tssService
 
-            messagesToSign.forEach { message ->
+            messagesToSign.forEachIndexed { index, message ->
                 Timber.d("signing message: $message")
                 signMessageWithRetry(tssService, message, 1)
+                recordSignedMessages(index + 1)
             }
         }
     }

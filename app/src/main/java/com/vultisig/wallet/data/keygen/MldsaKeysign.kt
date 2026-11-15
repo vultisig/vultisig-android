@@ -39,7 +39,7 @@ import tss.KeysignResponse
  *
  * Coordinates a threshold signing session between [keysignCommittee] members via the relay
  * [mediatorURL]. Each message hash in [messageToSign] is signed sequentially with automatic retry
- * on transient protocol failures.
+ * on transient protocol failures; [onMessageSigned] receives the running count of signed messages.
  */
 class MldsaKeysign(
     private val keysignCommittee: List<String>,
@@ -53,6 +53,7 @@ class MldsaKeysign(
     private val encryption: Encryption,
     private val onWaitingForPeers: ((List<String>) -> Unit)? = null,
     private val onPeersResumed: (() -> Unit)? = null,
+    private val onMessageSigned: ((signedCount: Int) -> Unit)? = null,
 ) {
     private val localPartyID: String = vault.localPartyID
     private val publicKeyMldsa: String = vault.pubKeyMLDSA
@@ -75,9 +76,15 @@ class MldsaKeysign(
     /** Collects signatures keyed by the signed message hex string. */
     val signatures = mutableMapOf<String, KeysignResponse>()
 
-    /** Signs all [messageToSign] hashes sequentially, retrying each on failure. */
+    /**
+     * Signs all [messageToSign] hashes sequentially, retrying each on failure, and reports each
+     * completed one through [onMessageSigned].
+     */
     suspend fun keysignWithRetry() {
-        messageToSign.forEach { keysignOneMessage(attempt = 0, messageToSign = it) }
+        messageToSign.forEachIndexed { index, msg ->
+            keysignOneMessage(attempt = 0, messageToSign = msg)
+            onMessageSigned?.invoke(index + 1)
+        }
     }
 
     /**
