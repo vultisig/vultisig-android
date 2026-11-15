@@ -16,12 +16,24 @@ import timber.log.Timber
  */
 val SPL_TOKEN_ACCOUNT_RENT_LAMPORTS: BigInteger = BigInteger.valueOf(2_039_280)
 
+/** Size of the farms `UserState` a first deposit creates with `initialize_user`. */
+const val FARM_USER_STATE_DATA_LENGTH = 920
+
+/** A wallet: a system account with no data. */
+const val WALLET_ACCOUNT_DATA_LENGTH = 0
+
 /**
- * Rent-exempt minimum Kamino charges when a first deposit creates the farms `UserState`. The
- * account size is Kamino-owned, so keep the observed mainnet lamport value here rather than
- * pretending the app can derive it from SPL token-account rent.
+ * Rent-exempt minimum for the farms `UserState`, measured on mainnet on 2026-11-15. Used only when
+ * the live read for [FARM_USER_STATE_DATA_LENGTH] bytes fails.
  */
-val FARM_USER_STATE_RENT_LAMPORTS: BigInteger = BigInteger.valueOf(6_299_080)
+val FARM_USER_STATE_RENT_LAMPORTS: BigInteger = BigInteger.valueOf(5_323_840)
+
+/**
+ * The balance a wallet must keep after any transaction: the runtime refuses one that leaves the
+ * fee payer between zero and this rent-exempt minimum for a 0-byte account. Measured on mainnet on
+ * 2026-11-15; used only when the live read fails.
+ */
+val WALLET_RENT_EXEMPT_LAMPORTS: BigInteger = BigInteger.valueOf(650_240)
 
 /**
  * What the Solana runtime deducts per signature. These transactions carry exactly one.
@@ -168,7 +180,12 @@ constructor(private val solanaApi: SolanaApi, private val kaminoApi: KaminoApi) 
                 if (!wrapsSol || hasWrappedSolAccount.await()) BigInteger.ZERO else rent
             val shareAccountRent = if (hasShareAccount.await()) BigInteger.ZERO else rent
             val farmUserStateRent =
-                if (hasPosition.await()) BigInteger.ZERO else FARM_USER_STATE_RENT_LAMPORTS
+                if (hasPosition.await()) BigInteger.ZERO
+                else
+                    sizedRentReserve(
+                        dataLength = FARM_USER_STATE_DATA_LENGTH,
+                        pinned = FARM_USER_STATE_RENT_LAMPORTS,
+                    )
 
             wrappedSolRent + shareAccountRent + farmUserStateRent
         }
@@ -201,6 +218,22 @@ constructor(private val solanaApi: SolanaApi, private val kaminoApi: KaminoApi) 
 
             destinationRent + shareAccountRent
         }
+
+    /**
+     * The balance the wallet has to keep after a transaction, see [WALLET_RENT_EXEMPT_LAMPORTS].
+     */
+    suspend fun walletRentExemptMinimum(): BigInteger =
+        sizedRentReserve(
+            dataLength = WALLET_ACCOUNT_DATA_LENGTH,
+            pinned = WALLET_RENT_EXEMPT_LAMPORTS,
+        )
+
+    /** The sized read answers a failure with zero, which is never a real rent-exempt minimum. */
+    private suspend fun sizedRentReserve(dataLength: Int, pinned: BigInteger): BigInteger =
+        solanaApi.getMinimumBalanceForRentExemption(dataLength).takeIf { it.signum() > 0 }
+            ?: pinned.also {
+                Timber.w("Kamino rent read for %d bytes failed, using the pinned value", dataLength)
+            }
 
     private suspend fun tokenAccountRentReserve(): BigInteger =
         runCatchingCancellable { solanaApi.getMinimumBalanceForRentExemption() }

@@ -691,6 +691,11 @@ constructor(
      * On a native-SOL deposit the amount leaves the same balance, so it is required on top. A
      * withdraw's amount arrives from the position rather than leaving the wallet, so it is not.
      *
+     * A deposit must also leave the wallet its own rent-exempt minimum: the runtime refuses a
+     * transaction that ends the fee payer anywhere between zero and that minimum, and ending at
+     * exactly zero is refused here too, because it leaves nothing to pay for the exit. A withdraw
+     * is not held to it, because a SOL-vault withdraw pays SOL back into the same wallet.
+     *
      * Weighed against [solChargeableLamports], not the padded figure the screens quote. The quoted
      * base fee is 1,000,000 lamports where the runtime deducts 5,000, and [spendableBalance]
      * reserves the padded one — so a Max deposit into the SOL vault leaves exactly the 995,000
@@ -714,12 +719,12 @@ constructor(
                 }
 
         val cost = solChargeableLamports(vault, coin, action)
+        val nativeAmount =
+            if (coin.isNativeToken) amount.movePointRight(coin.decimal).toBigInteger()
+            else BigInteger.ZERO
         val required =
-            if (!route.isWithdraw && coin.isNativeToken) {
-                cost + amount.movePointRight(coin.decimal).toBigInteger()
-            } else {
-                cost
-            }
+            if (route.isWithdraw) cost
+            else cost + nativeAmount + rentReserve.walletRentExemptMinimum()
 
         if (balance < required) {
             refuse(KaminoAmountRefusal.INSUFFICIENT_SOL, listOf(solCoin.ticker))
