@@ -38,6 +38,8 @@ import tss.KeysignResponse
  * @param onWaitingForPeers Invoked when no inbound messages have arrived for ~10 s; receives the
  *   silent peer IDs.
  * @param onPeersResumed Invoked when messages resume after [onWaitingForPeers] was called.
+ * @param onMessageSigned Invoked after each entry of [messageToSign] is signed, with the number of
+ *   messages signed so far.
  */
 class SchnorrKeysign(
     val keysignCommittee: List<String>,
@@ -52,6 +54,7 @@ class SchnorrKeysign(
     private val encryption: Encryption,
     private val onWaitingForPeers: ((List<String>) -> Unit)? = null,
     private val onPeersResumed: (() -> Unit)? = null,
+    private val onMessageSigned: ((signedCount: Int) -> Unit)? = null,
 ) {
     /** The local party ID for this node in the signing session. */
     val localPartyID: String = vault.localPartyID
@@ -440,10 +443,14 @@ class SchnorrKeysign(
         }
     }
 
-    /** Signs all [messageToSign] entries, retrying each on failure. */
+    /**
+     * Signs all [messageToSign] entries, retrying each on failure, and reports each completed one
+     * through [onMessageSigned].
+     */
     suspend fun keysignWithRetry() {
-        for (msg in messageToSign) {
+        messageToSign.forEachIndexed { index, msg ->
             keysignOneMessageWithRetry(0, msg)
+            onMessageSigned?.invoke(index + 1)
         }
     }
 }
