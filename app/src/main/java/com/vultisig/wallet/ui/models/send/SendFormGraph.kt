@@ -137,7 +137,11 @@ internal class SendFormGraph(
 
     private val planFee = MutableStateFlow<Long?>(null)
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
-    private val gasFee = MutableStateFlow<TokenValue?>(null)
+    /**
+     * The network fee for the current send, recomputed by [GasFeeOrchestrator]. Reset here when
+     * the selected chain changes, since it is priced per chain (issue #6168).
+     */
+    val gasFee = MutableStateFlow<TokenValue?>(null)
     private val tronFrozenBalances =
         MutableStateFlow<TronFrozenBalanceState>(TronFrozenBalanceState.Loading)
 
@@ -516,6 +520,12 @@ internal class SendFormGraph(
             .distinctUntilChanged()
             .onEach { chain ->
                 gasSettings.update { saved -> saved?.takeIf { it.chain == chain } }
+                // The fee is priced per chain too, and getSpecific turns it straight into the
+                // UTXO byteFee — so until collectGasFees (350ms-debounced) catches up, the new
+                // chain's spec would be built with the previous chain's rate, and would keep it
+                // for good if that recompute failed. The shimmer collectGasFees arms covers the
+                // gap, and pull-to-refresh recovers a failed recompute.
+                gasFee.value = null
                 // Dropping the saved settings is not enough on a UTXO chain: saveGasSettings
                 // copied that byte fee straight into `specific`, and only the 300ms-debounced
                 // collectSpecific replaces it. Until it lands, calculateUtxoMaxAmount would plan

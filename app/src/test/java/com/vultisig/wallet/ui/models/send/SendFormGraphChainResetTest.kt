@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
@@ -145,6 +146,42 @@ internal class SendFormGraphChainResetTest {
             advanceUntilIdle()
 
             assertEquals(ethSpec, graph.specific.value)
+        }
+
+    /**
+     * The fee is priced per chain, and `getSpecific` turns it into the UTXO byteFee, so a fee left
+     * over from the previous chain would build the new chain's spec — and stay there for good if
+     * the recompute for the new chain failed.
+     */
+    @Test
+    fun `switching chains drops the fee priced for the previous one`() =
+        runTest(mainDispatcher) {
+            val graph = buildGraph(backgroundScope)
+            graph.bindUiState()
+            selectedToken.value = btc
+            advanceUntilIdle()
+            graph.gasFee.value = TokenValue(value = BigInteger("35"), token = btc)
+
+            selectedToken.value = doge
+            advanceUntilIdle()
+
+            assertNull(graph.gasFee.value)
+        }
+
+    @Test
+    fun `the fee survives a token change within the same chain`() =
+        runTest(mainDispatcher) {
+            val graph = buildGraph(backgroundScope)
+            graph.bindUiState()
+            selectedToken.value = eth
+            advanceUntilIdle()
+            val fee = TokenValue(value = BigInteger("21000"), token = eth)
+            graph.gasFee.value = fee
+
+            selectedToken.value = usdc
+            advanceUntilIdle()
+
+            assertEquals(fee, graph.gasFee.value)
         }
 
     private val btc = Coins.Bitcoin.BTC.copy(address = "bc1q")
