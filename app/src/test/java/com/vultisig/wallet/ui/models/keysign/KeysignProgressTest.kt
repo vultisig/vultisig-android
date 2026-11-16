@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.keysign
 import com.vultisig.wallet.ui.utils.UiText
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class KeysignProgressTest {
@@ -56,6 +57,12 @@ class KeysignProgressTest {
     fun `out-of-range counts are clamped`() {
         assertEquals(0.33f, keysignProgress(KeysignState.KeysignECDSA, -1, 10))
         assertEquals(1f, keysignProgress(KeysignState.KeysignECDSA, 12, 10))
+    }
+
+    @Test
+    fun `many-inputs label shows from 10 signatures with the count`() {
+        assertNull(KeysignUiState(totalMessageCount = 9).manyInputsCount)
+        assertEquals(10, KeysignUiState(totalMessageCount = 10).manyInputsCount)
     }
 
     @Test

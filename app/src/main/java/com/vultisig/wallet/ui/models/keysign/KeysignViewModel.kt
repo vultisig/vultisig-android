@@ -338,6 +338,13 @@ internal data class KeysignUiState(
 internal val KeysignUiState.signingProgress: Float
     get() = keysignProgress(signingState, signedMessageCount, totalMessageCount)
 
+/** Signature count from which the signing screen warns that signing takes longer than usual. */
+internal const val MANY_INPUTS_SIGNATURE_THRESHOLD = 10
+
+/** Inputs to name in the "takes longer than usual" label, or null when no label is shown. */
+internal val KeysignUiState.manyInputsCount: Int?
+    get() = totalMessageCount.takeIf { it >= MANY_INPUTS_SIGNATURE_THRESHOLD }
+
 /**
  * One keyType-specific signing attempt: builds and runs the native helper, reporting peer-wait
  * transitions via [onWaitingForPeers]/[onPeersResumed] and each completed message via
