@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.blockchain.solana.kamino
 
-import com.vultisig.wallet.data.api.KaminoApi
+import com.vultisig.wallet.data.api.SolanaAccountOwnership
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.utils.runCatchingCancellable
@@ -137,7 +137,7 @@ private fun costLamports(
  */
 class KaminoRentReserve
 @Inject
-constructor(private val solanaApi: SolanaApi, private val kaminoApi: KaminoApi) {
+constructor(private val solanaApi: SolanaApi) {
 
     suspend operator fun invoke(
         vault: KaminoVault,
@@ -173,14 +173,14 @@ constructor(private val solanaApi: SolanaApi, private val kaminoApi: KaminoApi) 
                 wrapsSol && tokenAccountExists(walletAddress, vault.tokenMint)
             }
             val hasShareAccount = async { tokenAccountExists(walletAddress, vault.sharesMint) }
-            val hasPosition = async { hasVaultPosition(walletAddress, vault) }
+            val hasFarmUserState = async { farmUserStateExists(walletAddress, vault) }
 
             val rent = tokenAccountRent.await()
             val wrappedSolRent =
                 if (!wrapsSol || hasWrappedSolAccount.await()) BigInteger.ZERO else rent
             val shareAccountRent = if (hasShareAccount.await()) BigInteger.ZERO else rent
             val farmUserStateRent =
-                if (hasPosition.await()) BigInteger.ZERO
+                if (hasFarmUserState.await()) BigInteger.ZERO
                 else
                     sizedRentReserve(
                         dataLength = FARM_USER_STATE_DATA_LENGTH,
@@ -254,23 +254,36 @@ constructor(private val solanaApi: SolanaApi, private val kaminoApi: KaminoApi) 
             .getOrDefault(false)
 
     /**
-     * Whether the wallet already has a farm UserState account for this vault, so a redeposit does
-     * not need to pay its rent again.
+     * Whether the wallet's farms `UserState` for this vault's farm is already on-chain, so a
+     * deposit will not run `farms::initialize_user` and pay its rent.
      *
-     * Goes through [KaminoWithdrawEligibility.resolve] rather than checking for a bare entry in the
-     * response: the same endpoint keeps a zero-share row for a wallet that has fully exited, and
-     * the withdraw flow already treats that row as no position. Checking entry presence alone would
-     * disagree with that and waive the rent on an account that may no longer exist.
+     * Read from the account itself, not inferred from the positions API: a wallet that fully
+     * withdrew has no position there but still owns its `UserState` — nothing in a withdraw closes
+     * it — and Kamino's built deposit for that wallet carries no `initialize_user`. Inferring from
+     * the position reserved 5.3M lamports the transaction never spends and refused returning
+     * depositors who could afford the deposit (#6182). Kamino adds `initialize_user` exactly when
+     * this account is missing, so the initiating and the co-signing device reach the same answer
+     * here as a read of the transaction bytes would, and before those bytes exist.
+     *
+     * Only an account the farms program owns counts. A missing account, an unreadable answer or an
+     * address that will not derive all reserve the rent: overstating the fee by one rent is the
+     * safer error, as it is for [tokenAccountExists].
      */
-    private suspend fun hasVaultPosition(walletAddress: String, vault: KaminoVault): Boolean =
-        runCatchingCancellable {
-                val entry =
-                    kaminoApi.getUserPositions(walletAddress).firstOrNull {
-                        it.vaultAddress == vault.address
-                    }
-                KaminoWithdrawEligibility.resolve(entry, vault.sharesDecimals) is
-                    KaminoWithdrawEligibility.Withdrawable
+    private suspend fun farmUserStateExists(walletAddress: String, vault: KaminoVault): Boolean {
+        val userState =
+            KaminoFarmsUserState.derive(farm = vault.farm, owner = walletAddress)
+                ?: run {
+                    Timber.w("Kamino farm UserState did not derive for farm %s", vault.farm)
+                    return false
+                }
+        return when (val ownership = solanaApi.getAccountOwnership(userState)) {
+            is SolanaAccountOwnership.Owned ->
+                ownership.programId == KaminoVaultRegistry.FARMS_PROGRAM_ID
+            SolanaAccountOwnership.Missing -> false
+            SolanaAccountOwnership.Unavailable -> {
+                Timber.w("Kamino farm UserState read failed for farm %s", vault.farm)
+                false
             }
-            .onFailure { Timber.w(it, "Kamino positions read failed for vault %s", vault.address) }
-            .getOrDefault(false)
+        }
+    }
 }
