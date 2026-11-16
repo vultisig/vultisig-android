@@ -365,6 +365,65 @@ internal class GasFeeOrchestratorTest {
             assertNull(amountSlot.captured)
         }
 
+    /**
+     * Review finding on #6179: this collector is not cancelled when the selected token changes, so
+     * a request already inside getSpecific runs to completion and publishes its spec — after the
+     * chain observer in SendFormGraph cleared the spec for exactly that reason. A failing request
+     * for the new chain then leaves the previous chain's spec in place, and Max-amount planning
+     * prices against it (issue #6168).
+     */
+    @Test
+    fun `collectSpecific drops a spec for a chain the form has already left`() =
+        runTest(mainDispatcher) {
+            account = btcAccount()
+            val btc = btcAccount().token
+            val doge = btc.copy(chain = Chain.Dogecoin, ticker = "DOGE", address = "D8...")
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    gasLimit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    transactionType = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } coAnswers
+                {
+                    if (arg<Chain>(0) == Chain.Bitcoin) {
+                        // The form moves to Dogecoin while Bitcoin's request is in flight.
+                        selectedToken.value = doge
+                        BlockChainSpecificAndUtxo(
+                            BlockChainSpecific.UTXO(
+                                byteFee = BigInteger("35"),
+                                sendMaxAmount = false,
+                            )
+                        )
+                    } else {
+                        // Dogecoin's own request fails, so nothing overwrites a stale spec.
+                        throw RuntimeException("network error")
+                    }
+                }
+            val orchestrator = build(backgroundScope)
+
+            runWithIoOnTestScheduler {
+                orchestrator.start()
+                selectedToken.value = btc
+                gasFee.value = tokenValue(100, btc)
+                advanceTimeBy(400)
+                advanceUntilIdle()
+            }
+
+            assertNull(specific.value)
+            assertNull(uiState.value.specific)
+        }
+
     // ──────── collectPlanFee ────────
 
     @Test

@@ -460,6 +460,13 @@ internal class GasFeeOrchestrator(
                                     memo = cardanoMemo,
                                 )
                             }
+                        // This collector is not cancelled when the selected token changes: a
+                        // request that was already in getSpecific runs to completion, so its spec
+                        // can land after the form has moved on — and after the chain observer in
+                        // SendFormGraph cleared the spec for exactly that reason. A failing
+                        // request for the new chain then leaves the previous chain's spec in
+                        // place, which Max-amount planning would price against (issue #6168).
+                        if (selectedToken.value?.chain != chain) return@collect
                         specific.value = spec
                         advanceGasUiRepository.updateBlockChainSpecific(spec.blockChainSpecific)
                         advanceGasUiRepository.showIcon()
