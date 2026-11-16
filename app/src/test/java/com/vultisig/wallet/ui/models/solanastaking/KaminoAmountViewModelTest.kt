@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.KaminoVaultMetricsJson
 import com.vultisig.wallet.data.api.KaminoVaultStateJson
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.blockchain.solana.kamino.BuildKaminoKeysignPayloadUseCase
+import com.vultisig.wallet.data.blockchain.solana.kamino.FARM_USER_STATE_DATA_LENGTH
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoRentReserve
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoVaultRegistry
 import com.vultisig.wallet.data.blockchain.solana.kamino.KaminoWithdrawEligibility
@@ -94,6 +95,13 @@ internal class KaminoAmountViewModelTest {
 
         // 165-byte SPL token account rent-exempt reserve, the real mainnet figure.
         coEvery { solanaApi.getMinimumBalanceForRentExemption() } returns BigInteger("2039280")
+        // Deliberately not the pinned fallback, so a figure below that matches only when the live
+        // read was used.
+        coEvery {
+            solanaApi.getMinimumBalanceForRentExemption(FARM_USER_STATE_DATA_LENGTH)
+        } returns BigInteger(FARM_USER_STATE_RENT)
+        coEvery { solanaApi.getMinimumBalanceForRentExemption(0) } returns
+            BigInteger(WALLET_RENT_MINIMUM)
         coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns (null to false)
         coEvery { solanaApi.getMedianPriorityFee(any()) } returns KAMINO_UNIT_PRICE
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
@@ -369,6 +377,32 @@ internal class KaminoAmountViewModelTest {
         // 1 SOL less base fee (1,000,000), priority fee (1,000,000 µlamports x 350,000 CU =
         // 350,000), two token-account rents (2,039,280 each) and farm UserState rent (6,299,080).
         assertEquals(0, BigDecimal("0.98827236").compareTo(available))
+    }
+
+    @Test
+    fun `a failed farm rent read reserves the measured minimum instead`() = runTest {
+        coEvery {
+            solanaApi.getMinimumBalanceForRentExemption(FARM_USER_STATE_DATA_LENGTH)
+        } returns BigInteger.ZERO
+        coEvery { balanceRepository.getTokenValue(any(), any()) } returns
+            flowOf(TokenValue(value = BigInteger("1000000000"), token = COIN))
+        coEvery { kaminoApi.getVaultState(any()) } returns
+            KaminoVaultStateJson(
+                address = ALLEZ.address,
+                state =
+                    KaminoVaultStateJson.State(
+                        name = "Allez SOL",
+                        tokenMint = ALLEZ.tokenMint,
+                        tokenDecimals = 9,
+                        sharesMint = ALLEZ.sharesMint,
+                        sharesDecimals = 6,
+                    ),
+            )
+
+        val available = viewModel(vaultAddress = ALLEZ.address).state.value.available
+
+        // As above, with the pinned 5,323,840 in place of the farm UserState read.
+        assertEquals(0, BigDecimal("0.9892476").compareTo(available))
     }
 
     @Test
@@ -758,7 +792,29 @@ internal class KaminoAmountViewModelTest {
         coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
     }
 
-    /** 5,000 signature fee + 320,000 priority + 2,039,280 share account + 6,299,080 user-state. */
+    /**
+     * Paying every fee and rent but ending one lamport under the wallet's rent-exempt minimum is a
+     * transaction the runtime refuses, so the form refuses it before the ceremony.
+     */
+    @Test
+    fun `a USDC deposit that would leave the wallet under its rent-exempt minimum is refused`() =
+        runTest {
+            givenTokenBalance("2500000000")
+            givenSolBalance((BigInteger(FIRST_DEPOSIT_LAMPORTS) - BigInteger.ONE).toString())
+
+            val vm = viewModel()
+            vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+            vm.submit()
+
+            vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
+                R.string.insufficient_native_token
+            coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+        }
+
+    /**
+     * 5,000 signature fee + 320,000 priority + 2,039,280 share account + 6,299,080 user-state +
+     * 650,240 the wallet must keep.
+     */
     @Test
     fun `a USDC deposit goes through on a wallet holding exactly what it costs`() = runTest {
         givenTokenBalance("2500000000")
@@ -776,12 +832,14 @@ internal class KaminoAmountViewModelTest {
     /**
      * `createIdempotent` charges nothing for an account that already exists, and Kamino does not
      * re-create a user-state it finds. Charging the rent anyway would refuse a redeposit the wallet
-     * can comfortably afford.
+     * can comfortably afford. The wallet holds the fee plus the minimum it must keep, far short of
+     * any account's rent.
      */
     @Test
     fun `a redeposit is not charged rent for the accounts it already has`() = runTest {
         givenTokenBalance("2500000000")
-        givenSolBalance(FEE_ONLY_LAMPORTS)
+        val feePlusMinimum = BigInteger(FEE_ONLY_LAMPORTS) + BigInteger(WALLET_RENT_MINIMUM)
+        givenSolBalance(feePlusMinimum.toString())
         coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
             ("existing-account" to true)
         givenPosition()
@@ -988,9 +1046,16 @@ internal class KaminoAmountViewModelTest {
         const val FEE_ONLY_LAMPORTS = "325000"
 
         /**
-         * The fee plus rent for the share account and the farms user-state a first deposit opens.
+         * The fee plus rent for the share account and the farms user-state a first deposit opens,
+         * plus the rent-exempt minimum the wallet has to keep.
          */
-        const val FIRST_DEPOSIT_LAMPORTS = "8663360"
+        const val FIRST_DEPOSIT_LAMPORTS = "9313600"
+
+        /** The farms user-state rent the stubbed live read answers with. */
+        const val FARM_USER_STATE_RENT = "6299080"
+
+        /** Rent-exempt minimum for a 0-byte account on mainnet. */
+        const val WALLET_RENT_MINIMUM = "650240"
 
         /** More SOL than any of these transactions costs. */
         const val FUNDED_SOL = "50000000"
