@@ -514,7 +514,19 @@ internal class SendFormGraph(
         selectedToken
             .map { it?.chain }
             .distinctUntilChanged()
-            .onEach { chain -> gasSettings.update { saved -> saved?.takeIf { it.chain == chain } } }
+            .onEach { chain ->
+                gasSettings.update { saved -> saved?.takeIf { it.chain == chain } }
+                // Dropping the saved settings is not enough on a UTXO chain: saveGasSettings
+                // copied that byte fee straight into `specific`, and only the 300ms-debounced
+                // collectSpecific replaces it. Until it lands, calculateUtxoMaxAmount would plan
+                // a Max on the new chain with the previous chain's fee rate, so clear the spec
+                // and let that planner take its existing null fallback. The UI copy goes too,
+                // which also keeps the gas sheet from opening on another chain's spec.
+                if (specific.value != null) {
+                    specific.value = null
+                    uiState.update { it.copy(specific = null) }
+                }
+            }
             .launchIn(scope)
         advanceGasUiRepository.showSettings
             .onEach { showGasSettings ->

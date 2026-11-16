@@ -30,6 +30,22 @@ internal data class GasSettingsUiModel(
     val isLoadingEthFee: Boolean = false,
 )
 
+/**
+ * Whether the sheet's Save button may be pressed.
+ *
+ * Every field this sheet saves is read through [toBigIntegerOrZero], so a blank one is saved as a
+ * zero fee rather than rejected — Save has to be blocked until the chain's default actually loaded.
+ * On the Ethereum path that is what [GasSettingsUiModel.isLoadingEthFee] tracks (issue #5397); the
+ * UTXO path has no such flag, so the byte fee itself is the gate. Typing a value re-enables Save,
+ * which is also the retry path after a failed default-fee fetch.
+ */
+internal fun GasSettingsUiModel.isSaveEnabled(byteFee: CharSequence): Boolean =
+    when (chainSpecific) {
+        is BlockChainSpecific.Ethereum -> !isLoadingEthFee
+        is BlockChainSpecific.UTXO -> byteFee.toBigIntegerOrZero() > BigInteger.ZERO
+        else -> true
+    }
+
 internal enum class PriorityFee {
     LOW,
     NORMAL,
@@ -127,7 +143,7 @@ constructor(
             byteFeeChain = chain
         }
         return viewModelScope.safeLaunch {
-            if (byteFeeState.text.toBigInteger() > BigInteger.ZERO) return@safeLaunch
+            if (byteFeeState.text.toBigIntegerOrZero() > BigInteger.ZERO) return@safeLaunch
             val byteFee = utxoFeeService.getDefaultGasFee(chain)
             byteFeeState.setTextAndPlaceCursorAtEnd(byteFee.toString())
         }
@@ -152,26 +168,19 @@ constructor(
                     chain = chain,
                     baseFee = baseFeeWei,
                     priorityFee = priorityFeeWei,
-                    gasLimit = gasLimitState.text.toString().toBigInteger(),
+                    gasLimit = gasLimitState.text.toString().toBigIntegerOrZero(),
                 )
             }
 
             is BlockChainSpecific.UTXO ->
                 GasSettings.UTXO(
                     chain = chain,
-                    byteFee = byteFeeState.text.toString().toBigInteger(),
+                    byteFee = byteFeeState.text.toString().toBigIntegerOrZero(),
                 )
 
             else -> error("Unsupported chain specific")
         }
     }
-
-    private fun CharSequence.toBigInteger() =
-        try {
-            BigInteger(toString())
-        } catch (e: NumberFormatException) {
-            BigInteger.ZERO
-        }
 
     private fun String.toBigDecimalOrZero() =
         try {
@@ -180,3 +189,10 @@ constructor(
             java.math.BigDecimal.ZERO
         }
 }
+
+private fun CharSequence.toBigIntegerOrZero() =
+    try {
+        BigInteger(toString())
+    } catch (_: NumberFormatException) {
+        BigInteger.ZERO
+    }

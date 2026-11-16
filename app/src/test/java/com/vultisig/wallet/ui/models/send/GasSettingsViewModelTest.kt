@@ -17,8 +17,11 @@ import io.mockk.mockk
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -336,5 +339,83 @@ internal class GasSettingsViewModelTest {
                 gasLimit = BigInteger("21000"),
             )
         }
+    }
+
+    /**
+     * Review finding on this PR: blanking the byte fee on a chain switch (test above) left Save
+     * pressable, because only the ETH path has a loading flag. save() reads a blank field as zero,
+     * so an early Save planned a zero-fee spend — the ETH hazard of issue #5397 on the UTXO path.
+     */
+    @Test
+    fun `Save is disabled while the UTXO byte fee has not loaded yet`() = runTest {
+        // Still in flight when Save is evaluated: the field is blank, so there is nothing to save.
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } coAnswers
+            {
+                delay(1_000)
+                BigInteger("20")
+            }
+        val vm = viewModel()
+
+        vm.loadData(Chain.Bitcoin, utxoSpec)
+
+        assertEquals("", vm.byteFeeState.text.toString())
+        assertFalse(vm.state.value.isSaveEnabled(vm.byteFeeState.text))
+    }
+
+    @Test
+    fun `Save is enabled once the default byte fee lands`() = runTest {
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } returns BigInteger("20")
+        val vm = viewModel()
+
+        vm.loadData(Chain.Bitcoin, utxoSpec)
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isSaveEnabled(vm.byteFeeState.text))
+        assertEquals(BigInteger("20"), (vm.save() as GasSettings.UTXO).byteFee)
+    }
+
+    // A failed default-fee fetch leaves the field blank, so Save stays blocked; typing a byte fee
+    // is the retry path, and re-enables it.
+    @Test
+    fun `a failed default byte fee fetch keeps Save disabled until a fee is typed`() = runTest {
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } throws
+            RuntimeException("network error")
+        val vm = viewModel()
+
+        vm.loadData(Chain.Bitcoin, utxoSpec)
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.isSaveEnabled(vm.byteFeeState.text))
+
+        vm.byteFeeState.setTextAndPlaceCursorAtEnd("12")
+
+        assertTrue(vm.state.value.isSaveEnabled(vm.byteFeeState.text))
+    }
+
+    @Test
+    fun `Save is disabled for a non-positive byte fee`() = runTest {
+        coEvery { utxoFeeService.getDefaultGasFee(Chain.Bitcoin) } returns BigInteger("20")
+        val vm = viewModel()
+        vm.loadData(Chain.Bitcoin, utxoSpec)
+        advanceUntilIdle()
+
+        vm.byteFeeState.setTextAndPlaceCursorAtEnd("0")
+        assertFalse(vm.state.value.isSaveEnabled(vm.byteFeeState.text))
+
+        // Not restricted to digits either: a pasted "-" must not pass the gate.
+        vm.byteFeeState.setTextAndPlaceCursorAtEnd("-5")
+        assertFalse(vm.state.value.isSaveEnabled(vm.byteFeeState.text))
+    }
+
+    // The ETH branch of the same gate: it defers to isLoadingEthFee, which stays true on failure.
+    @Test
+    fun `Save is disabled while the eth fee is loading or failed`() = runTest {
+        coEvery { evmApi.getBaseFee() } throws RuntimeException("network error")
+        val vm = viewModel()
+
+        vm.loadData(Chain.Ethereum, ethSpec(priorityFeeWei = BigInteger("1000000000")))
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.isSaveEnabled(vm.byteFeeState.text))
     }
 }
