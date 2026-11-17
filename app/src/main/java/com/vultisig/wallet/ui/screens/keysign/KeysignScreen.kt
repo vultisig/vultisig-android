@@ -12,6 +12,7 @@ import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
+import com.vultisig.wallet.ui.models.keysign.manyInputsCount
 import com.vultisig.wallet.ui.models.keysign.signingProgress
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
@@ -89,6 +90,7 @@ private fun Keysign(
     KeysignView(
         state = state,
         signingProgress = uiState.signingProgress,
+        manyInputsCount = uiState.manyInputsCount,
         transactionTypeUiModel = uiState.transactionUiModel,
         txHash = uiState.txHash,
         approveTransactionHash = uiState.approveTxHash,

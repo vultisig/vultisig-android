@@ -118,6 +118,11 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA ključ kopiran</string>
     <string name="welcome_screen_skip">Preskoči</string>
     <string name="keysign_screen_preparing_vault">Priprema trezora…</string>
+    <plurals name="keysign_many_inputs_takes_longer">
+        <item quantity="one">Potpisivanje %1$d ulaza. To traje dulje nego obično.</item>
+        <item quantity="few">Potpisivanje %1$d ulaza. To traje dulje nego obično.</item>
+        <item quantity="other">Potpisivanje %1$d ulaza. To traje dulje nego obično.</item>
+    </plurals>
     <string name="keysign_malicious_party_detected">Otkriveno je da se uređaj „%1$s“ u ovoj sesiji potpisivanja ponaša zlonamjerno. Nemojte ga više koristiti za potpisivanje.</string>
     <string name="vault_settings_delete_vault_caution1">Svjestan sam da će trezor biti trajno izbrisan</string>
     <string name="vault_settings_delete_vault_caution2">Svjestan sam da mogu izgubiti sredstva</string>

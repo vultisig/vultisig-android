@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
+import com.vultisig.wallet.ui.models.keysign.manyInputsCount
 import com.vultisig.wallet.ui.models.keysign.signingProgress
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimDoneContent
@@ -215,6 +216,7 @@ internal fun JoinKeysignView() {
                 KeysignView(
                     state = kState,
                     signingProgress = keysignUiState.signingProgress,
+                    manyInputsCount = keysignUiState.manyInputsCount,
                     txHash = keysignUiState.txHash,
                     approveTransactionHash = keysignUiState.approveTxHash,
                     transactionLink = keysignUiState.txLink,
