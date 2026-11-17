@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.KaminoApi
 import com.vultisig.wallet.data.api.KaminoUserPositionJson
 import com.vultisig.wallet.data.api.KaminoVaultMetricsJson
 import com.vultisig.wallet.data.api.KaminoVaultStateJson
+import com.vultisig.wallet.data.api.SolanaAccountOwnership
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.blockchain.solana.kamino.BuildKaminoKeysignPayloadUseCase
 import com.vultisig.wallet.data.blockchain.solana.kamino.FARM_USER_STATE_DATA_LENGTH
@@ -103,6 +104,8 @@ internal class KaminoAmountViewModelTest {
         coEvery { solanaApi.getMinimumBalanceForRentExemption(0) } returns
             BigInteger(WALLET_RENT_MINIMUM)
         coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns (null to false)
+        // A wallet that never deposited: no farms UserState, so a deposit opens one.
+        coEvery { solanaApi.getAccountOwnership(any()) } returns SolanaAccountOwnership.Missing
         coEvery { solanaApi.getMedianPriorityFee(any()) } returns KAMINO_UNIT_PRICE
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { chainAccountAddressRepository.getAddress(Chain.Solana, VAULT) } returns
@@ -168,7 +171,7 @@ internal class KaminoAmountViewModelTest {
             buildKeysignPayload = buildKeysignPayload,
             // The real reserve over the same stubbed APIs: it is the rent arithmetic these tests
             // assert on, and it now runs on the co-signing device too.
-            rentReserve = KaminoRentReserve(solanaApi, kaminoApi),
+            rentReserve = KaminoRentReserve(solanaApi),
             depositTransactionRepository = depositTransactionRepository,
             navigator = navigator,
         )
@@ -213,6 +216,11 @@ internal class KaminoAmountViewModelTest {
             )
         coEvery { kaminoApi.getVaultMetrics(vaultAddress) } returns
             KaminoVaultMetricsJson(tokensPerShare = "1.0544278224860290217")
+    }
+
+    /** The wallet's farms UserState for the Steakhouse farm is already on-chain. */
+    private fun givenFarmUserState(ownership: SolanaAccountOwnership) {
+        coEvery { solanaApi.getAccountOwnership(STEAKHOUSE_USER_STATE) } returns ownership
     }
 
     /** The wrapped-SOL vault, whose withdraw pays SOL back into the fee-paying wallet. */
@@ -864,6 +872,7 @@ internal class KaminoAmountViewModelTest {
         coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
             ("existing-account" to true)
         givenPosition()
+        givenFarmUserState(SolanaAccountOwnership.Owned(KaminoVaultRegistry.FARMS_PROGRAM_ID))
         val captured = givenBuiltPayload()
 
         val vm = viewModel()
@@ -872,6 +881,84 @@ internal class KaminoAmountViewModelTest {
 
         vm.state.value.error.shouldBeNull()
         captured.captured.operation shouldBe OPERATION_KAMINO_DEPOSIT
+    }
+
+    /**
+     * A wallet that fully withdrew has no position left, but it still owns its farms UserState —
+     * nothing in a withdraw closes it, and Kamino's deposit for such a wallet carries no
+     * `farms::initialize_user` (checked on mainnet). Inferring the account from the position
+     * reserved its 5.3M-lamport rent anyway and refused a deposit that would land (#6182).
+     */
+    @Test
+    fun `a returning depositor is not charged farm rent for the UserState it kept`() = runTest {
+        givenTokenBalance("2500000000")
+        val feePlusMinimum = BigInteger(FEE_ONLY_LAMPORTS) + BigInteger(WALLET_RENT_MINIMUM)
+        givenSolBalance(feePlusMinimum.toString())
+        coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
+            ("existing-account" to true)
+        coEvery { kaminoApi.getUserPositions(WALLET) } returns emptyList()
+        givenFarmUserState(SolanaAccountOwnership.Owned(KaminoVaultRegistry.FARMS_PROGRAM_ID))
+        val captured = givenBuiltPayload()
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
+        vm.state.value.error.shouldBeNull()
+        captured.captured.operation shouldBe OPERATION_KAMINO_DEPOSIT
+    }
+
+    /**
+     * A position is no proof the account exists either: the rent follows the account, so an
+     * active position whose UserState is missing still pays for `initialize_user`.
+     */
+    @Test
+    fun `a missing farm UserState is charged its rent whatever the position says`() = runTest {
+        givenTokenBalance("2500000000")
+        val feePlusMinimum = BigInteger(FEE_ONLY_LAMPORTS) + BigInteger(WALLET_RENT_MINIMUM)
+        givenSolBalance(feePlusMinimum.toString())
+        coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
+            ("existing-account" to true)
+        givenPosition()
+        givenFarmUserState(SolanaAccountOwnership.Missing)
+
+        val vm = viewModel()
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+        vm.submit()
+
+        vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
+            R.string.insufficient_native_token
+        coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+    }
+
+    /**
+     * An unanswered read is not a "yes": reserving one rent too many costs a refusal the user can
+     * retry, while waiving one the transaction needs costs a whole ceremony. The same holds for an
+     * account at that address the farms program does not own — it is not the UserState Kamino reads.
+     */
+    @Test
+    fun `an unreadable or foreign farm UserState is charged its rent`() = runTest {
+        for (ownership in
+            listOf(
+                SolanaAccountOwnership.Unavailable,
+                SolanaAccountOwnership.Owned("11111111111111111111111111111111"),
+            )) {
+            givenTokenBalance("2500000000")
+            val feePlusMinimum = BigInteger(FEE_ONLY_LAMPORTS) + BigInteger(WALLET_RENT_MINIMUM)
+            givenSolBalance(feePlusMinimum.toString())
+            coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
+                ("existing-account" to true)
+            givenPosition()
+            givenFarmUserState(ownership)
+
+            val vm = viewModel()
+            vm.amountFieldState.setTextAndPlaceCursorAtEnd("100")
+            vm.submit()
+
+            vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
+                R.string.insufficient_native_token
+        }
+        coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
     }
 
     /**
@@ -1040,6 +1127,7 @@ internal class KaminoAmountViewModelTest {
         coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
             ("existing-account" to true)
         givenPosition()
+        givenFarmUserState(SolanaAccountOwnership.Owned(KaminoVaultRegistry.FARMS_PROGRAM_ID))
         val captured = givenBuiltPayload()
 
         val vm = viewModel()
@@ -1102,6 +1190,13 @@ internal class KaminoAmountViewModelTest {
 
         const val VAULT_ID = "vault-id"
         const val WALLET = "9ceRgz579BcfWogs3RE11FKNQaWW7Lmtnev3MXspxUjF"
+
+        /**
+         * [WALLET]'s farms UserState in the Steakhouse farm, derived independently (seeds `user`,
+         * farm, owner under the farms program) — so a stub keyed on it is reached only through the
+         * address the app derives.
+         */
+        const val STEAKHOUSE_USER_STATE = "A1b83WVHAKXeRQAHsdAzJY23ShXCPjqKshzmFFXwGP4Z"
 
         val STEAKHOUSE = KaminoVaultRegistry.STEAKHOUSE_USDC
         val ALLEZ = KaminoVaultRegistry.ALLEZ_SOL
