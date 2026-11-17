@@ -239,7 +239,13 @@ internal class GasFeeOrchestrator(
                     gasSettings,
                     specific,
                 ) { (chain, gasFeeValue), gasSettings, specific ->
-                    gasFee.value = adjustGasFee(gasFeeValue, gasSettings, specific, chain)
+                    // The estimate is not cancelled when the selected token changes, so one that
+                    // was already in flight can land after SendFormGraph reset gasFee for the new
+                    // chain. If the new chain's estimate then fails, nothing overwrites it, and
+                    // getSpecific would price the new chain with the old chain's fee (issue #6168).
+                    if (selectedToken.value?.chain == chain) {
+                        gasFee.value = adjustGasFee(gasFeeValue, gasSettings, specific, chain)
+                    }
                 }
                 .collect()
         }

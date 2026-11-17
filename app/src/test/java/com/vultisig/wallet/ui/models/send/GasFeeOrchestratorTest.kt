@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.BasicFee
+import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -292,6 +293,37 @@ internal class GasFeeOrchestratorTest {
             }
 
             assertEquals(BigInteger("2"), gasFee.value?.value)
+        }
+
+    @Test
+    fun `collectGasFees drops a fee for a chain the form has already left`() =
+        runTest(mainDispatcher) {
+            vault = vault()
+            account = btcAccount()
+            val btc = btcAccount().token
+            val doge = btc.copy(chain = Chain.Dogecoin, ticker = "DOGE", address = "D8...")
+            coEvery { tokenRepository.getNativeToken(any()) } returns btc
+            coEvery { feeServiceComposite.calculateFees(any()) } coAnswers
+                {
+                    if (firstArg<Transfer>().coin.chain == Chain.Bitcoin) {
+                        // The form moves to Dogecoin while Bitcoin's estimate is in flight.
+                        selectedToken.value = doge
+                        BasicFee(BigInteger("2"))
+                    } else {
+                        // Dogecoin's own estimate fails, so nothing overwrites a stale fee.
+                        throw RuntimeException("network error")
+                    }
+                }
+            val orchestrator = build(backgroundScope)
+
+            runWithIoOnTestScheduler {
+                orchestrator.start()
+                selectedToken.value = btc
+                advanceTimeBy(400)
+                advanceUntilIdle()
+            }
+
+            assertNull(gasFee.value)
         }
 
     // ──────── collectSpecific ────────
