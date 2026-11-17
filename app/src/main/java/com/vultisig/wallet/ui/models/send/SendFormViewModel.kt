@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.send
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
@@ -253,7 +254,17 @@ constructor(
         advanceGasUiRepository.hideSettings()
     }
 
+    /**
+     * The Advanced Gas Settings currently applied to this send. Exposed for the test covering the
+     * chain guard in [saveGasSettings] (issue #6168).
+     */
+    @VisibleForTesting internal val appliedGasSettings: GasSettings?
+        get() = graph.gasSettings.value
+
     fun saveGasSettings(settings: GasSettings) {
+        // The sheet was opened for one chain; if the form has since moved to another, the values
+        // were priced for a chain this send no longer targets (issue #6168).
+        if (settings.chain != selectedTokenValue?.chain) return
         graph.gasSettings.value = settings
         if (settings is GasSettings.UTXO) {
             val currentSpec = graph.specific.value ?: return

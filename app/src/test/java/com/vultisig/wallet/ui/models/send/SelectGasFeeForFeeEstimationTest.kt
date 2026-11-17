@@ -83,6 +83,7 @@ internal class SelectGasFeeForFeeEstimationTest {
                 planFee = null,
                 evmGasSettings =
                     GasSettings.Eth(
+                        chain = Chain.Ethereum,
                         baseFee = baseFee,
                         priorityFee = priorityFee,
                         gasLimit = BigInteger.valueOf(21_000L),
@@ -114,6 +115,7 @@ internal class SelectGasFeeForFeeEstimationTest {
                 planFee = 500L,
                 evmGasSettings =
                     GasSettings.Eth(
+                        chain = Chain.Ethereum,
                         baseFee = BigInteger.valueOf(100L),
                         priorityFee = BigInteger.valueOf(2L),
                         gasLimit = BigInteger.valueOf(21_000L),
@@ -133,6 +135,7 @@ internal class SelectGasFeeForFeeEstimationTest {
                 planFee = null,
                 evmGasSettings =
                     GasSettings.Eth(
+                        chain = Chain.Ethereum,
                         baseFee = BigInteger.ZERO,
                         priorityFee = BigInteger.valueOf(2L),
                         gasLimit = BigInteger.valueOf(21_000L),
@@ -150,6 +153,7 @@ internal class SelectGasFeeForFeeEstimationTest {
         // never diverge for the same GasSettings.Eth (issue #5397).
         val gasSettings =
             GasSettings.Eth(
+                chain = Chain.Ethereum,
                 baseFee = BigInteger.valueOf(30L),
                 priorityFee = BigInteger.valueOf(5L),
                 gasLimit = BigInteger.valueOf(21_000L),
@@ -164,5 +168,21 @@ internal class SelectGasFeeForFeeEstimationTest {
             )
 
         assertEquals(gasSettings.maxFeePerGasWei, result.value)
+    }
+
+    // Issue #6168: Ethereum and Base are both EVM, so the standard check alone let Ethereum's
+    // settings through on Base.
+    @Test
+    fun `evmSettingsFor drops settings saved on another EVM chain`() {
+        val saved =
+            GasSettings.Eth(
+                chain = Chain.Ethereum,
+                baseFee = BigInteger.valueOf(30L),
+                priorityFee = BigInteger.valueOf(5L),
+                gasLimit = BigInteger.valueOf(21_000L),
+            )
+
+        assertEquals(null, saved.evmSettingsFor(Chain.Base))
+        assertEquals(saved, saved.evmSettingsFor(Chain.Ethereum))
     }
 }

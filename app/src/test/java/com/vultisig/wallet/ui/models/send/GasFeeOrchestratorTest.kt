@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.BasicFee
+import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -102,9 +103,9 @@ internal class GasFeeOrchestratorTest {
     fun `adjustGasFee returns the original gas fee when settings are not UTXO`() {
         val gas = tokenValue(100, Coins.Ethereum.ETH)
         val ethSettings: GasSettings =
-            GasSettings.Eth(BigInteger.ONE, BigInteger.TWO, BigInteger.TEN)
+            GasSettings.Eth(Chain.Ethereum, BigInteger.ONE, BigInteger.TWO, BigInteger.TEN)
 
-        val result = adjustGasFee(gas, ethSettings, spec = null)
+        val result = adjustGasFee(gas, ethSettings, spec = null, chain = Chain.Ethereum)
 
         assertEquals(gas, result)
     }
@@ -112,13 +113,13 @@ internal class GasFeeOrchestratorTest {
     @Test
     fun `adjustGasFee swaps in the byteFee when both settings and specific are UTXO`() {
         val gas = tokenValue(100, Coins.ThorChain.RUNE)
-        val utxoSettings = GasSettings.UTXO(byteFee = BigInteger("250"))
+        val utxoSettings = GasSettings.UTXO(chain = Chain.Bitcoin, byteFee = BigInteger("250"))
         val utxoSpec =
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.UTXO(byteFee = BigInteger.ZERO, sendMaxAmount = false)
             )
 
-        val result = adjustGasFee(gas, utxoSettings, utxoSpec)
+        val result = adjustGasFee(gas, utxoSettings, utxoSpec, chain = Chain.Bitcoin)
 
         assertEquals(BigInteger("250"), result.value)
         // unit + decimals carried over from the original gas value.
@@ -126,10 +127,25 @@ internal class GasFeeOrchestratorTest {
         assertEquals(gas.decimals, result.decimals)
     }
 
+    // Issue #6168: Bitcoin and Dogecoin share BlockChainSpecific.UTXO.
+    @Test
+    fun `adjustGasFee ignores a byteFee saved on another UTXO chain`() {
+        val gas = tokenValue(100, Coins.ThorChain.RUNE)
+        val utxoSettings = GasSettings.UTXO(chain = Chain.Bitcoin, byteFee = BigInteger("250"))
+        val utxoSpec =
+            BlockChainSpecificAndUtxo(
+                BlockChainSpecific.UTXO(byteFee = BigInteger.ZERO, sendMaxAmount = false)
+            )
+
+        val result = adjustGasFee(gas, utxoSettings, utxoSpec, chain = Chain.Dogecoin)
+
+        assertEquals(gas, result)
+    }
+
     @Test
     fun `adjustGasFee leaves value alone when settings are UTXO but specific is not`() {
         val gas = tokenValue(42, Coins.Ethereum.ETH)
-        val utxoSettings = GasSettings.UTXO(byteFee = BigInteger("250"))
+        val utxoSettings = GasSettings.UTXO(chain = Chain.Bitcoin, byteFee = BigInteger("250"))
         // Mismatch: settings claim UTXO, specific is Ethereum-shaped.
         val ethSpec =
             BlockChainSpecificAndUtxo(
@@ -141,7 +157,7 @@ internal class GasFeeOrchestratorTest {
                 )
             )
 
-        val result = adjustGasFee(gas, utxoSettings, ethSpec)
+        val result = adjustGasFee(gas, utxoSettings, ethSpec, chain = Chain.Bitcoin)
 
         assertEquals(BigInteger("42"), result.value)
     }
@@ -158,7 +174,8 @@ internal class GasFeeOrchestratorTest {
                 )
             )
 
-        val result = adjustGasFee(gas, gasSettings = null, spec = cardanoSpec)
+        val result =
+            adjustGasFee(gas, gasSettings = null, spec = cardanoSpec, chain = Chain.Cardano)
 
         assertEquals(BigInteger.valueOf(174_257), result.value)
         assertEquals(gas.unit, result.unit)
@@ -168,7 +185,7 @@ internal class GasFeeOrchestratorTest {
     fun `adjustGasFee keeps the flat fee for Cardano until the specific is available`() {
         val gas = tokenValue(180_000, Coins.Cardano.ADA)
 
-        val result = adjustGasFee(gas, gasSettings = null, spec = null)
+        val result = adjustGasFee(gas, gasSettings = null, spec = null, chain = Chain.Cardano)
 
         assertEquals(BigInteger.valueOf(180_000), result.value)
     }
@@ -278,6 +295,37 @@ internal class GasFeeOrchestratorTest {
             assertEquals(BigInteger("2"), gasFee.value?.value)
         }
 
+    @Test
+    fun `collectGasFees drops a fee for a chain the form has already left`() =
+        runTest(mainDispatcher) {
+            vault = vault()
+            account = btcAccount()
+            val btc = btcAccount().token
+            val doge = btc.copy(chain = Chain.Dogecoin, ticker = "DOGE", address = "D8...")
+            coEvery { tokenRepository.getNativeToken(any()) } returns btc
+            coEvery { feeServiceComposite.calculateFees(any()) } coAnswers
+                {
+                    if (firstArg<Transfer>().coin.chain == Chain.Bitcoin) {
+                        // The form moves to Dogecoin while Bitcoin's estimate is in flight.
+                        selectedToken.value = doge
+                        BasicFee(BigInteger("2"))
+                    } else {
+                        // Dogecoin's own estimate fails, so nothing overwrites a stale fee.
+                        throw RuntimeException("network error")
+                    }
+                }
+            val orchestrator = build(backgroundScope)
+
+            runWithIoOnTestScheduler {
+                orchestrator.start()
+                selectedToken.value = btc
+                advanceTimeBy(400)
+                advanceUntilIdle()
+            }
+
+            assertNull(gasFee.value)
+        }
+
     // ──────── collectSpecific ────────
 
     @Test
@@ -347,6 +395,65 @@ internal class GasFeeOrchestratorTest {
             }
 
             assertNull(amountSlot.captured)
+        }
+
+    /**
+     * Review finding on #6179: this collector is not cancelled when the selected token changes, so
+     * a request already inside getSpecific runs to completion and publishes its spec — after the
+     * chain observer in SendFormGraph cleared the spec for exactly that reason. A failing request
+     * for the new chain then leaves the previous chain's spec in place, and Max-amount planning
+     * prices against it (issue #6168).
+     */
+    @Test
+    fun `collectSpecific drops a spec for a chain the form has already left`() =
+        runTest(mainDispatcher) {
+            account = btcAccount()
+            val btc = btcAccount().token
+            val doge = btc.copy(chain = Chain.Dogecoin, ticker = "DOGE", address = "D8...")
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    gasLimit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    transactionType = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } coAnswers
+                {
+                    if (arg<Chain>(0) == Chain.Bitcoin) {
+                        // The form moves to Dogecoin while Bitcoin's request is in flight.
+                        selectedToken.value = doge
+                        BlockChainSpecificAndUtxo(
+                            BlockChainSpecific.UTXO(
+                                byteFee = BigInteger("35"),
+                                sendMaxAmount = false,
+                            )
+                        )
+                    } else {
+                        // Dogecoin's own request fails, so nothing overwrites a stale spec.
+                        throw RuntimeException("network error")
+                    }
+                }
+            val orchestrator = build(backgroundScope)
+
+            runWithIoOnTestScheduler {
+                orchestrator.start()
+                selectedToken.value = btc
+                gasFee.value = tokenValue(100, btc)
+                advanceTimeBy(400)
+                advanceUntilIdle()
+            }
+
+            assertNull(specific.value)
+            assertNull(uiState.value.specific)
         }
 
     // ──────── collectPlanFee ────────

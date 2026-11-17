@@ -55,8 +55,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -135,7 +137,11 @@ internal class SendFormGraph(
 
     private val planFee = MutableStateFlow<Long?>(null)
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
-    private val gasFee = MutableStateFlow<TokenValue?>(null)
+    /**
+     * The network fee for the current send, recomputed by [GasFeeOrchestrator]. Reset here when
+     * the selected chain changes, since it is priced per chain (issue #6168).
+     */
+    val gasFee = MutableStateFlow<TokenValue?>(null)
     private val tronFrozenBalances =
         MutableStateFlow<TronFrozenBalanceState>(TronFrozenBalanceState.Loading)
 
@@ -507,6 +513,31 @@ internal class SendFormGraph(
                 uiState.update { it.copy(fiatCurrency = currency.ticker) }
             }
         }
+        // Saved Advanced Gas Settings were priced for one chain; drop them once the form moves to
+        // another, so a fee saved on Ethereum is never signed on Base (issue #6168).
+        selectedToken
+            .map { it?.chain }
+            .distinctUntilChanged()
+            .onEach { chain ->
+                gasSettings.update { saved -> saved?.takeIf { it.chain == chain } }
+                // The fee is priced per chain too, and getSpecific turns it straight into the
+                // UTXO byteFee — so until collectGasFees (350ms-debounced) catches up, the new
+                // chain's spec would be built with the previous chain's rate, and would keep it
+                // for good if that recompute failed. The shimmer collectGasFees arms covers the
+                // gap, and pull-to-refresh recovers a failed recompute.
+                gasFee.value = null
+                // Dropping the saved settings is not enough on a UTXO chain: saveGasSettings
+                // copied that byte fee straight into `specific`, and only the 300ms-debounced
+                // collectSpecific replaces it. Until it lands, calculateUtxoMaxAmount would plan
+                // a Max on the new chain with the previous chain's fee rate, so clear the spec
+                // and let that planner take its existing null fallback. The UI copy goes too,
+                // which also keeps the gas sheet from opening on another chain's spec.
+                if (specific.value != null) {
+                    specific.value = null
+                    uiState.update { it.copy(specific = null) }
+                }
+            }
+            .launchIn(scope)
         advanceGasUiRepository.showSettings
             .onEach { showGasSettings ->
                 uiState.update { it.copy(showGasSettings = showGasSettings) }
