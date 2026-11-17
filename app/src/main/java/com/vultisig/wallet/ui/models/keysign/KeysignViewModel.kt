@@ -339,7 +339,7 @@ internal val KeysignUiState.signingProgress: Float
     get() = keysignProgress(signingState, signedMessageCount, totalMessageCount)
 
 /** Signature count from which the signing screen warns that signing takes longer than usual. */
-internal const val MANY_INPUTS_SIGNATURE_THRESHOLD = 10
+internal const val MANY_INPUTS_SIGNATURE_THRESHOLD = 3
 
 /** Inputs to name in the "takes longer than usual" label, or null when no label is shown. */
 internal val KeysignUiState.manyInputsCount: Int?

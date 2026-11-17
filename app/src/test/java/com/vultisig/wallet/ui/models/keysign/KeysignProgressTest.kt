@@ -60,9 +60,9 @@ class KeysignProgressTest {
     }
 
     @Test
-    fun `many-inputs label shows from 10 signatures with the count`() {
-        assertNull(KeysignUiState(totalMessageCount = 9).manyInputsCount)
-        assertEquals(10, KeysignUiState(totalMessageCount = 10).manyInputsCount)
+    fun `many-inputs label shows from 3 signatures with the count`() {
+        assertNull(KeysignUiState(totalMessageCount = 2).manyInputsCount)
+        assertEquals(3, KeysignUiState(totalMessageCount = 3).manyInputsCount)
     }
 
     @Test
