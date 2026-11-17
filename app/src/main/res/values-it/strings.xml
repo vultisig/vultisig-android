@@ -118,6 +118,11 @@
     <string name="vault_detail_screen_mldsa_key_copied">Chiave MLDSA Copiata</string>
     <string name="welcome_screen_skip">Salta</string>
     <string name="keysign_screen_preparing_vault">Preparazione del vault…</string>
+    <plurals name="keysign_many_inputs_takes_longer">
+        <item quantity="one">Firma di %1$d input in corso. Richiede più tempo del solito.</item>
+        <item quantity="many">Firma di %1$d input in corso. Richiede più tempo del solito.</item>
+        <item quantity="other">Firma di %1$d input in corso. Richiede più tempo del solito.</item>
+    </plurals>
     <string name="keysign_malicious_party_detected">È stato rilevato che il dispositivo \"%1$s\" in questa sessione di keysign si è comportato in modo malevolo. Non utilizzarlo più per firmare.</string>
     <string name="vault_settings_delete_vault_caution1">Sono consapevole che il vault sarà eliminato definitivamente</string>
     <string name="vault_settings_delete_vault_caution2">Sono consapevole che posso perdere fondi</string>

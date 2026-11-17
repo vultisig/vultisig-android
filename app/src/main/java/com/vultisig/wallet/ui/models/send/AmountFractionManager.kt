@@ -60,7 +60,8 @@ internal class AmountFractionManager(
     private val feeServiceComposite: FeeServiceComposite,
     private val tokenRepository: TokenRepository,
     private val bitcoinPlanService: BitcoinPlanService,
-    private val adjustGasFee: (TokenValue, GasSettings?, BlockChainSpecificAndUtxo?) -> TokenValue,
+    private val adjustGasFee:
+        (TokenValue, GasSettings?, BlockChainSpecificAndUtxo?, Chain) -> TokenValue,
     private val amountManager: AmountManager,
 ) {
     private var chooseAmountFractionJob: Job? = null
@@ -331,7 +332,7 @@ internal class AmountFractionManager(
 
             val newGasFee = TokenValue(value = calculatedFee.amount, token = nativeCoin)
 
-            gasFee.value = adjustGasFee(newGasFee, gasSettings.value, specific.value)
+            gasFee.value = adjustGasFee(newGasFee, gasSettings.value, specific.value, chain)
             amount = fetchPercentageOfAvailableBalance(percentage)
         } catch (e: CancellationException) {
             throw e

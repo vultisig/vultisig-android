@@ -680,6 +680,7 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_claim_maturing" -> QbtcClaimMaturingPreview()
                     "quantum_security_intro" -> QuantumSecurityIntroScreenContent()
                     "keysign_signing_lunc" -> KeysignSigningLuncPreview()
+                    "keysign_signing_many_inputs" -> KeysignSigningManyInputsPreview()
                     "circle_usdc_widget" -> CircleUsdcWidgetPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
@@ -4026,6 +4027,27 @@ private fun KeysignSigningLuncPreview() {
         hasBackClick = false,
         showSaveToAddressBook = false,
         coinLogoRes = R.drawable.lunc,
+    )
+}
+
+// A 10-input ZEC send: the signing screen names the input count and warns it takes longer.
+@Composable
+private fun KeysignSigningManyInputsPreview() {
+    KeysignView(
+        state = KeysignState.KeysignECDSA,
+        signingProgress = 0.6f,
+        manyInputsCount = 10,
+        txHash = "",
+        approveTransactionHash = "",
+        transactionLink = "",
+        approveTransactionLink = "",
+        onComplete = {},
+        onAddToAddressBook = {},
+        progressLink = null,
+        transactionTypeUiModel = null,
+        hasBackClick = false,
+        showSaveToAddressBook = false,
+        coinLogoRes = R.drawable.zcash,
     )
 }
 

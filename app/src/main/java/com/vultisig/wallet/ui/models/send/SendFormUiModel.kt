@@ -190,9 +190,20 @@ internal enum class SendFocusField {
     AMOUNT,
 }
 
+/**
+ * Advanced Gas Settings saved from the sheet. [chain] is the chain they were priced for: a fee
+ * saved on Ethereum must never be signed on Base, nor a Bitcoin byte fee on Dogecoin, so readers
+ * resolve them through [forChain] (issue #6168).
+ */
 internal sealed class GasSettings {
-    data class Eth(val baseFee: BigInteger, val priorityFee: BigInteger, val gasLimit: BigInteger) :
-        GasSettings() {
+    abstract val chain: Chain
+
+    data class Eth(
+        override val chain: Chain,
+        val baseFee: BigInteger,
+        val priorityFee: BigInteger,
+        val gasLimit: BigInteger,
+    ) : GasSettings() {
         init {
             require(baseFee >= BigInteger.ZERO) { "baseFee must be non-negative" }
             require(priorityFee >= BigInteger.ZERO) { "priorityFee must be non-negative" }
@@ -206,7 +217,7 @@ internal sealed class GasSettings {
             get() = baseFee + priorityFee
     }
 
-    data class UTXO(val byteFee: BigInteger) : GasSettings()
+    data class UTXO(override val chain: Chain, val byteFee: BigInteger) : GasSettings()
 }
 
 internal data class InvalidTransactionDataException(val text: UiText) : Exception()

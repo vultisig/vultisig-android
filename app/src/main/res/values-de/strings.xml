@@ -120,6 +120,10 @@
     <string name="vault_detail_screen_mldsa_key_copied">MLDSA-Schlüssel kopiert</string>
     <string name="welcome_screen_skip">Überspringen</string>
     <string name="keysign_screen_preparing_vault">Tresor wird vorbereitet…</string>
+    <plurals name="keysign_many_inputs_takes_longer">
+        <item quantity="one">%1$d Eingabe wird signiert. Das dauert länger als üblich.</item>
+        <item quantity="other">%1$d Eingaben werden signiert. Das dauert länger als üblich.</item>
+    </plurals>
     <string name="keysign_malicious_party_detected">Das Gerät „%1$s“ hat sich in dieser Keysign-Sitzung böswillig verhalten. Verwenden Sie es nicht mehr zum Signieren.</string>
     <string name="vault_settings_delete_vault_caution1">Mir ist bewusst, dass der Tresor dauerhaft gelöscht wird</string>
     <string name="vault_settings_delete_vault_caution2">Mir ist bewusst, dass ich Geld verlieren kann</string>

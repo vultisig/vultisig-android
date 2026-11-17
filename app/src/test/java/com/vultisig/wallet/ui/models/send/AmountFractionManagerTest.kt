@@ -636,7 +636,7 @@ internal class AmountFractionManagerTest {
             feeServiceComposite = feeServiceComposite,
             tokenRepository = tokenRepository,
             bitcoinPlanService = bitcoinPlanService,
-            adjustGasFee = { gas, _, _ -> gas },
+            adjustGasFee = { gas, _, _, _ -> gas },
             amountManager = amountManager,
         )
 

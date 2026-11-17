@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.models.send.evmSettingsFor
+import com.vultisig.wallet.ui.models.send.forChain
 import com.vultisig.wallet.ui.models.send.memoLengthErrorOrNull
 import com.vultisig.wallet.ui.models.send.selectGasFeeForFeeEstimation
 import com.vultisig.wallet.ui.models.send.toPlainBigDecimalOrNull
@@ -287,7 +288,7 @@ internal class DefaultSendStrategy(
                                     isThorchainRouterDeposit = isThorchainRouterDeposit,
                                 )
                             }
-                            .let { applyGasSettings(it) }
+                            .let { applyGasSettings(chain, it) }
                             .let {
                                 applyBitcoinPlan(
                                     it,
@@ -676,10 +677,9 @@ internal class DefaultSendStrategy(
      * funds.
      */
     private fun withEvmGasSettings(chain: Chain, gasFee: TokenValue): TokenValue {
-        // Resolved through evmSettingsFor so a GasSettings.Eth left over from an EVM chain can't
-        // be read here on, say, Bitcoin — its wei-denominated product would land as satoshis and
-        // swallow the whole balance. applyGasSettings is safe on its own: it gates on the spec
-        // type, which only an EVM chain produces.
+        // Resolved through evmSettingsFor so a GasSettings.Eth saved on another chain can't be
+        // read here: on Bitcoin its wei-denominated product would land as satoshis and swallow the
+        // whole balance, and on another EVM chain it would reserve a fee priced for the wrong one.
         val eth = gasSettings.value.evmSettingsFor(chain) ?: return gasFee
         return gasFee.copy(value = eth.maxFeePerGasWei * eth.gasLimit)
     }
@@ -742,8 +742,13 @@ internal class DefaultSendStrategy(
         return specific.copy(blockChainSpecific = ripple.copy(destinationTag = destinationTag))
     }
 
-    private fun applyGasSettings(it: BlockChainSpecificAndUtxo): BlockChainSpecificAndUtxo {
-        val gs = gasSettings.value ?: return it
+    private fun applyGasSettings(
+        chain: Chain,
+        it: BlockChainSpecificAndUtxo,
+    ): BlockChainSpecificAndUtxo {
+        // Matching the spec type alone is not enough: Ethereum and Base share
+        // BlockChainSpecific.Ethereum, Bitcoin and Dogecoin share BlockChainSpecific.UTXO.
+        val gs = gasSettings.value.forChain(chain) ?: return it
         val spec = it.blockChainSpecific
         return when {
             gs is GasSettings.Eth && spec is BlockChainSpecific.Ethereum ->

@@ -201,23 +201,44 @@ internal class KaminoAmountViewModelTest {
     }
 
     /** A position large enough to withdraw from, with a readable rate. */
-    private fun givenPosition(shares: String = "1000000000") {
+    private fun givenPosition(
+        shares: String = "1000000000",
+        vaultAddress: String = STEAKHOUSE.address,
+    ) {
         coEvery { kaminoApi.getUserPositions(WALLET) } returns
             listOf(
                 KaminoUserPositionJson(
-                    vaultAddress = STEAKHOUSE.address,
+                    vaultAddress = vaultAddress,
                     stakedShares = "0",
                     unstakedShares = shares,
                     totalShares = shares,
                 )
             )
-        coEvery { kaminoApi.getVaultMetrics(STEAKHOUSE.address) } returns
+        coEvery { kaminoApi.getVaultMetrics(vaultAddress) } returns
             KaminoVaultMetricsJson(tokensPerShare = "1.0544278224860290217")
     }
 
     /** The wallet's farms UserState for the Steakhouse farm is already on-chain. */
     private fun givenFarmUserState(ownership: SolanaAccountOwnership) {
         coEvery { solanaApi.getAccountOwnership(STEAKHOUSE_USER_STATE) } returns ownership
+    }
+
+    /** The wrapped-SOL vault, whose withdraw pays SOL back into the fee-paying wallet. */
+    private fun givenSolVault() {
+        coEvery { kaminoApi.getVaultState(any()) } returns
+            KaminoVaultStateJson(
+                address = ALLEZ.address,
+                state =
+                    KaminoVaultStateJson.State(
+                        name = "Allez SOL",
+                        tokenMint = ALLEZ.tokenMint,
+                        tokenDecimals = 9,
+                        sharesMint = ALLEZ.sharesMint,
+                        sharesDecimals = 6,
+                        minDepositAmount = "10000000",
+                        minWithdrawAmount = "1000",
+                    ),
+            )
     }
 
     private fun givenBuiltPayload(): io.mockk.CapturingSlot<DepositTransaction> {
@@ -967,15 +988,82 @@ internal class KaminoAmountViewModelTest {
      * 5,000, so it leaves exactly 995,000 lamports of padding behind. Demanding the padded
      * 1,400,000 back stranded that position: the withdraw that exits it costs 405,000 and could
      * only be started by funding SOL from outside the app.
+     *
+     * Not held to the wallet's rent-exempt minimum either: the withdraw pays SOL back into the same
+     * wallet, so the 995,000 − 405,000 = 590,000 it would leave short of that minimum is topped up
+     * by the payout itself.
      */
     @Test
-    fun `a withdraw is affordable on the padding a Max deposit leaves, not on the quoted fee`() =
+    fun `a SOL-vault withdraw is affordable on the padding a Max deposit leaves`() = runTest {
+        givenSolVault()
+        givenTokenBalance("0")
+        givenSolBalance(MAX_DEPOSIT_LEFTOVER_LAMPORTS)
+        givenPosition(vaultAddress = ALLEZ.address)
+        // The accounts a withdraw would otherwise open are already the wallet's, which is what
+        // makes its whole cost the fee.
+        coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
+            ("existing-account" to true)
+        val captured = givenBuiltPayload()
+
+        val vm = viewModel(vaultAddress = ALLEZ.address, isWithdraw = true)
+        vm.amountFieldState.setTextAndPlaceCursorAtEnd("0.01")
+        vm.submit()
+
+        vm.state.value.error.shouldBeNull()
+        captured.captured.operation shouldBe OPERATION_KAMINO_WITHDRAW
+    }
+
+    /** 5,000 signature fee + the 400,000-unit withdraw priority fee, and no rent to pay. */
+    @Test
+    fun `a SOL-vault withdraw is refused one lamport below what the chain charges for it`() =
+        runTest {
+            givenSolVault()
+            givenTokenBalance("0")
+            givenSolBalance("404999")
+            givenPosition(vaultAddress = ALLEZ.address)
+            coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
+                ("existing-account" to true)
+
+            val vm = viewModel(vaultAddress = ALLEZ.address, isWithdraw = true)
+            vm.amountFieldState.setTextAndPlaceCursorAtEnd("0.01")
+            vm.submit()
+
+            vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
+                R.string.insufficient_native_token
+            coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+        }
+
+    /**
+     * A token-vault withdraw only pays SOL out, so the runtime holds the fee payer to its
+     * rent-exempt minimum: the same Max-deposit padding that exits a SOL position would end this
+     * wallet at 590,000 lamports and fail at broadcast with `InsufficientFundsForRent` (#6181).
+     */
+    @Test
+    fun `a USDC withdraw that would leave the wallet under its rent-exempt minimum is refused`() =
         runTest {
             givenTokenBalance("0")
-            givenSolBalance(MAX_DEPOSIT_LEFTOVER_LAMPORTS)
+            // 405,000 fee + 650,240 minimum, less one lamport.
+            givenSolBalance("1055239")
             givenPosition()
-            // The accounts a withdraw would otherwise open are already the wallet's, which is what
-            // makes its whole cost the fee.
+            coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
+                ("existing-account" to true)
+
+            val vm = viewModel(isWithdraw = true)
+            vm.amountFieldState.setTextAndPlaceCursorAtEnd("1")
+            vm.submit()
+
+            vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
+                R.string.insufficient_native_token
+            coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
+        }
+
+    /** One lamport more leaves the wallet exactly its rent-exempt minimum, and goes through. */
+    @Test
+    fun `a USDC withdraw goes through on the fee plus the wallet's rent-exempt minimum`() =
+        runTest {
+            givenTokenBalance("0")
+            givenSolBalance("1055240")
+            givenPosition()
             coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
                 ("existing-account" to true)
             val captured = givenBuiltPayload()
@@ -988,24 +1076,6 @@ internal class KaminoAmountViewModelTest {
             captured.captured.operation shouldBe OPERATION_KAMINO_WITHDRAW
         }
 
-    /** 5,000 signature fee + the 400,000-unit withdraw priority fee, and no rent to pay. */
-    @Test
-    fun `a withdraw is refused one lamport below what the chain charges for it`() = runTest {
-        givenTokenBalance("0")
-        givenSolBalance("404999")
-        givenPosition()
-        coEvery { solanaApi.getTokenAssociatedAccountByOwner(any(), any()) } returns
-            ("existing-account" to true)
-
-        val vm = viewModel(isWithdraw = true)
-        vm.amountFieldState.setTextAndPlaceCursorAtEnd("1")
-        vm.submit()
-
-        vm.state.value.error.shouldBeInstanceOf<UiText.FormattedText>().resId shouldBe
-            R.string.insufficient_native_token
-        coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
-    }
-
     /**
      * A staked exit runs `farms::unstake` and `farms::withdraw_unstaked_deposits` ahead of the
      * vault withdraw, and the shares those release land in the wallet's own share account — created
@@ -1015,8 +1085,9 @@ internal class KaminoAmountViewModelTest {
     @Test
     fun `a withdraw reserves the share account a staked exit releases into`() = runTest {
         givenTokenBalance("0")
-        // Both rents less one lamport: 405,000 fee + 2,039,280 payout + 2,039,280 share account.
-        givenSolBalance("4483559")
+        // Less one lamport than 405,000 fee + 2,039,280 payout + 2,039,280 share account + the
+        // 650,240 the wallet has to keep.
+        givenSolBalance("5133799")
         givenPosition()
 
         val vm = viewModel(isWithdraw = true)
@@ -1030,9 +1101,9 @@ internal class KaminoAmountViewModelTest {
 
     /** The same wallet, one lamport better off, opens both accounts and goes through. */
     @Test
-    fun `a withdraw goes through on exactly the fee and both account rents`() = runTest {
+    fun `a withdraw goes through on exactly the fee, both account rents and the minimum`() = runTest {
         givenTokenBalance("0")
-        givenSolBalance("4483560")
+        givenSolBalance("5133800")
         givenPosition()
         val captured = givenBuiltPayload()
 

@@ -125,6 +125,11 @@
     <string name="vault_detail_screen_mldsa_key_copied">Chave MLDSA Copiada</string>
     <string name="welcome_screen_skip">Pular</string>
     <string name="keysign_screen_preparing_vault">Preparando cofre…</string>
+    <plurals name="keysign_many_inputs_takes_longer">
+        <item quantity="one">Assinando %1$d entrada. Isso leva mais tempo que o normal.</item>
+        <item quantity="many">Assinando %1$d entradas. Isso leva mais tempo que o normal.</item>
+        <item quantity="other">Assinando %1$d entradas. Isso leva mais tempo que o normal.</item>
+    </plurals>
     <string name="keysign_malicious_party_detected">O dispositivo \"%1$s\" nesta sessão de keysign agiu de forma maliciosa. Não o use novamente para assinar.</string>
     <string name="vault_settings_delete_vault_caution1">Estou ciente de que o cofre será excluído permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Estou ciente de que posso perder fundos</string>
