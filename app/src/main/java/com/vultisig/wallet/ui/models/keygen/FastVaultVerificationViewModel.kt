@@ -169,7 +169,12 @@ constructor(
                                                 BackupPasswordType.VultiServerPassword(
                                                     password = args.password
                                                 ),
-                                        )
+                                        ),
+                                    opts =
+                                        NavigationOptions(
+                                            popUpToRoute = Route.Keygen.Generating::class,
+                                            inclusive = true,
+                                        ),
                                 )
                             } else {
                                 val vault = temporaryVaultRepository.getById(vaultId)
