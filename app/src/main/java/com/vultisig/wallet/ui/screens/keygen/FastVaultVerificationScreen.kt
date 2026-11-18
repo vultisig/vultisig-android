@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -63,7 +64,8 @@ internal fun FastVaultVerificationScreen(model: FastVaultVerificationViewModel =
     val sheetState =
         rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
-            confirmValueChange = { !state.isSingleKeygen },
+            // only block dismissing; rejecting Expanded would keep the sheet from ever opening
+            confirmValueChange = { !(state.isSingleKeygen && it == SheetValue.Hidden) },
         )
 
     V2BottomSheet(sheetState = sheetState, onDismissRequest = model::back) {

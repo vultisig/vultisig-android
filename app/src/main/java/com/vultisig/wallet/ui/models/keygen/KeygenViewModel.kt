@@ -1048,7 +1048,16 @@ constructor(
                         )
                 },
             opts =
-                NavigationOptions(popUpToRoute = Route.Keygen.Generating::class, inclusive = true),
+                // FastVaultVerification is a dialog: popping Generating would leave it with no
+                // destination behind it (blank screen). BackupVault clears the stack afterwards.
+                if (action == TssAction.SingleKeygen && !args.email.isNullOrEmpty()) {
+                    NavigationOptions()
+                } else {
+                    NavigationOptions(
+                        popUpToRoute = Route.Keygen.Generating::class,
+                        inclusive = true,
+                    )
+                },
         )
     }
 
