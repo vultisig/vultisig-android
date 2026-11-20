@@ -9,7 +9,7 @@
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Tresor-Reshare mit neuer Gerätegruppe durchführen</string>
     <string name="vault_settings_dilithium_keygen_title">Post-Quantum-Schlüssel</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">MLDSA-44-Schlüssel für Quantenresistenz generieren</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">MLDSA-65-Schlüssel für Quantenresistenz generieren</string>
     <string name="vault_settings_delete_title">Löschen</string>
     <string name="select_asset_title">Asset auswählen</string>
     <string name="select_asset_no_result">Kein Ergebnis gefunden.</string>

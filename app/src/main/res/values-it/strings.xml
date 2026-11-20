@@ -8,7 +8,7 @@
     <string name="vault_settings_reshare_title">Reshare</string>
     <string name="vault_settings_reshare_subtitle">Esegui il reshare del vault con un nuovo comitato</string>
     <string name="vault_settings_dilithium_keygen_title">Chiave post-quantistica</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Genera la chiave MLDSA-44 per la resistenza ai computer quantistici</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Genera la chiave MLDSA-65 per la resistenza ai computer quantistici</string>
     <string name="vault_settings_delete_title">Elimina</string>
     <string name="vault_settings_security_title">Sicurezza On-chain</string>
     <string name="vault_settings_security_subtitle">Gestisci la tua sicurezza on-chain</string>

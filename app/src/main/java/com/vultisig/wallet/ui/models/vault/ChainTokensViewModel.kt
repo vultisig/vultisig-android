@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
+import com.vultisig.wallet.data.keygen.VULTISERVER_SUPPORTS_MLDSA_LEVEL
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -21,6 +22,7 @@ import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.hasValidMldsaKey
 import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.matchesSearch
@@ -193,11 +195,15 @@ constructor(
     // The BTC banner also shows pre-keygen for DKLS vaults, which can still generate the
     // MLDSA key via the quantum-security intro. GG20 keyshares can't take part in the DKLS
     // claim ceremony, and KeyImport vaults receive the MLDSA key at import time — so for
-    // those, no key means no claim path.
+    // those, no key means no claim path. A Fast Vault can't generate it either until
+    // VultiServer runs the same ML-DSA level.
     private fun checkQbtcClaimEligibility(chain: Chain) {
         val vault = currentVault
         val hasMldsaKey = vault != null && vault.hasValidMldsaKey()
-        val canGenerateMldsaKey = vault != null && vault.libType == SigningLibType.DKLS
+        val canGenerateMldsaKey =
+            vault != null &&
+                vault.libType == SigningLibType.DKLS &&
+                (!vault.isFastVault() || VULTISERVER_SUPPORTS_MLDSA_LEVEL)
         val isEligible = chain == Chain.Bitcoin && (hasMldsaKey || canGenerateMldsaKey)
 
         uiState.update { it.copy(showClaimQbtcButton = chain == Chain.Qbtc && hasMldsaKey) }

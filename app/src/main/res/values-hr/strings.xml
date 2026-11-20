@@ -8,7 +8,7 @@
     <string name="vault_settings_reshare_title">Ponovno podijeli</string>
     <string name="vault_settings_reshare_subtitle">Ponovno podijelite trezor s novom skupinom uređaja</string>
     <string name="vault_settings_dilithium_keygen_title">Postkvantni ključ</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Generiraj MLDSA-44 ključ za otpornost na kvantna računala</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Generiraj MLDSA-65 ključ za otpornost na kvantna računala</string>
     <string name="vault_settings_delete_title">Izbriši</string>
     <string name="vault_settings_security_title">On-chain sigurnost</string>
     <string name="vault_settings_security_subtitle">Upravljajte svojom on-chain sigurnošću</string>
