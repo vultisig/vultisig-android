@@ -1,8 +1,13 @@
 package com.vultisig.wallet.ui.models.defi
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.ChainPublicKey
+import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.Vault
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
 internal class ThorChainPoolTest {
@@ -64,4 +69,74 @@ internal class ThorChainPoolTest {
         assertEquals(Chain.Bitcoin, parseThorChainPool("btc.BTC").chain)
         assertEquals(Chain.Ethereum, parseThorChainPool("Eth.ETH").chain)
     }
+
+    @Test
+    fun `CACAO side of a native Maya pool pairs with the pool's asset chain`() {
+        assertEquals(Chain.Bitcoin, mayaLpPairedChain(Chain.MayaChain, "BTC.BTC"))
+        assertEquals(Chain.Ethereum, mayaLpPairedChain(Chain.MayaChain, "ETH.ETH"))
+        assertEquals(Chain.Arbitrum, mayaLpPairedChain(Chain.MayaChain, "ARB.ETH"))
+        assertEquals(Chain.Dash, mayaLpPairedChain(Chain.MayaChain, "DASH.DASH"))
+        assertEquals(Chain.Zcash, mayaLpPairedChain(Chain.MayaChain, "ZEC.ZEC"))
+    }
+
+    @Test
+    fun `asset side of a native Maya pool pairs with MayaChain`() {
+        assertEquals(Chain.MayaChain, mayaLpPairedChain(Chain.Arbitrum, "ARB.ETH"))
+        assertEquals(Chain.MayaChain, mayaLpPairedChain(Chain.Zcash, "zec.zec"))
+    }
+
+    @Test
+    fun `Maya pools whose asset side the app cannot deposit stay single-sided`() {
+        assertNull(
+            mayaLpPairedChain(
+                Chain.MayaChain,
+                "ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48",
+            )
+        )
+        assertNull(mayaLpPairedChain(Chain.MayaChain, "ADA.ADA"))
+        assertNull(mayaLpPairedChain(Chain.MayaChain, "THOR.RUNE"))
+        assertNull(mayaLpPairedChain(Chain.MayaChain, "MAYA.MAYA"))
+    }
+
+    @Test
+    fun `a chain on neither side of the Maya pool gets no pairing`() {
+        assertNull(mayaLpPairedChain(Chain.Ethereum, "ARB.ETH"))
+        assertNull(mayaLpPairedChain(Chain.ThorChain, "BTC.BTC"))
+    }
+
+    @Test
+    fun `a key-import vault without a MayaChain key cannot add Maya liquidity`() {
+        val vault = keyImportVault(ChainPublicKey(Chain.Dash.raw, "02aa", isEddsa = false))
+
+        assertFalse(vault.canAddMayaLiquidity())
+        assertFalse(vault.canDepositOn(Chain.Dash))
+        assertFalse(vault.canDepositOn(Chain.Zcash))
+        assertFalse(vault.canDepositOn(Chain.Arbitrum))
+        assertTrue(vault.canDepositOn(Chain.Bitcoin))
+    }
+
+    @Test
+    fun `a key-import vault with a MayaChain key can add Maya liquidity`() {
+        val vault = keyImportVault(ChainPublicKey(Chain.MayaChain.raw, "02aa", isEddsa = false))
+
+        assertTrue(vault.canAddMayaLiquidity())
+        assertTrue(vault.canDepositOn(Chain.Dash))
+    }
+
+    @Test
+    fun `a regular vault can always add Maya liquidity`() {
+        val vault = Vault(id = "v", name = "v")
+
+        assertTrue(vault.canAddMayaLiquidity())
+        assertTrue(vault.canDepositOn(Chain.Zcash))
+        assertFalse(vault.canDepositOn(Chain.Solana))
+    }
+
+    private fun keyImportVault(vararg keys: ChainPublicKey) =
+        Vault(
+            id = "v",
+            name = "v",
+            libType = SigningLibType.KeyImport,
+            chainPublicKeys = keys.toList(),
+        )
 }

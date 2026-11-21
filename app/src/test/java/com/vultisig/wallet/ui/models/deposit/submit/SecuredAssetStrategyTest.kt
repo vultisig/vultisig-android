@@ -101,7 +101,6 @@ internal class SecuredAssetStrategyTest {
     private fun build(chain: Chain, selectedAccount: Account, formAddress: Address?) =
         SecuredAssetStrategy(
             vaultIdProvider = { GATE_VAULT_ID },
-            chainProvider = { chain },
             thorAddressFieldState = fields.thorAddressFieldState,
             tokenAmountFieldState = fields.tokenAmountFieldState,
             selectedAccountProvider = { selectedAccount },
