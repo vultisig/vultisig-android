@@ -97,6 +97,7 @@ internal fun JoinKeysignView() {
                     onBackClick = viewModel::navigateToHome,
                     onFastSignClick = {},
                     onConfirm = viewModel::joinKeysign,
+                    onConsentDappTransaction = viewModel::onConsentUnverifiedSend,
                 )
             }
 

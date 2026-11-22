@@ -7,9 +7,12 @@ import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.RippleDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.SubstrateDappTransactionDecoder
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
+import com.vultisig.wallet.data.common.asCallData
+import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -17,6 +20,7 @@ import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.cosmosNativeDenom
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.DeFiAction
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.substrateDappPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -31,6 +35,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.CosmosMessage
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
+import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.transaction.CosmosAmountUiModel
@@ -62,11 +67,8 @@ import wallet.core.jni.TONAddressConverter
 import wallet.core.jni.proto.Common.SigningError
 
 /**
- * Builds the [VerifyUiModel.Send] model for the join-keysign verify screen. Extracted verbatim from
- * `JoinKeysignViewModel.loadTransaction`'s send branch — behavior is unchanged. The background
- * hero/scan enrichment that the send branch kicks off stays in the ViewModel (it launches into
- * `viewModelScope`); this builder returns the [Transaction] and decoded function name those jobs
- * need via [JoinSendUiModelResult].
+ * Builds a co-signer's send review and canonical scanner input. The original signing payload
+ * stays unchanged. Wallet metadata comes from the receiving device or the chain.
  */
 internal class JoinSendUiModelBuilder
 @Inject
@@ -101,8 +103,27 @@ constructor(
         currency: AppCurrency,
     ): JoinSendUiModelResult? {
         val payloadToken = payload.coin
-        val address = payloadToken.address
         val chain = payloadToken.chain
+        val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return null
+        val (address, publicKey) =
+            withContext(Dispatchers.IO) { chainAccountAddressRepository.getAddress(chain, vault) }
+        val nativeCoin =
+            withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+                .copy(address = address, hexPublicKey = publicKey)
+        val signsRawSolana = chain == Chain.Solana && payload.signSolana != null
+        val signsRawSui = chain == Chain.Sui && payload.signSui != null
+        val signsRawTransaction = signsRawSolana || signsRawSui
+        val isCircleWithdrawal =
+            chain.standard == TokenStandard.EVM &&
+                !payloadToken.isNativeToken &&
+                payload.defiAction == DeFiAction.CIRCLE_USDC_WITHDRAW
+        val resolvedToken =
+            if (payloadToken.isNativeToken || signsRawTransaction || isCircleWithdrawal) nativeCoin
+            else resolveReviewToken(payloadToken, vault.coins)
+        val displayToken =
+            (resolvedToken
+                    ?: Coin.EMPTY.copy(chain = chain, contractAddress = payloadToken.contractAddress))
+                .copy(address = address, hexPublicKey = publicKey)
 
         // A Substrate dApp call is signed as the bytes in the memo, so the recipient and amount
         // shown here are read out of those bytes (a Balances transfer) or not shown at all; the
@@ -114,11 +135,11 @@ constructor(
                     SubstrateDappTransactionDecoder.decode(
                         payload = it,
                         chain = chain,
-                        decimals = payloadToken.decimal,
-                        ticker = payloadToken.ticker,
+                        decimals = displayToken.decimal,
+                        ticker = displayToken.ticker,
                     )
                 }
-                ?.transfer
+                    ?.transfer
 
         // A Cosmos `signDirect` / `signAmino` request is signed as its SignDoc bytes or amino
         // `msgs`, so the recipient and amount must be read out of that signed content — never from
@@ -144,36 +165,32 @@ constructor(
 
         val dstAddress =
             when {
+                signsRawTransaction -> ""
                 substrateDapp != null -> substrateTransfer?.recipient.orEmpty()
                 isCosmosSignDoc -> cosmosSignedTransfer?.recipient.orEmpty()
                 else -> payload.toAddress
             }
         val amount =
             when {
+                signsRawTransaction || isCircleWithdrawal -> BigInteger.ZERO
                 substrateDapp != null -> substrateTransfer?.amount ?: BigInteger.ZERO
                 isCosmosSignDoc -> cosmosSignedTransfer?.amount ?: BigInteger.ZERO
                 else -> payload.toAmount
             }
 
-        val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-        // The payload coin's ticker/decimals are the initiator's claim too. When the signed coin is
-        // the chain's native denom, label it from the locally known native token so a doctored
-        // `decimal` can't rescale the signed integer.
-        val displayToken =
-            if (cosmosSignedTransfer != null && expectedCosmosDenom == chain.cosmosNativeDenom) {
-                nativeCoin.copy(address = address)
-            } else {
-                payloadToken
+        val tokenValue = TokenValue(value = amount, token = displayToken)
+        val signedMemo =
+            when {
+                signsRawTransaction -> null
+                chain.standard != TokenStandard.EVM -> payload.memo
+                payloadToken.isNativeToken || isCircleWithdrawal ->
+                    payload.memo?.toByteStringOrHex()?.toByteArray()?.asCallData()
+                else -> null // The ordinary ERC-20 signer encodes a transfer, without a memo.
             }
-
-        val tokenValue =
-            TokenValue(value = amount, unit = displayToken.ticker, decimals = displayToken.decimal)
-
-        val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return null
 
         val blockchainTransaction =
             Transfer(
-                coin = payloadToken,
+                coin = displayToken,
                 vault =
                     VaultData(
                         vaultHexChainCode = vault.hexChainCode,
@@ -181,7 +198,7 @@ constructor(
                     ),
                 amount = tokenValue.value,
                 to = dstAddress,
-                memo = payload.memo,
+                memo = signedMemo,
                 isMax = false,
             )
 
@@ -194,6 +211,8 @@ constructor(
             payload.signRipple?.rawJson?.let { RippleDappTransactionDecoder.feeDrops(it) }
         val gasFee =
             when {
+                signsRawTransaction -> TokenValue(value = BigInteger.ZERO, token = nativeCoin)
+
                 chain.standard == TokenStandard.UTXO && chain != Chain.Cardano -> {
                     val utxoHelper = UtxoHelper.getHelper(vault, payloadToken.coinType)
                     val plan = utxoHelper.getBitcoinTransactionPlan(payload)
@@ -232,14 +251,14 @@ constructor(
                 GasFeeParams(
                     gasLimit = BigInteger.valueOf(1),
                     gasFee = gasFee,
-                    selectedToken = payload.coin,
+                    selectedToken = displayToken,
                 )
             )
         // A Tron dApp contract call is signed from its `data`, not from the memo, so that is what
         // gets decoded; otherwise an `approve` would render as a plain 0 TRX send to the contract.
         val calldata =
             if (chain == Chain.Tron) payload.tronTriggerSmartContractPayload?.data
-            else payload.memo
+            else signedMemo
         val functionInfo = feeResolver.getTransactionFunctionInfo(calldata, chain)
         val normalizedSignAminoJson =
             kotlinx.serialization.json.buildJsonArray {
@@ -266,8 +285,9 @@ constructor(
             } ?: ""
         val signDirect = signDirectMessage?.let { json.encodeToString(it) } ?: ""
 
-        val signSolana = payload.signSolana?.rawTransactions.orEmpty()
-        val signSui = payload.signSui?.unsignedTxMsg?.takeIf { it.isNotEmpty() }
+        val signSolana =
+            if (signsRawSolana) payload.signSolana?.rawTransactions.orEmpty() else emptyList()
+        val signSui = payload.signSui?.unsignedTxMsg?.takeIf { signsRawSui && it.isNotEmpty() }
         val signRipple = payload.signRipple?.rawJson?.takeIf { it.isNotBlank() }
         val transaction =
             Transaction(
@@ -278,14 +298,12 @@ constructor(
                 srcAddress = address,
                 dstAddress = dstAddress,
                 tokenValue = tokenValue,
-                fiatValue = convertTokenValueToFiat(displayToken, tokenValue, currency),
+                fiatValue =
+                    if (resolvedToken == null || signsRawTransaction)
+                        FiatValue(BigDecimal.ZERO, currency.ticker)
+                    else convertTokenValueToFiat(displayToken, tokenValue, currency),
                 gasFee = gasFee,
-                // A Substrate signer payload is the signed content, rendered by its own card, not
-                // a memo.
-                memo =
-                    payload.memo.takeIf {
-                        (functionInfo == null || chain == Chain.Tron) && substrateDapp == null
-                    },
+                memo = signedMemo,
                 estimatedFee = totalGasAndFee.formattedFiatValue,
                 blockChainSpecific = payload.blockChainSpecific,
                 totalGas = totalGasAndFee.formattedTokenValue,
@@ -297,18 +315,28 @@ constructor(
                 signSubstrate = substrateDapp?.rawJson,
             )
 
-        val transactionToUiModel = mapTransactionToUiModel(transaction)
+        // Render decoded calldata in its details card. Keep the original bytes in the scanner
+        // input so a contract call can never acquire the verdict of a plain transfer.
+        val presentationMemo =
+            signedMemo.takeIf {
+                (functionInfo == null || chain == Chain.Tron) && substrateDapp == null
+            }
+        val transactionToUiModel = mapTransactionToUiModel(transaction.copy(memo = presentationMemo))
 
         val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
         val dstVaultName =
-            resolveDstVaultName(
-                allVaults = allVaults,
-                chain = chain,
-                dstAddress = dstAddress,
-                chainAccountAddressRepository = chainAccountAddressRepository,
-            )
+            if (dstAddress.isEmpty()) {
+                null
+            } else {
+                resolveDstVaultName(
+                    allVaults = allVaults,
+                    chain = chain,
+                    dstAddress = dstAddress,
+                    chainAccountAddressRepository = chainAccountAddressRepository,
+                )
+            }
         val dstAddressBookTitle =
-            if (dstVaultName == null) {
+            if (dstVaultName == null && dstAddress.isNotEmpty()) {
                 addressBookRepository.getEntry(chain.id, dstAddress)?.title
             } else null
 
@@ -350,7 +378,7 @@ constructor(
             )
 
         val tonMessages =
-            mapTonMessages(payload.signTon, fromAddress = payload.coin.address) { rawAddress ->
+            mapTonMessages(payload.signTon, fromAddress = address) { rawAddress ->
                 TONAddressConverter.toUserFriendly(rawAddress, true, false) ?: rawAddress
             }
         val namedTransactionUiModel =
@@ -368,6 +396,13 @@ constructor(
                 decodedFunctionParams = decodedExtras.decodedFunctionParams,
                 isUniversalRouterSwap = decodedExtras.isUniversalRouterSwap,
                 tonMessages = tonMessages,
+                isRawCoSign = signsRawTransaction,
+                unverifiedAssetAmount =
+                    if (resolvedToken == null && (!isCosmosSignDoc || cosmosSignedTransfer != null))
+                        "$amount ${payloadToken.contractAddress}".trimEnd()
+                    else null,
+                heroContent =
+                    HeroContent.Unverified.takeIf { signsRawTransaction || resolvedToken == null },
                 isUnverifiedCosmosSign = isCosmosSignDoc && cosmosSignedTransfer == null,
                 cosmosTransfers =
                     if (isCosmosSignDoc && cosmosSignedTransfer == null) {
@@ -388,8 +423,38 @@ constructor(
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel),
                 ),
             transaction = transaction,
+            simulationPayload =
+                payload.copy(
+                    coin = displayToken,
+                    toAddress = dstAddress,
+                    toAmount = amount,
+                    memo = signedMemo,
+                ),
             functionName = functionInfo?.functionName,
             vaultCoins = vault.coins,
+        )
+    }
+
+    private suspend fun resolveReviewToken(payload: Coin, vaultCoins: List<Coin>): Coin? {
+        val contract = payload.contractAddress
+        if (contract.isBlank()) return null
+        val ignoreCase = payload.chain.standard == TokenStandard.EVM
+        fun matches(coin: Coin) =
+            coin.chain == payload.chain &&
+                !coin.isNativeToken &&
+                coin.contractAddress.equals(contract, ignoreCase = ignoreCase) &&
+                coin.decimal in 0..TokenMetadataResolver.MAX_DECIMALS
+
+        val known =
+            Coins.findCuratedByContract(payload.chain, contract)?.takeIf(::matches)
+                ?: vaultCoins.firstOrNull(::matches)
+        if (known != null) return known.copy(contractAddress = contract)
+        val metadata = tokenMetadataResolver.resolve(payload.chain, contract) ?: return null
+        return Coin.EMPTY.copy(
+            chain = payload.chain,
+            contractAddress = contract,
+            ticker = metadata.symbol,
+            decimal = metadata.decimals,
         )
     }
 

@@ -251,7 +251,7 @@ internal fun VerifySendScreen(
                     initiallyExpandedDetails = initiallyExpandedDetails,
                 )
 
-                if (isConsentsEnabled) {
+                if (isConsentsEnabled || state.transaction.requiresUnverifiedCoSignConsent) {
                     VerifySendConsents(
                         state = state,
                         onConsentAddress = onConsentAddress,
@@ -283,7 +283,10 @@ private fun VerifySendActions(
     onFastSignClick: () -> Unit,
 ) {
     val buttonState =
-        if (isConsentsEnabled && !state.hasAllConsents) VsButtonState.Disabled
+        if (
+            (isConsentsEnabled || state.transaction.requiresUnverifiedCoSignConsent) &&
+                !state.hasAllConsents
+        ) VsButtonState.Disabled
         else VsButtonState.Enabled
 
     if (state.hasFastSign) {
@@ -347,7 +350,7 @@ private fun VerifySendConsents(
             )
 
             VsCheckField(
-                title = stringResource(R.string.verify_transaction_consent_amount),
+                title = stringResource(R.string.verify_transaction_amount_title),
                 isChecked = state.consentAmount,
                 onCheckedChange = onConsentAmount,
             )
@@ -570,6 +573,7 @@ private fun VerifySendDetails(
             tx.signRipple == null &&
                 tx.signSubstrate == null &&
                 !tx.isRippleTrustSet &&
+                !tx.requiresUnverifiedCoSignConsent &&
                 !tx.isUnverifiedCosmosSign
         if (inSheet && isPlainSend) {
             VerifyAccountCards(
@@ -627,7 +631,9 @@ private fun VerifySendDetails(
                 )
             }
         } else if (
-            !tx.requiresDappConsent && !(inSheet && isPlainSend) && tx.dstAddress.isNotBlank()
+            (!tx.requiresDappConsent || tx.unverifiedAssetAmount != null) &&
+                !(inSheet && isPlainSend) &&
+                tx.dstAddress.isNotBlank()
         ) {
             rowDivider()
 
@@ -635,6 +641,15 @@ private fun VerifySendDetails(
                 title = stringResource(R.string.verify_transaction_to_title),
                 subtitle = toDstLabel ?: tx.dstAddress,
                 bracketValue = toDstLabel?.let { tx.dstAddress },
+            )
+        }
+
+        tx.unverifiedAssetAmount?.let { amount ->
+            rowDivider()
+            VerifyCardDetails(
+                title = stringResource(R.string.verify_transaction_consent_amount),
+                subtitle = stringResource(R.string.cosmos_amount_unverified_denom, amount),
+                showAllContent = true,
             )
         }
 
@@ -707,7 +722,7 @@ private fun VerifySendDetails(
 
                 SignSolanaDisplayView(
                     rawTransactions = it,
-                    initiallyExpanded = initiallyExpandedDetails,
+                    initiallyExpanded = initiallyExpandedDetails || tx.isRawCoSign,
                 )
             }
 
@@ -719,7 +734,7 @@ private fun VerifySendDetails(
                 SignSuiDisplayView(
                     sender = tx.srcAddress,
                     unsignedTxMsg = it,
-                    initiallyExpanded = initiallyExpandedDetails,
+                    initiallyExpanded = initiallyExpandedDetails || tx.isRawCoSign,
                 )
             }
 
@@ -849,15 +864,17 @@ private fun VerifySendDetails(
             }
         }
 
-        VerifyCardDivider(0.dp)
+        if (!tx.isRawCoSign) {
+            VerifyCardDivider(0.dp)
 
-        UiSpacer(12.dp)
+            UiSpacer(12.dp)
 
-        EstimatedNetworkFee(
-            tokenGas = tx.networkFeeTokenValue,
-            fiatGas = tx.networkFeeFiatValue,
-            isLoading = state.isLoadingFees,
-        )
+            EstimatedNetworkFee(
+                tokenGas = tx.networkFeeTokenValue,
+                fiatGas = tx.networkFeeFiatValue,
+                isLoading = state.isLoadingFees,
+            )
+        }
     }
 }
 

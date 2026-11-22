@@ -130,6 +130,10 @@ internal data class TransactionDetailsUiModel(
      * shown as a send.
      */
     val isUnverifiedCosmosSign: Boolean = false,
+    /** The co-signer has raw bytes with no complete locally decoded transfer summary. */
+    val isRawCoSign: Boolean = false,
+    /** Signed raw units and contract for an asset whose display metadata could not be resolved. */
+    val unverifiedAssetAmount: String? = null,
     /**
      * What an [isUnverifiedCosmosSign] request moves, read from its signed messages: every
      * recipient, one total per coin and any transfer memo. Null when there is no such request.
@@ -188,6 +192,9 @@ internal data class TransactionDetailsUiModel(
      */
     val heroContent: HeroContent? = null,
 ) {
+    val requiresUnverifiedCoSignConsent: Boolean
+        get() = isRawCoSign || unverifiedAssetAmount != null
+
     /**
      * True when the payload has no native recipient / amount for the "right address" and "amount is
      * correct" consents to attest to: a dApp XRPL tx (an OfferCreate has no Destination and the
@@ -198,7 +205,8 @@ internal data class TransactionDetailsUiModel(
      */
     val requiresDappConsent: Boolean
         get() =
-            signRipple != null ||
+            requiresUnverifiedCoSignConsent ||
+                signRipple != null ||
                 (signSubstrate != null && signSubstrate.transfer == null) ||
                 isUnverifiedCosmosSign
 }

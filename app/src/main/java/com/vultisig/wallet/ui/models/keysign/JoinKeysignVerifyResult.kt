@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.keysign
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionHistoryData
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 
 /**
  * The synchronous output of a per-transaction-type verify UI-model builder: the sealed
@@ -24,6 +25,7 @@ internal data class JoinKeysignVerifyResult(
 internal data class JoinSendUiModelResult(
     val result: JoinKeysignVerifyResult,
     val transaction: Transaction,
+    val simulationPayload: KeysignPayload,
     val functionName: String?,
     val vaultCoins: List<Coin>,
 )

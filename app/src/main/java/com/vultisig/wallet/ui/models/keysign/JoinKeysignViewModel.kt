@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
@@ -763,9 +764,9 @@ constructor(
                     joinSendUiModelBuilder.build(
                         payload = payload,
                         srcVaultName = _currentVault.name,
-                        vaultId = vaultId,
+                        vaultId = _currentVault.id,
                         currency = currency,
-                    ) ?: return
+                    ) ?: error("Unable to prepare the signing review")
                 applyVerifyResult(sendResult.result)
                 // Kick off the hero resolution in parallel with the existing security scan; the
                 // hero refresh and the badge refresh happen independently so neither blocks the
@@ -776,10 +777,14 @@ constructor(
                 if (chain == Chain.Ton && payload.signTon != null) {
                     loadTonDappDisplay(payload, sendResult.vaultCoins)
                 } else {
-                    loadBlockaidSimulation(payload, sendResult.functionName)
+                    loadBlockaidSimulation(sendResult.simulationPayload, sendResult.functionName)
                 }
-                loadDecodedVerifyHero(payload, sendResult.vaultCoins)
-                scanTransaction(sendResult.transaction)
+                loadDecodedVerifyHero(sendResult.simulationPayload, sendResult.vaultCoins)
+                // The simulation scans the complete raw Solana batch. The ordinary scanner
+                // builds a new transfer, which is only valid when the signer does too.
+                if (chain != Chain.Solana || payload.signSolana == null) {
+                    scanTransaction(sendResult.transaction)
+                }
             }
         }
     }
@@ -810,6 +815,15 @@ constructor(
     private fun isDepositPayload(payload: KeysignPayload): Boolean {
         // PSBT co-signs exit first — see above.
         if (payload.blockChainSpecific is BlockChainSpecific.BitcoinPSBT) return false
+        // Raw Solana/Sui requests and ordinary ERC-20 transfers do not sign the memo. The
+        // recognized Kamino branch, which checks its instructions, runs before this test.
+        if (
+            (payload.coin.chain == Chain.Solana && payload.signSolana != null) ||
+                (payload.coin.chain == Chain.Sui && payload.signSui != null) ||
+                (payload.coin.chain.standard == TokenStandard.EVM && !payload.coin.isNativeToken)
+        ) {
+            return false
+        }
         // A limit-order CANCEL reaches THORChain from a THORChain source as a MsgDeposit, which the
         // specific already marks — but from every other source as an ordinary memo-bearing
         // transfer,
@@ -865,6 +879,7 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { Timber.w(it, "Blockaid simulation failed during dApp signing") }
             ) {
+                val scansRawSolana = payload.coin.chain == Chain.Solana && payload.signSolana != null
                 val result = withContext(Dispatchers.IO) { blockaidSimulationService.scan(payload) }
                 val hero =
                     buildHeroContent(
@@ -889,8 +904,18 @@ constructor(
                     current.copy(
                         transaction =
                             current.transaction.copy(
-                                heroContent = decodedVerifyHero?.applyTo(hero) ?: hero
-                            )
+                                heroContent =
+                                    decodedVerifyHero?.applyTo(hero) ?: hero
+                                        ?: current.transaction.heroContent
+                            ),
+                        txScanStatus =
+                            if (scansRawSolana) {
+                                result.scannerResult?.let { TransactionScanStatus.Scanned(it) }
+                                    ?: TransactionScanStatus.Error(
+                                        "Security Scanner Failed",
+                                        BLOCKAID_PROVIDER,
+                                    )
+                            } else current.txScanStatus,
                     )
                 }
                 // Mirror the resolved hero into [transactionTypeUiModel] so the
@@ -899,7 +924,9 @@ constructor(
                 // a per-screen re-fetch and a flash of "loading" state on done.
                 (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
                     transactionTypeUiModel =
-                        TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))
+                        TransactionTypeUiModel.Send(
+                            send.tx.copy(heroContent = hero ?: send.tx.heroContent)
+                        )
                 }
             }
     }
@@ -1338,7 +1365,19 @@ constructor(
         }
     }
 
+    fun onConsentUnverifiedSend(consent: Boolean) {
+        updateSendUiModel(verifyUiModel) { it.copy(consentDappTransaction = consent) }
+    }
+
     fun joinKeysign() {
+        val send = (verifyUiModel.value as? VerifyUiModel.Send)?.model
+        if (
+            send != null &&
+                send.transaction.requiresUnverifiedCoSignConsent &&
+                !send.consentDappTransaction
+        ) {
+            return
+        }
         // A QBTC claim has no relay keysign session to join — confirming the approval gate kicks
         // off the local co-sign instead. startQbtcClaimCosign() owns its own join guard.
         if (_keysignPayload?.isQbtcClaim == true) {
