@@ -17,19 +17,24 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven {
-            url = uri("https://maven.pkg.github.com/trustwallet/wallet-core")
-            credentials {
-                username = System.getenv("TRUSTWALLET_USER")?.takeIf { it.isNotBlank() }
-                    ?: System.getenv("GITHUB_ACTOR")?.takeIf { it.isNotBlank() }
-                    ?: "token"
-                password = System.getenv("TRUSTWALLET_PAT")?.takeIf { it.isNotBlank() }
-                    ?: System.getenv("GH_TOKEN")?.takeIf { it.isNotBlank() }
-                    ?: ""
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = "TrustWalletPackages"
+                    url = uri("https://maven.pkg.github.com/trustwallet/wallet-core")
+                    credentials {
+                        username =
+                            System.getenv("TRUSTWALLET_USER")?.takeIf { it.isNotBlank() }
+                                ?: System.getenv("GITHUB_ACTOR")?.takeIf { it.isNotBlank() }
+                                ?: "token"
+                        password =
+                            System.getenv("TRUSTWALLET_PAT")?.takeIf { it.isNotBlank() }
+                                ?: System.getenv("GH_TOKEN")?.takeIf { it.isNotBlank() }
+                                ?: ""
+                    }
+                }
             }
-            content {
-                includeGroup("com.trustwallet")
-            }
+            filter { includeGroup("com.trustwallet") }
         }
     }
 }

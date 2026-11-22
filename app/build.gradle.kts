@@ -30,6 +30,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            vcsInfo { include = true }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -56,6 +57,16 @@ android {
 }
 
 kotlin { jvmToolchain(21) }
+
+val walletCoreReleaseArtifact =
+    configurations.detachedConfiguration(
+        dependencies.create("com.trustwallet:wallet-core:${libs.versions.walletCore.get()}@aar")
+    ).apply { isTransitive = false }
+
+tasks.register<Sync>("stageWalletCoreForReleaseInventory") {
+    from(walletCoreReleaseArtifact)
+    into(layout.buildDirectory.dir("provenance/wallet-core"))
+}
 
 tasks.withType<Test> {
     useJUnitPlatform()

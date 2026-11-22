@@ -1,0 +1,70 @@
+name: Android release provenance
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Require a release tag
+        run: |
+          if [[ "$GITHUB_REF_TYPE" != tag || "$GITHUB_REF_NAME" != v* ]]; then
+            echo "::error::Run this workflow from the version tag for the release."
+            exit 1
+          fi
+
+      - name: Check out the release
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.ref }}
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Check the tag revision
+        run: test "$(git rev-parse HEAD)" = "$(git rev-parse "${GITHUB_SHA}^{commit}")"
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build the unsigned release APK
+        env:
+          TRUSTWALLET_USER: ${{ secrets.TRUSTWALLET_USER }}
+          TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
+        run: >-
+          ./gradlew :app:assembleRelease :app:stageWalletCoreForReleaseInventory
+          --no-daemon --dependency-verification=strict
+
+      - name: Verify the release source and write its native inventory
+        run: |
+          wallet_core=(app/build/provenance/wallet-core/wallet-core-*.aar)
+          test "${#wallet_core[@]}" -eq 1
+          python3 scripts/write_native_release_inventory.py \
+            --apk app/build/outputs/apk/release/app-release-unsigned.apk \
+            --wallet-core "${wallet_core[0]}" \
+            --tag "$GITHUB_REF_NAME" \
+            --output app/build/provenance/native-inventory.json
+
+      - name: Attest the APK and inventory
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: |
+            app/build/outputs/apk/release/app-release-unsigned.apk
+            app/build/provenance/native-inventory.json
+
+      - name: Upload the attested build inputs for release signers
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: android-release-${{ github.ref_name }}
+          path: |
+            app/build/outputs/apk/release/app-release-unsigned.apk
+            app/build/provenance/native-inventory.json
+          if-no-files-found: error

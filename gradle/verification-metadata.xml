@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<verification-metadata xmlns="https://schema.gradle.org/dependency-verification"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://schema.gradle.org/dependency-verification https://schema.gradle.org/dependency-verification/dependency-verification-1.3.xsd">
+    <configuration>
+        <verify-metadata>true</verify-metadata>
+        <verify-signatures>false</verify-signatures>
+        <!-- This initial checksum policy covers only the Trust Wallet publication. -->
+        <trusted-artifacts>
+            <trust group="^(?!com\.trustwallet$).*$" regex="true" reason="Outside the Wallet Core verification scope"/>
+        </trusted-artifacts>
+    </configuration>
+    <components>
+        <component group="com.trustwallet" name="wallet-core" version="4.9.3">
+            <artifact name="wallet-core-4.9.3.aar">
+                <sha256 value="33cffce155e07a540c59eb5bd9ac69ae690d68415498b75d308c0fbbcbb6def0" origin="Trust Wallet GitHub Packages"/>
+            </artifact>
+            <artifact name="wallet-core-4.9.3.module">
+                <sha256 value="499c0187a54f8ff89b334c3d01e00c69fd217b78c3bf073a5f35ed17fc61d3b1" origin="Trust Wallet GitHub Packages"/>
+            </artifact>
+            <artifact name="wallet-core-4.9.3.pom">
+                <sha256 value="4b517dcacff32fdd5df2ed77f3c0ef0d27b986a327122242fbe55a248b3646b2" origin="Trust Wallet GitHub Packages"/>
+            </artifact>
+            <artifact name="wallet-core-4.9.3-sources.jar">
+                <sha256 value="226c2847b6a4fc0e930eb4283e5224509527eb91644d5a1ec41ef60d1fbda0f4" origin="Trust Wallet Gradle module metadata"/>
+            </artifact>
+        </component>
+        <component group="com.trustwallet" name="wallet-core-proto" version="4.9.3">
+            <artifact name="wallet-core-proto-4.9.3.jar">
+                <sha256 value="b9635dfcb06705dd58527f34188f7cbcb3687ead080f6b3af7e0cf266f0e6cb5" origin="Trust Wallet GitHub Packages"/>
+            </artifact>
+            <artifact name="wallet-core-proto-4.9.3.module">
+                <sha256 value="e9917d36c47d45c24612d7c711bcc5423d02f37b0cbbc595c68b02f575c9e002" origin="Trust Wallet GitHub Packages"/>
+            </artifact>
+            <artifact name="wallet-core-proto-4.9.3.pom">
+                <sha256 value="e1a5e7fea49745321eccf1a8d2a63fbfdf30e0e35c4f682c9c82e1013b79e328" origin="Trust Wallet GitHub Packages"/>
+            </artifact>
+            <artifact name="wallet-core-proto-4.9.3-sources.jar">
+                <sha256 value="9101909166e897fcb1accbce4bbc8d3124bc8eb09065004d1ebf51268c035860" origin="Trust Wallet GitHub Packages"/>
+            </artifact>
+        </component>
+    </components>
+</verification-metadata>
