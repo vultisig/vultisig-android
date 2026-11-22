@@ -68,6 +68,7 @@ internal fun BackupPasswordScreen(
         mimeType = state.mimeType.value,
         onDocumentCreated = model::saveContentToUriResult,
         createDocumentRequestFlow = model.createDocumentRequestFlow,
+        onDocumentCreationCancelled = model::onDocumentCreationCancelled,
     )
 
     val error = state.error
@@ -124,6 +125,15 @@ internal fun BackupPasswordScreen(
                     )
 
                     UiSpacer(16.dp)
+
+                    if (state.isFastVaultDeviceBackup) {
+                        Text(
+                            text = stringResource(R.string.backup_vault_screen_password_suffix),
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.text.secondary,
+                        )
+                        UiSpacer(16.dp)
+                    }
 
                     Banner(
                         text = stringResource(R.string.fast_vault_password_screen_warning),

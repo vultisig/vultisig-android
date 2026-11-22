@@ -1704,8 +1704,7 @@
     <string name="backup_use_a_different_email">Use a different email</string>
     <string name="backup_save_backup_to_the_cloud">Save backup to the cloud</string>
     <string name="backup_vault_screen_export_prefix">Export this backup file, then save it to the cloud.</string>
-    <string name="backup_vault_screen_encrypted">encrypted</string>
-    <string name="backup_vault_screen_password_suffix">with the password set earlier to unlock your Vault.</string>
+    <string name="backup_vault_screen_password_suffix">Use a separate password for this device backup. Choose a different password from your Fast Vault password.</string>
     <string name="backup_vault_screen_cloud_tip">Use a different cloud service or account for each backup. When you\'re finished, delete the file from this device.</string>
     <string name="backup_vault_screen_save_backup">Save backup</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Use a different cloud service or account for each backup. When you’re finished, delete the file from this device.</string>

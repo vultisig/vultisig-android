@@ -1618,8 +1618,7 @@
     <string name="backup_use_a_different_email">Usar un correo electrónico diferente</string>
     <string name="backup_save_backup_to_the_cloud">Guardar copia de seguridad en la nube</string>
     <string name="backup_vault_screen_export_prefix">Exporta este archivo de copia de seguridad y guárdalo en la nube. Está</string>
-    <string name="backup_vault_screen_encrypted">cifrado</string>
-    <string name="backup_vault_screen_password_suffix">con la contraseña establecida anteriormente para desbloquear tu bóveda.</string>
+    <string name="backup_vault_screen_password_suffix">Usa una contraseña independiente para esta copia de seguridad del dispositivo. Elige una distinta de la de tu Fast Vault.</string>
     <string name="backup_vault_screen_cloud_tip">Usa un servicio de nube o cuenta diferente para cada copia. Cuando termines, elimina el archivo de este dispositivo.</string>
     <string name="backup_vault_screen_save_backup">Guardar copia de seguridad</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Exporta este archivo de copia de seguridad y guárdalo en la nube. Está cifrado con la contraseña establecida anteriormente para desbloquear tu bóveda. Usa un servicio de nube o cuenta diferente para cada copia. Cuando termines, elimina el archivo de este dispositivo.</string>

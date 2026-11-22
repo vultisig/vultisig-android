@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.mappers.exportableOrNull
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
@@ -53,6 +54,7 @@ internal data class BackupPasswordState(
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
     val isNextButtonEnabled: Boolean = false,
+    val isFastVaultDeviceBackup: Boolean = false,
     val error: UiText? = null,
 )
 
@@ -99,6 +101,8 @@ constructor(
     val state =
         MutableStateFlow(
             BackupPasswordState(
+                isFastVaultDeviceBackup =
+                    (backupType as? BackupType.CurrentVault)?.vaultType == Route.VaultInfo.VaultType.Fast,
                 mimeType =
                     when (backupType) {
                         BackupType.AllVaults -> MimeType.ZIP
@@ -133,6 +137,9 @@ constructor(
                 } else {
                     vault.value = loadedVault
                     isVaultLoaded.value = true
+                    if (backupType is BackupType.CurrentVault && loadedVault.isFastVault()) {
+                        state.update { it.copy(isFastVaultDeviceBackup = true) }
+                    }
                 }
             }
         }
@@ -167,10 +174,12 @@ constructor(
     }
 
     fun back() {
+        onDocumentCreationCancelled()
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun backupEncryptedVault() {
+        if (passwordDelegate.confirmedPassword(MIN_BACKUP_PASSWORD_LENGTH) == null) return
         viewModelScope.launch {
             when (backupType) {
                 BackupType.AllVaults -> requestToCreateVaultsZipFile()
@@ -239,8 +248,15 @@ constructor(
     }
 
     fun saveContentToUriResult(uri: Uri, mimeType: String) {
+        val password = passwordDelegate.confirmedPassword(MIN_BACKUP_PASSWORD_LENGTH)
+        onDocumentCreationCancelled()
         viewModelScope.launch {
-            val password = passwordTextFieldState.text.toString()
+            // The picker can return after process recreation without the local passphrase.
+            // Leave the returned URI untouched and require the user to confirm a password again.
+            if (password == null) {
+                completeBackupVault(false)
+                return@launch
+            }
 
             if (isFileExtensionValid(uri, mimeType.toMimeType())) {
                 val isSuccess =
@@ -272,6 +288,17 @@ constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun onDocumentCreationCancelled() {
+        passwordDelegate.clearPasswords()
+        state.update {
+            it.copy(
+                isNextButtonEnabled = false,
+                isPasswordVisible = false,
+                isConfirmPasswordVisible = false,
+            )
         }
     }
 
@@ -347,13 +374,17 @@ constructor(
                                 return@launch
                             }
                     if (backupType.action == TssAction.Migrate) {
-                        navigator.route(
-                            Route.VaultConfirmation(
-                                vaultId = confirmedVaultId,
-                                vaultType = backupType.vaultType,
-                                action = backupType.action,
+                        if (backupType.vaultType == Route.VaultInfo.VaultType.Fast) {
+                            navigator.route(Route.Home(), NavigationOptions(clearBackStack = true))
+                        } else {
+                            navigator.route(
+                                Route.VaultConfirmation(
+                                    vaultId = confirmedVaultId,
+                                    vaultType = backupType.vaultType,
+                                    action = backupType.action,
+                                )
                             )
-                        )
+                        }
                     } else {
                         navigator.route(
                             route =

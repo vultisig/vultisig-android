@@ -1644,8 +1644,7 @@
     <string name="backup_use_a_different_email">다른 이메일 사용</string>
     <string name="backup_save_backup_to_the_cloud">클라우드에 백업 저장</string>
     <string name="backup_vault_screen_export_prefix">이 백업 파일을 내보낸 다음 클라우드에 저장하세요.</string>
-    <string name="backup_vault_screen_encrypted">암호화됨</string>
-    <string name="backup_vault_screen_password_suffix">(볼트 잠금 해제용으로 이전에 설정한 비밀번호 사용)</string>
+    <string name="backup_vault_screen_password_suffix">이 기기의 백업에는 별도의 비밀번호를 사용하세요. Fast Vault 비밀번호와 다른 것을 선택하세요.</string>
     <string name="backup_vault_screen_cloud_tip">각 백업마다 다른 클라우드 서비스나 계정을 사용하세요. 완료되면 이 기기에서 파일을 삭제하세요.</string>
     <string name="backup_vault_screen_save_backup">백업 저장</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">각 백업마다 다른 클라우드 서비스나 계정을 사용하세요. 완료되면 이 기기에서 파일을 삭제하세요.</string>

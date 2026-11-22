@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.usecases.fast.FastVaultModule
 import com.vultisig.wallet.data.usecases.fast.VerifyFastVaultBackupCodeUseCase
 import com.vultisig.wallet.ui.components.textField
 import com.vultisig.wallet.ui.flows.FastVaultKeygenFlow
+import com.vultisig.wallet.ui.flows.FastVaultKeygenFlow.Companion.TEST_DEVICE_BACKUP_PASSWORD
 import com.vultisig.wallet.ui.flows.FastVaultKeygenFlow.Companion.TEST_VAULT_EMAIL
 import com.vultisig.wallet.ui.flows.FastVaultKeygenFlow.Companion.TEST_VAULT_PASSWORD
 import com.vultisig.wallet.ui.pages.home.VaultAccountsPage
@@ -21,7 +22,6 @@ import com.vultisig.wallet.ui.pages.keygen.BackupVaultPage
 import com.vultisig.wallet.ui.pages.keygen.FastVaultEmailPage
 import com.vultisig.wallet.ui.pages.keygen.FastVaultVerificationPage
 import com.vultisig.wallet.ui.pages.onboarding.VaultBackupOnboardingPage
-import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreenTags
 import com.vultisig.wallet.ui.screens.migration.MigrationOnboardingScreenTags
 import com.vultisig.wallet.ui.utils.click
 import com.vultisig.wallet.ui.utils.waitUntilShown
@@ -117,8 +117,7 @@ class MigrateGg20FastVaultFlowTest : CleanTest() {
 
         intendingBackup()
 
-        compose.waitUntilShown(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD)
-        compose.click(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD)
+        backupVault.exportWithLocalPassphrase(TEST_DEVICE_BACKUP_PASSWORD)
 
         // assume it's home screens toolbar title with newly created vault
         compose.waitUntilAtLeastOneExists(hasText(vaultName), timeoutMillis = 10_000)

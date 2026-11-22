@@ -1613,8 +1613,7 @@
     <string name="backup_use_a_different_email">Gebruik een ander emailadres</string>
     <string name="backup_save_backup_to_the_cloud">Back-up opslaan in de cloud</string>
     <string name="backup_vault_screen_export_prefix">Exporteer dit back-upbestand en sla het op in de cloud. Het is</string>
-    <string name="backup_vault_screen_encrypted">versleuteld</string>
-    <string name="backup_vault_screen_password_suffix">met het eerder ingestelde wachtwoord om je kluis te ontgrendelen.</string>
+    <string name="backup_vault_screen_password_suffix">Gebruik een apart wachtwoord voor deze apparaatback-up. Kies een ander wachtwoord dan je Fast Vault-wachtwoord.</string>
     <string name="backup_vault_screen_cloud_tip">Gebruik voor elke back-up een andere cloudservice of een ander account. Als je klaar bent, verwijder je het bestand van dit apparaat.</string>
     <string name="backup_vault_screen_save_backup">Back-up opslaan</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Exporteer dit back-upbestand en sla het op in de cloud. Het is versleuteld met het eerder ingestelde wachtwoord om je kluis te ontgrendelen. Gebruik voor elke back-up een andere cloudservice of een ander account. Als je klaar bent, verwijder je het bestand van dit apparaat.</string>

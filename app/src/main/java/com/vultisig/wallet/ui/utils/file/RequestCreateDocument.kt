@@ -17,12 +17,14 @@ internal fun RequestCreateDocument(
     mimeType: String,
     onDocumentCreated: (uri: Uri, mimeType: String) -> Unit,
     createDocumentRequestFlow: Flow<String>,
+    onDocumentCreationCancelled: () -> Unit = {},
 ) {
     val filePickerLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.CreateDocument(mimeType = mimeType)
         ) { result ->
-            result?.let { uri -> onDocumentCreated(uri, mimeType) }
+            if (result == null) onDocumentCreationCancelled()
+            else onDocumentCreated(result, mimeType)
         }
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -33,6 +35,7 @@ internal fun RequestCreateDocument(
                     filePickerLauncher.launch(fileName)
                 } catch (e: android.content.ActivityNotFoundException) {
                     Timber.w("No activity found to handle CreateDocument ,${e}")
+                    onDocumentCreationCancelled()
                 }
             }
         }

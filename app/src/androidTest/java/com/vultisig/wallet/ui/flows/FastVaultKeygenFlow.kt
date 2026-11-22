@@ -18,9 +18,6 @@ import com.vultisig.wallet.ui.pages.onboarding.OnboardingPage
 import com.vultisig.wallet.ui.pages.onboarding.StartPage
 import com.vultisig.wallet.ui.pages.onboarding.SummaryPage
 import com.vultisig.wallet.ui.pages.onboarding.VaultBackupOnboardingPage
-import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreenTags
-import com.vultisig.wallet.ui.utils.click
-import com.vultisig.wallet.ui.utils.waitUntilShown
 import com.vultisig.wallet.util.intendingBackup
 import kotlin.time.Duration.Companion.seconds
 
@@ -95,8 +92,7 @@ class FastVaultKeygenFlow(private val compose: ComposeTestRule) {
 
         intendingBackup()
 
-        compose.waitUntilShown(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD)
-        compose.click(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD)
+        backupVault.exportWithLocalPassphrase(TEST_DEVICE_BACKUP_PASSWORD)
 
         // agree & pass summary
         summary.waitUntilShown(10.seconds)
@@ -117,5 +113,6 @@ class FastVaultKeygenFlow(private val compose: ComposeTestRule) {
         const val TEST_VAULT_NAME = "aqa test vault 123"
         const val TEST_VAULT_EMAIL = "test@email.com"
         const val TEST_VAULT_PASSWORD = "password123"
+        const val TEST_DEVICE_BACKUP_PASSWORD = "device-backup-phrase"
     }
 }

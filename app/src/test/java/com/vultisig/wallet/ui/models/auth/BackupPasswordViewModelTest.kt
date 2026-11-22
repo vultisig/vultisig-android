@@ -34,6 +34,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -103,6 +104,12 @@ internal class BackupPasswordViewModelTest {
             keyshares = listOf(KeyShare(pubKey = "pub-$id", keyShare = "share-$id")),
         )
 
+    private fun BackupPasswordViewModel.enterBackupPassword(password: String = "device-phrase") {
+        passwordTextFieldState.setTextAndPlaceCursorAtEnd(password)
+        confirmPasswordTextFieldState.setTextAndPlaceCursorAtEnd(password)
+        Snapshot.sendApplyNotifications()
+    }
+
     private fun createViewModel(
         vaultId: String = "vault-1",
         backupType: BackupType = BackupType.AllVaults,
@@ -143,6 +150,7 @@ internal class BackupPasswordViewModelTest {
 
             val vm = createViewModel()
             val uri = mockk<Uri>()
+            vm.enterBackupPassword()
 
             // User already picked a save location before the vault list finished loading.
             vm.saveContentToUriResult(uri, "application/zip")
@@ -183,6 +191,7 @@ internal class BackupPasswordViewModelTest {
                 vm.createDocumentRequestFlow.collect { requestedFileName = it }
             }
 
+            vm.enterBackupPassword()
             vm.backupEncryptedVault()
             requestedFileName.shouldBeNull()
 
@@ -242,6 +251,7 @@ internal class BackupPasswordViewModelTest {
 
             val vm = createViewModel()
             val uri = mockk<Uri>()
+            vm.enterBackupPassword()
 
             vm.saveContentToUriResult(uri, "application/zip")
 
@@ -267,6 +277,7 @@ internal class BackupPasswordViewModelTest {
 
             val vm = createViewModel(backupType = BackupType.CurrentVault())
             val uri = mockk<Uri>()
+            vm.enterBackupPassword()
 
             vm.saveContentToUriResult(uri, "application/octet-stream")
 
@@ -288,6 +299,7 @@ internal class BackupPasswordViewModelTest {
 
             val vm = createViewModel()
             val uri = mockk<Uri>()
+            vm.enterBackupPassword()
 
             vm.saveContentToUriResult(uri, "application/zip")
 
@@ -296,5 +308,63 @@ internal class BackupPasswordViewModelTest {
 
             advanceUntilIdle()
             vm.state.value.error.shouldNotBeNull()
+        }
+    @Test
+    fun `fast vault device export uses the locally confirmed passphrase and clears it`() =
+        runTest(testDispatcher) {
+            val vault = testVault("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns vault
+            coEvery { vaultRepository.getAll() } returns listOf(vault)
+            coEvery { saveBackupToUri(any(), any<String>()) } returns true
+
+            val vm = createViewModel(
+                backupType = BackupType.CurrentVault(vaultType = Route.VaultInfo.VaultType.Fast)
+            )
+            val uri = mockk<Uri>()
+            vm.enterBackupPassword("local-device-phrase")
+
+            vm.saveContentToUriResult(uri, "application/octet-stream")
+
+            vm.passwordTextFieldState.text.toString() shouldBe ""
+            vm.confirmPasswordTextFieldState.text.toString() shouldBe ""
+            coVerify(timeout = 5_000) { saveBackupToUri(uri, "encoded-vault-backup") }
+            verify(exactly = 1) { createVaultBackup(any(), "local-device-phrase") }
+            coVerify(exactly = 0) { deleteBackupDocument(any()) }
+        }
+
+    @Test
+    fun `picker result without a confirmed passphrase leaves its document untouched`() =
+        runTest(testDispatcher) {
+            val vault = testVault("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns vault
+            coEvery { vaultRepository.getAll() } returns listOf(vault)
+
+            val vm = createViewModel(backupType = BackupType.CurrentVault())
+            val uri = mockk<Uri>()
+
+            vm.saveContentToUriResult(uri, "application/octet-stream")
+            advanceUntilIdle()
+
+            verify(exactly = 0) { createVaultBackup(any(), any()) }
+            coVerify(exactly = 0) { saveBackupToUri(any(), any<String>()) }
+            coVerify(exactly = 0) { deleteBackupDocument(any()) }
+            vm.state.value.error.shouldNotBeNull()
+        }
+
+    @Test
+    fun `canceling document creation clears the locally entered passphrase`() =
+        runTest(testDispatcher) {
+            val vault = testVault("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns vault
+            coEvery { vaultRepository.getAll() } returns listOf(vault)
+
+            val vm = createViewModel(backupType = BackupType.CurrentVault())
+            vm.enterBackupPassword()
+
+            vm.onDocumentCreationCancelled()
+
+            vm.passwordTextFieldState.text.toString() shouldBe ""
+            vm.confirmPasswordTextFieldState.text.toString() shouldBe ""
+            vm.state.value.isNextButtonEnabled shouldBe false
         }
 }

@@ -165,10 +165,7 @@ constructor(
                                             vaultId = vaultId,
                                             vaultType = VaultType.Fast,
                                             action = args.tssAction,
-                                            passwordType =
-                                                BackupPasswordType.VultiServerPassword(
-                                                    password = args.password
-                                                ),
+                                            passwordType = BackupPasswordType.UserSelectionPassword,
                                         ),
                                     opts =
                                         NavigationOptions(
@@ -210,10 +207,7 @@ constructor(
                                             vaultId = args.vaultId,
                                             vaultType = VaultType.Fast,
                                             action = args.tssAction,
-                                            passwordType =
-                                                BackupPasswordType.VultiServerPassword(
-                                                    password = args.password
-                                                ),
+                                            passwordType = BackupPasswordType.UserSelectionPassword,
                                         )
                                 )
                             }

@@ -1619,8 +1619,7 @@
     <string name="backup_use_a_different_email">Usar um email diferente</string>
     <string name="backup_save_backup_to_the_cloud">Salvar backup na nuvem</string>
     <string name="backup_vault_screen_export_prefix">Exporte este arquivo de backup e salve-o na nuvem. Ele está</string>
-    <string name="backup_vault_screen_encrypted">criptografado</string>
-    <string name="backup_vault_screen_password_suffix">com a senha definida antes para desbloquear seu cofre.</string>
+    <string name="backup_vault_screen_password_suffix">Use uma senha separada para o backup deste dispositivo. Escolha uma senha diferente da senha do seu Fast Vault.</string>
     <string name="backup_vault_screen_cloud_tip">Use um serviço de nuvem ou conta diferente para cada backup. Quando terminar, exclua o arquivo deste dispositivo.</string>
     <string name="backup_vault_screen_save_backup">Salvar backup</string>
     <string name="backup_export_this_backup_file_then_save_it_to_the_cloud">Use um serviço de nuvem ou conta diferente para cada backup. Quando terminar, exclua o arquivo deste dispositivo.</string>

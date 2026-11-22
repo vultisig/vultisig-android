@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.usecases.backup.MimeType
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -38,17 +37,10 @@ import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.keygen.BackupVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
-import com.vultisig.wallet.ui.utils.file.RequestCreateDocument
 
 @Composable
 internal fun BackupVaultScreen(model: BackupVaultViewModel = hiltViewModel()) {
     val title by model.title.collectAsState()
-
-    RequestCreateDocument(
-        mimeType = MimeType.OCTET_STREAM.value,
-        onDocumentCreated = model::saveContentToUriResult,
-        createDocumentRequestFlow = model.createDocumentRequestFlow,
-    )
 
     BackupVaultScreen(
         title = title.asString(),
@@ -133,16 +125,7 @@ internal fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClic
                                         stringResource(R.string.backup_vault_screen_export_prefix)
                                     )
                                 }
-                                withStyle(
-                                    style =
-                                        Theme.brockmann.body.s.medium
-                                            .toSpanStyle()
-                                            .copy(color = Theme.v2.colors.text.primary)
-                                ) {
-                                    append(
-                                        " ${stringResource(R.string.backup_vault_screen_encrypted)} "
-                                    )
-                                }
+                                append("\n\n")
                                 withStyle(
                                     style =
                                         Theme.brockmann.body.s.medium
@@ -153,16 +136,14 @@ internal fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClic
                                         stringResource(R.string.backup_vault_screen_password_suffix)
                                     )
                                 }
-                                append("\n")
+                                append("\n\n")
                                 withStyle(
                                     style =
                                         Theme.brockmann.body.s.medium
                                             .toSpanStyle()
                                             .copy(color = Theme.v2.colors.text.secondary)
                                 ) {
-                                    append(" ")
                                     append(stringResource(R.string.backup_vault_screen_cloud_tip))
-                                    append(" ")
                                 }
                             }
                         },
