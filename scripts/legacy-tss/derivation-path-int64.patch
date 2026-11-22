@@ -1,0 +1,8 @@
+--- common.go
++++ common.go
+@@ -170 +170 @@
+-		intResult, err := strconv.Atoi(result)
++		intResult, err := strconv.ParseInt(result, 10, 64)
+@@ -174 +174 @@
+-		if intResult < 0 || intResult > int(MaxUint32) {
++		if intResult < 0 || intResult > int64(MaxUint32) {
