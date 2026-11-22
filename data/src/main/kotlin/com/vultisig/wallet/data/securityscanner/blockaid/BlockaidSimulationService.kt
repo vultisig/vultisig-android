@@ -19,8 +19,10 @@ interface BlockaidSimulationService {
 
     /**
      * Returns the simulation + scanner result for the given payload, hitting the Blockaid API only
-     * on cache miss. Returns [BlockaidKeysignScanResult.EMPTY] when the chain is unsupported, the
-     * payload has no calldata to simulate, or the scan failed (failures are not cached).
+     * on cache miss. Returns [BlockaidKeysignScanResult.EMPTY] when the chain is unsupported or the
+     * payload has no calldata to simulate. [BlockaidKeysignScanResult.FAILED] also covers requests
+     * skipped because the on-chain security setting is off. Skipped requests and failures are not
+     * cached.
      */
     suspend fun scan(payload: KeysignPayload): BlockaidKeysignScanResult
 

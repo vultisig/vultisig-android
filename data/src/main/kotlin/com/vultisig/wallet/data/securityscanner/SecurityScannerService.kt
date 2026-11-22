@@ -16,6 +16,12 @@ class SecurityScannerService(
     override suspend fun scanTransaction(
         transaction: SecurityScannerTransaction
     ): SecurityScannerResult {
+        if (!isSecurityServiceEnabled()) {
+            throw SecurityScannerException(
+                message = "On-chain security scanning is disabled",
+                chain = transaction.chain,
+            )
+        }
         val enabledProviders = providers.filter { it.getProviderName() !in disabledProvidersNames }
         return enabledProviders.firstOrNull()?.scanTransaction(transaction)
             ?: run {

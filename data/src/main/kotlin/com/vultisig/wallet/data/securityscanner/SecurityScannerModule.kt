@@ -60,10 +60,11 @@ object SecurityScannerModule {
     @Singleton
     @Provides
     fun provideBlockaidSimulationService(
-        blockaidRpcClient: BlockaidRpcClientContract
+        blockaidRpcClient: BlockaidRpcClientContract,
+        onChainSecurityScannerRepository: OnChainSecurityScannerRepository,
     ): BlockaidSimulationService {
         // Singleton-scoped on purpose: the cache is the contract — verify and
         // done screens own different ViewModels but must see the same scan.
-        return BlockaidSimulationServiceImpl(blockaidRpcClient)
+        return BlockaidSimulationServiceImpl(blockaidRpcClient, onChainSecurityScannerRepository)
     }
 }

@@ -5,6 +5,7 @@ package com.vultisig.wallet.data.securityscanner.blockaid
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
 import com.vultisig.wallet.data.utils.NetworkException
 import io.mockk.every
 import io.mockk.mockk
@@ -31,10 +32,35 @@ import vultisig.keysign.v1.SignSolana
 
 internal class BlockaidSimulationServiceImplTest {
 
+    private val scannerRepository =
+        mockk<OnChainSecurityScannerRepository> { every { getSecurityScannerStatus() } returns true }
+
+    @Test
+    fun `disabled setting skips EVM and Solana and permits scans after opt-in`() = runTest {
+        val rpc = FakeRpc(evmResponse = singleTransferEvmResponse())
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
+        val evm = evmPayload(memo = "0xfeed")
+        val solana = solanaPayload(rawTransactions = listOf("dGVzdA=="))
+
+        every { scannerRepository.getSecurityScannerStatus() } returns false
+        assertFalse(service.scan(evm).didLoadSimulation)
+        assertFalse(service.scan(solana).didLoadSimulation)
+        assertEquals(0, rpc.evmCalls)
+        assertEquals(0, rpc.solanaCalls)
+
+        every { scannerRepository.getSecurityScannerStatus() } returns true
+        assertNotNull(service.scan(evm).simulation)
+        assertEquals(1, rpc.evmCalls)
+
+        every { scannerRepository.getSecurityScannerStatus() } returns false
+        assertFalse(service.scan(evm).didLoadSimulation)
+        assertEquals(1, rpc.evmCalls)
+    }
+
     @Test
     fun `non-eligible chain returns EMPTY without hitting RPC`() = runTest {
         val rpc = FakeRpc()
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
 
         val result = service.scan(payload = bitcoinPayload())
 
@@ -46,7 +72,7 @@ internal class BlockaidSimulationServiceImplTest {
     @Test
     fun `evm scan caches on success`() = runTest {
         val rpc = FakeRpc(evmResponse = singleTransferEvmResponse())
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
         val payload = evmPayload(memo = "0xa9059cbb000000")
 
         val first = service.scan(payload)
@@ -65,7 +91,7 @@ internal class BlockaidSimulationServiceImplTest {
         // the next screen can retry; failures must not poison the cache, and callers must be able
         // to tell a genuine empty verdict apart from a scan that never happened.
         val rpc = FakeRpc(evmThrows = NetworkException(503, "boom"))
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
         val payload = evmPayload(memo = "0xfeed")
 
         val first = service.scan(payload)
@@ -88,7 +114,7 @@ internal class BlockaidSimulationServiceImplTest {
             // — that requires telling this apart from a completed scan that legitimately found no
             // balance change, which `didLoadSimulation` exists to do.
             val rpc = FakeRpc(solanaThrows = NetworkException(503, "boom"))
-            val service = BlockaidSimulationServiceImpl(rpc)
+            val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
             val payload = solanaPayload(rawTransactions = listOf("dGVzdA=="))
 
             val result = service.scan(payload)
@@ -100,7 +126,7 @@ internal class BlockaidSimulationServiceImplTest {
     @Test
     fun `solana scan on undecodable raw transaction returns FAILED`() = runTest {
         val rpc = FakeRpc()
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
         val payload = solanaPayload(rawTransactions = listOf("not-valid-base64!!!"))
 
         val result = service.scan(payload)
@@ -118,7 +144,7 @@ internal class BlockaidSimulationServiceImplTest {
         // (`safeLaunch` in JoinKeysignViewModel) catches the propagated exception and logs it
         // without crashing the verify flow.
         val rpc = FakeRpc(evmThrows = IllegalStateException("regression"))
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
         val payload = evmPayload(memo = "0xfeed")
 
         assertThrows<IllegalStateException> { service.scan(payload) }
@@ -127,7 +153,7 @@ internal class BlockaidSimulationServiceImplTest {
     @Test
     fun `concurrent calls coalesce into a single RPC`() = runTest {
         val rpc = FakeRpc(evmResponse = singleTransferEvmResponse(), evmDelayMillis = 100)
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
         val payload = evmPayload(memo = "0xabc")
 
         val results = coroutineScope { (1..8).map { async { service.scan(payload) } }.awaitAll() }
@@ -153,7 +179,7 @@ internal class BlockaidSimulationServiceImplTest {
                         error = null,
                     )
             )
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
         val payload = evmPayload(memo = "0xfeedface")
 
         val first = service.scan(payload)
@@ -169,7 +195,7 @@ internal class BlockaidSimulationServiceImplTest {
     @Test
     fun `invalidateAll clears cache and unblocks pending awaiters`() = runTest {
         val rpc = FakeRpc(evmResponse = singleTransferEvmResponse())
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
         val payload = evmPayload(memo = "0xabc")
         service.scan(payload)
 
@@ -186,7 +212,7 @@ internal class BlockaidSimulationServiceImplTest {
         // swallow it into an EMPTY result. The leader and any other
         // followers must remain unaffected.
         val rpc = FakeRpc(evmResponse = singleTransferEvmResponse(), evmDelayMillis = 50)
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
         val payload = evmPayload(memo = "0xabc")
 
         val leader = async { service.scan(payload) }
@@ -216,7 +242,7 @@ internal class BlockaidSimulationServiceImplTest {
             // the dispatch returns. Letting the leader still propagate the real result would
             // re-poison whatever UI state triggered the invalidation (e.g. a vault switch).
             val rpc = FakeRpc(evmResponse = singleTransferEvmResponse(), evmDelayMillis = 100)
-            val service = BlockaidSimulationServiceImpl(rpc)
+            val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
             val payload = evmPayload(memo = "0xabc")
 
             val leader = async { service.scan(payload) }
@@ -238,7 +264,7 @@ internal class BlockaidSimulationServiceImplTest {
         // between screens) shouldn't leave the cache in a state where the next screen sees
         // EMPTY forever.
         val rpc = FakeRpc(evmResponse = singleTransferEvmResponse(), evmDelayMillis = 50)
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
         val payload = evmPayload(memo = "0xabc")
 
         val leader = launch {
@@ -264,7 +290,7 @@ internal class BlockaidSimulationServiceImplTest {
         // EMPTY result. Otherwise structured concurrency breaks: a parent that expects to see
         // its child cancellation would instead see a normal completion.
         val rpc = FakeRpc(evmResponse = singleTransferEvmResponse(), evmDelayMillis = 50)
-        val service = BlockaidSimulationServiceImpl(rpc)
+        val service = BlockaidSimulationServiceImpl(rpc, scannerRepository)
         val payload = evmPayload(memo = "0xabc")
 
         val leader = async { service.scan(payload) }

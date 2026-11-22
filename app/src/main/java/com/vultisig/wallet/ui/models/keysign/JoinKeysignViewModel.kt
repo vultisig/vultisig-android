@@ -865,6 +865,8 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { Timber.w(it, "Blockaid simulation failed during dApp signing") }
             ) {
+                if (!securityScannerService.isSecurityServiceEnabled()) return@safeLaunch
+
                 val result = withContext(Dispatchers.IO) { blockaidSimulationService.scan(payload) }
                 val hero =
                     buildHeroContent(
@@ -1057,14 +1059,7 @@ constructor(
 
     private fun scanTransaction(transaction: Transaction) {
         viewModelScope.launch {
-            val chain = transaction.token.chain
-            val isChainSupported =
-                securityScannerService.getSupportedChainsByFeature().isChainSupported(chain) &&
-                    securityScannerService.isSecurityServiceEnabled()
-
-            if (!isChainSupported) {
-                return@launch
-            }
+            if (!canScanTransaction(transaction.token.chain)) return@launch
 
             // update loading status
             updateSendUiModel(verifyUiModel) { currentModel ->
@@ -1097,6 +1092,10 @@ constructor(
         }
     }
 
+    private suspend fun canScanTransaction(chain: Chain): Boolean =
+        securityScannerService.isSecurityServiceEnabled() &&
+            securityScannerService.getSupportedChainsByFeature().isChainSupported(chain)
+
     /**
      * Scans a Solana aggregator swap (Jupiter, LI.FI, SwapKit) through Blockaid using the exact
      * transaction it signs — the swap quote's `tx.data` — and publishes the verdict on the swap
@@ -1120,11 +1119,7 @@ constructor(
                     }
                 }
             ) {
-                val chain = payload.coin.chain
-                val isChainSupported =
-                    securityScannerService.getSupportedChainsByFeature().isChainSupported(chain) &&
-                        securityScannerService.isSecurityServiceEnabled()
-                if (!isChainSupported) return@safeLaunch
+                if (!canScanTransaction(payload.coin.chain)) return@safeLaunch
 
                 updateSwapUiModel { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.securityscanner.blockaid
 
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.toEvenLengthHexString
@@ -27,8 +28,10 @@ import timber.log.Timber
  * non-null are eligible. Everything else short-circuits to [BlockaidKeysignScanResult.EMPTY]
  * without hitting the network.
  */
-internal class BlockaidSimulationServiceImpl(private val rpcClient: BlockaidRpcClientContract) :
-    BlockaidSimulationService {
+internal class BlockaidSimulationServiceImpl(
+    private val rpcClient: BlockaidRpcClientContract,
+    private val scannerRepository: OnChainSecurityScannerRepository,
+) : BlockaidSimulationService {
 
     private val mutex = Mutex()
     private val cache = mutableMapOf<BlockaidSimulationCacheKey, BlockaidKeysignScanResult>()
@@ -36,6 +39,8 @@ internal class BlockaidSimulationServiceImpl(private val rpcClient: BlockaidRpcC
         mutableMapOf<BlockaidSimulationCacheKey, CompletableDeferred<BlockaidKeysignScanResult>>()
 
     override suspend fun scan(payload: KeysignPayload): BlockaidKeysignScanResult {
+        if (!scannerRepository.getSecurityScannerStatus()) return BlockaidKeysignScanResult.FAILED
+
         val key = BlockaidSimulationCacheKey.from(payload) ?: return BlockaidKeysignScanResult.EMPTY
 
         // Fast path: cached successes return without acquiring an outer lock
