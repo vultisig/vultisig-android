@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -14,66 +15,54 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import org.junit.jupiter.api.Test
 
-/**
- * A SwapKit EVM route approves a token-transfer proxy (`allowanceTarget`) rather than the swap's
- * `to`. The keysign proto doesn't carry that field (vultisig/commondata#116), so a co-signer sees
- * it as null and can only check the token and amount, as iOS does.
- */
+/** Ensures the signer refuses SwapKit allowance legs while the protocol lacks spender binding. */
 class SigningHelperApproveBoundToSwapTest {
 
     @Test
-    fun `SwapKit approve to the allowanceTarget proxy is signed when the proxy is known`() {
-        SigningHelper.requireApproveBoundToSwap(
-            approve(spender = PROXY),
-            payload(provider = "swapkit", allowanceTarget = PROXY),
-        )
-    }
-
-    @Test
-    fun `SwapKit approve to another spender is rejected when the proxy is known`() {
+    fun `SwapKit approval is refused when the quote has an allowance target`() {
         shouldThrow<IllegalArgumentException> {
             SigningHelper.requireApproveBoundToSwap(
-                approve(spender = ATTACKER),
+                approve(spender = PROXY),
                 payload(provider = "swapkit", allowanceTarget = PROXY),
             )
         }
     }
 
-    // What a co-signer reconstructs from the proto today: the proxy is dropped, so the spender
-    // can't be bound and only the token and amount are checked.
     @Test
-    fun `SwapKit approve to a proxy is signed when the payload carries no allowanceTarget`() {
-        SigningHelper.requireApproveBoundToSwap(
-            approve(spender = PROXY),
-            payload(provider = "swapkit", allowanceTarget = null),
-        )
-    }
-
-    @Test
-    fun `SwapKit approve above the swap amount is rejected when the payload carries no allowanceTarget`() {
+    fun `SwapKit approval is refused when the peer payload has no allowance target`() {
         shouldThrow<IllegalArgumentException> {
             SigningHelper.requireApproveBoundToSwap(
-                approve(spender = PROXY, amount = AMOUNT + BigInteger.ONE),
+                approve(spender = ROUTER),
                 payload(provider = "swapkit", allowanceTarget = null),
             )
         }
     }
 
     @Test
-    fun `SwapKit approve to the swap router is signed when the payload carries no allowanceTarget`() {
-        SigningHelper.requireApproveBoundToSwap(
-            approve(spender = ROUTER),
-            payload(provider = "swapkit", allowanceTarget = null),
-        )
-    }
-
-    @Test
-    fun `SwapKit approve above the swap amount is rejected`() {
-        shouldThrow<IllegalArgumentException> {
-            SigningHelper.requireApproveBoundToSwap(
-                approve(spender = PROXY, amount = AMOUNT + BigInteger.ONE),
-                payload(provider = "swapkit", allowanceTarget = PROXY),
+    fun `prebuilt TRON and Sui routes are rejected before accessing a signer`() {
+        val payload = payload(provider = "swapkit", allowanceTarget = null)
+        val unsupported =
+            listOf(
+                Chain.Tron to SwapKitSwapPayloadJson.TX_TYPE_TRON,
+                Chain.Sui to SwapKitSwapPayloadJson.TX_TYPE_SUI,
             )
+        unsupported.forEach { (chain, type) ->
+            val coin = payload.coin.copy(chain = chain)
+            val swap =
+                SwapPayload.SwapKit(
+                    SwapKitSwapPayloadJson(
+                        fromCoin = coin,
+                        toCoin = usdt,
+                        fromAmount = AMOUNT,
+                        toAmountDecimal = BigDecimal.ONE,
+                        txType = type,
+                        txPayload = byteArrayOf(),
+                        targetAddress = "deposit",
+                    )
+                )
+            shouldThrow<IllegalArgumentException> {
+                SigningHelper.requireVerifiedSwapKitRoute(payload.copy(coin = coin, swapPayload = swap))
+            }
         }
     }
 
@@ -91,8 +80,7 @@ class SigningHelperApproveBoundToSwapTest {
         }
     }
 
-    private fun approve(spender: String, amount: BigInteger = AMOUNT) =
-        ERC20ApprovePayload(amount = amount, spender = spender)
+    private fun approve(spender: String) = ERC20ApprovePayload(amount = AMOUNT, spender = spender)
 
     private fun payload(provider: String, allowanceTarget: String?) =
         KeysignPayload(

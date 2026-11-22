@@ -214,8 +214,6 @@ data class SwapKitSwapPayloadJson(
                 TX_TYPE_PSBT_BCH,
                 TX_TYPE_PSBT_DASH,
                 TX_TYPE_PSBT_ZEC,
-                TX_TYPE_TRON,
-                TX_TYPE_SUI,
                 TX_TYPE_TON,
                 TX_TYPE_XRP,
                 TX_TYPE_CARDANO,

@@ -2,11 +2,13 @@ package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.errors.SwapKitError
+import com.vultisig.wallet.data.api.swapAggregators.maximumNetworkFee
 import com.vultisig.wallet.data.api.swapAggregators.swapKitDepositRecipient
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -96,6 +98,7 @@ constructor(
         vault: Vault,
         currency: AppCurrency,
     ): JoinKeysignVerifyResult {
+        SigningHelper.requireVerifiedSwapKitRoute(payload)
         val srcToken = swapPayload.srcToken
         val dstToken = swapPayload.dstToken
 
@@ -106,6 +109,32 @@ constructor(
 
         val chain = srcToken.chain
         val blockChainSpecific = payload.blockChainSpecific
+        val swapKitEvm =
+            (swapPayload as? SwapPayload.EVM)?.takeIf {
+                chain.standard == TokenStandard.EVM &&
+                    swapProviderFromWireId(it.data.provider) == SwapProvider.SWAPKIT
+            }
+        val srcTokenForReview =
+            if (swapKitEvm == null) srcToken
+            else {
+                val verifiedToken =
+                    if (srcToken.isNativeToken) nativeToken
+                    else
+                        vault.coins.firstOrNull {
+                            it.chain == chain && !it.isNativeToken &&
+                                it.contractAddress.equals(srcToken.contractAddress, ignoreCase = true)
+                        }
+                            ?: tokenRepository.getToken(srcToken.id)?.takeIf {
+                                it.chain == chain && !it.isNativeToken &&
+                                    it.contractAddress.equals(srcToken.contractAddress, ignoreCase = true)
+                            }
+                            ?: tokenRepository.getEVMTokenByContract(chain.id, srcToken.contractAddress)
+                require(verifiedToken?.decimal == srcToken.decimal && verifiedToken?.ticker == srcToken.ticker) {
+                    "SwapKit source asset does not match the verified token metadata"
+                }
+                val (sourceAddress, publicKey) = chainAccountAddressRepository.getAddress(chain, vault)
+                srcToken.copy(address = sourceAddress, hexPublicKey = publicKey)
+            }
         // EVM aggregator display gas limit, computed with the same rule as the initiator so both
         // co-signers show the same fee; null for native deposits and OP-stack L2s (#5056).
         val aggregatorDisplayGasLimit =
@@ -114,6 +143,11 @@ constructor(
             }
         val gasFee =
             when {
+                swapKitEvm != null && blockChainSpecific is BlockChainSpecific.Ethereum ->
+                    TokenValue(
+                        value = swapKitEvm.data.quote.maximumNetworkFee(blockChainSpecific),
+                        token = nativeToken,
+                    )
                 chain.standard == TokenStandard.UTXO && chain != Chain.Cardano -> {
                     val utxoHelper = UtxoHelper.getHelper(vault, srcToken.coinType)
                     val plan = utxoHelper.getBitcoinTransactionPlan(payload)
@@ -319,7 +353,7 @@ constructor(
                         src =
                             ValuedToken(
                                 value = mapTokenValueToDecimalUiString(srcTokenValue),
-                                token = srcToken,
+                                token = srcTokenForReview,
                                 fiatValue =
                                     fiatValueToStringMapper(
                                         convertTokenValueToFiat(srcToken, srcTokenValue, currency)
@@ -356,7 +390,7 @@ constructor(
                         networkFeeFormatted =
                             mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                                 " ${estimatedNetworkGasFee.tokenValue.unit}",
-                        isNetworkFeeMax = srcToken.chain.hasSwapNetworkFeeCeiling,
+                        isNetworkFeeMax = swapKitEvm != null || srcToken.chain.hasSwapNetworkFeeCeiling,
                         totalFee = fiatValueToStringMapper(swapFeeForTotal, asFee = true),
                         totalFeeExcludingNetwork = swapFeeExcludingNetwork,
                         provider = provider,

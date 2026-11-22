@@ -8,12 +8,11 @@ import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import io.kotest.assertions.throwables.shouldThrow
 import java.math.BigDecimal
 import java.math.BigInteger
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * SwapKit is exempt from the router pin, and a co-signer never sees `targetAddress`, so the signed
- * calldata of a SwapKit ERC-20 deposit is bound on every device before signing: exactly
- * `transfer(recipient, fromAmount)` on the sold token, with no native value.
+ * Verifies that only direct deposits with a decodable recipient and amount pass the EVM guard.
  */
 internal class EvmSwapTxGuardSwapKitDepositTest {
 
@@ -23,17 +22,34 @@ internal class EvmSwapTxGuardSwapKitDepositTest {
     }
 
     @Test
-    fun `still signs a SwapKit router call to an unpinned entry contract`() {
-        EvmSwapTxGuard.check(
-            payload(depositTx().copy(to = ROUTER, data = "0x12aa3caf" + "00".repeat(64)))
-        )
+    fun `refuses an executable SwapKit router call`() {
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(payload(depositTx().copy(to = ROUTER, data = "0x01020304")))
+        }
+    }
+
+    @Test
+    fun `uses the outer recipient of a value-only native deposit`() {
+        val tx =
+            depositTx().copy(to = ROUTER, data = "0x", value = SOLD.toString(), gas = 21_000)
+        val swap = payload(tx).copy(fromCoin = usdt.copy(contractAddress = "", isNativeToken = true))
+
+        EvmSwapTxGuard.check(swap)
+        assertEquals(ROUTER, swap.swapKitDepositRecipient(Chain.Ethereum))
+
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(swap.copy(fromAmount = SOLD + BigInteger.ONE))
+        }
+        shouldThrow<IllegalArgumentException> {
+            EvmSwapTxGuard.check(swap.copy(quote = swap.quote.copy(tx = tx.copy(gas = 22_000))))
+        }
     }
 
     @Test
     fun `refuses a SwapKit transfer call on a token the swap does not sell`() {
-        val drain = depositTx().copy(to = USDC)
+        val differentToken = depositTx().copy(to = USDC)
 
-        shouldThrow<IllegalArgumentException> { EvmSwapTxGuard.check(payload(drain)) }
+        shouldThrow<IllegalArgumentException> { EvmSwapTxGuard.check(payload(differentToken)) }
     }
 
     @Test

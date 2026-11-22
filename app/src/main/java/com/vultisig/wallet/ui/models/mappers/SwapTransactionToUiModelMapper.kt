@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.swapAggregators.swapKitDepositRecipient
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -226,7 +227,10 @@ constructor(
                 ),
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
-            isNetworkFeeMax = from.srcToken.chain.hasSwapNetworkFeeCeiling,
+            isNetworkFeeMax =
+                from.srcToken.chain.hasSwapNetworkFeeCeiling ||
+                    (provider == SwapProvider.SWAPKIT &&
+                        from.srcToken.chain.standard == TokenStandard.EVM),
             totalFee =
                 fiatValueToStringMapper(
                     totalFeeExcludingNetwork + from.gasFeeFiatValue,

@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
@@ -255,7 +256,7 @@ private fun VerifySwapSheetDetails(tx: SwapTransactionUiModel, vaultName: String
                 ?.takeIf { it.isNotBlank() }
                 ?.let { recipient -> VerifyExternalRecipientRow(address = recipient) }
 
-            tx.depositAddress?.let { VerifyDepositAddressRow(address = it) }
+            tx.depositAddress?.let { VerifyDepositDetails(tx, address = it) }
 
             HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.light)
 
@@ -676,7 +677,7 @@ private fun VerifySwapScreen(
 
                     tx.depositAddress?.let {
                         VerifyCardDivider(size = 20.dp)
-                        VerifyDepositAddressRow(address = it)
+                        VerifyDepositDetails(tx, address = it)
                     }
 
                     VerifyCardDivider(size = 20.dp)
@@ -1095,14 +1096,21 @@ internal fun VerifyExternalRecipientRow(address: String, modifier: Modifier = Mo
     }
 }
 
-/** The address a SwapKit ERC-20 deposit sends the sold token to, read from the signed calldata. */
 @Composable
-private fun VerifyDepositAddressRow(address: String) {
+private fun VerifyDepositDetails(tx: SwapTransactionUiModel, address: String) {
     VerifyCardDetails(
         title = stringResource(R.string.verify_swap_deposit_address),
         subtitle = address,
         showAllContent = true,
     )
+    val token = tx.src.token
+    if (!token.isNativeToken && token.chain.standard == TokenStandard.EVM) {
+        VerifyCardDetails(
+            title = stringResource(R.string.token_details_contract_address),
+            subtitle = token.contractAddress,
+            showAllContent = true,
+        )
+    }
 }
 
 @Composable

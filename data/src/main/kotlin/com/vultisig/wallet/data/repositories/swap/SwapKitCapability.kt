@@ -88,5 +88,6 @@ internal object SwapKitCapability {
      */
     fun canQuoteFrom(chain: Chain): Boolean =
         canReceiveOn(chain) &&
+            chain != Chain.Tron && chain != Chain.Sui &&
             (chain.standard != TokenStandard.EVM || BlockaidChainIdentifier.name(chain) != null)
 }

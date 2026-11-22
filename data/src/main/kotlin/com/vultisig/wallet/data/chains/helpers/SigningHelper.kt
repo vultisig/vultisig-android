@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.api.swapAggregators.EVM_NATIVE_DEPOSIT_GAS
 import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
+import com.vultisig.wallet.data.api.swapAggregators.requireSwapKitEvmDeposit
 import com.vultisig.wallet.data.common.hexToByteArrayOrNull
 import com.vultisig.wallet.data.common.isHexPrefixed
 import com.vultisig.wallet.data.common.toHexBytes
@@ -162,10 +164,8 @@ object SigningHelper {
      * it does show: the same token, no more than the swap's input, and granted to that swap's own
      * router. Anything else lets an initiator slip an arbitrary allowance past the Verify screen.
      *
-     * A SwapKit EVM route approves a token-transfer proxy (`allowanceTarget`) that the keysign
-     * proto doesn't carry yet (vultisig/commondata#116). When it is missing (a co-signer) the
-     * spender can't be bound, so only the token and amount checks apply, as on iOS. The spender is
-     * bound again once the proto carries the field.
+     * SwapKit's independently verifiable deposits do not need an allowance. Other SwapKit routes
+     * require a separate spender that the keysign proto does not carry (commondata#116).
      */
     internal fun requireApproveBoundToSwap(
         approvePayload: ERC20ApprovePayload,
@@ -194,9 +194,7 @@ object SigningHelper {
                     val tx = swapPayload.data.quote.tx
                     val isSwapKit =
                         swapProviderFromWireId(swapPayload.data.provider) == SwapProvider.SWAPKIT
-                    // ponytail: SwapKit proxy unknown on the co-signer, spender unbound until
-                    // commondata#116
-                    if (isSwapKit && tx.allowanceTarget == null) return
+                    require(!isSwapKit) { "Android cannot verify a SwapKit token approval" }
                     tx.allowanceTarget ?: tx.to
                 }
                 is SwapPayload.SwapKit -> error("SwapKit ${swapPayload.data.txType} carries no approve")
@@ -209,8 +207,59 @@ object SigningHelper {
         }
     }
 
+    /** Apply SwapKit's route constraints before review, signing, or broadcasting any leg. */
+    fun requireVerifiedSwapKitRoute(payload: KeysignPayload) {
+        val swap = payload.swapPayload
+        when (swap) {
+            is SwapPayload.EVM -> {
+                if (swapProviderFromWireId(swap.data.provider) != SwapProvider.SWAPKIT) return
+                swap.requireSellsSigningCoin(payload.coin)
+                require(payload.approvePayload == null) {
+                    "Android cannot verify a SwapKit token approval"
+                }
+                if (payload.coin.chain == Chain.Solana) return
+                require(payload.coin.chain.standard == TokenStandard.EVM) {
+                    "Unsupported SwapKit transaction format for this chain"
+                }
+
+                val tx = swap.data.quote.tx
+                tx.requireSwapKitEvmDeposit(swap.srcToken, swap.srcTokenValue.value)
+                require(payload.toAmount == swap.srcTokenValue.value) {
+                    "SwapKit deposit does not match the transaction amount"
+                }
+                val gas = EthereumGasHelper.requireEthereumSpec(payload.blockChainSpecific)
+                val quoteGasPrice = tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO
+                require(
+                    tx.gas >= 0 &&
+                        quoteGasPrice.signum() >= 0 && quoteGasPrice.bitLength() <= 256 &&
+                        gas.gasLimit.signum() >= 0 && gas.gasLimit.bitLength() <= 64 &&
+                        gas.maxFeePerGasWei.signum() >= 0 && gas.maxFeePerGasWei.bitLength() <= 256 &&
+                        gas.priorityFeeWei.signum() >= 0 && gas.priorityFeeWei.bitLength() <= 256
+                ) { "SwapKit deposit contains invalid gas parameters" }
+                if (swap.srcToken.isNativeToken) {
+                    require(gas.gasLimit <= EVM_NATIVE_DEPOSIT_GAS.toBigInteger()) {
+                        "Android cannot verify a SwapKit native deposit with extra execution gas"
+                    }
+                }
+            }
+            is SwapPayload.SwapKit -> {
+                swap.requireSellsSigningCoin(payload.coin)
+                require(payload.approvePayload == null) {
+                    "SwapKit native routes cannot carry a token approval"
+                }
+                require(
+                    payload.coin.chain != Chain.Tron && payload.coin.chain != Chain.Sui &&
+                        swap.data.txType != SwapKitSwapPayloadJson.TX_TYPE_TRON &&
+                        swap.data.txType != SwapKitSwapPayloadJson.TX_TYPE_SUI
+                ) { "Android cannot verify this pre-built SwapKit transaction" }
+            }
+            else -> Unit
+        }
+    }
+
     fun getKeysignMessages(payload: KeysignPayload, vault: Vault): List<String> {
         payload.swapPayload?.requireSellsSigningCoin(payload.coin)
+        requireVerifiedSwapKitRoute(payload)
 
         val messages = mutableListOf<String>()
         val chain = payload.coin.chain
@@ -301,12 +350,6 @@ object SigningHelper {
                             }
                         } else {
                             when (txType) {
-                                SwapKitSwapPayloadJson.TX_TYPE_TRON ->
-                                    SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
-                                        .getPreSignedImageHash(swapPayload.data.txPayload)
-                                SwapKitSwapPayloadJson.TX_TYPE_SUI ->
-                                    SwapKitSuiSigner(eddsaKey)
-                                        .getPreSignedImageHash(swapPayload.data.txPayload)
                                 SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
                                     SwapKitCardanoSigner(eddsaKey)
                                         .getPreSignedImageHash(
@@ -551,6 +594,7 @@ object SigningHelper {
         signatures: Map<String, tss.KeysignResponse>,
         nonceAcc: BigInteger,
     ): SignedTransactionResult {
+        requireVerifiedSwapKitRoute(keysignPayload)
         val chain = keysignPayload.coin.chain
         val (ecdsaKey, ecdsaChainCode) = vault.getEcdsaSigningKey(chain)
         val eddsaKey = vault.getEddsaSigningKey(chain)
@@ -618,12 +662,6 @@ object SigningHelper {
                         }
                     } else {
                         when (txType) {
-                            SwapKitSwapPayloadJson.TX_TYPE_TRON ->
-                                SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
-                                    .getSignedTransaction(swapPayload.data.txPayload, signatures)
-                            SwapKitSwapPayloadJson.TX_TYPE_SUI ->
-                                SwapKitSuiSigner(eddsaKey)
-                                    .getSignedTransaction(swapPayload.data.txPayload, signatures)
                             SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
                                 SwapKitCardanoSigner(eddsaKey)
                                     .getSignedTransaction(

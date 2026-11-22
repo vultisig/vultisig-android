@@ -82,9 +82,7 @@ internal class SwapKitCapabilityTest {
                 Chain.Litecoin,
                 Chain.Ripple,
                 Chain.Solana,
-                Chain.Sui,
                 Chain.Ton,
-                Chain.Tron,
                 Chain.Zcash,
             )
             .forEach { chain ->
@@ -93,6 +91,14 @@ internal class SwapKitCapabilityTest {
                 // gate does not apply and receive implies quote.
                 assertTrue(SwapKitCapability.canQuoteFrom(chain), "canQuoteFrom(${chain.raw})")
             }
+    }
+
+    @Test
+    fun `TRON and Sui stay receivable while prebuilt swaps cannot originate`() {
+        listOf(Chain.Tron, Chain.Sui).forEach { chain ->
+            assertTrue(SwapKitCapability.canReceiveOn(chain))
+            assertFalse(SwapKitCapability.canQuoteFrom(chain))
+        }
     }
 
     @Test

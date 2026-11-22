@@ -1,7 +1,12 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.errors.SwapKitError
+import com.vultisig.wallet.data.api.swapAggregators.requireSwapKitEvmDeposit
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
+import com.vultisig.wallet.data.models.SwapQuote
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.swap.SwapKitQuoteSource
 import com.vultisig.wallet.data.repositories.swap.SwapPoolEligibilityRepository
@@ -53,7 +58,25 @@ constructor(
         request: SwapQuoteRequest,
     ): SwapQuoteResult {
         val source = sources[provider] ?: error("No SwapQuoteSource registered for $provider")
-        return source.fetch(request)
+        val result = source.fetch(request)
+        if (provider != SwapProvider.SWAPKIT) return result
+        when (result) {
+            is SwapQuoteResult.Evm ->
+                if (request.srcToken.chain.standard == TokenStandard.EVM) {
+                    try {
+                        result.data.tx.requireSwapKitEvmDeposit(request.srcToken, request.tokenValue.value)
+                    } catch (e: IllegalArgumentException) {
+                        throw SwapKitError.UnableToBuildTransaction
+                    }
+                }
+            is SwapQuoteResult.Native -> {
+                val quote = result.quote as? SwapQuote.SwapKit
+                if (quote != null && !SwapKitSwapPayloadJson.isSignableTxType(quote.data.txType, request.srcToken.chain)) {
+                    throw SwapKitError.UnsupportedTxType(quote.data.txType)
+                }
+            }
+        }
+        return result
     }
 
     override suspend fun getSwapKitInboundFee(request: SwapQuoteRequest): TokenValue =

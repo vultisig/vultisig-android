@@ -13,13 +13,10 @@ import java.math.BigInteger
  * relayed payload and its Verify screen only shows the quoted tokens and amounts, so `tx.to` and
  * `tx.value` must be ones that quote implies rather than whatever the provider response (or a
  * compromised initiator) put there.
- * - `tx.to` must be the provider's router on that chain. SwapKit is exempt: its entry contract is
- *   chosen per route, so there's no fixed address to pin. A SwapKit `transfer` call, or a SwapKit
- *   tx addressed to the sold token (an ERC-20 deposit), must instead be exactly
- *   `transfer(recipient, fromAmount)` on the sold token with no native value
- *   ([swapKitDepositRecipient]).
+ * - `tx.to` must be the provider's router on that chain. SwapKit can choose a different contract
+ *   for each route, so Android only accepts direct native or exact ERC-20 deposits from SwapKit.
  * - A 1inch / Kyber swap (or a provider-less one aimed at their routers) can't send more native
- *   value than the quoted amount, and sends none from an ERC-20 source. LI.FI and SwapKit are
+ *   value than the quoted amount, and sends none from an ERC-20 source. LI.FI is
  *   exempt: bridge routes add native messaging fees on top of the quoted amount, so `tx.value`
  *   can legitimately exceed it. LI.FI stays bound by its router pin.
  *
@@ -34,26 +31,22 @@ internal object EvmSwapTxGuard {
         val chain = swapPayload.fromCoin.chain
         require(chain.standard == TokenStandard.EVM) { "EVM swap signed for ${chain.raw}" }
         val tx = swapPayload.quote.tx
-        val value = tx.nativeValue()
-
         val rawProvider = swapPayload.provider.trim()
         val provider = swapProviderFromWireId(rawProvider)
         if (provider == SwapProvider.SWAPKIT) {
-            // Called for its throws only: a deposit-shaped tx must be exactly the deposit.
-            swapPayload.swapKitDepositRecipient(chain)
+            tx.requireSwapKitEvmDeposit(swapPayload.fromCoin, swapPayload.fromAmount)
+            return
         }
+        val value = tx.nativeValue()
         val routers =
             when {
-                provider == SwapProvider.SWAPKIT -> null
                 provider != null -> routersFor(provider, chain)
                 rawProvider.isEmpty() -> ENFORCED_PROVIDERS.flatMap { routersFor(it, chain) }.toSet()
                 else -> error("EVM swap from unrecognized provider '$rawProvider'")
             }
-        if (routers != null) {
-            require(tx.to.lowercase() in routers) {
-                "EVM swap router ${tx.to} is not a known ${rawProvider.ifEmpty { "aggregator" }} " +
-                    "router on ${chain.raw}"
-            }
+        require(tx.to.lowercase() in routers) {
+            "EVM swap router ${tx.to} is not a known ${rawProvider.ifEmpty { "aggregator" }} " +
+                "router on ${chain.raw}"
         }
 
         val boundsValue =

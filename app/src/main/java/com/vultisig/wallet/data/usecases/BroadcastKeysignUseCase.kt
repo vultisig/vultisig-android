@@ -102,6 +102,7 @@ constructor(
         signatures: Map<String, KeysignResponse>,
         isInitiatingDevice: Boolean,
     ): KeysignBroadcastResult {
+        SigningHelper.requireVerifiedSwapKitRoute(payload)
         var nonceAcc = BigInteger.ZERO
 
         val chain = payload.coin.chain

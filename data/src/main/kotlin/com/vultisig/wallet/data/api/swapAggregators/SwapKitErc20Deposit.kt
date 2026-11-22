@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api.swapAggregators
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.blockchain.ethereum.ERC20_TRANSFER_SELECTOR
 import com.vultisig.wallet.data.blockchain.ethereum.decodeErc20TransferCallData
+import com.vultisig.wallet.data.common.ZERO_ADDRESS
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
@@ -62,14 +63,51 @@ fun swapKitErc20DepositRecipient(
 }
 
 /**
- * The recipient of the SwapKit ERC-20 deposit this payload signs on [signingChain] (the keysign
- * coin's chain), decoded from its calldata by [swapKitErc20DepositRecipient]; null when it is not a
- * SwapKit swap, [signingChain] is not EVM, or it is not a deposit.
- *
- * @throws IllegalArgumentException when it has the deposit shape but is not exactly the deposit.
+ * Recipient of a verifiable SwapKit EVM deposit, including in history for previously signed swaps.
+ * Unsupported shapes have no verified recipient to show. The signing guard rejects them.
  */
 fun EVMSwapPayloadJson.swapKitDepositRecipient(signingChain: Chain): String? {
     val isSwapKit = swapProviderFromWireId(provider) == SwapProvider.SWAPKIT
     if (!isSwapKit || signingChain.standard != TokenStandard.EVM) return null
-    return swapKitErc20DepositRecipient(quote.tx, fromCoin, fromAmount)
+    return try {
+        quote.tx.requireSwapKitEvmDeposit(fromCoin, fromAmount)
+    } catch (_: IllegalArgumentException) {
+        null
+    }
 }
+
+/** Returns the recipient from the only SwapKit EVM shapes Android can verify independently. */
+internal fun OneInchSwapTxJson.requireSwapKitEvmDeposit(
+    srcToken: Coin,
+    amount: BigInteger,
+): String {
+    require(amount.signum() > 0 && amount.bitLength() <= 256) {
+        "SwapKit deposit amount must be a positive uint256"
+    }
+    require(EVM_ADDRESS.matches(to)) { "SwapKit deposit has an invalid transaction target" }
+    val recipient =
+        if (srcToken.isNativeToken) {
+            require(data.isEmpty() || data == "0x") {
+                "Android cannot verify this SwapKit contract call"
+            }
+            // Empty calldata can still invoke a contract. Allow only the intrinsic gas for a
+            // value transfer, so the receiving account cannot run a fallback with spare gas.
+            require(gas == EVM_NATIVE_DEPOSIT_GAS) {
+                "Android cannot verify a SwapKit native deposit with extra execution gas"
+            }
+            require(nativeValue() == amount) { "SwapKit deposit does not match the sold amount" }
+            to
+        } else {
+            requireNotNull(swapKitErc20DepositRecipient(this, srcToken, amount)) {
+                "Android cannot verify this SwapKit contract call"
+            }
+        }
+    require(!recipient.equals(ZERO_ADDRESS, ignoreCase = true)) {
+        "SwapKit deposit recipient is the zero address"
+    }
+    return recipient
+}
+
+internal const val EVM_NATIVE_DEPOSIT_GAS = 21_000L
+
+private val EVM_ADDRESS = Regex("0x[0-9a-fA-F]{40}")

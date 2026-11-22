@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.common.toByteString
 import com.vultisig.wallet.data.common.toHexBytesInByteString
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
 import java.math.BigInteger
@@ -66,20 +67,10 @@ class OneInchSwap(private val vaultHexPublicKey: String, private val vaultHexCha
                         )
                 )
 
-        val gasPrice =
-            maxOf(
-                quote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO,
-                requireEthereumSpec(keysignPayload.blockChainSpecific).maxFeePerGasWei,
-            )
-        val gas =
-            maxOf(
-                (quote.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
-                    .toBigInteger(),
-                requireEthereumSpec(keysignPayload.blockChainSpecific).gasLimit,
-            )
+        val spec = requireEthereumSpec(keysignPayload.blockChainSpecific)
         return EthereumGasHelper.setGasParameters(
-                gas = gas,
-                gasPrice = gasPrice,
+                gas = quote.swapGasLimit(spec),
+                gasPrice = quote.swapGasPrice(spec),
                 signingInput = input,
                 keysignPayload = keysignPayload,
                 nonceIncrement = nonceIncrement,
@@ -89,3 +80,13 @@ class OneInchSwap(private val vaultHexPublicKey: String, private val vaultHexCha
             .toByteArray()
     }
 }
+
+/** The gas limit times the maximum price per gas, from the same fields the signer uses. */
+fun EVMSwapQuoteJson.maximumNetworkFee(spec: BlockChainSpecific.Ethereum): BigInteger =
+    swapGasLimit(spec) * swapGasPrice(spec)
+
+private fun EVMSwapQuoteJson.swapGasLimit(spec: BlockChainSpecific.Ethereum): BigInteger =
+    maxOf((tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(), spec.gasLimit)
+
+private fun EVMSwapQuoteJson.swapGasPrice(spec: BlockChainSpecific.Ethereum): BigInteger =
+    maxOf(tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO, spec.maxFeePerGasWei)
