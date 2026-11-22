@@ -16,7 +16,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +35,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiAlertDialog
+import com.vultisig.wallet.ui.components.UiConfirmDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -76,7 +79,7 @@ internal fun BackupPasswordRequestScreen(model: BackupPasswordRequestViewModel =
         )
     }
 
-    BackupPasswordRequestScreen(
+    BackupPasswordRequestContent(
         onNoPasswordClick = model::backupWithoutPassword,
         onWithPasswordClick = model::backupWithPassword,
         onBackClick = model::back,
@@ -101,11 +104,12 @@ internal inline fun <reified T : Any> isBackupOpenedOutsideKeygen(
 @Preview
 @Composable
 private fun BackupPasswordRequestScreenPreview() {
-    BackupPasswordRequestScreen(onNoPasswordClick = {}, onWithPasswordClick = {}, onBackClick = {})
+    BackupPasswordRequestContent(onNoPasswordClick = {}, onWithPasswordClick = {}, onBackClick = {})
 }
 
 internal object BackupPasswordRequestScreenTags {
     const val BACKUP_WITHOUT_PASSWORD = "BackupPasswordRequestScreen.withoutPassword"
+    const val BACKUP_WITH_PASSWORD = "BackupPasswordRequestScreen.withPassword"
 }
 
 private enum class BackupRequestLook(
@@ -113,7 +117,6 @@ private enum class BackupRequestLook(
     val bottomGap: Dp,
     @DrawableRes val headerIcon: Int,
     val headerTint: Color,
-    @DrawableRes val secureIcon: Int,
     @DrawableRes val encryptIcon: Int,
     @DrawableRes val cannotResetIcon: Int,
     @StringRes val cannotResetText: Int,
@@ -128,7 +131,6 @@ private enum class BackupRequestLook(
         bottomGap = 0.dp,
         headerIcon = R.drawable.ic_passkeys,
         headerTint = V2.colors.neutrals.n100,
-        secureIcon = R.drawable.remember,
         encryptIcon = R.drawable.backup_passowrd_lock,
         cannotResetIcon = R.drawable.encrypt,
         cannotResetText = R.string.backup_password_request_caution_cannot_reset_desc,
@@ -143,7 +145,6 @@ private enum class BackupRequestLook(
         bottomGap = 10.dp,
         headerIcon = R.drawable.ic_lock_password,
         headerTint = V2.colors.primary.accent4,
-        secureIcon = R.drawable.lock_filled,
         encryptIcon = R.drawable.ic_folders,
         cannotResetIcon = R.drawable.ic_triangle_warning_filled,
         cannotResetText = R.string.backup_password_request_settings_cannot_reset,
@@ -156,13 +157,27 @@ private enum class BackupRequestLook(
 }
 
 @Composable
-private fun BackupPasswordRequestScreen(
+internal fun BackupPasswordRequestContent(
     onNoPasswordClick: () -> Unit,
     onWithPasswordClick: () -> Unit,
     onBackClick: () -> Unit,
     isSettingsLook: Boolean = false,
 ) {
     val look = if (isSettingsLook) BackupRequestLook.Settings else BackupRequestLook.Keygen
+    var confirmUnencryptedExport by remember { mutableStateOf(false) }
+    if (isSettingsLook && confirmUnencryptedExport) {
+        UiConfirmDialog(
+            title = stringResource(R.string.backup_password_request_unencrypted_action),
+            text = stringResource(R.string.backup_password_request_unencrypted_warning),
+            confirmTitle = stringResource(R.string.backup_password_request_no_password_action),
+            dismissTitle = stringResource(R.string.backup_password_request_unencrypted_cancel),
+            onConfirm = {
+                confirmUnencryptedExport = false
+                onNoPasswordClick()
+            },
+            onDismiss = { confirmUnencryptedExport = false },
+        )
+    }
     V2Scaffold(onBackClick = onBackClick) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -195,18 +210,20 @@ private fun BackupPasswordRequestScreen(
 
             UiSpacer(size = 16.dp)
 
-            BackupCaution(
-                icon = look.secureIcon,
-                look = look,
-                mainText =
-                    stringResource(R.string.backup_password_request_caution_secure_without_desc),
-                highlightedWords =
-                    listOf(
-                        stringResource(R.string.backup_password_request_highlight_secure_without)
-                    ),
-            )
+            if (!isSettingsLook) {
+                BackupCaution(
+                    icon = R.drawable.remember,
+                    look = look,
+                    mainText =
+                        stringResource(R.string.backup_password_request_caution_secure_without_desc),
+                    highlightedWords =
+                        listOf(
+                            stringResource(R.string.backup_password_request_highlight_secure_without)
+                        ),
+                )
+                UiSpacer(size = 16.dp)
+            }
 
-            UiSpacer(size = 16.dp)
             BackupCaution(
                 icon = look.encryptIcon,
                 look = look,
@@ -228,29 +245,55 @@ private fun BackupPasswordRequestScreen(
 
             UiSpacer(size = 24.dp)
 
-            VsButton(
-                label = stringResource(R.string.backup_password_request_no_password_action),
-                onClick = onNoPasswordClick,
-                variant = VsButtonVariant.Primary,
-                size = VsButtonSize.Medium,
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .testTag(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD),
-            )
-
-            UiSpacer(12.dp)
-
-            VsButton(
-                label = stringResource(look.withPasswordAction),
-                onClick = onWithPasswordClick,
-                variant = VsButtonVariant.Secondary,
-                size = VsButtonSize.Medium,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            if (isSettingsLook) {
+                BackupChoiceButton(
+                    label = look.withPasswordAction,
+                    testTag = BackupPasswordRequestScreenTags.BACKUP_WITH_PASSWORD,
+                    variant = VsButtonVariant.Primary,
+                    onClick = onWithPasswordClick,
+                )
+                UiSpacer(12.dp)
+                BackupChoiceButton(
+                    label = R.string.backup_password_request_unencrypted_action,
+                    testTag = BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD,
+                    variant = VsButtonVariant.Secondary,
+                    onClick = { confirmUnencryptedExport = true },
+                )
+            } else {
+                BackupChoiceButton(
+                    label = R.string.backup_password_request_no_password_action,
+                    testTag = BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD,
+                    variant = VsButtonVariant.Primary,
+                    onClick = onNoPasswordClick,
+                )
+                UiSpacer(12.dp)
+                BackupChoiceButton(
+                    label = look.withPasswordAction,
+                    testTag = BackupPasswordRequestScreenTags.BACKUP_WITH_PASSWORD,
+                    variant = VsButtonVariant.Secondary,
+                    onClick = onWithPasswordClick,
+                )
+            }
 
             UiSpacer(size = look.bottomGap)
         }
     }
+}
+
+@Composable
+private fun BackupChoiceButton(
+    @StringRes label: Int,
+    testTag: String,
+    variant: VsButtonVariant,
+    onClick: () -> Unit,
+) {
+    VsButton(
+        label = stringResource(label),
+        onClick = onClick,
+        variant = variant,
+        size = VsButtonSize.Medium,
+        modifier = Modifier.fillMaxWidth().testTag(testTag),
+    )
 }
 
 @Composable

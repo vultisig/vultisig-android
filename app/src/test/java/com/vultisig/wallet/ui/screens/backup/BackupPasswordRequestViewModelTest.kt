@@ -99,10 +99,13 @@ internal class BackupPasswordRequestViewModelTest {
             keyshares = listOf(KeyShare(pubKey = "pub-$id", keyShare = "share-$id")),
         )
 
-    private fun createViewModel(vaultId: String = "vault-1"): BackupPasswordRequestViewModel {
+    private fun createViewModel(
+        vaultId: String = "vault-1",
+        backupType: BackupType = BackupType.AllVaults,
+    ): BackupPasswordRequestViewModel {
         every {
             any<SavedStateHandle>().toRoute<Route.BackupPasswordRequest>(typeMap = any())
-        } returns Route.BackupPasswordRequest(vaultId = vaultId, backupType = BackupType.AllVaults)
+        } returns Route.BackupPasswordRequest(vaultId = vaultId, backupType = backupType)
 
         return BackupPasswordRequestViewModel(
             savedStateHandle = SavedStateHandle(),
@@ -119,6 +122,26 @@ internal class BackupPasswordRequestViewModelTest {
             deleteBackupDocument = deleteBackupDocument,
         )
     }
+
+    @Test
+    fun `encrypted export opens password setup for the selected backup scope`() =
+        runTest(testDispatcher) {
+            val wallet = testVault("vault-1")
+            coEvery { vaultRepository.get(wallet.id) } returns wallet
+            coEvery { vaultRepository.getAll() } returns listOf(wallet)
+
+            for (backupType in listOf(BackupType.CurrentVault(), BackupType.AllVaults)) {
+                createViewModel(backupType = backupType).backupWithPassword()
+
+                coVerify(exactly = 1) {
+                    navigator.route(
+                        Route.BackupPassword(vaultId = wallet.id, backupType = backupType)
+                    )
+                }
+            }
+            coVerify(exactly = 0) { saveBackupToUri(any(), any<String>()) }
+            coVerify(exactly = 0) { saveBackupToUri(any(), any<List<AppZipEntry>>()) }
+        }
 
     @Test
     fun `backing up all vaults waits for the vault list to finish loading instead of writing an empty zip`() =

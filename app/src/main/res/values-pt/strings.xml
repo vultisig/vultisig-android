@@ -1055,6 +1055,9 @@
     <string name="keygen_vault_created_success_part_1">Cofre criado</string>
     <string name="vault_created_success_part_2">Com sucesso</string>
     <string name="backup_password_request_no_password_action">Fazer backup sem senha</string>
+    <string name="backup_password_request_unencrypted_action">Exportar sem criptografia</string>
+    <string name="backup_password_request_unencrypted_warning">Qualquer pessoa que puder abrir este arquivo poderá ler as partes do cofre que ele contém.</string>
+    <string name="backup_password_request_unencrypted_cancel">Cancelar</string>
     <string name="address_bookmark_error_invalid_address">Este endereço não é válido para %s</string>
     <string name="address_bookmark_error_empty_label">O rótulo não pode ficar vazio</string>
     <plurals name="address_bookmark_error_invalid_label">

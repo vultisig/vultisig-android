@@ -1056,6 +1056,9 @@
     <string name="keygen_vault_created_success_part_1">Vault creato</string>
     <string name="vault_created_success_part_2">con successo</string>
     <string name="backup_password_request_no_password_action">Backup senza password</string>
+    <string name="backup_password_request_unencrypted_action">Esporta senza crittografia</string>
+    <string name="backup_password_request_unencrypted_warning">Chiunque possa aprire questo file può leggere le quote del vault che contiene.</string>
+    <string name="backup_password_request_unencrypted_cancel">Annulla</string>
     <string name="address_bookmark_error_invalid_address">Questo indirizzo non è valido per %s</string>
     <string name="address_bookmark_error_empty_label">L\'etichetta non può essere vuota</string>
     <plurals name="address_bookmark_error_invalid_label">

@@ -1056,6 +1056,9 @@
     <string name="keygen_vault_created_success_part_1">Bóveda creada</string>
     <string name="vault_created_success_part_2">correctamente</string>
     <string name="backup_password_request_no_password_action">Copia de seguridad sin contraseña</string>
+    <string name="backup_password_request_unencrypted_action">Exportar sin cifrado</string>
+    <string name="backup_password_request_unencrypted_warning">Cualquiera que pueda abrir este archivo puede leer los fragmentos de la bóveda que contiene.</string>
+    <string name="backup_password_request_unencrypted_cancel">Cancelar</string>
     <string name="address_bookmark_error_invalid_address">Esta dirección no es válida para %s</string>
     <string name="address_bookmark_error_empty_label">La etiqueta no puede estar vacía</string>
     <plurals name="address_bookmark_error_invalid_label">

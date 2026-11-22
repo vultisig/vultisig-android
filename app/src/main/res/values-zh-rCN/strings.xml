@@ -1384,6 +1384,9 @@
     <string name="keygen_vault_created_success_part_1">保险库已创建</string>
     <string name="vault_created_success_part_2">成功</string>
     <string name="backup_password_request_no_password_action">无需密码备份</string>
+    <string name="backup_password_request_unencrypted_action">不加密导出</string>
+    <string name="backup_password_request_unencrypted_warning">任何可以打开此文件的人都能读取其中的保险库份额。</string>
+    <string name="backup_password_request_unencrypted_cancel">取消</string>
     <string name="keygen_benefit_5_template">谨防再次上当受骗</string>
     <string name="keygen_benefit_5_emphasized">无种子钱包</string>
     <string name="address_bookmark_error_invalid_address">此地址对 %s 无效</string>

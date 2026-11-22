@@ -1060,6 +1060,9 @@
     <string name="keygen_vault_created_success_part_1">Хранилище создано</string>
     <string name="vault_created_success_part_2">успешно</string>
     <string name="backup_password_request_no_password_action">Резервное копирование без пароля</string>
+    <string name="backup_password_request_unencrypted_action">Экспортировать без шифрования</string>
+    <string name="backup_password_request_unencrypted_warning">Любой, кто может открыть этот файл, сможет прочитать содержащиеся в нём доли хранилища.</string>
+    <string name="backup_password_request_unencrypted_cancel">Отмена</string>
     <string name="address_bookmark_error_invalid_address">Этот адрес недействителен для %s.</string>
     <string name="address_bookmark_error_empty_label">Метка не может быть пустой</string>
     <plurals name="address_bookmark_error_invalid_label">

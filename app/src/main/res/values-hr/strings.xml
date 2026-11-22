@@ -1060,6 +1060,9 @@
     <string name="keygen_vault_created_success_part_1">Trezor kreiran</string>
     <string name="vault_created_success_part_2">uspješno</string>
     <string name="backup_password_request_no_password_action">Sigurnosna kopija bez lozinke</string>
+    <string name="backup_password_request_unencrypted_action">Izvezi bez šifriranja</string>
+    <string name="backup_password_request_unencrypted_warning">Svatko tko može otvoriti ovu datoteku može pročitati udjele trezora koje sadrži.</string>
+    <string name="backup_password_request_unencrypted_cancel">Odustani</string>
     <string name="address_bookmark_error_invalid_address">Ova adresa nije važeća za %s</string>
     <string name="address_bookmark_error_empty_label">Oznaka ne može biti prazna</string>
     <plurals name="address_bookmark_error_invalid_label">

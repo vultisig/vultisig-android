@@ -1052,6 +1052,9 @@
     <string name="keygen_vault_created_success_part_1">Kluis aangemaakt</string>
     <string name="vault_created_success_part_2">Succesvol</string>
     <string name="backup_password_request_no_password_action">Maak een back-up zonder wachtwoord</string>
+    <string name="backup_password_request_unencrypted_action">Exporteren zonder versleuteling</string>
+    <string name="backup_password_request_unencrypted_warning">Iedereen die dit bestand kan openen, kan de kluisdelen erin lezen.</string>
+    <string name="backup_password_request_unencrypted_cancel">Annuleren</string>
     <string name="address_bookmark_error_invalid_address">Dit adres is niet geldig voor %s</string>
     <string name="address_bookmark_error_empty_label">Label mag niet leeg zijn</string>
     <plurals name="address_bookmark_error_invalid_label">

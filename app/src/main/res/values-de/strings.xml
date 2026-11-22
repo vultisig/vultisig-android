@@ -1057,6 +1057,9 @@
     <string name="keygen_vault_created_success_part_1">Tresor erstellt</string>
     <string name="vault_created_success_part_2">erfolgreich</string>
     <string name="backup_password_request_no_password_action">Backup ohne Passwort</string>
+    <string name="backup_password_request_unencrypted_action">Ohne Verschlüsselung exportieren</string>
+    <string name="backup_password_request_unencrypted_warning">Wer diese Datei öffnen kann, kann die enthaltenen Tresoranteile lesen.</string>
+    <string name="backup_password_request_unencrypted_cancel">Abbrechen</string>
     <string name="address_bookmark_error_invalid_address">Diese Adresse ist für %s ungültig.</string>
     <string name="address_bookmark_error_empty_label">Das Label darf nicht leer sein</string>
     <plurals name="address_bookmark_error_invalid_label">

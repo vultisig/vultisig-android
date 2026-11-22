@@ -887,6 +887,9 @@
     <string name="verify_swap_youre_swapping_title">스왑 내역</string>
     <string name="keysign_app_version_text">버전 %1$s (%2$s)</string>
     <string name="backup_password_request_no_password_action">비밀번호 없이 백업</string>
+    <string name="backup_password_request_unencrypted_action">암호화 없이 내보내기</string>
+    <string name="backup_password_request_unencrypted_warning">이 파일을 열 수 있는 사람은 누구나 파일에 포함된 볼트 셰어를 읽을 수 있습니다.</string>
+    <string name="backup_password_request_unencrypted_cancel">취소</string>
     <string name="backup_password_request_with_password_action">비밀번호 사용</string>
     <string name="backup_password_request_settings_with_password">비밀번호로 백업</string>
     <string name="backup_password_device_title">기기 백업 비밀번호</string>
