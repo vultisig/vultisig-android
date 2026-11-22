@@ -37,6 +37,7 @@ constructor(
     private val vultiSignerRepository: VultiSignerRepository,
 ) {
     private var serviceStartedReceiver: BroadcastReceiver? = null
+    private var receiverSessionId: String? = null
 
     /**
      * Registers the broadcast receiver for [MediatorService.SERVICE_ACTION] and starts the local
@@ -44,24 +45,30 @@ constructor(
      * it is up — the ViewModel uses it to kick off the local session + participant discovery.
      */
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    fun startMediatorService(serviceName: String, onServiceStarted: () -> Unit) {
+    fun startMediatorService(
+        serviceName: String,
+        sessionId: String,
+        encryptionKeyHex: String,
+        onServiceStarted: () -> Unit,
+    ) {
         unregisterServiceReceiver()
-        registerServiceReceiver(onServiceStarted)
-        MediatorService.start(context, serviceName)
+        registerServiceReceiver(sessionId, onServiceStarted)
+        MediatorService.start(context, serviceName, sessionId, encryptionKeyHex)
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun registerServiceReceiver(onServiceStarted: () -> Unit) {
+    private fun registerServiceReceiver(sessionId: String, onServiceStarted: () -> Unit) {
         val receiver =
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
-                    if (intent.action == MediatorService.SERVICE_ACTION) {
+                    if (MediatorService.isStartNotificationFor(intent, sessionId)) {
                         Timber.tag("KeysignFlowViewModel").d("onReceive: Mediator service started")
                         onServiceStarted()
                     }
                 }
             }
         serviceStartedReceiver = receiver
+        receiverSessionId = sessionId
 
         val filter = IntentFilter()
         filter.addAction(MediatorService.SERVICE_ACTION)
@@ -73,7 +80,8 @@ constructor(
     }
 
     /** Unregisters the broadcast receiver if one was registered. Safe to call multiple times. */
-    fun unregisterServiceReceiver() {
+    fun unregisterServiceReceiver(sessionId: String? = null) {
+        if (sessionId != null && receiverSessionId != sessionId) return
         val receiver = serviceStartedReceiver ?: return
         try {
             context.unregisterReceiver(receiver)
@@ -81,6 +89,7 @@ constructor(
             // receiver was already unregistered or never registered
         }
         serviceStartedReceiver = null
+        receiverSessionId = null
     }
 
     /** Stops the local mediator service. */

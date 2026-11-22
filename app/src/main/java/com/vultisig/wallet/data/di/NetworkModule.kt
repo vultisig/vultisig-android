@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.di
 
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcProofHttpClient
+import com.vultisig.wallet.data.mediator.LocalMediatorInterceptor
+import com.vultisig.wallet.data.mediator.LocalMediatorNetworkInterceptor
 import com.vultisig.wallet.data.networkutils.HttpClientConfigurator
 import dagger.Module
 import dagger.Provides
@@ -50,6 +52,8 @@ internal interface NetworkModule {
                         writeTimeout(15, TimeUnit.SECONDS)
 
                         retryOnConnectionFailure(true)
+                        addInterceptor(LocalMediatorInterceptor())
+                        addNetworkInterceptor(LocalMediatorNetworkInterceptor())
 
                         // Most chains share one proxy host; OkHttp's default allows 5 at a time.
                         dispatcher(

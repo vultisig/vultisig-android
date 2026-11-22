@@ -31,7 +31,12 @@ constructor(@ApplicationContext private val context: Context) {
      * session; [stop] must be called to release the receiver.
      */
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    fun start(serviceName: String, onServiceStarted: () -> Unit) {
+    fun start(
+        serviceName: String,
+        sessionId: String,
+        encryptionKeyHex: String,
+        onServiceStarted: () -> Unit,
+    ) {
         // Drop any previously registered receiver first so a repeated start() (e.g. toggling back
         // to Local mode) cannot leak the old one or deliver stale onServiceStarted callbacks.
         stop()
@@ -40,7 +45,7 @@ constructor(@ApplicationContext private val context: Context) {
         val receiver =
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
-                    if (intent.action == MediatorService.SERVICE_ACTION) {
+                    if (MediatorService.isStartNotificationFor(intent, sessionId)) {
                         Timber.d("onReceive: Mediator service started")
                         onServiceStarted()
                     }
@@ -56,8 +61,10 @@ constructor(@ApplicationContext private val context: Context) {
             context.registerReceiver(receiver, filter)
         }
 
-        MediatorService.start(context, serviceName)
+        MediatorService.start(context, serviceName, sessionId, encryptionKeyHex)
     }
+
+    fun stopService() = MediatorService.stop(context)
 
     /** Unregisters the receiver if it is still registered. Idempotent. */
     fun stop() {

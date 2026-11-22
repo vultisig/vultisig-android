@@ -53,6 +53,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -61,6 +62,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 import wallet.core.jni.CoinType
@@ -108,10 +110,10 @@ constructor(
     private val updateSolanaKeysignPayload: UpdateSolanaKeysignPayloadUseCase,
     private val buildKeysignTransactionUiModel: BuildKeysignTransactionUiModelUseCase,
 ) : ViewModel() {
-    private val _sessionID: String = Uuid.random().toString()
-    private val _serviceName: String = generateServiceName()
+    private var _sessionID: String = Uuid.random().toString()
+    private var _serviceName: String = generateServiceName()
     private var _serverAddress: String = LOCAL_MEDIATOR_SERVER_URL
-    private val _encryptionKeyHex: String = Utils.encryptionKeyHex
+    private var _encryptionKeyHex: String = Utils.encryptionKeyHex
     private var _currentVault: Vault? = null
     private var _keysignPayload: KeysignPayload? = null
     private var customMessagePayload: CustomMessagePayload? = null
@@ -304,88 +306,83 @@ constructor(
                     return
                 }
 
-        if (!isRelayEnabled) {
-            sessionCoordinator.startMediatorService(_serviceName) { onMediatorServiceStarted() }
-        } else {
-            _serverAddress = Endpoints.VULTISIG_RELAY_URL
+        val sessionId = _sessionID
+        val serviceName = _serviceName
+        val encryptionKeyHex = _encryptionKeyHex
+        val useRelay = isRelayEnabled
+        val serverAddress =
+            if (useRelay) Endpoints.VULTISIG_RELAY_URL else LOCAL_MEDIATOR_SERVER_URL
+
+        if (useRelay) {
+            sessionCoordinator.stopService()
             withContext(Dispatchers.IO) {
                 sessionCoordinator.startSession(
-                    _serverAddress,
-                    _sessionID,
+                    serverAddress,
+                    sessionId,
                     vault.localPartyID,
-                    buildJoinRequest(vault),
+                    buildJoinRequest(vault, sessionId, encryptionKeyHex),
                 )
             }
-
-            participantDiscovery.start(
-                viewModelScope,
-                _serverAddress,
-                _sessionID,
-                vault.localPartyID,
-            )
+        } else {
+            val ready = CompletableDeferred<Unit>()
+            sessionCoordinator.startMediatorService(serviceName, sessionId, encryptionKeyHex) {
+                ready.complete(Unit)
+            }
+            val initialized =
+                try {
+                    withTimeoutOrNull(5_000) { ready.await() } != null
+                } finally {
+                    sessionCoordinator.unregisterServiceReceiver(sessionId)
+                }
+            val started =
+                initialized && sessionId == _sessionID &&
+                    sessionCoordinator.startSessionWithRetry(
+                        serverAddress, sessionId, vault.localPartyID, joinRequest = null
+                    )
+            if (sessionId != _sessionID) return
+            if (!started) {
+                sessionCoordinator.stopService()
+                moveToState(KeysignFlowState.Error("Failed to start session".asUiText()))
+                return
+            }
         }
 
+        if (sessionId != _sessionID) return
+        _serverAddress = serverAddress
+        participantDiscovery.start(viewModelScope, serverAddress, sessionId, vault.localPartyID)
         val data =
             buildKeysignMessage(
                 keysignPayload = _keysignPayload,
                 customMessagePayload = customMessagePayload,
-                sessionId = _sessionID,
-                serviceName = _serviceName,
-                encryptionKeyHex = _encryptionKeyHex,
-                serverAddress = _serverAddress,
-                useVultisigRelay = isRelayEnabled,
+                sessionId = sessionId,
+                serviceName = serviceName,
+                encryptionKeyHex = encryptionKeyHex,
+                serverAddress = serverAddress,
+                useVultisigRelay = useRelay,
             )
 
+        if (sessionId != _sessionID) return
         keysignMessage.value =
             "https://vultisig.com?type=SignTransaction&resharePrefix=${vault.resharePrefix}&vault=${vault.pubKeyECDSA}&jsonData=" +
                 data
 
         addressProvider.update(keysignMessage.value)
-        if (vault.isSecureVault()) notifyVaultDevices()
+        if (useRelay && vault.isSecureVault()) notifyVaultDevices()
     }
 
-    /**
-     * Invoked once the local mediator service signals it is up: starts the local session (with
-     * retries) and kicks off participant discovery. Mirrors the old `serviceStartedReceiver`.
-     */
-    private fun onMediatorServiceStarted() {
-        val vault =
-            _currentVault
-                ?: run {
-                    moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
-                    return
-                }
-        viewModelScope.launch(Dispatchers.IO) {
-            val started =
-                sessionCoordinator.startSessionWithRetry(
-                    _serverAddress,
-                    _sessionID,
-                    vault.localPartyID,
-                    buildJoinRequest(vault),
-                )
-            if (started) {
-                participantDiscovery.start(
-                    viewModelScope,
-                    _serverAddress,
-                    _sessionID,
-                    vault.localPartyID,
-                )
-            } else {
-                participantDiscovery.stop()
-                moveToState(KeysignFlowState.Error("Failed to start session".asUiText()))
-            }
-        }
-    }
-
-    private fun buildJoinRequest(vault: Vault): JoinKeysignRequestJson? {
+    private fun buildJoinRequest(
+        vault: Vault,
+        sessionId: String,
+        encryptionKeyHex: String,
+    ): JoinKeysignRequestJson? {
         val password = password
         if (password.isNullOrBlank()) return null
         val chain = resolveKeysignChain(_keysignPayload, customMessagePayload)
         return JoinKeysignRequestJson(
             publicKeyEcdsa = vault.pubKeyECDSA,
             messages = messagesToSign,
-            sessionId = _sessionID,
-            hexEncryptionKey = _encryptionKeyHex,
+            sessionId = sessionId,
+            hexEncryptionKey = encryptionKeyHex,
             derivePath = (chain?.coinType ?: CoinType.ETHEREUM).derivationPath(),
             isEcdsa = tssKeysignType == TssKeyType.ECDSA,
             password = password,
@@ -415,6 +412,7 @@ constructor(
      */
     private fun notifyVaultDevices() {
         viewModelScope.launch {
+            if (!isRelayEnabled || keysignMessage.value.isBlank()) return@launch
             val currentQrData = keysignMessage.value
             if (currentQrData == lastNotifiedQrData) {
                 uiState.update { it.copy(isNotificationPending = false) }
@@ -535,7 +533,19 @@ constructor(
         val resolvedOption =
             if (isFastSign && option == NetworkOption.Local) NetworkOption.Internet else option
         if (networkOption.value == resolvedOption) return
+        // Never reuse a ceremony secret after the QR may have been sent over the remote relay.
+        _sessionID = Uuid.random().toString()
+        _serviceName = generateServiceName()
+        _encryptionKeyHex = Utils.encryptionKeyHex
+        keysignMessage.value = ""
+        cleanQrAddress()
         networkOption.value = resolvedOption
+        uiState.update {
+            it.copy(
+                enableNotification = resolvedOption == NetworkOption.Internet && _currentVault?.isSecureVault() == true,
+                isNotificationPending = false,
+            )
+        }
         _serverAddress =
             when (resolvedOption) {
                 NetworkOption.Local -> {
@@ -557,7 +567,7 @@ constructor(
                 )
             }
         ) {
-            withContext(Dispatchers.IO) { updateKeysignPayload(context) }
+            updateKeysignPayload(context)
         }
     }
 

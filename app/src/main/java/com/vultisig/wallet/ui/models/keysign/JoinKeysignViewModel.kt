@@ -21,6 +21,8 @@ import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
+import com.vultisig.wallet.data.mediator.LocalMediatorAuth
+import com.vultisig.wallet.data.mediator.LocalMediatorCredentials
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
@@ -1224,6 +1226,11 @@ constructor(
     }
 
     private fun onServerAddressDiscovered(address: String) {
+        val auth = LocalMediatorAuth.create(_sessionID, _encryptionKeyHex)
+        if (auth == null || !LocalMediatorCredentials.bind(address, auth)) {
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+            return
+        }
         _serverAddress = address
         if (!payloadId.isEmpty() && tempKeysignMessageProto != null) {
             viewModelScope.safeLaunch(
@@ -1280,7 +1287,11 @@ constructor(
         _discoveryListener =
             MediatorServiceDiscoveryListener(nsdManager, _serviceName, ::onServerAddressDiscovered)
         _nsdManager = nsdManager
-        nsdManager.discoverServices("_http._tcp.", NsdManager.PROTOCOL_DNS_SD, _discoveryListener)
+        nsdManager.discoverServices(
+            LocalMediatorAuth.DNS_SERVICE_TYPE,
+            NsdManager.PROTOCOL_DNS_SD,
+            _discoveryListener,
+        )
     }
 
     /**

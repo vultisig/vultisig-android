@@ -168,7 +168,7 @@ constructor(
     private var sessionId = Uuid.random().toHexString()
     private val serviceName = generateServiceName()
 
-    private val encryptionKeyHex = Utils.encryptionKeyHex
+    private var encryptionKeyHex = Utils.encryptionKeyHex
 
     private val vaultName: String = args?.vaultName ?: ""
 
@@ -333,6 +333,10 @@ constructor(
         discoverParticipantsJob?.cancel()
         startPeerDiscoveryJob?.cancel()
         mediatorServiceController.stop()
+        if (state.value.network == NetworkOption.Local) {
+            mediatorServiceController.stopService()
+        }
+        encryptionKeyHex = Utils.encryptionKeyHex
         val newSessionId = Uuid.random().toHexString()
         sessionId = newSessionId
         state.update {
@@ -738,7 +742,7 @@ constructor(
     }
 
     private fun startMediatorService(sessionId: String) {
-        mediatorServiceController.start(serviceName) {
+        mediatorServiceController.start(serviceName, sessionId, encryptionKeyHex) {
             // send a request to local mediator server to start the session
             viewModelScope.safeLaunch {
                 withContext(Dispatchers.IO) { startSessionWithRetry(sessionId) }

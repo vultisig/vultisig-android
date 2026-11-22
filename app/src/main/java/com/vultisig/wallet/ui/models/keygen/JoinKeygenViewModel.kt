@@ -19,6 +19,8 @@ import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
 import com.vultisig.wallet.data.keygen.isReshareBlockedByMldsa
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
+import com.vultisig.wallet.data.mediator.LocalMediatorAuth
+import com.vultisig.wallet.data.mediator.LocalMediatorCredentials
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
@@ -164,7 +166,11 @@ constructor(
                                 if (message.useVultisigRelay) {
                                     Endpoints.VULTISIG_RELAY_URL
                                 } else {
-                                    discoverMediator(message.serviceName)
+                                    discoverMediator(
+                                        message.serviceName,
+                                        message.sessionID,
+                                        message.encryptionKeyHex,
+                                    )
                                 }
                             Session(
                                 sessionId = message.sessionID,
@@ -227,7 +233,11 @@ constructor(
                                 if (message.useVultisigRelay) {
                                     Endpoints.VULTISIG_RELAY_URL
                                 } else {
-                                    discoverMediator(message.serviceName)
+                                    discoverMediator(
+                                        message.serviceName,
+                                        message.sessionID,
+                                        message.encryptionKeyHex,
+                                    )
                                 }
 
                             Session(
@@ -286,7 +296,11 @@ constructor(
                                 if (message.useVultisigRelay) {
                                     Endpoints.VULTISIG_RELAY_URL
                                 } else {
-                                    discoverMediator(message.serviceName)
+                                    discoverMediator(
+                                        message.serviceName,
+                                        message.sessionID,
+                                        message.encryptionKeyHex,
+                                    )
                                 }
 
                             Session(
@@ -361,23 +375,35 @@ constructor(
         }
     }
 
-    private suspend fun discoverMediator(serviceName: String): String =
-        withTimeoutOrNull(DISCOVERY_TIMEOUT) {
+    private suspend fun discoverMediator(
+        serviceName: String,
+        sessionId: String,
+        encryptionKeyHex: String,
+    ): String {
+        val auth = LocalMediatorAuth.create(sessionId, encryptionKeyHex) ?: error(InvalidQr)
+        return withTimeoutOrNull(DISCOVERY_TIMEOUT) {
             suspendCancellableCoroutine { cont ->
                 val listener =
                     MediatorServiceDiscoveryListener(
                         nsdManager = nsdManager,
                         serviceName = serviceName,
                         onServerAddressDiscovered = { serverUrl ->
-                            stopDiscoveryQuietly()
-                            if (cont.isActive) cont.resume(serverUrl)
+                            if (cont.isActive && LocalMediatorCredentials.bind(serverUrl, auth)) {
+                                stopDiscoveryQuietly()
+                                cont.resume(serverUrl)
+                            }
                         },
                     )
                 discoveryListener = listener
                 cont.invokeOnCancellation { stopDiscoveryQuietly() }
-                nsdManager.discoverServices("_http._tcp.", NsdManager.PROTOCOL_DNS_SD, listener)
+                nsdManager.discoverServices(
+                    LocalMediatorAuth.DNS_SERVICE_TYPE,
+                    NsdManager.PROTOCOL_DNS_SD,
+                    listener,
+                )
             }
         } ?: error(DiscoveryTimeout)
+    }
 
     private fun stopDiscoveryQuietly() {
         val listener = discoveryListener ?: return
