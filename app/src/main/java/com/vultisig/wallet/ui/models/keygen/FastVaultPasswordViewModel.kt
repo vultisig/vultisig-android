@@ -8,6 +8,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.backup.PasswordState
@@ -111,11 +112,12 @@ constructor(
                 Route.VaultInfo.PasswordHint(
                     name = args.name,
                     email = args.email,
-                    password = enteredPassword,
+                    credentialId = NavigationSecrets.handoff(enteredPassword),
                     tssAction = args.tssAction,
                     vaultId = args.vaultId,
                 )
             )
+            passwordDelegate.clearPasswords()
         }
     }
 

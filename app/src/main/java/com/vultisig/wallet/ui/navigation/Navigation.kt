@@ -61,7 +61,6 @@ internal sealed class Route {
             val vaultType: VaultInfo.VaultType,
             val action: TssAction,
             val vaultName: String,
-            val password: String?,
             val deviceCount: Int?,
         )
     }
@@ -176,7 +175,7 @@ internal sealed class Route {
 
     data object Keysign {
 
-        @Serializable data class Join(val vaultId: String, val qr: String)
+        @Serializable data class Join(val vaultId: String, val qrHandle: String = "")
 
         @Serializable
         data class Password(
@@ -188,7 +187,7 @@ internal sealed class Route {
         @Serializable
         data class Keysign(
             val transactionId: TransactionId,
-            val password: String? = null,
+            val credentialId: String? = null,
             val txType: TxType,
         ) {
             @Keep
@@ -203,7 +202,7 @@ internal sealed class Route {
     }
 
     // vault creation / keygen
-    @Serializable data class ImportVault(val uri: String? = null)
+    @Serializable data class ImportVault(val uriHandle: String? = null)
 
     @Serializable data object ChooseVaultType
 
@@ -238,8 +237,7 @@ internal sealed class Route {
             val name: String,
             val action: TssAction,
             val vaultId: VaultId? = null,
-            // if password is not null, then it's migration flow
-            val password: String? = null,
+            val credentialId: String? = null,
         )
 
         @Serializable
@@ -254,7 +252,7 @@ internal sealed class Route {
         data class PasswordHint(
             val name: String,
             val email: String,
-            val password: String,
+            val credentialId: String = "",
             val tssAction: TssAction,
             val vaultId: VaultId? = null,
         )
@@ -271,14 +269,14 @@ internal sealed class Route {
     @Serializable
     data object Keygen {
 
-        @Serializable data class Join(val qr: String)
+        @Serializable data class Join(val qrHandle: String = "")
 
         @Serializable
         data class PeerDiscovery(
             val action: TssAction,
             val vaultName: String,
             val email: String? = null,
-            val password: String? = null,
+            val credentialId: String? = null,
             val hint: String? = null,
             val deviceCount: Int? = null,
 
@@ -295,7 +293,7 @@ internal sealed class Route {
             val vaultName: String,
             val hexChainCode: String,
             val keygenCommittee: List<String>,
-            val encryptionKeyHex: String,
+            val encryptionKeyHandle: String = "",
             val isInitiatingDevice: Boolean,
             val libType: SigningLibType,
 
@@ -304,7 +302,7 @@ internal sealed class Route {
             val oldCommittee: List<String>,
             val oldResharePrefix: String,
             val email: String?,
-            val password: String?,
+            val credentialId: String? = null,
             val hint: String?,
             val deviceCount: Int?,
 
@@ -323,7 +321,6 @@ internal sealed class Route {
         val email: String,
         val tssAction: TssAction,
         val vaultName: String,
-        val password: String?,
     )
 
     @Serializable
@@ -337,7 +334,7 @@ internal sealed class Route {
         @Serializable
         sealed interface BackupPasswordType {
             @Serializable
-            data class VultiServerPassword(val password: String?) : BackupPasswordType
+            data object VultiServerPassword : BackupPasswordType
 
             @Serializable data object UserSelectionPassword : BackupPasswordType
         }
@@ -676,7 +673,6 @@ internal sealed class Route {
         val vaultType: VaultInfo.VaultType,
         val action: TssAction,
         val vaultName: String,
-        val password: String?,
         val devices: List<String>?,
         val localPartyId: String?,
     )

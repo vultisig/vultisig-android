@@ -46,6 +46,7 @@ import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.v2.V2.colors
@@ -156,7 +157,7 @@ constructor(
                     // that shows peer discovery instead of connecting to the server (active-vault
                     // migrate, signers > 2), which we cannot detect synchronously here.
                     connectingToServer =
-                        if (!args?.email.isNullOrBlank() && !args.password.isNullOrBlank())
+                        if (!args?.email.isNullOrBlank() && args.credentialId != null)
                             ConnectingToServerUiModel(false)
                         else null,
                     enableNotification = false,
@@ -193,7 +194,7 @@ constructor(
 
     // fast vault data
     private val email = args?.email
-    private val password = args?.password
+    private var password = NavigationSecrets.take(args?.credentialId)
 
     private val qrBitmap = MutableStateFlow<Bitmap?>(null)
 
@@ -395,11 +396,11 @@ constructor(
                     vaultName = vaultName,
                     hexChainCode = session.hexChainCode,
                     keygenCommittee = keygenCommittee,
-                    encryptionKeyHex = encryptionKeyHex,
+                    encryptionKeyHandle = NavigationSecrets.handoff(encryptionKeyHex),
                     isInitiatingDevice = true,
                     libType = args.action.strategy().resolveLibType(session.libType),
                     email = email,
-                    password = password,
+                    credentialId = password?.let(NavigationSecrets::handoff),
                     hint = args.hint,
                     vaultId = args.vaultId,
                     oldCommittee =
@@ -456,6 +457,31 @@ constructor(
                 }
             ) {
                 val args = args ?: return@safeLaunch
+                if (args.credentialId != null && password == null) {
+                    val credentialRoute =
+                        when (args.action) {
+                            TssAction.Migrate -> Route.Migration.Password(requireNotNull(args.vaultId))
+                            TssAction.SingleKeygen ->
+                                Route.VaultInfo.VerifyExistingPassword(
+                                    args.vaultName,
+                                    requireNotNull(args.email),
+                                    args.action,
+                                    requireNotNull(args.vaultId),
+                                )
+                            else ->
+                                Route.VaultInfo.Password(
+                                    args.vaultName,
+                                    requireNotNull(args.email),
+                                    args.action,
+                                    args.vaultId,
+                                )
+                        }
+                    navigator.route(
+                        credentialRoute,
+                        NavigationOptions(popUpToRoute = Route.Keygen.PeerDiscovery::class, inclusive = true),
+                    )
+                    return@safeLaunch
+                }
 
                 var hexChainCode =
                     if (args.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
@@ -768,6 +794,7 @@ constructor(
     }
 
     override fun onCleared() {
+        password = null
         mediatorServiceController.stop()
         super.onCleared()
     }

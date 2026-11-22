@@ -191,13 +191,13 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
             if (e.statusCode == 400 || e.statusCode == 401) {
                 BackupCodeVerifyResult.Invalid
             } else {
-                Timber.e(e, "verifyBackupCode failed with HTTP %d", e.statusCode)
+                Timber.e("verifyBackupCode failed with HTTP %d", e.statusCode)
                 BackupCodeVerifyResult.NetworkError
             }
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
-            Timber.e(e, "verifyBackupCode failure")
+        } catch (_: Exception) {
+            Timber.e("verifyBackupCode failure")
             BackupCodeVerifyResult.NetworkError
         }
     }

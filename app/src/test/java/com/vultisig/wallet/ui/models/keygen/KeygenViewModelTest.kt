@@ -17,7 +17,6 @@ import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
-import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.usecases.DeriveChainKeyUseCase
@@ -25,6 +24,7 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -59,7 +59,6 @@ internal class KeygenViewModelTest {
     private lateinit var saveVault: SaveVaultUseCase
     private lateinit var lastOpenedVaultRepository: LastOpenedVaultRepository
     private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
-    private lateinit var vaultPasswordRepository: VaultPasswordRepository
     private lateinit var temporaryVaultRepository: TemporaryVaultRepository
     private lateinit var vaultRepository: VaultRepository
     private lateinit var keyImportRepository: KeyImportRepository
@@ -85,14 +84,13 @@ internal class KeygenViewModelTest {
                 vaultName = "Test Vault",
                 hexChainCode = "",
                 keygenCommittee = emptyList(),
-                encryptionKeyHex = "",
+                encryptionKeyHandle = NavigationSecrets.handoff("fixture-key"),
                 isInitiatingDevice = false,
                 libType = SigningLibType.DKLS,
                 vaultId = "vault-1",
                 oldCommittee = emptyList(),
                 oldResharePrefix = "",
                 email = null,
-                password = null,
                 hint = null,
                 deviceCount = null,
             )
@@ -101,7 +99,6 @@ internal class KeygenViewModelTest {
         saveVault = mockk(relaxed = true)
         lastOpenedVaultRepository = mockk(relaxed = true)
         vaultDataStoreRepository = mockk(relaxed = true)
-        vaultPasswordRepository = mockk(relaxed = true)
         temporaryVaultRepository = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
         keyImportRepository = mockk(relaxed = true)
@@ -137,7 +134,6 @@ internal class KeygenViewModelTest {
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
-            vaultPasswordRepository = vaultPasswordRepository,
             temporaryVaultRepository = temporaryVaultRepository,
             vaultRepository = vaultRepository,
             keyImportRepository = keyImportRepository,
@@ -239,7 +235,8 @@ internal class KeygenViewModelTest {
         // A chain id an older initiator can still name after this build dropped the entry.
         const val RETIRED_CHAIN_ID = "Kujira"
 
-        val KEY_IMPORT_ROUTE =
+        val KEY_IMPORT_ROUTE
+            get() =
             Route.Keygen.Generating(
                 action = TssAction.KeyImport,
                 sessionId = "",
@@ -248,14 +245,13 @@ internal class KeygenViewModelTest {
                 vaultName = "Test Vault",
                 hexChainCode = "",
                 keygenCommittee = emptyList(),
-                encryptionKeyHex = "",
+                encryptionKeyHandle = NavigationSecrets.handoff("fixture-key"),
                 isInitiatingDevice = false,
                 libType = SigningLibType.DKLS,
                 vaultId = null,
                 oldCommittee = emptyList(),
                 oldResharePrefix = "",
                 email = null,
-                password = null,
                 hint = null,
                 deviceCount = null,
             )

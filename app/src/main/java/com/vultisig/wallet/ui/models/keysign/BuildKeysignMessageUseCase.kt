@@ -12,7 +12,6 @@ import javax.inject.Inject
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
-import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 
 /**
@@ -55,8 +54,6 @@ constructor(
                     customMessagePayload = customMessagePayload,
                 )
             )
-
-        Timber.d("keysignProto: $keysignProto")
 
         var data = compressQr(keysignProto).encodeBase64()
         if (keysignPayloadProto != null && routerApi.shouldUploadPayload(data)) {

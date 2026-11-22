@@ -12,6 +12,8 @@ import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
@@ -41,6 +43,7 @@ constructor(
     val referralCode = referralCodeSettingsRepository.pendingReferralFlow
 
     private val args = savedStateHandle.toRoute<Route.VaultInfo.Email>()
+    private var password = NavigationSecrets.take(args.credentialId)
 
     private val vaultName = args.name
     private val action = args.action
@@ -81,17 +84,24 @@ constructor(
         viewModelScope.launch {
             if (!validateEmail(emailFieldState.text.toString())) return@launch
             val enteredEmail = emailFieldState.text.toString()
+            val password = password
 
-            if (!args.password.isNullOrBlank()) {
+            if (action == TssAction.Migrate && password.isNullOrBlank() && vaultId != null) {
+                navigator.route(
+                    Route.Migration.Password(vaultId),
+                    NavigationOptions(popUpToRoute = Route.VaultInfo.Email::class, inclusive = true),
+                )
+            } else if (!password.isNullOrBlank()) {
                 navigator.route(
                     Route.Keygen.PeerDiscovery(
                         vaultName = vaultName,
                         email = enteredEmail,
                         action = action,
                         vaultId = vaultId,
-                        password = args.password,
+                        credentialId = NavigationSecrets.handoff(password),
                     )
                 )
+                this@FastVaultEmailViewModel.password = null
             } else if (action == TssAction.SingleKeygen) {
                 navigator.route(
                     Route.VaultInfo.VerifyExistingPassword(
@@ -121,7 +131,13 @@ constructor(
         emailFieldState.clearText()
     }
 
+    override fun onCleared() {
+        password = null
+        super.onCleared()
+    }
+
     fun back() {
+        password = null
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 }

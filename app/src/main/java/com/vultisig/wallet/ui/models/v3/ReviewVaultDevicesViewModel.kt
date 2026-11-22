@@ -61,7 +61,6 @@ constructor(private val navigator: Navigator<Destination>, savedStateHandle: Sav
                         vaultType = args.vaultType,
                         action = args.action,
                         vaultName = args.vaultName,
-                        password = args.password,
                         deviceCount = uniqueDevices.size,
                     )
             )

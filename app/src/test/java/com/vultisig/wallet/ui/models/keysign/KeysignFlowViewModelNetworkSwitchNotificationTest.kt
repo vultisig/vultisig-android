@@ -75,7 +75,6 @@ internal class KeysignFlowViewModelNetworkSwitchNotificationTest {
         every { any<SavedStateHandle>().toRoute<Route.Keysign.Keysign>() } returns
             Route.Keysign.Keysign(
                 transactionId = "tx",
-                password = null,
                 txType = Route.Keysign.Keysign.TxType.Sign,
             )
         every { generateServiceName.invoke() } returns "svc"

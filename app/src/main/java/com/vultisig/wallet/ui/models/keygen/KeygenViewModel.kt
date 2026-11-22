@@ -48,7 +48,6 @@ import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
-import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.TempVaultDto
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
@@ -61,11 +60,11 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.utils.runCatchingCancellable
-import com.vultisig.wallet.ui.components.canAuthenticateBiometric
 import com.vultisig.wallet.ui.components.errors.ErrorState
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
@@ -133,7 +132,6 @@ constructor(
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
-    private val vaultPasswordRepository: VaultPasswordRepository,
     private val temporaryVaultRepository: TemporaryVaultRepository,
     private val vaultRepository: VaultRepository,
     private val keyImportRepository: KeyImportRepository,
@@ -175,7 +173,8 @@ constructor(
     private val oldCommittee: List<String> = args.oldCommittee
     private val serverUrl: String = args.serverUrl
     private val sessionId: String = args.sessionId
-    private val encryptionKeyHex: String = args.encryptionKeyHex
+    private val encryptionKeyHex = NavigationSecrets.take(args.encryptionKeyHandle).orEmpty()
+    private var password = NavigationSecrets.take(args.credentialId)
     private val oldResharePrefix: String = args.oldResharePrefix
     private val isInitiatingDevice: Boolean = args.isInitiatingDevice
     private val libType = args.libType
@@ -298,6 +297,17 @@ constructor(
     private fun generateKey() {
         viewModelScope.launch {
             updateStep(KeygenState.CreatingInstance)
+            if (encryptionKeyHex.isBlank() || (args.credentialId != null && password == null)) {
+                state.update {
+                    it.copy(
+                        error = ErrorUiModel(
+                            title = UiText.StringResource(R.string.error_view_default_title),
+                            description = UiText.StringResource(R.string.error_view_default_description),
+                        )
+                    )
+                }
+                return@launch
+            }
 
             args.vaultId?.let { vaultId ->
                 // Reshare, migrate and MLDSA keygen all build on this vault's existing shares, and
@@ -862,7 +872,7 @@ constructor(
     private suspend fun saveVault() {
         val vaultId = vault.id
 
-        val password = args.password
+        val password = password
         if (
             !args.email.isNullOrBlank() &&
                 !password.isNullOrBlank() &&
@@ -877,9 +887,7 @@ constructor(
                 )
             )
 
-            if (context.canAuthenticateBiometric()) {
-                vaultPasswordRepository.savePassword(vaultId, password)
-            }
+            this.password = null
         } else if (action == TssAction.SingleKeygen && !args.email.isNullOrBlank()) {
             // Fast vault SingleKeygen: defer save until OTP verification
             val email = args.email
@@ -888,7 +896,7 @@ constructor(
                 TempVaultDto(
                     vault = vault,
                     email = email,
-                    password = args.password ?: "",
+                    password = "",
                     hint = null,
                 )
             )
@@ -975,7 +983,6 @@ constructor(
                             vaultType = vaultType,
                             action = action,
                             vaultName = args.vaultName,
-                            password = args.password,
                             deviceCount = args.deviceCount,
                         )
 
@@ -987,7 +994,6 @@ constructor(
                             vaultType = vaultType,
                             action = action,
                             vaultName = args.vaultName,
-                            password = args.password,
                             devices = keygenCommittee,
                             localPartyId = vault.localPartyID,
                         )
@@ -1000,7 +1006,6 @@ constructor(
                             vaultType = vaultType,
                             action = action,
                             vaultName = args.vaultName,
-                            password = args.password,
                             deviceCount = args.deviceCount,
                         )
 
@@ -1014,7 +1019,6 @@ constructor(
                                 vaultType = vaultType,
                                 action = action,
                                 vaultName = args.vaultName,
-                                password = args.password,
                                 deviceCount = args.deviceCount,
                             )
                         } else {
@@ -1035,7 +1039,6 @@ constructor(
                             email = email,
                             tssAction = action,
                             vaultName = args.vaultName,
-                            password = args.password,
                         )
                     }
 
@@ -1227,6 +1230,7 @@ constructor(
     }
 
     override fun onCleared() {
+        password = null
         super.onCleared()
         stopService()
     }

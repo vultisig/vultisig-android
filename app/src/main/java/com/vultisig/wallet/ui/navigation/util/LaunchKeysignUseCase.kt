@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.navigation.util
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import javax.inject.Inject
@@ -33,7 +34,7 @@ constructor(private val navigator: Navigator<Destination>) : LaunchKeysignUseCas
                 KeysignInitType.BIOMETRY -> {
                     Route.Keysign.Keysign(
                         transactionId = transactionId,
-                        password = password,
+                        credentialId = password?.let(NavigationSecrets::handoff),
                         txType = txType,
                     )
                 }
@@ -49,7 +50,6 @@ constructor(private val navigator: Navigator<Destination>) : LaunchKeysignUseCas
                 KeysignInitType.QR_CODE -> {
                     Route.Keysign.Keysign(
                         transactionId = transactionId,
-                        password = null,
                         txType = txType,
                     )
                 }

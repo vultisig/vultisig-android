@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.common.JOIN_KEYGEN_FLOW
 import com.vultisig.wallet.data.common.JOIN_KEYSIGN_FLOW
 import com.vultisig.wallet.data.common.JOIN_SEND_ON_ADDRESS_FLOW
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import javax.inject.Inject
@@ -21,11 +22,11 @@ constructor(private val getFlowType: GetFlowTypeUseCase) : GetDirectionByQrCodeU
         return try {
             when (flowType) {
                 JOIN_KEYSIGN_FLOW -> {
-                    Route.Keysign.Join(vaultId = requireNotNull(vaultId), qr = qrBase64)
+                    Route.Keysign.Join(vaultId = requireNotNull(vaultId), qrHandle = NavigationSecrets.handoff(qrBase64))
                 }
 
                 JOIN_KEYGEN_FLOW -> {
-                    Route.Keygen.Join(qr = qrBase64)
+                    Route.Keygen.Join(qrHandle = NavigationSecrets.handoff(qrBase64))
                 }
 
                 JOIN_SEND_ON_ADDRESS_FLOW -> {

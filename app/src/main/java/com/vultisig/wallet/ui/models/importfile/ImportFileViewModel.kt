@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCase
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
@@ -75,7 +76,7 @@ constructor(
     val passwordTextFieldState = TextFieldState()
 
     init {
-        args.uri?.toUri()?.let { fetchFileName(it) }
+        NavigationSecrets.take(args.uriHandle)?.toUri()?.let { fetchFileName(it) }
     }
 
     fun hidePasswordPromptDialog() {

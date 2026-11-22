@@ -45,9 +45,9 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.usecases.TonJettonTransferRefusedException
 import com.vultisig.wallet.data.usecases.VerifyTonJettonTransferUseCase
-import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -64,6 +64,7 @@ import com.vultisig.wallet.ui.models.transactiondecoding.VerifyHero
 import com.vultisig.wallet.ui.models.transactiondecoding.VerifyTransactionPresentation
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
@@ -335,7 +336,6 @@ constructor(
 
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
     private val vaultId: String = args.vaultId
-    private val qrBase64: String = args.qr
     private var _currentVault: Vault = Vault(id = Uuid.random().toString(), "temp vault")
     /** Read-only view of the join-keysign flow state the screen observes. */
     val currentState: StateFlow<JoinKeysignState>
@@ -421,7 +421,9 @@ constructor(
         MutableStateFlow<VerifyUiModel>(VerifyUiModel.Send(VerifyTransactionUiModel()))
 
     init {
-        setScanResult(qrBase64)
+        val qr = NavigationSecrets.take(args.qrHandle)
+        if (qr == null) currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
+        else setScanResult(qr)
     }
 
     fun setScanResult(qrBase64: String) {
@@ -449,7 +451,6 @@ constructor(
                 val rawJson = decompressQr(qrCodeContent.decodeBase64Bytes())
 
                 val payloadProto = protoBuf.decodeFromByteArray<KeysignMessage>(rawJson)
-                Timber.d("Decoded KeysignMessageProto: $payloadProto")
                 _sessionID = payloadProto.sessionId
                 _serviceName = payloadProto.serviceName
                 _useVultisigRelay = payloadProto.useVultisigRelay
@@ -537,7 +538,7 @@ constructor(
                 Timber.d(e, "Socket timeout during QR scan")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
-                Timber.d(e, "Failed to parse QR code")
+                Timber.d("Failed to parse QR code")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
             }
         }

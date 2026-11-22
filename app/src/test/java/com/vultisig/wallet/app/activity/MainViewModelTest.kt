@@ -14,6 +14,7 @@ import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
@@ -30,7 +31,9 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkStatic
+import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -181,7 +184,7 @@ internal class MainViewModelTest {
             coEvery { vaultRepository.getByEcdsa(any()) } returns vault
             coEvery { getKeysignTransactionSummary.invoke(any()) } returns null
             coEvery { getDirectionByQrCodeUseCase(any(), any()) } returns
-                Route.Keysign.Join(vaultId = "vault-id", qr = "qr")
+                Route.Keysign.Join(vaultId = "vault-id", qrHandle = "fixture-handle")
 
             val vm = createViewModel()
             vm.onNavigationReady()
@@ -218,7 +221,7 @@ internal class MainViewModelTest {
             coEvery { vaultRepository.getByEcdsa(any()) } returns vault
             coEvery { getKeysignTransactionSummary.invoke(any()) } returns null
             coEvery { getDirectionByQrCodeUseCase(any(), any()) } returns
-                Route.Keygen.Join(qr = "qr")
+                Route.Keygen.Join(qrHandle = "fixture-handle")
 
             val vm = createViewModel()
             vm.onNavigationReady()
@@ -296,7 +299,7 @@ internal class MainViewModelTest {
             coEvery { vaultRepository.hasVaults() } returns true
             coEvery { vaultRepository.getByEcdsa("ecdsa-key") } returns vault
             coEvery { getDirectionByQrCodeUseCase(link, "vault-id") } returns
-                Route.Keysign.Join(vaultId = "vault-id", qr = "qr")
+                Route.Keysign.Join(vaultId = "vault-id", qrHandle = "fixture-handle")
 
             val vm = createViewModel()
             vm.onNavigationReady()
@@ -307,7 +310,7 @@ internal class MainViewModelTest {
 
             coVerify {
                 navigator.route(
-                    Route.Keysign.Join(vaultId = "vault-id", qr = "qr"),
+                    Route.Keysign.Join(vaultId = "vault-id", qrHandle = "fixture-handle"),
                     NavigationOptions(popUpToRoute = Route.Keysign.Join::class, inclusive = true),
                 )
             }
@@ -339,7 +342,7 @@ internal class MainViewModelTest {
             coEvery { vaultRepository.hasVaults() } returns true
             coEvery { vaultRepository.getByEcdsa(any()) } returns vault
             coEvery { getDirectionByQrCodeUseCase(any(), any()) } returns
-                Route.Keygen.Join(qr = "qr")
+                Route.Keygen.Join(qrHandle = "fixture-handle")
 
             val vm = createViewModel()
             vm.onNavigationReady()
@@ -367,7 +370,9 @@ internal class MainViewModelTest {
 
             coVerify(exactly = 0) { getDirectionByQrCodeUseCase(any(), any()) }
             coVerify(exactly = 0) { navigator.route(ofType(Route.Keygen.Join::class), any()) }
-            coVerify { navigator.route(Route.ImportVault(uri = link)) }
+            val importRoute = slot<Route.ImportVault>()
+            coVerify { navigator.route(capture(importRoute)) }
+            assertEquals(link, NavigationSecrets.take(importRoute.captured.uriHandle))
         }
 
     @Test
@@ -449,6 +454,8 @@ internal class MainViewModelTest {
             advanceUntilIdle()
 
             coVerify(exactly = 0) { getDirectionByQrCodeUseCase(any(), any()) }
-            coVerify { navigator.route(Route.ImportVault(uri = file)) }
+            val importRoute = slot<Route.ImportVault>()
+            coVerify { navigator.route(capture(importRoute)) }
+            assertEquals(file, NavigationSecrets.take(importRoute.captured.uriHandle))
         }
 }

@@ -81,7 +81,6 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
                             email = requireNotNull(args.email),
                             tssAction = args.action,
                             vaultName = args.vaultName,
-                            password = args.password,
                         )
                     )
                 }

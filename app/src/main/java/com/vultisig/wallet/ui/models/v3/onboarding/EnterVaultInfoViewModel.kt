@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.usecases.IsEmailValid
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
@@ -523,7 +524,7 @@ constructor(
                     action = tssAction,
                     vaultName = name,
                     email = email,
-                    password = password,
+                    credentialId = NavigationSecrets.handoff(password),
                     hint = null,
                     vaultId = null,
                     deviceCount = deviceCount,

@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.UnknownTss
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.WrongResharePrefix
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
@@ -120,7 +121,8 @@ constructor(
     init {
         viewModelScope.launch {
             try {
-                val deepLink = DeepLinkHelper(Base64.UrlSafe.decode(args.qr).decodeToString())
+                val qr = NavigationSecrets.take(args.qrHandle) ?: error(InvalidQr)
+                val deepLink = DeepLinkHelper(Base64.UrlSafe.decode(qr).decodeToString())
 
                 val bytes =
                     decompressQr((deepLink.getJsonData() ?: error(InvalidQr)).decodeBase64Bytes())
@@ -412,14 +414,13 @@ constructor(
                                 vaultName = session.vaultName,
                                 hexChainCode = session.hexChainCode,
                                 keygenCommittee = keygenCommittee,
-                                encryptionKeyHex = session.encryptionKeyHex,
+                                encryptionKeyHandle = NavigationSecrets.handoff(session.encryptionKeyHex),
                                 libType = session.libType,
                                 isInitiatingDevice = false,
                                 vaultId = session.vaultId,
                                 oldCommittee = session.oldCommittee,
                                 oldResharePrefix = session.oldResharePrefix,
                                 email = null,
-                                password = null,
                                 hint = null,
                                 deviceCount = null,
                                 chains = session.chains,

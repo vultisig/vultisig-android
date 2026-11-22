@@ -286,7 +286,6 @@ internal class TokenNetworkSelectionDelegate(
         fieldState: TextFieldState = addressFieldState,
     ) {
         if (qrCode.isNullOrBlank()) return
-        Timber.d("setAddressFromQrCode(address = $qrCode)")
 
         if (fieldState === addressFieldState) onRecipientPicked(qrCode)
         fieldState.setTextAndPlaceCursorAtEnd(qrCode)

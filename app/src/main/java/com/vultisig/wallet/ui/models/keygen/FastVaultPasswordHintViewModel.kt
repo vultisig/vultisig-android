@@ -8,6 +8,8 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.utils.TextFieldUtils.HINT_MAX_LENGTH
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
@@ -33,6 +35,7 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
     val passwordHintFieldState = TextFieldState()
 
     private val args = savedStateHandle.toRoute<Route.VaultInfo.PasswordHint>()
+    private var password = NavigationSecrets.take(args.credentialId)
 
     init {
         viewModelScope.launch {
@@ -53,16 +56,25 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
 
     private fun openPeerDiscovery(hint: String?) {
         viewModelScope.launch {
+            val password = password
+            if (password == null) {
+                navigator.route(
+                    Route.VaultInfo.Password(args.name, args.email, args.tssAction, args.vaultId),
+                    NavigationOptions(popUpToRoute = Route.VaultInfo.PasswordHint::class, inclusive = true),
+                )
+                return@launch
+            }
             navigator.route(
                 Route.Keygen.PeerDiscovery(
                     action = args.tssAction,
                     vaultName = args.name,
                     email = args.email,
-                    password = args.password,
+                    credentialId = NavigationSecrets.handoff(password),
                     hint = hint,
                     vaultId = args.vaultId,
                 )
             )
+            this@FastVaultPasswordHintViewModel.password = null
         }
     }
 
@@ -78,7 +90,13 @@ constructor(savedStateHandle: SavedStateHandle, private val navigator: Navigator
 
     private fun isHintValid(hint: String) = hint.length <= HINT_MAX_LENGTH
 
+    override fun onCleared() {
+        password = null
+        super.onCleared()
+    }
+
     fun back() {
+        password = null
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 }

@@ -23,8 +23,8 @@ constructor(private val chainAccountAddressRepository: ChainAccountAddressReposi
             val deepLinkHelper = DeepLinkHelper(qr)
             return if (deepLinkHelper.isSendDeeplink()) SEND_FLOW
             else deepLinkHelper.getFlowType() ?: throw IllegalArgumentException("No flowType found")
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to parse QR-code via DeepLinkHelper")
+        } catch (_: Exception) {
+            Timber.e("Failed to parse QR-code via DeepLinkHelper")
             if (qr.isJson()) {
                 UNKNOWN_FLOW
             } else {

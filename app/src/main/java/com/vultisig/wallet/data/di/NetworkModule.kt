@@ -11,16 +11,13 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.ANDROID
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import kotlinx.serialization.json.Json
 import okhttp3.Dispatcher
+import timber.log.Timber
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -34,13 +31,6 @@ internal interface NetworkModule {
             HttpClient(OkHttp) {
                 baseConfig.configure(this)
 
-                if (BuildConfig.DEBUG) {
-                    install(Logging) {
-                        logger = Logger.ANDROID
-                        level = LogLevel.ALL
-                    }
-                }
-
                 install(HttpCache)
 
                 engine {
@@ -50,6 +40,15 @@ internal interface NetworkModule {
                         writeTimeout(15, TimeUnit.SECONDS)
 
                         retryOnConnectionFailure(true)
+                        if (BuildConfig.DEBUG) {
+                            addInterceptor { chain ->
+                                val request = chain.request()
+                                chain.proceed(request).also { response ->
+                                    // The request URL can contain backup codes and session IDs.
+                                    Timber.d("HTTP %s -> %d", request.method, response.code)
+                                }
+                            }
+                        }
 
                         // Most chains share one proxy host; OkHttp's default allows 5 at a time.
                         dispatcher(

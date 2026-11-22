@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keygen
 
 import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -82,6 +83,12 @@ constructor(
 
     val codeFieldState = TextFieldState()
 
+    init {
+        if (temporaryVaultRepository.findById(args.vaultId) == null) {
+            viewModelScope.launch { restartVerification() }
+        }
+    }
+
     fun processCode(code: String) {
         if (code.length >= FAST_VAULT_VERIFICATION_CODE_LENGTH) {
             verify()
@@ -97,11 +104,13 @@ constructor(
 
     fun back() {
         if (isSingleKeygen) return // Non-dismissable: user must verify OTP
+        temporaryVaultRepository.remove(args.vaultId)
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
     fun changeEmail() {
         if (isSingleKeygen) return // Cannot change email for MLDSA keygen on existing vault
+        temporaryVaultRepository.remove(args.vaultId)
         viewModelScope.launch {
             navigator.route(
                 route = Route.EnterVaultInfo(count = 1, tssAction = args.tssAction),
@@ -109,6 +118,19 @@ constructor(
                     NavigationOptions(popUpToRoute = Route.EnterVaultInfo::class, inclusive = true),
             )
         }
+    }
+
+    private suspend fun restartVerification() {
+        val start =
+            when (args.tssAction) {
+                TssAction.SingleKeygen -> Route.QuantumSecurityIntro(args.vaultId)
+                TssAction.Migrate -> Route.Migration.Password(args.vaultId)
+                else -> Route.EnterVaultInfo(count = 1, tssAction = args.tssAction)
+            }
+        navigator.route(
+            start,
+            NavigationOptions(popUpToRoute = Route.FastVaultVerification::class, inclusive = true),
+        )
     }
 
     fun retry() {
@@ -120,6 +142,10 @@ constructor(
     private fun verify() {
         if (state.value.verifyPinState == VerifyPinState.Loading) return
         viewModelScope.launch {
+            if (temporaryVaultRepository.findById(args.vaultId) == null) {
+                restartVerification()
+                return@launch
+            }
             val code = codeFieldState.text.toString()
 
             if (isCodeTemplateValid(code)) {
@@ -133,19 +159,24 @@ constructor(
                             updateVerifyState(VerifyPinState.Success)
 
                             val vaultId = args.vaultId
+                            val pending = temporaryVaultRepository.findById(vaultId)
+                            if (pending == null) {
+                                restartVerification()
+                                return@launch
+                            }
 
                             if (isSingleKeygen) {
                                 // MLDSA keygen on existing fast vault: merge MLDSA
                                 // data into existing vault and auto-enable QBTC
-                                val tempVault = temporaryVaultRepository.getById(vaultId)
                                 val existingVault =
                                     vaultRepository.get(vaultId)
                                         ?: error(
                                             "No vault with id $vaultId exists for SingleKeygen save"
                                         )
-                                existingVault.pubKeyMLDSA = tempVault.vault.pubKeyMLDSA
-                                existingVault.keyshares = tempVault.vault.keyshares
+                                existingVault.pubKeyMLDSA = pending.vault.pubKeyMLDSA
+                                existingVault.keyshares = pending.vault.keyshares
                                 saveVault(existingVault, true)
+                                temporaryVaultRepository.remove(vaultId)
 
                                 val qbtcToken = Coins.Qbtc.QBTC
                                 val (address, pubKey) =
@@ -174,11 +205,11 @@ constructor(
                                         ),
                                 )
                             } else {
-                                val vault = temporaryVaultRepository.getById(vaultId)
                                 val shouldOverride = args.tssAction == TssAction.Migrate
-                                saveVault(vault.vault, shouldOverride)
+                                saveVault(pending.vault, shouldOverride)
+                                temporaryVaultRepository.remove(vaultId)
 
-                                vault.hint?.let {
+                                pending.hint?.let {
                                     vaultDataStoreRepository.setFastSignHint(
                                         vaultId = vaultId,
                                         hint = it,
@@ -186,7 +217,7 @@ constructor(
                                 }
 
                                 if (context.canAuthenticateBiometric()) {
-                                    vaultPasswordRepository.savePassword(vaultId, vault.password)
+                                    vaultPasswordRepository.savePassword(vaultId, pending.password)
                                 }
 
                                 vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
@@ -226,6 +257,12 @@ constructor(
                 updateVerifyState(VerifyPinState.Error)
             }
         }
+    }
+
+    override fun onCleared() {
+        temporaryVaultRepository.remove(args.vaultId)
+        codeFieldState.clearText()
+        super.onCleared()
     }
 
     /**

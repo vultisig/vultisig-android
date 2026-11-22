@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.token.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.Keysign.Keysign.TxType.Deposit
@@ -132,7 +133,7 @@ constructor(
         field = MutableStateFlow<NetworkOption>(NetworkOption.Internet)
 
     private val args = savedStateHandle.toRoute<Route.Keysign.Keysign>()
-    private val password = args.password
+    private var password = NavigationSecrets.take(args.credentialId)
     private val transactionId = args.transactionId
 
     val isFastSign: Boolean
@@ -225,6 +226,13 @@ constructor(
             }
 
             val vault = shareViewModel.vault ?: return
+            if (args.credentialId != null && password == null) {
+                navigator.route(
+                    Route.Keysign.Password(transactionId, vault.id, txType),
+                    NavigationOptions(popUpToRoute = Route.Keysign.Keysign::class, inclusive = true),
+                )
+                return
+            }
             _currentVault = vault
             val keysignPayload = shareViewModel.keysignPayload
             val modifiedKeysignPayload = updateSolanaKeysignPayload(keysignPayload)
@@ -574,6 +582,7 @@ constructor(
     }
 
     override fun onCleared() {
+        password = null
         cleanQrAddress()
         sessionCoordinator.unregisterServiceReceiver()
         sessionCoordinator.stopService()

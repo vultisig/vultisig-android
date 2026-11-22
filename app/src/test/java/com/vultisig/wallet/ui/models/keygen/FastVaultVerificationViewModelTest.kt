@@ -28,6 +28,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import java.io.IOException
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
@@ -62,6 +63,7 @@ internal class FastVaultVerificationViewModelTest {
         Dispatchers.setMain(testDispatcher)
         mockkStatic("androidx.navigation.SavedStateHandleKt")
         givenRoute(TssAction.KEYGEN)
+        givenTemporaryVault()
     }
 
     @AfterEach
@@ -127,6 +129,7 @@ internal class FastVaultVerificationViewModelTest {
             advanceUntilIdle()
 
             coVerify(exactly = 1) { inAppReviewRepository.onVaultCreated() }
+            verify(exactly = 1) { temporaryVaultRepository.remove("vault") }
         }
 
     @Test
@@ -160,8 +163,19 @@ internal class FastVaultVerificationViewModelTest {
             coVerify(exactly = 0) { inAppReviewRepository.onVaultCreated() }
         }
 
+    @Test
+    fun `missing temporary data restarts onboarding before verifying a code`() =
+        runTest(testDispatcher) {
+            every { temporaryVaultRepository.findById("vault") } returns null
+            buildViewModel()
+            advanceUntilIdle()
+
+            coVerify { navigator.route(Route.EnterVaultInfo(count = 1, tssAction = TssAction.KEYGEN), any()) }
+            coVerify(exactly = 0) { verifyUseCase(any(), any()) }
+        }
+
     private fun givenTemporaryVault() {
-        coEvery { temporaryVaultRepository.getById("vault") } returns
+        every { temporaryVaultRepository.findById("vault") } returns
             TempVaultDto(
                 vault = Vault(id = "vault", name = "v"),
                 email = "a@b.c",
@@ -178,7 +192,6 @@ internal class FastVaultVerificationViewModelTest {
                 email = "a@b.c",
                 tssAction = tssAction,
                 vaultName = "v",
-                password = "pw",
             )
     }
 

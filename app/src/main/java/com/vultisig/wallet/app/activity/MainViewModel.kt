@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
@@ -272,7 +273,7 @@ constructor(
             } else if (deepLinkHelper.getFlowType() == JOIN_KEYSIGN_FLOW) {
                 joinKeysign(uri.toString())
             } else {
-                navigator.route(Route.ImportVault(uri = uri.toString()))
+                navigator.route(Route.ImportVault(uriHandle = NavigationSecrets.handoff(uri.toString())))
             }
         }
     }

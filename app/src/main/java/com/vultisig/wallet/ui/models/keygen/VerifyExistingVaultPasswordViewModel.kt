@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.keygen
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -12,6 +13,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
@@ -72,7 +74,7 @@ constructor(
 
         viewModelScope.safeLaunch(
             onError = { e ->
-                Timber.e(e, "Failed to verify vault password")
+                Timber.e("Failed to verify vault password")
                 state.update {
                     VerifyExistingVaultPasswordUiState.Ready(
                         isPasswordVisible = isPasswordVisible,
@@ -100,9 +102,10 @@ constructor(
                             email = args.email,
                             action = args.tssAction,
                             vaultId = vaultId,
-                            password = password,
+                            credentialId = NavigationSecrets.handoff(password),
                         )
                     )
+                    passwordFieldState.clearText()
                 }
                 is PasswordCheckResult.Invalid -> {
                     state.update {

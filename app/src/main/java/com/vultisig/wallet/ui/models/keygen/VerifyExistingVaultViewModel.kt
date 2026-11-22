@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.keygen.VerifyExistingVaultStepState
@@ -242,7 +243,7 @@ constructor(
 
         viewModelScope.safeLaunch(
             onError = { e ->
-                Timber.e(e, "Failed to verify vault password")
+                Timber.e("Failed to verify vault password")
                 passwordInnerState.value = VsTextInputFieldInnerState.Error
                 passwordErrorMessage.value = StringResource(R.string.fast_vault_invalid_password)
                 uiState.update { it.copy(isLoading = false) }
@@ -265,9 +266,10 @@ constructor(
                             email = emailTextFieldState.text.toString(),
                             action = tssAction,
                             vaultId = vaultId,
-                            password = password,
+                            credentialId = NavigationSecrets.handoff(password),
                         )
                     )
+                    passwordTextFieldState.clearText()
                 }
                 is PasswordCheckResult.Invalid -> {
                     passwordInnerState.value = VsTextInputFieldInnerState.Error

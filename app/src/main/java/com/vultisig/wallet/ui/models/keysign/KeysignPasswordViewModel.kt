@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import androidx.compose.foundation.text.input.clearText
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,7 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.util.password.InputPasswordViewModelDelegate
@@ -72,10 +74,11 @@ constructor(
                 navigator.route(
                     Route.Keysign.Keysign(
                         transactionId = transactionId,
-                        password = delegate.password,
+                        credentialId = NavigationSecrets.handoff(delegate.password),
                         txType = args.txType,
                     )
                 )
+                passwordFieldState.clearText()
             }
         }
     }
