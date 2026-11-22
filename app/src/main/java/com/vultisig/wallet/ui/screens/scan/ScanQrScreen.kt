@@ -157,7 +157,7 @@ private fun ScanQrScreen(
                 isScanned = true
                 val barcode = barcodes.first()
                 val barcodeValue = barcode.rawValue
-                Timber.d("Successfully scanned barcode: %s", barcodeValue)
+                Timber.d("Successfully scanned barcode")
                 if (barcodeValue != null) {
                     onScanSuccess(barcodeValue)
                 }

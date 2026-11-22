@@ -176,7 +176,6 @@ constructor(
                                 existingVault.pubKeyMLDSA = pending.vault.pubKeyMLDSA
                                 existingVault.keyshares = pending.vault.keyshares
                                 saveVault(existingVault, true)
-                                temporaryVaultRepository.remove(vaultId)
 
                                 val qbtcToken = Coins.Qbtc.QBTC
                                 val (address, pubKey) =
@@ -189,6 +188,7 @@ constructor(
                                     qbtcToken.copy(address = address, hexPublicKey = pubKey),
                                 )
 
+                                temporaryVaultRepository.remove(vaultId)
                                 delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
                                 navigator.route(
                                     route =
@@ -207,7 +207,6 @@ constructor(
                             } else {
                                 val shouldOverride = args.tssAction == TssAction.Migrate
                                 saveVault(pending.vault, shouldOverride)
-                                temporaryVaultRepository.remove(vaultId)
 
                                 pending.hint?.let {
                                     vaultDataStoreRepository.setFastSignHint(
@@ -231,6 +230,7 @@ constructor(
                                     recordVaultCreatedForReview()
                                 }
 
+                                temporaryVaultRepository.remove(vaultId)
                                 delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
                                 navigator.route(
                                     route =
