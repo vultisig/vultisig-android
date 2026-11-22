@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.keygen.isBatchEligibleCeremony
 import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
 import com.vultisig.wallet.data.keygen.isReshareBlockedByMldsa
+import com.vultisig.wallet.data.keygen.isReshareBlockedForKeyImport
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.SigningLibType
@@ -31,6 +32,7 @@ import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.DiscoveryTimeout
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.DuplicateVaultName
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.InvalidQr
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.KeyImportReshareUnsupported
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.MldsaReshareUnsupported
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.UnknownError
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.UnknownTss
@@ -76,6 +78,9 @@ internal sealed class JoinKeygenError(val message: UiText) {
 
     data object MldsaReshareUnsupported :
         JoinKeygenError(R.string.join_key_gen_mldsa_reshare_unsupported.asUiText())
+
+    data object KeyImportReshareUnsupported :
+        JoinKeygenError(R.string.join_key_gen_key_import_reshare_unsupported.asUiText())
 
     data object DiscoveryTimeout :
         JoinKeygenError(R.string.join_key_gen_mediator_discovery_timeout.asUiText())
@@ -215,6 +220,10 @@ constructor(
 
                             if (isReshareBlockedByMldsa(action, existingVault)) {
                                 error(MldsaReshareUnsupported)
+                            }
+
+                            if (isReshareBlockedForKeyImport(action, message.libType, existingVault)) {
+                                error(KeyImportReshareUnsupported)
                             }
 
                             // if we don't reshare vault which we already have,

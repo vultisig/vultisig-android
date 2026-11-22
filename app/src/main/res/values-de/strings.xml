@@ -270,6 +270,7 @@
     <string name="join_keysign_ton_jetton_token_mismatch">Der angezeigte Token stimmt nicht mit dem Token überein, den diese Überweisung sendet</string>
     <string name="join_keysign_ton_jetton_unverifiable">Diese TON-Token-Überweisung konnte nicht überprüft werden. Bitte versuchen Sie es erneut.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">Reshare wird für Tresore mit QBTC-Schlüssel nicht unterstützt</string>
+    <string name="join_key_gen_key_import_reshare_unsupported">Ein mit einer Wiederherstellungsphrase importierter Tresor kann nicht neu geteilt werden</string>
     <string name="swap_screen_provider_title">Anbieter</string>
     <string name="swap_form_minimum_amount">Swap-Betrag zu klein. Empfohlener Betrag %1$s %2$s</string>
     <string name="backup_password_screen_title">Backup</string>

@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
+import com.vultisig.wallet.data.keygen.isReshareBlockedForKeyImport
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
@@ -318,7 +319,9 @@ constructor(
     }
 
     fun switchMode() {
-        if (args == null) return
+        val args = args ?: return
+        // The reshare session starts with placeholder metadata until the vault is loaded.
+        if (args.action == TssAction.ReShare && session.pubKeyEcdsa.isBlank()) return
         // Tear down the current transport before switching, otherwise the old discovery job or
         // local mediator receiver can keep emitting and repopulate the just-cleared device list
         // (or leave a stale local session/receiver behind).
@@ -379,6 +382,10 @@ constructor(
         ) {
             val session = session
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
+            if (isReshareBlockedForKeyImport(args.action, session.libType, existingVault)) {
+                showImportedVaultReshareError()
+                return@safeLaunch
+            }
             // Snapshot the selection once: startWithCommittee suspends, and oldCommittee below
             // reads it again — without the snapshot a selection change mid-call would desync the
             // started committee from the navigation args.
@@ -456,6 +463,11 @@ constructor(
                 }
             ) {
                 val args = args ?: return@safeLaunch
+                val existingVault = args.vaultId?.let { vaultRepository.get(it) }
+                if (isReshareBlockedForKeyImport(args.action, existingVault?.libType)) {
+                    showImportedVaultReshareError()
+                    return@safeLaunch
+                }
 
                 var hexChainCode =
                     if (args.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
@@ -530,7 +542,6 @@ constructor(
                 var signers: List<String> = emptyList()
                 var resharePrefix = ""
 
-                val existingVault = args.vaultId?.let { vaultRepository.get(it) }
                 if (existingVault != null) {
                     libType = existingVault.libType
                     hexChainCode = existingVault.hexChainCode
@@ -582,6 +593,21 @@ constructor(
                     startPeerDiscovery(sessionId)
                 }
             }
+    }
+
+    private fun showImportedVaultReshareError() {
+        state.update {
+            it.copy(
+                error =
+                    ErrorUiModel(
+                        title = UiText.StringResource(R.string.generating_key_screen_reshare_failed),
+                        description =
+                            UiText.StringResource(
+                                R.string.join_key_gen_key_import_reshare_unsupported
+                            ),
+                    )
+            )
+        }
     }
 
     private fun actionContext(session: KeygenSession, sessionId: String) =

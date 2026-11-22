@@ -185,9 +185,8 @@ internal fun selectKeygenExecutor(action: TssAction, libType: SigningLibType): K
  * KeyImport per-chain shares). For non-reshare flows (KEYGEN / Migrate / KeyImport / SingleKeygen)
  * the existing list is replaced with just the freshly produced root shares.
  *
- * Reshare only re-runs the ECDSA and EdDSA ceremonies, so a carried-over MLDSA share still belongs
- * to the old committee. That is only safe because reshare is refused on vaults holding an MLDSA key
- * (see [isReshareBlockedByMldsa]); a preserved MLDSA share here never meets a changed committee.
+ * Reshare only re-runs the ECDSA and EdDSA root ceremonies. The entry points refuse vaults
+ * with MLDSA or imported per-chain shares, which would remain tied to the old committee.
  *
  * Pure function so the preservation invariant is tested independently of the JNI-heavy ceremony
  * code in `KeygenViewModel.startKeygenDkls`. The previous inline implementation captured the
@@ -226,6 +225,18 @@ internal fun mergeReshareKeyshares(
  */
 internal fun isReshareBlockedByMldsa(action: TssAction, existingVault: Vault?): Boolean =
     action == TssAction.ReShare && existingVault != null && existingVault.pubKeyMLDSA.isNotBlank()
+
+/**
+ * A root-only ceremony cannot reshare keys belonging to imported chains. A new device may only
+ * have the type from the request, while an existing device can also check its stored vault type.
+ */
+internal fun isReshareBlockedForKeyImport(
+    action: TssAction,
+    libType: SigningLibType?,
+    existingVault: Vault? = null,
+): Boolean =
+    action == TssAction.ReShare &&
+        (libType == SigningLibType.KeyImport || existingVault?.libType == SigningLibType.KeyImport)
 
 /**
  * Returns `true` when a reshare ceremony must preserve the vault's existing `hexChainCode` instead

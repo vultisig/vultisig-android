@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.keygen.ROOT_EDDSA_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.ROOT_MLDSA_EXCHANGE_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.ROOT_MLDSA_SETUP_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.SchnorrKeygen
+import com.vultisig.wallet.data.keygen.isReshareBlockedForKeyImport
 import com.vultisig.wallet.data.keygen.keyImportChainRouting
 import com.vultisig.wallet.data.keygen.mergeReshareKeyshares
 import com.vultisig.wallet.data.keygen.resolveParallelKeygenOptIn
@@ -299,27 +300,40 @@ constructor(
         viewModelScope.launch {
             updateStep(KeygenState.CreatingInstance)
 
-            args.vaultId?.let { vaultId ->
-                // Reshare, migrate and MLDSA keygen all build on this vault's existing shares, and
-                // a read taken while the app is locked comes back without them.
-                vaultRepository.awaitKeySharesReadable()
-
-                val cachedVault = vaultRepository.get(vaultId)
-                if (cachedVault != null) {
-                    vault.pubKeyECDSA = cachedVault.pubKeyECDSA
-                    vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
-                    vault.pubKeyMLDSA = cachedVault.pubKeyMLDSA
-                    vault.keyshares = cachedVault.keyshares
-                    // Preserve user-curated state across reshare / migrate. The keygen ceremony
-                    // only regenerates the threshold root shares — coins (custom token list,
-                    // addresses) and per-chain public keys (KeyImport vaults' chain routing) must
-                    // survive untouched. Without this, SaveVaultUseCase would overwrite the
-                    // upserted vault's empty coin list with default chains, wiping the user's
-                    // selections; for KeyImport vaults the empty `chainPublicKeys` would also
-                    // break per-chain signing-key resolution in `Vault.getEcdsaSigningKey`.
-                    vault.coins = cachedVault.coins
-                    vault.chainPublicKeys = cachedVault.chainPublicKeys
+            val cachedVault =
+                args.vaultId?.let { vaultId ->
+                    // A read while locked omits existing shares needed by these ceremonies.
+                    vaultRepository.awaitKeySharesReadable()
+                    vaultRepository.get(vaultId)
                 }
+
+            if (isReshareBlockedForKeyImport(action, libType, cachedVault)) {
+                state.update {
+                    it.copy(
+                        error =
+                            ErrorUiModel(
+                                title =
+                                    UiText.StringResource(
+                                        R.string.generating_key_screen_reshare_failed
+                                    ),
+                                description =
+                                    UiText.StringResource(
+                                        R.string.join_key_gen_key_import_reshare_unsupported
+                                    ),
+                            )
+                    )
+                }
+                return@launch
+            }
+
+            if (cachedVault != null) {
+                vault.pubKeyECDSA = cachedVault.pubKeyECDSA
+                vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
+                vault.pubKeyMLDSA = cachedVault.pubKeyMLDSA
+                vault.keyshares = cachedVault.keyshares
+                // Preserve the vault's custom token selections and existing chain metadata.
+                vault.coins = cachedVault.coins
+                vault.chainPublicKeys = cachedVault.chainPublicKeys
             }
 
             state.update { it.copy(error = null) }

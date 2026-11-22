@@ -378,6 +378,7 @@
     <string name="join_keysign_ton_jetton_token_mismatch">표시된 토큰이 이 전송에서 보내는 토큰과 일치하지 않습니다</string>
     <string name="join_keysign_ton_jetton_unverifiable">이 TON 토큰 전송을 확인할 수 없습니다. 다시 시도해 주세요.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">QBTC 키가 있는 볼트는 재공유를 지원하지 않습니다</string>
+    <string name="join_key_gen_key_import_reshare_unsupported">복구 문구로 가져온 볼트는 다시 공유할 수 없습니다</string>
     <string name="swap_screen_provider_title">제공자</string>
     <string name="swap_form_minimum_amount">"스왑 금액이 너무 적습니다. 권장 금액 %1$s %2$s "</string>
     <string name="backup_password_screen_title">백업</string>

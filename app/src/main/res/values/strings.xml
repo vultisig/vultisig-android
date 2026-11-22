@@ -383,6 +383,7 @@
     <string name="join_keysign_ton_jetton_token_mismatch">The token shown doesn\'t match the token this transfer sends</string>
     <string name="join_keysign_ton_jetton_unverifiable">Couldn\'t verify this TON token transfer. Please try again.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">Reshare isn\'t supported for vaults with a QBTC key</string>
+    <string name="join_key_gen_key_import_reshare_unsupported">You cannot reshare a vault imported from a recovery phrase</string>
     <string name="swap_screen_provider_title">Provider</string>
     <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
     <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>

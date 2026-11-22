@@ -271,6 +271,7 @@
     <string name="join_keysign_ton_jetton_token_mismatch">Il token mostrato non corrisponde al token inviato da questo trasferimento</string>
     <string name="join_keysign_ton_jetton_unverifiable">Impossibile verificare questo trasferimento di token TON. Riprova.</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">Il reshare non è supportato per i vault con una chiave QBTC</string>
+    <string name="join_key_gen_key_import_reshare_unsupported">Non puoi condividere di nuovo un vault importato con una frase di recupero</string>
     <string name="swap_screen_provider_title">Fornitore</string>
     <string name="swap_form_minimum_amount">Importo dello swap troppo piccolo. Importo consigliato %1$s %2$s</string>
     <string name="backup_password_screen_title">Backup</string>

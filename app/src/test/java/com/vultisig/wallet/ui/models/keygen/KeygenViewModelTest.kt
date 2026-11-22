@@ -5,10 +5,12 @@ package com.vultisig.wallet.ui.models.keygen
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.passcode.AutoLockHold
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ChainImportSetting
@@ -27,6 +29,7 @@ import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -204,6 +207,37 @@ internal class KeygenViewModelTest {
                     )
                 )
             }
+        }
+
+    @Test
+    fun `a new participant cannot generate shares for an imported vault reshare`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.Keygen.Generating>() } returns
+                KEY_IMPORT_ROUTE.copy(
+                    action = TssAction.ReShare,
+                    libType = SigningLibType.KeyImport,
+                )
+
+            val vm = createViewModel()
+
+            vm.state.value.error?.description shouldBe
+                UiText.StringResource(R.string.join_key_gen_key_import_reshare_unsupported)
+            coVerify(exactly = 0) { featureFlagRepository.getFeatureFlags() }
+        }
+
+    @Test
+    fun `a stored imported vault blocks reshare regardless of the route type`() =
+        runTest(testDispatcher) {
+            val vault = Vault(id = "vault-1", name = "Test Vault", libType = SigningLibType.KeyImport)
+            coEvery { vaultRepository.get(vault.id) } returns vault
+            every { any<SavedStateHandle>().toRoute<Route.Keygen.Generating>() } returns
+                KEY_IMPORT_ROUTE.copy(action = TssAction.ReShare, vaultId = vault.id)
+
+            val vm = createViewModel()
+
+            vm.state.value.error?.description shouldBe
+                UiText.StringResource(R.string.join_key_gen_key_import_reshare_unsupported)
+            coVerify(exactly = 0) { featureFlagRepository.getFeatureFlags() }
         }
 
     /** Verifies tryAgain navigates back. */

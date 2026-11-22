@@ -8,8 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.keygen.isReshareBlockedForKeyImport
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.hasValidMldsaKey
 import com.vultisig.wallet.data.passcode.PasscodeConfig
 import com.vultisig.wallet.data.passcode.PasscodeRepository
@@ -360,6 +362,10 @@ constructor(
             hasFastSign = isVaultHasFastSignById(vaultId) && vault?.signers?.count() == 2
             val hasPassword = vaultPasswordRepository.getPassword(vaultId) != null
             val hasMldsaKey = vault != null && vault.hasValidMldsaKey()
+            val supportsReshare =
+                !hasFastSign &&
+                    !hasMldsaKey &&
+                    !isReshareBlockedForKeyImport(TssAction.ReShare, vault?.libType)
             // Only DKLS vaults can run the post-quantum (Dilithium/MLDSA) keygen: KeyImport vaults
             // receive the key at import, and GG20 vaults must migrate to DKLS first — so the option
             // stays hidden for them (an isEnabled=false item is filtered out of the list).
@@ -379,10 +385,8 @@ constructor(
 
                                     is VaultSettingsItem.Migrate ->
                                         it.copy(isEnabled = hasMigration)
-                                    // Reshare regenerates only ECDSA/EdDSA, so the MLDSA share
-                                    // would stay tied to the old committee.
                                     is VaultSettingsItem.Reshare ->
-                                        it.copy(isEnabled = !hasFastSign && !hasMldsaKey)
+                                        it.copy(isEnabled = supportsReshare)
                                     is VaultSettingsItem.DilithiumKeygen ->
                                         it.copy(isEnabled = supportsDilithiumKeygen && !hasMldsaKey)
                                     else -> it

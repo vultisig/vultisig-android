@@ -463,6 +463,7 @@
     <string name="join_keysign_ton_jetton_token_mismatch">显示的代币与此转账发送的代币不一致</string>
     <string name="join_keysign_ton_jetton_unverifiable">无法验证此 TON 代币转账，请重试。</string>
     <string name="join_key_gen_mldsa_reshare_unsupported">带有 QBTC 密钥的保险库不支持重新分享</string>
+    <string name="join_key_gen_key_import_reshare_unsupported">无法重新分享通过恢复短语导入的保险库</string>
 
     <!-- Swap Screen -->
     <string name="swap_screen_provider_title">提供商</string>

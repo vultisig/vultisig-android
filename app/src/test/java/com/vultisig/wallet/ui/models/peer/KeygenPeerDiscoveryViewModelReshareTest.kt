@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.api.models.signer.BatchReshareRequestJson
@@ -31,6 +32,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
+import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -50,6 +52,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -250,37 +253,28 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
         }
 
     @Test
-    fun `reshare on a KeyImport vault uses the batch endpoint when the flag is on`() =
+    fun `reshare on an imported vault never starts a session`() =
         runTest(testDispatcher) {
-            // iOS PR #4139 includes KeyImport in `supportsBatch` because imported seed-phrase
-            // vaults still use DKLS / Schnorr at the root level. Android must match or peers
-            // running iOS / Windows will deadlock against an Android initiator that fell back
-            // to the legacy `/reshare` endpoint while joiners follow the QR's `is_tss_batch=true`.
             val keyImportVault = existingVault.copy(libType = SigningLibType.KeyImport)
             coEvery { vaultRepository.get(vaultId) } returns keyImportVault
             coEvery { featureFlagRepository.getFeatureFlags() } returns
                 FeatureFlagJson(isTssBatchEnabled = true)
 
             stubReshareRoute()
-            createViewModel()
+            val vm = createViewModel()
             advanceUntilIdle()
 
-            coVerify(exactly = 1) {
-                vultiSignerRepository.joinBatchReshare(
-                    match<BatchReshareRequestJson> { request ->
-                        request.publicKeyEcdsa == keyImportVault.pubKeyECDSA &&
-                            request.oldParties == keyImportVault.signers &&
-                            request.email == "user@example.com" &&
-                            request.encryptionPassword == "fast-vault-password" &&
-                            request.protocols ==
-                                listOf(
-                                    BatchReshareRequestJson.PROTOCOL_ECDSA,
-                                    BatchReshareRequestJson.PROTOCOL_EDDSA,
-                                ) &&
-                            request.localPartyId == "Server-XYZ"
-                    }
-                )
-            }
+            vm.switchMode()
+            vm.next()
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.join_key_gen_key_import_reshare_unsupported),
+                vm.state.value.error?.description,
+            )
+            coVerify(exactly = 0) { sessionApi.startSession(any(), any(), any()) }
+            coVerify(exactly = 0) { sessionApi.startWithCommittee(any(), any(), any()) }
+            coVerify(exactly = 0) { vultiSignerRepository.joinBatchReshare(any()) }
             coVerify(exactly = 0) { vultiSignerRepository.joinReshare(any()) }
         }
 
