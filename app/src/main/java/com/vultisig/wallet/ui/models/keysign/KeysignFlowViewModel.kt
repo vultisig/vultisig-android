@@ -99,7 +99,7 @@ constructor(
     private val addressProvider: AddressProvider,
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
-    generateServiceName: GenerateServiceName,
+    private val generateServiceName: GenerateServiceName,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
     private val pushNotificationManager: PushNotificationManager,
     private val snackbarFlow: SnackbarFlow,

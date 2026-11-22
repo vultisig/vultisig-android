@@ -298,7 +298,7 @@ constructor(
                                 } else {
                                     discoverMediator(
                                         message.serviceName,
-                                        message.sessionID,
+                                        message.sessionId,
                                         message.encryptionKeyHex,
                                     )
                                 }
