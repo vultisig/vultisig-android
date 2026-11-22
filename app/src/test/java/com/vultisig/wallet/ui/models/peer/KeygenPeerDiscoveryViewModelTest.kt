@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationSecrets
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
@@ -127,7 +128,7 @@ internal class KeygenPeerDiscoveryViewModelTest {
                 vaultName = "Test Vault",
                 deviceCount = deviceCount,
                 email = email,
-                password = password,
+                credentialId = password?.let(NavigationSecrets::handoff),
             )
     }
 
