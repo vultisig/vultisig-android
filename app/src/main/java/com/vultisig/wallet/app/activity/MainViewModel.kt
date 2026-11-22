@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.data.usecases.KeysignTransactionSummary
+import com.vultisig.wallet.data.usecases.MAX_SIGNING_LINK_CHARS
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
@@ -128,6 +129,7 @@ constructor(
     private var foregroundPushJob: kotlinx.coroutines.Job? = null
 
     fun onForegroundPushReceived(qrCodeData: String) {
+        if (qrCodeData.length > MAX_SIGNING_LINK_CHARS) return
         foregroundPushJob?.cancel()
         foregroundPushJob =
             viewModelScope.safeLaunch {
@@ -210,6 +212,10 @@ constructor(
      * nothing was navigated to.
      */
     private suspend fun joinKeysign(qrCodeData: String): Boolean {
+        if (qrCodeData.length > MAX_SIGNING_LINK_CHARS) {
+            showInvalidLink()
+            return false
+        }
         val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
         val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
         if (vault == null) {
@@ -246,7 +252,12 @@ constructor(
     fun openUri(uri: Uri) {
         viewModelScope.safeLaunch {
             _navigationReady.await()
-            val deepLinkHelper = DeepLinkHelper(uri)
+            val link = uri.toString()
+            if (link.length > MAX_SIGNING_LINK_CHARS) {
+                showInvalidLink()
+                return@safeLaunch
+            }
+            val deepLinkHelper = DeepLinkHelper(link)
             if (deepLinkHelper.isSendDeeplink()) {
                 if (hasAnyVault()) {
                     navigator.route(
@@ -270,11 +281,18 @@ constructor(
             } else if (deepLinkHelper.isDepositDeeplink()) {
                 openDepositDeeplink(deepLinkHelper)
             } else if (deepLinkHelper.getFlowType() == JOIN_KEYSIGN_FLOW) {
-                joinKeysign(uri.toString())
+                joinKeysign(link)
             } else {
-                navigator.route(Route.ImportVault(uri = uri.toString()))
+                navigator.route(Route.ImportVault(uri = link))
             }
         }
+    }
+
+    private suspend fun showInvalidLink() {
+        snackbarFlow.showMessage(
+            UiText.StringResource(R.string.join_keysign_invalid_qr),
+            SnackbarType.Error,
+        )
     }
 
     /**

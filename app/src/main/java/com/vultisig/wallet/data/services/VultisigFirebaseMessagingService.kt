@@ -10,6 +10,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.PushNotificationTapActivity
+import com.vultisig.wallet.data.usecases.MAX_SIGNING_LINK_CHARS
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
@@ -28,18 +29,23 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
         PushRegistrationWorker.enqueue(this, replaceExisting = true)
     }
 
+    override fun handleIntent(intent: Intent) {
+        if (intent.hasExtra(QR_CODE_DATA)) {
+            // A combined notification/data message normally bypasses onMessageReceived in the
+            // background and opens the exported launcher. The pinned Firebase SDK checks both
+            // flags to decide whether to render it. Use the app's private tap target instead.
+            intent.removeExtra(FCM_NOTIFICATION_ENABLED)
+            intent.removeExtra(FCM_LEGACY_NOTIFICATION_ENABLED)
+        }
+        super.handleIntent(intent)
+    }
+
     override fun onMessageReceived(message: RemoteMessage) {
-        Timber.d(
-            "FCM message received from: ${message.from}, data keys: ${message.data.keys}, notification: title=${message.notification?.title} body=${message.notification?.body?.take(80)}"
-        )
-        val qrCodeData =
-            message.data[QR_CODE_DATA]
-                ?: run {
-                    Timber.w(
-                        "Push notification missing qr_code_data. Available data keys: ${message.data}"
-                    )
-                    return
-                }
+        val qrCodeData = message.data[QR_CODE_DATA]
+        if (qrCodeData == null || qrCodeData.length !in 1..MAX_SIGNING_LINK_CHARS) {
+            Timber.w("Push notification did not contain a valid-sized signing link")
+            return
+        }
 
         // Forward to foreground app via broadcast (handled in MainActivity when app is visible)
         val broadcastIntent =
@@ -93,6 +99,8 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         const val PUSH_NOTIFICATION_ACTION = "com.vultisig.wallet.PUSH_NOTIFICATION"
         const val QR_CODE_DATA = "message"
+        private const val FCM_NOTIFICATION_ENABLED = "gcm.n.e"
+        private const val FCM_LEGACY_NOTIFICATION_ENABLED = "gcm.notification.e"
         private val notificationIdCounter = AtomicInteger(1000)
     }
 }

@@ -15,7 +15,8 @@ internal class GetDirectionByQrCodeUseCaseImpl
 @Inject
 constructor(private val getFlowType: GetFlowTypeUseCase) : GetDirectionByQrCodeUseCase {
     override suspend fun invoke(qr: String, vaultId: String?): Any {
-        Timber.d("joinOrSend(qr = $qr)")
+        if (qr.length > MAX_SIGNING_LINK_CHARS) return Route.ScanError
+
         val flowType = getFlowType(qr)
         val qrBase64 = Base64.UrlSafe.encode(qr.toByteArray())
         return try {

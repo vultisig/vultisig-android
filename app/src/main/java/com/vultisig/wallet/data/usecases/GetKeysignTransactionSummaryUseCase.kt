@@ -45,6 +45,7 @@ constructor(
     @OptIn(ExperimentalSerializationApi::class)
     override suspend fun invoke(qrCodeData: String): KeysignTransactionSummary? =
         runCatching {
+                if (qrCodeData.length > MAX_SIGNING_LINK_CHARS) return null
                 val jsonData = DeepLinkHelper(qrCodeData).getJsonData() ?: return null
                 val rawBytes = decompressQr(jsonData.decodeBase64Bytes())
                 val proto = protoBuf.decodeFromByteArray(KeysignMessageProto.serializer(), rawBytes)

@@ -165,11 +165,10 @@
             </intent-filter>
         </service>
 
-        <!--
-             A backgrounded message carrying a notification block is rendered by the FCM SDK itself,
-             so onMessageReceived never runs. Without this the SDK invents a "Miscellaneous" channel
-             at default importance and a keysign request arrives with no heads-up peek.
-        -->
+        <!-- Keysign notifications must be rendered by this app, with its private tap target. -->
+        <meta-data
+            android:name="firebase_messaging_notification_delegation_enabled"
+            android:value="false" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="@string/keysign_notification_channel_id" />

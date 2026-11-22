@@ -1,7 +1,10 @@
 package com.vultisig.wallet.data.usecases
 
+import java.io.IOException
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.tukaani.xz.MemoryLimitException
 
 class CompressQrUseCaseTest {
 
@@ -30,6 +33,37 @@ class CompressQrUseCaseTest {
     @Test
     fun `decompress ignores bytes after the first xz stream`() {
         assertArrayEquals(payload, decompress(compress(payload) + byteArrayOf(0x41, 0x42, 0x43)))
+    }
+
+    @Test
+    fun `decompress accepts an exact fit against both byte limits`() {
+        val encoded = compress(payload)
+        assertArrayEquals(
+            payload,
+            decompress.decompress(encoded, inputLimit = encoded.size, outputLimit = payload.size),
+        )
+    }
+
+    @Test
+    fun `decompress rejects input beyond the configured limit`() {
+        val encoded = compress(payload)
+        assertThrows<IOException> {
+            decompress.decompress(encoded, inputLimit = encoded.size - 1)
+        }
+    }
+
+    @Test
+    fun `decompress rejects output beyond the configured limit`() {
+        assertThrows<IOException> {
+            decompress.decompress(compress(payload), outputLimit = payload.size - 1)
+        }
+    }
+
+    @Test
+    fun `decompress applies the xz decoder memory limit`() {
+        assertThrows<MemoryLimitException> {
+            decompress.decompress(compress(payload), decoderMemoryLimitKiB = 1024)
+        }
     }
 
     private companion object {

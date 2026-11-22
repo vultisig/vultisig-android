@@ -19,6 +19,8 @@ internal class GetFlowTypeUseCaseImpl
 constructor(private val chainAccountAddressRepository: ChainAccountAddressRepository) :
     GetFlowTypeUseCase {
     override fun invoke(qr: String): String {
+        if (qr.length > MAX_SIGNING_LINK_CHARS) return UNKNOWN_FLOW
+
         return try {
             val deepLinkHelper = DeepLinkHelper(qr)
             return if (deepLinkHelper.isSendDeeplink()) SEND_FLOW
