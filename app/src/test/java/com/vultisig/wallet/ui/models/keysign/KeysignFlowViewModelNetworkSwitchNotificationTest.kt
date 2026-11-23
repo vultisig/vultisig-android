@@ -81,11 +81,15 @@ internal class KeysignFlowViewModelNetworkSwitchNotificationTest {
         every { generateServiceName.invoke() } returns "svc"
         coEvery { pushNotificationManager.notifyVaultDevices(vault, capture(pushed)) } just runs
         coEvery { updateSolanaKeysignPayload(null) } returns null
+        every { sessionCoordinator.startMediatorService(any(), any(), any(), any()) } answers
+            { arg<() -> Unit>(3)() }
+        coEvery { sessionCoordinator.startSessionWithRetry(any(), any(), any(), null) } returns
+            true
         every { participantDiscovery.selection } returns MutableStateFlow(listOf("A"))
         every { participantDiscovery.participants } returns MutableStateFlow(emptyList())
         coEvery { buildKeysignMessage(any(), any(), any(), any(), any(), any(), any()) } answers
             {
-                "server=${args[5]};relay=${args[6]}"
+                "session=${args[2]};server=${args[5]};relay=${args[6]}"
             }
 
         every { shareViewModel.hasAllData } returns true
@@ -144,19 +148,25 @@ internal class KeysignFlowViewModelNetworkSwitchNotificationTest {
             runCurrent()
 
             val relayQr = vm.keysignMessage.value
-            relayQr shouldEndWith "jsonData=server=https://api.vultisig.com/router;relay=true"
+            relayQr shouldEndWith ";server=https://api.vultisig.com/router;relay=true"
             pushed shouldBe listOf(relayQr)
             vm.uiState.value.resendCooldownSeconds shouldBe 30
             vm.uiState.value.isNotificationPending shouldBe false
         }
 
     @Test
-    fun `switching network inside the cooldown holds the rebuilt QR until the countdown ends`() =
+    fun `switching to local mode cancels a queued Internet notification`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.setData(shareViewModel, context, Route.Keysign.Keysign.TxType.Sign)
             runCurrent()
             val relayQr = vm.keysignMessage.value
+
+            vm.changeNetworkPromptOption(NetworkOption.Local, context)
+            runCurrent()
+            vm.changeNetworkPromptOption(NetworkOption.Internet, context)
+            runCurrent()
+            vm.uiState.value.isNotificationPending shouldBe true
 
             advanceTimeBy(5_000)
             runCurrent()
@@ -167,23 +177,22 @@ internal class KeysignFlowViewModelNetworkSwitchNotificationTest {
 
             val localQr = vm.keysignMessage.value
             localQr shouldNotBe relayQr
-            localQr shouldEndWith "jsonData=server=http://127.0.0.1:18080;relay=false"
-            // The server would drop a push inside its window and still answer 200, so nothing is
-            // sent yet: the countdown keeps running and the screen says the peers are next.
+            localQr shouldEndWith ";server=http://127.0.0.1:18080;relay=false"
             pushed shouldBe listOf(relayQr)
-            vm.uiState.value.isNotificationPending shouldBe true
+            vm.uiState.value.enableNotification shouldBe false
+            vm.uiState.value.isNotificationPending shouldBe false
             vm.uiState.value.resendCooldownSeconds shouldBe 25
 
             advanceTimeBy(25_000)
             runCurrent()
 
-            pushed shouldBe listOf(relayQr, localQr)
+            pushed shouldBe listOf(relayQr)
             vm.uiState.value.isNotificationPending shouldBe false
-            vm.uiState.value.resendCooldownSeconds shouldBe 30
+            vm.uiState.value.resendCooldownSeconds shouldBe 0
         }
 
     @Test
-    fun `switching back before the countdown ends cancels the hold`() =
+    fun `returning to Internet mode queues the new relay QR until the cooldown ends`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.setData(shareViewModel, context, Route.Keysign.Keysign.TxType.Sign)
@@ -193,24 +202,29 @@ internal class KeysignFlowViewModelNetworkSwitchNotificationTest {
             advanceTimeBy(5_000)
             vm.changeNetworkPromptOption(NetworkOption.Local, context)
             runCurrent()
-            vm.uiState.value.isNotificationPending shouldBe true
+            vm.keysignMessage.value shouldEndWith ";server=http://127.0.0.1:18080;relay=false"
+            vm.uiState.value.isNotificationPending shouldBe false
 
             advanceTimeBy(5_000)
             vm.changeNetworkPromptOption(NetworkOption.Internet, context)
             runCurrent()
 
-            // The peers already hold this QR, so there is nothing left to deliver.
-            vm.keysignMessage.value shouldBe relayQr
-            vm.uiState.value.isNotificationPending shouldBe false
-
-            advanceTimeBy(21_000)
-            runCurrent()
+            val newRelayQr = vm.keysignMessage.value
+            newRelayQr shouldNotBe relayQr
+            newRelayQr shouldEndWith ";server=https://api.vultisig.com/router;relay=true"
             pushed shouldBe listOf(relayQr)
-            vm.uiState.value.resendCooldownSeconds shouldBe 0
+            vm.uiState.value.isNotificationPending shouldBe true
+            vm.uiState.value.resendCooldownSeconds shouldBe 20
+
+            advanceTimeBy(20_000)
+            runCurrent()
+            pushed shouldBe listOf(relayQr, newRelayQr)
+            vm.uiState.value.isNotificationPending shouldBe false
+            vm.uiState.value.resendCooldownSeconds shouldBe 30
         }
 
     @Test
-    fun `switching network after the cooldown pushes the rebuilt QR at once`() =
+    fun `after the cooldown only the Internet QR is pushed`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.setData(shareViewModel, context, Route.Keysign.Keysign.TxType.Sign)
@@ -225,14 +239,26 @@ internal class KeysignFlowViewModelNetworkSwitchNotificationTest {
             runCurrent()
 
             val localQr = vm.keysignMessage.value
-            localQr shouldNotBe relayQr
-            pushed shouldBe listOf(relayQr, localQr)
+            localQr shouldEndWith ";server=http://127.0.0.1:18080;relay=false"
+            vm.sendNotification()
+            runCurrent()
+            pushed shouldBe listOf(relayQr)
+            vm.uiState.value.isNotificationPending shouldBe false
+            vm.uiState.value.resendCooldownSeconds shouldBe 0
+
+            vm.changeNetworkPromptOption(NetworkOption.Internet, context)
+            runCurrent()
+
+            val newRelayQr = vm.keysignMessage.value
+            newRelayQr shouldNotBe relayQr
+            newRelayQr shouldEndWith ";server=https://api.vultisig.com/router;relay=true"
+            pushed shouldBe listOf(relayQr, newRelayQr)
             vm.uiState.value.isNotificationPending shouldBe false
             vm.uiState.value.resendCooldownSeconds shouldBe 30
         }
 
     @Test
-    fun `switching network while a push is in flight waits for that push's cooldown`() =
+    fun `a new relay QR waits for an in-flight push and its cooldown`() =
         runTest(testDispatcher) {
             coEvery { pushNotificationManager.notifyVaultDevices(vault, capture(pushed)) } coAnswers
                 {
@@ -245,21 +271,28 @@ internal class KeysignFlowViewModelNetworkSwitchNotificationTest {
             pushed shouldBe listOf(relayQr)
             vm.uiState.value.resendCooldownSeconds shouldBe 0
 
-            // The server's window opens when it receives the first push, not when it answers, so a
-            // rebuild during the round-trip must not be fired into it.
             vm.changeNetworkPromptOption(NetworkOption.Local, context)
             runCurrent()
-            val localQr = vm.keysignMessage.value
+            vm.keysignMessage.value shouldEndWith ";server=http://127.0.0.1:18080;relay=false"
+            pushed shouldBe listOf(relayQr)
+            vm.uiState.value.isNotificationPending shouldBe false
+
+            // Wait for the previous push to finish before starting the next cooldown window.
+            vm.changeNetworkPromptOption(NetworkOption.Internet, context)
+            runCurrent()
+            val newRelayQr = vm.keysignMessage.value
+            newRelayQr shouldNotBe relayQr
             pushed shouldBe listOf(relayQr)
             vm.uiState.value.isNotificationPending shouldBe true
 
             advanceTimeBy(2_000)
             runCurrent()
+            pushed shouldBe listOf(relayQr)
             vm.uiState.value.resendCooldownSeconds shouldBe 30
 
             advanceTimeBy(30_000)
             runCurrent()
-            pushed shouldBe listOf(relayQr, localQr)
+            pushed shouldBe listOf(relayQr, newRelayQr)
             vm.uiState.value.isNotificationPending shouldBe false
         }
 
