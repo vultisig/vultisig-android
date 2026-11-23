@@ -121,4 +121,48 @@ internal class SwapExternalRecipientTest {
             )
             .shouldBeNull()
     }
+
+    @Test
+    fun `payout is the signed memo destination even when it is the vault's own address`() {
+        val ownCosmos = "cosmos1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5lzv7xu"
+
+        resolveSwapPayoutAddress(
+            memo = "=:GAIA.ATOM:$ownCosmos:0/1/0:vi:50",
+            externalRecipient = null,
+            vaultDestinationAddress = ownCosmos,
+        ) shouldBe ownCosmos
+    }
+
+    @Test
+    fun `payout prefers the signed memo destination over form state`() {
+        resolveSwapPayoutAddress(
+            memo = "=:ETH.ETH:$evmRecipient:0",
+            externalRecipient = "0xStaleFormRecipient",
+            vaultDestinationAddress = ownEvmChecksum,
+        ) shouldBe evmRecipient
+    }
+
+    @Test
+    fun `payout falls back to the custom recipient when the swap carries no memo`() {
+        resolveSwapPayoutAddress(
+            memo = null,
+            externalRecipient = evmRecipient,
+            vaultDestinationAddress = ownEvmChecksum,
+        ) shouldBe evmRecipient
+    }
+
+    @Test
+    fun `payout falls back to the vault address when there is no memo or custom recipient`() {
+        resolveSwapPayoutAddress(
+            memo = null,
+            externalRecipient = " ",
+            vaultDestinationAddress = ownEvmChecksum,
+        ) shouldBe ownEvmChecksum
+    }
+
+    @Test
+    fun `payout is null when no destination is known`() {
+        resolveSwapPayoutAddress(memo = "", externalRecipient = null, vaultDestinationAddress = "")
+            .shouldBeNull()
+    }
 }

@@ -251,9 +251,14 @@ private fun VerifySwapSheetDetails(tx: SwapTransactionUiModel, vaultName: String
             // External recipient must be visible before signing — never a silent default
             // (#4858). Only shown when the user routed the output to a custom address, and
             // given warning emphasis so it reads as a deliberate deviation, not a fee row.
-            tx.externalRecipient
-                ?.takeIf { it.isNotBlank() }
-                ?.let { recipient -> VerifyExternalRecipientRow(address = recipient) }
+            // Otherwise the payout goes back to the vault, and its address is still shown in full
+            // so the user can check where the funds land, as a Send review does (#6212).
+            val externalRecipient = tx.externalRecipient?.takeIf { it.isNotBlank() }
+            if (externalRecipient != null) {
+                VerifyExternalRecipientRow(address = externalRecipient)
+            } else {
+                tx.payoutAddress?.let { VerifyPayoutAddressRow(address = it) }
+            }
 
             tx.depositAddress?.let { VerifyDepositAddressRow(address = it) }
 
@@ -1074,8 +1079,11 @@ internal fun VerifyVaultDetails(
  */
 @Composable
 internal fun VerifyExternalRecipientRow(address: String, modifier: Modifier = Modifier) {
-    val display = if (address.length > 8) "${address.take(6)}...${address.takeLast(6)}" else address
-    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.fillMaxWidth(),
+    ) {
         Text(
             text = stringResource(R.string.verify_swap_recipient),
             style = Theme.brockmann.supplementary.footnote,
@@ -1083,16 +1091,27 @@ internal fun VerifyExternalRecipientRow(address: String, modifier: Modifier = Mo
             maxLines = 1,
         )
 
-        Spacer(Modifier.weight(1f))
-
+        // In full, wrapping rather than truncated, so the whole address can be checked (#6212).
         Text(
-            text = display,
+            text = address,
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.alerts.warning,
             textAlign = TextAlign.End,
-            maxLines = 1,
+            maxLines = 5,
+            overflow = TextOverflow.MiddleEllipsis,
+            modifier = Modifier.weight(1f),
         )
     }
+}
+
+/** The vault's own address the swap output is paid out to, in full (#6212). */
+@Composable
+private fun VerifyPayoutAddressRow(address: String) {
+    VerifyCardDetails(
+        title = stringResource(R.string.verify_swap_recipient),
+        subtitle = address,
+        showAllContent = true,
+    )
 }
 
 /** The address a SwapKit ERC-20 deposit sends the sold token to, read from the signed calldata. */
