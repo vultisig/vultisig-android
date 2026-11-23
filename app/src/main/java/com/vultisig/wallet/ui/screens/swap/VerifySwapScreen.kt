@@ -59,6 +59,7 @@ import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
+import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -254,10 +255,8 @@ private fun VerifySwapSheetDetails(tx: SwapTransactionUiModel, vaultName: String
             // Otherwise the payout goes back to the vault, and its address is still shown in full
             // so the user can check where the funds land, as a Send review does (#6212).
             val externalRecipient = tx.externalRecipient?.takeIf { it.isNotBlank() }
-            if (externalRecipient != null) {
-                VerifyExternalRecipientRow(address = externalRecipient)
-            } else {
-                tx.payoutAddress?.let { VerifyPayoutAddressRow(address = it) }
+            (externalRecipient ?: tx.payoutAddress?.takeIf { it.isNotBlank() })?.let { address ->
+                VerifyPayoutAddress(address = address, isExternal = externalRecipient != null)
             }
 
             tx.depositAddress?.let { VerifyDepositAddressRow(address = it) }
@@ -1091,27 +1090,43 @@ internal fun VerifyExternalRecipientRow(address: String, modifier: Modifier = Mo
             maxLines = 1,
         )
 
-        // In full, wrapping rather than truncated, so the whole address can be checked (#6212).
-        Text(
-            text = address,
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.alerts.warning,
-            textAlign = TextAlign.End,
-            maxLines = 5,
-            overflow = TextOverflow.MiddleEllipsis,
-            modifier = Modifier.weight(1f),
-        )
+        // In full on one line, shrunk to fit rather than truncated or broken mid-address, so it
+        // can be compared character by character (#6212).
+        Box(contentAlignment = Alignment.CenterEnd, modifier = Modifier.weight(1f)) {
+            AutoSizingText(
+                text = address,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.alerts.warning,
+            )
+        }
     }
 }
 
-/** The vault's own address the swap output is paid out to, in full (#6212). */
+/**
+ * Where the swap output is paid out, centred under the vault row it leaves from (#6212). The full
+ * address sits on one line, shrunk to fit as a Send review draws it. An [isExternal] recipient is
+ * warning-coloured so it reads as a deliberate deviation from the vault's own address (#4858).
+ */
 @Composable
-private fun VerifyPayoutAddressRow(address: String) {
-    VerifyCardDetails(
-        title = stringResource(R.string.verify_swap_recipient),
-        subtitle = address,
-        showAllContent = true,
-    )
+private fun VerifyPayoutAddress(address: String, isExternal: Boolean) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = stringResource(R.string.verify_swap_recipient),
+            style = Theme.brockmann.supplementary.captionSmall,
+            color = if (isExternal) Theme.v2.colors.alerts.warning else Theme.v2.colors.text.tertiary,
+            maxLines = 1,
+        )
+
+        AutoSizingText(
+            text = address,
+            style = Theme.brockmann.body.s.medium,
+            color = if (isExternal) Theme.v2.colors.alerts.warning else Theme.v2.colors.text.primary,
+        )
+    }
 }
 
 /** The address a SwapKit ERC-20 deposit sends the sold token to, read from the signed calldata. */
