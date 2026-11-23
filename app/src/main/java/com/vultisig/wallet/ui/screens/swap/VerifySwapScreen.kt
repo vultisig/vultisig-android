@@ -249,15 +249,16 @@ private fun VerifySwapSheetDetails(tx: SwapTransactionUiModel, vaultName: String
         ) {
             VerifyVaultRow(name = vaultName, address = tx.src.token.address)
 
-            // External recipient must be visible before signing — never a silent default
-            // (#4858). Only shown when the user routed the output to a custom address, and
-            // given warning emphasis so it reads as a deliberate deviation, not a fee row.
-            // Otherwise the payout goes back to the vault, and its address is still shown in full
-            // so the user can check where the funds land, as a Send review does (#6212).
+            // Where the funds land, in full, as a Send review shows it (#6212). It is the address
+            // resolved from the signed memo, never the form's recipient, so a recipient typed
+            // after the quote cannot stand in for where the memo actually pays. Warning emphasis
+            // only when that address is the custom recipient (#4858).
             val externalRecipient = tx.externalRecipient?.takeIf { it.isNotBlank() }
-            (externalRecipient ?: tx.payoutAddress?.takeIf { it.isNotBlank() })?.let { address ->
-                VerifyPayoutAddress(address = address, isExternal = externalRecipient != null)
-            }
+            tx.payoutAddress
+                ?.takeIf { it.isNotBlank() }
+                ?.let { address ->
+                    VerifyPayoutAddress(address = address, isExternal = address == externalRecipient)
+                }
 
             tx.depositAddress?.let { VerifyDepositAddressRow(address = it) }
 
