@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.keygen
 
 import android.content.Context
+import android.net.Uri
 import android.net.nsd.NsdManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
@@ -47,6 +48,8 @@ internal class JoinKeygenViewModelReshareTest {
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         mockkStatic("androidx.navigation.SavedStateHandleKt")
+        mockkStatic(Uri::class)
+        every { Uri.decode(any()) } answers { firstArg() }
         every { context.getSystemService(Context.NSD_SERVICE) } returns mockk<NsdManager>()
         val qr =
             Base64.UrlSafe.encode(
@@ -58,6 +61,7 @@ internal class JoinKeygenViewModelReshareTest {
 
     @AfterEach
     fun tearDown() {
+        unmockkStatic(Uri::class)
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
         Dispatchers.resetMain()
     }
