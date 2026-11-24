@@ -519,6 +519,7 @@
     <string name="reward_history_node">Узел: %s</string>
     <string name="reward_history_upcoming">Ожидается</string>
     <string name="reward_history_error">Не удалось загрузить историю наград</string>
+    <string name="reward_history_partial">Не удалось загрузить некоторые награды</string>
     <string name="next_payout">Следующая выплата</string>
     <string name="wait_until_node_churned_out">Подождите, пока узел не будет исключен</string>
     <string name="deposit_option_leave">Покинуть</string>

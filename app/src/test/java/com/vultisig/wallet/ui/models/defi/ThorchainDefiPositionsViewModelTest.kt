@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.BondChurnReward
+import com.vultisig.wallet.data.usecases.BondRewardHistory
 import com.vultisig.wallet.data.usecases.BondRewardHistoryUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainPendingLpDepositsUseCase
@@ -137,7 +138,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrencyUsd)
         coEvery { bondRewardHistoryUseCase.getLastReward(any(), any(), any()) } returns null
         coEvery { bondRewardHistoryUseCase.getRewardHistory(any(), any(), any()) } returns
-            emptyList()
+            BondRewardHistory(rewards = emptyList(), isComplete = true)
         coEvery { appCurrencyRepository.getCurrencyFormat() } returns
             NumberFormat.getCurrencyInstance(Locale.US)
         coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns BigDecimal("2")
@@ -1642,9 +1643,13 @@ internal class ThorchainDefiPositionsViewModelTest {
         coEvery {
             bondRewardHistoryUseCase.getRewardHistory(Chain.ThorChain, NODE_ADDRESS, RUNE_ADDRESS)
         } returns
-            listOf(
-                churnReward(BigInteger("2200000000"), date = SEP_20_NOON_UTC),
-                churnReward(BigInteger("2000000000"), date = SEP_17_NOON_UTC),
+            BondRewardHistory(
+                rewards =
+                    listOf(
+                        churnReward(BigInteger("2200000000"), date = SEP_20_NOON_UTC),
+                        churnReward(BigInteger("2000000000"), date = SEP_17_NOON_UTC),
+                    ),
+                isComplete = true,
             )
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
@@ -1654,6 +1659,7 @@ internal class ThorchainDefiPositionsViewModelTest {
         requireNotNull(sheet)
         assertFalse(sheet.isLoading)
         assertFalse(sheet.isError)
+        assertFalse(sheet.isPartial)
         assertEquals(RewardHistorySource.BondedNode(NODE_ADDRESS), sheet.source)
         assertEquals(vm.state.value.bonded.nodes.single().nextAward, sheet.upcoming)
         assertEquals("42.0000 RUNE", sheet.totalEarned)
@@ -1665,6 +1671,28 @@ internal class ThorchainDefiPositionsViewModelTest {
             sheet.rows,
         )
     }
+
+    @Test
+    fun `a partial history shows the churns that loaded and flags the total as partial`() =
+        runTest {
+            selectPositions("RUNE")
+            coEvery { bondUseCase.getActiveNodes(VAULT_ID, RUNE_ADDRESS) } returns
+                flowOf(listOf(bondedNode(BigInteger("1000000000"))))
+            coEvery { bondRewardHistoryUseCase.getRewardHistory(any(), any(), any()) } returns
+                BondRewardHistory(
+                    rewards = listOf(churnReward(BigInteger("2200000000"), SEP_20_NOON_UTC)),
+                    isComplete = false,
+                )
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+
+            vm.onClickLastReward(NODE_ADDRESS)
+
+            val sheet = requireNotNull(vm.state.value.rewardHistory)
+            assertFalse(sheet.isError)
+            assertTrue(sheet.isPartial)
+            assertEquals("22.0000 RUNE", sheet.totalEarned)
+            assertEquals(1, sheet.rows.size)
+        }
 
     @Test
     fun `a failed history reading flags the sheet instead of closing it`() = runTest {

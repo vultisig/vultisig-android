@@ -517,6 +517,7 @@
     <string name="reward_history_node">Nodo: %s</string>
     <string name="reward_history_upcoming">In arrivo</string>
     <string name="reward_history_error">Impossibile caricare la cronologia dei premi</string>
+    <string name="reward_history_partial">Impossibile caricare alcuni premi</string>
     <string name="next_payout">Prossimo pagamento</string>
     <string name="wait_until_node_churned_out">Attendi fino a quando il nodo viene espulso</string>
     <string name="deposit_option_leave">Esci</string>

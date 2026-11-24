@@ -518,6 +518,7 @@
     <string name="reward_history_node">Čvor: %s</string>
     <string name="reward_history_upcoming">Nadolazeća</string>
     <string name="reward_history_error">Povijest nagrada nije moguće učitati</string>
+    <string name="reward_history_partial">Neke nagrade nije moguće učitati</string>
     <string name="next_payout">Sljedeća isplata</string>
     <string name="wait_until_node_churned_out">Pričekajte dok čvor ne bude izbačen</string>
     <string name="deposit_option_leave">Napusti</string>

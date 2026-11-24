@@ -78,7 +78,10 @@ constructor(private val bondRewardHistoryUseCase: BondRewardHistoryUseCase) {
         }
     }
 
-    /** Fills [sheet] with [nodeAddress]'s churn history, or flags it as failed. */
+    /**
+     * Fills [sheet] with [nodeAddress]'s churn history, flagged partial when some churns could not
+     * be read, or flags it as failed when none could.
+     */
     suspend fun loadHistory(
         chain: Chain,
         nodeAddress: String,
@@ -86,13 +89,15 @@ constructor(private val bondRewardHistoryUseCase: BondRewardHistoryUseCase) {
         bondAddress: String,
     ): RewardHistoryUiModel =
         try {
-            val rewards =
+            val history =
                 bondRewardHistoryUseCase.getRewardHistory(
                     chain = chain,
                     nodeAddress = nodeAddress,
                     bondAddress = bondAddress,
                 )
-            sheet.withPayouts(rewards.map { it.date to it.amount }, chain.rewardCoin())
+            sheet
+                .withPayouts(history.rewards.map { it.date to it.amount }, chain.rewardCoin())
+                .copy(isPartial = !history.isComplete)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

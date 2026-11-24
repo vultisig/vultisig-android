@@ -51,6 +51,7 @@
     <string name="reward_history_node">节点：%s</string>
     <string name="reward_history_upcoming">即将发放</string>
     <string name="reward_history_error">无法加载奖励记录</string>
+    <string name="reward_history_partial">部分奖励无法加载</string>
     <string name="next_payout">下次支付</string>
     <string name="wait_until_node_churned_out">等待节点被淘汰</string>
     <string name="deposit_option_leave">离开</string>
