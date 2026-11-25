@@ -18,7 +18,6 @@ fun String.getChain(): Chain {
         "ETH" -> Chain.Ethereum
         "AVAX" -> Chain.Avalanche
         "BASE" -> Chain.Base
-        "BLAST" -> Chain.Blast
         "ARB" -> Chain.Arbitrum
         "POL" -> Chain.Polygon
         "OP" -> Chain.Optimism

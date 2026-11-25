@@ -28,7 +28,6 @@ object CustomRpcDefaultEndpoint {
             Chain.Polygon to "https://api.vultisig.com/polygon/",
             Chain.Optimism to "https://api.vultisig.com/opt/",
             Chain.CronosChain to "https://cronos-evm-rpc.publicnode.com",
-            Chain.Blast to "https://api.vultisig.com/blast/",
             Chain.Base to "https://api.vultisig.com/base/",
             Chain.Arbitrum to "https://api.vultisig.com/arb/",
             Chain.ZkSync to "https://api.vultisig.com/zksync/",

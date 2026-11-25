@@ -1242,8 +1242,8 @@ class ChainHelpersTest {
         // +2: "Send TAO (allow_death)" / "Send DOT (allow_death)" — the keep-alive vectors with
         // only the Balances call index changed, pinned alongside vultisig-sdk's copies.
         // +2: near.json (named + implicit receiver), byte-identical to the vultisig-sdk and iOS
-        // copies.
-        private const val EXPECTED_CASE_COUNT = 90
+        // copies. -1: "Send Blast ETH" in evm-chain-matrix.json, dropped with the chain.
+        private const val EXPECTED_CASE_COUNT = 89
 
         private const val HEX_PUBLIC_KEY =
             "023e4b76861289ad4528b33c2fd21b3a5160cd37b3294234914e21efb6ed4a452b"

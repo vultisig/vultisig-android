@@ -41,7 +41,7 @@ internal class SwapNetworkFeeLabelTest {
         listOf(Chain.ThorChain, Chain.Bitcoin, Chain.Solana, Chain.GaiaChain).forEach {
             it.hasSwapNetworkFeeCeiling shouldBe false
         }
-        listOf(Chain.Base, Chain.Optimism, Chain.Blast).forEach {
+        listOf(Chain.Base, Chain.Optimism).forEach {
             it.hasSwapNetworkFeeCeiling shouldBe false
         }
         listOf(Chain.Ethereum, Chain.Arbitrum, Chain.BscChain).forEach {

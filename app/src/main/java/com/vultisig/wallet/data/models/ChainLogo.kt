@@ -10,7 +10,6 @@ internal val Chain.logo: Int
             Chain.Ethereum -> R.drawable.ethereum
             Chain.Avalanche -> R.drawable.avax
             Chain.Base -> R.drawable.base
-            Chain.Blast -> R.drawable.blast
             Chain.Arbitrum -> R.drawable.arbitrum
             Chain.Polygon -> R.drawable.polygon
             Chain.Optimism -> R.drawable.optimism
@@ -54,7 +53,6 @@ internal val Chain.monoToneLogo: Int
             Chain.Ethereum -> R.drawable.eth_mono
             Chain.Avalanche -> R.drawable.ava_mono
             Chain.Base -> R.drawable.base_mono
-            Chain.Blast -> R.drawable.blast_mono
             Chain.Arbitrum -> R.drawable.arb_mono
             Chain.Polygon -> R.drawable.pol_mono
             Chain.Optimism -> R.drawable.opti_mono

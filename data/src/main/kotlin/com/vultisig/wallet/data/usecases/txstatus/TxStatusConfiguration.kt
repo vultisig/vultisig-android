@@ -23,7 +23,6 @@ internal class TxStatusConfigurationProviderImpl @Inject constructor() :
             Chain.Avalanche to TxStatusConfiguration(5, 5 * 60),
             Chain.CronosChain to TxStatusConfiguration(5, 5 * 60),
             Chain.BscChain to TxStatusConfiguration(5, 5 * 60),
-            Chain.Blast to TxStatusConfiguration(5, 5 * 60),
             Chain.Optimism to TxStatusConfiguration(5, 5 * 60),
             Chain.ZkSync to TxStatusConfiguration(5, 5 * 60),
             Chain.Mantle to TxStatusConfiguration(5, 5 * 60),

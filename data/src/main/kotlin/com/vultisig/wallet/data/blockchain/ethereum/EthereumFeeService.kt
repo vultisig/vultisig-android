@@ -265,13 +265,6 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
                 Chain.Mantle,
                 Chain.Robinhood -> BigInteger.ZERO
 
-                // Blast is a dead chain, with empty blocks with 0 miner tips
-                Chain.Blast ->
-                    maxOf(
-                        rewardsFeeHistory.maxOrNull() ?: BigInteger.ZERO,
-                        DEFAULT_MAX_PRIORITY_FEE_BLAST,
-                    )
-
                 // picked max from 10 previous blocks, then ensure inclusion. For l2 is quite low
                 Chain.Base,
                 Chain.Optimism ->
@@ -347,7 +340,6 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
 
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()
-        private val DEFAULT_MAX_PRIORITY_FEE_BLAST = BigInteger.TEN.pow(7) // 0.01 GWEI
         // Minimum tip for Ethereum swaps so a quiet window still lands the tx before the embedded
         // DEX deadline. Recalibrated from 2 GWEI: post-blob mainnet base fees and tips now sit
         // around 0.1 GWEI, where a 2 GWEI floor was ~20x the market and dominated the

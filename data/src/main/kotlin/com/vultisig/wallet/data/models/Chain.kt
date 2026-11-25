@@ -38,7 +38,6 @@ enum class Chain(
     Base("Base", EVM, "Gwei", displayName = "Base"),
     CronosChain("CronosChain", EVM, "Gwei", displayName = "Cronos Chain"),
     BscChain("BSC", EVM, "Gwei", displayName = "BSC"),
-    Blast("Blast", EVM, "Gwei", displayName = "Blast"),
     Ethereum("Ethereum", EVM, "Gwei", displayName = "Ethereum"),
     Optimism("Optimism", EVM, "Gwei", displayName = "Optimism"),
     Polygon("Polygon", EVM, "Gwei", displayName = "Polygon"),
@@ -134,7 +133,6 @@ val Chain.coinType: CoinType
             Chain.Solana -> CoinType.SOLANA
             Chain.Avalanche -> CoinType.AVALANCHECCHAIN
             Chain.Base -> CoinType.BASE
-            Chain.Blast -> CoinType.BLAST
             Chain.Arbitrum -> CoinType.ARBITRUM
             Chain.Polygon -> CoinType.POLYGON
             Chain.Optimism -> CoinType.OPTIMISM
@@ -248,7 +246,6 @@ val Chain.isSwapSupported: Boolean
                 Chain.Polygon,
                 Chain.Mantle,
                 Chain.Arbitrum,
-                Chain.Blast,
                 Chain.CronosChain,
                 Chain.Solana,
                 Chain.ZkSync,
@@ -371,7 +368,6 @@ val Chain.isLayer2: Boolean
         when (this) {
             Chain.Arbitrum,
             Chain.Base,
-            Chain.Blast,
             Chain.Mantle,
             Chain.Optimism,
             Chain.Robinhood,
@@ -392,7 +388,6 @@ val Chain.isOpStackL2: Boolean
     get() =
         when (this) {
             Chain.Base,
-            Chain.Blast,
             Chain.Optimism -> true
             else -> false
         }
@@ -403,7 +398,6 @@ fun Chain.oneInchChainId(): Long =
         Chain.Avalanche -> 43114
         Chain.Base -> 8453
         Chain.Solana -> 1151111081099710
-        Chain.Blast -> 81457
         Chain.Arbitrum -> 42161
         Chain.Polygon -> 137
         Chain.Optimism -> 10
@@ -450,7 +444,6 @@ fun Chain.swapAssetName(): String {
         Chain.Base -> "BASE"
         Chain.Optimism -> "OP"
         Chain.Polygon -> "POL"
-        Chain.Blast -> "BLAST"
         Chain.CronosChain -> "CRO"
         Chain.Polkadot -> "DOT"
         Chain.Bittensor -> "TAO"
@@ -490,7 +483,6 @@ fun Chain.coinGeckoAssetPlatformId(): String? =
         Chain.Ethereum -> "ethereum"
         Chain.Avalanche -> "avalanche"
         Chain.Base -> "base"
-        Chain.Blast -> "blast"
         Chain.Arbitrum -> "arbitrum-one"
         Chain.Polygon -> "polygon-pos"
         Chain.Optimism -> "optimistic-ethereum"
@@ -511,7 +503,6 @@ fun Chain.ticker(): String {
         Chain.Ethereum -> "ETH"
         Chain.Avalanche -> "AVAX"
         Chain.Base -> "BASE"
-        Chain.Blast -> "BLAST"
         Chain.Arbitrum -> "ARB"
         Chain.Polygon -> "POL"
         Chain.Optimism -> "OP"
@@ -583,7 +574,6 @@ val Chain.blockTimeMs: Long
             Chain.Avalanche,
             Chain.Optimism,
             Chain.Base,
-            Chain.Blast,
             Chain.Mantle -> 2_000L
             Chain.Arbitrum,
             Chain.ZkSync,

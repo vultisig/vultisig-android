@@ -49,7 +49,6 @@ internal class EvmCoinFinderTest {
     @Test
     fun `EVM chains without a 1inch surface are not in the supported set`() {
         listOf(
-                Chain.Blast,
                 Chain.CronosChain,
                 Chain.ZkSync,
                 Chain.Mantle,
@@ -360,24 +359,24 @@ internal class EvmCoinFinderTest {
 
     @Test
     fun `find on an unsupported EVM chain iterates curated balances and skips 1inch`() = runTest {
-        // Pick whichever curated coin Blast happens to have first — keeps the test stable as
+        // Pick whichever curated coin Mantle happens to have first — keeps the test stable as
         // tokens are added or removed.
-        val blastContracts =
-            requireNotNull(Coins.coins[Chain.Blast])
+        val mantleContracts =
+            requireNotNull(Coins.coins[Chain.Mantle])
                 .filter { !it.isNativeToken && it.contractAddress.isNotEmpty() }
                 .map { it.contractAddress }
         val curated =
-            requireNotNull(Coins.coins[Chain.Blast]).first {
+            requireNotNull(Coins.coins[Chain.Mantle]).first {
                 !it.isNativeToken && it.contractAddress.isNotEmpty()
             }
-        every { evmApiFactory.createEvmApi(Chain.Blast) } returns evmApi
-        coEvery { evmApi.getBalances(ADDRESS, blastContracts) } returns
+        every { evmApiFactory.createEvmApi(Chain.Mantle) } returns evmApi
+        coEvery { evmApi.getBalances(ADDRESS, mantleContracts) } returns
             mapOf(curated.contractAddress to BigInteger.valueOf(7))
 
-        val coins = finder.find(Chain.Blast, ADDRESS)
+        val coins = finder.find(Chain.Mantle, ADDRESS)
 
         assertEquals(listOf(curated), coins)
-        coVerify(exactly = 1) { evmApi.getBalances(ADDRESS, blastContracts) }
+        coVerify(exactly = 1) { evmApi.getBalances(ADDRESS, mantleContracts) }
         coVerify(exactly = 0) { oneInchApi.getContractsWithBalance(any(), any()) }
         coVerify(exactly = 0) { oneInchApi.getTokensByContracts(any(), any()) }
     }

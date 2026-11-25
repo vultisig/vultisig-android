@@ -44,7 +44,7 @@ internal object SwapKitAssetPrefix {
             // bucket is HyperCore (`USDC:0x…` addresses), a different venue — never this chain.
             Chain.Robinhood -> "HOOD"
             Chain.Hyperliquid -> "HYPEREVM"
-            // ZkSync, Mantle, Blast and Cronos land here: EVM networks the wallet holds that
+            // ZkSync, Mantle and Cronos land here: EVM networks the wallet holds that
             // SwapKit's `/providers` does not enable and whose catalogue spelling is therefore
             // unconfirmed. Guessing one would mint a garbage identifier, so they stay unoffered
             // until an entry can be read off `GET /tokens`.

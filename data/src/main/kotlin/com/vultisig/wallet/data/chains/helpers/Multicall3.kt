@@ -45,7 +45,6 @@ object Multicall3 {
             Chain.Polygon,
             Chain.Optimism,
             Chain.Mantle,
-            Chain.Blast,
             Chain.CronosChain,
             Chain.Sei,
             Chain.Robinhood -> CANONICAL_ADDRESS

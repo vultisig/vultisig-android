@@ -111,31 +111,6 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
-    fun `Blast with empty history uses the 001 GWEI floor`() = runTest {
-        val fee = service.calculateDefaultFees(transfer(Chain.Blast)) as Eip1559
-
-        assertEquals(BLAST_MIN_TIP, fee.maxPriorityFeePerGas)
-    }
-
-    @Test
-    fun `Blast with rewards below the floor still uses the floor`() = runTest {
-        stubFeeHistory(listOf(BigInteger.ONE, BigInteger("100")))
-
-        val fee = service.calculateDefaultFees(transfer(Chain.Blast)) as Eip1559
-
-        assertEquals(BLAST_MIN_TIP, fee.maxPriorityFeePerGas)
-    }
-
-    @Test
-    fun `Blast uses max reward when it exceeds the floor`() = runTest {
-        stubFeeHistory(listOf(gwei(1), gwei(3), gwei(2)))
-
-        val fee = service.calculateDefaultFees(transfer(Chain.Blast)) as Eip1559
-
-        assertEquals(gwei(3), fee.maxPriorityFeePerGas)
-    }
-
-    @Test
     fun `Base with empty history uses the L2 default`() = runTest {
         val fee = service.calculateDefaultFees(transfer(Chain.Base)) as Eip1559
 
@@ -693,6 +668,5 @@ internal class EthereumFeeServiceTest {
         private val POLYGON_MIN_TIP = GWEI.multiply(BigInteger("30"))
         private val ETH_SWAP_TIP_FLOOR = GWEI.divide(BigInteger.valueOf(2)) // 0.5 GWEI
         private val L2_DEFAULT_TIP = BigInteger("20")
-        private val BLAST_MIN_TIP = BigInteger.TEN.pow(7) // 0.01 GWEI
     }
 }

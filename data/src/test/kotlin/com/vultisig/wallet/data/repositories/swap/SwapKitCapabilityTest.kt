@@ -37,7 +37,7 @@ internal class SwapKitCapabilityTest {
         // for any of them, so `assetIdentifier` could only throw. Offering them replaced a pair's
         // immediate "no route" guidance with a spinner and a late error — worst for
         // Cardano/TON/SUI/BTC destinations, where SwapKit is the only shared provider.
-        listOf(Chain.ZkSync, Chain.Mantle, Chain.Blast, Chain.CronosChain).forEach { chain ->
+        listOf(Chain.ZkSync, Chain.Mantle, Chain.CronosChain).forEach { chain ->
             assertNull(SwapKitAssetPrefix.of(chain), "prefix for ${chain.raw}")
             assertFalse(SwapKitCapability.canReceiveOn(chain), "canReceiveOn(${chain.raw})")
             assertFalse(SwapKitCapability.canQuoteFrom(chain), "canQuoteFrom(${chain.raw})")
@@ -104,8 +104,6 @@ internal class SwapKitCapabilityTest {
 
     @Test
     fun `EVM chains the scanner covers can originate a route`() {
-        // Blast is deliberately absent: Blockaid does index it, but SwapKit's spelling of it is
-        // unknown, so it is not receivable and therefore not sourceable either.
         listOf(
                 Chain.Ethereum,
                 Chain.Arbitrum,

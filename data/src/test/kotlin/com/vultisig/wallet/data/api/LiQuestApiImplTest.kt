@@ -53,7 +53,6 @@ class LiQuestApiImplTest {
                 Chain.Ethereum to "1",
                 Chain.Avalanche to "43114",
                 Chain.Base to "8453",
-                Chain.Blast to "81457",
                 Chain.Arbitrum to "42161",
                 Chain.Polygon to "137",
                 Chain.Optimism to "10",
