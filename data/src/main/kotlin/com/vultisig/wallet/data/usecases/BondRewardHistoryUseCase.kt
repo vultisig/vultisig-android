@@ -2,17 +2,25 @@ package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.repositories.BondRewardCacheRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.ThorchainBondRepository
 import java.math.BigInteger
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 
 /** What one churn paid a bond provider, in the chain's base units. */
 data class BondChurnReward(val churnHeight: Long, val date: Date, val amount: BigInteger)
+
+/**
+ * The churn rewards a history can show, newest first, and whether that is all of them: false when
+ * a churn that belongs in [rewards] could not be read, so their sum may be short.
+ */
+data class BondRewardHistory(val rewards: List<BondChurnReward>, val isComplete: Boolean)
 
 /**
  * A bond provider's per-churn rewards on one THORChain or MayaChain node.
@@ -22,6 +30,9 @@ data class BondChurnReward(val churnHeight: Long, val date: Date, val amount: Bi
  * is read off the node one block before each churn, while the award about to be paid is still on
  * its ledger. THORNode reports only the node's award, so it is split by the provider's bond share
  * at that same block; MAYANode reports each provider's payout directly.
+ *
+ * Rewards already read are kept on the device and never read again: nodes prune old state, so the
+ * device copy is also the only source for churns the node no longer serves.
  */
 interface BondRewardHistoryUseCase {
 
@@ -41,12 +52,16 @@ interface BondRewardHistoryUseCase {
      * The walk stops at the first churn where the address was not a bond provider, since nothing
      * older can belong to this position. Churns that paid nothing, such as those while the node sat
      * on standby, are left out.
+     *
+     * A churn whose read fails ends the walk there too: the node keeps only recent state, and the
+     * unread churn may be where the position began. The rewards newer than it come back flagged
+     * incomplete. Throws only when no churn could be read at all.
      */
     suspend fun getRewardHistory(
         chain: Chain,
         nodeAddress: String,
         bondAddress: String,
-    ): List<BondChurnReward>
+    ): BondRewardHistory
 
     companion object {
         const val MAX_CHURNS = 20
@@ -58,6 +73,7 @@ internal class BondRewardHistoryUseCaseImpl
 constructor(
     private val thorchainBondRepository: ThorchainBondRepository,
     private val mayachainBondRepository: MayachainBondRepository,
+    private val bondRewardCacheRepository: BondRewardCacheRepository,
 ) : BondRewardHistoryUseCase {
 
     // A node at a past height never changes, so its payouts are kept for the life of the process.
@@ -69,37 +85,64 @@ constructor(
         bondAddress: String,
     ): BondChurnReward? {
         val churn = fetchChurns(chain).firstOrNull() ?: return null
-        return rewardAt(chain, nodeAddress, bondAddress, churn)
+        val saved = bondRewardCacheRepository.getRewards(chain, nodeAddress, bondAddress)
+        val reward = rewardAt(chain, nodeAddress, bondAddress, churn, saved) ?: return null
+        if (churn.height !in saved) {
+            bondRewardCacheRepository.saveRewards(chain, nodeAddress, bondAddress, listOf(reward))
+        }
+        return reward
     }
 
     override suspend fun getRewardHistory(
         chain: Chain,
         nodeAddress: String,
         bondAddress: String,
-    ): List<BondChurnReward> {
+    ): BondRewardHistory {
         val churns = fetchChurns(chain).take(BondRewardHistoryUseCase.MAX_CHURNS)
-        val rewards = mutableListOf<BondChurnReward>()
+        val saved = bondRewardCacheRepository.getRewards(chain, nodeAddress, bondAddress)
+        val read = mutableListOf<BondChurnReward>()
+        var firstFailure: Exception? = null
         for (batch in churns.chunked(PARALLEL_REQUESTS)) {
             // Supervised and awaited in order, so a read older than the churn that ends the walk
-            // can fail without failing the history it no longer belongs to.
+            // can fail without touching the history it no longer belongs to.
             val reachedEnd = supervisorScope {
                 val pending =
                     batch.map { churn ->
-                        async { rewardAt(chain, nodeAddress, bondAddress, churn) }
+                        async { rewardAt(chain, nodeAddress, bondAddress, churn, saved) }
                     }
                 for (deferred in pending) {
-                    val reward = deferred.await()
+                    val reward =
+                        try {
+                            deferred.await()
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            // The unread churn may be where this position began, so nothing older
+                            // can be trusted to belong to it.
+                            firstFailure = e
+                            null
+                        }
                     if (reward == null) {
                         pending.forEach { it.cancel() }
                         return@supervisorScope true
                     }
-                    if (reward.amount > BigInteger.ZERO) rewards += reward
+                    read += reward
                 }
                 false
             }
             if (reachedEnd) break
         }
-        return rewards
+        bondRewardCacheRepository.saveRewards(
+            chain,
+            nodeAddress,
+            bondAddress,
+            read.filter { it.churnHeight !in saved },
+        )
+        firstFailure?.let { if (read.isEmpty()) throw it }
+        return BondRewardHistory(
+            rewards = read.filter { it.amount > BigInteger.ZERO },
+            isComplete = firstFailure == null,
+        )
     }
 
     private suspend fun rewardAt(
@@ -107,7 +150,11 @@ constructor(
         nodeAddress: String,
         bondAddress: String,
         churn: ParsedChurn,
+        saved: Map<Long, BondChurnReward>,
     ): BondChurnReward? {
+        saved[churn.height]?.let {
+            return it
+        }
         val amount =
             providerRewardsBefore(chain, nodeAddress, churn.height)[bondAddress] ?: return null
         return BondChurnReward(churnHeight = churn.height, date = churn.date, amount = amount)

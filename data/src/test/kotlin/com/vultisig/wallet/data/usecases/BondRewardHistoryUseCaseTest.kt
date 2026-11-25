@@ -7,17 +7,27 @@ import com.vultisig.wallet.data.api.models.thorchain.BondProvider
 import com.vultisig.wallet.data.api.models.thorchain.BondProviders
 import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
 import com.vultisig.wallet.data.api.models.thorchain.NodeDetailsResponse
+import androidx.datastore.preferences.core.MutablePreferences
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.repositories.BondRewardCacheRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.ThorchainBondRepository
+import com.vultisig.wallet.data.sources.AppDataStore
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
 import java.util.Date
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -26,14 +36,23 @@ internal class BondRewardHistoryUseCaseTest {
 
     private lateinit var thorchainBondRepository: ThorchainBondRepository
     private lateinit var mayachainBondRepository: MayachainBondRepository
+    private lateinit var deviceStore: AppDataStore
     private lateinit var useCase: BondRewardHistoryUseCaseImpl
 
     @BeforeEach
     fun setUp() {
         thorchainBondRepository = mockk()
         mayachainBondRepository = mockk()
-        useCase = BondRewardHistoryUseCaseImpl(thorchainBondRepository, mayachainBondRepository)
+        deviceStore = FakeAppDataStore()
+        useCase = newUseCase()
     }
+
+    private fun newUseCase() =
+        BondRewardHistoryUseCaseImpl(
+            thorchainBondRepository,
+            mayachainBondRepository,
+            BondRewardCacheRepository(deviceStore),
+        )
 
     @Test
     fun `the last churn pays the award after the operator fee, split by bond share`() = runTest {
@@ -88,8 +107,12 @@ internal class BondRewardHistoryUseCaseTest {
 
             val history = useCase.getRewardHistory(Chain.ThorChain, NODE, ME)
 
-            assertEquals(listOf(500L, 300L), history.map { it.churnHeight })
-            assertEquals(listOf(BigInteger("500"), BigInteger("200")), history.map { it.amount })
+            assertEquals(listOf(500L, 300L), history.rewards.map { it.churnHeight })
+            assertEquals(
+                listOf(BigInteger("500"), BigInteger("200")),
+                history.rewards.map { it.amount },
+            )
+            assertTrue(history.isComplete)
         }
 
     @Test
@@ -101,9 +124,9 @@ internal class BondRewardHistoryUseCaseTest {
 
         val history = useCase.getRewardHistory(Chain.ThorChain, NODE, ME)
 
-        assertEquals(BondRewardHistoryUseCase.MAX_CHURNS, history.size)
-        assertEquals(2_500L, history.first().churnHeight)
-        assertEquals(600L, history.last().churnHeight)
+        assertEquals(BondRewardHistoryUseCase.MAX_CHURNS, history.rewards.size)
+        assertEquals(2_500L, history.rewards.first().churnHeight)
+        assertEquals(600L, history.rewards.last().churnHeight)
         coVerify(exactly = 0) { thorchainBondRepository.getNodeDetailsAtHeight(NODE, 499) }
     }
 
@@ -120,13 +143,44 @@ internal class BondRewardHistoryUseCaseTest {
     }
 
     @Test
-    fun `a failed height read fails the whole history rather than understate it`() = runTest {
-        coEvery { thorchainBondRepository.getChurns() } returns listOf(churn(200), churn(100))
-        stubThorNode(height = 199, award = "1000", myBond = "1", othersBond = "1")
-        coEvery { thorchainBondRepository.getNodeDetailsAtHeight(NODE, 99) } throws
-            IllegalStateException("No archive nodes configured for this chain")
+    fun `a pruned height keeps only the churns newer than it, flagged incomplete`() = runTest {
+        coEvery { thorchainBondRepository.getChurns() } returns
+            listOf(churn(300), churn(200), churn(100))
+        stubThorNode(height = 299, award = "1000", myBond = "1", othersBond = "1")
+        coEvery { thorchainBondRepository.getNodeDetailsAtHeight(NODE, 199) } throws PRUNED
+        // Readable but older than the unread churn, which may be where this position began.
+        stubThorNode(height = 99, award = "1000", myBond = "1", othersBond = "1")
+
+        val history = useCase.getRewardHistory(Chain.ThorChain, NODE, ME)
+
+        assertEquals(listOf(300L), history.rewards.map { it.churnHeight })
+        assertFalse(history.isComplete)
+    }
+
+    @Test
+    fun `a history with no churn read at all throws`() = runTest {
+        coEvery { thorchainBondRepository.getChurns() } returns listOf(churn(100))
+        coEvery { thorchainBondRepository.getNodeDetailsAtHeight(NODE, 99) } throws PRUNED
 
         assertThrows<IllegalStateException> { useCase.getRewardHistory(Chain.ThorChain, NODE, ME) }
+    }
+
+    @Test
+    fun `churns read once are served from the device after the node prunes them`() = runTest {
+        coEvery { thorchainBondRepository.getChurns() } returns listOf(churn(200), churn(100))
+        // Standby: a zero payout is kept too, or its pruning would end the walk before 100.
+        stubThorNode(height = 199, award = "0", myBond = "1", othersBond = "1")
+        stubThorNode(height = 99, award = "1000", myBond = "1", othersBond = "1")
+        useCase.getRewardHistory(Chain.ThorChain, NODE, ME)
+        coEvery { thorchainBondRepository.getNodeDetailsAtHeight(NODE, any()) } throws PRUNED
+
+        // A new process: nothing in memory, only what the device kept.
+        val history = newUseCase().getRewardHistory(Chain.ThorChain, NODE, ME)
+
+        assertEquals(listOf(100L), history.rewards.map { it.churnHeight })
+        assertTrue(history.isComplete)
+        coVerify(exactly = 1) { thorchainBondRepository.getNodeDetailsAtHeight(NODE, 199) }
+        coVerify(exactly = 1) { thorchainBondRepository.getNodeDetailsAtHeight(NODE, 99) }
     }
 
     @Test
@@ -141,7 +195,8 @@ internal class BondRewardHistoryUseCaseTest {
 
         val history = useCase.getRewardHistory(Chain.ThorChain, NODE, ME)
 
-        assertEquals(listOf(300L), history.map { it.churnHeight })
+        assertEquals(listOf(300L), history.rewards.map { it.churnHeight })
+        assertTrue(history.isComplete)
     }
 
     @Test
@@ -233,7 +288,30 @@ internal class BondRewardHistoryUseCaseTest {
     private fun churn(height: Long, dateMillis: Long = height * 1_000L) =
         ChurnEntry(date = (dateMillis * 1_000_000L).toString(), height = height.toString())
 
+    private class FakeAppDataStore : AppDataStore {
+        private val prefs = MutableStateFlow<Preferences>(emptyPreferences())
+
+        override suspend fun editData(
+            transform: suspend (MutablePreferences) -> Unit
+        ): Preferences {
+            val mutable = prefs.value.toMutablePreferences()
+            transform(mutable)
+            return mutable.toPreferences().also { prefs.value = it }
+        }
+
+        override fun <T> readData(key: Preferences.Key<T>, defaultValue: T): Flow<T> =
+            prefs.map { it[key] ?: defaultValue }
+
+        override suspend fun <T> set(key: Preferences.Key<T>, value: T) {
+            editData { it[key] = value }
+        }
+
+        override fun <T> readData(key: Preferences.Key<T>): Flow<T?> = prefs.map { it[key] }
+    }
+
     private companion object {
+        val PRUNED =
+            IllegalStateException("failed to load state at height 99; no commit info found")
         const val NODE = "thor10czf2s89h79fsjmqqck85cdqeq536hw5ngz4lt"
         const val ME = "thor18zg6y8ylus8n3tpzu5xxge3yyquj03vylstrl3"
         const val OTHERS = "thor1hxrydan0eypp5eutah2dt63swnqwzuvc0elgmd"

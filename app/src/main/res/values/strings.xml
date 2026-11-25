@@ -58,6 +58,7 @@
     <string name="reward_history_node">Node: %s</string>
     <string name="reward_history_upcoming">Upcoming</string>
     <string name="reward_history_error">Couldn\'t load reward history</string>
+    <string name="reward_history_partial">Some rewards couldn\'t be loaded</string>
     <string name="next_payout">Next Payout</string>
     <string name="wait_until_node_churned_out">Wait until node is churned out</string>
     <string name="deposit_option_leave">Leave</string>

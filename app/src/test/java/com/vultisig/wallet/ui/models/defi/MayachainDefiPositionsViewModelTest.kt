@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.BondChurnReward
+import com.vultisig.wallet.data.usecases.BondRewardHistory
 import com.vultisig.wallet.data.usecases.BondRewardHistoryUseCase
 import com.vultisig.wallet.data.usecases.MayachainBondUseCase
 import com.vultisig.wallet.ui.navigation.Destination
@@ -105,7 +106,7 @@ internal class MayachainDefiPositionsViewModelTest {
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
         coEvery { bondRewardHistoryUseCase.getLastReward(any(), any(), any()) } returns null
         coEvery { bondRewardHistoryUseCase.getRewardHistory(any(), any(), any()) } returns
-            emptyList()
+            BondRewardHistory(rewards = emptyList(), isComplete = true)
         coEvery { balanceVisibilityRepository.getVisibility(VAULT_ID) } returns true
         coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
         coEvery { appCurrencyRepository.getCurrencyFormat() } returns
@@ -1078,7 +1079,11 @@ internal class MayachainDefiPositionsViewModelTest {
         } returns BondChurnReward(1L, Date(0), BigInteger("35106321933"))
         coEvery {
             bondRewardHistoryUseCase.getRewardHistory(Chain.MayaChain, NODE_ADDRESS, CACAO_ADDRESS)
-        } returns listOf(BondChurnReward(1L, Date(0), BigInteger("35106321933")))
+        } returns
+            BondRewardHistory(
+                rewards = listOf(BondChurnReward(1L, Date(0), BigInteger("35106321933"))),
+                isComplete = true,
+            )
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         vm.onClickLastReward(NODE_ADDRESS)
