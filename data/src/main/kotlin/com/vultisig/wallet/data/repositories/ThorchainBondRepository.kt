@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.thorchain.BondedNodesResponse
 import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
+import com.vultisig.wallet.data.api.models.thorchain.MidgardUnbondAction
 import com.vultisig.wallet.data.api.models.thorchain.MidgardHealth
 import com.vultisig.wallet.data.api.models.thorchain.MidgardNetworkData
 import com.vultisig.wallet.data.api.models.thorchain.NodeDetailsResponse
@@ -20,6 +21,13 @@ interface ThorchainBondRepository {
     suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): NodeDetailsResponse
 
     suspend fun getChurns(): List<ChurnEntry>
+
+    /** See the chain API's `getUnbondActions`. */
+    suspend fun getUnbondActions(
+        address: String,
+        fromHeight: Long,
+        beforeHeight: Long?,
+    ): List<MidgardUnbondAction>
 
     suspend fun getChurnInterval(): Long
 
@@ -96,6 +104,12 @@ constructor(private val thorChainApi: ThorChainApi, timeSource: TimeSource) :
             throw e
         }
     }
+
+    override suspend fun getUnbondActions(
+        address: String,
+        fromHeight: Long,
+        beforeHeight: Long?,
+    ): List<MidgardUnbondAction> = thorChainApi.getUnbondActions(address, fromHeight, beforeHeight)
 
     override suspend fun getChurnInterval(): Long {
         return try {

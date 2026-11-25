@@ -119,15 +119,6 @@ private fun RewardHistoryContent(
                     color = Theme.v2.colors.text.tertiary,
                     textAlign = TextAlign.Center,
                 )
-
-                if (model.isPartial) {
-                    Text(
-                        text = stringResource(R.string.reward_history_partial),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.alerts.warning,
-                        textAlign = TextAlign.Center,
-                    )
-                }
             }
 
             UiSpacer(20.dp)

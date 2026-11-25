@@ -517,7 +517,6 @@
     <string name="reward_history_node">Nó: %s</string>
     <string name="reward_history_upcoming">Próxima</string>
     <string name="reward_history_error">Não foi possível carregar o histórico de recompensas</string>
-    <string name="reward_history_partial">Não foi possível carregar algumas recompensas</string>
     <string name="next_payout">Próximo pagamento</string>
     <string name="wait_until_node_churned_out">Aguarde até o nó sair no churn</string>
     <string name="deposit_option_leave">Sair</string>

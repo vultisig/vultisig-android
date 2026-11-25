@@ -516,7 +516,6 @@
     <string name="reward_history_node">Knoten: %s</string>
     <string name="reward_history_upcoming">Anstehend</string>
     <string name="reward_history_error">Belohnungsverlauf konnte nicht geladen werden</string>
-    <string name="reward_history_partial">Einige Belohnungen konnten nicht geladen werden</string>
     <string name="next_payout">Nächste Auszahlung</string>
     <string name="wait_until_node_churned_out">Warten Sie, bis der Knoten ausgeschieden ist</string>
     <string name="deposit_option_leave">Verlassen</string>

@@ -12,6 +12,9 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
+import com.vultisig.wallet.data.api.models.thorchain.MIDGARD_ACTIONS_PAGE_LIMIT
+import com.vultisig.wallet.data.api.models.thorchain.MidgardUnbondAction
+import com.vultisig.wallet.data.api.models.thorchain.MidgardUnbondActionsResponse
 import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STREAMING_INTERVAL
@@ -76,6 +79,17 @@ interface MayaChainApi {
     suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): MayaNodeInfo
 
     suspend fun getChurns(): List<ChurnEntry>
+
+    /**
+     * The newest [MIDGARD_ACTIONS_PAGE_LIMIT] unbonds involving [address] at heights from
+     * [fromHeight] up to, not including, [beforeHeight] (no upper bound when null), newest first.
+     * Asked by node address, this includes unbonds the operator sent for its providers.
+     */
+    suspend fun getUnbondActions(
+        address: String,
+        fromHeight: Long,
+        beforeHeight: Long?,
+    ): List<MidgardUnbondAction>
 
     suspend fun getMidgardNetworkData(): MayaMidgardNetworkData
 
@@ -349,6 +363,23 @@ constructor(
         httpClient
             .get("$MAYA_MIDGARD_BASE/churns") { header(xClientID, xClientIDValue) }
             .bodyOrThrow<List<ChurnEntry>>()
+
+    override suspend fun getUnbondActions(
+        address: String,
+        fromHeight: Long,
+        beforeHeight: Long?,
+    ): List<MidgardUnbondAction> =
+        httpClient
+            .get("$MAYA_MIDGARD_BASE/actions") {
+                header(xClientID, xClientIDValue)
+                parameter("address", address)
+                parameter("type", "unbond")
+                parameter("limit", MIDGARD_ACTIONS_PAGE_LIMIT)
+                parameter("fromHeight", fromHeight)
+                beforeHeight?.let { parameter("height", it) }
+            }
+            .bodyOrThrow<MidgardUnbondActionsResponse>()
+            .actions
 
     override suspend fun getMidgardNetworkData(): MayaMidgardNetworkData =
         httpClient

@@ -4,7 +4,6 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.data.usecases.BondChurnReward
-import com.vultisig.wallet.data.usecases.BondRewardHistoryUseCase
 import java.io.IOException
 import java.util.Date
 import javax.inject.Inject
@@ -16,8 +15,8 @@ import timber.log.Timber
  * The churn rewards a bond provider has already been paid on a node, kept on the device.
  *
  * A past churn's reward never changes, so it is read from the network once. Nodes keep only recent
- * state, so this copy is also the only source for churns they have since pruned. At most
- * [BondRewardHistoryUseCase.MAX_CHURNS] rows per chain, node and bond address, newest kept.
+ * state, so this copy is also the only source for churns they have since pruned. Rows are kept
+ * for good, per chain, node and bond address.
  *
  * Best effort: a storage failure is logged and reads as nothing saved, so it never costs the
  * rewards the network did return.
@@ -53,12 +52,7 @@ class BondRewardCacheRepository @Inject constructor(private val dataStore: AppDa
             dataStore.editData { preferences ->
                 val merged =
                     decodeAll(preferences[key].orEmpty()) + rewards.associateBy { it.churnHeight }
-                preferences[key] =
-                    merged.values
-                        .sortedByDescending { it.churnHeight }
-                        .take(BondRewardHistoryUseCase.MAX_CHURNS)
-                        .map(::encode)
-                        .toSet()
+                preferences[key] = merged.values.map(::encode).toSet()
             }
         } catch (e: IOException) {
             Timber.e(e, "Failed to save bond rewards for %s", nodeAddress)

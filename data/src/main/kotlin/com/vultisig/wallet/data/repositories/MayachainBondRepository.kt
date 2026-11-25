@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.MayaMidgardNetworkData
 import com.vultisig.wallet.data.api.MayaNodeInfo
 import com.vultisig.wallet.data.api.MayaNodePool
 import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
+import com.vultisig.wallet.data.api.models.thorchain.MidgardUnbondAction
 import com.vultisig.wallet.data.utils.SimpleCache
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,6 +29,13 @@ interface MayachainBondRepository {
     suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): MayaNodeInfo
 
     suspend fun getChurns(): List<ChurnEntry>
+
+    /** See the chain API's `getUnbondActions`. */
+    suspend fun getUnbondActions(
+        address: String,
+        fromHeight: Long,
+        beforeHeight: Long?,
+    ): List<MidgardUnbondAction>
 
     suspend fun getMidgardNetworkData(): MayaMidgardNetworkData
 
@@ -114,6 +122,12 @@ constructor(private val mayaChainApi: MayaChainApi, timeSource: TimeSource) :
             throw e
         }
     }
+
+    override suspend fun getUnbondActions(
+        address: String,
+        fromHeight: Long,
+        beforeHeight: Long?,
+    ): List<MidgardUnbondAction> = mayaChainApi.getUnbondActions(address, fromHeight, beforeHeight)
 
     override suspend fun getMidgardNetworkData(): MayaMidgardNetworkData {
         return try {
