@@ -122,7 +122,6 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Arbitrum,
                 Chain.Avalanche,
                 Chain.Base,
-                Chain.Blast,
                 Chain.BscChain,
                 Chain.Cardano,
                 Chain.CronosChain,
@@ -158,7 +157,6 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Base -> "https://basescan.org/"
                 Chain.Bitcoin -> "https://mempool.space/"
                 Chain.BitcoinCash -> "https://blockchair.com/bitcoin-cash/"
-                Chain.Blast -> "https://blastscan.io/"
                 Chain.BscChain -> "https://bscscan.com/"
                 Chain.CronosChain -> "https://cronoscan.com/"
                 Chain.Dash -> "https://blockchair.com/dash/"

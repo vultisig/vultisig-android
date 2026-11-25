@@ -617,7 +617,7 @@ internal class SwapGasCalculatorTest {
         }
 
     /**
-     * OP-stack L2s (Base/Optimism/Blast) fold an L1 data fee into the baseline, which the gas-limit
+     * OP-stack L2s (Base/Optimism) fold an L1 data fee into the baseline, which the gas-limit
      * ratio must not scale — so the rebase is skipped there even when route gas exceeds 600k
      * (#5056, CodeRabbit). Base native floors at 600k via getGasLimit==null, and routeGas 900k
      * would otherwise rebase up.

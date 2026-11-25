@@ -140,7 +140,6 @@ constructor(private val poolEligibility: SwapPoolEligibilityRepository) : SwapPr
                 mayaPlusEvmAggregators
             Chain.Arbitrum -> evmAggregators
 
-            Chain.Blast,
             Chain.CronosChain -> setOf(SwapProvider.LIFI)
 
             Chain.Solana if coin.isNativeToken ->

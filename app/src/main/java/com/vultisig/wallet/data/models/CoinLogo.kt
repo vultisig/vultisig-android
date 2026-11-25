@@ -50,7 +50,6 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         "optimism" -> R.drawable.optimism
         "eth_polygon" -> R.drawable.polygon
         "bsc" -> R.drawable.bsc
-        "blast" -> R.drawable.blast
         "cro" -> R.drawable.cro
         "arbitrum" -> R.drawable.arbitrum
         "kuji" -> R.drawable.kuji

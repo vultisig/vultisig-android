@@ -23,7 +23,6 @@ object CustomRpcSupportedChains {
             Chain.Polygon,
             Chain.Optimism,
             Chain.CronosChain,
-            Chain.Blast,
             Chain.Base,
             Chain.Arbitrum,
             Chain.ZkSync,

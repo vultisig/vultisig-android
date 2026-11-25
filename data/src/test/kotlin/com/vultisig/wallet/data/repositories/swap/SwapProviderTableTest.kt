@@ -75,7 +75,7 @@ internal class SwapProviderTableTest {
         // Boundary guard the other way. Opening the chain list did not make it unbounded: a chain
         // with no SwapKit-reachable account here would mint a garbage asset id and 500 from the
         // proxy. Sei is the one EVM network excluded outright — the wallet holds it but does not
-        // swap on it at all. ZkSync, Mantle, Blast and Cronos are excluded for the other reason:
+        // swap on it at all. ZkSync, Mantle and Cronos are excluded for the other reason:
         // SwapKit has no asset-identifier spelling for them, so a quote could never be addressed
         // and offering one would only cost the pair its immediate "no route" answer.
         val nonSwapKitCoins =
@@ -83,7 +83,6 @@ internal class SwapProviderTableTest {
                 coin(Chain.Sei, "SEI", isNative = true),
                 coin(Chain.ZkSync, "ETH", isNative = true),
                 coin(Chain.Mantle, "MNT", isNative = true),
-                coin(Chain.Blast, "ETH", isNative = true),
                 coin(Chain.CronosChain, "CRO", isNative = true),
                 coin(Chain.GaiaChain, "ATOM", isNative = true),
                 coin(Chain.ThorChain, "RUNE", isNative = true),

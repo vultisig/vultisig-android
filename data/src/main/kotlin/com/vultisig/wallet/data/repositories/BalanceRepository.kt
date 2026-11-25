@@ -36,7 +36,6 @@ import com.vultisig.wallet.data.models.Chain.Avalanche
 import com.vultisig.wallet.data.models.Chain.Base
 import com.vultisig.wallet.data.models.Chain.Bitcoin
 import com.vultisig.wallet.data.models.Chain.BitcoinCash
-import com.vultisig.wallet.data.models.Chain.Blast
 import com.vultisig.wallet.data.models.Chain.BscChain
 import com.vultisig.wallet.data.models.Chain.CronosChain
 import com.vultisig.wallet.data.models.Chain.Dash
@@ -560,7 +559,6 @@ constructor(
                             Polygon,
                             Optimism,
                             Mantle,
-                            Blast,
                             CronosChain,
                             ZkSync,
                             Sei,

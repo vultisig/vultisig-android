@@ -127,7 +127,6 @@ constructor(private val httpClient: HttpClient, private val timeSource: TimeSour
             Chain.Polygon -> 137
             Chain.Optimism -> 10
             Chain.CronosChain -> 25
-            Chain.Blast -> 81457
             Chain.Base -> 8453
             Chain.Arbitrum -> 42161
             Chain.ZkSync -> 324

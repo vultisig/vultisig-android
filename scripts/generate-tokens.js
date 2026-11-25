@@ -13,7 +13,6 @@ const chainMap = {
     bscchain: "BscChain",
     cronoschain: "CronosChain",
     bsc: "BscChain",
-    blast: "Blast",
     ethereum: "Ethereum",
     optimism: "Optimism",
     polygon: "Polygon",

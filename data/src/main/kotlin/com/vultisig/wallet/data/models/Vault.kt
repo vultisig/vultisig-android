@@ -216,7 +216,6 @@ fun Vault.getPubKeyByChain(chain: Chain): String {
         Chain.Base,
         Chain.CronosChain,
         Chain.BscChain,
-        Chain.Blast,
         Chain.Ethereum,
         Chain.Optimism,
         Chain.Polygon,

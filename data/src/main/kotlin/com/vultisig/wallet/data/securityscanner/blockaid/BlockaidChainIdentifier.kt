@@ -18,7 +18,6 @@ internal object BlockaidChainIdentifier {
             Chain.Arbitrum -> "arbitrum"
             Chain.Avalanche -> "avalanche"
             Chain.Base -> "base"
-            Chain.Blast -> "blast"
             Chain.BscChain -> "bsc"
             Chain.Bitcoin -> "bitcoin"
             Chain.Ethereum -> "ethereum"
