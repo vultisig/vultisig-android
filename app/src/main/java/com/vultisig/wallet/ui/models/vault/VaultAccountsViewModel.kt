@@ -22,9 +22,12 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsPartialFiatValue
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesPartialFiatValue
+import com.vultisig.wallet.data.models.combinedWalletAndDeFiTotal
+import com.vultisig.wallet.data.models.deFiNotInWalletTotal
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.models.isSwapSupported
+import com.vultisig.wallet.data.models.selectedDeFiAddresses
 import com.vultisig.wallet.data.models.toDefi
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
@@ -760,15 +763,11 @@ constructor(
                         "DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts, selected chains: ${selectedDeFiChains.map { it.raw }}"
                     )
 
-                    val filteredAccounts = accounts.filter { address ->
-                        val isSelected = selectedDeFiChains.contains(address.chain)
-                        // New Circle (USDC yield) deposits are disabled: only surface the
-                        // Circle (Ethereum DeFi) row for vaults that already opened an
-                        // account, so they can still withdraw.
-                        val isCircleAllowed = address.chain != Chain.Ethereum || hasCircleAccount
-                        Timber.d("Chain ${address.chain.raw} is selected: $isSelected")
-                        isSelected && isCircleAllowed
-                    }
+                    val filteredAccounts =
+                        accounts.selectedDeFiAddresses(
+                            selectedChains = selectedDeFiChains,
+                            hasCircleAccount = hasCircleAccount,
+                        )
 
                     Timber.d("Filtered DeFi accounts: ${filteredAccounts.size} accounts")
 
@@ -829,7 +828,10 @@ constructor(
             merged.map { addressToUiModelMapper(it) }.filteredAccounts(searchQuery)
 
         if (isDefi) deFiNotInWalletTotal = merged.deFiNotInWalletTotal() else walletTotal = total
-        val combinedFiatValue = combinedTotal()?.let { fiatValueToStringMapper(it) }
+        val combinedFiatValue =
+            combinedWalletAndDeFiTotal(walletTotal, deFiNotInWalletTotal)?.let {
+                fiatValueToStringMapper(it)
+            }
 
         uiState.update { state ->
             if (!isDefi) {
@@ -852,24 +854,6 @@ constructor(
         }
 
         Timber.d("Update updateUiStateFromList: %s", "$this")
-    }
-
-    /** Excludes receipts the wallet total already counts; position-only accounts are not in it. */
-    private fun List<Address>.deFiNotInWalletTotal(): FiatValue? =
-        flatMap { it.accounts }
-            .filterNot { !it.isPositionOnly && Coins.isWalletHeldDefiReceipt(it.token) }
-            .calculateAccountsPartialFiatValue()
-
-    /**
-     * Wallet plus DeFi-not-in-wallet; waits for the wallet total, and reads a DeFi side with
-     * nothing resolved (no DeFi chains, or not loaded yet) as adding nothing.
-     */
-    private fun combinedTotal(): FiatValue? {
-        val wallet = walletTotal ?: return null
-        val deFi = deFiNotInWalletTotal ?: return wallet
-        // The two load separately, so one can still be in the previous currency.
-        if (deFi.currency != wallet.currency) return null
-        return FiatValue(wallet.value + deFi.value, wallet.currency)
     }
 
     /**

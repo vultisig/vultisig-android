@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.repositories.FolderRepository
+import com.vultisig.wallet.data.repositories.HomeDisplayRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.usecases.GetOrderedVaults
@@ -19,6 +20,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -39,7 +42,11 @@ constructor(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultAndBalanceUseCase: VaultAndBalanceUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
+    private val homeDisplayRepository: HomeDisplayRepository,
 ) : ViewModel() {
+    // Every DataStore write re-emits the setting; only a real change should re-read the balances.
+    private val balanceDisplay = homeDisplayRepository.balanceDisplay.distinctUntilChanged()
+
     private var folderId: String? = null
 
     val state = MutableStateFlow(FolderUiModel())
@@ -55,20 +62,24 @@ constructor(
     private fun collectVaults() =
         viewModelScope.launch {
             val folderId = folderId ?: return@launch
-            getOrderedVaults(folderId).collect { orderedVaults ->
-                val vaultAndBalances = orderedVaults.map { vaultAndBalanceUseCase(it) }
+            // Re-read on a Home display change: each balance follows it.
+            getOrderedVaults(folderId)
+                .combine(balanceDisplay) { orderedVaults, _ -> orderedVaults }
+                .collect { orderedVaults ->
+                    val vaultAndBalances = orderedVaults.map { vaultAndBalanceUseCase(it) }
 
-                val totalBalance =
-                    vaultAndBalances
-                        .mapNotNull { it.balanceFiatValue }
-                        .reduceOrNull { acc, balance -> acc + balance }
-                state.update {
-                    it.copy(
-                        vaults = vaultAndBalances,
-                        totalBalance = totalBalance?.let { fiatValueToStringMapper(totalBalance) },
-                    )
+                    val totalBalance =
+                        vaultAndBalances
+                            .mapNotNull { it.balanceFiatValue }
+                            .reduceOrNull { acc, balance -> acc + balance }
+                    state.update {
+                        it.copy(
+                            vaults = vaultAndBalances,
+                            totalBalance =
+                                totalBalance?.let { fiatValueToStringMapper(totalBalance) },
+                        )
+                    }
                 }
-            }
         }
 
     private fun getFolder() =

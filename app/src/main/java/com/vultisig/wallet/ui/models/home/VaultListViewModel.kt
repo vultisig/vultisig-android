@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.DepositDeeplinkData
 import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.FolderRepository
+import com.vultisig.wallet.data.repositories.HomeDisplayRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.order.FolderOrderRepository
@@ -28,6 +29,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -58,7 +60,11 @@ constructor(
     private val vaultAndBalanceUseCase: VaultAndBalanceUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val snackbarFlow: SnackbarFlow,
+    private val homeDisplayRepository: HomeDisplayRepository,
 ) : ViewModel() {
+
+    // Every DataStore write re-emits the setting; only a real change should re-read the balances.
+    private val balanceDisplay = homeDisplayRepository.balanceDisplay.distinctUntilChanged()
 
     val state = MutableStateFlow(VaultListUiModel())
 
@@ -83,27 +89,35 @@ constructor(
         collectVaultsJob?.cancel()
         collectVaultsJob =
             viewModelScope.launch {
-                getOrderedVaults(null).collect { orderedVaults ->
-                    val vaultAndBalances = orderedVaults.map { vaultAndBalanceUseCase(it) }
-                    state.update { it.copy(vaults = vaultAndBalances) }
-                }
+                // Re-read on a Home display change: each balance follows it.
+                getOrderedVaults(null)
+                    .combine(balanceDisplay) { orderedVaults, _ -> orderedVaults }
+                    .collect { orderedVaults ->
+                        val vaultAndBalances = orderedVaults.map { vaultAndBalanceUseCase(it) }
+                        state.update { it.copy(vaults = vaultAndBalances) }
+                    }
             }
     }
 
     private fun collectTotalVaultAndBalance() {
         viewModelScope.launch {
-            vaultRepository.getAllAsFlow().collect { vaults ->
-                val fiatValues = vaults.mapNotNull { vaultAndBalanceUseCase(it).balanceFiatValue }
+            vaultRepository
+                .getAllAsFlow()
+                .combine(balanceDisplay) { vaults, _ -> vaults }
+                .collect { vaults ->
+                    val fiatValues =
+                        vaults.mapNotNull { vaultAndBalanceUseCase(it).balanceFiatValue }
 
-                val totalBalance = fiatValues.reduceOrNull { acc, value -> acc + value }
+                    val totalBalance = fiatValues.reduceOrNull { acc, value -> acc + value }
 
-                state.update {
-                    it.copy(
-                        totalVaultsCount = vaults.size,
-                        totalBalance = totalBalance?.let { fiatValueToStringMapper(totalBalance) },
-                    )
+                    state.update {
+                        it.copy(
+                            totalVaultsCount = vaults.size,
+                            totalBalance =
+                                totalBalance?.let { fiatValueToStringMapper(totalBalance) },
+                        )
+                    }
                 }
-            }
         }
     }
 

@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.home
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.DepositDeeplinkData
+import com.vultisig.wallet.data.models.HomeBalanceDisplay
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetOrderedVaults
@@ -21,6 +22,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -59,6 +61,8 @@ internal class VaultListViewModelDepositDeeplinkTest {
             vaultAndBalanceUseCase = mockk(relaxed = true),
             fiatValueToStringMapper = mockk(relaxed = true),
             snackbarFlow = snackbarFlow,
+            homeDisplayRepository =
+                mockk { every { balanceDisplay } returns flowOf(HomeBalanceDisplay.Separate) },
         )
 
     @Test
