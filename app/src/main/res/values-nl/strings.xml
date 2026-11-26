@@ -515,7 +515,6 @@
     <string name="reward_history_node">Node: %s</string>
     <string name="reward_history_upcoming">Aankomend</string>
     <string name="reward_history_error">Beloningsgeschiedenis kon niet worden geladen</string>
-    <string name="reward_history_partial">Sommige beloningen konden niet worden geladen</string>
     <string name="next_payout">Volgende uitbetaling</string>
     <string name="wait_until_node_churned_out">Wacht tot de node is uitgefaseerd</string>
     <string name="deposit_option_leave">Verlaten</string>

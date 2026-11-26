@@ -517,7 +517,6 @@
     <string name="reward_history_node">Nodo: %s</string>
     <string name="reward_history_upcoming">Próxima</string>
     <string name="reward_history_error">No se pudo cargar el historial de recompensas</string>
-    <string name="reward_history_partial">No se pudieron cargar algunas recompensas</string>
     <string name="next_payout">Próximo Pago</string>
     <string name="wait_until_node_churned_out">Espera hasta que el nodo salga por rotación</string>
     <string name="deposit_option_leave">Salir</string>

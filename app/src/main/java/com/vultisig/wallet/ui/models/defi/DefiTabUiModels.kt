@@ -200,8 +200,6 @@ internal data class RewardHistoryUiModel(
     val upcoming: String?,
     val isLoading: Boolean = true,
     val isError: Boolean = false,
-    /** Some payouts could not be loaded, so [totalEarned] may be short. */
-    val isPartial: Boolean = false,
     /** Sum of [rows], null until the history has loaded. */
     val totalEarned: String? = null,
     /** Newest payout first. */

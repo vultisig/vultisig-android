@@ -20,6 +20,9 @@ import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
 import com.vultisig.wallet.data.api.models.thorchain.BlockNumber
 import com.vultisig.wallet.data.api.models.thorchain.BondedNodesResponse
 import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
+import com.vultisig.wallet.data.api.models.thorchain.MIDGARD_ACTIONS_PAGE_LIMIT
+import com.vultisig.wallet.data.api.models.thorchain.MidgardUnbondAction
+import com.vultisig.wallet.data.api.models.thorchain.MidgardUnbondActionsResponse
 import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.api.models.thorchain.MidgardHealth
 import com.vultisig.wallet.data.api.models.thorchain.MidgardNetworkData
@@ -168,6 +171,17 @@ interface ThorChainApi {
     suspend fun getNodeDetailsAtHeight(nodeAddress: String, height: Long): NodeDetailsResponse
 
     suspend fun getChurns(): List<ChurnEntry>
+
+    /**
+     * The newest [MIDGARD_ACTIONS_PAGE_LIMIT] unbonds involving [address] at heights from
+     * [fromHeight] up to, not including, [beforeHeight] (no upper bound when null), newest first.
+     * Asked by node address, this includes unbonds the operator sent for its providers.
+     */
+    suspend fun getUnbondActions(
+        address: String,
+        fromHeight: Long,
+        beforeHeight: Long?,
+    ): List<MidgardUnbondAction>
 
     suspend fun getChurnInterval(): Long
 
@@ -789,6 +803,23 @@ constructor(
             .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow<List<ChurnEntry>>()
     }
+
+    override suspend fun getUnbondActions(
+        address: String,
+        fromHeight: Long,
+        beforeHeight: Long?,
+    ): List<MidgardUnbondAction> =
+        httpClient
+            .get("$MIDGARD_URL/actions") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+                parameter("address", address)
+                parameter("type", "unbond")
+                parameter("limit", MIDGARD_ACTIONS_PAGE_LIMIT)
+                parameter("fromHeight", fromHeight)
+                beforeHeight?.let { parameter("height", it) }
+            }
+            .bodyOrThrow<MidgardUnbondActionsResponse>()
+            .actions
 
     override suspend fun getChurnInterval(): Long {
         val url = "$THORNODE_BASE/thorchain/mimir/key/CHURNINTERVAL"
