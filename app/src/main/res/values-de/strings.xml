@@ -1921,4 +1921,10 @@
     <string name="market_widget_configure_results">Ergebnisse</string>
     <string name="market_widget_configure_no_results">Keine Kryptowährungen gefunden</string>
     <string name="market_widget_configure_search_failed">Suche fehlgeschlagen. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
+    <string name="rewards_payout">Auszahlung der Belohnungen</string>
+    <string name="rewards_payout_description">Erhalte einen Teil deiner Bond-Belohnungen als RUNE-Auszahlung.</string>
+    <string name="payout_asset">Auszahlungs-Asset</string>
+    <string name="payout_percentage">Auszahlungsanteil</string>
+    <string name="rewards_payout_caption">%1$d %% deiner Bond-Belohnungen werden ausgezahlt. Der Rest wird deinem gebondeten Betrag hinzugefügt.</string>
+    <string name="rewards_payout_caption_none">Alle deine Bond-Belohnungen werden deinem gebondeten Betrag hinzugefügt.</string>
 </resources>

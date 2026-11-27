@@ -41,6 +41,7 @@ internal fun BondedTabContent(
     onClickBond: (String) -> Unit,
     onClickUnbond: (String) -> Unit,
     onClickLastReward: (String) -> Unit,
+    onClickRewardsPayout: ((BondedNodeUiModel) -> Unit)? = null,
     coinName: String = "RUNE",
     coinIconRes: Int = R.drawable.rune,
 ) {
@@ -62,6 +63,7 @@ internal fun BondedTabContent(
                 onClickBond = onClickBond,
                 onClickUnbond = onClickUnbond,
                 onClickLastReward = onClickLastReward,
+                onClickRewardsPayout = onClickRewardsPayout,
                 isBalanceVisible = state.isBalanceVisible,
             )
         }
@@ -74,6 +76,7 @@ internal fun ActiveNodesWidget(
     onClickBond: (String) -> Unit,
     onClickUnbond: (String) -> Unit,
     onClickLastReward: (String) -> Unit,
+    onClickRewardsPayout: ((BondedNodeUiModel) -> Unit)? = null,
     isBalanceVisible: Boolean = true,
 ) {
     Column(
@@ -121,6 +124,7 @@ internal fun ActiveNodesWidget(
                 onClickBond = { onClickBond(node.fullAddress) },
                 onClickUnbond = { onClickUnbond(node.fullAddress) },
                 onClickLastReward = { onClickLastReward(node.fullAddress) },
+                onClickRewardsPayout = onClickRewardsPayout?.let { open -> { open(node) } },
                 isBalanceVisible = isBalanceVisible,
             )
         }
@@ -133,6 +137,7 @@ private fun NodeContent(
     onClickBond: () -> Unit,
     onClickUnbond: () -> Unit,
     onClickLastReward: () -> Unit,
+    onClickRewardsPayout: (() -> Unit)?,
     isBalanceVisible: Boolean = true,
 ) {
     Column {
@@ -250,6 +255,19 @@ private fun NodeContent(
                 text = stringResource(R.string.wait_until_node_churned_out),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
+            )
+        }
+
+        if (onClickRewardsPayout != null) {
+            UiSpacer(16.dp)
+
+            ActionButton(
+                title = stringResource(R.string.rewards_payout),
+                icon = null,
+                variant = ActionButtonVariant.Secondary,
+                onClick = onClickRewardsPayout,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = node.status.canSetBondYield,
             )
         }
     }

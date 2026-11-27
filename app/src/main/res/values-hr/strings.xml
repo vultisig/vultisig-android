@@ -1932,4 +1932,10 @@
     <string name="market_widget_configure_results">Rezultati</string>
     <string name="market_widget_configure_no_results">Nije pronađena nijedna kriptovaluta</string>
     <string name="market_widget_configure_search_failed">Pretraživanje nije uspjelo. Provjerite vezu i pokušajte ponovno.</string>
+    <string name="rewards_payout">Isplata nagrada</string>
+    <string name="rewards_payout_description">Primi dio nagrada od bonda kao isplatu u RUNE.</string>
+    <string name="payout_asset">Imovina isplate</string>
+    <string name="payout_percentage">Postotak isplate</string>
+    <string name="rewards_payout_caption">%1$d%% tvojih nagrada od bonda se isplaćuje. Ostatak se dodaje tvom vezanom iznosu.</string>
+    <string name="rewards_payout_caption_none">Sve tvoje nagrade od bonda dodaju se tvom vezanom iznosu.</string>
 </resources>

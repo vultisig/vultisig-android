@@ -1913,4 +1913,10 @@
     <string name="market_widget_configure_results">Resultaten</string>
     <string name="market_widget_configure_no_results">Geen cryptovaluta\'s gevonden</string>
     <string name="market_widget_configure_search_failed">Zoeken mislukt. Controleer je verbinding en probeer het opnieuw.</string>
+    <string name="rewards_payout">Uitbetaling van beloningen</string>
+    <string name="rewards_payout_description">Ontvang een deel van je bondbeloningen als uitbetaling in RUNE.</string>
+    <string name="payout_asset">Uitbetalingsasset</string>
+    <string name="payout_percentage">Uitbetalingspercentage</string>
+    <string name="rewards_payout_caption">%1$d%% van je bondbeloningen wordt uitbetaald. De rest wordt aan je gebonde bedrag toegevoegd.</string>
+    <string name="rewards_payout_caption_none">Al je bondbeloningen worden aan je gebonde bedrag toegevoegd.</string>
 </resources>

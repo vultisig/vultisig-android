@@ -1925,4 +1925,10 @@
     <string name="market_widget_configure_results">Risultati</string>
     <string name="market_widget_configure_no_results">Nessuna criptovaluta trovata</string>
     <string name="market_widget_configure_search_failed">Ricerca non riuscita. Controlla la connessione e riprova.</string>
+    <string name="rewards_payout">Pagamento ricompense</string>
+    <string name="rewards_payout_description">Ricevi parte delle ricompense del bond come pagamento in RUNE.</string>
+    <string name="payout_asset">Asset di pagamento</string>
+    <string name="payout_percentage">Percentuale di pagamento</string>
+    <string name="rewards_payout_caption">Il %1$d%% delle tue ricompense del bond viene pagato. Il resto viene aggiunto al tuo importo in bond.</string>
+    <string name="rewards_payout_caption_none">Tutte le ricompense del bond vengono aggiunte al tuo importo in bond.</string>
 </resources>

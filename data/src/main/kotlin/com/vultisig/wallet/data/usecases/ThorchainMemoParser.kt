@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.models.OPERATION_BOND
+import com.vultisig.wallet.data.models.OPERATION_BOND_YIELD
 import com.vultisig.wallet.data.models.OPERATION_LEAVE
 import com.vultisig.wallet.data.models.OPERATION_LOAN_CLOSE
 import com.vultisig.wallet.data.models.OPERATION_LOAN_OPEN
@@ -15,7 +16,7 @@ import javax.inject.Inject
  *
  * @property operation Display label for the action (e.g. "Mint", "Withdraw", "Bond").
  * @property pool Pool identifier from the memo, when present.
- * @property nodeAddress Validator node thor1/maya1 address from BOND/UNBOND/LEAVE memos.
+ * @property nodeAddress Validator node thor1/maya1 address from BOND/UNBOND/BONDYIELD/LEAVE memos.
  * @property pairedAddress Asset-side address from LP ADD memos (any chain).
  * @property thorAddress User thor1/maya1 address from SECURE+ mint memos.
  */
@@ -83,6 +84,11 @@ internal class ThorchainMemoParserImpl @Inject constructor() : ThorchainMemoPars
             "UNBOND" ->
                 ParsedThorchainMemo(
                     operation = OPERATION_UNBOND,
+                    nodeAddress = parts.extractNodeAddress(),
+                )
+            "BONDYIELD" ->
+                ParsedThorchainMemo(
+                    operation = OPERATION_BOND_YIELD,
                     nodeAddress = parts.extractNodeAddress(),
                 )
             "LEAVE" ->

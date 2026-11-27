@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.models.OPERATION_BOND
+import com.vultisig.wallet.data.models.OPERATION_BOND_YIELD
 import com.vultisig.wallet.data.models.OPERATION_LEAVE
 import com.vultisig.wallet.data.models.OPERATION_LOAN_CLOSE
 import com.vultisig.wallet.data.models.OPERATION_LOAN_OPEN
@@ -99,6 +100,14 @@ class ThorchainMemoParserTest {
         assertEquals(OPERATION_UNBOND, parsed?.operation)
         assertEquals("maya1nodeaddress", parsed?.nodeAddress)
         assertEquals("", parsed?.pairedAddress)
+    }
+
+    @Test
+    fun `bond yield memo parses to bond yield with the node, not the payout address`() {
+        val parsed = parser.parse("BONDYIELD:thor1node:4000:thor1vault")
+
+        assertEquals(OPERATION_BOND_YIELD, parsed?.operation)
+        assertEquals("thor1node", parsed?.nodeAddress)
     }
 
     @Test

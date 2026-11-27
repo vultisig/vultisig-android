@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.ManagePositionsButton
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.screens.v2.defi.RewardHistorySheet
+import com.vultisig.wallet.ui.screens.v2.defi.RewardsPayoutSheet
 import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasLpPositions
@@ -81,6 +82,15 @@ internal fun ThorchainDefiPositionsScreen(
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.onScreenResumed() }
 
+    var rewardsPayoutNode by remember { mutableStateOf<BondedNodeUiModel?>(null) }
+    rewardsPayoutNode?.let { node ->
+        RewardsPayoutSheet(
+            vaultId = vaultId,
+            node = node,
+            onDismissRequest = { rewardsPayoutNode = null },
+        )
+    }
+
     ThorchainDefiPositionScreenContent(
         state = state,
         isRefreshing = isRefreshing,
@@ -92,6 +102,7 @@ internal fun ThorchainDefiPositionsScreen(
         onClickUnbond = { model.onClickUnBond(it) },
         onClickBond = { model.onClickBond(it) },
         onClickLastReward = model::onClickLastReward,
+        onClickRewardsPayout = { rewardsPayoutNode = it },
         onDismissRewardHistory = model::onDismissRewardHistory,
         onClickTcyRewardHistory = model::onClickTcyRewardHistory,
         onTabSelected = model::onTabSelected,
@@ -120,6 +131,7 @@ internal fun ThorchainDefiPositionScreenContent(
     onClickUnbond: (String) -> Unit,
     onClickBond: (String) -> Unit,
     onClickLastReward: (String) -> Unit = {},
+    onClickRewardsPayout: (BondedNodeUiModel) -> Unit = {},
     onDismissRewardHistory: () -> Unit = {},
     onClickTcyRewardHistory: () -> Unit = {},
     onEditPositionClick: () -> Unit = {},
@@ -216,6 +228,7 @@ internal fun ThorchainDefiPositionScreenContent(
                             onClickUnbond = onClickUnbond,
                             onClickBond = onClickBond,
                             onClickLastReward = onClickLastReward,
+                            onClickRewardsPayout = onClickRewardsPayout,
                         )
 
                     DeFiTab.STAKED.displayNameRes if

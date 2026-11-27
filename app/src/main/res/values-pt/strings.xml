@@ -1919,4 +1919,10 @@
     <string name="market_widget_configure_results">Resultados</string>
     <string name="market_widget_configure_no_results">Nenhuma criptomoeda encontrada</string>
     <string name="market_widget_configure_search_failed">A pesquisa falhou. Verifique sua conexão e tente novamente.</string>
+    <string name="rewards_payout">Pagamento de recompensas</string>
+    <string name="rewards_payout_description">Receba parte das suas recompensas de bond como pagamento em RUNE.</string>
+    <string name="payout_asset">Ativo de pagamento</string>
+    <string name="payout_percentage">Porcentagem de pagamento</string>
+    <string name="rewards_payout_caption">%1$d%% das suas recompensas de bond são pagas. O restante é adicionado ao seu valor vinculado.</string>
+    <string name="rewards_payout_caption_none">Todas as suas recompensas de bond são adicionadas ao seu valor vinculado.</string>
 </resources>

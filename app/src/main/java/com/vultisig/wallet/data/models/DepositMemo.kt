@@ -96,6 +96,26 @@ internal interface DepositMemo {
         }
     }
 
+    /**
+     * THORChain Bond Yield: [payoutPercentage]% of the node's future rewards paid out to
+     * [payoutAddress], the rest rebonded; 0 disables it. The target is always written out because a
+     * non-zero share without one keeps paying whatever target was stored before.
+     */
+    data class BondYield(
+        val nodeAddress: String,
+        val payoutPercentage: Int,
+        val payoutAddress: String,
+    ) : DepositMemo {
+
+        init {
+            require(payoutPercentage in 0..100) { "Payout percentage out of range" }
+        }
+
+        override fun toString(): String =
+            if (payoutPercentage == 0) "BONDYIELD:$nodeAddress:0"
+            else "BONDYIELD:$nodeAddress:${payoutPercentage * 100}:$payoutAddress"
+    }
+
     data class Leave(val nodeAddress: String) : DepositMemo {
 
         override fun toString(): String = buildString {

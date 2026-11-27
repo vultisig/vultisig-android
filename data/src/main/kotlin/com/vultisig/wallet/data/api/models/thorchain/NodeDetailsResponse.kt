@@ -24,4 +24,12 @@ data class BondProviders(
 data class BondProvider(
     @SerialName("bond_address") val bondAddress: String,
     @SerialName("bond") val bond: String,
+    /** Bond Yield payout share in basis points; THORNode omits it when unset (0). */
+    @SerialName("bps") val bps: Int? = null,
 )
+
+/** [address]'s Bond Yield share on this node in basis points; null when it is not a provider. */
+fun NodeDetailsResponse.payoutBps(address: String): Int? =
+    bondProviders.providers
+        .firstOrNull { it.bondAddress.equals(address, ignoreCase = true) }
+        ?.let { it.bps ?: 0 }
