@@ -6,8 +6,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,6 +25,12 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -30,10 +39,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,11 +67,13 @@ import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle
 import com.vultisig.wallet.ui.screens.transaction.components.TypeBadge
 import com.vultisig.wallet.ui.screens.transaction.components.abbreviateAddress
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.VsClipboardService
 import com.vultisig.wallet.ui.utils.asString
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,34 +174,75 @@ internal fun TransactionDetailBottomSheet(
                 }
 
                 if (item.explorerUrl.isNotEmpty()) {
-                    Row(
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier =
-                            Modifier.clickOnce(onClick = { onViewExplorer(item.explorerUrl) })
-                                .border(
-                                    width = 1.dp,
-                                    color = Color(0x08FFFFFF),
-                                    shape = Theme.v2.radius.pill,
-                                )
-                                .background(
-                                    color = Theme.v2.colors.variables.bordersLight,
-                                    shape = Theme.v2.radius.pill,
-                                )
-                                .padding(start = 32.dp, top = 16.dp, end = 32.dp, bottom = 16.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.view_on_explorer),
-                            style = Theme.brockmann.button.medium.medium,
-                            color = Theme.v2.colors.variables.textPrimary,
-                        )
-                    }
+                    ExplorerActions(
+                        explorerUrl = item.explorerUrl,
+                        onViewExplorer = onViewExplorer,
+                    )
                 }
             }
         }
     }
 }
+
+@Composable
+private fun ExplorerActions(explorerUrl: String, onViewExplorer: (String) -> Unit) {
+    val context = LocalContext.current
+    var copyCount by remember { mutableIntStateOf(0) }
+    var linkCopied by remember { mutableStateOf(false) }
+    LaunchedEffect(copyCount) {
+        if (copyCount == 0) return@LaunchedEffect
+        linkCopied = true
+        delay(LINK_COPIED_CONFIRMATION_MS)
+        linkCopied = false
+    }
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+    ) {
+        ExplorerActionPill(
+            label = stringResource(R.string.view_on_explorer),
+            onClick = { onViewExplorer(explorerUrl) },
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
+        ExplorerActionPill(
+            label =
+                stringResource(
+                    if (linkCopied) R.string.transaction_history_link_copied
+                    else R.string.transaction_history_copy_link
+                ),
+            onClick = {
+                VsClipboardService.copy(context, explorerUrl)
+                copyCount++
+            },
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
+    }
+}
+
+@Composable
+private fun ExplorerActionPill(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier =
+            modifier
+                .clickOnce(onClick = onClick)
+                .border(width = 1.dp, color = Color(0x08FFFFFF), shape = Theme.v2.radius.pill)
+                .background(
+                    color = Theme.v2.colors.variables.bordersLight,
+                    shape = Theme.v2.radius.pill,
+                )
+                .padding(16.dp),
+    ) {
+        Text(
+            text = label,
+            style = Theme.brockmann.button.medium.medium,
+            color = Theme.v2.colors.variables.textPrimary,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+private const val LINK_COPIED_CONFIRMATION_MS = 2_000L
 
 @Composable
 private fun SendDetailContent(item: TransactionHistoryItemUiModel.Send) {

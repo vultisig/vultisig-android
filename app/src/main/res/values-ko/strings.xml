@@ -1551,6 +1551,8 @@
     <string name="transaction_history_detail_network">네트워크</string>
     <string name="transaction_history_detail_provider">제공자</string>
     <string name="view_on_explorer">Explorer에서 보기</string>
+    <string name="transaction_history_copy_link">링크 복사</string>
+    <string name="transaction_history_link_copied">링크가 복사됨</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">시드 구문 입력</string>
