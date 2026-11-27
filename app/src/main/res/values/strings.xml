@@ -1608,6 +1608,8 @@
     <string name="transaction_history_detail_network">Network</string>
     <string name="transaction_history_detail_provider">Provider</string>
     <string name="view_on_explorer">View on Explorer</string>
+    <string name="transaction_history_copy_link">Copy Link</string>
+    <string name="transaction_history_link_copied">Link copied</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Enter your seed phrase</string>

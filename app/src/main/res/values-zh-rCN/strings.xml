@@ -1853,6 +1853,8 @@
     <string name="transaction_history_detail_network">网络</string>
     <string name="transaction_history_detail_provider">提供商</string>
     <string name="view_on_explorer">在浏览器中查看</string>
+    <string name="transaction_history_copy_link">复制链接</string>
+    <string name="transaction_history_link_copied">链接已复制</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">输入您的助记词</string>

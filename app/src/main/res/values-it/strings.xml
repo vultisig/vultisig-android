@@ -1527,6 +1527,8 @@
     <string name="transaction_history_detail_network">Rete</string>
     <string name="transaction_history_detail_provider">Fornitore</string>
     <string name="view_on_explorer">Visualizza su Explorer</string>
+    <string name="transaction_history_copy_link">Copia link</string>
+    <string name="transaction_history_link_copied">Link copiato</string>
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Inserisci la tua frase seed</string>
