@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +42,7 @@ import kotlin.math.roundToInt
 
 private val payoutShortcuts = listOf(25, 50, 75, 100)
 private const val RUNE_TICKER = "RUNE"
+private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
 
 /**
  * Rewards Payout for one bonded THORChain node: the share of its future rewards paid out to the
@@ -50,6 +53,7 @@ private const val RUNE_TICKER = "RUNE"
 internal fun RewardsPayoutSheet(
     vaultId: String,
     node: BondedNodeUiModel,
+    isBalanceVisible: Boolean,
     onDismissRequest: () -> Unit,
     model: RewardsPayoutViewModel = hiltViewModel(key = node.fullAddress),
 ) {
@@ -62,6 +66,7 @@ internal fun RewardsPayoutSheet(
         RewardsPayoutContent(
             state = state,
             node = node,
+            isBalanceVisible = isBalanceVisible,
             onPercentageChange = model::setPercentage,
             onRetry = model::retry,
             onContinue = { model.submit(onSubmitted = onDismissRequest) },
@@ -73,6 +78,7 @@ internal fun RewardsPayoutSheet(
 private fun RewardsPayoutContent(
     state: RewardsPayoutUiState,
     node: BondedNodeUiModel,
+    isBalanceVisible: Boolean,
     onPercentageChange: (Int) -> Unit,
     onRetry: () -> Unit,
     onContinue: () -> Unit,
@@ -80,6 +86,7 @@ private fun RewardsPayoutContent(
     Column(
         modifier =
             Modifier.fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, end = 16.dp, top = 31.dp)
                 .navigationBarsPadding()
                 .padding(bottom = 24.dp),
@@ -108,8 +115,14 @@ private fun RewardsPayoutContent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             InfoRow(stringResource(R.string.node_address), node.address)
-            InfoRow(stringResource(R.string.defi_tab_bonded), node.bondedAmount)
-            InfoRow(stringResource(R.string.next_reward), node.nextAward)
+            InfoRow(
+                stringResource(R.string.defi_tab_bonded),
+                if (isBalanceVisible) node.bondedAmount else HIDE_BALANCE_CHARS,
+            )
+            InfoRow(
+                stringResource(R.string.next_reward),
+                if (isBalanceVisible) node.nextAward else HIDE_BALANCE_CHARS,
+            )
         }
 
         if (state.submitFailed) {
@@ -169,7 +182,7 @@ private fun PayoutPercentage(
     onPercentageChange: (Int) -> Unit,
     onRetry: () -> Unit,
 ) {
-    val isLoaded = state.initialPercentage != null
+    val isLoaded = state.currentBps != null
     Column(
         modifier = Modifier.fillMaxWidth().card().padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),

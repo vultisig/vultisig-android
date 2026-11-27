@@ -87,6 +87,7 @@ internal fun ThorchainDefiPositionsScreen(
         RewardsPayoutSheet(
             vaultId = vaultId,
             node = node,
+            isBalanceVisible = state.isBalanceVisible,
             onDismissRequest = { rewardsPayoutNode = null },
         )
     }

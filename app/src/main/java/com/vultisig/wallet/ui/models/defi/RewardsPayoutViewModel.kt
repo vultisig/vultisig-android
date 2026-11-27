@@ -32,14 +32,14 @@ private const val BPS_PER_PERCENT = 100
 @Immutable
 internal data class RewardsPayoutUiState(
     val percentage: Int = 0,
-    /** The share the sheet opened with, in whole percent; null until read, and after a failed read. */
-    val initialPercentage: Int? = null,
+    /** The provider's on-chain Bond Yield share in basis points; null until read, and after a failed read. */
+    val currentBps: Int? = null,
     val loadFailed: Boolean = false,
     val submitFailed: Boolean = false,
     val isSubmitting: Boolean = false,
 ) {
     val canContinue: Boolean
-        get() = initialPercentage != null && !isSubmitting && percentage != initialPercentage
+        get() = currentBps != null && !isSubmitting && percentage * BPS_PER_PERCENT != currentBps
 }
 
 /**
@@ -90,8 +90,7 @@ constructor(
                 val bps =
                     details.payoutBps(nativeRune.address) ?: error("Vault is not a bond provider")
                 rune = nativeRune
-                val loaded = bps / BPS_PER_PERCENT
-                state.update { it.copy(initialPercentage = loaded, percentage = loaded) }
+                state.update { it.copy(currentBps = bps, percentage = bps / BPS_PER_PERCENT) }
             }
     }
 
