@@ -15,17 +15,21 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.retry
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.http.path
 import java.io.IOException
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.buildJsonObject
@@ -101,7 +105,10 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
 
     override suspend fun getSpecific() =
         httpClient
-            .post(tronGrid) { url { path("tron", "wallet", "getnowblock") } }
+            .post(tronGrid) {
+                url { path("tron", "wallet", "getnowblock") }
+                retryIdempotentRead()
+            }
             .bodyOrThrow<TronSpecificBlockJson>()
 
     override suspend fun getTriggerConstantContractFee(
@@ -128,6 +135,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                     // by ~60s, so a just-funded or just-approved account is simulated against stale
                     // state. iOS and the SDK both simulate on the full node.
                     url { path("tron", "wallet", "triggerconstantcontract") }
+                    retryIdempotentRead()
                     setBody(body)
                     accept(ContentType.Application.Json)
                 }
@@ -148,7 +156,10 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
 
     override suspend fun getChainParameters(): TronChainParametersJson {
         return httpClient
-            .post(tronGrid) { url { path("tron", "wallet", "getchainparameters") } }
+            .post(tronGrid) {
+                url { path("tron", "wallet", "getchainparameters") }
+                retryIdempotentRead()
+            }
             .bodyOrThrow<TronChainParametersJson>()
     }
 
@@ -177,6 +188,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
         return httpClient
             .post(tronGrid) {
                 url { path("tron", "wallet", "getaccountresource") }
+                retryIdempotentRead()
                 contentType(ContentType.Application.Json)
                 setBody(TronAccountRequestJson(address, true))
             }
@@ -187,6 +199,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
         return httpClient
             .post(tronGrid) {
                 url { appendPathSegments("/wallet/getaccount") }
+                retryIdempotentRead()
                 contentType(ContentType.Application.Json)
                 setBody(TronAccountRequestJson(address, true))
             }
@@ -207,6 +220,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
             httpClient
                 .post(tronGrid) {
                     url { path("tron", "wallet", "triggerconstantcontract") }
+                    retryIdempotentRead()
                     setBody(body)
                     accept(ContentType.Application.Json)
                 }
@@ -265,11 +279,26 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
         }
     }
 
+    /** Idempotent reads sent as POST, which the client-wide retry policy never resends. */
+    private fun HttpRequestBuilder.retryIdempotentRead() = retry {
+        maxRetries = MAX_READ_RETRIES
+        retryOnExceptionIf { _, cause -> cause !is CancellationException }
+        retryIf { _, response ->
+            response.status.value >= HTTP_SERVER_ERROR ||
+                response.status == HttpStatusCode.TooManyRequests ||
+                response.status == HttpStatusCode.RequestTimeout
+        }
+        // A proxy Retry-After would hold the fee read past the user's wait (as in ThorChainApi).
+        constantDelay(respectRetryAfterHeader = false)
+    }
+
     companion object {
         const val TRANSFER_FUNCTION_SELECTOR = "transfer(address,uint256)"
         private const val DUP_TRANSACTION_ERROR_CODE = "DUP_TRANSACTION_ERROR"
         private const val NOT_ENOUGH_EFFECTIVE_CONNECTION_ERROR_CODE =
             "NOT_ENOUGH_EFFECTIVE_CONNECTION"
         private const val MAX_BROADCAST_RETRIES = 3
+        private const val MAX_READ_RETRIES = 1
+        private const val HTTP_SERVER_ERROR = 500
     }
 }

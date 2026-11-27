@@ -17,10 +17,12 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import timber.log.Timber
 
 /**
  * TRON uses a resource-based fee model instead of a fixed gas fee like Ethereum. Transactions
@@ -89,7 +91,7 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
             val fromAddress = transaction.coin.address
             val toAddress = transaction.to
 
-            val srcAccountDeferred = async { tronApi.getAccountResource(fromAddress) }
+            val srcAccountDeferred = async { getAccountResourceOrNull(fromAddress) }
 
             if (coin.isNativeToken) {
                 // Only a plain transfer can activate its destination, so only it needs to know
@@ -138,6 +140,20 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
     }
 
     private fun TronAccountJson?.isNewAccount(): Boolean = this == null || address.isEmpty()
+
+    /**
+     * Resources only discount the displayed fee, never the signed `fee_limit`; a failed read shows the
+     * full burn.
+     */
+    private suspend fun getAccountResourceOrNull(address: String): TronAccountResourceJson? =
+        try {
+            tronApi.getAccountResource(address)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Tron account resources unavailable, pricing without staked resources")
+            null
+        }
 
     /**
      * Tron burns the memo fee only for a non-empty `raw_data.data`, so the staking routing signal
