@@ -27,6 +27,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -186,12 +187,13 @@ internal fun TransactionDetailBottomSheet(
 @Composable
 private fun ExplorerActions(explorerUrl: String, onViewExplorer: (String) -> Unit) {
     val context = LocalContext.current
+    var copyCount by remember { mutableIntStateOf(0) }
     var linkCopied by remember { mutableStateOf(false) }
-    LaunchedEffect(linkCopied) {
-        if (linkCopied) {
-            delay(LINK_COPIED_CONFIRMATION_MS)
-            linkCopied = false
-        }
+    LaunchedEffect(copyCount) {
+        if (copyCount == 0) return@LaunchedEffect
+        linkCopied = true
+        delay(LINK_COPIED_CONFIRMATION_MS)
+        linkCopied = false
     }
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -210,7 +212,7 @@ private fun ExplorerActions(explorerUrl: String, onViewExplorer: (String) -> Uni
                 ),
             onClick = {
                 VsClipboardService.copy(context, explorerUrl)
-                linkCopied = true
+                copyCount++
             },
             modifier = Modifier.weight(1f).fillMaxHeight(),
         )
