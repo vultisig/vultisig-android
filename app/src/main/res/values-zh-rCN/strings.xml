@@ -2241,4 +2241,10 @@
     <string name="market_widget_configure_results">搜索结果</string>
     <string name="market_widget_configure_no_results">未找到加密货币</string>
     <string name="market_widget_configure_search_failed">搜索失败。请检查网络连接后重试。</string>
+    <string name="rewards_payout">奖励发放</string>
+    <string name="rewards_payout_description">将部分绑定奖励以 RUNE 形式发放给你。</string>
+    <string name="payout_asset">发放资产</string>
+    <string name="payout_percentage">发放比例</string>
+    <string name="rewards_payout_caption">%1$d%% 的绑定奖励将被发放，其余部分将加回到你的绑定金额中。</string>
+    <string name="rewards_payout_caption_none">所有绑定奖励都将加回到你的绑定金额中。</string>
 </resources>

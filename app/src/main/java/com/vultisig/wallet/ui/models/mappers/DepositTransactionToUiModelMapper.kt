@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.OPERATION_BOND_YIELD
 import com.vultisig.wallet.data.models.OPERATION_KAMINO_DEPOSIT
 import com.vultisig.wallet.data.models.OPERATION_KAMINO_WITHDRAW
 import com.vultisig.wallet.data.models.OPERATION_TONSTAKERS_STAKE
@@ -49,6 +50,7 @@ internal fun depositVerifyTitleRes(
         operation == OPERATION_TONSTAKERS_STAKE -> R.string.cosmos_staking_youre_staking
         operation == OPERATION_TONSTAKERS_UNSTAKE -> R.string.cosmos_staking_youre_unstaking
         operation == OPERATION_UNBOND -> R.string.verify_deposit_unbonding
+        operation == OPERATION_BOND_YIELD -> R.string.rewards_payout
         else -> R.string.verify_deposit_sending
     }
 

@@ -30,6 +30,18 @@ enum class BondNodeState(val state: String) {
                 UNKNOWN -> false
             }
 
+    /** Whether THORChain accepts a BONDYIELD memo for a node in this state. */
+    val canSetBondYield: Boolean
+        get() =
+            when (this) {
+                STANDBY,
+                READY,
+                ACTIVE -> true
+                WHITELISTED,
+                DISABLED,
+                UNKNOWN -> false
+            }
+
     companion object {
         fun String?.fromApiStatus(): BondNodeState {
             return when (this?.lowercase()) {

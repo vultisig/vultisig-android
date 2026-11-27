@@ -1937,4 +1937,10 @@
     <string name="market_widget_configure_results">Результаты</string>
     <string name="market_widget_configure_no_results">Криптовалюты не найдены</string>
     <string name="market_widget_configure_search_failed">Поиск не удался. Проверьте подключение и попробуйте еще раз.</string>
+    <string name="rewards_payout">Выплата наград</string>
+    <string name="rewards_payout_description">Получайте часть наград за бонд в виде выплаты в RUNE.</string>
+    <string name="payout_asset">Актив выплаты</string>
+    <string name="payout_percentage">Доля выплаты</string>
+    <string name="rewards_payout_caption">%1$d%% ваших наград за бонд выплачивается. Остальное добавляется к сумме в бонде.</string>
+    <string name="rewards_payout_caption_none">Все ваши награды за бонд добавляются к сумме в бонде.</string>
 </resources>

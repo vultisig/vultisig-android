@@ -1977,4 +1977,10 @@
     <string name="market_widget_configure_results">Results</string>
     <string name="market_widget_configure_no_results">No cryptocurrencies found</string>
     <string name="market_widget_configure_search_failed">Search failed. Check your connection and try again.</string>
+    <string name="rewards_payout">Rewards Payout</string>
+    <string name="rewards_payout_description">Receive part of your bond rewards as a RUNE payout.</string>
+    <string name="payout_asset">Payout asset</string>
+    <string name="payout_percentage">Payout percentage</string>
+    <string name="rewards_payout_caption">%1$d%% of your bond rewards are paid out. The rest is added back to your bonded amount.</string>
+    <string name="rewards_payout_caption_none">All of your bond rewards are added back to your bonded amount.</string>
 </resources>
