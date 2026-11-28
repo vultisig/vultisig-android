@@ -57,3 +57,20 @@ internal fun parseThorchainMemoDestination(memo: String?): String? {
 
     return segments[2].takeIf { it.isNotBlank() }
 }
+
+/**
+ * The address the swap output is paid out to, as the overview shows it before signing (#6212).
+ *
+ * Read in order of how close each source is to the signed bytes: the THORChain/MayaChain memo's
+ * `DESTINATION` segment, then a custom recipient the user routed the output to, then the vault's own
+ * address on the destination chain. Null when none of them is known, so the overview never shows an
+ * empty destination.
+ */
+internal fun resolveSwapPayoutAddress(
+    memo: String?,
+    externalRecipient: String?,
+    vaultDestinationAddress: String,
+): String? =
+    parseThorchainMemoDestination(memo)
+        ?: externalRecipient?.takeIf { it.isNotBlank() }
+        ?: vaultDestinationAddress.takeIf { it.isNotBlank() }

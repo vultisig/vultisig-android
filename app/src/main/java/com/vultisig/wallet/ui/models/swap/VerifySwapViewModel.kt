@@ -87,6 +87,9 @@ internal data class SwapTransactionUiModel(
     // For native THORChain/MayaChain swaps this is resolved from the signed memo's destination
     // segment rather than form state, so it reflects what's actually signed (#4972).
     val externalRecipient: String? = null,
+    // Address the swap output is paid out to, whether the vault's own or [externalRecipient], so
+    // the overview always names where funds land (#6212). Null when unknown.
+    val payoutAddress: String? = null,
     // Address a SwapKit ERC-20 deposit transfers the sold token to, decoded from the signed
     // calldata; null for every other swap. The tx itself is addressed to the token.
     val depositAddress: String? = null,
@@ -210,26 +213,37 @@ constructor(
             // Recipient parsed from the signed THORChain/MayaChain memo (#4972). Null for swaps
             // whose memo can't carry one (EVM aggregators sign calldata, not a memo) — those fall
             // back to the form-state recipient already mapped onto the UI model (#4858).
+            val vaultDestinationAddress =
+                vault
+                    ?.coins
+                    ?.firstOrNull { it.chain == transaction.dstToken.chain }
+                    ?.address
+                    .orEmpty()
             val memoExternalRecipient =
                 resolveExternalSwapRecipient(
                     memo = transaction.memo,
                     destinationChain = transaction.dstToken.chain,
-                    vaultDestinationAddress =
-                        vault
-                            ?.coins
-                            ?.firstOrNull { it.chain == transaction.dstToken.chain }
-                            ?.address
-                            .orEmpty(),
+                    vaultDestinationAddress = vaultDestinationAddress,
                 )
 
             val mappedTx = mapTransactionToUiModel(transaction)
+            val externalRecipient = memoExternalRecipient ?: mappedTx.externalRecipient
             val consentAllowance = !transaction.isApprovalRequired
             state.update {
                 it.copy(
                     consentAllowance = consentAllowance,
                     tx =
                         mappedTx.copy(
-                            externalRecipient = memoExternalRecipient ?: mappedTx.externalRecipient
+                            externalRecipient = externalRecipient,
+                            payoutAddress =
+                                resolveSwapPayoutAddress(
+                                    memo = transaction.memo,
+                                    externalRecipient = externalRecipient,
+                                    vaultDestinationAddress =
+                                        vaultDestinationAddress.ifBlank {
+                                            transaction.dstToken.address
+                                        },
+                                ),
                         ),
                     vaultName = vaultName?.takeIf { name -> name.isNotEmpty() } ?: "Main Vault",
                 )

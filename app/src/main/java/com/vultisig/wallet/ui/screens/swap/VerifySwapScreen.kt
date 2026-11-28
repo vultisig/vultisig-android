@@ -59,6 +59,7 @@ import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
+import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -248,12 +249,16 @@ private fun VerifySwapSheetDetails(tx: SwapTransactionUiModel, vaultName: String
         ) {
             VerifyVaultRow(name = vaultName, address = tx.src.token.address)
 
-            // External recipient must be visible before signing — never a silent default
-            // (#4858). Only shown when the user routed the output to a custom address, and
-            // given warning emphasis so it reads as a deliberate deviation, not a fee row.
-            tx.externalRecipient
+            // Where the funds land, in full, as a Send review shows it (#6212). It is the address
+            // resolved from the signed memo, never the form's recipient, so a recipient typed
+            // after the quote cannot stand in for where the memo actually pays. Warning emphasis
+            // only when that address is the custom recipient (#4858).
+            val externalRecipient = tx.externalRecipient?.takeIf { it.isNotBlank() }
+            tx.payoutAddress
                 ?.takeIf { it.isNotBlank() }
-                ?.let { recipient -> VerifyExternalRecipientRow(address = recipient) }
+                ?.let { address ->
+                    VerifyPayoutAddress(address = address, isExternal = address == externalRecipient)
+                }
 
             tx.depositAddress?.let { VerifyDepositAddressRow(address = it) }
 
@@ -664,14 +669,17 @@ private fun VerifySwapScreen(
                         metadata = tx.src.token.address,
                     )
 
-                    // External recipient must be visible before signing — never a silent default
-                    // (#4858). Only shown when the user routed the output to a custom address, and
-                    // given warning emphasis so it reads as a deliberate deviation, not a fee row.
-                    tx.externalRecipient
+                    // Where the funds land, same as the initiator's sheet (#6212). Warning
+                    // emphasis only when it is the custom recipient (#4858).
+                    val externalRecipient = tx.externalRecipient?.takeIf { it.isNotBlank() }
+                    tx.payoutAddress
                         ?.takeIf { it.isNotBlank() }
-                        ?.let { recipient ->
+                        ?.let { address ->
                             VerifyCardDivider(size = 20.dp)
-                            VerifyExternalRecipientRow(address = recipient)
+                            VerifyPayoutAddress(
+                                address = address,
+                                isExternal = address == externalRecipient,
+                            )
                         }
 
                     tx.depositAddress?.let {
@@ -1068,29 +1076,28 @@ internal fun VerifyVaultDetails(
 }
 
 /**
- * External-recipient row on the swap verify screen (#4858). Warning-styled so the user registers
- * that the output is routed to an address other than their own vault — the most security-sensitive
- * of the advanced overrides — before signing.
+ * Where the swap output is paid out, centred under the vault row it leaves from (#6212). The full
+ * address sits on one line, shrunk to fit as a Send review draws it. An [isExternal] recipient is
+ * warning-coloured so it reads as a deliberate deviation from the vault's own address (#4858).
  */
 @Composable
-internal fun VerifyExternalRecipientRow(address: String, modifier: Modifier = Modifier) {
-    val display = if (address.length > 8) "${address.take(6)}...${address.takeLast(6)}" else address
-    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+private fun VerifyPayoutAddress(address: String, isExternal: Boolean) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Text(
             text = stringResource(R.string.verify_swap_recipient),
-            style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.alerts.warning,
+            style = Theme.brockmann.supplementary.captionSmall,
+            color = if (isExternal) Theme.v2.colors.alerts.warning else Theme.v2.colors.text.tertiary,
             maxLines = 1,
         )
 
-        Spacer(Modifier.weight(1f))
-
-        Text(
-            text = display,
+        AutoSizingText(
+            text = address,
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.alerts.warning,
-            textAlign = TextAlign.End,
-            maxLines = 1,
+            color = if (isExternal) Theme.v2.colors.alerts.warning else Theme.v2.colors.text.primary,
         )
     }
 }

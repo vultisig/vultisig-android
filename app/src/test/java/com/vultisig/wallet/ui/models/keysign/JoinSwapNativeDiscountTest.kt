@@ -122,6 +122,41 @@ internal class JoinSwapNativeDiscountTest {
         swap.swapTransactionUiModel.vultBpsDiscountFiatValue shouldBe null
     }
 
+    @Test
+    fun `names the payout address from the signed memo, as the initiator does`() = runTest {
+        stub(SwapProvider.THORCHAIN, vultBps = 0)
+
+        val tx =
+            builder()
+                .build(
+                    payload(memo = "=:ETH.ETH:0xpayout"),
+                    SwapPayload.ThorChain(thorPayload),
+                    vault,
+                    AppCurrency.USD,
+                )
+
+        val swap = tx.transactionTypeUiModel as TransactionTypeUiModel.Swap
+        // #6212: the co-signer shows where funds land, read from the bytes it is about to sign.
+        swap.swapTransactionUiModel.payoutAddress shouldBe "0xpayout"
+    }
+
+    @Test
+    fun `falls back to the destination token's address when the memo names none`() = runTest {
+        stub(SwapProvider.THORCHAIN, vultBps = 0)
+
+        val tx =
+            builder()
+                .build(
+                    payload(memo = "=:ETH.ETH"),
+                    SwapPayload.ThorChain(thorPayload),
+                    vault,
+                    AppCurrency.USD,
+                )
+
+        val swap = tx.transactionTypeUiModel as TransactionTypeUiModel.Swap
+        swap.swapTransactionUiModel.payoutAddress shouldBe eth.address
+    }
+
     private fun stub(
         provider: SwapProvider,
         vultBps: Int,
@@ -202,12 +237,12 @@ internal class JoinSwapNativeDiscountTest {
         }
     }
 
-    private fun payload() =
+    private fun payload(memo: String = "=:ETH.ETH:0xdst") =
         KeysignPayload(
             coin = rune,
             toAddress = "thorInbound",
             toAmount = srcValue.value,
-            memo = "=:ETH.ETH:0xdst",
+            memo = memo,
             blockChainSpecific =
                 BlockChainSpecific.THORChain(
                     accountNumber = BigInteger.ZERO,

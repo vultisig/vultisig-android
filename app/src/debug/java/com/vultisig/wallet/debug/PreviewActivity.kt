@@ -454,6 +454,11 @@ class PreviewActivity : ComponentActivity() {
                     "kamino_withdraw_form" -> KaminoAmountPreview(isWithdraw = true)
                     "swap_confirm" -> SwapConfirmPreview()
                     "swap_overview_sheet" -> SwapOverviewSheetPreview()
+                    "swap_overview_sheet_payout" -> SwapPayoutOverviewSheetPreview()
+                    "swap_overview_sheet_external_recipient" ->
+                        SwapPayoutOverviewSheetPreview(
+                            externalRecipient = "cosmos1z8mzakma7vnaajysmtkwt4wgjqr2m84tzvyfkz"
+                        )
                     "send_overview_sheet" -> SendOverviewSheetPreview()
                     "send_overview_sheet_zec" ->
                         SendOverviewSheetPreview(
@@ -1303,6 +1308,48 @@ private fun SwapOverviewSheetPreview() {
                     consentReceiveAmount = true,
                     hasFastSign = true,
                     vaultName = "Main Vault",
+                ),
+            onDismissRequest = {},
+            onFastSignClick = {},
+            onConfirm = {},
+        )
+    }
+}
+
+/**
+ * The RUNE → ATOM swap review from #6212, with the payout address under the vault row: the vault's
+ * own `cosmos1…` address by default, or the warning-styled [externalRecipient] when one is set.
+ */
+@Composable
+private fun SwapPayoutOverviewSheetPreview(externalRecipient: String? = null) {
+    val rune = Coins.ThorChain.RUNE.copy(address = "thor1q8zsl7rr6ndkr0n4qmxtp2vxpq7dpcsn8v79tu")
+    val atom = Coins.GaiaChain.ATOM.copy(address = "cosmos1q8zsl7rr6ndkr0n4qmxtp2vxpq7dpcsnq9mxfy")
+    Box(modifier = Modifier.fillMaxSize()) {
+        SwapScreen(state = SwapFormUiModel(), srcAmountTextFieldState = TextFieldState("1.7"))
+        VerifySwapSheet(
+            state =
+                VerifySwapUiModel(
+                    tx =
+                        SwapTransactionUiModel(
+                            src = ValuedToken(token = rune, value = "1.7", fiatValue = "$2.04"),
+                            dst =
+                                ValuedToken(token = atom, value = "0.469347", fiatValue = "$1.97"),
+                            networkFee =
+                                ValuedToken(token = rune, value = "0.02", fiatValue = "$0.02"),
+                            providerFee =
+                                ValuedToken(token = rune, value = "0.01", fiatValue = "$0.01"),
+                            totalFee = "$0.03",
+                            networkFeeFormatted = "0.02 RUNE ($0.02)",
+                            providerFeeFormatted = "0.01 RUNE ($0.01)",
+                            provider = "THORChain",
+                            externalRecipient = externalRecipient,
+                            payoutAddress = externalRecipient ?: atom.address,
+                            hasConsentAllowance = false,
+                        ),
+                    consentAmount = true,
+                    consentReceiveAmount = true,
+                    hasFastSign = true,
+                    vaultName = "fastandroid",
                 ),
             onDismissRequest = {},
             onFastSignClick = {},
