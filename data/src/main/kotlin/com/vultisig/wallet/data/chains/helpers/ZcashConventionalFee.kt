@@ -10,10 +10,15 @@ package com.vultisig.wallet.data.chains.helpers
  * fee from the same transaction shape, or the MPC preimage digests diverge and keysign fails. Keep
  * the math in lockstep with the SDK (and the iOS `ZcashConventionalFee`) when touching this file.
  *
+ * Marginal fee per logical action: 1,000 zats since ZIP 2009 took effect at mainnet height
+ * 3,590,000 (2026-11-19), down from ZIP 317's 5,000. Do not go lower: Zebra 7.2 beta accepts 400,
+ * but most nodes still don't relay below 1,000.
+ *
  * https://zips.z.cash/zip-0317
+ * https://zips.z.cash/zip-2009
  */
 internal object ZcashConventionalFee {
-    private const val MARGINAL_FEE: Long = 5_000L
+    private const val MARGINAL_FEE: Long = 1_000L
     private const val GRACE_ACTIONS: Long = 2L
     /** Serialized size of a signed transparent P2PKH input (ZIP-317 section 3.1). */
     private const val P2PKH_INPUT_SIZE: Long = 148L
@@ -26,7 +31,7 @@ internal object ZcashConventionalFee {
     fun ceilDiv(value: Long, divisor: Long): Long = (value + divisor - 1) / divisor
 
     /**
-     * Minimum fee the Zcash network relays for a transparent tx of the given shape: 5,000 zats per
+     * Minimum fee the Zcash network relays for a transparent tx of the given shape: 1,000 zats per
      * logical action with a two-action grace window, where logical actions = max(ceil(tx_in bytes /
      * 150), ceil(tx_out bytes / 34)).
      */

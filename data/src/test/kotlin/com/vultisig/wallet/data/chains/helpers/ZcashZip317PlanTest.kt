@@ -8,23 +8,26 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import wallet.core.jni.CoinType
+import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
 /**
- * Real-WalletCore regression for the Zcash ZIP-317 conventional-fee guard in [UtxoHelper].
- * WalletCore's `zip_0317` planner flat-sizes OP_RETURN and ignores `byteFee`, so memo txs plan one
- * logical action short; the helper re-plans with `zip_0317` off until the fee clears the
- * conventional fee.
+ * Real-WalletCore regression for Zcash fee planning in [UtxoHelper]. WalletCore's `zip_0317`
+ * planner hardcodes 5,000 zats per action, flat-sizes OP_RETURN and ignores `byteFee`, so the
+ * helper never uses it: every Zcash plan runs with `zip_0317` off, raising `byteFee` from 1 until
+ * the fee clears the ZIP 2009 conventional fee (1,000 zats per action).
  *
- * Golden vectors mirror the iOS `ZcashZip317PlanTests` (extracted from a live SDK resolver run
- * against wallet-core 4.7.0 — the version this module pins, `gradle/libs.versions.toml`). The
- * planned fee/amount/change must be byte-identical across platforms or MPC co-signing devices
- * derive different preimage digests and keysign fails. Skipped gracefully when the WalletCore
- * native library is unavailable in the JVM test host.
+ * The exact fees are cross-platform vectors shared with the SDK's `utxo.zcashFee.test.ts` and the
+ * iOS `ZcashZip317PlanTests`; the SDK derives them from WalletCore WASM, this module from the
+ * wallet-core version pinned in `gradle/libs.versions.toml`. The planned fee/amount/change must be
+ * byte-identical across platforms or MPC co-signing devices derive different preimage digests and
+ * keysign fails. Skipped gracefully when the WalletCore native library is unavailable in the JVM
+ * test host.
  */
 class ZcashZip317PlanTest {
 
@@ -32,28 +35,55 @@ class ZcashZip317PlanTest {
     private val branchIdHex = "30f33754"
 
     @Test
-    fun `plain send keeps the zip_0317 plan at the floor`() {
+    fun `plain send plans at the 1,000-zat rate, not WalletCore's hardcoded 10,000`() {
+        // Required 2,000; 226 vbytes x ceil(2,000 / 226) = 9 zats/byte.
         planTest(amount = 5_000_000L, balance = 8_300_000L, memo = null) { plan ->
             assertEquals(SigningError.OK, plan.error)
-            assertEquals(10_000L, plan.fee)
+            assertEquals(2_034L, plan.fee)
             assertEquals(5_000_000L, plan.amount)
-            assertEquals(3_290_000L, plan.change)
+            assertEquals(3_297_966L, plan.change)
         }
     }
 
     @Test
-    fun `memo send re-plans to meet the conventional fee`() {
-        // zip_0317 plans 15,000 where ZIP-317 requires 20,000; the guard re-plans to 20,020.
+    fun `plain send-max plans at the 1,000-zat rate`() {
+        // One output, still two grace actions: required 2,000; 192 vbytes x 11.
+        planTest(amount = 2_200_000L, balance = 2_200_000L, memo = null, sendMax = true) { plan ->
+            assertEquals(SigningError.OK, plan.error)
+            assertEquals(2_112L, plan.fee)
+            assertEquals(2_197_888L, plan.amount)
+            assertEquals(0L, plan.change)
+        }
+    }
+
+    @Test
+    fun `never hands the plan to WalletCore's zip_0317 planner`() {
+        val helper = UtxoHelper(CoinType.ZCASH, "", "")
+        try {
+            val payload = makePayload(amount = 5_000_000L, balance = 8_300_000L, memo = null, sendMax = false)
+            val input =
+                Bitcoin.SigningInput.parseFrom(
+                    helper.getSigningInputData(payload, helper.getBitcoinSigningInput(payload))
+                )
+            assertFalse(input.zip0317)
+            assertEquals(2_034L, input.plan.fee)
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `memo send with change meets the conventional fee`() {
         planTest(amount = 5_000_000L, balance = 8_300_000L, memo = "m".repeat(40)) { plan ->
             assertEquals(SigningError.OK, plan.error)
-            assertEquals(20_020L, plan.fee)
+            assertEquals(4_160L, plan.fee)
             assertEquals(5_000_000L, plan.amount)
-            assertEquals(3_279_980L, plan.change)
+            assertEquals(3_295_840L, plan.change)
         }
     }
 
     @Test
-    fun `send-max memo send re-plans to meet the conventional fee`() {
+    fun `send-max memo send meets the conventional fee`() {
         planTest(
             amount = 2_200_000L,
             balance = 2_200_000L,
@@ -61,8 +91,8 @@ class ZcashZip317PlanTest {
             sendMax = true,
         ) { plan ->
             assertEquals(SigningError.OK, plan.error)
-            assertEquals(15_142L, plan.fee)
-            assertEquals(2_184_858L, plan.amount)
+            assertEquals(3_164L, plan.fee)
+            assertEquals(2_196_836L, plan.amount)
             assertEquals(0L, plan.change)
         }
     }
@@ -71,22 +101,21 @@ class ZcashZip317PlanTest {
     fun `long memo spanning extra actions clears the conventional fee`() {
         planTest(amount = 5_000_000L, balance = 8_300_000L, memo = "m".repeat(200)) { plan ->
             assertEquals(SigningError.OK, plan.error)
-            assertEquals(45_240L, plan.fee)
-            assertEquals(3_254_760L, plan.change)
+            assertEquals(9_100L, plan.fee)
+            assertEquals(3_290_900L, plan.change)
         }
     }
 
     @Test
-    fun `Maya-swap-shaped memo re-plans to meet the conventional fee`() {
-        // Maya-native ZEC swaps ride the plain send path with the swap instruction as the memo;
-        // this is the live shape the issue reports.
+    fun `Maya-swap-shaped memo meets the conventional fee`() {
+        // Maya-native ZEC swaps ride the plain send path with the swap instruction as the memo.
         val memo =
             "=:ETH.USDC-0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48:" +
                 "0x92009f858E52D5C48CBaBFE0EE9AB05EF5eEC865:1494322902:vi:35"
         planTest(amount = 5_000_000L, balance = 8_300_000L, memo = memo) { plan ->
             assertEquals(SigningError.OK, plan.error)
-            assertEquals(30_160L, plan.fee)
-            assertEquals(3_269_840L, plan.change)
+            assertEquals(6_240L, plan.fee)
+            assertEquals(3_293_760L, plan.change)
         }
     }
 
@@ -98,8 +127,8 @@ class ZcashZip317PlanTest {
         assertEquals(34, memo.toByteArray(Charsets.UTF_8).size)
         planTest(amount = 5_000_000L, balance = 8_300_000L, memo = memo) { plan ->
             assertEquals(SigningError.OK, plan.error)
-            assertEquals(20_020L, plan.fee)
-            assertEquals(3_279_980L, plan.change)
+            assertEquals(4_160L, plan.fee)
+            assertEquals(3_295_840L, plan.change)
         }
     }
 
@@ -108,7 +137,7 @@ class ZcashZip317PlanTest {
         // Balance can't cover amount + fee + dust, so WalletCore selects no UTXOs. The
         // conventional-fee guard must not hijack this with a ZIP-317 error — the send flow owns the
         // insufficient-funds outcome.
-        planTest(amount = 90_000L, balance = 100_000L, memo = "m".repeat(40)) { plan ->
+        planTest(amount = 99_000L, balance = 100_000L, memo = "m".repeat(40)) { plan ->
             assertTrue(
                 plan.utxosList.isEmpty(),
                 "Expected no selected UTXOs, got ${plan.utxosCount}",

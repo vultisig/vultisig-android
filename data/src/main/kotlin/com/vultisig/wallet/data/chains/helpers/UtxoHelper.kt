@@ -42,7 +42,7 @@ class UtxoHelper(
 ) {
     companion object {
         /**
-         * Max non-ZIP-317 re-plans before giving up raising the Zcash fee. Matches the SDK's cap so
+         * Max byteFee re-plans before giving up raising the Zcash fee. Matches the SDK's cap so
          * every co-signing device fails identically instead of diverging on the plan.
          */
         private const val MAX_ZCASH_FEE_BUMPS = 5
@@ -68,9 +68,10 @@ class UtxoHelper(
     }
 
     /**
-     * Plan the transaction, guarding Zcash plans against WalletCore's underpaying ZIP-317 mode.
-     * Every other coin plans directly. For Zcash the [signingInput] builder is mutated (zip0317
-     * toggled off, byteFee bumped) so the serialized input the digests commit to matches the plan.
+     * Plan the transaction, pricing Zcash plans at the ZIP-317 conventional fee instead of
+     * WalletCore's `zip_0317` mode. Every other coin plans directly. For Zcash the [signingInput]
+     * builder is mutated (zip0317 off, byteFee bumped) so the serialized input the digests commit
+     * to matches the plan.
      */
     private fun planTransaction(
         signingInput: Bitcoin.SigningInput.Builder
@@ -82,22 +83,22 @@ class UtxoHelper(
         }
 
     /**
-     * Produce a Zcash plan whose fee meets the ZIP-317 conventional fee.
+     * Produce a Zcash plan whose fee meets the ZIP-317 conventional fee at 1,000 zats per logical
+     * action (ZIP 2009).
      *
-     * WalletCore's `zip_0317` planner sizes an OP_RETURN output as a flat ~34 bytes and ignores
-     * `byteFee`, so memo transactions (MayaChain-routed swaps carry the swap instruction in an
-     * OP_RETURN; sends with memo too) plan one logical action short — e.g. 15,000 zats where the
-     * network requires 20,000 — with no way to raise the fee in that mode. When the `zip_0317` plan
-     * underpays the byte-accurate conventional fee, re-plan with `zip_0317` off — where WalletCore
-     * honours `byteFee` — and bump `byteFee` until the fee clears. Plain (no-memo) sends already
-     * meet the fee and keep the `zip_0317` plan.
+     * WalletCore's `zip_0317` planner can't do that: it hardcodes 5,000 zats per action, ignores
+     * `byteFee`, and sizes an OP_RETURN output as a flat ~34 bytes. So every Zcash plan is built
+     * with `zip_0317` off — where WalletCore honours `byteFee` — starting at 1 zat/byte and raising
+     * `byteFee` until the fee clears the byte-accurate conventional fee. The result is the
+     * conventional fee rounded up to whole zats per byte.
      *
      * An empty plan (no selected UTXOs) is returned untouched: coin selection produced nothing
      * (insufficient funds), and that flow owns the outcome.
      *
      * Byte-parity port of the SDK's `planZcashConventionalFee` (and iOS `UTXOChainsHelper`) — every
-     * co-signing device must derive the same plan or the MPC preimage digests diverge and keysign
-     * fails. Keep in lockstep with the SDK.
+     * co-signing device must run this exact sequence (start at 1, then the bump formula below) with
+     * the same marginal fee, or the MPC preimage digests diverge and keysign fails. Keep in lockstep
+     * with the SDK.
      */
     private fun planZcashConventionalFee(
         signingInput: Bitcoin.SigningInput.Builder
@@ -118,15 +119,9 @@ class UtxoHelper(
         fun meetsConventionalFee(plan: Bitcoin.TransactionPlan): Boolean =
             plan.utxosCount == 0 || plan.fee >= conventionalFee(plan)
 
-        val zipPlan =
-            AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
-        if (meetsConventionalFee(zipPlan)) {
-            return zipPlan
-        }
-
         signingInput.setZip0317(false)
         var byteFee = 1L
-        var plan = zipPlan
+        var plan = Bitcoin.TransactionPlan.getDefaultInstance()
         repeat(MAX_ZCASH_FEE_BUMPS) {
             signingInput.setByteFee(byteFee)
             plan = AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
@@ -201,7 +196,6 @@ class UtxoHelper(
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
             .setUseMaxAmount(utxo.sendMaxAmount)
             .setByteFee(utxo.byteFee.toLong())
-            .setZip0317(coinType == CoinType.ZCASH)
             .setFixedDustThreshold(coinType.getDustThreshold)
         for (item in keysignPayload.utxos) {
             val lockScript =
@@ -268,7 +262,6 @@ class UtxoHelper(
                 .setToAddress(payeeAddress(keysignPayload))
                 .setChangeAddress(keysignPayload.coin.address)
                 .setByteFee(utxo.byteFee.toLong())
-                .setZip0317(coinType == CoinType.ZCASH)
                 .setCoinType(coinType.value())
                 .setFixedDustThreshold(coinType.getDustThreshold)
         keysignPayload.memo?.let { input.setOutputOpReturn(ByteString.copyFromUtf8(it)) }
