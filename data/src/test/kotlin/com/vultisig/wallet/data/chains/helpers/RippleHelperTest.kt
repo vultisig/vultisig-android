@@ -399,25 +399,4 @@ class RippleHelperTest {
             )
         )
     }
-
-    // One secp256k1 signature in both forms; both verify against the same key and digest, but
-    // rippled only accepts the low-S one (high-S is rejected as temBAD_SIGNATURE).
-    private val lowSSignature =
-        "74d0c86f5ef22554f4fe2486e6441c19eb3993aef1e6c70c6b517e9fa44113b5" +
-            "43872f99d936e796754c32ae9b416d8c2b54aff964900e7fa744b21250839f0e00"
-    private val highSSignature =
-        "74d0c86f5ef22554f4fe2486e6441c19eb3993aef1e6c70c6b517e9fa44113b5" +
-            "bc78d06626c918698ab3cd5164be92728f5a2ced4ab891bc188dac7a7fb2a23301"
-
-    @Test
-    fun `normalizeToLowS rewrites a high-S signature and flips the recovery id`() {
-        val normalized = RippleHelper.normalizeToLowS(highSSignature.hexToByteArray())
-        assertEquals(lowSSignature, normalized.toHexString())
-    }
-
-    @Test
-    fun `normalizeToLowS leaves a low-S signature untouched`() {
-        val normalized = RippleHelper.normalizeToLowS(lowSSignature.hexToByteArray())
-        assertEquals(lowSSignature, normalized.toHexString())
-    }
 }

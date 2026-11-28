@@ -467,15 +467,16 @@ object RippleHelper {
         signatures[key]?.getSignature() ?: error("Signature not found")
 
         signatures[key]?.let {
-            // rippled enforces fully-canonical (low-S) ECDSA signatures and rejects a high-S one
-            // as temBAD_SIGNATURE, while WalletCore's verify and compile both accept it. Normalize
-            // here so every co-signer embeds the same canonical signature and tx hash.
-            val signature = normalizeToLowS(it.getSignatureWithRecoveryID())
-            if (!publicKey.verify(signature, preSigningOutput.dataHash.toByteArray())) {
+            if (
+                !publicKey.verify(
+                    it.getSignatureWithRecoveryID(),
+                    preSigningOutput.dataHash.toByteArray(),
+                )
+            ) {
                 Timber.e("Invalid signature")
                 error("Invalid signature")
             }
-            allSignatures.add(signature)
+            allSignatures.add(it.getSignatureWithRecoveryID())
             publicKeys.add(publicKey.data())
         }
 
@@ -514,29 +515,6 @@ object RippleHelper {
             MessageDigest.getInstance("SHA-512").digest(TRANSACTION_HASH_PREFIX + signedTransaction)
         return digest.copyOfRange(0, 32).toHexString(HexFormat.UpperCase)
     }
-
-    /**
-     * Rewrites a 65-byte `r || s || v` secp256k1 signature into its low-S form (`s ≤ n/2`),
-     * flipping the recovery bit when `s` is replaced by `n − s`. Both forms verify against the
-     * same key and hash, but XRPL only accepts the low-S one.
-     */
-    internal fun normalizeToLowS(signature: ByteArray): ByteArray {
-        require(signature.size == 65) { "Expected a 65-byte r||s||v signature" }
-        val s = BigInteger(1, signature.copyOfRange(32, 64))
-        if (s <= SECP256K1_HALF_ORDER) return signature
-
-        // n − s < n/2 < 2^255, so its two's-complement bytes never exceed 32 (no sign byte).
-        val lowSBytes = (SECP256K1_ORDER - s).toByteArray()
-        val result = signature.copyOf()
-        result.fill(0, fromIndex = 32, toIndex = 64)
-        lowSBytes.copyInto(result, destinationOffset = 64 - lowSBytes.size)
-        result[64] = (result[64].toInt() xor 1).toByte()
-        return result
-    }
-
-    private val SECP256K1_ORDER =
-        BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16)
-    private val SECP256K1_HALF_ORDER = SECP256K1_ORDER.shiftRight(1)
 
     // 0x54584E00 is the ASCII "TXN" mnemonic plus a zero byte: XRPL's transaction-ID hash prefix.
     private val TRANSACTION_HASH_PREFIX = byteArrayOf(0x54, 0x58, 0x4E, 0x00)
