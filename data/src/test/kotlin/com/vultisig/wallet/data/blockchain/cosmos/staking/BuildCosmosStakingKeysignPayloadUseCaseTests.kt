@@ -166,8 +166,8 @@ class BuildCosmosStakingKeysignPayloadUseCaseTests {
 
     @Test
     fun `QBTC coin routes through the ML-DSA resolver and stamps the ML-DSA pubkey`() {
-        val mldsaPubKeyHex = "ab".repeat(1312)
-        val mldsaPubKey = ByteArray(1312) { 0xAB.toByte() }
+        val mldsaPubKeyHex = "ab".repeat(1952)
+        val mldsaPubKey = ByteArray(1952) { 0xAB.toByte() }
         val qbtcCoin =
             Coin(
                 chain = Chain.Qbtc,
@@ -200,7 +200,7 @@ class BuildCosmosStakingKeysignPayloadUseCaseTests {
         assertEquals("qbtc", signDirect.chainId)
         // The AuthInfo must carry the ML-DSA pubkey `Any` and the QBTC base gas/fee — proving the
         // use case dispatched to `resolveMLDSA`, not the secp256k1 `resolve` (which would have
-        // rejected the 1312-byte key).
+        // rejected the 1952-byte key).
         val expectedAuth =
             CosmosStakingHelper.buildAuthInfo(
                 pubKey = mldsaPubKey,

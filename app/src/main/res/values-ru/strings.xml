@@ -27,7 +27,7 @@
     <string name="vault_settings_security_screen_title_content">Вы можете отключить защиту в режиме реального времени, предоставляемую Blockaid.</string>
     <string name="vault_settings_reshare_subtitle">Перераспределить доли хранилища с новым комитетом</string>
     <string name="vault_settings_dilithium_keygen_title">Постквантовый ключ</string>
-    <string name="vault_settings_dilithium_keygen_subtitle">Создайте ключ MLDSA-44 для квантовой устойчивости</string>
+    <string name="vault_settings_dilithium_keygen_subtitle">Создайте ключ MLDSA-65 для квантовой устойчивости</string>
     <string name="vault_settings_delete_title">Удалить</string>
     <string name="vault_settings_delete_subtitle">Безвозвратно удалите долю хранилища</string>
     <string name="vault_settings_security_title">Безопасность в сети</string>

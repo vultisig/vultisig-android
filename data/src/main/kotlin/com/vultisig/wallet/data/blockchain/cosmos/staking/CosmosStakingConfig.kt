@@ -83,7 +83,8 @@ object CosmosStakingConfig {
                     // Redelegate OoG'd at the borrowed 400_000 Terra floor: on-chain
                     // MsgBeginRedelegate burned 400_832 gas (qbtc-testnet tx 67B85E1C…, sdk code
                     // 11 "ReadPerByte"). It's the heaviest single-msg path — the dual-record
-                    // x/staking write plus the per-byte read of QBTC's ~2.4 KB ML-DSA signature
+                    // x/staking write plus the per-byte read of QBTC's ML-DSA signature (~2.4 KB at
+                    // ML-DSA-44 when this was measured, ~3.3 KB at ML-DSA-65)
                     // outruns the floor a single MsgDelegate (simulate burned 278_759) fits in.
                     // Raised to 800_000 (~2x the observed burn). Free here: qbtc-testnet has no
                     // minimum gas price and block.max_gas is -1, so a larger budget moves neither

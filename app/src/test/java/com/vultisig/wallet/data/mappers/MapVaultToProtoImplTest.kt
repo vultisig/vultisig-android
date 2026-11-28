@@ -7,7 +7,10 @@ import com.vultisig.wallet.data.models.ChainPublicKey
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.legacyMldsa44PublicKey
 import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
+import com.vultisig.wallet.data.models.proto.v1.VaultProto
+import com.vultisig.wallet.data.usecases.MalformedVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCaseImpl
 import com.vultisig.wallet.data.usecases.VaultBackupEncryption
 import io.mockk.mockk
@@ -58,10 +61,52 @@ internal class MapVaultToProtoImplTest {
     }
 
     @Test
-    fun `proto carries the MLDSA public key`() {
-        val proto = mapper(vault(pubKeyMLDSA = "mldsaPub"))
+    fun `proto carries an ML-DSA-65 key in public_key_mldsa65`() {
+        val proto = mapper(vault(pubKeyMLDSA = MLDSA65_KEY))
 
-        assertEquals("mldsaPub", proto.publicKeyMldsa44)
+        assertEquals(MLDSA65_KEY, proto.publicKeyMldsa65)
+        assertEquals("", proto.publicKeyMldsa44)
+    }
+
+    @Test
+    fun `proto carries a legacy ML-DSA-44 key in public_key_mldsa44`() {
+        val proto = mapper(vault(pubKeyMLDSA = MLDSA44_KEY))
+
+        assertEquals(MLDSA44_KEY, proto.publicKeyMldsa44)
+        assertEquals("", proto.publicKeyMldsa65)
+    }
+
+    @Test
+    fun `an upgraded vault exports both keys and round-trips to the ML-DSA-65 one`() {
+        val source =
+            vault(pubKeyMLDSA = MLDSA65_KEY).let {
+                it.copy(
+                    keyshares =
+                        it.keyshares +
+                            KeyShare(pubKey = MLDSA44_KEY, keyShare = "legacy") +
+                            KeyShare(pubKey = MLDSA65_KEY, keyShare = "current")
+                )
+            }
+
+        val proto = mapper(source)
+        assertEquals(MLDSA65_KEY, proto.publicKeyMldsa65)
+        assertEquals(MLDSA44_KEY, proto.publicKeyMldsa44)
+
+        val restored = roundTrip(source)
+        assertEquals(MLDSA65_KEY, restored.pubKeyMLDSA)
+        assertEquals(MLDSA44_KEY, restored.legacyMldsa44PublicKey())
+    }
+
+    @Test
+    fun `a backup with only a legacy ML-DSA-44 key restores it as is`() {
+        assertEquals(MLDSA44_KEY, roundTrip(vault(pubKeyMLDSA = MLDSA44_KEY)).pubKeyMLDSA)
+    }
+
+    @Test
+    fun `a backup whose ML-DSA-65 key has the wrong size is refused`() {
+        val proto = mapper(vault()).copy(publicKeyMldsa65 = MLDSA44_KEY)
+
+        assertFailsWith<MalformedVaultException> { parse(proto) }
     }
 
     @Test
@@ -77,7 +122,7 @@ internal class MapVaultToProtoImplTest {
         val source =
             vault(
                 libType = SigningLibType.KeyImport,
-                pubKeyMLDSA = "mldsaPub",
+                pubKeyMLDSA = MLDSA65_KEY,
                 chainPublicKeys =
                     listOf(
                         ChainPublicKey(chain = "Ethereum", publicKey = "ethPub", isEddsa = false),
@@ -88,13 +133,14 @@ internal class MapVaultToProtoImplTest {
         val restored = roundTrip(source)
 
         assertEquals(SigningLibType.KeyImport, restored.libType)
-        assertEquals("mldsaPub", restored.pubKeyMLDSA)
+        assertEquals(MLDSA65_KEY, restored.pubKeyMLDSA)
         assertEquals(2, restored.chainPublicKeys.size)
         assertEquals(source.chainPublicKeys.toSet(), restored.chainPublicKeys.toSet())
     }
 
-    private fun roundTrip(source: Vault): Vault {
-        val proto = mapper(source)
+    private fun roundTrip(source: Vault): Vault = parse(mapper(source))
+
+    private fun parse(proto: VaultProto): Vault {
         val vaultBytes = protoBuf.encodeToByteArray(proto)
         val container = VaultContainerProto(vault = Base64.encode(vaultBytes), isEncrypted = false)
         val containerBytes = protoBuf.encodeToByteArray(container)
@@ -161,5 +207,10 @@ internal class MapVaultToProtoImplTest {
 
         assertFailsWith<VaultKeysharesUnavailableException> { mapper(fromPartialLockedRead) }
         assertNull(mapper.exportableOrNull(fromPartialLockedRead))
+    }
+
+    private companion object {
+        val MLDSA65_KEY = "ab".repeat(1952)
+        val MLDSA44_KEY = "cd".repeat(1312)
     }
 }
