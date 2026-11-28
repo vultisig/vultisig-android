@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.blockchain.model.DeFiBalance
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.utils.NetworkException
@@ -30,6 +31,10 @@ import timber.log.Timber
  * against the tsTON price. It is emitted as its own balance because the two are different
  * mechanisms with different receipts, and folding them together would deny the liquid position its
  * own row on the Portfolio DeFi list.
+ *
+ * Both positions are persisted as [StakingDetails] rows (the nominator stake keyed by
+ * [Coins.Ton.TON], the liquid position by [Coins.Ton.TSTON]), so the cached read answers with both
+ * and a failed read falls back to the last-known amount instead of dropping the row.
  */
 class TonDeFiBalanceService(
     private val tonStakingApi: TonStakingApi,
@@ -41,7 +46,7 @@ class TonDeFiBalanceService(
         // Read first, independently of the nominator position and outside the fallback: a vault can
         // hold one, the other, or both, a liquid-only holder must not be answered with an empty
         // list, and a nominator read that fails afterwards must not cost this answer its row.
-        val liquid = fetchLiquidBalance(address)
+        val liquid = resolveLiquidBalance(address, vaultId)
 
         return try {
             val primary =
@@ -97,18 +102,22 @@ class TonDeFiBalanceService(
         }
 
     override suspend fun getCacheDeFiBalance(address: String, vaultId: String): List<DeFiBalance> =
-        // Only the nominator stake is persisted; the liquid position is a jetton balance, which the
-        // wallet's own token cache already answers for offline.
-        deFiBalancesFromCache(vaultId, BigInteger.ZERO)
+        // tsTON is usually not a wallet coin, so the wallet's token cache can't answer for it: the
+        // liquid position has to come from its own persisted row, or a cache-only reader (the vault
+        // list, the header's first emission) drops it.
+        deFiBalancesFromCache(vaultId, cachedAmount(vaultId, Coins.Ton.TSTON))
 
     /** The persisted nominator stake, paired with whatever the liquid read produced. */
     private suspend fun deFiBalancesFromCache(
         vaultId: String,
         liquid: BigInteger,
     ): List<DeFiBalance> {
-        val cached = stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Ton.TON.id)
-        return tonDeFiBalances(cached?.stakeAmount ?: BigInteger.ZERO, liquid)
+        return tonDeFiBalances(cachedAmount(vaultId, Coins.Ton.TON), liquid)
     }
+
+    private suspend fun cachedAmount(vaultId: String, coin: Coin): BigInteger =
+        stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, coin.id)?.stakeAmount
+            ?: BigInteger.ZERO
 
     /** Drops the cached Tonstakers position, so the next read goes to the chain. */
     suspend fun invalidateLiquidPosition(address: String) {
@@ -116,18 +125,25 @@ class TonDeFiBalanceService(
     }
 
     /**
-     * The vault's tsTON balance, or zero when it holds none. Best-effort: a lookup failure must not
-     * cost the nominator position its row, and an absent liquid position is indistinguishable from
-     * a zero one on this row.
+     * The vault's tsTON balance. A successful read (zero included: the position was closed) is
+     * persisted; a failed one falls back to the last persisted amount, so a transient tonapi failure
+     * neither erases the row from the cache nor costs the nominator position its row.
      */
-    private suspend fun fetchLiquidBalance(address: String): BigInteger =
+    private suspend fun resolveLiquidBalance(address: String, vaultId: String): BigInteger {
+        val fetched = fetchLiquidBalance(address) ?: return cachedAmount(vaultId, Coins.Ton.TSTON)
+        persistDetails(vaultId, Coins.Ton.TSTON, fetched, apr = null)
+        return fetched
+    }
+
+    /** The vault's tsTON balance, or `null` when the lookup failed. */
+    private suspend fun fetchLiquidBalance(address: String): BigInteger? =
         try {
             liquidStakingService.getPosition(address).tsTonBalance
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Timber.w(e, "TonDeFiBalanceService: Failed to fetch the Tonstakers position")
-            BigInteger.ZERO
+            null
         }
 
     /** One balance per mechanism, each omitted when it holds nothing. */
@@ -148,30 +164,38 @@ class TonDeFiBalanceService(
         return tonDeFiBalances(BigInteger.ZERO, liquid)
     }
 
-    private suspend fun persistStakedBalance(vaultId: String, staked: BigInteger, apr: Double?) {
+    private suspend fun persistStakedBalance(vaultId: String, staked: BigInteger, apr: Double?) =
+        persistDetails(vaultId, Coins.Ton.TON, staked, apr)
+
+    /** Upserts [coin]'s row, skipping the write when nothing changed. Best-effort. */
+    private suspend fun persistDetails(
+        vaultId: String,
+        coin: Coin,
+        amount: BigInteger,
+        apr: Double?,
+    ) {
         try {
             val details =
                 StakingDetails(
-                    id = Coins.Ton.TON.generateId(),
-                    coin = Coins.Ton.TON,
-                    stakeAmount = staked,
+                    id = coin.generateId(),
+                    coin = coin,
+                    stakeAmount = amount,
                     apr = apr,
                     estimatedRewards = null,
                     nextPayoutDate = null,
                     rewards = null,
                     rewardsCoin = null,
                 )
-            val existing =
-                stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.Ton.TON.id)
+            val existing = stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, coin.id)
             when {
                 existing == null -> stakingDetailsRepository.saveStakingDetails(vaultId, details)
-                existing.stakeAmount != staked || existing.apr != apr ->
+                existing.stakeAmount != amount || existing.apr != apr ->
                     stakingDetailsRepository.updateStakingDetails(vaultId, details)
             }
-        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "TonDeFiBalanceService: Failed to persist staked TON balance")
+            Timber.e(e, "TonDeFiBalanceService: Failed to persist %s balance", coin.ticker)
         }
     }
 
