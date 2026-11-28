@@ -669,14 +669,17 @@ private fun VerifySwapScreen(
                         metadata = tx.src.token.address,
                     )
 
-                    // External recipient must be visible before signing — never a silent default
-                    // (#4858). Only shown when the user routed the output to a custom address, and
-                    // given warning emphasis so it reads as a deliberate deviation, not a fee row.
-                    tx.externalRecipient
+                    // Where the funds land, same as the initiator's sheet (#6212). Warning
+                    // emphasis only when it is the custom recipient (#4858).
+                    val externalRecipient = tx.externalRecipient?.takeIf { it.isNotBlank() }
+                    tx.payoutAddress
                         ?.takeIf { it.isNotBlank() }
-                        ?.let { recipient ->
+                        ?.let { address ->
                             VerifyCardDivider(size = 20.dp)
-                            VerifyExternalRecipientRow(address = recipient)
+                            VerifyPayoutAddress(
+                                address = address,
+                                isExternal = address == externalRecipient,
+                            )
                         }
 
                     tx.depositAddress?.let {
@@ -1068,37 +1071,6 @@ internal fun VerifyVaultDetails(
                     maxLines = 1,
                 )
             }
-        }
-    }
-}
-
-/**
- * External-recipient row on the swap verify screen (#4858). Warning-styled so the user registers
- * that the output is routed to an address other than their own vault — the most security-sensitive
- * of the advanced overrides — before signing.
- */
-@Composable
-internal fun VerifyExternalRecipientRow(address: String, modifier: Modifier = Modifier) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        Text(
-            text = stringResource(R.string.verify_swap_recipient),
-            style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.alerts.warning,
-            maxLines = 1,
-        )
-
-        // In full on one line, shrunk to fit rather than truncated or broken mid-address, so it
-        // can be compared character by character (#6212).
-        Box(contentAlignment = Alignment.CenterEnd, modifier = Modifier.weight(1f)) {
-            AutoSizingText(
-                text = address,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.alerts.warning,
-            )
         }
     }
 }

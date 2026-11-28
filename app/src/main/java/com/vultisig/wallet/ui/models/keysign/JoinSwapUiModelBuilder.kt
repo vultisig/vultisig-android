@@ -52,6 +52,7 @@ import com.vultisig.wallet.ui.models.swap.formatPriceImpact
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.models.swap.hasSwapNetworkFeeCeiling
 import com.vultisig.wallet.ui.models.swap.resolveExternalSwapRecipient
+import com.vultisig.wallet.ui.models.swap.resolveSwapPayoutAddress
 import com.vultisig.wallet.ui.models.swap.signedLimitOrder
 import com.vultisig.wallet.ui.models.swap.signedMinimumOutput
 import com.vultisig.wallet.ui.models.swap.swapFeeRow
@@ -186,6 +187,17 @@ constructor(
         // Surface a custom recipient on the cosigner's verify screen too — null for routes that
         // don't carry one (#4858 review). Reused across the provider branches below.
         val externalRecipient = resolveExternalRecipient(payload, swapPayload, dstToken, vault)
+        // Where the output lands, so the co-signer names it as the initiator does (#6212).
+        val payoutAddress =
+            resolveSwapPayoutAddress(
+                memo = payload.memo,
+                externalRecipient = externalRecipient,
+                vaultDestinationAddress =
+                    runCatching { chainAccountAddressRepository.getAddress(dstToken, vault).first }
+                        .getOrNull()
+                        .orEmpty()
+                        .ifBlank { dstToken.address },
+            )
 
         return when (swapPayload) {
             is SwapPayload.EVM -> {
@@ -360,6 +372,7 @@ constructor(
                         totalFee = fiatValueToStringMapper(swapFeeForTotal, asFee = true),
                         totalFeeExcludingNetwork = swapFeeExcludingNetwork,
                         provider = provider,
+                        payoutAddress = payoutAddress,
                         depositAddress =
                             swapPayload.data.swapKitDepositRecipient(payload.coin.chain),
                         swapFeeIncludedInRate = isOneInchIncludedInRate,
@@ -389,6 +402,7 @@ constructor(
                             srcTokenValue = srcTokenValue,
                             dstToken = dstToken,
                             dstTokenValue = dstTokenValue,
+                            payoutAddress = payoutAddress,
                             estimatedNetworkGasFee = estimatedNetworkGasFee,
                             provider = provider,
                             providerFee = TokenValue(value = BigInteger.ZERO, token = srcToken),
@@ -436,6 +450,7 @@ constructor(
                         srcTokenValue = srcTokenValue,
                         dstToken = dstToken,
                         dstTokenValue = dstTokenValue,
+                        payoutAddress = payoutAddress,
                         estimatedNetworkGasFee = estimatedNetworkGasFee,
                         provider = provider,
                         providerFee = quote.fees,
@@ -481,6 +496,7 @@ constructor(
                             srcTokenValue = srcTokenValue,
                             dstToken = dstToken,
                             dstTokenValue = dstTokenValue,
+                            payoutAddress = payoutAddress,
                             estimatedNetworkGasFee = estimatedNetworkGasFee,
                             provider = provider,
                             providerFee = TokenValue(value = BigInteger.ZERO, token = srcToken),
@@ -528,6 +544,7 @@ constructor(
                         srcTokenValue = srcTokenValue,
                         dstToken = dstToken,
                         dstTokenValue = dstTokenValue,
+                        payoutAddress = payoutAddress,
                         estimatedNetworkGasFee = estimatedNetworkGasFee,
                         provider = provider,
                         providerFee = quote.fees,
@@ -621,6 +638,7 @@ constructor(
                         srcTokenValue = srcTokenValue,
                         dstToken = dstToken,
                         dstTokenValue = dstTokenValue,
+                        payoutAddress = payoutAddress,
                         estimatedNetworkGasFee = estimatedNetworkGasFee,
                         provider = provider,
                         providerFee = swapKitProviderFee,
@@ -657,6 +675,7 @@ constructor(
         currency: AppCurrency,
         providerLabel: String = provider,
         externalRecipient: String? = null,
+        payoutAddress: String? = null,
         depositAddress: String? = null,
         swapFee: TokenValue? = null,
         outboundFee: TokenValue? = null,
@@ -764,6 +783,7 @@ constructor(
             provider = provider,
             providerLabel = providerLabel,
             externalRecipient = externalRecipient,
+            payoutAddress = payoutAddress,
             depositAddress = depositAddress,
             swapFeeHidden = swapFeeHidden,
             swapFeePercent = feeRow.percent,
