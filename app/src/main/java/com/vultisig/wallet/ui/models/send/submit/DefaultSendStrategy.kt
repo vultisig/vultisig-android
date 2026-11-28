@@ -250,6 +250,15 @@ internal class DefaultSendStrategy(
                             isMaxAmount = isMaxAmount,
                         )
 
+                    // XRPL rejects a same-currency Payment to the sending account as
+                    // temREDUNDANT and then caches that tx id as bad, so a co-signer's re-submit
+                    // of the same blob comes back as a misleading temBAD_SIGNATURE.
+                    if (chain == Chain.Ripple && srcAddress == dstAddress) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_same_address)
+                        )
+                    }
+
                     if (chain == Chain.Tron) {
                         val isTronStakingOp =
                             memo != null &&
