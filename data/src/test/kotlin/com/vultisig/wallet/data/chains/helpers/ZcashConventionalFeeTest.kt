@@ -15,9 +15,25 @@ class ZcashConventionalFeeTest {
     // conventionalFee
 
     @Test
-    fun `returns the ten-thousand-zat floor for a simple one-in two-out send`() {
+    fun `charges 1,000 zats per logical action (ZIP 2009), not 5,000`() {
+        // Three outputs push past the two-action grace window: exactly one marginal fee per action.
+        val twoActions =
+            ZcashConventionalFee.conventionalFee(
+                inputCount = 1,
+                outputSizes = listOf(p2pkhOutput, p2pkhOutput),
+            )
+        val threeActions =
+            ZcashConventionalFee.conventionalFee(
+                inputCount = 1,
+                outputSizes = listOf(p2pkhOutput, p2pkhOutput, p2pkhOutput),
+            )
+        assertEquals(1_000L, threeActions - twoActions)
+    }
+
+    @Test
+    fun `returns the two-thousand-zat floor for a simple one-in two-out send`() {
         assertEquals(
-            10_000L,
+            2_000L,
             ZcashConventionalFee.conventionalFee(
                 inputCount = 1,
                 outputSizes = listOf(p2pkhOutput, p2pkhOutput),
@@ -28,7 +44,7 @@ class ZcashConventionalFeeTest {
     @Test
     fun `scales with input count beyond the grace window`() {
         assertEquals(
-            20_000L,
+            4_000L,
             ZcashConventionalFee.conventionalFee(
                 inputCount = 4,
                 outputSizes = listOf(p2pkhOutput, p2pkhOutput),
@@ -40,7 +56,7 @@ class ZcashConventionalFeeTest {
     fun `charges input actions from serialized bytes not raw count`() {
         // 75 P2PKH inputs: ceil(75 * 148 / 150) = 74 actions, not 75.
         assertEquals(
-            370_000L,
+            74_000L,
             ZcashConventionalFee.conventionalFee(
                 inputCount = 75,
                 outputSizes = listOf(p2pkhOutput, p2pkhOutput),
@@ -51,9 +67,9 @@ class ZcashConventionalFeeTest {
     @Test
     fun `counts large OP_RETURN outputs as multiple actions`() {
         // 80-byte memo output: 92 bytes serialized -> with two p2pkh outputs,
-        // ceil(160 / 34) = 5 actions -> 25,000 zats.
+        // ceil(160 / 34) = 5 actions -> 5,000 zats.
         assertEquals(
-            25_000L,
+            5_000L,
             ZcashConventionalFee.conventionalFee(
                 inputCount = 1,
                 outputSizes = listOf(p2pkhOutput, p2pkhOutput, 92L),
