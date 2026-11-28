@@ -1,6 +1,9 @@
 package com.vultisig.wallet.ui.models.defi
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.hasPreGeneratedKey
+import com.vultisig.wallet.data.models.isDepositSupported
 
 internal data class ThorChainPoolAsset(
     val chain: Chain?,
@@ -41,3 +44,67 @@ internal fun thorPoolChainPrefixToChain(prefix: String): Chain? =
         "XRP" -> Chain.Ripple
         else -> null
     }
+
+// Every prefix `/mayachain/pools` currently returns as Available. A prefix missing here resolves to
+// no chain, which leaves the pool's asset leg priced at zero and halves the card and header totals.
+internal fun mayaPoolChainPrefixToChain(prefix: String): Chain? =
+    when (prefix.uppercase()) {
+        "BTC" -> Chain.Bitcoin
+        "ETH" -> Chain.Ethereum
+        "DASH" -> Chain.Dash
+        "MAYA" -> Chain.MayaChain
+        "BASE" -> Chain.Base
+        "ARB" -> Chain.Arbitrum
+        "AVAX" -> Chain.Avalanche
+        "BSC" -> Chain.BscChain
+        "THOR" -> Chain.ThorChain
+        "ADA" -> Chain.Cardano
+        "ZEC" -> Chain.Zcash
+        else -> null
+    }
+
+/**
+ * The MayaChain pool each chain's native coin deposits into, for the chains whose asset side of a
+ * Maya LP add the app can sign: a plain native transfer to the Maya inbound vault carrying the
+ * memo. ERC-20 pools need the router and are not covered.
+ */
+internal val MAYA_NATIVE_LP_POOLS: Map<Chain, String> =
+    mapOf(
+        Chain.Bitcoin to "BTC.BTC",
+        Chain.Ethereum to "ETH.ETH",
+        Chain.Arbitrum to "ARB.ETH",
+        Chain.Dash to "DASH.DASH",
+        Chain.Zcash to "ZEC.ZEC",
+    )
+
+/**
+ * Whether [this] vault can ever hold the CACAO account a Maya LP add credits. A KeyImport vault
+ * without a MayaChain key cannot enable MayaChain, so Add Maya LP would only lead to that refusal.
+ */
+internal fun Vault.canAddMayaLiquidity(): Boolean = hasPreGeneratedKey(Chain.MayaChain)
+
+/** Chains whose Functions flow offers Add Maya LP and nothing else. */
+private val MAYA_LP_ONLY_DEPOSIT_CHAINS = setOf(Chain.Arbitrum, Chain.Dash, Chain.Zcash)
+
+/** Whether [chain]'s Functions button opens a flow [this] vault can use. */
+internal fun Vault.canDepositOn(chain: Chain): Boolean =
+    chain.isDepositSupported && (chain !in MAYA_LP_ONLY_DEPOSIT_CHAINS || canAddMayaLiquidity())
+
+/**
+ * The chain whose vault address a MayaChain LP memo names as its paired side when [chain] signs the
+ * add into [pool], or null when the add is single-sided.
+ *
+ * Only pools in [MAYA_NATIVE_LP_POOLS] pair: those are the pools whose other half the app can
+ * deposit, so a paired CACAO add there can be completed. A paired CACAO add anywhere else would sit
+ * pending on MayaChain until an asset deposit the app cannot make, so it stays `+:POOL`.
+ */
+internal fun mayaLpPairedChain(chain: Chain, pool: String): Chain? {
+    val assetChain =
+        MAYA_NATIVE_LP_POOLS.entries.firstOrNull { it.value.equals(pool, ignoreCase = true) }?.key
+            ?: return null
+    return when (chain) {
+        Chain.MayaChain -> assetChain
+        assetChain -> Chain.MayaChain
+        else -> null
+    }
+}

@@ -13,7 +13,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 
-/** Mimir key for the number of blocks THORChain holds a half-deposit before refunding it. */
+/** Mimir key for the number of blocks THORChain holds a half-deposit before committing it alone. */
 private const val PENDING_LIQUIDITY_AGE_LIMIT_MIMIR = "PENDINGLIQUIDITYAGELIMIT"
 
 /**
@@ -28,8 +28,8 @@ interface GetThorChainPendingLpDepositsUseCase {
      *
      * A symmetric add mints no LP units until both sides arrive, so these deposits are invisible to
      * every position lookup — including this app's own, which reads a unit-less record as "no
-     * position". Unfound, they are simply refunded after `PendingLiquidityAgeLimit` with nothing
-     * ever shown to the user.
+     * position". Unfound, they are simply committed to the pool on their own after
+     * `PendingLiquidityAgeLimit` with nothing ever shown to the user.
      *
      * The scan starts from `/thorchain/pools`, whose `pending_inbound_*` fields say which pools
      * hold *anyone's* pending liquidity. Only those pools are then checked against the user's
@@ -51,7 +51,8 @@ internal class GetThorChainPendingLpDepositsUseCaseImpl
 constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepositsUseCase {
 
     override suspend fun invoke(runeAddress: String): List<ThorChainPendingLpDeposit> {
-        val candidates = thorChainApi.getPools().filter { it.holdsPendingLiquidity() }
+        val pools = thorChainApi.getPools()
+        val candidates = pools.filter { it.holdsPendingLiquidity() }
         if (candidates.isEmpty()) return emptyList()
 
         val found = coroutineScope {
@@ -62,7 +63,7 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
         }
         if (found.isEmpty()) return emptyList()
 
-        return withRefundCountdown(found)
+        return withAgeLimitCountdown(found, pools)
     }
 
     private fun ThorChainPoolJson.holdsPendingLiquidity(): Boolean =
@@ -78,37 +79,64 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
         thorChainApi.getLiquidityProvider(pool, runeAddress)?.toPendingFetch(pool)
 
     /**
-     * Resolves how long each half-deposit has before it is refunded. A failed read leaves the
-     * countdown null rather than inventing a deadline the user might plan around.
+     * Resolves how long each half-deposit has before it is committed alone. A failed read leaves
+     * the countdown null rather than inventing a deadline the user might plan around.
      */
-    private suspend fun withRefundCountdown(
-        pending: List<PendingFetch>
+    private suspend fun withAgeLimitCountdown(
+        pending: List<PendingFetch>,
+        pools: List<ThorChainPoolJson>,
     ): List<ThorChainPendingLpDeposit> {
-        val (ageLimit, currentHeight) =
+        val (mimir, currentHeight) =
             coroutineScope {
-                val ageLimitTask = async { fetchPendingLiquidityAgeLimit() }
+                val mimirTask = async { fetchMimirOrNull() }
                 val heightTask = async { fetchLastBlockOrNull() }
-                ageLimitTask.await() to heightTask.await()
+                mimirTask.await() to heightTask.await()
             }
+        if (mimir == null || currentHeight == null) return pending.map { it.deposit }
+
+        val ageLimit =
+            mimir[PENDING_LIQUIDITY_AGE_LIMIT_MIMIR]?.takeIf { it > 0 }
+                ?: DEFAULT_PENDING_LIQUIDITY_AGE_LIMIT
+        val cleanedPools =
+            pools
+                .filter {
+                    isCleanedPendingLiquidityPool(
+                        schedule = PendingLiquidityCleanupSchedule.THORChain,
+                        asset = it.asset,
+                        status = it.status,
+                        pendingInboundNative = it.pendingInboundRune,
+                        pendingInboundAsset = it.pendingInboundAsset,
+                        mimir = mimir,
+                        height = currentHeight,
+                    )
+                }
+                .map { it.asset }
 
         return pending.map { (deposit, lastAddHeight) ->
-            if (ageLimit == null || currentHeight == null || lastAddHeight == null) deposit
+            if (lastAddHeight == null) deposit
             else
                 deposit.copy(
-                    blocksUntilRefund = (lastAddHeight + ageLimit - currentHeight).coerceAtLeast(0L)
+                    blocksUntilAddedAlone =
+                        blocksUntilPendingLiquidityCommit(
+                            schedule = PendingLiquidityCleanupSchedule.THORChain,
+                            pool = deposit.pool,
+                            cleanedPools = cleanedPools,
+                            lastAddHeight = lastAddHeight,
+                            ageLimit = ageLimit,
+                            currentHeight = currentHeight,
+                        )
                 )
         }
     }
 
-    private suspend fun fetchPendingLiquidityAgeLimit(): Long? =
+    private suspend fun fetchMimirOrNull(): Map<String, Long>? =
         try {
-            thorChainApi.getMimir()[PENDING_LIQUIDITY_AGE_LIMIT_MIMIR]?.takeIf { it > 0 }
-                ?: DEFAULT_PENDING_LIQUIDITY_AGE_LIMIT
+            thorChainApi.getMimir()
         } catch (e: IOException) {
-            Timber.w(e, "Failed to read PendingLiquidityAgeLimit")
+            Timber.w(e, "Failed to read THORChain mimir")
             null
         } catch (e: NetworkException) {
-            Timber.w(e, "Failed to read PendingLiquidityAgeLimit")
+            Timber.w(e, "Failed to read THORChain mimir")
             null
         }
 
@@ -129,7 +157,7 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
      *
      * A nonzero `units` does not rule a record out. Thornode stages a top-up's pending halves onto
      * the same record that already holds a live position, so skipping those would hide exactly the
-     * half-deposit a returning LP needs to complete before it is refunded.
+     * half-deposit a returning LP needs to complete before it is committed alone.
      */
     private fun ThorChainLiquidityProviderJson.toPendingFetch(pool: String): PendingFetch? {
         val runePending = pendingRune.toBigIntegerOrNull() ?: BigInteger.ZERO
@@ -146,7 +174,7 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
                     pairedAddress =
                         if (runePending.signum() > 0) assetAddress?.takeIf { it.isNotBlank() }
                         else runeAddress?.takeIf { it.isNotBlank() },
-                    blocksUntilRefund = null,
+                    blocksUntilAddedAlone = null,
                 ),
             lastAddHeight = lastAddHeight?.takeIf { it > 0 },
         )
@@ -154,7 +182,7 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainPendingLpDepos
 
     /**
      * A pending deposit plus the block it was recorded at. The height only exists to derive the
-     * refund countdown once, after the scan, so it stays out of the domain model.
+     * age-limit countdown once, after the scan, so it stays out of the domain model.
      */
     private data class PendingFetch(
         val deposit: ThorChainPendingLpDeposit,

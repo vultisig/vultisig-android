@@ -81,7 +81,7 @@ internal data class LpTabUiModel(
     /**
      * Half-finished symmetric adds, listed above the positions. They are deliberately not gated on
      * the pool being selected in the Manage-Positions dialog: a deposit the user cannot see is the
-     * one that silently gets refunded.
+     * one that silently ends up as a one-sided position.
      */
     val pendingDeposits: List<PendingLpDepositUiModel> = emptyList(),
     /**
@@ -106,10 +106,15 @@ internal data class PendingLpDepositUiModel(
     val depositedAmount: String,
     /** Address the missing side must be sent from, shortened for display. */
     val pairedAddress: String?,
-    /** Time left before THORChain refunds the deposit, or `null` when it could not be resolved. */
-    val refundsIn: UiText?,
+    /**
+     * Time left before the protocol adds the deposit to the pool on its own, or `null` when it
+     * could not be resolved.
+     */
+    val addedAloneIn: UiText?,
     /** False when the missing side is on a chain this vault has no account for. */
     val canComplete: Boolean = true,
+    /** The protocol holding the deposit, named in the card's explanation. */
+    val protocolName: String = Chain.ThorChain.raw,
 )
 
 internal data class LpPositionUiModel(
